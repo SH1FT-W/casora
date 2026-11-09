@@ -458,6 +458,23 @@ window.CASORA_TILE_TYPES = [
     community: { desc: "Carbon monoxide in ppm on the tile, the symbol in the color of its level: green, from 30 ppm yellow, from 50 orange, from 100 red. The popup shows the value in a ring with the four levels, the history of 24 hours and 7 days, what to do when it rises and when it was last raised, plus battery, self-test and alarm of the detector. For every CO sensor, e.g. Matter smoke and CO alarms.",
       darkShots: true },
     fields: [ICON, TITLE_NAME] },
+  // Heat pump (issue 132): a climate with program, hot water and compressor – thermostat tile underneath, own popup
+  // (44-waermepumpe.js). Everything but the climate is optional; empty fields are found on the climate's device.
+  { id: "casora_heat_pump", like: "thermostat", label: "Heat pump", template: "casora_heat_pump", domains: ["climate"],
+    icon: "heat_pump", color: "var(--casora-color-orange, #FF9F0A)", entityLabel: "Heating (climate)", entityPlaceholder: "The heat pump's climate entity",
+    fields: [
+      { key: "temp_sensor", label: "Temperature sensor", domains: ["sensor"], classes: ["temperature"], placeholder: "None",
+        hint: "Shown on the dial when the heating reports no temperature of its own." },
+      { key: "water_heater_entity", label: "Hot water", domains: ["water_heater"], find: { heatpump: "water" }, group: "Hot water" },
+      { key: "charge_button", label: "One-time charge", domains: ["button"], find: { heatpump: "charge" }, group: "Hot water" },
+      { key: "compressor_entity", label: "Compressor", domains: ["binary_sensor"], find: { heatpump: "compressor" }, group: "Values" },
+      { key: "outdoor_entity", label: "Outdoor temperature", domains: ["sensor"], classes: ["temperature"], find: { heatpump: "outdoor" }, group: "Values" },
+      { key: "supply_entity", label: "Supply temperature", domains: ["sensor"], classes: ["temperature"], find: { heatpump: "supply" }, group: "Values" },
+      { key: "return_entity", label: "Return temperature", domains: ["sensor"], classes: ["temperature"], find: { heatpump: "return" }, group: "Values" },
+      { key: "cop_entity", label: "Coefficient of performance", domains: ["sensor"], find: { heatpump: "cop" }, group: "Values" },
+      { key: "power_entity", label: "Compressor power", domains: ["sensor"], classes: ["power"], find: { heatpump: "power" }, group: "Values" },
+      TITLE_NAME,
+    ] },
   // Velair (community card, issue #32): a climate Velair (HACS, domain velair) plans. Tile = the thermostat tile;
   // the popup adds Velair's schedule (today, week, on/off, editing a day) from Velair's WebSocket API and services
   // (scripts/local/31-velair.js, casoraVelairFind in 00-finder.js). Only offered when an entity has the platform velair.
@@ -689,7 +706,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   "shield_alarm", "shield_bypass", "shield_vacation", "calendar", "calendar-day", "window-open",
   "window-closed", "heating_coil", "wind", "rooms", "soccer", "pulse", "lawn-mower", "coffee-maker", "paw",
   "coffee-espresso", "coffee-doppio", "coffee-cup", "coffee-cappuccino", "coffee-latte", "coffee-tall", "coffee-water",
-  "coffee-milk", "coffee-tea", "chart", "velair", "list", "tasks", "grid", "cart", "universal", "kettle", "co",
+  "coffee-milk", "coffee-tea", "chart", "velair", "list", "tasks", "grid", "cart", "universal", "kettle", "co", "heat_pump",
 ].map((n) => [n, "/casora_assets/icons/" + n + ".svg"]));
 
 // Preview: show conditional cards (type: conditional) as the dashboard does –
@@ -1049,6 +1066,11 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
       if (f.find.dish) {
         const LF = window.casoraLaundryFind;
         return (LF && LF.dish && LF.dish.field(hass, tile.entity, f.find.dish)) || null;
+      }
+      // Heat pump (issue 132): on the climate's device, by translation_key, else the entity's own words.
+      if (f.find.heatpump) {
+        const HF = window.casoraHeatPumpFind;
+        return (HF && HF.field(hass, tile.entity, f.find.heatpump)) || null;
       }
       // Fridge: the shared fridge finder (Liebherr, Home Connect, generic) and its field.
       if (f.find.fridge) {

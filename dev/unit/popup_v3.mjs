@@ -53,6 +53,7 @@ const MIGRIERT = [
   { popup: 'Fahrzeug', vorlagen: ['casora_popup_car'], file: '03-popups.js', from: '  var C = window._casoraCar = {};', to: '  var B = window._casoraBike = {};', stages: 1 },
   // S2 on the cooling zone, S7 when no zone has a setpoint (or the fridge is unavailable).
   { popup: 'Kühlschrank', vorlagen: ['casora_popup_fridge'], file: '30-fridge.js', from: '  F.popup = function', to: null, stages: 2 },
+  { popup: 'Wärmepumpe', vorlagen: ['casora_popup_heat_pump'], file: '44-waermepumpe.js', from: '  H.sec = function', to: "  // The popup's cards", stages: 2 },
   { popup: 'Haustier', vorlagen: ['casora_popup_pet'], file: '26-haustier.js', from: '  P.popup = function', to: null, stages: 1 },
   { popup: 'Kaffeevollautomat', vorlagen: ['casora_popup_coffee'], file: '25-coffee.js', from: '  K.popup = function', to: null, stages: 2 },
   { popup: 'Saugroboter', vorlagen: ['casora_vacuum'], file: '02-devices.js', from: '  var V = window._casoraVac = ', to: '// ── Notifications: line wrapping', stages: 1 },

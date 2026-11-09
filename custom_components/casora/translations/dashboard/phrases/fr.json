@@ -2866,7 +2866,20 @@
     "Die Aufgabe konnte nicht gespeichert werden.": "La tâche n'a pas pu être enregistrée.",
     "Abhaken": "Cocher",
     "Wieder öffnen": "Rouvrir",
-    "Eintrag löschen?": "Supprimer cette entrée ?"
+    "Eintrag löschen?": "Supprimer cette entrée ?",
+    "Wärmepumpe": "Pompe à chaleur",
+    "Warmwasser": "Eau chaude",
+    "Vorlauf": "Départ",
+    "Rücklauf": "Retour",
+    "Außen": "Extérieur",
+    "Leistungszahl": "COP",
+    "Verdichterleistung": "Puissance du compresseur",
+    "Verdichter": "Compresseur",
+    "Verdichter läuft": "Compresseur en marche",
+    "Verdichter aus": "Compresseur arrêté",
+    "Einmal aufheizen": "Chauffer une fois",
+    "Aufheizen gestartet": "Chauffe lancée",
+    "Taut ab": "Dégivrage"
   },
   "patterns": [
     [

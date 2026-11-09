@@ -86,6 +86,7 @@
     casora_chart: "diagramm chart verlauf graph statistik cpu prozessor server system monitor",
     casora_velair: "velair zeitplan klima klimaanlage heizung thermostat schedule climate",
     casora_shopping: "einkaufsliste einkauf bring liste todo shopping list grocery",
+    casora_heat_pump: "wärmepumpe waermepumpe heizung warmwasser verdichter kompressor vicare nibe daikin heat pump hot water compressor",
     casora_kettle: "wasserkocher kocher tee wasser xiaomi kettle",
     casora_co: "co kohlenmonoxid co-melder melder gas carbon monoxide detector alarm matter",
     casora_oven: "backofen ofen herd backen home connect oven",
@@ -743,6 +744,10 @@
       });
       // Kettle (community card #87, when added): one tile per kettle on its water temperature (casoraKettleFind).
       if (typeIds.has("casora_kettle") && W.casoraKettleFind) W.casoraKettleFind.all(h).forEach((k) => push(k.anchor, "", "casora_kettle"));
+      // Heat pump (issue 132): climates that look like one (name, or water_heater and compressor on the same device).
+      if (typeIds.has("casora_heat_pump") && W.casoraHeatPumpFind) Object.keys(S).forEach((id) => {
+        if (id.startsWith("climate.") && W.casoraHeatPumpFind.isPump(h, id)) push(id, "", "casora_heat_pump");
+      });
       // CO detector (community card 124, when added): every carbon monoxide sensor (device_class) as this card.
       if (typeIds.has("casora_co")) Object.keys(S).forEach((id) => {
         if (id.startsWith("sensor.") && (S[id].attributes || {}).device_class === "carbon_monoxide") push(id, "", "casora_co");

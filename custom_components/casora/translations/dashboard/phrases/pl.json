@@ -2866,7 +2866,20 @@
     "Die Aufgabe konnte nicht gespeichert werden.": "Nie udało się zapisać zadania.",
     "Abhaken": "Odhacz",
     "Wieder öffnen": "Otwórz ponownie",
-    "Eintrag löschen?": "Usunąć ten wpis?"
+    "Eintrag löschen?": "Usunąć ten wpis?",
+    "Wärmepumpe": "Pompa ciepła",
+    "Warmwasser": "Ciepła woda",
+    "Vorlauf": "Zasilanie",
+    "Rücklauf": "Powrót",
+    "Außen": "Na zewnątrz",
+    "Leistungszahl": "COP",
+    "Verdichterleistung": "Moc sprężarki",
+    "Verdichter": "Sprężarka",
+    "Verdichter läuft": "Sprężarka pracuje",
+    "Verdichter aus": "Sprężarka wyłączona",
+    "Einmal aufheizen": "Podgrzej jednorazowo",
+    "Aufheizen gestartet": "Podgrzewanie rozpoczęte",
+    "Taut ab": "Odszranianie"
   },
   "patterns": [
     [

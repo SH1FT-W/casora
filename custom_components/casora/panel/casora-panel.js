@@ -711,6 +711,7 @@ function secSubRows(saved, present) {
 const FILTER_CATEGORIES = {
   casora_thermostat: "climate",
   casora_velair: "climate",
+  casora_heat_pump: "climate",
   casora_air_purifier: "climate",
   // Wie CASORA_FILTER_CATEGORIES (casora-core.js): Jalousien gehören zu keinem Badge-Filter.
   casora_cover: "unfiltered",
@@ -5545,6 +5546,7 @@ const TILE_MAIN_FIND = {
   // zone sensors) – a climate Velair does not plan has no schedule to show.
   // anchors: the finder's whole list, asked once per search (not per entity – per entity the fridge finder walked every
   // device for each of thousands of entities and the Studio hung).
+  casora_heat_pump: { domain: "climate", anchors: (h) => (window.casoraHeatPumpFind ? Object.keys(h.states || {}).filter((id) => id.startsWith("climate.") && window.casoraHeatPumpFind.isPump(h, id)) : []) },
   casora_velair: { domain: "climate", anchors: (h) => (window.casoraVelairFind ? window.casoraVelairFind.climates(h) : []) },
   casora_fridge: { anchors: (h) => (window.casoraFridgeFind ? window.casoraFridgeFind.all(h).map((f) => f.anchor) : []) },
   // Oven: the anchor of every oven the shared finder knows (casoraOvenFind.all in 00-finder.js – Home Connect in HA core and

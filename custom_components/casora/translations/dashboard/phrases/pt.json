@@ -2866,7 +2866,20 @@
     "Die Aufgabe konnte nicht gespeichert werden.": "Não foi possível guardar a tarefa.",
     "Abhaken": "Marcar",
     "Wieder öffnen": "Reabrir",
-    "Eintrag löschen?": "Eliminar esta entrada?"
+    "Eintrag löschen?": "Eliminar esta entrada?",
+    "Wärmepumpe": "Bomba de calor",
+    "Warmwasser": "Água quente",
+    "Vorlauf": "Ida",
+    "Rücklauf": "Retorno",
+    "Außen": "Exterior",
+    "Leistungszahl": "COP",
+    "Verdichterleistung": "Potência do compressor",
+    "Verdichter": "Compressor",
+    "Verdichter läuft": "Compressor a funcionar",
+    "Verdichter aus": "Compressor desligado",
+    "Einmal aufheizen": "Aquecer uma vez",
+    "Aufheizen gestartet": "Aquecimento iniciado",
+    "Taut ab": "A descongelar"
   },
   "patterns": [
     [

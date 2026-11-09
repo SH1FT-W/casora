@@ -3121,6 +3121,7 @@ window.casoraMenuGlass = {
     window.CASORA_FILTER_CATEGORIES = {
       casora_thermostat:    'climate',
       casora_velair:        'climate',
+      casora_heat_pump:     'climate',
       casora_air_purifier:  'climate',
       // Jalousien sind kein Klima-Gerät: kein Badge-Filter, im Raum-Popup unter „Sonstiges“.
       casora_cover:         'unfiltered',

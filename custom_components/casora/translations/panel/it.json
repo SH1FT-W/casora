@@ -3001,7 +3001,18 @@
     "60 % then means 60 % closed and the tile lights up only while it is not fully open. On an awning, Extend and Retract swap. Everything Casora counts stays the same.": "60 % significa quindi 60 % chiuso e la tessera si illumina solo finché il dispositivo non è completamente aperto. Su una tenda da sole Estendi e Ritrai si scambiano. Tutto ciò che Casora conta resta uguale.",
     "Tasks": "Attività",
     "Add list …": "Aggiungi elenco …",
-    "Empty: every to-do list in your home.": "Vuoto: tutti gli elenchi della casa."
+    "Empty: every to-do list in your home.": "Vuoto: tutti gli elenchi della casa.",
+    "Heat pump": "Pompa di calore",
+    "Heating (climate)": "Riscaldamento (climate)",
+    "The heat pump's climate entity": "L'entità climate della pompa di calore",
+    "Shown on the dial when the heating reports no temperature of its own.": "Mostrata sul quadrante se il riscaldamento non riporta una propria temperatura.",
+    "Hot water": "Acqua calda",
+    "One-time charge": "Riscalda una volta",
+    "Compressor": "Compressore",
+    "Supply temperature": "Temperatura di mandata",
+    "Return temperature": "Temperatura di ritorno",
+    "Coefficient of performance": "Coefficiente di prestazione",
+    "Compressor power": "Potenza compressore"
   },
   "patterns": [
     [

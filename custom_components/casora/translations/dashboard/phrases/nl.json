@@ -2866,7 +2866,20 @@
     "Die Aufgabe konnte nicht gespeichert werden.": "De taak kon niet worden opgeslagen.",
     "Abhaken": "Afvinken",
     "Wieder öffnen": "Heropenen",
-    "Eintrag löschen?": "Dit item verwijderen?"
+    "Eintrag löschen?": "Dit item verwijderen?",
+    "Wärmepumpe": "Warmtepomp",
+    "Warmwasser": "Warm water",
+    "Vorlauf": "Aanvoer",
+    "Rücklauf": "Retour",
+    "Außen": "Buiten",
+    "Leistungszahl": "COP",
+    "Verdichterleistung": "Compressorvermogen",
+    "Verdichter": "Compressor",
+    "Verdichter läuft": "Compressor draait",
+    "Verdichter aus": "Compressor uit",
+    "Einmal aufheizen": "Eenmalig opwarmen",
+    "Aufheizen gestartet": "Opwarmen gestart",
+    "Taut ab": "Ontdooit"
   },
   "patterns": [
     [

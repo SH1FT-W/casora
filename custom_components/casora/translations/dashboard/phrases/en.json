@@ -2848,7 +2848,20 @@
     "Die Aufgabe konnte nicht gespeichert werden.": "The task could not be saved.",
     "Abhaken": "Tick off",
     "Wieder öffnen": "Reopen",
-    "Eintrag löschen?": "Delete this item?"
+    "Eintrag löschen?": "Delete this item?",
+    "Wärmepumpe": "Heat pump",
+    "Warmwasser": "Hot water",
+    "Vorlauf": "Supply",
+    "Rücklauf": "Return",
+    "Außen": "Outdoor",
+    "Leistungszahl": "COP",
+    "Verdichterleistung": "Compressor power",
+    "Verdichter": "Compressor",
+    "Verdichter läuft": "Compressor running",
+    "Verdichter aus": "Compressor off",
+    "Einmal aufheizen": "Heat up once",
+    "Aufheizen gestartet": "Heating up started",
+    "Taut ab": "Defrosting"
   },
   "patterns": [
     [

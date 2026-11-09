@@ -3001,7 +3001,18 @@
     "60 % then means 60 % closed and the tile lights up only while it is not fully open. On an awning, Extend and Retract swap. Everything Casora counts stays the same.": "60 % betekent dan 60 % gesloten en de tegel licht alleen op zolang het apparaat niet helemaal open is. Bij een zonnescherm wisselen Uitrollen en Inrollen om. Alles wat Casora telt blijft gelijk.",
     "Tasks": "Taken",
     "Add list …": "Lijst toevoegen …",
-    "Empty: every to-do list in your home.": "Leeg: alle takenlijsten in huis."
+    "Empty: every to-do list in your home.": "Leeg: alle takenlijsten in huis.",
+    "Heat pump": "Warmtepomp",
+    "Heating (climate)": "Verwarming (climate)",
+    "The heat pump's climate entity": "De climate-entiteit van de warmtepomp",
+    "Shown on the dial when the heating reports no temperature of its own.": "Getoond op de draaiknop als de verwarming geen eigen temperatuur meldt.",
+    "Hot water": "Warm water",
+    "One-time charge": "Eenmalig opwarmen",
+    "Compressor": "Compressor",
+    "Supply temperature": "Aanvoertemperatuur",
+    "Return temperature": "Retourtemperatuur",
+    "Coefficient of performance": "Prestatiecoëfficiënt",
+    "Compressor power": "Compressorvermogen"
   },
   "patterns": [
     [

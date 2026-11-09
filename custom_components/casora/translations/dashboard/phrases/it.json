@@ -2866,7 +2866,20 @@
     "Die Aufgabe konnte nicht gespeichert werden.": "Impossibile salvare l'attività.",
     "Abhaken": "Spunta",
     "Wieder öffnen": "Riapri",
-    "Eintrag löschen?": "Eliminare questa voce?"
+    "Eintrag löschen?": "Eliminare questa voce?",
+    "Wärmepumpe": "Pompa di calore",
+    "Warmwasser": "Acqua calda",
+    "Vorlauf": "Mandata",
+    "Rücklauf": "Ritorno",
+    "Außen": "Esterno",
+    "Leistungszahl": "COP",
+    "Verdichterleistung": "Potenza compressore",
+    "Verdichter": "Compressore",
+    "Verdichter läuft": "Compressore in funzione",
+    "Verdichter aus": "Compressore spento",
+    "Einmal aufheizen": "Riscalda una volta",
+    "Aufheizen gestartet": "Riscaldamento avviato",
+    "Taut ab": "Sbrinamento"
   },
   "patterns": [
     [

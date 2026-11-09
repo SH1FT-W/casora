@@ -3763,3 +3763,78 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
   window.casoraOvenFind = { fields: FIELDS, progRe: PROG_RE, coreKeys: CORE, is: is, find: find, all: all, field: field,
     state: state, unit: unit, deg: deg, minsLeft: minsLeft, tile: tile, level: level, color: color };
 })();
+
+// ── Heat pump (tile casora_heat_pump, issue 132) ────────────────────────────────────────────────────────────────────
+// The tile's entity is the climate; everything else is optional and comes from the tile's Studio fields. An empty
+// field falls back to the climate's own device (with its sub-devices): by translation_key first (HA's ViCare keys),
+// then by the entity's own words in the common languages (never the entity id, never the device's name). Nothing
+// found: the row stays away. Other makers' keys simply go into the table below.
+//   casoraHeatPumpFind.field(hass, climate, key) → entity_id | null (water, charge, charging, outdoor, supply, return, cop, power, compressor)
+//   casoraHeatPumpFind.find(hass, climate)       → all of them { water: …, charge: …, … }
+//   casoraHeatPumpFind.isPump(hass, climate)     → the climate looks like a heat pump (Studio: suggested first)
+(function () {
+  if (window.casoraHeatPumpFind) return;
+  var COMPRESSOR = /compressor|kompressor|verdichter|compresseur|compressore|compresor|spr(ę|e)(ż|z)ark/i;
+  var FIELDS = {
+    water: { domain: 'water_heater', keys: ['domestic_hot_water'], any: true },
+    charge: { domain: 'button', keys: ['activate_onetimecharge'], like: /one.?time|einmal|boost/i,
+      not: /de.?activ|deaktiv|stop|cancel|abbrech/i },
+    charging: { domain: 'binary_sensor', keys: ['one_time_charge'], like: /one.?time|einmal/i },
+    outdoor: { domain: 'sensor', dc: 'temperature', keys: ['outside_temperature', 'outdoor_temperature'],
+      like: /au(ß|ss|s)en|outdoor|outside|ambient|ext(é|e)rieur|esterna|exterior/i },
+    supply: { domain: 'sensor', dc: 'temperature', keys: ['supply_temperature', 'secondary_circuit_supply_temperature',
+      'boiler_supply_temperature', 'primary_circuit_supply_temperature'], like: /vorlauf|supply|flow|d(é|e)part|mandata/i,
+    not: /r(ü|ue|u)cklauf|return|soll|target|set.?point/i },
+    return: { domain: 'sensor', dc: 'temperature', keys: ['return_temperature', 'secondary_circuit_return_temperature',
+      'primary_circuit_return_temperature'], like: /r(ü|ue|u)cklauf|return|retour|ritorno/i, not: /soll|target|set.?point/i },
+    cop: { domain: 'sensor', keys: ['cop_total', 'spf_total', 'cop', 'cop_heating'], like: /coefficient|leistungszahl|\bs?cop\b|\bjaz\b/i,
+      // „Leistungszahl – Heizung“ only when there is no plain one.
+      avoid: /heiz|heating|warm|dhw|hot.?water|cool|k(ü|ue)hl/i },
+    power: { domain: 'sensor', dc: 'power', keys: ['compressor_power'], like: COMPRESSOR },
+    compressor: { domain: 'binary_sensor', keys: ['compressor'], like: COMPRESSOR },
+  };
+  // The entity's own words: its friendly name without the device's name (each entity carries it: „Testpumpe Kompressor“).
+  var wordsOf = function (hass, e) {
+    var D = (hass && hass.devices) || {}, a = (((hass && hass.states) || {})[e.entity_id] || {}).attributes || {};
+    var dev = D[e.device_id] || {}, dn = String(dev.name_by_user || dev.name || ''), fn = String(a.friendly_name || '');
+    return (dn && fn.toLowerCase().indexOf(dn.toLowerCase()) === 0 ? fn.slice(dn.length) : fn).trim();
+  };
+  var pick = function (hass, list, spec) {
+    var c = list.filter(function (e) { return e.domain === spec.domain && (!spec.dc || !e.dc || e.dc === spec.dc); });
+    var keys = spec.keys || [];
+    for (var k = 0; k < keys.length; k++) {
+      var hit = c.filter(function (e) { return e.key === keys[k]; })[0];
+      if (hit) return hit.entity_id;
+    }
+    if (spec.like) {
+      var named = c.filter(function (e) { var w = wordsOf(hass, e); return spec.like.test(w) && !(spec.not && spec.not.test(w)); });
+      if (spec.avoid) {
+        var plain = named.filter(function (e) { return !spec.avoid.test(wordsOf(hass, e)); });
+        if (plain.length) named = plain;
+      }
+      if (named.length) return named[0].entity_id;
+    }
+    return spec.any && c.length ? c[0].entity_id : null;
+  };
+  var list = function (hass, climate) {
+    var CD = window.casoraDevice;
+    return CD && CD.entities ? CD.entities(hass, climate) : [];
+  };
+  function field(hass, climate, key) {
+    return FIELDS[key] ? pick(hass, list(hass, climate), FIELDS[key]) : null;
+  }
+  function find(hass, climate) {
+    var out = {}, l = list(hass, climate);
+    Object.keys(FIELDS).forEach(function (k) { out[k] = pick(hass, l, FIELDS[k]); });
+    return out;
+  }
+  var PUMP = /w(ä|ae|a)rmepumpe|heat.?pump|pompe.?(à|a).?chaleur|bomba.?de.?calor|pompa.?di.?calore|warmtepomp|pompa.?ciep/i;
+  function isPump(hass, climate) {
+    var st = ((hass && hass.states) || {})[climate], D = (hass && hass.devices) || {}, R = (hass && hass.entities) || {};
+    var dev = D[(R[climate] || {}).device_id] || {};
+    if (PUMP.test(String((st && st.attributes && st.attributes.friendly_name) || '') + ' ' + (dev.name_by_user || dev.name || '') + ' ' + (dev.model || ''))) return true;
+    var f = find(hass, climate);
+    return !!(f.water && f.compressor);
+  }
+  window.casoraHeatPumpFind = { field: field, find: find, isPump: isPump, fields: FIELDS };
+})();

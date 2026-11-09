@@ -360,6 +360,17 @@ Home Connect aus HACS (Wäsche/Spüler: `00-finder.js` `casoraLaundryFind.SOURCE
   anderer Integrationen auch am Namen (self-test/Selbsttest). Code: `42-co.js` (`C.model`), `casora-panel.js`
   `TILE_MAIN_FIND.casora_co`, `casora-panel-b-ux.js`; Tests `dev/unit/co_sensor.mjs`, `dev/unit/community_first_use.mjs`,
   Testhaus `dev/casora_mock/co.py`.
+- Wärmepumpe (`casora_heat_pump`, #132; Kern `climate`, `water_heater`, `button`, Integration ViCare als Vorbild):
+  `climate` liefert `preset_modes`, `preset_mode`, `temperature`, `min_temp`, `max_temp`, `target_temp_step`,
+  `hvac_action`; `current_temperature` darf `null` sein (ViCare), dann zeigt das Rad nur das Ziel. Programme über
+  `climate.set_preset_mode`, Ziel über `climate.set_temperature`, Warmwasser über `water_heater.set_temperature`
+  (`water_heater` mit `current_temperature`, `temperature`, `min_temp`, `max_temp`), einmaliges Aufheizen über
+  `button.press`. Leere Studio-Felder findet `casoraHeatPumpFind` über das Gerät der Klima-Entität und zuerst über
+  ViCares `translation_key` (`domestic_hot_water`, `activate_onetimecharge`, `one_time_charge`, `compressor`,
+  `outside_temperature`, `supply_temperature`, `return_temperature`, `secondary_circuit_supply_temperature`, `cop_total`,
+  `compressor_power`), sonst über den eigenen Namen der Entität (mehrsprachig, nie Entity-ID). Code: `44-waermepumpe.js`,
+  `00-finder.js` `casoraHeatPumpFind`, `casora-panel-types.js` `casora_heat_pump`; Tests `dev/unit/waermepumpe.mjs`,
+  `dev/qa/regress/r614_waermepumpe.mjs`.
 - `todo` (Kern, Community-Karte „Bring! Einkaufsliste“, #82): Zustand einer To-do-Entität = Zahl der offenen Einträge;
   Einträge über `todo/item/subscribe` (sonst `todo/item/list`) mit `uid`, `summary`, `description`, `status`
   `needs_action`/`completed`; Dienste `add_item` (`item`, `description`), `update_item` (`item` = uid, `status`),
