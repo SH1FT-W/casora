@@ -2303,7 +2303,7 @@ const GROUPS = [
     blurb: "The cards along the bottom of the room." },
 ];
 
-const R = (id, label, max, fields, menuGroup, kinds) => ({ id, label, max, fields, menuGroup: menuGroup || null, kinds: kinds || null });
+const R = (id, label, max, fields, menuGroup, kinds, closeGaps) => ({ id, label, max, fields, menuGroup: menuGroup || null, kinds: kinds || null, closeGaps: !!closeGaps });
 
 const mediaRepeats = () => [
   R("player", "Media player", 10, [{ ...E("media_player_%", "Media player %", ["media_player"]),
@@ -2722,7 +2722,7 @@ const SECTIONS = [
         { id: "alarm", label: "Alarm system", domains: ["alarm_control_panel"] },
         { id: "lock", label: "Lock", domains: ["lock"] },
         { id: "camera", label: "Camera", domains: ["camera"] },
-      ]),
+      ], true),
     ],
   },
   {
@@ -2823,6 +2823,8 @@ function sectionFields(sec) {
           repeatOf: rep.id,
           repeatLabel: rep.label,
           repeatKinds: rep.kinds,
+          repeatCloseGaps: rep.closeGaps,
+          repeatMax: rep.max,
           menuGroup: f.menuGroup || rep.menuGroup || null,
         });
       });
@@ -18571,7 +18573,16 @@ class CasoraPanel extends HTMLElement {
           if (unitLive(u) || !addable(u) || !met(u, units)) return;
           if (u.fields.every((f) => f.noAdd) || !u.fields.some(modAvail)) return;
           const rep = u.fields[0].repeatOf;
-          if (rep) { if (seenRep.has(rep)) return; seenRep.add(rep); }
+          if (rep) {
+            if (seenRep.has(rep)) return;
+            // Rows that close their gaps keep the empty one last, also in a config saved with a gap (#152).
+            const f0 = u.fields[0];
+            if (f0.repeatCloseGaps) {
+              const last = Math.max(0, ...units.filter((x) => x.fields[0].repeatOf === rep && unitLive(x)).map((x) => x.fields[0].repeatN));
+              if (f0.repeatN < last && last < f0.repeatMax) return;
+            }
+            seenRep.add(rep);
+          }
           out.add(u.id);
         });
       }
@@ -19007,6 +19018,24 @@ class CasoraPanel extends HTMLElement {
       };
 
       const unitSeen = new Set();
+      // #152: when a numbered row goes, the later ones move up with their labels.
+      const closeGaps = (repId) => {
+        const slots = new Map();
+        sectionFields(sec).filter((x) => x.repeatOf === repId).forEach((x) => {
+          if (!slots.has(x.repeatN)) slots.set(x.repeatN, []);
+          slots.get(x.repeatN).push(x);
+        });
+        const all = [...slots.keys()].sort((a, b) => a - b).map((n) => slots.get(n));
+        const kept = all.filter((fs) => fs.some(isSet)).map((fs) => fs.map((x) => room.variables[x.key]));
+        all.forEach((fs, i) => {
+          fs.forEach((x, j) => {
+            const v = kept[i] ? kept[i][j] : undefined;
+            if (room.variables[x.key] !== v) setVar(x.key, v, x);
+          });
+          this._slotKind.delete(room.path + "|" + unitOf(fs[0]));
+          if (!kept[i]) this._revealed.delete(room.path + "|" + unitOf(fs[0]));
+        });
+      };
       const addDrop = (row, f) => {
         const cell = document.createElement("button");
         cell.className = "drop";
@@ -19023,6 +19052,7 @@ class CasoraPanel extends HTMLElement {
           this._armRow(row, kindLabel(f) || f.label, () => {
             sectionFields(sec).filter((x) => unitOf(x) === u).forEach((x) => setVar(x.key, undefined, x));
             this._revealed.delete(room.path + "|" + u);
+            if (f.repeatCloseGaps) closeGaps(f.repeatOf);
             this._renderForm();
           });
         };
@@ -19056,6 +19086,11 @@ class CasoraPanel extends HTMLElement {
         row.dataset.key = f.key;
         const lab = document.createElement("label");
         lab.textContent = kindLabel(f) || f.label;
+        // Numbered by position, so a config saved with a gap still reads 1, 2, 3 (#152).
+        if (f.repeatCloseGaps && !f.labelOf && !kindLabel(f)) {
+          const nums = [...new Set(shownFields(sec).filter((x) => x.repeatOf === f.repeatOf).map((x) => x.repeatN))].sort((a, b) => a - b);
+          lab.textContent = f.label.replace(/\d+$/, String(nums.indexOf(f.repeatN) + 1));
+        }
         // Mehrere gleiche „Beschriftung“-Felder: mit dem Gerät, zu dem sie gehören.
         if (f.labelOf) {
           const dev = room.variables[f.labelOf];
