@@ -437,8 +437,14 @@ function camStatusMap(rooms) {
   }));
   return out;
 }
-const camOffline = (id, states, map) => !!(window.casoraCamOffline
-  && window.casoraCamOffline(id, states, { casora_camera_status: map || {} }));
+// Same rule as casoraCamOffline (casora-core.js), which a freshly opened Studio has not loaded.
+const camOffline = (id, states, map) => {
+  const sid = (map || {})[id];
+  const e = sid && states && states[sid];
+  if (!e) return false;
+  const s = String(e.state == null ? "" : e.state).toLowerCase();
+  return !s || s === "unavailable" || s === "unknown" || (sid.indexOf("binary_sensor.") === 0 && s === "off");
+};
 
 // Eigener Kachelname je Entität mit Rückfrage (note4 Frage 4): Der Dialog im Popup nennt dann
 // „Garage“ wie die Kachel statt des Gerätenamens. Nur feste Namen (keine [[[ … ]]]-Ausdrücke).

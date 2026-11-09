@@ -255,7 +255,8 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
         label: sp && getComputedStyle(sp).display !== 'none' ? { fs: parseFloat(getComputedStyle(sp).fontSize), fw: +getComputedStyle(sp).fontWeight, gap: sp.getBoundingClientRect().left - i.right, right: q.right - sp.getBoundingClientRect().right } : null }; };
     const on = b.querySelector('.hmn-btn.on'), off = b.querySelector('.hmn-btn:not(.on)');
     return { h: Math.round(r.height), radius: cs.borderTopLeftRadius, pad: parseFloat(cs.paddingLeft), ic: b.classList.contains('hmn-ic'), act: b.classList.contains('hmn-act'), op: cs.opacity, under: b.classList.contains('hmn-under'),
-      on: on ? btn(on) : null, off: off ? btn(off) : null };
+      on: on ? btn(on) : null, off: off ? btn(off) : null,
+      pill: (() => { const x = b.querySelector('.hmn-pill'); if (!x) return null; const c = getComputedStyle(x); return { bg: c.backgroundColor, shadow: c.boxShadow }; })() };
   });
   await check(`${tag}: Leiste unverändert (nicht 40 px, nicht 50 % rund) und nach dem Schließen wieder da`, bar && bar.h > 44 && bar.radius !== '50%' && !bar.under && +bar.op === 1, bar);
   // Richtung 1 „Weiße Pille“ (08.10.2026): Platte 60/30, Innenrand 6, Tasten 48, Radius 24 = 30 − 6; ruhende Taste
@@ -266,9 +267,11 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
   // 1.3 (Handy-Leiste B, .hmn-act): Glocke/⋯ unten in der Leiste – alle Tasten 50 breit, die aktive ohne Namen.
   const tw = bar.act ? 50 : 58;
   await check(`${tag}: ruhende Taste ${tw} breit, Sand-Kreis 36 mittig (wie die C-Zeile), dunkle Glyphe 22`,
-    near(bar.off.w, tw) && near(bar.off.icW, 36) && near(bar.off.icL, (bar.off.w - 36) / 2) && near(bar.off.icTop, 6) && bar.off.icBg === m.off.icBg && near(bar.off.glyph, 22) && bar.off.glyphColor === m.off.icColor && clear(bar.off.bg), [bar.off, m.off.icBg]);
+    near(bar.off.w, tw) && near(bar.off.icW, 36) && near(bar.off.icL, (bar.off.w - 36) / 2) && near(bar.off.icTop, 6) && (bar.pill ? clear(bar.off.icBg) : bar.off.icBg === m.off.icBg) && near(bar.off.glyph, 22) && bar.off.glyphColor === m.off.icColor && clear(bar.off.bg), [bar.off, m.off.icBg]);
   await check(`${tag}: aktive Taste weiße Pille wie der offene Raum im Blatt, Kreis in Ton mit weißer Glyphe`,
-    bar.on.bg === m.on.bg && bar.on.shadow === m.on.shadow && bar.on.icBg === m.on.icBg && /^rgb\(255, 255, 255\)/.test(bar.on.glyphColor), [bar.on, m.on.bg, m.on.icBg]);
+    // Phone bar A (08.11.2026): the pill is the segment's sliding marker in the look of the popup segments (r608), the circle on it the general tone.
+    (bar.pill ? !clear(bar.pill.bg) && !clear(bar.on.icBg) && clear(bar.on.bg)
+      : bar.on.bg === m.on.bg && bar.on.shadow === m.on.shadow && bar.on.icBg === m.on.icBg) && /^rgb\(255, 255, 255\)/.test(bar.on.glyphColor), [bar.on, bar.pill, m.on.bg, m.on.icBg]);
   if (bar.act) await check(`${tag}: aktive Taste (Leiste B) 50 breit, Kreis mittig, ohne Namen (der steht als Titel darüber)`,
     near(bar.on.w, 50) && near(bar.on.icL, 7) && near(bar.on.icTop, 6) && !bar.on.label, bar.on);
   else await check(`${tag}: aktive Taste konzentrisch (Kreis 6 px vom Rand = Radius 24 − 18), Name 15/600, 10 px nach dem Kreis, 18 px zum Rand`,

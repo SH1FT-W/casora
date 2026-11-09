@@ -72,4 +72,18 @@ const finden = fs.readFileSync(new URL('custom_components/casora/scripts/local/0
 assert.ok(/dom === 'camera' && !!\(window\.casoraCamOffline && window\.casoraCamOffline\(id, S\)\)/.test(finden), 'Sicherheits-Stufe (Farben)');
 const types = fs.readFileSync(new URL('custom_components/casora/panel/casora-panel-types.js', root), 'utf8');
 assert.ok(/key: "status_entity", label: "Status from", domains: \["camera", "binary_sensor"\]/.test(types), 'Studio-Feld „Status from“');
+// The Studio preview has its own copy of the rule: a freshly opened Studio has not loaded casora-core.js.
+const panelSrc = fs.readFileSync(new URL('custom_components/casora/panel/casora-panel.js', root), 'utf8');
+const copy = panelSrc.match(/const camOffline = (\(id, states, map\) => \{[\s\S]*?\n\});?\n/);
+assert.ok(copy, 'Studio: camOffline found');
+assert.ok(!/window\.casoraCamOffline/.test(copy[1]), 'Studio: the copy does not need casora-core.js');
+const studioOff = new Function('return ' + copy[1])();
+for (const [cam, sid, st] of [['camera.a', 'camera.b', 'idle'], ['camera.a', 'camera.b', 'unavailable'], ['camera.a', 'camera.b', 'unknown'], ['camera.a', 'camera.b', ''],
+  ['camera.a', 'binary_sensor.b', 'on'], ['camera.a', 'binary_sensor.b', 'off'], ['camera.a', 'binary_sensor.b', 'unavailable'], ['camera.a', 'sensor.b', 'off']]) {
+  const S = { [sid]: { state: st } };
+  assert.equal(studioOff(cam, S, { [cam]: sid }), off(cam, S, { casora_camera_status: { [cam]: sid } }), `Studio = dashboard: ${sid} ${st}`);
+}
+assert.equal(studioOff('camera.a', {}, { 'camera.a': 'camera.b' }), false, 'Studio: missing status entity is not offline');
+assert.equal(studioOff('camera.a', { 'camera.b': { state: 'unavailable' } }, {}), false, 'Studio: no setting, never offline');
+
 console.log('ok – Kamera „Status von“: Kachel, Badges, Popup, Sicherheits-Stufe; ohne Einstellung unverändert');
