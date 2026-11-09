@@ -40,7 +40,8 @@
       "Sets itself up",
       "Visual studio",
       "No YAML"
-    ]
+    ],
+    "nameFont": "\"Inter\", system-ui, sans-serif"
   },
   "fonts": {
     "display": "\"Inter\", system-ui, sans-serif",
