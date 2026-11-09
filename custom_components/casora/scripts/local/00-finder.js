@@ -1534,6 +1534,40 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     });
     return Object.keys(out).sort().map(function (id) { return out[id]; });
   }
+  // casora-home-next:start
+  // The line under the Home greeting (#157, variables.casora_greeting_next): next calendar event and next waste pickup.
+  window.casoraHomeNext = function (hass, vars, now) {
+    if (!vars || vars.casora_greeting_next !== true || !hass) return '';
+    var S = hass.states || {}, tr = function (x) { return window.casoraTr ? window.casoraTr(x) : x; };
+    var t = now || new Date(), day0 = new Date(t); day0.setHours(0, 0, 0, 0);
+    var word = function (d) {
+      var n = Math.round((new Date(d.getFullYear(), d.getMonth(), d.getDate()) - day0) / 86400000);
+      if (n <= 0) return tr('Heute');
+      if (n === 1) return tr('Morgen');
+      var lang = (hass.locale && hass.locale.language) || hass.language || 'de';
+      return n < 7 ? d.toLocaleDateString(lang, { weekday: 'long' }) : d.getDate() + '.' + (d.getMonth() + 1) + '.';
+    };
+    var W = null;
+    try { W = window.casoraDevice && window.casoraDevice.waste ? window.casoraDevice.waste(hass, {}) : null; } catch (e) { W = null; }
+    var best = null;
+    Object.keys(S).forEach(function (id) {
+      if (id.indexOf('calendar.') !== 0 || (W && W.calendar === id)) return;
+      var a = S[id].attributes || {};
+      if (!a.message || !a.start_time) return;
+      var d = new Date(String(a.start_time).replace(' ', 'T'));
+      if (!isNaN(d) && (!best || d < best.d)) best = { d: d, title: a.message, allDay: !!a.all_day, on: S[id].state === 'on' };
+    });
+    var parts = [];
+    if (best) {
+      var hm = best.allDay ? '' : ' ' + String(best.d.getHours()).padStart(2, '0') + ':' + String(best.d.getMinutes()).padStart(2, '0');
+      parts.push((best.on && !best.allDay ? tr('Jetzt') : word(best.d) + hm) + ' ' + best.title);
+    }
+    var bins = W && Array.isArray(W.bins) ? W.bins.filter(function (b) { return b && b.days != null && isFinite(b.days) && b.days >= 0; }).sort(function (a, b) { return a.days - b.days; }) : [];
+    if (bins.length) parts.push(word(new Date(day0.getFullYear(), day0.getMonth(), day0.getDate() + bins[0].days)) + ' ' + bins[0].label);
+    return parts.join(' · ');
+  };
+  // casora-home-next:end
+
   window.casoraNotifySources = notifySources;
 
   // ── Security: level per device/group (security colour system, 03.10.2026) ───────

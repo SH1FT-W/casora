@@ -976,6 +976,8 @@ function markPhoneManaged(cfg, showBell, showAssist, rooms) {
           if (hv.casora_greeting && Array.isArray(hv.casora_greeting_people) && hv.casora_greeting_people.length) {
             c.variables.casora_greeting_people = hv.casora_greeting_people.slice();
           } else delete c.variables.casora_greeting_people;
+          if (hv.casora_greeting && hv.casora_greeting_next === true) c.variables.casora_greeting_next = true;
+          else delete c.variables.casora_greeting_next;
         }
       }
       walk(c.cards);
@@ -2356,6 +2358,10 @@ const SECTIONS = [
       { ...LIST("casora_greeting_people", "People to name", ["person"]), always: true, homeOnly: true,
         when: (v) => v.casora_greeting === "names",
         hint: "Empty: everyone who is home. With three or more at home, just the greeting." },
+      // #157: off by default; a line under the greeting (casoraHomeNext, 00-finder.js).
+      { key: "casora_greeting_next", label: "Next event and waste collection", type: "bool", boolDefault: false, always: true, homeOnly: true,
+        when: (v) => !!v.casora_greeting,
+        hint: "Shows the next calendar event and the next waste collection in a line under the greeting." },
       { key: "__phone_name", label: "Name on phone", type: "text", always: true,
         phoneName: true, placeholder: MOBILE_FAVORITES,
         hint: "Heading of the favorites on the phone's Home page." },

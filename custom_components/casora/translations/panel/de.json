@@ -2352,6 +2352,8 @@
     "{n} tiles get the size Automatic on the phone. Save afterwards to apply it.": "{n} Kacheln bekommen am Handy die Größe Automatisch. Danach speichern, damit es gilt.",
     "Set to Automatic": "Auf Automatisch stellen",
     "Title": "Titel",
+    "Next event and waste collection": "Nächster Termin und Abfall",
+    "Shows the next calendar event and the next waste collection in a line under the greeting.": "Zeigt den nächsten Kalendertermin und die nächste Abfallabholung in einer Zeile unter der Begrüßung.",
     "Greeting by time of day": "Begrüßung nach Tageszeit",
     "Greeting with who is home": "Begrüßung mit Namen der Anwesenden",
     "Greeting the signed-in user": "Begrüßung des angemeldeten Benutzers",
