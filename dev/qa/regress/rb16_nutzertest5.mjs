@@ -37,11 +37,11 @@ await page.waitForTimeout(1200);
 const sw = await H(() => { const r = window.__panel().shadowRoot; const row = r.querySelector('#pane #band-tiles .tile.sel .row.mask');
   if (!row) return null; const f = row.closest('.adv'); if (f && !f.classList.contains('open')) f.querySelector('.advsum').click(); return true; });
 await check('Cover-Kachel bietet „Vor dem Schalten fragen“ an', !!sw);
-await page.waitForTimeout(500);
 if (sw) {
-  const at = await H(() => { const s = window.__panel().shadowRoot.querySelector('#pane .tile.sel .row.mask .switch, #pane .tile.sel .row.mask [role=switch], #pane .tile.sel .row.mask input');
-    s.scrollIntoView({ block: 'center' }); const r = s.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; });
-  await page.mouse.click(at[0], at[1]);
+  // Opening the fold animates and then smooth-scrolls it into view (_openAdv/_revealAdv). A click at coordinates
+  // measured while that runs lands on the hint below the switch. Playwright's click waits until the switch stands
+  // still and is really what the pointer hits.
+  await page.locator('#pane .tile.sel .row.mask [role=switch]').click();
   await page.waitForTimeout(600);
   const on = await H((c) => { const p = window.__panel(); const t = p._state.compact.rooms[c.i].tiles.find((x) => p._tileKey(x) === c.key); return (t.variables || {}).confirm_toggle === true; }, cov);
   await check('Schalter setzt die Rückfrage', on);
