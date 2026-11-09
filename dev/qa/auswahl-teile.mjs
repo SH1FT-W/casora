@@ -176,7 +176,8 @@ export function reach(src, parts, all = units(src), max = 40) {
     if (u.kind === 'element' || u.kind === 'global' || u.kind === 'prop') { into.add(u.name); continue; }
     if (u.kind === 'marker' || u.kind === 'iife') {
       const inner = exposed.filter((e) => e.start >= u.start && e.end <= u.end).map((e) => e.name)
-        .concat(aliases.filter((x) => x.line >= u.start && x.line <= u.end).map((x) => x.global));
+        // Only a global the module sets itself: "const UI = window._casoraUI" merely uses a global from elsewhere.
+        .concat(aliases.filter((x) => x.line >= u.start && x.line <= u.end && new RegExp('window\\.' + x.global.replace(/\$/g, '\\$') + '\\s*=(?!=)').test(lines[x.line - 1])).map((x) => x.global));
       if (!inner.length) return null;
       // A changed line right in a module's body (not inside one of its definitions) counts like a change of each of
       // them; a part only reached as "same module" is weak.

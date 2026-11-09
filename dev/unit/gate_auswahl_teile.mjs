@@ -81,4 +81,12 @@ const withComment = src.replace('    return x + 1;', '    // just a note\n    re
 assert.deepEqual(placed(withComment, [{ start: 4, end: 4 }]).parts, []);
 // a line outside every unit cannot be placed
 assert.equal(placed('var x = 1;\nfoo();\n', [{ start: 2, end: 2 }]).unplaced.length, 1);
+// A module that only uses a global from elsewhere does not expose it; one that sets it does.
+{
+  const src = ['(function () {', '  var UI = window._hub;', '  var S = window._own = {};', '  function f() { return 1; }', '  f();', '})();', ''].join('\n');
+  const all = units(src);
+  const p = placed(src, [{ start: 5, end: 5 }], all);
+  const r = reach(src, p.parts, all);
+  assert.ok(!r.has('_hub') && !(r.weak && r.weak.has('_hub')), 'a global the module only reads is not its own');
+}
 console.log('ok gate_auswahl_teile');

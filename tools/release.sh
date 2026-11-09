@@ -87,7 +87,7 @@ ok "Paket $ZIP_MSG"
 # 1) Gate (inkl. sauberem Arbeitsstand; Kalender-Versionen brauchen das volle Gate, Patch-Gate nur mit --patch)
 [ -n "$PATCH" ] && echo "! --patch: Fix-Release unter der Woche, Patch-Gate wird angenommen"
 if [ $BETA = 1 ]; then
-  MSG="$(python3 tools/qa_gate.py --version "$NEXT" --patch)" || fail "$MSG"
+  MSG="$(python3 tools/qa_gate.py --version "$NEXT" --patch --beta)" || fail "$MSG"
 else
   MSG="$(python3 tools/qa_gate.py --version "$VER" $PATCH)" || fail "$MSG"
 fi

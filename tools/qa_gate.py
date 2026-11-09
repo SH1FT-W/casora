@@ -75,6 +75,35 @@ def last_full_green() -> str:
     return best[1] if best else ""
 
 
+def _gate_of(commit: str) -> dict | None:
+    for f in gate_files() if commit else []:
+        if os.path.basename(f) == f"gate-{commit}.json":
+            return _load(f)
+    return None
+
+
+def rooted_green(commit: str, depth: int = 0) -> bool:
+    """A full green gate, or a green patch gate whose chain of bases ends in one (betas build on each other)."""
+    doc = _gate_of(commit)
+    if full_green(doc):
+        return True
+    if depth > 30 or not doc or not doc.get("ok") or doc.get("umfang") != "patch" or doc.get("quick") or doc.get("partial") or doc.get("dirty"):
+        return False
+    return rooted_green(doc.get("basis") or "", depth + 1)
+
+
+def last_rooted_green() -> str:
+    """Commit of the newest gate an ancestor of HEAD has that counts for a beta's chain (or "")."""
+    best = None
+    for f in gate_files():
+        d = _load(f)
+        if not d or not d.get("commit") or not rooted_green(d["commit"]) or not _is_ancestor(d["commit"]):
+            continue
+        if best is None or d.get("timestamp", "") > best[0]:
+            best = (d.get("timestamp", ""), d["commit"])
+    return best[1] if best else ""
+
+
 def is_calendar_version(version: str) -> bool:
     """Kalender-Version YY.M.N (26.10.31) statt alter X.Y.Z (1.6.0) – alte Hauptversionen waren < 24."""
     parts = version.split(".")
@@ -84,7 +113,7 @@ def is_calendar_version(version: str) -> bool:
     return yy >= 24 and 1 <= m <= 12 and n >= 1
 
 
-def gate_status(require_clean: bool = True, version: str | None = None, patch_ok: bool = False) -> tuple[bool, str]:
+def gate_status(require_clean: bool = True, version: str | None = None, patch_ok: bool = False, beta: bool = False) -> tuple[bool, str]:
     """(ok, Text) – Text nennt bei ok die Gate-Datei, sonst den Grund."""
     head = _git("rev-parse", "HEAD")
     if require_clean:
@@ -132,10 +161,9 @@ def gate_status(require_clean: bool = True, version: str | None = None, patch_ok
                 return False, (f"Gate für {head[:12]} ist ein Patch-Gate – ein Release {version} (X.Y.0) braucht das "
                                "volle Gate: dev/qa/gate.sh --voll")
         basis = doc.get("basis") or ""
-        bdoc = None
-        for f in gate_files() if basis else []:
-            if os.path.basename(f) == f"gate-{basis}.json" and full_green(_load(f)):
-                bdoc = _load(f)
+        bdoc = _gate_of(basis)
+        if beta and rooted_green(basis) and _is_ancestor(basis):
+            return True, f"Gate grün: {rel} ({doc.get('timestamp')}, {len(doc.get('steps', []))} Schritte{extra}, Beta auf Gate {basis[:12]})"
         if not full_green(bdoc):
             return False, f"Patch-Gate für {head[:12]}: Bezug {basis[:12] or '?'} ist kein grünes volles Gate – dev/qa/gate.sh --voll"
         if not _is_ancestor(basis):
@@ -150,7 +178,10 @@ if __name__ == "__main__":
     if "--letztes-volles" in sys.argv[1:]:   # für dev/qa/gate.sh --patch
         print(last_full_green())
         sys.exit(0)
+    if "--letztes-gruenes" in sys.argv[1:]:   # für dev/qa/gate.sh --patch --kette
+        print(last_rooted_green())
+        sys.exit(0)
     ver = sys.argv[sys.argv.index("--version") + 1] if "--version" in sys.argv[1:-1] else None
-    ok, msg = gate_status(version=ver, patch_ok="--patch" in sys.argv[1:])
+    ok, msg = gate_status(version=ver, patch_ok="--patch" in sys.argv[1:], beta="--beta" in sys.argv[1:])
     print(msg)
     sys.exit(0 if ok else 1)

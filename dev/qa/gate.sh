@@ -8,6 +8,7 @@
 #                                  grünen vollen Gate berühren (dev/qa/auswahl.mjs); Freigabe für
 #                                  Fix-Releases unter der Woche (release.sh --patch)
 #   dev/qa/gate.sh --basis C       Bezug für --patch (sonst letztes grünes volles Gate, Vorfahre von HEAD)
+#   dev/qa/gate.sh --patch --kette  für Betas: Bezug ist das letzte grüne Gate, auch ein Patch-Gate; prüft nur das seither Neue
 #   dev/qa/gate.sh --nachholen[=C] nur die im Vorlauf (bzw. Gate von C) roten und seitdem geänderten Tests;
 #                                  zusammen mit dem Vorlauf gilt das Ergebnis als vollständig
 #   dev/qa/gate.sh --seriell       Zustände nacheinander auf casora-test (:8124, dev/haus.sh)
@@ -39,7 +40,7 @@ NODE="${NODE:-/opt/homebrew/opt/node@22/bin/node}"
 PY="uv run --python 3.14"
 
 QUICK=0; ONLY=""; DRY=0; NOSWITCH=0; JOBS="${GATE_JOBS:-}"; PAR=1; HAS="${GATE_HAS:-}"
-UMFANG="${GATE_UMFANG:-auto}"; BASIS=""; NACH=0; NACHVON=""; GPFLAG=""
+KETTE=0; UMFANG="${GATE_UMFANG:-auto}"; BASIS=""; NACH=0; NACHVON=""; GPFLAG=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --seriell) PAR=0 ;;
@@ -48,6 +49,7 @@ while [ $# -gt 0 ]; do
     --patch) UMFANG=patch ;;
     --umfang) UMFANG="$2"; shift ;;
     --umfang=*) UMFANG="${1#--umfang=}" ;;
+    --kette) KETTE=1 ;;
     --basis) BASIS="$2"; shift ;;
     --basis=*) BASIS="${1#--basis=}" ;;
     --gezielt) UMFANG=patch ;;                                  # alter Name
@@ -480,6 +482,7 @@ if [ $PAR = 1 ]; then
       *) UMFANG=patch; echo "Umfang: patch (Version $VER – Patch-Release; volles Gate mit --voll)" ;; esac
   fi
   if [ "$UMFANG" = patch ]; then
+    [ -n "$BASIS" ] || { [ $KETTE = 1 ] && BASIS="$(python3 tools/qa_gate.py --letztes-gruenes)"; }
     [ -n "$BASIS" ] || BASIS="$(last_green)"
     if [ -z "$BASIS" ]; then
       echo "Kein grünes volles Gate als Vorfahre von HEAD – Patch-Gate braucht diesen Bezug. Volles Gate läuft (oder --basis <commit>)."

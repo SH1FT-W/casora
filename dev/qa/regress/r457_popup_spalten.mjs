@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: dashboards/casora/button_card_templates.json dev/qa/popup-galerie.mjs dev/qa/popup-spalten.mjs custom_components/casora/scripts/casora-core.js custom_components/casora/scripts/local/02-devices.js custom_components/casora/scripts/local/03-popups.js custom_components/casora/scripts/local/05-weich-mehr.js custom_components/casora/scripts/local/05-standard-medien.js
+// @deckt: dashboards/casora/button_card_templates.json dev/qa/popup-galerie.mjs dev/qa/popup-spalten.mjs custom_components/casora/scripts/casora-core.js#_holdUntilLaidOut,step,casora-popup custom_components/casora/scripts/local/02-devices.js custom_components/casora/scripts/local/03-popups.js custom_components/casora/scripts/local/05-weich-mehr.js custom_components/casora/scripts/local/05-standard-medien.js
 // Owner 01.11.2026: two-column popups on desktop/tablet must not leave a large empty block under the shorter column
 // (02.11.2026: one rule for all, casora-core colBalance; the popups it evens out fail here without it).
 // Builds the popup gallery, opens every popup (twice: rule B applies from the second opening, 03.11.2026) at 1440×900 and the tablet size 1180×820 and measures both columns'

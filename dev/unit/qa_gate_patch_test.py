@@ -57,4 +57,22 @@ check("Volles Gate, Kalender-Version", q.gate_status(False, "26.10.34")[0], True
 q.gate_files = lambda: [os.path.join(tmp, ".qa", f"gate-{HEAD}.json")]
 write(HEAD, "patch")
 check("Patch-Gate ohne volles Bezugs-Gate, mit --patch", q.gate_status(False, "26.10.34", patch_ok=True)[0], False)
+
+# Betas build on each other: a patch gate on a patch gate counts for a beta, as long as the chain ends in a full gate.
+MID = "c" * 40
+def chain(top_basis, root_full=True):
+    docs = {BASIS: {"commit": BASIS, "ok": True, "steps": steps, "umfang": "voll" if root_full else "patch", "basis": ""},
+            MID: {"commit": MID, "ok": True, "steps": steps, "umfang": "patch", "basis": BASIS},
+            HEAD: {"commit": HEAD, "ok": True, "steps": steps, "umfang": "patch", "basis": top_basis}}
+    files = []
+    for c, d in docs.items():
+        path = os.path.join(tmp, ".qa", f"gate-{c}.json")
+        json.dump(d, open(path, "w", encoding="utf-8"))
+        files.append(path)
+    q.gate_files = lambda: files
+chain(MID)
+check("Kette: Beta auf Beta auf vollem Gate", q.gate_status(False, "26.10.34", patch_ok=True, beta=True)[0], True)
+check("Kette: stabiles Fix-Release braucht das volle Gate als Bezug", q.gate_status(False, "26.10.34", patch_ok=True)[0], False)
+chain(MID, root_full=False)
+check("Kette ohne volles Gate am Anfang", q.gate_status(False, "26.10.34", patch_ok=True, beta=True)[0], False)
 sys.exit(1 if fails else 0)

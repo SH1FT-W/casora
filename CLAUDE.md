@@ -40,7 +40,7 @@ Adressen, Zugangsdaten) in Code, Tests, Commits oder PR-Texten.
   im Monat; jedes Release ist die nächste Nummer (kein Patch/Minor mehr). Nächste Nummer: `tools/next-version`,
   `tools/release.sh` schlägt sie vor und prüft sie. Rhythmus (Maintainer, 09.11.2026): **stabiles Release freitags** mit
   vollem Gate (`dev/qa/gate.sh --voll`), auch bei großen Umbauten (viele Module, Vorlagen-Umbau, Migration, gespeicherte Daten);
-  **unter der Woche nur Betas** mit Patch-Gate (`dev/qa/gate.sh --patch`); ein stabiles Release außer der Reihe nur als
+  **unter der Woche nur Betas** mit Patch-Gate (`dev/qa/gate.sh --patch --kette`, prüft nur das seit dem letzten grünen Gate Neue); ein stabiles Release außer der Reihe nur als
   Hotfix (`tools/release.sh --patch`). Das Patch-Gate wählt in großen
   Skripten nach geänderten Teilen (`dev/qa/auswahl-teile.mjs`); neue Tests mit `// @deckt: <datei>#<global/funktion>,…` statt nur
   der ganzen Datei markieren, sonst laufen sie nur, wenn sie einen Namen der Datei nennen oder die Datei nicht einzuordnen ist.
