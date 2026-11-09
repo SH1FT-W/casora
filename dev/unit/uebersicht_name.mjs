@@ -55,6 +55,7 @@ const code = [
   grab(/^function markPhoneManaged\(/m),
   'const roomIcon = () => "mdi:home-variant";',
   grab(/^function roomVisibility\(/m),
+  'const MOTION_KEYS = ["motion_entity"];',
   grab(/^function retargetRoutes\(/m),
   'return { roomLabel, setHomeName, markPhoneManaged, retargetRoutes, markAutoHome };',
 ].join('\n');

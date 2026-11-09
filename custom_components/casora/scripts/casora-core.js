@@ -17637,6 +17637,14 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     });
   }
 
+  // A room's motion sensors (#150), the first under its old key: on while any is on, entity is the one to show.
+  window.casoraMotionOf = function (o, states) {
+    var ids = ['motion_entity', 'motion_entity_2', 'motion_entity_3', 'motion_entity_4'].map(function (k) { return o && o[k]; }).filter(Boolean);
+    var st = function (id) { return ((states || {})[id] || {}).state; };
+    var on = ids.filter(function (id) { return st(id) === 'on'; })[0];
+    return { ids: ids, entity: on || ids[0] || null, state: on ? 'on' : ids.some(function (id) { return st(id) === 'off'; }) ? 'off' : 'unavailable' };
+  };
+
   // desk: Variablen des Desktop-Raums (oder null), chip: room_chips[<raum>], name: Raumname.
   function merge(desk, chip, name) {
     var o = Object.assign({}, desk || legacy(chip));

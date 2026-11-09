@@ -1452,7 +1452,7 @@ const CHIPS_SECURITY_KEYS = ["room_name", "security_locks", "security_locks_labe
 // „Name auf dem Badge“ (06.10.2026): eigene Badge-Namen, auch für die Raumseite am Handy.
 const BADGE_TITLE_KEYS = ["climate_title", "lights_title", "people_title", "media_title", "security_title", "energy_title"];
 const CHIPS_ROOM_KEYS = ["temp_entity", "humidity_entity", "entity_quality",
-  "aqi_room_name", "aqi_sensors", "lights_entity"].concat(CHIPS_SECURITY_KEYS, BADGE_TITLE_KEYS);
+  "aqi_room_name", "aqi_sensors", "lights_entity"].concat(CHIPS_SECURITY_KEYS, BADGE_TITLE_KEYS, ["motion_entity", "motion_entity_2", "motion_entity_3", "motion_entity_4"]);
 const chipsHasSecurity = (c) => !!c && (!!(c.security_locks || []).length
   || [1, 2, 3, 4, 5, 6, 7, 8].some((n) => !!c["security_entity_" + n]));
 
@@ -1512,6 +1512,7 @@ function syncRoomChips(pair) {
     const next = { ...(chips[key] || {}) };
     CHIPS_ROOM_KEYS.forEach((k) => { delete next[k]; });
     const set = (k, v) => { if (!emptyVal(v)) next[k] = clone(v); };
+    ["motion_entity", "motion_entity_2", "motion_entity_3", "motion_entity_4"].forEach((k) => set(k, V[k]));
     if (V.show_climate !== false) {
       Object.keys(CHIPS_FROM_ROOM).forEach((k) => set(k, V[CHIPS_FROM_ROOM[k]]));
       set("aqi_sensors", CHIPS_AQI_FROM_ROOM.map((k) => V[k]).filter(Boolean));
@@ -2303,6 +2304,7 @@ const GROUPS = [
     blurb: "The cards along the bottom of the room." },
 ];
 
+const MOTION_KEYS = ["motion_entity", "motion_entity_2", "motion_entity_3", "motion_entity_4"];
 const R = (id, label, max, fields, menuGroup, kinds, closeGaps) => ({ id, label, max, fields, menuGroup: menuGroup || null, kinds: kinds || null, closeGaps: !!closeGaps });
 
 const mediaRepeats = () => [
@@ -2357,8 +2359,12 @@ const SECTIONS = [
         phoneName: true, placeholder: MOBILE_FAVORITES,
         hint: "Heading of the favorites on the phone's Home page." },
       { key: "image", label: "Background image", type: "image", always: true },
-      { ...E("motion_entity", "Motion sensor", ["binary_sensor"]), classes: ["motion", "occupancy", "presence"],
-        hint: "Pulses a dot beside this room in the navigation, and shows a motion icon on the phone." },
+    ],
+    // #150: several sensors count as one, on while any is on; the first keeps its old key.
+    repeats: [
+      R("motion", "Motion sensor", MOTION_KEYS.length, [{ ...E("motion_entity_%", "Motion sensor %", ["binary_sensor"]), key1: "motion_entity",
+        classes: ["motion", "occupancy", "presence"], hintOnce: true,
+        hint: "Pulses a dot beside this room in the navigation, and shows a motion icon on the phone." }], null, null, true),
     ],
   },
   {
@@ -4214,13 +4220,17 @@ function retargetRoutes(root, urlPath, rooms, extras) {
           // Casora ihn angelegt hat und er unverändert ist; ein eigener Name steht ohne Übersetzung.
           if (isDefaultHome(r, rooms)) route.auto = AUTO_HOME;
           else if ((r.variables || {}).name_literal || (isHomeRoom(r, rooms) && isDefaultHomeName(r.name))) route.literal = true;
-          const m = (r.variables || {}).motion_entity;
           // The global helper is a mute switch: absent means nothing to mute.
           // Only a plain entity ID goes into the expression (an imported file or a hand edit could hold anything).
-          if (typeof m === "string" && /^[a-z_]+\.[a-z0-9_]+$/.test(m)) route.badge = { show: "[[[ const b = states['input_boolean.casora_motion_badges'];"
+          const motion = MOTION_KEYS.map((k) => (r.variables || {})[k]).filter((x) => typeof x === "string" && /^[a-z_]+\.[a-z0-9_]+$/.test(x));
+          const m = motion[0];
+          if (motion.length === 1) route.badge = { show: "[[[ const b = states['input_boolean.casora_motion_badges'];"
             + " if (b && b.state !== 'on') return false;"
             + " const s = states['" + m + "'];"
             + " return !!s && s.state === 'on'; ]]]" };
+          else if (motion.length) route.badge = { show: "[[[ const b = states['input_boolean.casora_motion_badges'];"
+            + " if (b && b.state !== 'on') return false;"
+            + " return [" + motion.map((x) => "'" + x + "'").join(",") + "].some((e) => states[e] && states[e].state === 'on'); ]]]" };
           return route;
         })
         .concat(clone(keep));
@@ -25935,7 +25945,8 @@ class CasoraPanel extends HTMLElement {
       });
       // Bewegung (nur Handy, room_chips[<raum>].motion_entity) steht hinter den Badges.
       if (e && e.motion_entity) {
-        const ms = (this._hass.states[e.motion_entity] || {}).state;
+        const mStates = MOTION_KEYS.map((k) => e[k]).filter(Boolean).map((id) => (this._hass.states[id] || {}).state);
+        const ms = mStates.includes("on") ? "on" : mStates.includes("off") ? "off" : undefined;
         crow.appendChild(this._paintChip({ icon: "motion", label: "Motion", glyphHeight: "70%", color: "#fff", bare: true,
           text: ms === "on" ? "Detected" : ms === "off" ? "Not Detected" : "Unavailable" }));
       }

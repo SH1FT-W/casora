@@ -152,14 +152,24 @@ KEEP_TOP = ("title", "views", "kiosk_mode")
 SCENE_BADGE_EXPR = ("[[[ const ids = window.casoraNavScenes ? window.casoraNavScenes(hass, variables.scene_exclude) : [];"
                     " const o = variables.scene_order || []; const at = (x) => { const i = o.indexOf(x); return i < 0 ? 999 : i; };"
                     " return ids.slice().sort((a, b) => at(a) - at(b)); ]]]")
-_MOTION_HEAD = "[[[ const b = states['input_boolean.casora_motion_badges']; if (b && b.state !== 'on') return false; const s = states['"
+_MOTION_GUARD = "[[[ const b = states['input_boolean.casora_motion_badges']; if (b && b.state !== 'on') return false;"
+_MOTION_HEAD = _MOTION_GUARD + " const s = states['"
 _MOTION_TAIL = "']; return !!s && s.state === 'on'; ]]]"
 MOTION_BADGE = re.compile("^" + re.escape(_MOTION_HEAD) + r"([a-z_]+\.[a-z0-9_]+)" + re.escape(_MOTION_TAIL) + "$")
+# Several sensors in one room: on while any of them is on.
+_MOTION_MANY_HEAD = _MOTION_GUARD + " return ["
+_MOTION_MANY_TAIL = "].some((e) => states[e] && states[e].state === 'on'); ]]]"
+_MOTION_ID = r"'[a-z_]+\.[a-z0-9_]+'"
+MOTION_BADGE_MANY = re.compile(
+    "^" + re.escape(_MOTION_MANY_HEAD) + "(" + _MOTION_ID + "(?:," + _MOTION_ID + ")+)" + re.escape(_MOTION_MANY_TAIL) + "$"
+)
 
 
-def motion_badge(entity_id: str) -> str:
-    """The nav badge expression the Studio writes for a room with a motion sensor."""
-    return _MOTION_HEAD + entity_id + _MOTION_TAIL
+def motion_badge(entity_id: str | list[str]) -> str:
+    """The nav badge expression the Studio writes for a room with one motion sensor or several."""
+    if isinstance(entity_id, str):
+        return _MOTION_HEAD + entity_id + _MOTION_TAIL
+    return _MOTION_MANY_HEAD + ",".join(f"'{e}'" for e in entity_id) + _MOTION_MANY_TAIL
 
 
 # button-card draws name, label, state, custom_fields and tooltip as HTML (lit unsafeHTML): a tag in a file's
@@ -177,7 +187,7 @@ def casora_code(value: str, key: Any, place: str) -> str | None:
 
     place: "room_vars" (variables of a casora_room card) or "badge" (a nav route's badge); elsewhere None.
     scene_entities: the home room's scene badge (older Studios wrote other texts; all mean "the scenes of the
-    navigation"). show: a route's motion badge, only in the exact form with a plain entity ID.
+    navigation"). show: a route's motion badge, only in the exact forms with plain entity IDs.
     """
     if key == "scene_entities" and place == "room_vars":
         return SCENE_BADGE_EXPR
@@ -185,6 +195,11 @@ def casora_code(value: str, key: Any, place: str) -> str | None:
         m = MOTION_BADGE.match(value)
         if m and ENTITY_ID.match(m.group(1)):
             return motion_badge(m.group(1))
+        many = MOTION_BADGE_MANY.match(value)
+        if many:
+            ids = [x.strip("'") for x in many.group(1).split(",")]
+            if all(ENTITY_ID.match(x) for x in ids):
+                return motion_badge(ids)
     return None
 
 

