@@ -38,9 +38,10 @@ Adressen, Zugangsdaten) in Code, Tests, Commits oder PR-Texten.
 - Kalender-Versionen **YY.M.N** (z. B. 26.10.31), Tag/Titel „vYY.M.N“ (Casora bleibt vorerst bei „v“, anders als die
   übrigen Repos: bisher veröffentlichte Casora-Versionen erkennen nur v-Tags, siehe `tools/release.sh`). N = laufende Nummer des Releases
   im Monat; jedes Release ist die nächste Nummer (kein Patch/Minor mehr). Nächste Nummer: `tools/next-version`,
-  `tools/release.sh` schlägt sie vor und prüft sie. Zwei Gate-Stufen (Maintainer, 02.11.2026): **Fix-Releases unter der
-  Woche** mit Patch-Gate (`dev/qa/gate.sh --patch` + `tools/release.sh --patch`); **volles Gate** (`dev/qa/gate.sh --voll`)
-  freitags und bei großen Umbauten (viele Module, Vorlagen-Umbau, Migration, gespeicherte Daten). Das Patch-Gate wählt in großen
+  `tools/release.sh` schlägt sie vor und prüft sie. Rhythmus (Maintainer, 09.11.2026): **stabiles Release freitags** mit
+  vollem Gate (`dev/qa/gate.sh --voll`), auch bei großen Umbauten (viele Module, Vorlagen-Umbau, Migration, gespeicherte Daten);
+  **unter der Woche nur Betas** mit Patch-Gate (`dev/qa/gate.sh --patch`); ein stabiles Release außer der Reihe nur als
+  Hotfix (`tools/release.sh --patch`). Das Patch-Gate wählt in großen
   Skripten nach geänderten Teilen (`dev/qa/auswahl-teile.mjs`); neue Tests mit `// @deckt: <datei>#<global/funktion>,…` statt nur
   der ganzen Datei markieren, sonst laufen sie nur, wenn sie einen Namen der Datei nennen oder die Datei nicht einzuordnen ist.
 - Release-Kandidat einfrieren: Sind Version/CHANGELOG committet, kommt nichts mehr dazu; Weiteres ins nächste Release.
@@ -49,7 +50,9 @@ Adressen, Zugangsdaten) in Code, Tests, Commits oder PR-Texten.
   casora-test danach selbst.
 - Betas für Tester (Fix auf Verdacht, Gerät nicht nachstellbar): `tools/release.sh --beta --publish` – nächste Nummer mit
   `bK` (26.10.58b1), Vorabversion, Patch-Gate reicht, nur `.qa/release-notes-<version>.md` (englisch) nötig, manifest auf die
-  Beta-Nummer. Betas zählen nicht als Release-Nummer; das stabile Release danach bündelt und bekommt das volle Gate.
+  Beta-Nummer. Betas zählen nicht als Release-Nummer; das stabile Release danach bündelt und bekommt das volle Gate. Nach jeder Beta die enthaltenen
+  Issues auf `in-beta` setzen, in der Sprache des Melders kommentieren (Link, Bitte um Feedback, Wiederöffnen erwünscht, Hinweis aufs
+  Freitag-Release) und schließen. Während ein Gate läuft, nichts committen: Es prüft genau einen Commit.
 
 ## Nicht anfassen
 - Version (`manifest.json`), `CHANGELOG*.md`, „Neu“-Popup (`casora-panel-welcome.js`, WHATS_NEW),

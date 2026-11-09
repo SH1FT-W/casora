@@ -137,3 +137,15 @@ Vor einem Release zusätzlich:
 
 In Prod nie selbst neu starten oder Dateien kopieren ohne Absprache; fertige Teile einspielen und sagen,
 was angeschaut werden soll. Beim Testen ersetzt `CASORA_LOCAL=1` den Neustart für Skripte und Studio.
+
+## Stolperfallen
+
+Jede hat schon einen Fehler oder einen Gate-Lauf gekostet.
+
+1. Im frisch geöffneten Studio ist `casora-core.js` nicht geladen. Was die Studio-Vorschau braucht, darf nicht nur dort liegen.
+2. Das Handy-Dashboard hat keine `casora_room`-Karte. Was nur aus deren Variablen gelesen wird, fehlt am Handy (`casora/partner_info` holt es vom Desktop-Zwilling).
+3. Bedienelemente im Popup brauchen `PS.onTap`, am Handy kommt in button-card kein click.
+4. Unit-Tests schneiden Funktionen und Abschnitte per Text aus der Datei. Neue Konstanten und geänderte Kommentare brechen sie; vorher `git grep` in `dev/`.
+5. Vor dem Commit den Unit-Lauf getrennt prüfen, nicht mit dem Commit in einen Befehl hängen.
+6. Einem Melder keinen Workaround nennen, der nicht ausprobiert ist.
+7. Temporäre Testskripte nicht nach `dev/qa/regress/` legen, solange ein Gate läuft.
