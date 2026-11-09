@@ -15889,27 +15889,12 @@ class CasoraPanel extends HTMLElement {
     }));
   }
 
-  // A real dashboard, live, as a picture: an iframe scaled into box. HA starts it without
-  // its sidebar (dockedSidebar is read once at start); the viewer's setting is put back at once.
+  // A real dashboard, live, as a picture: an iframe scaled into box. Only the frame's own HA drops its sidebar
+  // (_updateHass, which unlike the dock event stores nothing); the viewer's setting is never touched (#154).
   _livePreview(box, url, w, h, top) {
     const warm = this._warm;
     if (warm && warm.url === url && warm.w === w && warm.h === h && !top && warm.wrap.isConnected) return this._warmShow(box);
     top = top || 0;
-    // Mehrere Vorschauen gleichzeitig (Desktop + Handy): nur die erste merkt sich den echten
-    // Wert, erst die letzte stellt ihn zurück – sonst bliebe „always_hidden“ stehen.
-    if (!this._dockHold) {
-      try { this._dockPrev = localStorage.getItem("dockedSidebar"); } catch (e) { this._dockPrev = undefined; }
-    }
-    this._dockHold = (this._dockHold || 0) + 1;
-    try { localStorage.setItem("dockedSidebar", JSON.stringify("always_hidden")); } catch (e) { /* nichts */ }
-    let restored = false;
-    const restore = () => {
-      if (restored) return; restored = true;
-      if (--this._dockHold > 0) return;
-      const prev = this._dockPrev;
-      try { if (prev === null) localStorage.removeItem("dockedSidebar"); else if (prev !== undefined) localStorage.setItem("dockedSidebar", prev); } catch (e) { /* nichts */ }
-    };
-    setTimeout(restore, 20000);
     const f = document.createElement("iframe");
     f.className = "dn-frame"; f.src = url; f.setAttribute("tabindex", "-1"); f.setAttribute("aria-hidden", "true");
     // top = Höhe der Notch: der Rahmen reicht bis ganz oben; im Rahmen wird der sichere Bereich
@@ -15927,8 +15912,8 @@ class CasoraPanel extends HTMLElement {
       const tick = () => {
         try {
           const ha = f.contentDocument.querySelector("home-assistant");
-          if (!(ha && ha.hass)) { if (Date.now() - t0 < 15000) setTimeout(tick, 200); else { restore(); box.classList.add("ready"); } return; }
-          restore();
+          if (!(ha && ha.hass)) { if (Date.now() - t0 < 15000) setTimeout(tick, 200); else box.classList.add("ready"); return; }
+          if (typeof ha._updateHass === "function") ha._updateHass({ dockedSidebar: "always_hidden" });
           setTimeout(() => box.classList.add("ready"), 1500);
           // T11 (test 2): right after creating, a badge whose card script was not there yet stayed HA's red
           // "Configuration error" in the preview (the dashboard itself was fine) – look once more and reload the frame once.
@@ -15941,7 +15926,7 @@ class CasoraPanel extends HTMLElement {
             box.classList.remove("ready");
             try { f.contentWindow.location.reload(); } catch (e) { f.src = url; }
           }, ms));
-        } catch (e) { restore(); box.classList.add("ready"); }
+        } catch (e) { box.classList.add("ready"); }
       };
       tick();
     };

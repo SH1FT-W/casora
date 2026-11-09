@@ -258,6 +258,8 @@ WS-Befehl ist zusätzlich `require_admin`). Tests: `dev/unit/update_prompt.mjs` 
 Attrappe), `dev/unit/update_prompt_test.py` (Antwort des WS-Befehls), `dev/qa/regress/r454_update_hinweis.mjs`
 (echtes HA: Benutzerdaten, Dashboard-Erkennung, Studio-Schalter); Neustart-Code 3 und HACS selbst nicht im Test.
 
+Live-Vorschau im Studio (`casora-panel.js` `_livePreview`, Issue 154): im Rahmen derselben Herkunft hat `home-assistant` die Methode `_updateHass`, und `_updateHass({ dockedSidebar })` blendet die Seitenleiste nur dort aus, ohne etwas in `localStorage` zu schreiben. Fehlt die Methode, zeigt die Vorschau die Seitenleiste. Test: `dev/qa/regress/r612_seitenleiste_bleibt.mjs`.
+
 Anzeige-Diagnose auf dem Dashboard (`scripts/local/41-display-diag.js`, Issue 123): liest nur die Seite. Annahmen:
 HAs Kopfzeile ist `home-assistant` → `home-assistant-main` → `partial-panel-resolver ha-panel-lovelace` → `hui-root`
 → `.header` (Höhe 0/ausgeblendet = „hidden“), die Seitenleiste `ha-sidebar` im Schatten von `home-assistant-main`
