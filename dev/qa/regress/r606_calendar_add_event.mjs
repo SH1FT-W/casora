@@ -21,6 +21,8 @@ for (const [tag, o] of [['Desktop', { width: 1280, height: 860, dark: false }], 
     h.callService = (d, s, data, target) => { window.__calls.push({ d, s, data, target }); return window.__fail ? Promise.reject(new Error('no')) : Promise.resolve(); };`);
   const offered = await E(`return window._casoraCalendar.html('day', window._casoraCalendar._vars);`);
   await check(tag + ': the day section offers Add event', /data-hcal="add:/.test(offered) && /Termin hinzufügen|Add event/.test(offered));
+  const dayHtml = offered.slice(offered.lastIndexOf('</style>'));
+  await check(tag + ': the button comes before the day heading (#146)', dayHtml.indexOf('data-hcal="add:') >= 0 && dayHtml.indexOf('data-hcal="add:') < dayHtml.search(/Heute|Today|, \d/), dayHtml.slice(0, 300));
   const none = await E(`return window._casoraCalendar.html('day', { calendars: [{ entity: 'calendar.qa_ro', name: 'Read only', color: '#888' }] });`);
   await check(tag + ': a read-only calendar gets no button', !/data-hcal="add:/.test(none));
 

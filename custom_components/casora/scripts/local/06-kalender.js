@@ -231,7 +231,7 @@
       + '.hcal-tt{font-size:16px;color:' + T.ink + ';line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
       + '.hcal-ts{font-size:13px;color:' + T.ink3 + ';margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
       + '.hcal-e{font-size:15px;color:' + T.ink3 + ';padding:6px 0 2px;}'
-      + '.hcal-add{all:unset;box-sizing:border-box;width:100%;min-height:48px;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;pointer-events:auto;'
+      + '.hcal-add{all:unset;box-sizing:border-box;width:100%;min-height:48px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;pointer-events:auto;'
       + 'border-radius:999px;font-size:15px;font-weight:600;background:var(--casora-popup-row-fill,rgba(127,127,127,.14));color:inherit;}'
       + '.hcal-add ha-icon{--mdc-icon-size:20px;width:20px;height:20px;flex:none;margin:0 !important;pointer-events:none;}.hcal-add span{flex:none;width:auto;pointer-events:none;}'
       + '.hcal-add:focus-visible{outline:2px solid var(--casora-popup-ui-action,var(--casora-accent,#276B64));outline-offset:2px;}'
@@ -510,7 +510,7 @@
       var haNow = document.querySelector('home-assistant');
       var addHtml = haNow && haNow.hass && K.writable(variables, haNow.hass.states).length
         ? '<button type="button" class="hcal-add" data-hcal="add:' + esc(ymd(sel)) + '"><ha-icon icon="mdi:calendar-plus"></ha-icon><span>Termin hinzufügen</span></button>' : '';
-      return CSS() + (SOFT() ? '<div class="hcal hs">' + sHead(esc(t)) : '<div class="hcal">' + head(esc(t))) + body + addHtml + '</div>';
+      return CSS() + (SOFT() ? '<div class="hcal hs">' + addHtml + sHead(esc(t)) : '<div class="hcal">' + addHtml + head(esc(t))) + body + '</div>';
     }
     if (k === 'week') {
       var w0 = weekStart(today), wout = '', wseen = [];
