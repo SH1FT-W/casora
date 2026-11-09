@@ -1566,6 +1566,23 @@
       this._cardEls.push(el);
     }
 
+    // A pasted card is taller than one phone row. Span enough fixed rows for its lines.
+    _fitGrowCard(grid, card) {
+      if (!card || !card.isConnected || card.dataset.casoraGrow !== '1') return;
+      const row = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--casora-tile-row-h-current')) || 66;
+      const gap = grid ? (parseFloat(getComputedStyle(grid).rowGap) || 8) : 8;
+      if (card.style.gridRow !== 'span 16') {
+        card.style.alignSelf = 'start';
+        card.style.gridRow = 'span 16';
+        requestAnimationFrame(() => this._fitGrowCard(grid, card));
+        return;
+      }
+      const h = Math.ceil(card.getBoundingClientRect().height);
+      if (h < 40) return;
+      const span = Math.min(16, Math.max(2, Math.ceil((h + 2) / (row + gap))));
+      card.style.gridRow = 'span ' + span;
+    }
+
     _appendEntityGrid(cards, parent, animIndex) {
       const wrap = document.createElement('div');
       wrap.style.cssText = 'display:block;width:100%;box-sizing:border-box;opacity:0;margin-bottom:8px;touch-action:pan-y;';
@@ -1583,7 +1600,8 @@
           // Handy-Kachelabstand wie im Zuhause-Raster (smart-row): der Look darf ihn setzen.
           '--casora-entity-grid-gap:var(--casora-tile-row-gap-mobile,8px);' +
           'grid-auto-flow:row dense;align-items:stretch;}' +
-          '.casora-entity-grid > [data-casora-size="large"]{grid-row:span 2;}}' +
+          '.casora-entity-grid > [data-casora-size="large"]{grid-row:span 2;}' +
+          '.casora-entity-grid > [data-casora-grow="1"]{grid-column:1 / -1;width:100%;height:auto !important;align-self:start;overflow:visible;}}' +
           // Phone tiles never span the full width, also when a group has a single tile (owner decision
           // 01.11.2026 – DH-24 let the only tile of a group fill the row; reverted).
           '@media (max-height:500px) and (orientation:landscape), (max-height:600px) and (orientation:landscape) and (hover: hover){' +
@@ -1620,8 +1638,17 @@
         const autoCfg = cardCfg?.type === 'conditional' && cardCfg.card ? cardCfg.card : cardCfg;
         if (/^\/[^/]*[-_]mobile(\/|$)/i.test(window.location.pathname)
           && String(autoCfg?.variables?.size || '').toLowerCase() === 'auto') card._casoraAutoCfg = autoCfg;
+        const growTpl = autoCfg && autoCfg.template;
+        const growList = Array.isArray(growTpl) ? growTpl : (growTpl ? [growTpl] : []);
+        if (growList.includes('casora_custom')) card.dataset.casoraGrow = '1';
         grid.appendChild(card);
         this._cardEls.push(card);
+        if (card.dataset.casoraGrow === '1') {
+          const fit = () => this._fitGrowCard(grid, card);
+          requestAnimationFrame(fit);
+          setTimeout(fit, 400);
+          setTimeout(fit, 1200);
+        }
       }
 
       wrap._casoraGrid = grid;

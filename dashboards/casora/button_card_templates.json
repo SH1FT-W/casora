@@ -3435,16 +3435,13 @@
             "width": "100%"
           },
           {
-            "height": "100%"
+            "height": "auto"
           },
           {
             "min-width": 0
           },
           {
-            "min-height": 0
-          },
-          {
-            "overflow": "hidden"
+            "overflow": "visible"
           },
           {
             "border-radius": "inherit"
@@ -3474,7 +3471,7 @@
           "grid-template-columns": "1fr"
         },
         {
-          "grid-template-rows": "1fr"
+          "grid-template-rows": "auto"
         },
         {
           "grid-template-areas": "\"card\""
@@ -3510,9 +3507,19 @@
         },
         {
           "border": "none"
+        },
+        {
+          "height": "auto"
+        },
+        {
+          "min-height": "var(--casora-entity-height-current, 200px)"
+        },
+        {
+          "overflow": "visible"
         }
       ]
     },
+    "extra_styles": ":host, ha-card {\n  height: auto !important;\n  min-height: var(--casora-entity-height-current, 200px);\n  overflow: visible !important;\n}\n#container {\n  height: auto !important;\n  grid-template-rows: auto !important;\n}\n.custom-field, #card {\n  height: auto !important;\n  overflow: visible !important;\n}\n",
     "tap_action": {
       "action": "none"
     },
@@ -4431,7 +4438,7 @@
       "toggle_service": null,
       "toggle_service_data": null
     },
-    "name": "[[[\n  const esc = window.casoraEsc || ((t) => String(t ?? '').replace(/[&<>\"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', \"'\": '&#39;' }[c])));\n  /* Wie button-cards eigener Standard (Anzeigename, sonst Objekt-ID). Ohne Entität: Ersatzname der\n     Vorlage (variables.casora_default_name), nur wenn das Design --casora-tile-fallback-name: 1 setzt\n     (Weich, Fix-Runde 1 A-15) – sonst wie bisher ohne Namen. */\n  if (entity) {\n    const a = entity.attributes || {};\n    return esc(a.friendly_name ? a.friendly_name : entity.entity_id.substr(entity.entity_id.indexOf('.') + 1));\n  }\n  let on = false;\n  try { on = getComputedStyle(document.documentElement).getPropertyValue('--casora-tile-fallback-name').trim() === '1'; } catch (e) {}\n  return on ? esc(variables.casora_default_name || '') : '';\n]]]\n"
+    "name": "[[[\n  const esc = window.casoraEsc || ((t) => String(t ?? '').replace(/[&<>\"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', \"'\": '&#39;' }[c])));\n  /* Wie button-cards eigener Standard (Anzeigename, sonst Objekt-ID). Ohne Entität: Ersatzname der\n     Vorlage (variables.casora_default_name), nur wenn das Design --casora-tile-fallback-name: 1 setzt\n     (Weich, Fix-Runde 1 A-15) – sonst wie bisher ohne Namen. */\n  if (entity) {\n    const a = entity.attributes || {};\n    const own = String(variables.display_name || '').trim() || (window.casoraDisplayName && window.casoraDisplayName(entity));\n    if (own) return esc(own);\n    return esc(a.friendly_name ? a.friendly_name : entity.entity_id.substr(entity.entity_id.indexOf('.') + 1));\n  }\n  let on = false;\n  try { on = getComputedStyle(document.documentElement).getPropertyValue('--casora-tile-fallback-name').trim() === '1'; } catch (e) {}\n  return on ? esc(variables.casora_default_name || '') : '';\n]]]\n"
   },
   "casora_entity_actions": {
     "custom_fields": {

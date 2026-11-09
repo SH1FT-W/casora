@@ -5056,6 +5056,19 @@ const TILE_TYPES = [
     ] },
 ];
 
+// Day history behind the glass, and extra readings on the tile (44-tile-glass.js).
+// Off until a tile asks. The same two fields on every tile kind.
+TILE_TYPES.forEach((t) => {
+  if (!Array.isArray(t.fields)) return;
+  t.fields.push(
+    { key: "history_bg", label: "Day history in the background", type: "bool", advanced: true, tileLevel: true,
+      hint: "A faint graph of the last 24 hours, behind the glass. A switch shows when it was on." },
+    { ...LIST("tile_info", "Extra on the tile", ["sensor", "binary_sensor", "input_number", "input_boolean"]),
+      advanced: true, tileLevel: true,
+      hint: "Small readings on the tile, under the switch. Empty shows nothing extra." },
+  );
+});
+
 const CUSTOM_TILE = { id: "__custom", label: "Custom card\u2026" };
 
 // A pasted card has no template, so none of its own keys are Casora's to edit.
@@ -29051,6 +29064,59 @@ class CasoraPanel extends HTMLElement {
       }
     } else {
       addRow("Name", nameIn);
+    }
+
+    // A name only Casora shows. Home Assistant keeps the entity and device names.
+    if (!isCustom && tile.entity && this._hass) {
+      const entId = tile.entity;
+      const reg = this._hass.entities && this._hass.entities[entId];
+      const devId = reg && reg.device_id;
+      const dev = devId && this._hass.devices && this._hass.devices[devId];
+      const entIn = document.createElement("input");
+      const devIn = document.createElement("input");
+      entIn.placeholder = friendlyOf(entId) || "Same as Home Assistant";
+      entIn.setAttribute("data-no-i18n", "");
+      devIn.placeholder = (dev && (dev.name_by_user || dev.name)) || "Same as Home Assistant";
+      devIn.setAttribute("data-no-i18n", "");
+      const paintNames = (names) => {
+        entIn.value = (names && names.entities && names.entities[entId]) || (tile.variables && tile.variables.display_name) || "";
+        if (devId) devIn.value = (names && names.devices && names.devices[devId]) || "";
+      };
+      this._hass.callWS({ type: "casora/settings/get" }).then((r) => {
+        if (entIn.isConnected) paintNames((r && r.settings && r.settings.names) || {});
+      }).catch(() => {});
+      const saveName = async (kind, id, input) => {
+        const value = input.value.trim();
+        const r = await this._hass.callWS({ type: "casora/settings/get" });
+        const cur = (r && r.settings) || {};
+        const names = {
+          entities: { ...((cur.names && cur.names.entities) || {}) },
+          devices: { ...((cur.names && cur.names.devices) || {}) },
+        };
+        const bucket = kind === "device" ? names.devices : names.entities;
+        if (value) bucket[id] = value;
+        else delete bucket[id];
+        const next = { ...cur };
+        if (Object.keys(names.entities).length || Object.keys(names.devices).length) next.names = names;
+        else delete next.names;
+        const saved = await this._hass.callWS({ type: "casora/settings/set", settings: next });
+        window.CASORA_SETTINGS = (saved && saved.settings) || next;
+        if (kind === "entity") {
+          if (value) tile.variables = { ...(tile.variables || {}), display_name: value };
+          else if (tile.variables) {
+            delete tile.variables.display_name;
+            if (!Object.keys(tile.variables).length) delete tile.variables;
+          }
+          this._markDirty();
+          this._syncPreview();
+        }
+      };
+      entIn.onchange = () => { saveName("entity", entId, entIn).catch(() => {}); };
+      addRow("Name in Casora", entIn);
+      if (devId) {
+        devIn.onchange = () => { saveName("device", devId, devIn).catch(() => {}); };
+        addRow("Device name in Casora", devIn);
+      }
     }
 
     // Only a template that reads variables.icon can use one of Casora's icons.

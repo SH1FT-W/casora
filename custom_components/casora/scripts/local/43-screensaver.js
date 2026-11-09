@@ -191,9 +191,11 @@
     style.textContent = [
       '.cs-ss{position:fixed;inset:0;z-index:2147483000;background:#101010;color:#FFF4C4;',
       'font-family:var(--primary-font-family,var(--ha-font-family,system-ui,sans-serif));',
-      'display:flex;flex-direction:column;cursor:pointer;}',
-      '.cs-ss-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}',
-      '.cs-ss-scrim{position:absolute;inset:0;background:rgba(0,0,0,.28);}',
+      'display:none !important;flex-direction:column;cursor:pointer;touch-action:none;',
+      '-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}',
+      '.cs-ss.cs-ss-on{display:flex !important;}',
+      '.cs-ss-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;}',
+      '.cs-ss-scrim{position:absolute;inset:0;background:rgba(0,0,0,.28);pointer-events:none;}',
       '.cs-ss-clock{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;',
       'text-shadow:0 8px 24px rgba(0,0,0,.55);font-variant-numeric:tabular-nums;}',
       '.cs-ss-time{font-weight:300;font-size:min(26vw,34vh);letter-spacing:-.03em;line-height:.9;}',
@@ -223,12 +225,12 @@
     document.head.appendChild(style);
     layer = document.createElement('div');
     layer.className = 'cs-ss';
-    layer.setAttribute('role', 'dialog');
     layer.hidden = true;
-    layer.innerHTML = '<img class="cs-ss-photo" alt="">'
+    layer.style.setProperty('display', 'none', 'important');
+    layer.innerHTML = '<img class="cs-ss-photo" alt="" draggable="false">'
       + '<div class="cs-ss-scrim"></div>'
       + '<div class="cs-ss-clock"><div class="cs-ss-time"></div><div class="cs-ss-date"></div></div>'
-      + '<div class="cs-ss-bar"><div class="cs-ss-col cs-ss-wx"></div><div class="cs-ss-rule"></div><div class="cs-ss-col cs-ss-cal"></div></div>';
+      + '<div class="cs-ss-bar"><div class="cs-ss-col cs-ss-wx" data-cs-entity=""></div><div class="cs-ss-rule"></div><div class="cs-ss-col cs-ss-cal" data-cs-entity=""></div></div>';
     document.body.appendChild(layer);
     return layer;
   }
@@ -414,7 +416,9 @@
   function show(view) {
     var vars = readVars(view.config);
     ensure();
+    layer.style.removeProperty('display');
     layer.hidden = false;
+    layer.classList.add('cs-ss-on');
     shown = true;
     var wx = vars.weather_entity || '';
     paintClock(view.hass);
@@ -429,20 +433,49 @@
 
   function hide() {
     shown = false;
-    if (layer) layer.hidden = true;
+    if (layer) {
+      layer.classList.remove('cs-ss-on');
+      layer.hidden = true;
+      // Inline, so a stylesheet display never keeps the cover on screen.
+      layer.style.setProperty('display', 'none', 'important');
+    }
     dropForecast();
     releaseWake();
     bump();
   }
 
-  window.addEventListener('pointerdown', function () {
-    if (shown) hide();
-    else bump();
-  }, true);
-  window.addEventListener('keydown', function () {
-    if (shown) hide();
-    else bump();
-  }, true);
+  // A tap on the weather or the calendar stays. Anywhere else on the cover (clock, photo)
+  // closes it at once. The whole gesture is swallowed, so the dashboard underneath never
+  // sees it and does not navigate or reload.
+  var eatUntil = 0;
+  function onEntity(ev) {
+    var path = (ev.composedPath && ev.composedPath()) || [];
+    for (var i = 0; i < path.length; i++) {
+      var n = path[i];
+      if (!n || n === layer) return false;
+      if (n.getAttribute && n.hasAttribute('data-cs-entity')) return true;
+    }
+    return false;
+  }
+  function block(ev) {
+    ev.stopPropagation();
+    if (ev.cancelable) ev.preventDefault();
+  }
+  function onGesture(ev) {
+    if (shown) {
+      if (onEntity(ev)) { block(ev); return; }
+      hide();
+      eatUntil = Date.now() + 900;
+      block(ev);
+      return;
+    }
+    if (Date.now() < eatUntil) { block(ev); return; }
+    if (ev.type === 'pointerdown' || ev.type === 'touchstart' || ev.type === 'keydown') bump();
+  }
+  ['pointerdown', 'pointerup', 'pointercancel', 'touchstart', 'touchend', 'touchcancel', 'click', 'auxclick', 'contextmenu'].forEach(function (t) {
+    window.addEventListener(t, onGesture, true);
+  });
+  window.addEventListener('keydown', onGesture, true);
 
   setInterval(function () {
     var view = dash();
