@@ -13,140 +13,115 @@
 <meta property="og:description" content="A calm home dashboard that sets itself up. Designed room by room in a visual studio.">
 <meta property="og:image" content="https://sh1ft-w.github.io/casora/images/readme-title-social.png">
 <link rel="icon" href="images/icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<!-- Shared SH1FT-W design (tokens, glass navigation, light/dark, DE/EN, reveal) -->
-<link rel="stylesheet" href="https://sh1ft-w.github.io/theme/v1/theme.css">
-<script src="https://sh1ft-w.github.io/theme/v1/theme.js"></script>
+<!-- Shared SH1FT-W design, version 2 (tokens, Archivo, navigation, light/dark, DE/EN, the lanes) -->
+<link rel="stylesheet" href="https://sh1ft-w.github.io/theme/v2/theme.css">
+<script src="https://sh1ft-w.github.io/theme/v2/theme.js"></script>
 <style>
 /* Casora-Palette aus custom_components/casora/theme_weich.yaml; Dunkel folgt dem System oder dem Schalter oben rechts */
 :root {
-  --accent: var(--ton); --font: "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --accent: var(--ton); --font: "Archivo", -apple-system, BlinkMacSystemFont, system-ui, sans-serif; --display: var(--font); --mono: ui-monospace, "SF Mono", Menlo, monospace;
   --bg: #F4EFE7; --bg-2: #ECE5DA; --card: #FBF8F3; --card-2: #F0E9DF;
   --ink: #3A322B; --ink-2: #62574C; --ink-3: rgba(58,50,43,0.5);
-  --ton: #94603B; --ton-fill: #B67A50; --ton-tint: rgba(182,122,80,0.12); --ton-glow: rgba(182,122,80,0.28); --on-ton: #FFFDF9;
+  --ton: #94603B; --ton-fill: #B67A50; --ton-tint: rgba(182,122,80,0.12); --on-ton: #FFFDF9;
   --petrol: #4E9A93; --petrol-tint: rgba(78,154,147,0.14);
   --line: rgba(120,100,80,0.14); --chip: rgba(140,115,90,0.09);
   --glass: rgba(251,248,243,0.66); --glass-line: rgba(255,255,255,0.6);
   --shadow: 0 1px 2px rgba(90,70,50,0.05), 0 12px 32px -14px rgba(90,70,50,0.22);
-  --shadow-lg: 0 2px 6px rgba(90,70,50,0.05), 0 48px 100px -36px rgba(90,65,40,0.42);
-  --radius: 28px; --radius-lg: 40px; --gutter: clamp(16px, 5vw, 48px); --max: 1180px;
-  --blob-1: rgba(182,122,80,0.22); --blob-2: rgba(78,154,147,0.16); --blob-3: rgba(236,199,160,0.5);
+  --radius: 20px; --radius-lg: 28px; --gutter: clamp(16px, 5vw, 48px); --max: 1200px;
+  --lane-a: #94603B; --lane-b: #B67A50;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --accent: var(--ton);
   --bg: #24211E; --bg-2: #1C1A18; --card: #2E2A26; --card-2: #342F2A;
   --ink: #F2EBE1; --ink-2: rgba(205,194,180,0.88); --ink-3: rgba(205,194,180,0.55);
-  --ton: #D9A27A; --ton-fill: #D9A27A; --ton-tint: rgba(217,162,122,0.14); --ton-glow: rgba(217,162,122,0.22); --on-ton: #24211E;
+  --ton: #D9A27A; --ton-fill: #D9A27A; --ton-tint: rgba(217,162,122,0.14); --on-ton: #24211E;
   --petrol: #7CC2BB; --petrol-tint: rgba(124,194,187,0.14);
   --line: rgba(205,194,180,0.12); --chip: rgba(205,194,180,0.08);
   --glass: rgba(46,42,38,0.62); --glass-line: rgba(255,255,255,0.08);
-  --shadow: 0 14px 34px -16px rgba(0,0,0,0.55); --shadow-lg: 0 48px 100px -36px rgba(0,0,0,0.75);
-  --blob-1: rgba(217,162,122,0.16); --blob-2: rgba(124,194,187,0.12); --blob-3: rgba(120,90,60,0.25);
+  --shadow: 0 14px 34px -16px rgba(0,0,0,0.55);
 } }
 :root[data-theme="dark"] {
   --accent: var(--ton);
   --bg: #24211E; --bg-2: #1C1A18; --card: #2E2A26; --card-2: #342F2A;
   --ink: #F2EBE1; --ink-2: rgba(205,194,180,0.88); --ink-3: rgba(205,194,180,0.55);
-  --ton: #D9A27A; --ton-fill: #D9A27A; --ton-tint: rgba(217,162,122,0.14); --ton-glow: rgba(217,162,122,0.22); --on-ton: #24211E;
+  --ton: #D9A27A; --ton-fill: #D9A27A; --ton-tint: rgba(217,162,122,0.14); --on-ton: #24211E;
   --petrol: #7CC2BB; --petrol-tint: rgba(124,194,187,0.14);
   --line: rgba(205,194,180,0.12); --chip: rgba(205,194,180,0.08);
   --glass: rgba(46,42,38,0.62); --glass-line: rgba(255,255,255,0.08);
-  --shadow: 0 14px 34px -16px rgba(0,0,0,0.55); --shadow-lg: 0 48px 100px -36px rgba(0,0,0,0.75);
-  --blob-1: rgba(217,162,122,0.16); --blob-2: rgba(124,194,187,0.12); --blob-3: rgba(120,90,60,0.25);
+  --shadow: 0 14px 34px -16px rgba(0,0,0,0.55);
 }
 
-body { font-feature-settings: "cv11", "ss01"; }
+body { font-family: var(--font); }
 a { color: var(--ton); text-decoration: none; }
 a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .wrap { max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter); }
 .narrow { max-width: 760px; }
 p { margin: 0; }
 .muted { color: var(--ink-2); }
-.center { text-align: center; }
-.center .lead { margin-left: auto; margin-right: auto; max-width: 680px; }
 
-/* Glas-Navigation, Hell/Dunkel-Knopf und Sprachschalter kommen aus theme.css */
+/* Navigation, Hell/Dunkel-Knopf, Sprachschalter, Knopf-Grundform und die Lanes kommen aus theme.css (v2) */
 
 /* Buttons */
-.btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 48px; padding: 0 24px; border-radius: 999px;
-  font-family: inherit; font-size: 15px; font-weight: 600; line-height: 1; letter-spacing: -0.005em;
-  background: var(--ton-fill); color: var(--on-ton); border: 0; cursor: pointer;
-  box-shadow: 0 12px 28px -12px var(--ton-glow); transition: transform .2s ease, filter .2s ease, box-shadow .2s ease;
-}
-.btn:hover { text-decoration: none; filter: brightness(1.05); transform: translateY(-1px); box-shadow: 0 16px 32px -12px var(--ton-glow); }
-.btn.ghost { background: var(--card); color: var(--ink); box-shadow: var(--shadow); }
-.btn.small { height: 36px; padding: 0 16px; font-size: 14px; }
-.btn svg { width: 16px; height: 16px; }
+.btn { background: var(--ton-fill); color: var(--on-ton); }
+.btn.ghost { background: var(--chip); color: var(--ink); }
 
 /* Schrift */
-.eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ton); margin: 0 0 18px; }
-.eyebrow::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--ton); box-shadow: 0 0 0 4px var(--ton-tint); }
-h1, h2, h3 { margin: 0; color: var(--ink); font-weight: 800; }
-h1 { font-size: clamp(48px, 8.6vw, 108px); line-height: 0.96; letter-spacing: -0.045em; }
-h1 em { font-style: normal; color: var(--ton); }
-h2 { font-size: clamp(36px, 5.4vw, 64px); line-height: 1.02; letter-spacing: -0.04em; }
-h3 { font-size: 21px; line-height: 1.2; letter-spacing: -0.02em; font-weight: 700; }
-.lead { font-size: clamp(19px, 2.1vw, 23px); line-height: 1.45; color: var(--ink-2); letter-spacing: -0.012em; margin: 24px 0 0; }
+.eyebrow { font-size: 16px; font-weight: 650; color: var(--ton); margin: 0 0 12px; }
+h1 { font-size: clamp(40px, 5.2vw, 72px); line-height: 1.02; }
+h2 { font-size: clamp(30px, 3.8vw, 48px); }
+.lead { font-size: clamp(18px, 1.7vw, 21px); line-height: 1.45; color: var(--ink-2); margin: 20px 0 0; max-width: 40em; }
 .lead strong { color: var(--ink); font-weight: 600; }
 
 /* Abschnitte */
 section { padding: clamp(72px, 9vw, 128px) 0; position: relative; }
 section.tint { background: var(--bg-2); }
-.head { margin-bottom: clamp(40px, 5.5vw, 64px); }
-.split h2 { font-size: clamp(34px, 4.4vw, 56px); }
+.head { margin-bottom: clamp(32px, 4.5vw, 52px); max-width: 50em; }
+.split h2 { font-size: clamp(28px, 3.2vw, 40px); }
 
 /* Bildrahmen */
-.shot { border-radius: var(--radius); overflow: hidden; background: var(--card); box-shadow: var(--shadow-lg); position: relative; }
-.shot::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px var(--glass-line); pointer-events: none; }
+.shot { border-radius: var(--radius); overflow: hidden; background: var(--card); border: 1px solid var(--line); }
 .shot.lg { border-radius: var(--radius-lg); }
 .shot img { width: 100%; }
-.cap { margin-top: 18px; font-size: 15px; color: var(--ink-3); text-align: center; }
+.cap { margin-top: 18px; font-size: 15px; color: var(--ink-3); max-width: 60em; }
 
-/* Hero mit weichem Farbschleier */
-.hero { padding: clamp(64px, 10vw, 120px) 0 clamp(64px, 9vw, 112px); text-align: center; }
-.hero .glow { position: absolute; inset: -30% -10% auto; height: 90%; z-index: 0; pointer-events: none;
-  background:
-    radial-gradient(42% 38% at 22% 28%, var(--blob-1), transparent 70%),
-    radial-gradient(36% 34% at 78% 22%, var(--blob-2), transparent 70%),
-    radial-gradient(50% 40% at 50% 70%, var(--blob-3), transparent 70%);
-  filter: blur(48px); opacity: .7; }
-.hero .wrap { position: relative; z-index: 1; }
-.hero .lead { max-width: 640px; margin-left: auto; margin-right: auto; }
-.cta { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 36px; }
-.meta { margin-top: 22px; font-size: 14px; color: var(--ink-3); display: flex; flex-wrap: wrap; gap: 8px 14px; justify-content: center; align-items: center; }
-.pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; background: var(--card); box-shadow: var(--shadow); font-weight: 600; color: var(--ink-2); font-size: 13px; }
+/* Hero: links Text, rechts die Lanes, darunter die Bühne mit dem Produktbild */
+.hero { padding: clamp(48px, 7vw, 96px) 0 clamp(56px, 7vw, 96px); overflow: hidden; }
+.hero-top { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 64px); align-items: center; }
+.hero .mark { width: 64px; height: 64px; border-radius: 15px; margin-bottom: 26px; }
+.hero .lead { max-width: 34em; }
+.hero .s-lanes { margin-right: calc(-1 * var(--gutter) - 14vw); }
+.s-track b { color: #FFFDF9; font: italic 800 clamp(20px, 2.5vw, 34px)/1 var(--font); font-stretch: 116%; letter-spacing: -0.015em; white-space: nowrap; }
+.cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
+.meta { margin-top: 22px; font-size: 14px; color: var(--ink-3); display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 8px; background: var(--chip); font-weight: 600; color: var(--ink-2); font-size: 13px; }
 .pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--petrol); display: inline-block; }
 .hero-shot { margin-top: clamp(48px, 7vw, 88px); }
-.hero-shot .shot { box-shadow: 0 2px 6px rgba(90,70,50,0.05), 0 80px 160px -60px var(--ton-glow), var(--shadow-lg); }
 
 /* Laufband mit Gerätearten */
 .marquee { margin-top: clamp(40px, 6vw, 72px); overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); }
 .marquee .track { display: flex; gap: 10px; width: max-content; animation: slide 48s linear infinite; }
 .marquee:hover .track { animation-play-state: paused; }
 @keyframes slide { to { transform: translateX(-50%); } }
-.chip { padding: 9px 15px; border-radius: 999px; background: var(--card); box-shadow: 0 1px 2px rgba(90,70,50,0.05); font-size: 14px; font-weight: 500; color: var(--ink-2); white-space: nowrap; }
+.chip { padding: 8px 14px; border-radius: 8px; background: var(--card); border: 1px solid var(--line); font-size: 14px; font-weight: 500; color: var(--ink-2); white-space: nowrap; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 28px; }
 
 /* Neu dabei: Bento */
 .bento { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
-.b { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column; position: relative; min-width: 0; }
+.b { background: var(--card); border-radius: var(--radius); border: 1px solid var(--line); overflow: hidden; display: flex; flex-direction: column; position: relative; min-width: 0; }
 .b .txt { padding: 26px 28px 28px; }
-.b .txt .k { display: inline-block; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--petrol); background: var(--petrol-tint); padding: 4px 10px; border-radius: 999px; margin-bottom: 14px; }
+.b .txt .k { display: inline-block; font-size: 13px; font-weight: 600; color: var(--petrol); background: var(--petrol-tint); padding: 4px 10px; border-radius: 6px; margin-bottom: 14px; }
 .b h3 { margin-bottom: 8px; }
 .b p { color: var(--ink-2); font-size: 16px; }
 .b .pic { background: var(--card-2); padding: 22px; display: flex; justify-content: center; align-items: center; flex: 1; }
-.b .pic img { border-radius: 22px; box-shadow: 0 10px 30px -12px rgba(0,0,0,.28); max-width: 300px; }
+.b .pic img { border-radius: 14px; max-width: 300px; }
 .b.wide .pic { align-items: flex-end; }
 .b.wide .pic img { max-width: 100%; }
 .b.s4 { grid-column: span 4; } .b.s6 { grid-column: span 6; } .b.s8 { grid-column: span 8; } .b.s12 { grid-column: span 12; }
 
 /* Zahlen */
 .facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: clamp(48px, 6vw, 80px); }
-.fact { background: var(--card); border-radius: var(--radius); padding: 28px; box-shadow: var(--shadow); }
-.fact b { display: block; font-size: clamp(40px, 5vw, 56px); line-height: 1; font-weight: 800; letter-spacing: -0.045em; color: var(--ton); }
+.fact { background: var(--card); border-radius: var(--radius); padding: 28px; border: 1px solid var(--line); }
+.fact b { display: block; font-size: clamp(40px, 5vw, 56px); line-height: 1; font-weight: 800; font-stretch: 112%; letter-spacing: -0.02em; color: var(--ton); }
 .fact span { display: block; margin-top: 12px; color: var(--ink-2); font-size: 16px; line-height: 1.45; }
 
 /* Zweispaltig */
@@ -156,14 +131,14 @@ section.tint { background: var(--bg-2); }
 
 /* Drei Bildschirme, Studio-Karten, Bedienung */
 .trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px; }
-.tile { background: var(--card); border-radius: var(--radius); padding: 28px; box-shadow: var(--shadow); }
+.tile { background: var(--card); border-radius: var(--radius); padding: 28px; border: 1px solid var(--line); }
 .tile h3 { margin-bottom: 8px; }
 .tile p { color: var(--ink-2); font-size: 16px; }
-.tile .k { font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ton); margin-bottom: 14px; }
-.tile .ico { width: 48px; height: 48px; border-radius: 16px; background: var(--ton-tint); color: var(--ton); display: grid; place-items: center; margin-bottom: 18px; }
+.tile .k { font-size: 14px; font-weight: 650; color: var(--ton); margin-bottom: 12px; }
+.tile .ico { width: 48px; height: 48px; border-radius: 10px; background: var(--ton-tint); color: var(--ton); display: grid; place-items: center; margin-bottom: 18px; }
 .tile .ico svg { width: 24px; height: 24px; }
 .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 20px; }
-.card { background: var(--card); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); display: flex; flex-direction: column; }
+.card { background: var(--card); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); display: flex; flex-direction: column; }
 .card .txt { padding: 26px 28px 28px; }
 .card h3 { margin-bottom: 8px; }
 .card p { color: var(--ink-2); font-size: 16px; }
@@ -173,16 +148,15 @@ section.tint { background: var(--bg-2); }
 /* Popups */
 .pops { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 .pops figure { margin: 0; }
-.pops .shot { border-radius: 24px; }
 
 /* Abgedeckt: Kategorien */
 .cover { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 32px; }
-.cov { background: var(--card); border-radius: 24px; padding: 24px 26px; box-shadow: var(--shadow); }
+.cov { background: var(--card); border-radius: var(--radius); padding: 24px 26px; border: 1px solid var(--line); }
 .cov h3 { margin: 0 0 8px; font-size: 17px; }
 .cov p { margin: 0; color: var(--ink-2); font-size: 15px; line-height: 1.5; }
-.cov.accent { background: var(--ton-tint); box-shadow: none; }
+.cov.accent { background: var(--ton-tint); border-color: transparent; }
 .cov.accent h3 { color: var(--ton); }
-.what { margin-top: 32px; background: var(--card); border-radius: 24px; padding: 8px 26px; box-shadow: var(--shadow); overflow-x: auto; }
+.what { margin-top: 32px; background: var(--card); border-radius: var(--radius); padding: 8px 26px; border: 1px solid var(--line); overflow-x: auto; }
 .what table { width: 100%; border-collapse: collapse; font-size: 15px; line-height: 1.45; }
 .what th, .what td { text-align: left; vertical-align: top; padding: 14px 0; border-bottom: 1px solid var(--line, rgba(127,127,127,.15)); }
 .what tr:last-child th, .what tr:last-child td { border-bottom: 0; }
@@ -192,13 +166,13 @@ section.tint { background: var(--bg-2); }
 @media (max-width: 640px) { .what { padding: 4px 18px; } .what thead { display: none; } .what table, .what tbody, .what tr { display: block; } .what tbody th { width: auto; display: block; padding: 14px 0 2px; border: 0; } .what td { display: block; padding: 0 0 14px; } }
 
 /* Designs mit Umschalter */
-.tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--chip); margin: 0 auto 28px; }
-.tabs button { font: inherit; font-size: 14px; font-weight: 600; border: 0; background: none; color: var(--ink-2); padding: 9px 18px; border-radius: 999px; cursor: pointer; transition: background .2s, color .2s; }
-.tabs button.on { background: var(--card); color: var(--ink); box-shadow: var(--shadow); }
+.tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 12px; background: var(--chip); margin: 0 0 28px; }
+.tabs button { font: inherit; font-size: 14px; font-weight: 600; border: 0; background: none; color: var(--ink-2); padding: 9px 18px; border-radius: 9px; cursor: pointer; transition: background .2s, color .2s; }
+.tabs button.on { background: var(--card); color: var(--ink); box-shadow: 0 0 0 1px var(--line); }
 .design { display: none; }
 .design.on { display: block; }
 .design .shot { margin-top: 0; }
-.design .cap { max-width: 640px; margin-left: auto; margin-right: auto; }
+.design .cap { max-width: 640px; }
 
 /* Schritte */
 .steps { list-style: none; padding: 0; margin: 36px 0 0; display: grid; gap: 22px; counter-reset: s; }
@@ -208,33 +182,32 @@ section.tint { background: var(--bg-2); }
 
 /* Installation */
 .install { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; }
-.panel { background: var(--card); border-radius: var(--radius); padding: clamp(28px, 4vw, 44px); box-shadow: var(--shadow); min-width: 0; }
+.panel { background: var(--card); border-radius: var(--radius); padding: clamp(28px, 4vw, 44px); border: 1px solid var(--line); min-width: 0; }
 .panel h3 { margin-bottom: 6px; }
-.repo { margin-top: 10px; display: flex; align-items: center; gap: 8px; background: var(--chip); border-radius: 18px; padding: 8px 8px 8px 18px; }
-.repo code { flex: 1; min-width: 0; font: 500 15px/1.4 ui-monospace, "SF Mono", Menlo, monospace; color: var(--ink); overflow-wrap: anywhere; }
-.copy { flex: none; height: 34px; padding: 0 14px; border-radius: 999px; border: 0; background: var(--card); color: var(--ink); font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 1px 2px rgba(90,70,50,0.08); }
+.repo { margin-top: 10px; display: flex; align-items: center; gap: 8px; background: var(--chip); border-radius: 12px; padding: 8px 8px 8px 18px; }
+.repo code { flex: 1; min-width: 0; font: 500 15px/1.4 var(--mono); color: var(--ink); overflow-wrap: anywhere; }
+.copy { flex: none; height: 34px; padding: 0 14px; border-radius: 8px; border: 0; background: var(--card); color: var(--ink); font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
 .req { list-style: none; padding: 0; margin: 22px 0 0; }
 .req li { display: flex; gap: 14px; align-items: baseline; padding: 15px 0; border-top: 1px solid var(--line); font-size: 16px; }
 .req li:first-child { border-top: 0; padding-top: 6px; }
 .req .name { color: var(--ink); font-weight: 600; flex: 1; }
-.tag { flex: none; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; background: var(--ton-tint); color: var(--ton); }
+.tag { flex: none; font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 6px; background: var(--ton-tint); color: var(--ton); }
 .tag.opt { background: var(--chip); color: var(--ink-3); }
 .note { margin-top: 20px; font-size: 14px; color: var(--ink-3); }
 .manual { grid-column: 1 / -1; }
-.manual code { font: 500 14px/1.4 ui-monospace, "SF Mono", Menlo, monospace; background: var(--chip); padding: 2px 6px; border-radius: 6px; overflow-wrap: anywhere; }
+.manual code { font: 500 14px/1.4 var(--mono); background: var(--chip); padding: 2px 6px; border-radius: 6px; overflow-wrap: anywhere; }
 
 /* Datenschutz, KI */
 .three { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(28px, 4vw, 56px); }
 .three h3 { margin-bottom: 10px; }
 .three p { color: var(--ink-2); font-size: 16px; }
 .rule { height: 1px; background: var(--line); margin: 0 0 28px; }
-.ai { margin-top: clamp(48px, 6vw, 72px); background: var(--card); border-radius: var(--radius); padding: clamp(28px, 4vw, 44px); box-shadow: var(--shadow); }
+.ai { margin-top: clamp(48px, 6vw, 72px); background: var(--card); border-radius: var(--radius); padding: clamp(28px, 4vw, 44px); border: 1px solid var(--line); }
 .ai .chips { margin-top: 22px; }
-.ai .chip { background: var(--chip); box-shadow: none; }
+.ai .chip { background: var(--chip); border-color: transparent; }
 
 /* Dank, Fuß */
-.credits { text-align: center; }
-.credits p:not(.eyebrow) { font-size: clamp(19px, 2.1vw, 23px); line-height: 1.5; color: var(--ink-2); max-width: 720px; margin: 0 auto; letter-spacing: -0.01em; }
+.credits p:not(.eyebrow) { font-size: clamp(18px, 1.7vw, 21px); line-height: 1.5; color: var(--ink-2); max-width: 720px; }
 .credits a { font-weight: 600; }
 footer { border-top: 1px solid var(--line); padding: 44px 0 56px; font-size: 14px; color: var(--ink-3); }
 footer .wrap { display: flex; flex-wrap: wrap; gap: 20px 32px; align-items: center; }
@@ -245,6 +218,10 @@ footer .fine { flex-basis: 100%; }
 /* Zweisprachig: Browsersprache entscheidet, Schalter oben rechts merkt sich die Wahl (Regeln in theme.css) */
 
 /* Schmal */
+@media (max-width: 900px) {
+  .hero-top { grid-template-columns: 1fr; }
+  .hero .s-lanes { margin: 8px calc(-1 * var(--gutter) - 20vw) 0 44px; }
+}
 @media (max-width: 960px) {
   .split, .split.flip, .install { grid-template-columns: 1fr; }
   .split.flip > :first-child { order: 0; }
@@ -255,7 +232,6 @@ footer .fine { flex-basis: 100%; }
 }
 @media (max-width: 640px) {
   body { font-size: 16px; }
-  :root { --radius: 24px; --radius-lg: 28px; }
   .nav { gap: 10px; }
   .nav .btn { margin-left: auto; }
   .facts { grid-template-columns: 1fr; gap: 12px; }
@@ -277,7 +253,7 @@ footer .fine { flex-basis: 100%; }
   .tabs button { flex: 1; padding: 9px 8px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .marquee .track { animation: none; flex-wrap: wrap; width: auto; justify-content: center; }
+  .marquee .track { animation: none; flex-wrap: wrap; width: auto; }
   .marquee { -webkit-mask-image: none; mask-image: none; }
 }
 </style>
@@ -306,19 +282,27 @@ footer .fine { flex-basis: 100%; }
 </div>
 
 <section class="hero" id="top">
-  <div class="glow" aria-hidden="true"></div>
-  <div class="wrap">
-    <p class="eyebrow reveal"><span class="en">For Home Assistant</span><span class="de">Für Home Assistant</span></p>
-    <h1 class="reveal d1"><span class="en">Your home.<br>At <em>ease</em>.</span><span class="de">Dein Zuhause.<br>Ganz <em>entspannt</em>.</span></h1>
-    <p class="lead reveal d2"><span class="en">A calm, photo-backed dashboard that <strong>sets itself up</strong>. Shape the rest room by room in a visual studio. No YAML.</span><span class="de">Ein ruhiges Dashboard mit Raumfotos, das <strong>sich selbst einrichtet</strong>. Den Rest gestaltest du Raum für Raum in einem visuellen Studio. Ohne YAML.</span></p>
-    <div class="cta reveal d3">
-      <a class="btn" href="#install"><span class="en">Install from the Marketplace</span><span class="de">Über den Marketplace installieren</span></a>
-      <a class="btn ghost" href="https://github.com/SH1FT-W/casora/blob/main/docs/guide.md"><span class="en">Read the guide</span><span class="de">Zur Anleitung</span></a>
+  <div class="wrap hero-top">
+    <div>
+      <img class="mark" src="images/icon.png" alt="" width="64" height="64">
+      <h1><span class="en">Your home. At ease.</span><span class="de">Dein Zuhause. Ganz entspannt.</span></h1>
+      <p class="lead reveal d2"><span class="en">A calm, photo-backed dashboard that <strong>sets itself up</strong>. Shape the rest room by room in a visual studio. No YAML.</span><span class="de">Ein ruhiges Dashboard mit Raumfotos, das <strong>sich selbst einrichtet</strong>. Den Rest gestaltest du Raum für Raum in einem visuellen Studio. Ohne YAML.</span></p>
+      <div class="cta reveal d3">
+        <a class="btn" href="#install"><span class="en">Install from the Marketplace</span><span class="de">Über den Marketplace installieren</span></a>
+        <a class="btn ghost" href="https://github.com/SH1FT-W/casora/blob/main/docs/guide.md"><span class="en">Read the guide</span><span class="de">Zur Anleitung</span></a>
+      </div>
+      <p class="meta reveal d3">
+        <span class="pill"><i></i><span id="casora-version">Version 26.11.25</span></span>
+        <span class="en">Home Assistant 2026.9 or newer &middot; Free and open source</span><span class="de">Home Assistant 2026.9 oder neuer &middot; Kostenlos und Open Source</span>
+      </p>
     </div>
-    <p class="meta reveal d3">
-      <span class="pill"><i></i><span id="casora-version">Version 26.11.25</span></span>
-      <span class="en">Home Assistant 2026.9 or newer &middot; Free and open source</span><span class="de">Home Assistant 2026.9 oder neuer &middot; Kostenlos und Open Source</span>
-    </p>
+    <div class="s-lanes" aria-hidden="true">
+      <div class="s-lane"><div class="s-track"><b><span class="en">Sets itself up</span><span class="de">Richtet sich selbst ein</span></b></div></div>
+      <div class="s-lane"><div class="s-track"><b><span class="en">Visual studio</span><span class="de">Visuelles Studio</span></b></div></div>
+      <div class="s-lane"><div class="s-track"><b><span class="en">No YAML</span><span class="de">Ohne YAML</span></b></div></div>
+    </div>
+  </div>
+  <div class="wrap">
     <div class="hero-shot reveal d3">
       <div class="shot lg">
         <picture>
@@ -337,7 +321,7 @@ footer .fine { flex-basis: 100%; }
 
 <section id="new" class="tint">
   <div class="wrap">
-    <div class="head center reveal">
+    <div class="head reveal">
       <p class="eyebrow"><span class="en">Just arrived</span><span class="de">Gerade neu</span></p>
       <h2><span class="en">New popups.<br>One calm dial.</span><span class="de">Neue Popups.<br>Ein ruhiges Rad.</span></h2>
       <p class="lead"><span class="en">The three biggest changes of 26.11. Every change is in the <a href="https://github.com/SH1FT-W/casora/blob/main/CHANGELOG.md">changelog</a>.</span><span class="de">Die drei größten Neuerungen von 26.11. Alle Änderungen stehen im <a href="https://github.com/SH1FT-W/casora/blob/main/CHANGELOG.de.md">Changelog</a>.</span></p>
@@ -405,7 +389,7 @@ footer .fine { flex-basis: 100%; }
 
 <section id="layouts" class="tint">
   <div class="wrap">
-    <div class="head center reveal">
+    <div class="head reveal">
       <p class="eyebrow"><span class="en">Desktop, tablet, phone</span><span class="de">Desktop, Tablet, Handy</span></p>
       <h2><span class="en">One home.<br>Three screens.</span><span class="de">Ein Zuhause.<br>Drei Bildschirme.</span></h2>
       <p class="lead"><span class="en">Every screen gets a layout made for it. Not a shrunken copy.</span><span class="de">Jeder Bildschirm bekommt ein eigenes Layout. Keine verkleinerte Kopie.</span></p>
@@ -426,7 +410,7 @@ footer .fine { flex-basis: 100%; }
 
 <section id="popups">
   <div class="wrap">
-    <div class="head center reveal">
+    <div class="head reveal">
       <p class="eyebrow">Popups</p>
       <h2><span class="en">Tap a tile.<br>One thing first.</span><span class="de">Kachel antippen.<br>Das Wichtigste zuerst.</span></h2>
       <p class="lead"><span class="en">Every popup answers the question you opened it for at a glance. A slim header says what is going on, in words. Below it one main thing, usually a large dial you turn, with scenes and modes as round buttons around it. Lists sit beside it, settings stay in the Studio.</span><span class="de">Jedes Popup beantwortet auf einen Blick die Frage, wegen der du es öffnest. Ein schlanker Kopf sagt in Worten, was los ist. Darunter eine Hauptsache, meist ein großes Rad zum Drehen, mit Szenen und Modi als runden Knöpfen drumherum. Listen stehen daneben, Einstellungen bleiben im Studio.</span></p>
@@ -444,7 +428,7 @@ footer .fine { flex-basis: 100%; }
 
 <section id="hold" class="tint">
   <div class="wrap">
-    <div class="head center reveal">
+    <div class="head reveal">
       <p class="eyebrow"><span class="en">Press and hold</span><span class="de">Gedrückt halten</span></p>
       <h2><span class="en">Hold a tile.<br>Everything is right there.</span><span class="de">Kachel halten.<br>Alles liegt direkt da.</span></h2>
       <p class="lead"><span class="en">The everyday actions should not need a popup. Press and hold any tile and a small menu opens right at the tile, a bottom sheet on the phone, a right-click on the desktop.</span><span class="de">Das Alltägliche soll kein Popup brauchen. Halte eine Kachel gedrückt, und ein kleines Menü öffnet sich direkt an der Kachel. Am Handy von unten, am Desktop auch per Rechtsklick.</span></p>
@@ -471,7 +455,7 @@ footer .fine { flex-basis: 100%; }
 
 <section id="tiles">
   <div class="wrap">
-    <div class="head center reveal">
+    <div class="head reveal">
       <p class="eyebrow"><span class="en">Tiles</span><span class="de">Kacheln</span></p>
       <h2><span class="en">Everything in your home.<br>Already covered.</span><span class="de">Alles in deinem Zuhause.<br>Schon dabei.</span></h2>
       <p class="lead"><span class="en">Casora picks the right tile and popup for each device on its own, with the integrations you already have. Every popup puts one thing first.</span><span class="de">Casora wählt für jedes Gerät selbst die passende Kachel und das passende Popup, mit den Integrationen, die du schon hast. Jedes Popup zeigt eine Sache zuerst.</span></p>
@@ -500,7 +484,7 @@ footer .fine { flex-basis: 100%; }
 
 <section id="studio" class="tint">
   <div class="wrap">
-    <div class="head center reveal">
+    <div class="head reveal">
       <p class="eyebrow">Casora Studio</p>
       <h2><span class="en">Design it.<br>Don't code it.</span><span class="de">Gestalten.<br>Nicht programmieren.</span></h2>
       <p class="lead"><span class="en">A visual editor in the Home Assistant sidebar. Rooms, tiles, badges and popups, changed in place with a live preview for desktop, tablet and phone. Settings sorted by topic, help for the everyday tasks, and export and import for whole dashboards.</span><span class="de">Ein visueller Editor in der Seitenleiste von Home Assistant. Räume, Kacheln, Badges und Popups änderst du direkt, mit Live-Vorschau für Desktop, Tablet und Handy. Einstellungen nach Themen, Hilfe für die alltäglichen Aufgaben und Export und Import ganzer Dashboards.</span></p>
@@ -530,12 +514,12 @@ footer .fine { flex-basis: 100%; }
 
 <section id="look">
   <div class="wrap">
-    <div class="head center reveal">
+    <div class="head reveal">
       <p class="eyebrow"><span class="en">Three designs</span><span class="de">Drei Designs</span></p>
       <h2><span class="en">Soft by day.<br>Warm by night.</span><span class="de">Sanft am Tag.<br>Warm am Abend.</span></h2>
       <p class="lead"><span class="en">Warm linen, generous corners and gentle shadows, set in Inter. All three designs follow Home Assistant between light and dark.</span><span class="de">Warmes Leinen, großzügige Ecken und sanfte Schatten, in Inter gesetzt. Alle drei Designs folgen Home Assistant zwischen hell und dunkel.</span></p>
     </div>
-    <div class="center reveal">
+    <div class="reveal">
       <div class="tabs" role="tablist" aria-label="Design">
         <button type="button" class="on" data-d="casora" role="tab" aria-selected="true">Casora</button>
         <button type="button" data-d="nebel" role="tab" aria-selected="false">Casora Nebel</button>
@@ -585,7 +569,7 @@ footer .fine { flex-basis: 100%; }
 
 <section id="install">
   <div class="wrap">
-    <div class="head center reveal">
+    <div class="head reveal">
       <p class="eyebrow"><span class="en">Install</span><span class="de">Installation</span></p>
       <h2><span class="en">Three steps.<br>Then it's yours.</span><span class="de">Drei Schritte.<br>Dann gehört es dir.</span></h2>
     </div>
@@ -625,7 +609,7 @@ footer .fine { flex-basis: 100%; }
 
 <section id="privacy" class="tint">
   <div class="wrap">
-    <div class="head center reveal">
+    <div class="head reveal">
       <p class="eyebrow"><span class="en">Privacy</span><span class="de">Datenschutz</span></p>
       <h2><span class="en">It stays at home.</span><span class="de">Alles bleibt zu Hause.</span></h2>
     </div>

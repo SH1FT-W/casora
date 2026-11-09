@@ -2,14 +2,14 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-title-dark.webp" />
-  <img src="docs/images/readme-title-light.webp" alt="Casora: Your home. At ease." />
+  <img src="docs/images/readme-title-light.webp" alt="Casora: a calm dashboard for Home Assistant, room by room. Sets itself up. Visual studio. No YAML." />
 </picture>
 
 [![Version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FSH1FT-W%2Fcasora%2Fmain%2Fcustom_components%2Fcasora%2Fmanifest.json&query=%24.version&label=version&style=flat-square&color=94603B&labelColor=3A322B)](https://github.com/SH1FT-W/casora/releases/latest)
 [![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2026.9%2B-94603B?style=flat-square&labelColor=3A322B&logo=homeassistant&logoColor=white)](https://www.home-assistant.io)
 [![Marketplace](https://img.shields.io/badge/Marketplace-default-94603B?style=flat-square&labelColor=3A322B)](https://hacs.xyz)
 
-<a href="https://sh1ft-w.github.io/casora"><b>Website</b></a>&emsp;<a href="#install">Install</a>&emsp;<a href="#set-up">Set up</a>&emsp;<a href="#using-it">Using it</a>&emsp;<a href="#studio">Studio</a>&emsp;<a href="CHANGELOG.md">Changelog</a>
+<a href="https://sh1ft-w.github.io/casora"><b>Website</b></a>&emsp;<a href="#get-started">Get started</a>&emsp;<a href="#using-it">Using it</a>&emsp;<a href="#studio">Studio</a>&emsp;<a href="CHANGELOG.md">Changelog</a>
 
 </div>
 
@@ -26,7 +26,8 @@ Casora builds on two cards from the Marketplace, **UI eXtension (UIX)** and **bu
   </picture>
 </p>
 
-## What a tap shows you
+<a id="what-a-tap-shows-you"></a>
+## What you get
 
 Every popup puts the one thing you opened it for in the middle, usually a large dial, with scenes and modes as round buttons around it and lists beside it.
 
@@ -56,12 +57,20 @@ Anything else gets the **Universal tile** or an **own badge**, each with a popup
 
 **New in 26.11:** popups rebuilt around one dial, a search for rooms, devices and scenes, export and import of whole dashboards, and Casora is in the Marketplace. Every change in the [changelog](CHANGELOG.md).
 
-<a id="install"></a>
-## Install
+<a id="get-started"></a><a id="install"></a><a id="set-up"></a>
+## Get started
 
 [![Open in the Marketplace](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=SH1FT-W&repository=casora&category=integration)
 
-Search for **Casora** under **Settings > Marketplace** (called HACS before Home Assistant 2026.11), download it together with **UI eXtension** and **button-card** if you don't have them yet, and restart Home Assistant.
+You need **Home Assistant 2026.9** or newer, [UI eXtension](https://github.com/Lint-Free-Technology/uix) (the successor to card-mod; use it instead of card-mod, not both) and [button-card](https://github.com/custom-cards/button-card). An **AI task** in Home Assistant is optional, for the AI features.
+
+1. **Install it.** Search for **Casora** under **Settings > Marketplace** (called HACS before Home Assistant 2026.11), download it together with **UI eXtension** and **button-card** if you don't have them yet, and restart Home Assistant.
+2. **Add the integrations.** Under **Settings > Devices & services > Add integration** add **Casora**, and **UI eXtension** if it isn't added yet. UIX does nothing until it is added there.
+3. **Open Casora Studio** in the sidebar. It checks the requirements and links you to anything missing.
+4. **Pick a look and your rooms.** The setup assistant asks for the design, the font and which rooms get a page. Your Home Assistant areas are the starting point.
+5. **Fill your rooms.** Automatically, with AI (which also places devices without a room and names tiles, after a cost estimate) or empty. A preview shows what goes where before anything is created.
+
+Casora creates its helpers and registers its dashboard resources itself; nothing is written into your configuration. Updates arrive through the Marketplace. Step by step in the [guide](docs/guide.md#the-setup-assistant).
 
 <details>
 <summary>Install by hand</summary>
@@ -72,18 +81,6 @@ Search for **Casora** under **Settings > Marketplace** (called HACS before Home 
 To update, replace the folder with the new release and restart. New versions show up under **Settings > Updates**.
 
 </details>
-
-<a id="set-up"></a>
-## Set up
-
-You need **Home Assistant 2026.9** or newer, [UI eXtension](https://github.com/Lint-Free-Technology/uix) (the successor to card-mod; use it instead of card-mod, not both) and [button-card](https://github.com/custom-cards/button-card). An **AI task** in Home Assistant is optional, for the AI features.
-
-1. **Add the integrations.** Under **Settings > Devices & services > Add integration** add **Casora**, and **UI eXtension** if it isn't added yet. UIX does nothing until it is added there.
-2. **Open Casora Studio** in the sidebar. It checks the requirements and links you to anything missing.
-3. **Pick a look and your rooms.** The setup assistant asks for the design, the font and which rooms get a page. Your Home Assistant areas are the starting point.
-4. **Fill your rooms.** Automatically, with AI (which also places devices without a room and names tiles, after a cost estimate) or empty. A preview shows what goes where before anything is created.
-
-Casora creates its helpers and registers its dashboard resources itself; nothing is written into your configuration. Updates arrive through the Marketplace. Step by step in the [guide](docs/guide.md#the-setup-assistant).
 
 <details>
 <summary>Coming from Hemma</summary>
@@ -205,3 +202,11 @@ Casora gets better with every bug report and every idea. A big thank you to:
 [MIT](LICENSE). Casora is built on [Hemma](https://github.com/willsanderson/Hemma) by [Will Sanderson](https://github.com/willsanderson), which grew out of [Homio](https://github.com/iamtherufus/Homio) by [@iamtherufus](https://github.com/iamtherufus); the original Hemma copyright notice is kept. Thank you both.
 
 <sub>Casora is an independent project and is not affiliated with Home Assistant or Nabu Casa.</sub>
+
+<br/>
+
+<div align="center">
+<a href="https://sh1ft-w.github.io"><img src="https://sh1ft-w.github.io/readme/footer.png" width="640" alt="All SH1FT-W projects"></a>
+<br/>
+<sub>More open source for Home Assistant and the Mac at <a href="https://sh1ft-w.github.io">sh1ft-w.github.io</a></sub>
+</div>
