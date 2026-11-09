@@ -331,11 +331,19 @@ def scenes_of(cfg: dict) -> dict:
     return {k: src.get(k) for k in ("scenes", "scene_exclude", "scene_order")}
 
 
+def notify_of(cfg: dict) -> dict:
+    """The bell's switches of a desktop dashboard (#156): a phone dashboard has no casora_room to read them from."""
+    for room in desktop_rooms(cfg):
+        if room.get("is_room"):
+            return {k: v for k, v in room["variables"].items() if k.startswith(("notify_", "notification_"))}
+    return {}
+
+
 async def async_partner_info(hass, url_path: str, admin: bool = True) -> dict | None:
     cfg = await _load(hass, url_path, admin)
     if not cfg:
         return None
-    return {"confirm": confirm_of(cfg), "scenes": scenes_of(cfg)}
+    return {"confirm": confirm_of(cfg), "scenes": scenes_of(cfg), "notify": notify_of(cfg)}
 
 
 def async_setup_phone_badges(hass) -> None:

@@ -28,6 +28,11 @@ got = pb.confirm_of(cfg)
 assert got["ids"] == ["lock.haustuer", "switch.pumpe", "cover.alle", "cover.b", "cover.a"], got
 assert got["names"] == {"lock.haustuer": "Haustür", "cover.alle": "Jalousien", "cover.a,cover.b": "Jalousien"}, got
 assert pb.scenes_of(cfg) == {"scenes": ["scene.a"], "scene_exclude": None, "scene_order": ["scene.a"]}
+# #156: the bell's switches of the desktop dashboard, nothing else of the room.
+desk = {"views": [{"cards": [{"type": "custom:button-card", "template": "casora_room", "name": "Home",
+                              "variables": {"notify_battery": False, "notification_appliances": ["sensor.a"], "image": "x"}}, {}, {"cards": []}]}]}
+assert pb.notify_of(desk) == {"notify_battery": False, "notification_appliances": ["sensor.a"]}, pb.notify_of(desk)
+assert pb.notify_of({"views": []}) == {}
 # Startseiten-Variablen haben Vorrang
 cfg2 = json.loads(json.dumps(cfg)); cfg2["views"][0]["cards"].insert(0, {"variables": {"scenes": ["scene.z"]}})
 assert pb.scenes_of(cfg2)["scenes"] == ["scene.z"]

@@ -17139,6 +17139,24 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     try { configureFrom(window._casoraNotifyCfg); } catch (e) {}
   }
 
+  // A phone dashboard has no casora_room: its bell takes the switches from the desktop twin (#156).
+  var phoneCfgFor = null;
+  function phoneSwitches(tries) {
+    var url = (((window.location || {}).pathname || '').split('/')[1] || '');
+    if (!/[-_]mobile$/i.test(url) || phoneCfgFor === url) return;
+    var h = document.querySelector('home-assistant');
+    if (!h || !h.hass || !window._casoraPartnerInfo) {
+      if (tries < 40) setTimeout(function () { phoneSwitches(tries + 1); }, 500);
+      return;
+    }
+    phoneCfgFor = url;
+    window._casoraPartnerInfo(h.hass, url.replace(/[-_]mobile$/i, '')).then(function (r) {
+      if (r && r.notify) { configureFrom(r.notify); collect(); }
+    }, function () { phoneCfgFor = null; });
+  }
+  phoneSwitches(0);
+  if (window.addEventListener) window.addEventListener('location-changed', function () { phoneSwitches(0); });
+
   window._casoraNotify = {
     open: open,
     close: function () { if (_menu) _menu._close(); },
