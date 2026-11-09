@@ -269,8 +269,8 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
   await check(`${tag}: ruhende Taste ${tw} breit, Sand-Kreis 36 mittig (wie die C-Zeile), dunkle Glyphe 22`,
     near(bar.off.w, tw) && near(bar.off.icW, 36) && near(bar.off.icL, (bar.off.w - 36) / 2) && near(bar.off.icTop, 6) && (bar.pill ? clear(bar.off.icBg) : bar.off.icBg === m.off.icBg) && near(bar.off.glyph, 22) && bar.off.glyphColor === m.off.icColor && clear(bar.off.bg), [bar.off, m.off.icBg]);
   await check(`${tag}: aktive Taste weiße Pille wie der offene Raum im Blatt, Kreis in Ton mit weißer Glyphe`,
-    // Phone bar A (08.11.2026): the pill is the segment's sliding marker in the look of the popup segments (r608), the circle on it the general tone.
-    (bar.pill ? !clear(bar.pill.bg) && !clear(bar.on.icBg) && clear(bar.on.bg)
+    // Phone bar A (08.11.2026): the pill is the segment's sliding marker in the look of the popup segments (r608), the circle on it the theme's colour, as in the sheet.
+    (bar.pill ? !clear(bar.pill.bg) && bar.on.icBg === m.on.icBg && clear(bar.on.bg)
       : bar.on.bg === m.on.bg && bar.on.shadow === m.on.shadow && bar.on.icBg === m.on.icBg) && /^rgb\(255, 255, 255\)/.test(bar.on.glyphColor), [bar.on, bar.pill, m.on.bg, m.on.icBg]);
   if (bar.act) await check(`${tag}: aktive Taste (Leiste B) 50 breit, Kreis mittig, ohne Namen (der steht als Titel darüber)`,
     near(bar.on.w, 50) && near(bar.on.icL, 7) && near(bar.on.icTop, 6) && !bar.on.label, bar.on);

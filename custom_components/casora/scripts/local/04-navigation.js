@@ -182,7 +182,7 @@
       + '.hmn-bar.hmn-act.hmn-ic .hmn-btn{position:relative;z-index:1;}'
       + '.hmn-bar.hmn-act.hmn-ic .hmn-btn .hmn-bic{background:transparent;}'
       + '.hmn-bar.hmn-act.hmn-ic .hmn-btn.on{background:transparent;box-shadow:none;}'
-      + '.hmn-bar.hmn-act.hmn-ic .hmn-btn.on .hmn-bic{background:var(--casora-tone-general, var(--primary-color, #B67A50));color:#fff;}'
+      + '.hmn-bar.hmn-act.hmn-ic .hmn-btn.on .hmn-bic{background:var(--primary-color, #B67A50);color:#fff;}'
       + '.hmn-bar.hmn-act.hmn-ic .hmn-sep{display:none;}'
       + '.hmn-bar.hmn-act.hmn-ic .hmn-dock{--casora-mchrome-btn-fill:transparent;margin-left:2px;}'
       /* Narrow phones: three tools only fit with less room beside the bar. */
