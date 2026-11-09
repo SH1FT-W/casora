@@ -2522,12 +2522,14 @@ window.casoraMenuGlass = {
       casora_3d_printer: 2, casora_vacuum: 2, casora_lawn_mower: 2, casora_coffee: 2, casora_pet: 1, casora_media: 1, casora_football: 1, casora_trash: 1,
       casora_weather_warning: 3, casora_alarm: 3, casora_pulse: 3,
     };
-    var AUTO_ALWAYS = { casora_camera: 1, casora_cameras: 1, casora_frigate: 1, casora_reolink_doorbell: 1 };
+    var AUTO_ALWAYS = { casora_camera: 1, casora_cameras: 1, casora_frigate: 1, casora_reolink_doorbell: 1, casora_map: 1 };
     window.casoraAutoLarge = function (cfg, hass, active) {
       if (!cfg) return 0;
       if (/swipe|carousel/.test(String(cfg.type || '')) && Array.isArray(cfg.cards)) return 2;
       var tmpl = cfg.template;
       var list = Array.isArray(tmpl) ? tmpl : (tmpl ? [tmpl] : []);
+      // The map tile is large for its map; with „Map on the tile“ off it is an ordinary small tile.
+      if (list.indexOf('casora_map') !== -1 && cfg.variables && cfg.variables.map_tile === false) return 0;
       if (list.some(function (t) { return AUTO_ALWAYS[t]; })) return 2;
       var S = (hass && hass.states) || {};
       // Schloss: klein mit Schalter; groß nur bei Störung oder entriegelt, während niemand zuhause ist.
@@ -3143,6 +3145,7 @@ window.casoraMenuGlass = {
       casora_shopping:      'unfiltered',
       casora_kettle:        'unfiltered',
       casora_co:            'security',
+      casora_map:           'unfiltered',
       casora_plant:         'unfiltered',
     };
   }

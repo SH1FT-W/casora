@@ -2879,7 +2879,9 @@
     "Verdichter aus": "Compresor apagado",
     "Einmal aufheizen": "Calentar una vez",
     "Aufheizen gestartet": "Calentamiento iniciado",
-    "Taut ab": "Descongelando"
+    "Taut ab": "Descongelando",
+    "Landkarte": "Mapa",
+    "Nichts auf der Karte": "Nada en el mapa"
   },
   "patterns": [
     [
@@ -5149,6 +5151,10 @@
     [
       "^(\\d+(?:,\\d+)?) Portionen$",
       "{1} raciones"
+    ],
+    [
+      "^(\\d+) von (\\d+) zu Hause$",
+      "{1} de {2} en casa"
     ]
   ]
 }

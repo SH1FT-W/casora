@@ -3014,7 +3014,24 @@
     "Supply temperature": "Temperatura de impulsión",
     "Return temperature": "Temperatura de retorno",
     "Coefficient of performance": "Coeficiente de rendimiento",
-    "Compressor power": "Potencia del compresor"
+    "Compressor power": "Potencia del compresor",
+    "Area map": "Mapa",
+    "On the map": "En el mapa",
+    "Empty: all persons and zones.": "Vacío: todas las personas y zonas.",
+    "Geo location data": "Datos de geolocalización",
+    "All sources": "Todas las fuentes",
+    "Earthquakes, wildfires and other sources that put points on the map.": "Terremotos, incendios y otras fuentes que colocan puntos en el mapa.",
+    "History (hours)": "Historial (horas)",
+    "How many hours of the way people took are drawn. 0: none.": "Cuántas horas del recorrido se dibujan. 0: ninguna.",
+    "Default zoom": "Zoom predeterminado",
+    "How far the map zooms in when it fits everyone: 1 (world) to 20. Empty: Home Assistant's default.": "Cuánto se acerca el mapa al encajar a todos: de 1 (mundo) a 20. Vacío: el valor de Home Assistant.",
+    "Map look": "Aspecto del mapa",
+    "Follows the theme": "Según el tema",
+    "Light map": "Mapa claro",
+    "Dark map": "Mapa oscuro",
+    "Map on the tile": "Mapa en la tarjeta",
+    "The tile shows the map itself, large. Off: a small tile with a title and a symbol.": "La tarjeta muestra el propio mapa, en grande. Desactivado: una tarjeta pequeña con título y símbolo.",
+    "Home Assistant's map right on the tile, with the title and who is home. A tap opens it large in the popup: persons and zones, geo location data if you like, the way people took and the zoom you set. Without the map: a small tile with a title and a symbol.": "El mapa de Home Assistant en la propia tarjeta, con el título y quién está en casa. Al tocarla se abre en grande: personas y zonas, datos de geolocalización si quieres, el recorrido y el zoom que elijas. Sin mapa: una tarjeta pequeña con título y símbolo."
   },
   "patterns": [
     [

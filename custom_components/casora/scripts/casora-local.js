@@ -253,6 +253,7 @@ const MODULES = [
   '42-co',
   '43-aufgaben',
   '44-waermepumpe',
+  '44-landkarte',
 ];
 
 const START_MODULES = MODULES.slice(0, 5);

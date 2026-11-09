@@ -3014,7 +3014,24 @@
     "Supply temperature": "Aanvoertemperatuur",
     "Return temperature": "Retourtemperatuur",
     "Coefficient of performance": "Prestatiecoëfficiënt",
-    "Compressor power": "Compressorvermogen"
+    "Compressor power": "Compressorvermogen",
+    "Area map": "Kaart",
+    "On the map": "Op de kaart",
+    "Empty: all persons and zones.": "Leeg: alle personen en zones.",
+    "Geo location data": "Geolocatiegegevens",
+    "All sources": "Alle bronnen",
+    "Earthquakes, wildfires and other sources that put points on the map.": "Aardbevingen, branden en andere bronnen die punten op de kaart zetten.",
+    "History (hours)": "Geschiedenis (uren)",
+    "How many hours of the way people took are drawn. 0: none.": "Hoeveel uur van de afgelegde weg wordt getekend. 0: geen.",
+    "Default zoom": "Standaardzoom",
+    "How far the map zooms in when it fits everyone: 1 (world) to 20. Empty: Home Assistant's default.": "Hoe ver de kaart inzoomt als iedereen past: 1 (wereld) tot 20. Leeg: standaard van Home Assistant.",
+    "Map look": "Kaartweergave",
+    "Follows the theme": "Volgt het thema",
+    "Light map": "Lichte kaart",
+    "Dark map": "Donkere kaart",
+    "Map on the tile": "Kaart op de tegel",
+    "The tile shows the map itself, large. Off: a small tile with a title and a symbol.": "De tegel toont de kaart zelf, groot. Uit: een kleine tegel met titel en symbool.",
+    "Home Assistant's map right on the tile, with the title and who is home. A tap opens it large in the popup: persons and zones, geo location data if you like, the way people took and the zoom you set. Without the map: a small tile with a title and a symbol.": "De kaart van Home Assistant direct op de tegel, met de titel en wie thuis is. Een tik opent hem groot: personen en zones, desgewenst geolocatiegegevens, afgelegde wegen en de ingestelde zoom. Zonder kaart: een kleine tegel met titel en symbool."
   },
   "patterns": [
     [

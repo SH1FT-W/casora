@@ -9,3 +9,4 @@ custom_components/casora/scripts/local/34-security-covers.js | covers: one | lis
 custom_components/casora/scripts/local/35-phone-hub.js | covers: item.blinds | list of cover entity ids | 1
 custom_components/casora/scripts/local/29-eigene-badges.js | out.title: (entity.attributes && entity.attributes.friendly_name) || entity.entity_id | view model returned to the badge's templates (shown escaped), no card config | 2
 custom_components/casora/scripts/filter-overlay.js | room: roomMode | the overlay card's own room key from the dashboard config (admin) | 2
+custom_components/casora/scripts/local/44-landkarte.js | M.ids(states, vars).map(function (id) { return { entity: id }; }) | entity ids that exist in hass.states (keys of the state table), no text | 1

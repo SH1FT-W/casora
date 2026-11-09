@@ -3014,7 +3014,24 @@
     "Supply temperature": "Temperatura zasilania",
     "Return temperature": "Temperatura powrotu",
     "Coefficient of performance": "Współczynnik COP",
-    "Compressor power": "Moc sprężarki"
+    "Compressor power": "Moc sprężarki",
+    "Area map": "Mapa",
+    "On the map": "Na mapie",
+    "Empty: all persons and zones.": "Puste: wszystkie osoby i strefy.",
+    "Geo location data": "Dane geolokalizacji",
+    "All sources": "Wszystkie źródła",
+    "Earthquakes, wildfires and other sources that put points on the map.": "Trzęsienia ziemi, pożary i inne źródła, które dodają punkty na mapie.",
+    "History (hours)": "Historia (godziny)",
+    "How many hours of the way people took are drawn. 0: none.": "Ile godzin przebytej drogi jest rysowanych. 0: wcale.",
+    "Default zoom": "Domyślne przybliżenie",
+    "How far the map zooms in when it fits everyone: 1 (world) to 20. Empty: Home Assistant's default.": "Jak bardzo mapa się przybliża, gdy mieści wszystkich: od 1 (świat) do 20. Puste: domyślne Home Assistant.",
+    "Map look": "Wygląd mapy",
+    "Follows the theme": "Zgodnie z motywem",
+    "Light map": "Jasna mapa",
+    "Dark map": "Ciemna mapa",
+    "Map on the tile": "Mapa na kafelku",
+    "The tile shows the map itself, large. Off: a small tile with a title and a symbol.": "Kafelek pokazuje samą mapę, w dużym rozmiarze. Wyłączone: mały kafelek z tytułem i symbolem.",
+    "Home Assistant's map right on the tile, with the title and who is home. A tap opens it large in the popup: persons and zones, geo location data if you like, the way people took and the zoom you set. Without the map: a small tile with a title and a symbol.": "Mapa Home Assistant bezpośrednio na kafelku, z tytułem i informacją, kto jest w domu. Dotknięcie otwiera ją w dużym oknie: osoby i strefy, opcjonalnie dane geolokalizacji, przebyte drogi i ustawione przybliżenie. Bez mapy: mały kafelek z tytułem i symbolem."
   },
   "patterns": [
     [

@@ -3014,7 +3014,24 @@
     "Supply temperature": "Temperatura di mandata",
     "Return temperature": "Temperatura di ritorno",
     "Coefficient of performance": "Coefficiente di prestazione",
-    "Compressor power": "Potenza compressore"
+    "Compressor power": "Potenza compressore",
+    "Area map": "Mappa",
+    "On the map": "Sulla mappa",
+    "Empty: all persons and zones.": "Vuoto: tutte le persone e le zone.",
+    "Geo location data": "Dati di geolocalizzazione",
+    "All sources": "Tutte le fonti",
+    "Earthquakes, wildfires and other sources that put points on the map.": "Terremoti, incendi e altre fonti che mettono punti sulla mappa.",
+    "History (hours)": "Cronologia (ore)",
+    "How many hours of the way people took are drawn. 0: none.": "Quante ore di percorso vengono disegnate. 0: nessuna.",
+    "Default zoom": "Zoom predefinito",
+    "How far the map zooms in when it fits everyone: 1 (world) to 20. Empty: Home Assistant's default.": "Quanto si avvicina la mappa quando contiene tutti: da 1 (mondo) a 20. Vuoto: valore di Home Assistant.",
+    "Map look": "Aspetto della mappa",
+    "Follows the theme": "Segue il tema",
+    "Light map": "Mappa chiara",
+    "Dark map": "Mappa scura",
+    "Map on the tile": "Mappa sulla scheda",
+    "The tile shows the map itself, large. Off: a small tile with a title and a symbol.": "La scheda mostra la mappa stessa, in grande. Disattivato: una scheda piccola con titolo e simbolo.",
+    "Home Assistant's map right on the tile, with the title and who is home. A tap opens it large in the popup: persons and zones, geo location data if you like, the way people took and the zoom you set. Without the map: a small tile with a title and a symbol.": "La mappa di Home Assistant direttamente sulla scheda, con il titolo e chi è a casa. Un tocco la apre in grande: persone e zone, dati di geolocalizzazione se vuoi, percorsi e lo zoom scelto. Senza mappa: una scheda piccola con titolo e simbolo."
   },
   "patterns": [
     [

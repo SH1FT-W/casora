@@ -2879,7 +2879,9 @@
     "Verdichter aus": "Sprężarka wyłączona",
     "Einmal aufheizen": "Podgrzej jednorazowo",
     "Aufheizen gestartet": "Podgrzewanie rozpoczęte",
-    "Taut ab": "Odszranianie"
+    "Taut ab": "Odszranianie",
+    "Landkarte": "Mapa",
+    "Nichts auf der Karte": "Nic na mapie"
   },
   "patterns": [
     [
@@ -5149,6 +5151,10 @@
     [
       "^(\\d+(?:,\\d+)?) Portionen$",
       "Porcje: {1}"
+    ],
+    [
+      "^(\\d+) von (\\d+) zu Hause$",
+      "{1} z {2} w domu"
     ]
   ]
 }

@@ -158,7 +158,7 @@ Rooms, tiles, badges and popups, changed in place with a live preview for deskto
 <a id="good-to-know"></a>
 ## Good to know
 
-- **Community cards** (Frigate camera, Reolink doorbell, Velair thermostat, chart, pet tracker, Bring! shopping list, kettle) ship with Casora but only appear in **Add a tile** once you add them under **Community** in the Studio. Nothing is downloaded from outside your Home Assistant.
+- **Community cards** (Frigate camera, Reolink doorbell, Velair thermostat, chart, pet tracker, Bring! shopping list, kettle, map) ship with Casora but only appear in **Add a tile** once you add them under **Community** in the Studio. Nothing is downloaded from outside your Home Assistant.
 - **Missing a card?** Request it in the Studio under **Community > Request a card**. Casora prepares a GitHub issue without entity names, rooms or places, shows you the text and you submit it yourself. The Studio then shows where it stands.
 - **After an update** Casora brings your dashboards up to its new templates and saves a version first. Templates you changed yourself stay as they are. It never restarts Home Assistant on its own.
 - **Versions** are `YY.M.N`: year, month and the number of the release in that month. The jump from 1.6.0 was intended.

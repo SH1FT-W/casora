@@ -3014,7 +3014,24 @@
     "Supply temperature": "Vorlauftemperatur",
     "Return temperature": "Rücklauftemperatur",
     "Coefficient of performance": "Leistungszahl",
-    "Compressor power": "Verdichterleistung"
+    "Compressor power": "Verdichterleistung",
+    "Area map": "Landkarte",
+    "On the map": "Auf der Karte",
+    "Empty: all persons and zones.": "Leer: alle Personen und Zonen.",
+    "Geo location data": "Geo-Standortdaten",
+    "All sources": "Alle Quellen",
+    "Earthquakes, wildfires and other sources that put points on the map.": "Erdbeben, Brände und andere Quellen, die Punkte auf die Karte setzen.",
+    "History (hours)": "Verlauf (Stunden)",
+    "How many hours of the way people took are drawn. 0: none.": "Wie viele Stunden der zurückgelegte Weg gezeichnet wird. 0: keiner.",
+    "Default zoom": "Standard-Zoomstufe",
+    "How far the map zooms in when it fits everyone: 1 (world) to 20. Empty: Home Assistant's default.": "Wie weit die Karte hineinzoomt, wenn alle hineinpassen: 1 (Welt) bis 20. Leer: Standard von Home Assistant.",
+    "Map look": "Kartenfarbe",
+    "Follows the theme": "Folgt dem Theme",
+    "Light map": "Helle Karte",
+    "Dark map": "Dunkle Karte",
+    "Map on the tile": "Karte auf der Kachel",
+    "The tile shows the map itself, large. Off: a small tile with a title and a symbol.": "Die Kachel zeigt die Karte selbst, groß. Aus: eine kleine Kachel mit Titel und Symbol.",
+    "Home Assistant's map right on the tile, with the title and who is home. A tap opens it large in the popup: persons and zones, geo location data if you like, the way people took and the zoom you set. Without the map: a small tile with a title and a symbol.": "Die Karte von Home Assistant direkt auf der Kachel, mit Titel und wer zu Hause ist. Antippen öffnet sie groß im Popup: Personen und Zonen, auf Wunsch Geo-Standortdaten, zurückgelegte Wege und den eingestellten Zoom. Ohne Karte: eine kleine Kachel mit Titel und Symbol."
   },
   "patterns": [
     [

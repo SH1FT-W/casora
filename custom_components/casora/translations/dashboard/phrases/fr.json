@@ -2879,7 +2879,9 @@
     "Verdichter aus": "Compresseur arrêté",
     "Einmal aufheizen": "Chauffer une fois",
     "Aufheizen gestartet": "Chauffe lancée",
-    "Taut ab": "Dégivrage"
+    "Taut ab": "Dégivrage",
+    "Landkarte": "Carte",
+    "Nichts auf der Karte": "Rien sur la carte"
   },
   "patterns": [
     [
@@ -5149,6 +5151,10 @@
     [
       "^(\\d+(?:,\\d+)?) Portionen$",
       "{1} portions"
+    ],
+    [
+      "^(\\d+) von (\\d+) zu Hause$",
+      "{1} sur {2} à la maison"
     ]
   ]
 }

@@ -3014,7 +3014,24 @@
     "Supply temperature": "Temperatura de ida",
     "Return temperature": "Temperatura de retorno",
     "Coefficient of performance": "Coeficiente de desempenho",
-    "Compressor power": "Potência do compressor"
+    "Compressor power": "Potência do compressor",
+    "Area map": "Mapa",
+    "On the map": "No mapa",
+    "Empty: all persons and zones.": "Vazio: todas as pessoas e zonas.",
+    "Geo location data": "Dados de geolocalização",
+    "All sources": "Todas as fontes",
+    "Earthquakes, wildfires and other sources that put points on the map.": "Sismos, incêndios e outras fontes que colocam pontos no mapa.",
+    "History (hours)": "Histórico (horas)",
+    "How many hours of the way people took are drawn. 0: none.": "Quantas horas de percurso são desenhadas. 0: nenhuma.",
+    "Default zoom": "Zoom predefinido",
+    "How far the map zooms in when it fits everyone: 1 (world) to 20. Empty: Home Assistant's default.": "Até onde o mapa aproxima quando cabem todos: de 1 (mundo) a 20. Vazio: valor do Home Assistant.",
+    "Map look": "Aspeto do mapa",
+    "Follows the theme": "Segue o tema",
+    "Light map": "Mapa claro",
+    "Dark map": "Mapa escuro",
+    "Map on the tile": "Mapa no mosaico",
+    "The tile shows the map itself, large. Off: a small tile with a title and a symbol.": "O mosaico mostra o próprio mapa, em grande. Desligado: um mosaico pequeno com título e símbolo.",
+    "Home Assistant's map right on the tile, with the title and who is home. A tap opens it large in the popup: persons and zones, geo location data if you like, the way people took and the zoom you set. Without the map: a small tile with a title and a symbol.": "O mapa do Home Assistant diretamente no mosaico, com o título e quem está em casa. Um toque abre-o em grande: pessoas e zonas, dados de geolocalização se quiser, percursos e o zoom definido. Sem mapa: um mosaico pequeno com título e símbolo."
   },
   "patterns": [
     [

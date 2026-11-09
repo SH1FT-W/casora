@@ -125,6 +125,8 @@ const MIGRIERT = [
   // Built for v3 (issue 124): S6 with a range (0–150 ppm in the colour of the level, thresholds as marks), the Verlauf
   // 24 Std. · 7 Tage in the stage.
   { popup: 'Aufgaben', vorlagen: ['casora_popup_tasks'], file: '43-aufgaben.js', from: '  T.innerHtml = function', to: '  T.box = function', stages: 1 },
+  // S5: HA's own map card mounted into UI.stage('image'), across the wide popup (issue 159).
+  { popup: 'Landkarte', vorlagen: ['casora_popup_map'], file: '44-landkarte.js', from: '  M.sec = function', to: '  M.popup = function', stages: 2 },
   { popup: 'CO-Melder', vorlagen: ['casora_popup_co'], file: '42-co.js', from: '  C.sec = function', to: "  // The popup's cards: v3", stages: 1 },
 ];
 

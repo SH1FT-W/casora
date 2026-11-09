@@ -88,6 +88,7 @@
     casora_shopping: "einkaufsliste einkauf bring liste todo shopping list grocery",
     casora_heat_pump: "wärmepumpe waermepumpe heizung warmwasser verdichter kompressor vicare nibe daikin heat pump hot water compressor",
     casora_kettle: "wasserkocher kocher tee wasser xiaomi kettle",
+    casora_map: "karte landkarte map personen zonen standort geo location",
     casora_co: "co kohlenmonoxid co-melder melder gas carbon monoxide detector alarm matter",
     casora_oven: "backofen ofen herd backen home connect oven",
     // E03 (test 2): "Abfall"/"Müll" found nothing – tile types are found by their everyday words as well.

@@ -17,6 +17,7 @@ const TEST_DEVICES = {
   casora_shopping: ['testeinkauf'], // shopping.py: a to-do list named like a shopping list
   casora_kettle: ['testkocher', 'testwasserkocher'], // kettle.py: Xiaomi-BLE-like kettle (shows only) and one with target + keep warm
   casora_co: ['testmelder'], // co.py: Matter-like smoke and CO detector with CO reading, alarm, battery and self-test
+  casora_map: [], // no device of its own: persons and zones of the whole home
 };
 
 const hass = testhaus();

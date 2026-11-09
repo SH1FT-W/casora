@@ -2861,7 +2861,9 @@
     "Verdichter aus": "Compressor off",
     "Einmal aufheizen": "Heat up once",
     "Aufheizen gestartet": "Heating up started",
-    "Taut ab": "Defrosting"
+    "Taut ab": "Defrosting",
+    "Landkarte": "Map",
+    "Nichts auf der Karte": "Nothing on the map"
   },
   "patterns": [
     [
@@ -5131,6 +5133,10 @@
     [
       "^(\\d+(?:,\\d+)?) Portionen$",
       "{1} servings"
+    ],
+    [
+      "^(\\d+) von (\\d+) zu Hause$",
+      "{1} of {2} at home"
     ]
   ]
 }

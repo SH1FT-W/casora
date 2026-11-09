@@ -49,3 +49,5 @@ dashboards/casora/button_card_templates.json#casora_badge_humidity | re:^window\
 dashboards/casora/button_card_templates.json#casora_badge_light | re:^window\.casoraBadgeOfflineName | offline sub-badge: casoraBadgeOfflineName (01-basis.js) escapes the title itself | 1
 dashboards/casora/button_card_templates.json#casora_badge_presence | re:^window\.casoraBadgeOfflineName | offline sub-badge: casoraBadgeOfflineName (01-basis.js) escapes the title itself | 1
 dashboards/casora/button_card_templates.json#casora_badge_temp | re:^window\.casoraBadgeOfflineName | offline sub-badge: casoraBadgeOfflineName (01-basis.js) escapes the title itself | 1
+dashboards/casora/button_card_templates.json#casora_map | return word ? fit(word) : '&nbsp;' | word from 44-landkarte.js (fixed words and counts) through fit() = casoraStateFit (escapes) or casoraEsc | 1
+dashboards/casora/button_card_templates.json#casora_map | return window._casoraMapCard ? window._casoraMapCard.tileField(this, variables) : '' | fixed markup of the map element, no data in it | 1

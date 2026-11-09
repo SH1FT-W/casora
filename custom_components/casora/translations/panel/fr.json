@@ -3014,7 +3014,24 @@
     "Supply temperature": "Température de départ",
     "Return temperature": "Température de retour",
     "Coefficient of performance": "Coefficient de performance",
-    "Compressor power": "Puissance du compresseur"
+    "Compressor power": "Puissance du compresseur",
+    "Area map": "Carte",
+    "On the map": "Sur la carte",
+    "Empty: all persons and zones.": "Vide : toutes les personnes et zones.",
+    "Geo location data": "Données de géolocalisation",
+    "All sources": "Toutes les sources",
+    "Earthquakes, wildfires and other sources that put points on the map.": "Séismes, incendies et autres sources qui placent des points sur la carte.",
+    "History (hours)": "Historique (heures)",
+    "How many hours of the way people took are drawn. 0: none.": "Nombre d'heures de trajet dessinées. 0 : aucune.",
+    "Default zoom": "Zoom par défaut",
+    "How far the map zooms in when it fits everyone: 1 (world) to 20. Empty: Home Assistant's default.": "Niveau de zoom maximal quand tout le monde tient sur la carte : de 1 (monde) à 20. Vide : valeur de Home Assistant.",
+    "Map look": "Aspect de la carte",
+    "Follows the theme": "Suit le thème",
+    "Light map": "Carte claire",
+    "Dark map": "Carte sombre",
+    "Map on the tile": "Carte sur la tuile",
+    "The tile shows the map itself, large. Off: a small tile with a title and a symbol.": "La tuile affiche la carte elle-même, en grand. Désactivé : une petite tuile avec un titre et un symbole.",
+    "Home Assistant's map right on the tile, with the title and who is home. A tap opens it large in the popup: persons and zones, geo location data if you like, the way people took and the zoom you set. Without the map: a small tile with a title and a symbol.": "La carte de Home Assistant directement sur la tuile, avec le titre et qui est à la maison. Un toucher l'ouvre en grand : personnes et zones, données de géolocalisation au besoin, trajets et zoom choisi. Sans carte : une petite tuile avec un titre et un symbole."
   },
   "patterns": [
     [

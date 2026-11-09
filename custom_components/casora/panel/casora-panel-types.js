@@ -447,6 +447,31 @@ window.CASORA_TILE_TYPES = [
       { key: "target_entity", label: "Target temperature", domains: ["number"] },
       { key: "keep_warm_entity", label: "Keep warm", domains: ["switch"] },
       TITLE_NAME] },
+  // Map (community card, card request 159): a title and a symbol on the tile, no device needed; the popup is Home
+  // Assistant's own map card, large (scripts/local/44-landkarte.js). Without entities: all persons and zones.
+  { id: "casora_map", label: "Area map", template: "casora_map", domains: [], noEntity: true, icon: "map",
+    color: "var(--casora-color-teal, #00C3D0)",
+    community: { desc: "Home Assistant's map right on the tile, with the title and who is home. A tap opens it large in the popup: persons and zones, geo location data if you like, the way people took and the zoom you set. Without the map: a small tile with a title and a symbol.", darkShots: true },
+    fields: [
+      { key: "map_tile", label: "Map on the tile", type: "bool", boolDefault: true,
+        hint: "The tile shows the map itself, large. Off: a small tile with a title and a symbol." },
+      { key: "map_entities", label: "On the map", type: "list", noAnchor: true, domains: ["person", "zone", "device_tracker"], placeholder: "Add device …",
+        hint: "Empty: all persons and zones." },
+      { key: "map_geo", label: "Geo location data", type: "select", options: ["", "all"], optionLabels: { "": "None", all: "All sources" },
+        // The sources this home has (attribute source of geo_location entities); a stored one stays selectable.
+        dynOptions: (hass) => {
+          const found = [...new Set(Object.keys((hass && hass.states) || {}).filter((id) => id.startsWith("geo_location."))
+            .map((id) => (hass.states[id].attributes || {}).source).filter(Boolean))].sort();
+          return { options: ["", "all", ...found], labels: {} };
+        },
+        hint: "Earthquakes, wildfires and other sources that put points on the map." },
+      { key: "map_hours", label: "History (hours)", type: "number", placeholder: "0",
+        hint: "How many hours of the way people took are drawn. 0: none." },
+      { key: "map_zoom", label: "Default zoom", type: "number", placeholder: "14",
+        hint: "How far the map zooms in when it fits everyone: 1 (world) to 20. Empty: Home Assistant's default." },
+      { key: "map_theme", label: "Map look", type: "select", options: ["", "light", "dark"],
+        optionLabels: { "": "Follows the theme", light: "Light map", dark: "Dark map" } },
+      ICON, TITLE_NAME] },
   // CO detector (community card, card request 124): a sensor with device_class carbon_monoxide (Matter's CO concentration
   // in ppm). Tile: the reading, the symbol in the color of its level (green, from 30 ppm yellow, from 50 orange, from 100
   // red); popup: the reading on a dial with the levels, Verlauf 24 h / 7 days, what to do, battery, self-test and alarm of
@@ -707,6 +732,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   "window-closed", "heating_coil", "wind", "rooms", "soccer", "pulse", "lawn-mower", "coffee-maker", "paw",
   "coffee-espresso", "coffee-doppio", "coffee-cup", "coffee-cappuccino", "coffee-latte", "coffee-tall", "coffee-water",
   "coffee-milk", "coffee-tea", "chart", "velair", "list", "tasks", "grid", "cart", "universal", "kettle", "co", "heat_pump",
+  "coffee-milk", "coffee-tea", "chart", "velair", "list", "tasks", "grid", "cart", "universal", "kettle", "co", "map",
 ].map((n) => [n, "/casora_assets/icons/" + n + ".svg"]));
 
 // Preview: show conditional cards (type: conditional) as the dashboard does –

@@ -734,6 +734,7 @@ const FILTER_CATEGORIES = {
   casora_tasks: "unfiltered",
   casora_kettle: "unfiltered",
   casora_co: "security",
+  casora_map: "unfiltered",
   casora_plant: "unfiltered",
 };
 
@@ -3910,7 +3911,7 @@ const autoRoomGlyph = (name) => {
 // kitchen) is no reason to offer them as "Fits <room>".
 const HOUSE_WIDE_TILES = new Set(["energy_tile", "network", "battery", "updates", "casora_alarm",
   "casora_weather_warning", "casora_solar_tip", "casora_trash", "casora_recipe", "casora_pulse", "casora_calendar", "casora_tasks",
-  "casora_entity_list", "casora_more"]);
+  "casora_entity_list", "casora_more", "casora_map"]);
 
 // The automatic icon follows the name. A new name it doesn't know ("Küche" →
 // "Kochecke") would fall back to the house - keep the icon the room had instead.
@@ -6504,6 +6505,7 @@ const tileStateWord = (kind, tile, ent, states, hass) => {
     const cal = Object.keys(S).sort().find((id) => id.startsWith("calendar.") && S[id].attributes && S[id].attributes.message);
     return cal ? String(S[cal].attributes.message) : "No events";
   }
+  if (kind === "casora_map") return "";
   if (kind === "casora_tasks") {
     const T = typeof window !== "undefined" && window._casoraTasks;
     return T && T.tile ? T.tile(states || {}, V) : "Tasks";

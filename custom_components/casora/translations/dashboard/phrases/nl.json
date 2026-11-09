@@ -2879,7 +2879,9 @@
     "Verdichter aus": "Compressor uit",
     "Einmal aufheizen": "Eenmalig opwarmen",
     "Aufheizen gestartet": "Opwarmen gestart",
-    "Taut ab": "Ontdooit"
+    "Taut ab": "Ontdooit",
+    "Landkarte": "Kaart",
+    "Nichts auf der Karte": "Niets op de kaart"
   },
   "patterns": [
     [
@@ -5149,6 +5151,10 @@
     [
       "^(\\d+(?:,\\d+)?) Portionen$",
       "{1} porties"
+    ],
+    [
+      "^(\\d+) von (\\d+) zu Hause$",
+      "{1} van {2} thuis"
     ]
   ]
 }

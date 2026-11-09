@@ -2879,7 +2879,9 @@
     "Verdichter aus": "Compressore spento",
     "Einmal aufheizen": "Riscalda una volta",
     "Aufheizen gestartet": "Riscaldamento avviato",
-    "Taut ab": "Sbrinamento"
+    "Taut ab": "Sbrinamento",
+    "Landkarte": "Mappa",
+    "Nichts auf der Karte": "Niente sulla mappa"
   },
   "patterns": [
     [
@@ -5149,6 +5151,10 @@
     [
       "^(\\d+(?:,\\d+)?) Portionen$",
       "{1} porzioni"
+    ],
+    [
+      "^(\\d+) von (\\d+) zu Hause$",
+      "{1} di {2} a casa"
     ]
   ]
 }

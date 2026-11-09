@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-0.2 -0.2 24.4 24.4" fill="none" stroke="#000" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Casora: map (a folded sheet), SF-symbol style like list.svg -->
+  <path d="M3 6.2 8.7 4l6.6 2.2L21 4v13.8l-5.7 2.2-6.6-2.2L3 20z"/>
+  <path d="M8.7 4v13.8M15.3 6.2V20"/>
+</svg>
