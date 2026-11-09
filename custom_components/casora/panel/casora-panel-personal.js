@@ -21,6 +21,7 @@
     + ".casora-x{flex:0 0 auto;width:var(--k-hit, 32px);height:var(--k-hit, 32px);border-radius:50%;border:none;cursor:pointer;"
     + "background:transparent;color:var(--ink-3);display:grid;place-items:center;padding:0}"
     + ".casora-x svg{width:14px;height:14px}"
+    + ".casora-pagain{flex:0 0 auto;min-height:var(--k-hit, 32px);padding:0 12px;border:none;border-radius:calc(var(--k-hit, 32px) / 2);cursor:pointer;background:var(--casora-studio-field, rgba(255,255,255,.14));color:inherit;font:inherit;font-weight:600}"
     + ".casora-x:is(:hover,:focus-visible){background:color-mix(in srgb, var(--casora-studio-danger, #d70015) 13%, transparent);color:var(--casora-studio-danger, #d70015)}"
     // Fields stand out from the card (on the phone --field is as light as the card).
     + ".frow.casora-prow .casora-pctl .combo>input,.frow.casora-prow .casora-pctl>input.fin{background:var(--casora-studio-field, var(--field));"
@@ -92,6 +93,7 @@
     s.security.covers = Array.isArray(s.security.covers) ? s.security.covers : [];
     s.media = s.media || {};
     s.media.players = s.media.players || {};
+    s.media.hidden = Array.isArray(s.media.hidden) ? s.media.hidden : [];
     s.ebike = s.ebike || {};
     s.basis = s.basis || {};
     return s;
@@ -616,18 +618,24 @@
         const icon = (c, onSet) => pick(c.icon || "", ICONS, ICON_LABELS, (v) => { if (v) c.icon = v; else delete c.icon; onSet && onSet(); });
         const vol = (c, onSet) => ent(c.volume_entity, ["number", "media_player"],
           (v) => { if (v) c.volume_entity = v; else delete c.volume_entity; onSet && onSet(); }, "Volume: through the player");
-        shown.forEach((id) => {
+        const friendly = (id) => { const st = hass && hass.states[id]; return (st && st.attributes && st.attributes.friendly_name) || id; };
+        const noI18n = (r) => r.querySelectorAll(".rtext > b, .rtext > span").forEach((x) => x.setAttribute("data-no-i18n", ""));
+        shown.filter((id) => !S.media.hidden.includes(id)).forEach((id) => {
           // No entry yet: only create it once it differs (prune clears it away again when empty).
           const c = S.media.players[id] || {};
           const put = () => { S.media.players[id] = c; };
-          const st = hass && hass.states[id];
-          const r = row(g, (st && st.attributes && st.attributes.friendly_name) || id, [icon(c, put), vol(c, put)], id);
-          const b = r.querySelector(".rtext > b");
-          if (b) b.setAttribute("data-no-i18n", "");
-          const sub = r.querySelector(".rtext > span");
-          if (sub) sub.setAttribute("data-no-i18n", "");
+          noI18n(row(g, friendly(id), [icon(c, put), vol(c, put), del(() => { S.media.hidden.push(id); })], id));
         });
-        mapRows(S.media.players).filter(([id]) => !shown.includes(id)).forEach(([id, cfg]) => {
+        // Taken out of Now Playing on every dashboard (#151): the row brings it back.
+        S.media.hidden.forEach((id, i) => {
+          const back = document.createElement("button");
+          back.type = "button";
+          back.className = "casora-pagain";
+          back.textContent = "Show again";
+          back.onclick = () => { S.media.hidden.splice(i, 1); render(); };
+          noI18n(row(g, friendly(id), [back], id + " · " + (window.casoraI18n ? window.casoraI18n.t("Hidden") : "Hidden")));
+        });
+        mapRows(S.media.players).filter(([id]) => !shown.includes(id) && !S.media.hidden.includes(id)).forEach(([id, cfg]) => {
           const c = cfg || {};
           row(g, "Player", [
             ent(id, ["media_player"], (v) => { setMap(S.media.players, id, v, c); render(); }),

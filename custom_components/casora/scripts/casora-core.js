@@ -3313,12 +3313,14 @@ window.casoraMenuGlass = {
 
       const pauseTimeout = Number(V.pause_timeout_minutes ?? 10);
       const out = [];
+      // Taken out of Now Playing for every dashboard in the Studio's player list (#151).
+      const npOff = ((window.CASORA_SETTINGS || {}).media || {}).hidden || [];
 
       for (let i = 1; i <= 10; i++) {
         if (!V['show_media_player_' + i]) continue;
         const eid = V['media_player_' + i];
         const s = eid && states[eid];
-        if (!s) continue;
+        if (!s || npOff.includes(eid)) continue;
 
         const st = low(s.state);
         const a  = s.attributes || {};
@@ -3615,7 +3617,7 @@ window.casoraMenuGlass = {
       // Echter Pausen-Beginn (sensor.casora_media_paused): verschiebt die Ausblende-Frist, gehört
       // also in die Signatur – und wird so auch von button-card mitverfolgt.
       const pausedMap = states['sensor.casora_media_paused']?.attributes?.players || null;
-      parts.push('pt:' + String(V.pause_timeout_minutes ?? ''));
+      parts.push('pt:' + String(V.pause_timeout_minutes ?? '') + '|' + (((window.CASORA_SETTINGS || {}).media || {}).hidden || []).join());
       for (let i = 1; i <= 10; i++) {
         const e = V['show_media_player_' + i] && V['media_player_' + i];
         if (e) {
