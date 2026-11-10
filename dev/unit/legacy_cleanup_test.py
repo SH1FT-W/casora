@@ -77,7 +77,7 @@ _, msg = lc.notification_text({"theme": {"path": "themes/casora-themes.yaml", "r
 check("ließ sich nicht löschen" in msg and "entfernt" not in msg, f"de, theme file not removable: {msg!r}")
 check(lc.notification_text({}, "de") is None and lc.notification_text({"removed": [], "kept": {}}, "de") is None, "nothing: no text")
 keys = set(lc.TEXT["de"])
-for lang in ("en", "es", "fr", "it", "nl", "pl", "pt"):
+for lang in ("en", "es", "fr", "it", "nl", "pl", "pt", "nb"):
     check(set(lc.TEXT[lang]) == keys, f"{lang}: same text keys as de")
     t = lc.notification_text({"removed": list(lc.OBJECT_IDS), "theme": {"path": "x", "removed": True},
                               "kept": {"casora_restart_toggle": {"reason": r} for r in lc.REASONS[:1]}}, lang)

@@ -58,6 +58,20 @@
     "presence.n_away": "{n} fuori",
     "presence.person": "Persona"
   },
+  "nb": {
+    "filter.all": "Hjem",
+    "filter.climate": "Klima",
+    "filter.energy": "Energi",
+    "filter.lights": "Belysning",
+    "filter.media": "Medier",
+    "filter.presence": "Personer",
+    "filter.security": "Sikkerhet",
+    "presence.all_away": "Alle borte",
+    "presence.all_home": "Alle hjemme",
+    "presence.group.title": "Personer",
+    "presence.n_away": "{n} borte",
+    "presence.person": "Person"
+  },
   "nl": {
     "filter.all": "Thuis",
     "filter.climate": "Klimaat",
@@ -106,7 +120,7 @@
   // all 8 languages were 1 MB / 291 KB gzip on every dashboard). window.__casoraI18nPhrases preloads
   // languages ({lang: object or JSON text}), e.g. in the unit tests.
   var PHRASES = {"de":{"exact":{"Ein":"An","Favorites":"Favoriten","Home":"Zuhause","Scenes":"Szenen"},"patterns":[]}};
-  var AVAIL = ["en", "es", "fr", "it", "nl", "pl", "pt"];
+  var AVAIL = ["en", "es", "fr", "it", "nb", "nl", "pl", "pt"];
   var BASE = '/casora_scripts/i18n/';
   var REMEMBER = 'casora.i18n.lang';
   (function () {

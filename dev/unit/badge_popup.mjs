@@ -216,7 +216,7 @@ r = render();
 assert.ok(!r.labels.includes('Own popup'), 'popup fields only for the own popup');
 
 // ── Translations ────────────────────────────────────────────────────────────────
-for (const lang of ['de', 'es', 'fr', 'it', 'nl', 'pl', 'pt']) {
+for (const lang of ['de', 'es', 'fr', 'it', 'nl', 'pl', 'pt', 'nb']) {
   const tr = JSON.parse(src('custom_components/casora/translations/panel/' + lang + '.json')).exact;
   for (const s of ['Own popup', "This badge's device"]) assert.ok(tr[s], lang + ' translation missing for: ' + s);
 }

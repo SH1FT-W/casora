@@ -51,7 +51,7 @@ for (const f of files) {
   }
 }
 assert.equal(bare, 0, 'every minute count before „gerade eben“ uses casoraAgoMin');
-for (const lang of ['en', 'es', 'fr', 'it', 'nl', 'pl', 'pt']) {
+for (const lang of ['en', 'es', 'fr', 'it', 'nl', 'pl', 'pt', 'nb']) {
   const ex = JSON.parse(rd('custom_components/casora/translations/dashboard/phrases/' + lang + '.json')).exact;
   assert.ok(ex['gerade eben'] && ex['Gerade eben'], lang + ': „gerade eben“ translated');
 }

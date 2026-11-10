@@ -72,6 +72,11 @@ TEXT = {
         "schliessen": ("Fechar janela: {n}", "{grund} – já a podes fechar."),
         "co2krit": ("CO₂ crítico: {n}", "{co2} ppm – ventila já."),
     },
+    "nb": {
+        "jetzt": ("Luft ut: {n}", "{grund} – luft ut en kort stund nå."),
+        "schliessen": ("Lukk vinduet: {n}", "{grund} – du kan lukke igjen."),
+        "co2krit": ("CO₂ kritisk: {n}", "{co2} ppm – luft ut med en gang."),
+    },
 }
 # Gründe kommen deutsch aus raumklima.py; für Englisch die festen Teile tauschen.
 GRUND_EN = (("Feuchte", "Humidity"), ("Fenster seit", "Window open for"), (" offen", ""), ("Std.", "h"), ("Min.", "min"))
@@ -81,7 +86,8 @@ GRUND = {"en": GRUND_EN, "es": (("Feuchte", "Humedad"), ("Fenster seit", "Ventan
          "it": (("Feuchte", "Umidità"), ("Fenster seit", "Finestra aperta da"), (" offen", ""), ("Std.", "h"), ("Min.", "min")),
          "nl": (("Feuchte", "Vochtigheid"), ("Fenster seit", "Raam open sinds"), (" offen", ""), ("Std.", "u"), ("Min.", "min")),
          "pl": (("Feuchte", "Wilgotność"), ("Fenster seit", "Okno otwarte od"), (" offen", ""), ("Std.", "godz."), ("Min.", "min")),
-         "pt": (("Feuchte", "Humidade"), ("Fenster seit", "Janela aberta há"), (" offen", ""), ("Std.", "h"), ("Min.", "min"))}
+         "pt": (("Feuchte", "Humidade"), ("Fenster seit", "Janela aberta há"), (" offen", ""), ("Std.", "h"), ("Min.", "min")),
+         "nb": (("Feuchte", "Fuktighet"), ("Fenster seit", "Vindu åpent i"), (" offen", ""), ("Std.", "t"), ("Min.", "min"))}
 
 
 def notify_services(hass: HomeAssistant) -> list[str]:

@@ -313,14 +313,14 @@ assert.deepEqual(fm.more_charts.domains, ['sensor']); assert.equal(fm.more_chart
 // Tiles of the dashboard as entries (#59): only entities with a tile, a name each.
 assert.equal(fm.more_tiles.tiles, true); assert.equal(fm.more_tile_labels.over, 'more_tiles');
 assert.equal(fm.more_tile_labels.when({}), false); assert.equal(fm.more_tile_labels.when({ more_tiles: ['light.qa_x'] }), true);
-for (const lang of ['de', 'es', 'fr', 'it', 'nl', 'pl', 'pt']) {
+for (const lang of ['de', 'es', 'fr', 'it', 'nl', 'pl', 'pt', 'nb']) {
   const tr = JSON.parse(src('custom_components/casora/translations/panel/' + lang + '.json')).exact;
   const words = [tList.label, tMore.label].concat([tList, tMore].flatMap((t) => t.fields.flatMap((f) => [f.label, f.hint, f.placeholder]
     .concat(Object.values(f.optionLabels || {})))).filter(Boolean), ['Heading, e.g. Per month', 'Before which entry?', 'Choose the entries first.']);
   for (const s of words) assert.ok(tr[s], lang + ' translation missing for: ' + s);
 }
 const phr = (lang) => JSON.parse(src('custom_components/casora/translations/dashboard/phrases/' + lang + '.json'));
-for (const lang of ['en', 'es', 'fr', 'it', 'nl', 'pl', 'pt']) {
+for (const lang of ['en', 'es', 'fr', 'it', 'nl', 'pl', 'pt', 'nb']) {
   const ph = phr(lang);
   for (const s of ['Liste', 'Mehr', 'Keine Einträge', '1 Gerät', 'Nichts gewählt', '1 Liste', '1 Diagramm', 'Diagramme',
     'Die Gruppe gibt es nicht mehr. Wähle im Studio eine andere.', 'Wähle im Studio eine Gruppe, Geräte oder ein Label.',

@@ -96,7 +96,7 @@ for (const t of ['casora_cover', 'casora_popup_cover']) {
 }
 
 // ── Translations: every part has a phrase in every language ──
-for (const lang of ['en', 'es', 'fr', 'it', 'nl', 'pl', 'pt']) {
+for (const lang of ['en', 'es', 'fr', 'it', 'nl', 'pl', 'pt', 'nb']) {
   const P = JSON.parse(read(`custom_components/casora/translations/dashboard/phrases/${lang}.json`));
   const hit = (x) => P.exact[x] != null || P.patterns.some(([re]) => new RegExp(re).test(x));
   for (const x of ['Alle geöffnet', 'Alle geschlossen', '2 von 4 geöffnet', 'Ø 70 %', '70 % geöffnet', 'Nicht verfügbar']) {

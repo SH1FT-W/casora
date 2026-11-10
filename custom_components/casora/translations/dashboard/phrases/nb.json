@@ -1,0 +1,5161 @@
+{
+  "exact": {
+    "Favorites": "Favoritter",
+    "Scenes": "Scener",
+    "Ein": "På",
+    "Home": "Hjem",
+    "Alle Änderungen": "Alle endringer",
+    "Tankinhalt": "Drivstoff i tanken",
+    "Staubbeutel oder Filter fehlt": "Støvpose eller filter mangler",
+    "Absauggebläse gestört": "Feil på tømmeviften",
+    "Absaugkanal verstopft": "Tømmekanalen er tett",
+    "Spannungsfehler an der Station": "Spenningsfeil på stasjonen",
+    "Reinigungsbürste blockiert": "Rengjøringsbørsten sitter fast",
+    "Schmutzwassertank nicht eingerastet": "Skittenvannstanken er ikke på plass",
+    "Reinigungstank voll oder verstopft": "Rengjøringstanken er full eller tett",
+    "Entfernen": "Fjern",
+    "Alle entfernen": "Fjern alle",
+    "Alle Meldungen entfernen?": "Fjerne alle varsler?",
+    "Sie kommen wieder, wenn sich etwas ändert.": "De kommer tilbake når noe endrer seg.",
+    "Alle Meldungen entfernt": "Alle varsler fjernet",
+    "Rückgängig": "Angre",
+    "Guten Morgen": "God morgen",
+    "Guten Tag": "God dag",
+    "Guten Abend": "God kveld",
+    "und": "og",
+    "1 Problem": "1 problem",
+    "1 Batterie bald fällig": "1 batteri må snart byttes",
+    "Keine Probleme": "Ingen problemer",
+    "Keine Geräte": "Ingen enheter",
+    "Nicht installiert": "Ikke installert",
+    "Pulse ist nicht installiert": "Pulse er ikke installert",
+    "Bald fällig": "Forfaller snart",
+    "Batterie bald fällig": "Batteri må snart byttes",
+    "In Pulse öffnen": "Åpne i Pulse",
+    "Gewechselt": "Byttet",
+    "Batterie gewechselt": "Batteri byttet",
+    "Batteriewechsel gemeldet": "Batteribytte registrert",
+    "Wichtig": "Viktig",
+    "Antwortet nicht": "Svarer ikke",
+    "Still": "Stille",
+    "Hat sich noch nicht gemeldet": "Har ikke meldt seg ennå",
+    "Still, obwohl das Partnergerät aktiv war": "Stille selv om partnerenheten var aktiv",
+    "Batterie fast leer": "Batteri nesten tomt",
+    "Meldet schwache Batterie": "Melder lavt batteri",
+    "wartet auf erste Meldung": "venter på første melding",
+    "Lernt noch den Rhythmus": "Lærer fortsatt rytmen",
+    "Meldet sich wie gewohnt": "Melder seg som vanlig",
+    "Ausgefallen": "Ute av drift",
+    "Bitte prüfen": "Bør sjekkes",
+    "Erinnerung pausiert": "Påminnelse pauset",
+    "jede Minute": "hvert minutt",
+    "jede Stunde": "hver time",
+    "einmal am Tag": "én gang om dagen",
+    "sonst jede Minute": "vanligvis hvert minutt",
+    "sonst jede Stunde": "vanligvis hver time",
+    "sonst einmal am Tag": "vanligvis én gang om dagen",
+    "Alarm!": "Alarm!",
+    "Scharf schalten": "Armer",
+    "Unscharf schalten": "Deaktiver",
+    "Alarm beenden": "Stopp alarmen",
+    "Oder Modus wählen": "Eller velg modus",
+    "Code eingeben": "Skriv inn kode",
+    "Code falsch": "Feil kode",
+    "Alarmanlage ausgeschaltet": "Alarmanlegg av",
+    "Die Alarmanlage wurde ausgelöst": "Alarmen ble utløst",
+    "Verlass das Haus oder brich ab": "Forlat huset eller avbryt",
+    "Jetzt unscharf schalten, sonst geht der Alarm los": "Deaktiver nå, ellers går alarmen",
+    "Wird scharf …": "Armerer…",
+    "Dieses Gerät ist für dich ausgeblendet": "Denne enheten er skjult for deg",
+    "wird scharf …": "armerer…",
+    "scharf in": "armert om",
+    "Alarm in": "Alarm om",
+    "ausgelöst": "utløst",
+    "Abholung heute": "Henting i dag",
+    "Abholung morgen · heute Abend raus": "Henting i morgen · sett ut i kveld",
+    "Abholung": "Henting",
+    "Casora wurde aktualisiert": "Casora ble oppdatert",
+    "Keine Abholung": "Ingen henting",
+    "An": "På",
+    "Aus": "Av",
+    "an": "på",
+    "aus": "av",
+    "Neu laden": "Last inn på nytt",
+    "Neu laden (Cache leeren)": "Last inn på nytt (tøm hurtigbuffer)",
+    "Offen": "Åpen",
+    "offen": "åpen",
+    "Geöffnet": "Åpen",
+    "Geschlossen": "Lukket",
+    "geöffnet": "åpen",
+    "geschlossen": "lukket",
+    "Verriegelt": "Låst",
+    "Entriegelt": "Ulåst",
+    "Bereit": "Klar",
+    "Fertig": "Ferdig",
+    "Pausiert": "Pauset",
+    "Läuft": "Kjører",
+    "läuft": "kjører",
+    "Läuft …": "Kjører…",
+    "Lädt": "Lader",
+    "Getrennt": "Frakoblet",
+    "Verbunden": "Tilkoblet",
+    "Fehler": "Feil",
+    "Nicht verfügbar": "Utilgjengelig",
+    "nicht verfügbar": "utilgjengelig",
+    "Gerade nicht verfügbar": "Ikke tilgjengelig akkurat nå",
+    "Keine": "Ingen",
+    "Keine aktiv": "Ingen aktive",
+    "Kein Dienst": "Ingen tjeneste",
+    "Neu": "Ny",
+    "Alle": "Alle",
+    "Gesamt": "Totalt",
+    "Fällig": "Forfaller",
+    "Überfällig": "Forfalt",
+    "Übersprungen": "Hoppet over",
+    "Gelöst": "Løst",
+    "Ausgelöst": "Utløst",
+    "Kühl": "Kjølig",
+    "Heiß": "Varmt",
+    "Sehr heiß": "Svært varmt",
+    "Mäßig": "Moderat",
+    "mäßig": "moderat",
+    "Gut": "God",
+    "Schlecht": "Dårlig",
+    "Sehr schlecht": "Svært dårlig",
+    "Ausgezeichnet": "Utmerket",
+    "Außergewöhnlich": "Eksepsjonell",
+    "heute": "i dag",
+    "gestern": "i går",
+    "morgen": "i morgen",
+    "jetzt": "nå",
+    "gerade eben": "nettopp",
+    "Gerade eben": "Nettopp",
+    "ganztägig": "hele dagen",
+    "jede Woche": "hver uke",
+    "Demnächst": "Snart",
+    "Früher": "Tidligere",
+    "Diese Woche": "Denne uken",
+    "Letzte 30 Tage": "Siste 30 dager",
+    "Nächste 4 Wochen": "Neste 4 uker",
+    "30 Tage": "30 dager",
+    "7 Tage": "7 dager",
+    "Älter als ein Tag": "Eldre enn én dag",
+    "Räume": "Rom",
+    "Raum": "Rom",
+    "Szenen": "Scener",
+    "Szene": "Scene",
+    "Favoriten": "Favoritter",
+    "Aktivität": "Aktivitet",
+    "Akku": "Batteri",
+    "Akku schwach": "Lavt batteri",
+    "Akku verbraucht": "Batteri oppbrukt",
+    "Akku & Strom": "Batteri & strøm",
+    "Akku Lecksensor": "Batteri lekkasjesensor",
+    "Akku Temperaturfühler": "Batteri temperaturføler",
+    "Akku-Bereich": "Batteriområde",
+    "Akku-Gesundheit": "Batterihelse",
+    "Aktualisieren": "Oppdater",
+    "Aktueller Raum": "Gjeldende rom",
+    "Aktueller Verbrauch": "Nåværende forbruk",
+    "Alarm ausgelöst": "Alarm utløst",
+    "Alarm ausgelöst!": "Alarm utløst!",
+    "Alarm läuft an": "Alarm armeres",
+    "Alle An": "Alle på",
+    "Alle Aus": "Alle av",
+    "Alle an": "Alle på",
+    "Alle aus": "Alle av",
+    "Alles aus": "Alt av",
+    "1 Licht im Haus ausschalten?": "Slå av 1 lys i huset?",
+    "Alle Lichter": "Alle lys",
+    "Alle Räume aus": "Alle rom av",
+    "Alle Szenen": "Alle scener",
+    "Alle Temperaturen im Normalbereich": "Alle temperaturer normale",
+    "Alle Türen entriegelt": "Alle dører ulåst",
+    "Alle Türen verriegelt": "Alle dører låst",
+    "Alle aktualisieren": "Oppdater alle",
+    "Alle entriegelt": "Alle ulåst",
+    "Alle geschlossen": "Alle lukket",
+    "Alle geöffnet": "Alle åpne",
+    "Alle offline": "Alle frakoblet",
+    "Alle unterwegs": "Alle borte",
+    "Alle verriegelt": "Alle låst",
+    "Alle zuhause": "Alle hjemme",
+    "Alles im grünen Bereich": "Alt i orden",
+    "An · alle Räume warm genug": "På · alle rom varme nok",
+    "AquaStop ausgelöst": "AquaStop utløst",
+    "Aufnahme nicht verfügbar": "Opptak utilgjengelig",
+    "Ausfüllen": "Fyll",
+    "Außenluft": "Uteluft",
+    "Außenluft belastet": "Uteluft forurenset",
+    "Außenluft enthält mehr Wasser": "Uteluften inneholder mer fukt",
+    "Außenluft ist feuchter": "Uteluften er fuktigere",
+    "Außenluft ist trockener": "Uteluften er tørrere",
+    "Außentemperatur": "Utetemperatur",
+    "Bald lüften": "Luft ut snart",
+    "Beifahrertür": "Passasjerdør",
+    "Bekommt zu viel Licht": "Får for mye lys",
+    "Bereit zum Starten": "Klar til start",
+    "Bereit zur Anpassung": "Klar til justering",
+    "Bestätigen": "Bekreft",
+    "Betttemperatur gestört": "Feil på sengtemperatur",
+    "Bewölkt": "Overskyet",
+    "Bitte nachfüllen": "Fyll på",
+    "Bitte nicht stören: an": "Ikke forstyrr: på",
+    "Bitte nicht stören: aus": "Ikke forstyrr: av",
+    "Braucht Dünger": "Trenger gjødsel",
+    "Braucht etwas Pflege": "Trenger litt stell",
+    "Braucht mehr Licht": "Trenger mer lys",
+    "Braucht sofortige Pflege": "Trenger stell nå",
+    "Bypass und Entladen": "Bypass og utlading",
+    "CO₂ erhöht – lüften": "CO₂ forhøyet – luft ut",
+    "CO₂ hoch – Fenster öffnen": "CO₂ høyt – åpne et vindu",
+    "Claude schaut sich das Bild an …": "Claude ser på bildet…",
+    "Cookidoo-App öffnen": "Åpne Cookidoo-appen",
+    "Apple Music öffnen": "Åpne Apple Music",
+    "Dock-Fehler": "Dokkfeil",
+    "Dosiermenge je Stoß": "Dose per puls",
+    "Druck": "Utskrift",
+    "Druck abbrechen": "Avbryt utskrift",
+    "Druck läuft gerade": "Utskrift pågår nå",
+    "Druck prüfen": "Sjekk utskriften",
+    "Druckbett heizt vor": "Varmesengen forvarmes",
+    "Druckbett kühlt ab": "Varmesengen kjøles ned",
+    "Du bist diesen Monat nicht dran": "Ikke din tur denne måneden",
+    "Durchgänge erfasst": "Sykluser registrert",
+    "Düngeanlage": "Doseringspumpe",
+    "Dünger": "Gjødsel",
+    "Düse": "Dyse",
+    "Düse heizt auf": "Dysen varmes opp",
+    "Düse kühlt ab": "Dysen kjøles ned",
+    "Düse verstopft": "Dysen er tett",
+    "Düse wird gereinigt": "Dysen rengjøres",
+    "Düsentemperatur gestört": "Feil på dysetemperatur",
+    "EU-Data-Act-Portal, kommt verzögert": "EU Data Act-portal, kommer forsinket",
+    "Eigene Leistung": "Egen effekt",
+    "Eingriff nötig": "Tiltak kreves",
+    "Einkaufsliste nicht verfügbar": "Handleliste utilgjengelig",
+    "Energie heute": "Energi i dag",
+    "Erde zu feucht": "Jord for fuktig",
+    "Erde zu trocken": "Jord for tørr",
+    "Erhöhte Partikelbelastung": "Forhøyet partikkelnivå",
+    "Erste Schicht wird geprüft": "Første lag sjekkes",
+    "Fahrertür": "Førerdør",
+    "Falls das Ende nicht erkannt wird": "Hvis slutten ikke oppdages",
+    "Fehler aufgetreten": "Det oppsto en feil",
+    "Fehler bei der Anfrage.": "Forespørselen mislyktes.",
+    "Fehler bei der Spracheingabe.": "Taleinndata mislyktes.",
+    "Fehler gemeldet": "Feil meldt",
+    "Fehler in der ersten Schicht": "Feil i første lag",
+    "Fenster": "Vinduer",
+    "Fenster & Schiebedach": "Vinduer & soltak",
+    "Fenster &amp; Schiebedach": "Vinduer &amp; soltak",
+    "Fenster hinten links": "Vindu bak til venstre",
+    "Fenster hinten rechts": "Vindu bak til høyre",
+    "Fenster offen": "Vindu åpent",
+    "Fenster schließen": "Lukk vinduet",
+    "Fenster vorne links": "Vindu foran til venstre",
+    "Fenster vorne rechts": "Vindu foran til høyre",
+    "Fenster weit auf, nach Außentemperatur": "Vinduer helt åpne, etter utetemperatur",
+    "Fenster-Erkennung": "Vindusdeteksjon",
+    "Fensterläden": "Skodder",
+    "Fernstart am Gerät nicht erlaubt": "Fjernstart ikke tillatt på enheten",
+    "Feuchte": "Fuktighet",
+    "Feuchter draußen": "Fuktigere ute",
+    "Filter": "Filter",
+    "Filter & Kondensator reinigen": "Rengjør filter & kondensator",
+    "Filter reinigen": "Rengjør filter",
+    "Filter verstopft": "Filter tett",
+    "Firmware passt nicht": "Fastvaren passer ikke",
+    "Firmware-Update verfügbar": "Fastvareoppdatering tilgjengelig",
+    "Fläche": "Areal",
+    "Fläche insgesamt": "Totalt areal",
+    "Frischwasser auffüllen": "Fyll på rent vann",
+    "Frontabdeckung prüfen": "Sjekk frontdekselet",
+    "Fußbodenheizung": "Gulvvarme",
+    "Fährt herunter": "Slår seg av",
+    "Fährt zum Dock": "Returnerer til dokk",
+    "Fährt zum Ziel": "Kjører til målet",
+    "Fährt zur Moppwäsche": "Kjører til moppevask",
+    "Gehärteter Stahl": "Herdet stål",
+    "Gerade kein Überschuss": "Ikke noe overskudd akkurat nå",
+    "Kein Sensor": "Ingen sensor",
+    "Kein Überschuss": "Ikke noe overskudd",
+    "Kein Sensor gewählt": "Ingen sensor valgt",
+    "Jetzt nutzen": "Bruk det nå",
+    "Keiner": "Ingen",
+    "Hausverbrauch": "Husforbruk",
+    "Solar-Tipp": "Soltips",
+    "Sobald Sonnenstrom übrig ist, steht hier, welches Gerät sich lohnt.": "Når det er solstrøm til overs, står det her hvilken enhet det lønner seg å kjøre.",
+    "Gereinigte Fläche": "Rengjort areal",
+    "Gerät": "Enhet",
+    "Geräte": "Enheter",
+    "Geräte laufen schon": "Enheter kjører allerede",
+    "Gerätemeldung (HMS)": "Enhetsmelding (HMS)",
+    "Geräteprofil": "Enhetsprofil",
+    "Gerätestatus": "Enhetsstatus",
+    "Geschirrspüler": "Oppvaskmaskin",
+    "Waschmaschine": "Vaskemaskin",
+    "Trockner": "Tørketrommel",
+    "3D-Drucker": "3D-skriver",
+    "Saugroboter": "Robotstøvsuger",
+    "Gilt bis morgen 9:00, dann übernimmt wieder der HA-Zeitplan.": "Gjelder til i morgen kl. 9:00, deretter tar HA-tidsplanen over igjen.",
+    "Für Räder mit Bosch Smart System: Die Werte kommen aus der Integration Bosch eBike (Marketplace: Xunil99/ha-bosch-ebike).": "For sykler med Bosch Smart System: Verdiene kommer fra integrasjonen Bosch eBike (Marketplace: Xunil99/ha-bosch-ebike).",
+    "Gründlich": "Grundig",
+    "Gründlich+": "Grundig+",
+    "Hauptbürste": "Hovedbørste",
+    "Hauptbürste blockiert": "Hovedbørsten sitter fast",
+    "Hauptspülen": "Hovedskylling",
+    "Hauptwäsche": "Hovedvask",
+    "Heizkörper": "Radiator",
+    "Heizung": "Oppvarming",
+    "Herausnehmen und ausspülen": "Ta ut og skyll",
+    "Home Assistant jetzt neu starten?": "Starte Home Assistant på nytt nå?",
+    "Höhenmeter": "Høydemeter",
+    "Höhenmeter gesamt": "Høydemeter totalt",
+    "Hört zu …": "Lytter…",
+    "In der Cookidoo-App auf \"Meine Woche\" planen": "Planlegg i Cookidoo-appen under \"Min uke\"",
+    "Info-Licht am Boden": "Infolys på gulvet",
+    "Jetzt lüften": "Luft ut nå",
+    "Jetzt prüfen": "Sjekk nå",
+    "KI prüft noch …": "KI sjekker fortsatt…",
+    "KI-Blick auf den Druck": "KI-blikk på utskriften",
+    "KI-Check steht noch aus": "KI-sjekk gjenstår",
+    "Kalender nicht erreichbar": "Kalender ikke tilgjengelig",
+    "Kaum Aktivität": "Nesten ingen aktivitet",
+    "Kehrt zurück": "Returnerer",
+    "Kehrt zurück & Moppwäsche": "Returnerer & moppevask",
+    "Kein Bild – die Kamera ist aus, schläft oder ist offline.": "Ikke noe bilde – kameraet er av, sover eller er frakoblet.",
+    "Die Kamera ist aus oder offline und liefert gerade kein Bild.": "Kameraet er av eller frakoblet og gir ikke noe bilde akkurat nå.",
+    "Kein Zugriff aufs Mikrofon – bitte in den Einstellungen erlauben.": "Ingen tilgang til mikrofonen – tillat det i innstillingene.",
+    "Keine Antwort erhalten.": "Ikke noe svar mottatt.",
+    "Keine Batteriesensoren gefunden": "Fant ingen batterisensorer",
+    "Keine Daten": "Ingen data",
+    "Keine Detailbeschreibung verfügbar.": "Ingen detaljert beskrivelse tilgjengelig.",
+    "Keine Idee gefunden": "Fant ingen idé",
+    "Keine Kameras": "Ingen kameraer",
+    "Keine Kameras verfügbar": "Ingen kameraer tilgjengelig",
+    "Keine Pflanzensensoren konfiguriert": "Ingen plantesensorer konfigurert",
+    "Keine Rückmeldung": "Ingen respons",
+    "Keine Sensoren": "Ingen sensorer",
+    "Keine Statusdaten": "Ingen statusdata",
+    "Keine Szene aktiv": "Ingen scene aktiv",
+    "Keine Szenen": "Ingen scener",
+    "Keine Termine": "Ingen avtaler",
+    "Keine Tonnen gefunden": "Fant ingen dunker",
+    "Keine Updates in 30 Tagen": "Ingen oppdateringer på 30 dager",
+    "Keine Updates offen": "Ingen ventende oppdateringer",
+    "Keine Verbindung": "Ingen forbindelse",
+    "Keine Verbindung zu Home Assistant.": "Ingen forbindelse til Home Assistant.",
+    "Keine Warnung": "Ingen farevarsel",
+    "Keine aktiven Warnungen": "Ingen aktive farevarsler",
+    "Klarspülen": "Skylling",
+    "Klarspüler": "Glansemiddel",
+    "Kosten Monat": "Kostnad denne måneden",
+    "Kosten heute": "Kostnad i dag",
+    "Kosten letzter Durchgang": "Kostnad siste syklus",
+    "Kosten pro Tag": "Kostnad per dag",
+    "Kurz volle Leistung": "Kort full effekt",
+    "Laut Anker-App": "Ifølge Anker-appen",
+    "Lautstärke": "Volum",
+    "Wiedergabeposition": "Avspillingsposisjon",
+    "Leert Staubbehälter": "Tømmer støvbeholder",
+    "Leistung": "Effekt",
+    "Leistung der Station": "Stasjonens effekt",
+    "Leistung jetzt": "Effekt nå",
+    "Leistung · 24 Stunden": "Effekt · 24 timer",
+    "Letzte Aufgabe": "Siste oppgave",
+    "Letzte Aufnahme": "Siste opptak",
+    "Letzte Durchgänge": "Siste sykluser",
+    "Letzte Fahrt": "Siste tur",
+    "Letzte Reinigung": "Siste rengjøring",
+    "Licht": "Lys",
+    "Licht nicht erreichbar": "Lys ikke tilgjengelig",
+    "Licht offline": "Lys frakoblet",
+    "Luft gut": "God luft",
+    "Luft zu feucht": "For fuktig luft",
+    "Luft zu trocken": "For tørr luft",
+    "Luftfeuchte außen": "Luftfuktighet ute",
+    "Luftqualität": "Luftkvalitet",
+    "Luftqualität ist gut": "Luftkvaliteten er god",
+    "Luftqualität ist hervorragend": "Luftkvaliteten er utmerket",
+    "Luftqualität ist mäßig": "Luftkvaliteten er moderat",
+    "Luftqualität nicht verfügbar": "Luftkvalitet utilgjengelig",
+    "Länger abwesend": "Borte en stund",
+    "Lässt sich nicht fortsetzen": "Kan ikke fortsette",
+    "Läuft seit": "Kjører siden",
+    "Lüften": "Luft ut",
+    "Lüften empfohlen": "Lufting anbefales",
+    "Lüften erkannt": "Lufting oppdaget",
+    "Lüften hilft gegen Feuchte": "Lufting hjelper mot fukt",
+    "Lüften hilft nicht gegen Feuchte": "Lufting hjelper ikke mot fukt",
+    "Lüfter zu langsam": "Viften går for sakte",
+    "Lüftet": "Lufter",
+    "Maschine läuft gerade": "Maskinen kjører nå",
+    "Maschinenpflege fällig": "Tid for maskinpleie",
+    "Material wird geprüft": "Materialet sjekkes",
+    "Mikrofon nicht verfügbar.": "Mikrofon utilgjengelig.",
+    "Min. übrig": "min igjen",
+    "Mopp nicht angebracht": "Mopp ikke festet",
+    "Moppwäsche": "Moppevask",
+    "Moppwäsche gestört": "Feil på moppevask",
+    "Pause · wäscht Mopp": "Pauset · vasker mopp",
+    "Pause · saugt ab": "Pauset · tømmer",
+    "Pause · trocknet": "Pauset · tørker",
+    "Pause · lädt": "Pauset · lader",
+    "Pause · an der Station": "Pauset · på stasjonen",
+    "Muss gedüngt werden": "Må gjødsles",
+    "NO₂ erkannt – lüften": "NO₂ oppdaget – luft ut",
+    "Nachfüllen & Pflege": "Påfyll & stell",
+    "Nachfüllen &amp; Pflege": "Påfyll &amp; stell",
+    "Neu auswerten": "Vurder på nytt",
+    "Neu prüfen": "Sjekk på nytt",
+    "Neu starten": "Start på nytt",
+    "Nicht stören": "Ikke forstyrr",
+    "Nichts Neues": "Ingenting nytt",
+    "Nichts geplant": "Ingenting planlagt",
+    "Nichts läuft": "Ingenting spilles",
+    "Nichts in den nächsten 30 Tagen": "Ingenting de neste 30 dagene",
+    "Noch keine Idee": "Ingen idé ennå",
+    "Noch nicht geprüft": "Ikke sjekket ennå",
+    "Nächste Abholung": "Neste henting",
+    "Nächste Solltemperatur": "Neste måltemperatur",
+    "Nächster Service": "Neste service",
+    "Nährstoffe": "Næringsstoffer",
+    "Oberer Stoßfänger gedrückt": "Øvre støtfanger trykket",
+    "Per Bluetooth nicht erreichbar": "Ikke tilgjengelig via Bluetooth",
+    "Pflanze kämpft": "Planten sliter",
+    "Pflanze schwächelt": "Planten svekkes",
+    "Pflege": "Stell",
+    "Pflege fällig": "Tid for stell",
+    "Prognose für dieses Programm": "Prognose for dette programmet",
+    "Programm": "Program",
+    "Programm abbrechen": "Avbryt program",
+    "Programm abgebrochen": "Program avbrutt",
+    "Programm abgeschlossen": "Program fullført",
+    "Programm aus der Roborock-App": "Program fra Roborock-appen",
+    "Programm festlegen": "Angi program",
+    "Programm „Maschinenpflege“ mit Reiniger starten": "Start programmet «Maskinpleie» med rengjøringsmiddel",
+    "Prüfen": "Sjekk",
+    "Prüft …": "Sjekker…",
+    "Prüfung fehlgeschlagen": "Sjekken mislyktes",
+    "Aktiviert · Bypass": "Armert · bypass",
+    "Einzelne Sensoren ausgenommen": "Enkelte sensorer unntatt",
+    "Alarm aus": "Alarm av",
+    "Rezepte": "Oppskrifter",
+    "Kühlt": "Kjøler",
+    "Entfeuchten": "Tørr",
+    "Nur Lüfter": "Kun vifte",
+    "Keine KI eingerichtet (Einstellungen → KI-Aufgaben)": "Ingen KI satt opp (Innstillinger → KI-oppgaver)",
+    "Auswertung fehlgeschlagen.": "Analysen mislyktes.",
+    "Qualität": "Kvalitet",
+    "Reichweite jetzt": "Rekkevidde nå",
+    "Reichweite voller Akku": "Rekkevidde med fullt batteri",
+    "Restzeit": "Tid igjen",
+    "Roboter lädt nicht": "Roboten lader ikke",
+    "Räder blockiert": "Hjulene er blokkert",
+    "Räder hängen in der Luft": "Hjulene er løftet",
+    "Räume antippen": "Trykk på rom",
+    "Räume reinigen": "Rengjør rom",
+    "Saugstärke": "Sugestyrke",
+    "Saugt & wischt Raum": "Støvsuger & mopper rom",
+    "Schalte alle Lichter aus": "Slå av alle lys",
+    "Scharfschaltung läuft": "Armerer",
+    "Schlafzimmer Fenster ist offen": "Soveromsvinduet er åpent",
+    "Schließen": "Lukk",
+    "Zurück": "Tilbake",
+    "Schließt": "Lukker",
+    "Schließt bei Temperatursturz": "Lukker ved temperaturfall",
+    "Schließt sich …": "Lukker…",
+    "Schmutzfänger (Station)": "Smussfanger (stasjon)",
+    "Schmutzfänger prüfen": "Sjekk smussfangeren",
+    "Seitenbürste": "Sidebørste",
+    "Seitenbürste blockiert": "Sidebørsten sitter fast",
+    "Sensordaten nicht verfügbar": "Sensordata utilgjengelig",
+    "Sensoren temporär deaktiviert": "Sensorer midlertidig deaktivert",
+    "Service fällig": "Tid for service",
+    "Sirene an": "Sirene på",
+    "Sirene auslösen?": "Utløse sirenen?",
+    "Solaranteil heute": "Solandel i dag",
+    "Spaßmodus": "Moromodus",
+    "Speiseplan nicht verfügbar": "Måltidsplan utilgjengelig",
+    "Spülen": "Skylling",
+    "Starten": "Start",
+    "Startet später": "Starter senere",
+    "Staubbehälter fehlt": "Støvbeholder mangler",
+    "Staubbehälter leeren": "Tøm støvbeholderen",
+    "Std. übrig": "t igjen",
+    "Steckdose nicht erreichbar": "Stikkontakt ikke tilgjengelig",
+    "Stoßfänger klemmt": "Støtfangeren sitter fast",
+    "Stoßlüften": "Sjokklufting",
+    "Stromstärke": "Strømstyrke",
+    "Süßwasser": "Ferskvann",
+    "Taste an der Steckdose": "Knapp på stikkontakten",
+    "Tasten am Gerät gesperrt": "Knappene på enheten er låst",
+    "Tasten an der Station": "Knapper på stasjonen",
+    "Teils bewölkt": "Delvis skyet",
+    "Teilweise bewölkt": "Delvis skyet",
+    "Teilweise geöffnet": "Delvis åpen",
+    "Temperatur": "Temperatur",
+    "Temperatur am Heizkörper": "Temperatur ved radiatoren",
+    "Temperatur im AMS": "Temperatur i AMS",
+    "Temperatur im Haus": "Temperatur i huset",
+    "Temperatur im Normalbereich": "Temperatur normal",
+    "Temperatur kritisch": "Temperatur kritisk",
+    "Temperaturfühler": "Temperaturføler",
+    "Temperaturfühler offline": "Temperaturføler frakoblet",
+    "Ton an": "Lyd på",
+    "Trotzdem aus": "Slå av likevel",
+    "Tür": "Dør",
+    "Tür entriegelt": "Dør ulåst",
+    "Tür hinten links": "Dør bak til venstre",
+    "Tür hinten rechts": "Dør bak til høyre",
+    "Tür ist offen": "Døren er åpen",
+    "Tür offen": "Dør åpen",
+    "Tür verriegelt": "Dør låst",
+    "Türen": "Dører",
+    "Türen & Fenster": "Dører & vinduer",
+    "Türen & Fenster überwacht": "Dører & vinduer overvåkes",
+    "Türen & Klappen": "Dører & luker",
+    "Türen &amp; Klappen": "Dører &amp; luker",
+    "Unbekanntes Programm": "Ukjent program",
+    "VOCs erkannt – lüften": "VOC oppdaget – luft ut",
+    "Ventilöffnung": "Ventilåpning",
+    "Verbrauch": "Forbruk",
+    "Verbrauch Monat": "Forbruk denne måneden",
+    "Verbrauch heute": "Forbruk i dag",
+    "Verbrauch pro Tag": "Forbruk per dag",
+    "Verfügbare Updates": "Tilgjengelige oppdateringer",
+    "Verlauf nicht verfügbar": "Historikk utilgjengelig",
+    "Verzögerter Start": "Utsatt start",
+    "Vollständig geladen": "Fulladet",
+    "Vorhänge": "Gardiner",
+    "Vorspülen": "Forskylling",
+    "Vorwäsche": "Forvask",
+    "Wasser erkannt": "Vann oppdaget",
+    "Wasser erkannt!": "Vann oppdaget!",
+    "Wasserbehälter leer": "Vanntank tom",
+    "Wasserstärke": "Vannmengde",
+    "Weiter": "Neste",
+    "Weitere Geräte": "Flere enheter",
+    "Welche Fenster sind offen?": "Hvilke vinduer er åpne?",
+    "Welche Lichter sind an?": "Hvilke lys er på?",
+    "Weniger als 1 Min. übrig": "Mindre enn 1 min igjen",
+    "Windig & bewölkt": "Vind & skyer",
+    "Wird übernommen": "Tas i bruk",
+    "Wird abgebrochen": "Avbryter",
+    "Wird aktiviert …": "Slår på…",
+    "Wird aktualisiert": "Oppdaterer",
+    "Wird deaktiviert …": "Slår av…",
+    "Wird eingerichtet": "Settes opp",
+    "Wird entfernt": "Fjerner",
+    "Wird erkannt …": "Oppdager…",
+    "Wird geladen …": "Laster…",
+    "Wird geleert": "Tømmes",
+    "Wird gewaschen": "Vaskes",
+    "Wird installiert": "Installerer",
+    "Wird unscharf geschaltet": "Deaktiverer",
+    "Wirklich öffnen?": "Virkelig åpne?",
+    "Wischt Raum": "Mopper rom",
+    "Wärmeanforderung": "Varmebehov",
+    "Zeitplan überschrieben": "Tidsplan overstyrt",
+    "Zeitüberschreitung – bitte nochmal versuchen.": "Tidsavbrudd – prøv igjen.",
+    "Zieltemperatur alle Räume": "Måltemperatur, alle rom",
+    "Zu viel Dünger": "For mye gjødsel",
+    "Zuletzt aktualisiert": "Sist oppdatert",
+    "Zuletzt gedruckt": "Sist skrevet ut",
+    "Zum Öffnen tippen": "Trykk for å åpne",
+    "Zurücksetzen": "Tilbakestill",
+    "Zusätzliche Käufe": "Ekstra kjøp",
+    "Zählerstand": "Målerstand",
+    "außen": "ute",
+    "Öffnen": "Åpne",
+    "Öffnet": "Åpner",
+    "Öffnet sich …": "Åpner…",
+    "Ölstand": "Oljenivå",
+    "Ölwechsel": "Oljeskift",
+    "Idee der Woche von Claude": "Ukens idé fra Claude",
+    "Lüftungs-Coach": "Luftecoach",
+    "Heizungs-Coach": "Varmecoach",
+    "Energie-Coach": "Energicoach",
+    "Raumklima": "Inneklima",
+    "Keine Klimasensoren in diesem Raum": "Ingen klimasensorer i dette rommet",
+    "Ein Feuchte- oder CO₂-Sensor im Raum genügt": "En fukt- eller CO₂-sensor i rommet er nok",
+    "Sonnenstrom übrig": "Solstrøm til overs",
+    "Fahrzeug": "Kjøretøy",
+    "Rezept der Woche": "Ukens oppskrift",
+    "Schlösser": "Låser",
+    "Beleuchtung": "Belysning",
+    "Jalousien": "Persienner",
+    "Klima": "Klima",
+    "Energie": "Energi",
+    "Sicherheit": "Sikkerhet",
+    "Medien": "Medier",
+    "Personen": "Personer",
+    "Batterien": "Batterier",
+    "Netzwerk": "Nettverk",
+    "Pflanzen": "Planter",
+    "Kameras": "Kameraer",
+    "Kalender": "Kalender",
+    "Abfall": "Avfall",
+    "Abfall heute": "Avfall i dag",
+    "Abfall morgen": "Avfall i morgen",
+    "Restmüll": "Restavfall",
+    "Biomüll": "Matavfall",
+    "Papier": "Papir",
+    "Gelber Sack": "Plastemballasje",
+    "Wertstoff": "Gjenvinning",
+    "Abkühlen": "Kjøler ned",
+    "Abpumpen nicht möglich": "Kan ikke pumpe ut",
+    "Abbrechen": "Avbryt",
+    "Beispiel-Künstler": "Eksempelartist",
+    "Türen offen": "Dører åpne",
+    "Zuletzt": "Sist",
+    "Zuletzt:": "Sist:",
+    "Entlädt": "Lader ut",
+    "Weißton": "Hvittone",
+    "Helligkeit": "Lysstyrke",
+    "Farbe": "Farge",
+    "Temperaturverlauf": "Temperaturhistorikk",
+    "Fenster offen · noch": "Vindu åpent · ennå",
+    "Zu feucht": "For fuktig",
+    "Luftfeuchte": "Luftfuktighet",
+    "Heizt": "Varmer",
+    "Heizen": "Varme",
+    "Kühlen": "Kjøling",
+    "Druckt": "Skriver ut",
+    "Reinigt": "Rengjør",
+    "Saugt": "Støvsuger",
+    "Angedockt": "I dokk",
+    "Lädt auf": "Lader",
+    "Unterwegs": "Borte",
+    "Zuhause": "Hjemme",
+    "Abwesend": "Borte",
+    "Luft": "Luft",
+    "Wasser": "Vann",
+    "Strom": "Strøm",
+    "Solar": "Sol",
+    "Netz": "Strømnett",
+    "Haus": "Hus",
+    "Einspeisung": "Innmating",
+    "Netzbezug": "Nettimport",
+    "Autarkie": "Selvforsyning",
+    "Eigenverbrauch": "Egenforbruk",
+    "Heute": "I dag",
+    "Dieser Monat": "Denne måneden",
+    "Diesen Monat": "Denne måneden",
+    "Monat": "Måned",
+    "Woche": "Uke",
+    "Jahr": "År",
+    "Schwach": "Lavt",
+    "Voll": "Fullt",
+    "Leer": "Tomt",
+    "Niedrig": "Lav",
+    "Hoch": "Høy",
+    "Mittel": "Middels",
+    "Normal": "Normal",
+    "Online": "Tilkoblet",
+    "Offline": "Frakoblet",
+    "Unbekannt": "Ukjent",
+    "Bauteillüfter": "Delkjølevifte",
+    "Druckkopflüfter": "Hotend-vifte",
+    "Druckraumlüfter": "Kammervifte",
+    "Lüfter": "Vifte",
+    "Claude wertet einmal pro Woche (samstags 10 Uhr) Feuchte, CO₂ und Fensterzeiten aus und sagt, wo, wann und wie lange sich Lüften lohnt.": "Én gang i uken (lørdager kl. 10) vurderer Claude fuktighet, CO₂ og vindustider og sier hvor, når og hvor lenge det lønner seg å lufte.",
+    "Die Auswertung startet mit der Heizsaison: Sobald geheizt wird, prüft Claude jeden Montag Heizdauer, Raumtemperaturen, Heizen bei offenem Fenster und den Heizkörper im Bad.": "Vurderingen starter med fyringssesongen: Så snart det fyres, sjekker Claude hver mandag varmetid, romtemperaturer, oppvarming med åpent vindu og radiatoren på badet.",
+    "Gesichert": "Sikret",
+    "Sicher": "Sikker",
+    "Braucht Aufmerksamkeit": "Krever oppmerksomhet",
+    "Nicht gesichert": "Ikke sikret",
+    "Fortschritt": "Fremdrift",
+    "Schicht": "Lag",
+    "Aufgabe": "Jobb",
+    "Steuerung": "Styring",
+    "Pausieren": "Pause",
+    "Abspielen": "Spill av",
+    "Fortsetzen": "Fortsett",
+    "Druckraumlicht": "Kammerlys",
+    "Kamera": "Kamera",
+    "Temperaturen": "Temperaturer",
+    "Druckbett": "Varmeseng",
+    "Steckdose": "Stikkontakt",
+    "Spannung": "Spenning",
+    "Luftfeuchtigkeit im AMS": "Luftfuktighet i AMS",
+    "Drucker": "Skriver",
+    "Druckzeit insgesamt": "Total utskriftstid",
+    "Druckplatte": "Byggeplate",
+    "Texturiert (PEI)": "Teksturert (PEI)",
+    "Glatt (PEI)": "Glatt (PEI)",
+    "Edelstahl": "Rustfritt stål",
+    "Einstellungen": "Innstillinger",
+    "Luftfeuchtigkeit": "Luftfuktighet",
+    "Wohlfühlbereich 40–60 %": "Komfortområde 40–60%",
+    "Status": "Status",
+    "Modus": "Modus",
+    "Zustand": "Tilstand",
+    "Zielwert": "Målverdi",
+    "Feinstaub PM2,5": "Svevestøv PM2,5",
+    "Bodenfeuchtigkeit": "Jordfuktighet",
+    "Beleuchtungsstärke": "Belysningsstyrke",
+    "Bewegung": "Bevegelse",
+    "Ausschalten": "Slå av",
+    "Einschalten": "Slå på",
+    "Durchschnitt im Haus": "Snitt i huset",
+    "Halbe Ladung": "Halv last",
+    "Heizkreise mit Strom versorgt": "Varmekretser har strøm",
+    "Kindersicherung": "Barnesikring",
+    "Nur im Betrieb schaltbar": "Kun under drift",
+    "Verbindung": "Tilkobling",
+    "Weitere Einstellungen": "Flere innstillinger",
+    "Nächste Stunden": "De neste timene",
+    "Nachtlicht": "Nattlys",
+    "Anzeige": "Display",
+    "Automatik": "Auto",
+    "Heizpause": "Varmepause",
+    "Temperaturabsenkung": "Temperatursenking",
+    "Abgerufen": "Hentet",
+    "Abpumpen": "Pumper ut",
+    "AdBlue-Reichweite": "AdBlue-rekkevidde",
+    "Akkufehler": "Batterifeil",
+    "Akkustand": "Batterinivå",
+    "Aktiv": "Aktiv",
+    "Aktiver": "Aktiv",
+    "Aktivieren": "Aktiver",
+    "Aktiviert": "Aktivert",
+    "Aktualisiert": "Oppdatert",
+    "Aktuell": "Oppdatert",
+    "Anbieter": "Leverandør",
+    "Angenehm": "Behagelig",
+    "Angepasst": "Tilpasset",
+    "Angezogen": "Tilsatt",
+    "Anpassen": "Tilpass",
+    "Anzeigen": "Vis",
+    "Aquarien": "Akvarier",
+    "Aquarium-Doktor": "Akvariedoktor",
+    "Aufgehoben": "Opphevet",
+    "Aufheben": "Opphev",
+    "Aufheizen": "Varmer opp",
+    "Aufmerksamkeit": "Oppmerksomhet",
+    "Aufnahme": "Opptak",
+    "Aufwachen": "Våkner",
+    "Ausblenden": "Skjul",
+    "Ausgeschaltet": "Av",
+    "Ausgewogen": "Balansert",
+    "Ausstehend": "Venter",
+    "Automatisch": "Automatisk",
+    "Badezimmer": "Bad",
+    "Batterie": "Batteri",
+    "Beckenlicht": "Akvarielys",
+    "Bedeckt": "Overskyet",
+    "Beenden": "Stopp",
+    "Beendet": "Avsluttet",
+    "Benachrichtigungen": "Varsler",
+    "Beobachten": "Følg med",
+    "Bereitschaft": "Standby",
+    "Beschattungsautomatik": "Automatisk solskjerming",
+    "Betriebsart": "Driftsmodus",
+    "Betriebssystem": "Operativsystem",
+    "Bezug": "Fra nettet",
+    "Bild": "Bilde",
+    "Blockiert": "Blokkert",
+    "Bodenfeuchte": "Jordfuktighet",
+    "Büro": "Kontor",
+    "Datenstand": "Data per",
+    "Deaktivieren": "Deaktiver",
+    "Deaktiviert": "Deaktivert",
+    "Diebstahl": "Tyveri",
+    "Dosieren": "Doser",
+    "Dosiert": "Dosert",
+    "Druckfehler": "Utskriftsfeil",
+    "Durchgang": "Syklus",
+    "Durchgängen": "sykluser",
+    "Eigene": "Egendefinert",
+    "Eigenversorgung": "Selvforsyning",
+    "Eingeschaltet": "På",
+    "Einkaufsliste": "Handleliste",
+    "Einpassen": "Innpass",
+    "Einweichen": "Bløtlegging",
+    "Endet": "Slutter",
+    "Energiebedarf": "Energibehov",
+    "Energieverbrauch": "Energiforbruk",
+    "Entkalken": "Avkalk",
+    "Entwarnung": "Faren over",
+    "Erinnerung": "Påminnelse",
+    "Erkannt": "Oppdaget",
+    "Erkennung": "Deteksjon",
+    "Erledigt": "Ferdig",
+    "Extrem": "Ekstrem",
+    "Fahrt": "Tur",
+    "Fahrten": "Turer",
+    "Fahrzeit": "Turtid",
+    "Favorit": "Favoritt",
+    "Fehlgeschlagen": "Mislyktes",
+    "Fernstart": "Fjernstart",
+    "Feststellbremse": "Parkeringsbrems",
+    "Filamentwechsel": "Filamentbytte",
+    "Flur": "Gang",
+    "Frei": "Ledig",
+    "Freigeben": "Godkjenn",
+    "Gekippt": "Vippet",
+    "Gemeldet": "Meldt",
+    "Gering": "Lav",
+    "Geringer": "Lavere",
+    "Geschwindigkeit": "Hastighet",
+    "Gestartet": "Startet",
+    "Gestern": "I går",
+    "Gestoppt": "Stoppet",
+    "Gesund": "Frisk",
+    "Gewitter": "Tordenvær",
+    "HA-Zeitplan": "HA-tidsplan",
+    "Hagel": "Hagl",
+    "Handeln": "Ta grep",
+    "Hauptschalter": "Hovedbryter",
+    "Hauswirtschaftsraum": "Grovkjøkken",
+    "Heckklappe": "Bakluke",
+    "Hinweis": "Merknad",
+    "Hinweise": "Merknader",
+    "Inaktiv": "Inaktiv",
+    "Inspektion": "Service",
+    "Installiert": "Installert",
+    "Intensiv": "Intensiv",
+    "Isoliert": "Isolert",
+    "Jalousien-Automatik": "Persienneautomatikk",
+    "Jetzt": "Nå",
+    "Kalibrierung": "Kalibrering",
+    "Kalorien": "Kalorier",
+    "Kalt": "Kaldt",
+    "Kaltstart": "Kaldstart",
+    "Kanal": "Kanal",
+    "Kartierung": "Kartlegging",
+    "Kilometerstand": "Kilometerstand",
+    "Klar": "Klart",
+    "Klingel": "Ringeklokke",
+    "Knitterschutz": "Antikrøll",
+    "Kritisch": "Kritisk",
+    "Küche": "Kjøkken",
+    "LAN-Download": "LAN-nedlasting",
+    "Ladefehler": "Ladefeil",
+    "Ladevorrang": "Ladeprioritet",
+    "Ladezyklen": "Ladesykluser",
+    "Lagerwartung": "Lagervedlikehold",
+    "Langzeit": "Langtid",
+    "Lecksensor": "Lekkasjesensor",
+    "Leicht": "Lett",
+    "Leise": "Stille",
+    "Leiser": "Stillere",
+    "Lichtsteuerung": "Lysstyring",
+    "Luftdruck": "Lufttrykk",
+    "Luftreiniger": "Luftrenser",
+    "Manuell": "Manuell",
+    "Markisen": "Markiser",
+    "Maschinenpflege": "Maskinpleie",
+    "Maschinenreinigung": "Maskinrengjøring",
+    "Meerwasser": "Saltvann",
+    "Meldefehler": "Rapporteringsfeil",
+    "Messwerte": "Måleverdier",
+    "Minuten": "minutter",
+    "Motorhaube": "Panser",
+    "Motorstunden": "Motortimer",
+    "Nacht": "Natt",
+    "Nachtmodus": "Nattmodus",
+    "Neustart": "Omstart",
+    "Nivellieren": "Nivellering",
+    "Notfall": "Nødsituasjon",
+    "Notstrom": "Nødstrøm",
+    "Optionen": "Alternativer",
+    "Orten": "Lokaliser",
+    "Patrouille": "Patrulje",
+    "Pflanzen-Doktor": "Plantedoktor",
+    "Profil": "Profil",
+    "Punktreinigung": "Punktrengjøring",
+    "Quelle": "Kilde",
+    "Raumluft": "Inneluft",
+    "Raumreinigung": "Romrengjøring",
+    "Raumtemperatur": "Romtemperatur",
+    "Rausstellen": "Sett ut",
+    "Referenzfahrt": "Referansekjøring",
+    "Regen": "Regn",
+    "Regeneriersalz": "Oppvaskmaskinsalt",
+    "Regnerisch": "Regnfullt",
+    "Reichweite": "Rekkevidde",
+    "Reinigen": "Rengjør",
+    "Reinigung": "Rengjøring",
+    "Reinigungen": "Rengjøringer",
+    "Reinigungsmodus": "Rengjøringsmodus",
+    "Ruhig": "Rolig",
+    "Salz": "Salt",
+    "Sanft": "Skånsom",
+    "Sauber": "Ren",
+    "Saugen": "Støvsuging",
+    "Schiebedach": "Soltak",
+    "Schildkröte": "Skilpadde",
+    "Schlafzimmer": "Soverom",
+    "Schleudern": "Sentrifugering",
+    "Schnee": "Snø",
+    "Schneefall": "Snøfall",
+    "Schneeregen": "Sludd",
+    "Schnell": "Rask",
+    "Schnellwahl": "Hurtigvalg",
+    "Schrittverlust": "Stegtap",
+    "Schutzladung": "Beskyttelseslading",
+    "Schwer": "Alvorlig",
+    "Sensoren": "Sensorer",
+    "Sicherheitswarnung": "Sikkerhetsadvarsel",
+    "Sichtweite": "Sikt",
+    "Slicen": "Slicing",
+    "Sofort": "Straks",
+    "Solaranlage": "Solcelleanlegg",
+    "Sonnig": "Solrikt",
+    "Speiseplan": "Måltidsplan",
+    "Starker": "Kraftig",
+    "Starkregen": "Kraftig regn",
+    "Startet": "Starter",
+    "Statistik": "Statistikk",
+    "Stufe": "Nivå",
+    "Stumm": "Dempet",
+    "Stunde": "time",
+    "Stunden": "timer",
+    "Tagen": "dager",
+    "Tarif": "Tariff",
+    "Tastensperre": "Tastelås",
+    "Technik": "Utstyr",
+    "Temperaturwarnung": "Temperaturvarsel",
+    "Terrasse": "Terrasse",
+    "Tonnen": "Dunker",
+    "Trittfrequenz": "Tråkkfrekvens",
+    "Trocken": "Tørr",
+    "Trocknen": "Tørking",
+    "Trocknet": "Tørker",
+    "Trommelreinigung": "Trommelrengjøring",
+    "Unklar": "Uklart",
+    "Unkritisch": "Ukritisk",
+    "Unscharf": "Deaktivert",
+    "Unter": "Under",
+    "Unterbrochen": "Avbrutt",
+    "Unwetter": "Uvær",
+    "Urlaub": "Ferie",
+    "VERBLEIBEND": "GJENSTÅR",
+    "Ventil-Anpassung": "Ventiltilpasning",
+    "Verriegelung": "Låsing",
+    "Vorbereitung": "Forbereder",
+    "WLAN-Download": "Wi-Fi-nedlasting",
+    "Warm": "Varmt",
+    "Warnung": "Advarsel",
+    "Wartung": "Vedlikehold",
+    "Waschen": "Vask",
+    "Waschküche": "Vaskerom",
+    "Wasserbedarf": "Vannbehov",
+    "Wassertemperatur": "Vanntemperatur",
+    "Wetterwarnung": "Farevarsel",
+    "Wiedergabe": "Avspilling",
+    "Windig": "Vindfullt",
+    "Wischen": "Mopping",
+    "Wischmodus": "Moppemodus",
+    "Wischt": "Mopper",
+    "Wohnzimmer": "Stue",
+    "Zeitplan": "Tidsplan",
+    "Zonenreinigung": "Sonerengjøring",
+    "Überschwemmung": "Oversvømmelse",
+    "überschwemmung": "oversvømmelse",
+    "Januar": "januar",
+    "Februar": "februar",
+    "März": "mars",
+    "Mär": "mar",
+    "April": "april",
+    "Mai": "mai",
+    "Juni": "juni",
+    "Juli": "juli",
+    "August": "august",
+    "September": "september",
+    "Oktober": "oktober",
+    "November": "november",
+    "Dezember": "desember",
+    "Montag": "mandag",
+    "Dienstag": "tirsdag",
+    "Mittwoch": "onsdag",
+    "Donnerstag": "torsdag",
+    "Freitag": "fredag",
+    "Samstag": "lørdag",
+    "Sonntag": "søndag",
+    "1 Reinigung": "1 rengjøring",
+    "1 Update braucht Aufmerksamkeit": "1 oppdatering trenger oppmerksomhet",
+    "AMS getrennt": "AMS frakoblet",
+    "AMS wird vorbereitet": "Forbereder AMS",
+    "Ablaufpumpe blockiert": "Avløpspumpe blokkert",
+    "Absturzsensor verschmutzt": "Fallsensor skitten",
+    "Abwesend scharf schalten?": "Armere (borte)?",
+    "Aktiviert (Abwesend)": "Armert (borte)",
+    "Aktiviert (Bypass)": "Armert (bypass)",
+    "Aktiviert (Zuhause)": "Armert (hjemme)",
+    "Aktiviert (Nacht)": "Armert (natt)",
+    "Aktiviert (Urlaub)": "Armert (ferie)",
+    "Alarm deaktiviert": "Alarm deaktivert",
+    "Alles aktuell": "Alt oppdatert",
+    "Alles eingekauft": "Alt handlet",
+    "Alles gelesen": "Alt lest",
+    "Als beendet markieren": "Merk som avsluttet",
+    "Amtliche Warnung": "Offisielt varsel",
+    "Andere Idee": "En annen idé",
+    "Aquarium-Licht": "Akvarielys",
+    "Auf die Einkaufsliste": "Legg i handlelisten",
+    "Automatisch erkennen": "Oppdag automatisk",
+    "Batterie schwach": "Lavt batteri",
+    "Betrifft bei dir": "Gjelder deg",
+    "Bett wird nivelliert": "Nivellerer sengen",
+    "Bewegung erkannt": "Bevegelse oppdaget",
+    "Bewegungsmelder inaktiv": "Bevegelsessensor inaktiv",
+    "Bitte warten": "Vent litt",
+    "Bluetooth-Verbindung kurz unterbrochen": "Bluetooth-forbindelsen kort brutt",
+    "Braucht dringend Aufmerksamkeit": "Trenger rask oppmerksomhet",
+    "Braucht etwas Aufmerksamkeit": "Trenger litt oppmerksomhet",
+    "braucht Aufmerksamkeit": "trenger oppmerksomhet",
+    "Breaking Change betrifft dich": "brytende endring gjelder deg",
+    "Breaking Changes betreffen dich": "brytende endringer gjelder deg",
+    "CO₂-Wert hoch": "Høy CO₂",
+    "Claude liest die Release-Notes …": "Claude leser versjonsmerknadene…",
+    "Claude prüft Bodenfeuchte, Licht, Temperatur und Luftfeuchte der letzten 7 Tage passend zur Art und gibt einen Pflegetipp.": "Claude sjekker jordfuktighet, lys, temperatur og luftfuktighet de siste 7 dagene opp mot arten og gir et stelletips.",
+    "Zu hoch": "For høy",
+    "Zu niedrig": "For lav",
+    "Claude prüft Heizdauer, Raumtemperaturen, Heizen bei offenem Fenster und den Heizkörper im Bad der letzten 7 Tage.": "Claude går gjennom oppvarmingstid, romtemperaturer, oppvarming med åpne vinduer og radiatoren på badet de siste 7 dagene.",
+    "Code eingeben …": "Skriv inn kode…",
+    "Dashboard bearbeiten": "Rediger dashbord",
+    "Deine Region": "Din region",
+    "Details in der Bambu-App": "Detaljer i Bambu-appen",
+    "Diebstahl gemeldet": "Tyveri meldt",
+    "Du bist diesen Monat dran": "Det er din tur denne måneden",
+    "Du bist dran": "Din tur",
+    "Nicht dran": "Ikke din tur",
+    "Dock getrennt": "Dokk frakoblet",
+    "Druckbett wird gescannt": "Skanner sengen",
+    "Drucker offline": "Skriver frakoblet",
+    "Druckplatte wird erkannt": "Registrerer byggeplate",
+    "Eigenes Tagesprofil der Lampe": "Lampens egen dagsprofil",
+    "Eingriff erforderlich": "Inngrep kreves",
+    "Einmalig erlaubt": "Tillatt én gang",
+    "Endet gleich": "Slutter snart",
+    "Energie gesamt": "Energi totalt",
+    "Erkennung fortsetzen": "Gjenoppta deteksjon",
+    "Erkennung pausieren": "Sett deteksjon på pause",
+    "Wenn die Maschine kurz angehalten wird": "Når maskinen stoppes en kort stund",
+    "Ersparnis gesamt": "Spart totalt",
+    "Erst saugen, dann wischen": "Støvsug først, så mopp",
+    "Extra Trocken": "Ekstra tørt",
+    "Extreme Warnung": "Ekstremvarsel",
+    "Extremes Unwetter": "Ekstremvær",
+    "Extrusion wird kalibriert": "Kalibrerer ekstrudering",
+    "Fahrzeit gesamt": "Turtid totalt",
+    "Farben nach deiner Automation": "Farger fra automasjonen din",
+    "Fast fertig": "Nesten ferdig",
+    "Feinstaub PM2.5": "Svevestøv PM2.5",
+    "Fernsteuerung aktiv": "Fjernstyring aktiv",
+    "Feste Zieltemperatur": "Fast måltemperatur",
+    "Filament wird entladen": "Laster ut filament",
+    "Filament wird geladen": "Laster inn filament",
+    "Fluss wird kalibriert": "Kalibrerer flyt",
+    "Frag Assist …": "Spør Assist…",
+    "Frischwassertank leer": "Rentvannstank tom",
+    "Ganzes Haus": "Hele hjemmet",
+    "Gas erkannt": "Gass oppdaget",
+    "Geladen (12 Monate)": "Ladet (12 måneder)",
+    "Gerade angekommen": "Nettopp kommet",
+    "Gerade gegangen": "Nettopp dratt",
+    "Heute gefahren": "Syklet i dag",
+    "Gestern gefahren": "Syklet i går",
+    "Heute gegossen": "Vannet i dag",
+    "Gestern gegossen": "Vannet i går",
+    "Gewitter mit Regen": "Tordenvær med regn",
+    "Heizkreise stromlos": "Varmekretser uten strøm",
+    "Heute dosiert": "Dosert i dag",
+    "Hohe Feuchtigkeit": "Høy luftfuktighet",
+    "Ich habe nichts verstanden.": "Jeg oppfattet ikke det.",
+    "Idee holen": "Få en idé",
+    "Im Anruf": "I samtale",
+    "Immer erlaubt": "Alltid tillatt",
+    "Intensiv 70°": "Intensiv 70°",
+    "Jetzt aktualisieren": "Oppdater nå",
+    "Jetzt auswerten": "Analyser nå",
+    "Jetzt dosieren": "Doser nå",
+    "Jetzt neu starten": "Start på nytt nå",
+    "Jetzt starten": "Start nå",
+    "Zeitversetzt starten": "Utsatt start",
+    "Kindersicherung aktiv": "Barnesikring aktiv",
+    "Klare Nacht": "Klar natt",
+    "Kohlenmonoxid erkannt": "Karbonmonoksid oppdaget",
+    "Kritische Temperaturabweichung!": "Kritisk temperaturavvik!",
+    "Lädt und Bypass": "Lader og bypass",
+    "Lade Vorhersage …": "Laster værmelding…",
+    "Laden bis": "Lad til",
+    "Nicht entladen unter": "Ikke lad ut under",
+    "Laufzeit insgesamt": "Total driftstid",
+    "Lecksensor offline": "Lekkasjesensor frakoblet",
+    "Letzter Durchgang": "Siste syklus",
+    "Letzter Versuch fehlgeschlagen": "Siste forsøk mislyktes",
+    "Lidar blockiert": "Lidar blokkert",
+    "Manueller Modus": "Manuell modus",
+    "Mopp fehlt": "Mopp mangler",
+    "Mopp trocknen": "Tørk mopp",
+    "Mopp waschen": "Vask mopp",
+    "Mopp wird angebracht": "Fester mopp",
+    "Mopp wird entfernt": "Fjerner mopp",
+    "Motor wird kalibriert": "Kalibrerer motor",
+    "Nach Zeitplan": "Etter tidsplan",
+    "Neue Post im Briefkasten": "Ny post i postkassen",
+    "Neues Gespräch": "Ny samtale",
+    "Neustart ausstehend": "Omstart venter",
+    "Neustart erforderlich": "Omstart kreves",
+    "Nicht angepasst": "Ikke tilpasset",
+    "Nicht erkannt": "Ikke oppdaget",
+    "Nicht gemeldet": "Ikke meldt",
+    "Nicht verbunden": "Ikke tilkoblet",
+    "Nicht verriegelt": "Ikke låst",
+    "Niedriger Wasserdruck": "Lavt vanntrykk",
+    "Noch nie": "Aldri",
+    "Nur Anzeige": "Kun visning",
+    "Pflanze ist gesund": "Planten er frisk",
+    "Push am Vorabend": "Push kvelden før",
+    "Rauch erkannt": "Røyk oppdaget",
+    "Reichweite je Modus": "Rekkevidde per modus",
+    "Akkukapazität": "Batterikapasitet",
+    "Distanz gesamt": "Distanse totalt",
+    "Geladen gesamt": "Ladet totalt",
+    "Unterstützungsmodi": "Assistansemoduser",
+    "eMTB+": "eMTB+",
+    "Zuletzt gesehen": "Sist sett",
+    "Software-Update": "Programvareoppdatering",
+    "Verfügbar": "Tilgjengelig",
+    "Reinigung gestartet": "Rengjøring startet",
+    "Reinigungen insgesamt": "Rengjøringer totalt",
+    "Reispfanne mit Hähnchen und Pilzen": "Rispanne med kylling og sopp",
+    "Roboter gekippt": "Robot veltet",
+    "Roboter steckt fest": "Robot sitter fast",
+    "Saugen & wischen": "Støvsug & mopp",
+    "Saugt & wischt": "Støvsuger & mopper",
+    "Saugt & wischt Zone": "Støvsuger & mopper sone",
+    "Wischt Zone": "Mopper sone",
+    "Scharf schalten?": "Armere?",
+    "Unscharf schalten?": "Deaktivere?",
+    "Sirene stoppen?": "Stopp sirenen?",
+    "Schmutzwasser leeren": "Tøm skittent vann",
+    "Schmutzwassertank voll": "Skittenvannstank full",
+    "Schnell 45°": "Rask 45°",
+    "Schnell 65°": "Rask 65°",
+    "Schnell 30": "Rask 30",
+    "Baumwolle 40": "Bomull 40",
+    "Pflegeleicht": "Strykelett",
+    "Schneller fertig": "Raskere ferdig",
+    "Schwere Warnung": "Alvorlig varsel",
+    "Sehr kalt": "Veldig kaldt",
+    "Zu kalt": "For kaldt",
+    "Sehr trocken": "Veldig tørt",
+    "sehr trocken": "veldig tørt",
+    "Sensoren reinigen": "Rengjør sensorer",
+    "Service & Sicherheit": "Service & sikkerhet",
+    "Service nach Strecke": "Service etter distanse",
+    "Sonstige Wartung": "Annet vedlikehold",
+    "Speedtest starten": "Start hastighetstest",
+    "Spracheingabe fehlgeschlagen.": "Taleinndata mislyktes.",
+    "Sprechen": "Snakk",
+    "Starte den Saugroboter": "Start robotstøvsugeren",
+    "Starts insgesamt": "Starter totalt",
+    "Stoppt …": "Stopper…",
+    "Sucht ein Rezept …": "Finner en oppskrift…",
+    "Temperaturwarnung aktiv": "Temperaturvarsel aktivt",
+    "Trocknet Mopp": "Tørker mopp",
+    "Trocknung endet": "Tørking slutter",
+    "Verbindung stabil": "Stabil tilkobling",
+    "Verschobene Termine": "Flyttede datoer",
+    "Voll geladen": "Fulladet",
+    "Voll, Bypass": "Fullt, bypass",
+    "Vollschutz aktiv": "Full beskyttelse aktiv",
+    "Von dir pausiert": "Pauset av deg",
+    "WLAN & Sperren": "Wi-Fi & sperrer",
+    "Warte auf Pflanzendaten": "Venter på plantedata",
+    "Warte auf Start": "Venter på start",
+    "Wartet auf Druckbett": "Venter på sengen",
+    "Wartet auf Neustart": "Venter på omstart",
+    "Was steht auf der Einkaufsliste?": "Hva står på handlelisten?",
+    "Wasserheizung verkalkt": "Vannvarmer tilkalket",
+    "Wasserkasten fehlt": "Vanntank mangler",
+    "Wetterwarnung aufgehoben": "Farevarsel opphevet",
+    "Wie kann ich helfen?": "Hva kan jeg hjelpe med?",
+    "Wieder anzeigen": "Vis igjen",
+    "Zum Freigeben oben in der Update-Zeile auf „Freigeben“ tippen und bestätigen.": "For å godkjenne: trykk på «Godkjenn» i oppdateringsraden øverst og bekreft.",
+    "KI: alle unkritisch": "KI: alle ukritiske",
+    "KI: unkritisch": "KI: ukritisk",
+    "Installieren empfohlen": "Installering anbefalt",
+    "auf der Arbeit": "på jobb",
+    "dauert länger als üblich": "tar lengre tid enn vanlig",
+    "gibt es noch keine eigene Auswertung. „Neu auswerten“ erstellt sie für alle Räume.": "har ingen egen analyse ennå. «Analyser på nytt» lager en for alle rom.",
+    "sehr schlecht": "veldig dårlig",
+    "Stufe 1": "Nivå 1",
+    "Stufe 2": "Nivå 2",
+    "Stufe 3": "Nivå 3",
+    "Durchgänge seit dem letzten Mal": "sykluser siden sist",
+    "Ø Dauer": "Ø varighet",
+    "Ø pro Durchgang": "Ø per syklus",
+    "Wertstoffabfall": "Gjenvinning",
+    "Aktuelle Wiedergabe": "Spilles nå",
+    "Beispiel-Titel": "Eksempeltittel",
+    "Daten: Deutscher Wetterdienst (DWD)": "Data: Deutscher Wetterdienst (DWD)",
+    "Internetsperre": "Internettsperre",
+    "Latenz": "Forsinkelse",
+    "Startzeit": "Starttid",
+    "Wetter": "Vær",
+    "Zieltemperatur": "Måltemperatur",
+    "braucht Wasser": "trenger vann",
+    "braucht Dünger": "trenger gjødsel",
+    "braucht mehr Licht": "trenger mer lys",
+    "steht in zu trockener Luft": "har for tørr luft",
+    "steht in zu feuchter Luft": "har for fuktig luft",
+    "ausgezeichnet": "utmerket",
+    "gut": "god",
+    "schlecht": "dårlig",
+    "Lädt aus dem Netz": "Lader fra nettet",
+    "Übernahme fehlgeschlagen": "Overtakelse mislyktes",
+    "Backup läuft": "Sikkerhetskopiering pågår",
+    "An/Aus": "På/Av",
+    "12-V-Batterie": "12 V-batteri",
+    "Luftfeuchtigkeit außen": "Luftfuktighet ute",
+    "Nächstes Backup überfällig": "Neste sikkerhetskopi er forfalt",
+    "Kein Bild – Kamera ist offline oder ihr Dienst läuft nicht.": "Ikke noe bilde – kameraet er frakoblet, eller tjenesten kjører ikke.",
+    "Kamera offline": "Kamera frakoblet",
+    "Schloss offline": "Lås frakoblet",
+    "Fenster gekippt": "Vindu vippet",
+    "Tor offen": "Port åpen",
+    "Luft ausgezeichnet": "Luften er utmerket",
+    "Luft mäßig": "Luften er moderat",
+    "Luft schlecht": "Luften er dårlig",
+    "Luft sehr schlecht": "Luften er veldig dårlig",
+    "Klemmt": "Sitter fast",
+    "Wird geöffnet …": "Åpner…",
+    "Gerät fehlt": "Enhet mangler",
+    "Aktionen": "Handlinger",
+    "Gerät nicht erreichbar": "Enhet ikke tilgjengelig",
+    "Aus (Bürste angehoben)": "Av (børste hevet)",
+    "Eigene Wassermenge": "Egen vannmengde",
+    "Nur wischen": "Kun mopping",
+    "Pflanze": "Plante",
+    "Rezept": "Oppskrift",
+    "Tür gekippt": "Dør vippet",
+    "Ton": "Lyd",
+    "Beschreiben": "Beskriv",
+    "Prüfe Strom und WLAN der Kamera.": "Sjekk kameraets strøm og Wi-Fi.",
+    "Erneut versuchen": "Prøv igjen",
+    "Schloss": "Lås",
+    "Sirene": "Sirene",
+    "Alarm": "Alarm",
+    "Tor": "Port",
+    "Lichtfarbe": "Lysfarge",
+    "Lampen im Raum": "Lamper i rommet",
+    "Gedimmt": "Dimmet",
+    "Volle Helligkeit": "Full lysstyrke",
+    "Neutral": "Nøytral",
+    "zuletzt": "sist",
+    "Kanäle": "Kanaler",
+    "Becken": "Akvarier",
+    "Aquarien · Temperaturen": "Akvarier · Temperaturer",
+    "Mehr": "Mer",
+    "Weniger": "Mindre",
+    "WLAN": "Wi-Fi",
+    "Verbraucher": "Forbrukere",
+    "Energiefluss": "Energiflyt",
+    "Woher": "Fra",
+    "Wohin Solar": "Hvor solstrømmen går",
+    "Verbrauch im Haus": "Forbruk i huset",
+    "Akku lädt": "Batteri lader",
+    "Akku entlädt": "Batteri lader ut",
+    "Akku bereit": "Batteri klart",
+    "Solar liefert gerade nichts": "Ingen solstrøm akkurat nå",
+    "Kein Verbrauch": "Ikke noe forbruk",
+    "Noch keine Werte": "Ingen verdier ennå",
+    "Noch keine Aufteilung": "Ingen fordeling ennå",
+    "Sperren": "Sperrer",
+    "Internet": "Internett",
+    "Durchsatz": "Gjennomstrømning",
+    "Gerätedetails": "Enhetsdetaljer",
+    "Update verfügbar": "Oppdatering tilgjengelig",
+    "Problem": "Problem",
+    "Speedtest läuft …": "Hastighetstest kjører…",
+    "Kapazität": "Kapasitet",
+    "Tipps": "Tips",
+    "Noch keine Auswertung": "Ingen analyse ennå",
+    "Solarbank": "Solarbank",
+    "Betriebszustand": "Driftstilstand",
+    "Lastvorgabe": "Lastsettpunkt",
+    "Öffentliche IP": "Offentlig IP",
+    "LAN-Upload": "LAN-opplasting",
+    "WLAN-Upload": "Wi-Fi-opplasting",
+    "pro Woche sparbar": "kan spares per uke",
+    "Kein Strom ins Netz": "Ingen strøm til nettet",
+    "Abgabelimit": "Leveringsgrense",
+    "Claude wertet die letzte Woche aus …": "Claude analyserer den siste uken…",
+    "Niedriger Akkustand": "Lavt batterinivå",
+    "Alle Geräte": "Alle enheter",
+    "Keine Warnungen": "Ingen advarsler",
+    "Alles in Ordnung": "Alt i orden",
+    "Alle Schlösser": "Alle låser",
+    "Alle Kameras": "Alle kameraer",
+    "Nicht geprüft": "Ikke sjekket",
+    "KI-Fehler": "KI-feil",
+    "KI prüft …": "KI sjekker…",
+    "1 Batterie schwach": "1 batteri lavt",
+    "Tippen zum Verriegeln": "Trykk for å låse",
+    "Tippen zum Entriegeln": "Trykk for å låse opp",
+    "Tippen, um alle zu verriegeln": "Trykk for å låse alle",
+    "Tippen, um alle zu entriegeln": "Trykk for å låse opp alle",
+    "Wird verriegelt …": "Låser…",
+    "Wird entriegelt …": "Låser opp…",
+    "● Unkritisch": "● Ukritisk",
+    "● Breaking": "● Brytende",
+    "● Handeln": "● Ta grep",
+    "KI-Blick: Druck prüfen": "KI-blikk: sjekk utskrift",
+    "Fertig gegen": "Ferdig rundt",
+    "Station": "Stasjon",
+    "Alles aufgefüllt": "Alt fylt opp",
+    "Salz, Klarspüler und Pflege sind in Ordnung": "Salt, glansemiddel og pleie er i orden",
+    "Fühler": "Følere",
+    "Verlauf": "Historikk",
+    "Verlauf der letzten 24 Stunden": "Historikk for de siste 24 timene",
+    "Rad-Check im Detail": "Sykkelsjekk i detalj",
+    "Motor": "Motor",
+    "Alles zu und verriegelt": "Alt lukket og låst",
+    "Alles zu": "Alt lukket",
+    "Feststellbremse angezogen": "Parkeringsbrems på",
+    "Tank fast leer": "Tank nesten tom",
+    "Speiseplan der nächsten 7 Tage ist leer": "Måltidsplanen for de neste 7 dagene er tom",
+    "Zutaten der Idee": "Ingredienser til ideen",
+    "Raumluft gut": "Inneluft god",
+    "Heute keine Termine": "Ingen avtaler i dag",
+    "1 Termin heute": "1 avtale i dag",
+    "Keine Szenen gefunden. Casora zeigt alle Szenen, die in den Entitäten weder ausgeblendet noch deaktiviert sind.": "Fant ingen scener. Casora viser alle scener som verken er skjult eller deaktivert i entitetene.",
+    "Aquarium": "Akvarium",
+    "Jalousie": "Persienne",
+    "E-Bike": "Elsykkel",
+    "Ventilator": "Vifte",
+    "Spiel": "Spill",
+    "Luftbefeuchter": "Luftfukter",
+    "Anwesenheit": "Tilstedeværelse",
+    "Schalter": "Bryter",
+    "Updates": "Oppdateringer",
+    "Wetterwarnungen": "Farevarsler",
+    "Noch keine Geräte – im Studio hinzufügen": "Ingen enheter ennå – legg dem til i Studio",
+    "Noch kein Gerät zugeordnet": "Ingen enhet tilordnet ennå",
+    "Im Casora Studio dieser Kachel ein Gerät zuweisen": "Tilordne en enhet til denne flisen i Casora Studio",
+    "Im Casora Studio neu zuordnen": "Tilordne på nytt i Casora Studio",
+    "Noch nicht eingerichtet": "Ikke satt opp ennå",
+    "Im Casora Studio der Kachel den Solar-Tipp zuordnen.": "Tilordne soltipset til denne flisen i Casora Studio.",
+    "Noch keine Tageswerte": "Ingen dagsverdier ennå",
+    "Welche Geräte hier zählen, legst du im Studio fest.": "Du velger i Studio hvilke enheter som teller her.",
+    "waschen": "vaske klær",
+    "spülen": "kjøre oppvaskmaskinen",
+    "trocknen": "kjøre tørketrommelen",
+    "Fühlt sich wohl": "Trives",
+    "Braucht Wasser": "Trenger vann",
+    "Steht zu nass": "Står for vått",
+    "Steht zu kalt": "Står for kaldt",
+    "Steht zu warm": "Står for varmt",
+    "Zu viel Sonne": "For mye sol",
+    "Überdüngt": "Overgjødslet",
+    "Bitte nachsehen": "Ta en titt",
+    "Keine Messwerte": "Ingen måleverdier",
+    "Wartet auf Daten": "Venter på data",
+    "steht zu nass": "står for vått",
+    "ist überdüngt": "er overgjødslet",
+    "bekommt zu viel Sonne": "får for mye sol",
+    "steht zu kalt": "står for kaldt",
+    "steht zu warm": "står for varmt",
+    "Ausgeräumt": "Tømt",
+    "Wäsche ist noch drin": "Tøyet er fortsatt inni",
+    "Wäsche ist noch im Trockner": "Tøyet er fortsatt i tørketrommelen",
+    "Fertig · Wäsche drin": "Ferdig · tøy inni",
+    "Wird beim Öffnen der Tür erkannt": "Oppdages når døren åpnes",
+    "Welches Programm läuft?": "Hvilket program kjører?",
+    "Nächstes Programm": "Neste program",
+    "Erkennung anhalten": "Sett deteksjon på pause",
+    "Wenn die Maschine kurz unterbrochen wird": "Hvis maskinen avbrytes kort",
+    "Die Erkennung ist angehalten": "Deteksjonen er satt på pause",
+    "Erkennung verbessern": "Forbedre deteksjonen",
+    "1 Einstellung empfohlen, in WashData übernehmen": "1 innstilling anbefalt, bruk den i WashData",
+    "Durchgänge insgesamt": "Sykluser totalt",
+    "Programme": "Programmer",
+    "Programm gewählt": "Program valgt",
+    "An der Maschine gewählt": "Valgt på maskinen",
+    "Prüfung": "Sjekk",
+    "Spülstopp": "Skyllestopp",
+    "Stromausfall": "Strømbrudd",
+    "Störung": "Feil",
+    "Wartung nötig": "Service kreves",
+    "Abfallkalender gerade nicht erreichbar": "Avfallskalender ikke tilgjengelig nå",
+    "Nicht erreichbar": "Ikke tilgjengelig",
+    "Die Abholtermine kommen wieder, sobald der Entsorger antwortet.": "Hentedatoene kommer tilbake så snart renovasjonsselskapet svarer.",
+    "Lautsprecher und TVs": "Høyttalere & TV-er",
+    "Sonstiges": "Annet",
+    "Schlaf": "Søvn",
+    "Eco": "Eco",
+    "Smart": "Smart",
+    "Turbo": "Turbo",
+    "Boost": "Boost",
+    "Natur": "Natur",
+    "Hier gibt es noch keine Geräte": "Ingen enheter her ennå",
+    "Im Casora Studio einem Raum zuordnen": "Tilordne dem til et rom i Casora Studio",
+    "weitere": "flere",
+    "Zum Anfang": "Til starten",
+    "Fast leer": "Nesten tomt",
+    "Alle Batterien OK": "Alle batterier OK",
+    "1 Akku schwach": "1 batteri lavt",
+    "Akku fast leer": "Batteri nesten tomt",
+    "Läuft gerade": "Spilles nå",
+    "Scharf": "Armert",
+    "Alarm unscharf": "Alarm deaktivert",
+    "Welche Türen sind offen?": "Hvilke dører er åpne?",
+    "Ist alles abgeschlossen?": "Er alt låst?",
+    "Alarm scharf schalten": "Armer alarmen",
+    "Wie wird das Wetter heute?": "Hvordan blir været i dag?",
+    "Muss heute eine Tonne raus?": "Skal en dunk ut i dag?",
+    "Öffne die Jalousien": "Åpne persiennene",
+    "Schließe die Jalousien": "Lukk persiennene",
+    "Wie viel Strom brauchen wir gerade?": "Hvor mye strøm bruker vi akkurat nå?",
+    "Läuft die Waschmaschine noch?": "Går vaskemaskinen fortsatt?",
+    "Was läuft gerade?": "Hva spilles nå?",
+    "Vorschläge für den Morgen": "Forslag for morgenen",
+    "Vorschläge für heute": "Forslag for i dag",
+    "Vorschläge für den Abend": "Forslag for kvelden",
+    "Vorschläge für die Nacht": "Forslag for natten",
+    "lädt": "lader",
+    "Zum Dock": "Til dokk",
+    "Smart wählt Saugstärke und Wischen je Raum selbst.": "Smart velger selv sugestyrke og mopping for hvert rom.",
+    "Kein Bild": "Ikke noe bilde",
+    "Zu": "Lukk",
+    "Auf": "Åpne",
+    "Position": "Posisjon",
+    "Spielt": "Spiller",
+    "Geräte im Casora Studio einem Raum zuordnen": "Tilordne enheter til et rom i Casora Studio",
+    "Das Mikrofon funktioniert nur über HTTPS – bitte Home Assistant über eine https-Adresse öffnen.": "Mikrofonen fungerer bare over HTTPS – åpne Home Assistant via en https-adresse.",
+    "In der Summe": "I summen",
+    "Nicht in der Summe": "Ikke i summen",
+    "Keine Leistung": "Ikke effekt",
+    "Steckt hinter": "Ligger bak",
+    "1 Gerät ohne Wert": "1 enhet uten verdi",
+    "Schloss offen": "Lås åpen",
+    "Alles sicher": "Alt sikkert",
+    "Auswertung der letzten 7 Tage": "Analyse av de siste 7 dagene",
+    "Idee der Woche": "Ukens idé",
+    "Heute geplant": "Planlagt i dag",
+    "Vorschlag von Claude": "Forslag fra Claude",
+    "Karte": "Kart",
+    "Vom Hersteller, kommt verzögert": "Fra produsenten, kommer forsinket",
+    "der Entsorger": "renovasjonsselskapet",
+    "Mbit/s Download": "Mbit/s nedlasting",
+    "Mbit/s Upload": "Mbit/s opplasting",
+    "Download & Upload": "Nedlasting og opplasting",
+    "Download": "Nedlasting",
+    "Upload": "Opplasting",
+    "Sensor": "Sensor",
+    "Speedtest": "Speedtest",
+    "Standby": "Standby",
+    "Firmware": "Fastvare",
+    "Marketplace": "Marketplace",
+    "Casora": "Casora",
+    "Cookidoo": "Cookidoo",
+    "Thermomix": "Thermomix",
+    "PowerTube": "PowerTube",
+    "PlayStation": "PlayStation",
+    "PlayStation Network": "PlayStation Network",
+    "1 Termin": "1 avtale",
+    "1 Kamera offline": "1 kamera frakoblet",
+    "1 Schloss offline": "1 lås frakoblet",
+    "1 Tür gekippt": "1 dør vippet",
+    "1 Tag": "1 dag",
+    "Wirklich ausschalten?": "Vil du virkelig slå av?",
+    "Wirklich einschalten?": "Vil du virkelig slå på?",
+    "Wirklich schließen?": "Vil du virkelig lukke?",
+    "Wirklich aufschließen?": "Vil du virkelig låse opp?",
+    "Wirklich abschließen?": "Vil du virkelig låse?",
+    "Aufschließen": "Lås opp",
+    "Abschließen": "Lås",
+    "Achtung": "Obs",
+    "Trotzdem scharf schalten?": "Armere likevel?",
+    "Trotzdem scharf schalten": "Armer likevel",
+    "1 Tür offen": "1 dør åpen",
+    "1 Tor offen": "1 port åpen",
+    "1 Fenster offen": "1 vindu åpent",
+    "1 Fenster gekippt": "1 vindu vippet",
+    "Licht aus": "Lys av",
+    "Kein Team-Tracker-Sensor": "Ikke en Team Tracker-sensor",
+    "Endstand": "Sluttresultat",
+    "Live": "Direkte",
+    "Halbzeit": "Pause",
+    "Morgen": "I morgen",
+    "Heim": "Hjemme",
+    "Gast": "Borte",
+    "Tabelle": "Tabell",
+    "Form": "Form",
+    "Letzte Duelle": "Siste oppgjør",
+    "Licht an": "Lys på",
+    "Feucht": "Fuktig",
+    "Ergebnis": "Resultat",
+    "Nächstes Spiel": "Neste kamp",
+    "Letztes Spiel": "Forrige kamp",
+    "Testspiel": "Treningskamp",
+    "Gegner": "motstander",
+    "nächster Gegner": "neste motstander",
+    "Ganze Tabelle": "Hele tabellen",
+    "Weniger zeigen": "Vis mindre",
+    "Keine Spiele gefunden": "Ingen kamper funnet",
+    "Tabelle nicht erreichbar": "Tabellen er ikke tilgjengelig",
+    "Keine Tabelle für diesen Wettbewerb": "Ingen tabell for denne turneringen",
+    "Fußball": "Fotball",
+    "gegen": "mot",
+    "bei": "hos",
+    "Kein Spiel angesetzt": "Ingen kamp berammet",
+    "Nächstes Spiel noch nicht angesetzt": "Neste kamp er ikke berammet ennå",
+    "Verschoben": "Utsatt",
+    "Abgesagt": "Avlyst",
+    "Uhrzeit offen": "Tid ikke satt",
+    "Verlängerung": "Ekstraomganger",
+    "Elfmeterschießen": "Straffekonk",
+    "Gleich": "Snart",
+    "n. V.": "e.e.o.",
+    "i. E.": "e. str.",
+    "Sieg": "Seier",
+    "Niederlage": "Tap",
+    "1 Raum": "1 rom",
+    "1 Licht an": "1 lys på",
+    "Keine Räume": "Ingen rom",
+    "Lampen-Modi": "Lampemoduser",
+    "Lampen-Profil": "Lampeprofil",
+    "Farbkanäle": "Fargekanaler",
+    "Ohne Effekt": "Uten effekt",
+    "Home Assistant": "Home Assistant",
+    "Programm der Lampe": "Lampens eget program",
+    "Eigener Tagesablauf der Lampe": "Lampens egen døgnrytme",
+    "Temperatur zu hoch": "For høy temperatur",
+    "Temperatur zu niedrig": "For lav temperatur",
+    "Aktinisch": "Aktinisk",
+    "UV": "UV",
+    "Kaltweiß": "Kaldhvit",
+    "Warmweiß": "Varmhvit",
+    "Mondlicht": "Månelys",
+    "Rot": "Rød",
+    "Grün": "Grønn",
+    "Blau": "Blå",
+    "Weiß": "Hvit",
+    "Tanken": "Drivstoff",
+    "Abruf gestört": "Henting feiler",
+    "Preise werden geladen": "Laster inn priser",
+    "Empfehlung": "Anbefaling",
+    "Am günstigsten": "Billigst",
+    "In der Nähe": "I nærheten",
+    "Günstigste": "Billigste",
+    "Nächste": "Nærmeste",
+    "Typischer Tag": "Typisk dag",
+    "Ø 14 Tage": "Ø 14 dager",
+    "Lernphase": "Læringsfase",
+    "Empfehlung kommt bald": "Anbefaling kommer snart",
+    "Die Empfehlung kommt, sobald genug Preise gesammelt sind, in etwa einem Tag.": "Anbefalingen kommer når nok priser er samlet inn, om omtrent en dag.",
+    "Gerade": "Akkurat nå",
+    "Keine offene Tankstelle": "Ingen åpen bensinstasjon",
+    "Im Umkreis hat gerade keine Tankstelle geöffnet.": "Ingen bensinstasjon i området er åpen akkurat nå.",
+    "Tank knapp": "Lite drivstoff",
+    "Jetzt tanken": "Fyll nå",
+    "Warte bis heute Abend": "Vent til i kveld",
+    "Warte bis morgen Abend": "Vent til i morgen kveld",
+    "Warte bis heute Vormittag": "Vent til i formiddag",
+    "Warte bis morgen früh": "Vent til i morgen tidlig",
+    "Guter Zeitpunkt": "Godt tidspunkt",
+    "Kein großer Unterschied": "Liten forskjell",
+    "In den nächsten Stunden ändert sich der Preis meist um weniger als 2 ct.": "De neste timene endrer prisen seg som regel med mindre enn 2 ct.",
+    "Noch keine Preise": "Ingen priser ennå",
+    "Tankpreise gerade nicht abrufbar": "Drivstoffpriser utilgjengelige akkurat nå",
+    "Casora fragt alle 10 Minuten, die ersten Preise kommen gleich.": "Casora spør hvert 10. minutt, de første prisene kommer straks.",
+    "Gerade keine offen": "Ingen åpne akkurat nå",
+    "Daten: Tankerkönig, CC BY 4.0": "Data: Tankerkönig, CC BY 4.0",
+    "Umkreis": "Radius",
+    "bis": "til",
+    "Ø pro Tag": "Ø per dag",
+    "Heute bis": "I dag til",
+    "letzte 2 Stunden": "siste 2 timer",
+    "letzte 4 Stunden": "siste 4 timer",
+    "letzte 6 Stunden": "siste 6 timer",
+    "letzte 24 Stunden": "siste 24 timer",
+    "letzte 48 Stunden": "siste 48 timer",
+    "letzte 7 Tage": "siste 7 dager",
+    "letzte 30 Tage": "siste 30 dager",
+    "noch nie": "aldri",
+    "Salz nachfüllen": "Fyll på salt",
+    "Klarspüler nachfüllen": "Fyll på glansemiddel",
+    "Flusensieb reinigen": "Rengjør lofilter",
+    "Kondensator reinigen": "Rengjør kondensator",
+    "Angehalten": "Stoppet",
+    "steht still, evtl. Unwucht": "står stille, mulig ubalanse",
+    "Eigene Aufgabe": "Egen oppgave",
+    "Am Schloss": "På låsen",
+    "Bedienen": "Betjening",
+    "Entriegeln": "Lås opp",
+    "Verriegeln": "Lås",
+    "Ganzer Verlauf": "Hele historikken",
+    "Skript": "Skript",
+    "Tür öffnen": "Åpne dør",
+    "Türkontakt": "Dørkontakt",
+    "Wirklich die Tür öffnen?": "Vil du virkelig åpne døren?",
+    "Mit Rückfrage, wie im Studio eingestellt": "Spør først, som innstilt i Studio",
+    "Schloss nicht erreichbar": "Låsen er ikke tilgjengelig",
+    "Verlauf nicht abrufbar": "Historikk utilgjengelig",
+    "Heute keine Änderung": "Ingen endring i dag",
+    "per App": "via app",
+    "Über": "Via",
+    "Alles ok": "Alt i orden",
+    "Wirklich entriegeln?": "Vil du virkelig låse opp?",
+    "Wirklich verriegeln?": "Vil du virkelig låse?",
+    "Nichts fällig": "Ingenting forfaller",
+    "Daten": "Data",
+    "Jetzt nach Updates suchen": "Se etter oppdateringer nå",
+    "Suche …": "Søker…",
+    "Keine neuen Updates": "Ingen nye oppdateringer",
+    "1 neues Update gefunden": "1 ny oppdatering funnet",
+    "Suche fehlgeschlagen": "Søket mislyktes",
+    "Vorheriger Titel": "Forrige spor",
+    "Nächster Titel": "Neste spor",
+    "Klappen": "Luker",
+    "Kraftstoff": "Drivstoff",
+    "jetzt günstig": "billig nå",
+    "keine offen": "ingen åpne",
+    "KI:": "KI:",
+    "1 heizt": "1 varmer",
+    "Handy": "Mobil",
+    "Lädt nicht": "Lader ikke",
+    "Mobilfunk": "Mobildata",
+    "kein WLAN": "ikke Wi-Fi",
+    "Entfernung": "Avstand",
+    "Richtung": "Retning",
+    "Nach Hause": "Hjemover",
+    "Luftlinie zur Zone Zuhause": "Luftlinje til sonen Hjem",
+    "Standort jetzt holen": "Hent posisjon nå",
+    "fragt die Companion-App": "spør Companion-appen",
+    "Nachricht schicken": "Send melding",
+    "Klingeln lassen": "Få den til å ringe",
+    "auch wenn es leise ist": "også når den er på lydløs",
+    "Standort per GPS": "Posisjon via GPS",
+    "über das WLAN": "via Wi-Fi",
+    "über Bluetooth": "via Bluetooth",
+    "Verlauf wird geladen …": "Laster inn historikk …",
+    "Kein Verlauf der letzten drei Tage": "Ingen historikk de siste tre dagene",
+    "Entfernt sich": "Fjerner seg",
+    "Kommt näher": "Kommer nærmere",
+    "Bleibt stehen": "Står stille",
+    "Angekommen": "Fremme",
+    "Standort angefragt": "Posisjon forespurt",
+    "Konnte das Handy nicht erreichen": "Fikk ikke kontakt med mobilen",
+    "Nachricht gesendet": "Melding sendt",
+    "Handy klingelt": "Mobilen ringer",
+    "Senden": "Send",
+    "Nachricht": "Melding",
+    "Nachricht an": "Melding til",
+    "von zuhause": "hjemmefra",
+    "Handy klingeln lassen?": "Få mobilen til å ringe?",
+    "Es klingelt auch, wenn es leise gestellt ist.": "Den ringer også når den er satt på lydløs.",
+    "Klingeln": "Ring",
+    "Hier bin ich!": "Her er jeg!",
+    "Person": "Person",
+    "jetzt hier": "her nå",
+    "Keine Änderung in den letzten drei Tagen": "Ingen endring de siste tre dagene",
+    "Mähroboter": "Robotgressklipper",
+    "Mäht": "Klipper",
+    "In der Station": "I ladestasjonen",
+    "Fährt zur Station": "Kjører til ladestasjonen",
+    "Mäht außerhalb des Zeitplans": "Klipper utenom tidsplanen",
+    "Verlässt die Station": "Forlater ladestasjonen",
+    "Parkt bis zum nächsten Zeitplan": "Parkert til neste tidsplan",
+    "Parkt bis auf Weiteres": "Parkert inntil videre",
+    "Parkt, Rasen wächst langsam": "Parkert, gresset vokser sakte",
+    "Parkt wegen Frost": "Parkert på grunn av frost",
+    "Parkt, Tagesziel erreicht": "Parkert, dagsmålet nådd",
+    "Außerhalb des Mähbereichs": "Utenfor klippeområdet",
+    "Kein Signal vom Begrenzungsdraht": "Ikke signal fra avgrensningskabelen",
+    "Falsches Signal vom Begrenzungsdraht": "Feil signal fra avgrensningskabelen",
+    "Steckt fest": "Sitter fast",
+    "Umgekippt": "Veltet",
+    "Akku leer": "Batteriet er tomt",
+    "Kann nicht fahren": "Kan ikke kjøre",
+    "Angehoben": "Løftet",
+    "Kurz angehoben": "Kort løftet",
+    "Steht schief": "Står skjevt",
+    "Rutscht": "Sklir",
+    "Hängt in der Station fest": "Sitter fast i ladestasjonen",
+    "Station blockiert": "Ladestasjonen er blokkert",
+    "Ladestrom zu hoch": "For høy ladestrøm",
+    "Rad links blockiert": "Venstre hjul blokkert",
+    "Rad rechts blockiert": "Høyre hjul blokkert",
+    "Rad links überlastet": "Venstre hjul overbelastet",
+    "Rad rechts überlastet": "Høyre hjul overbelastet",
+    "Radantrieb links gestört": "Feil på venstre hjuldrift",
+    "Radantrieb rechts gestört": "Feil på høyre hjuldrift",
+    "Mähwerk blockiert": "Klippesystemet er blokkert",
+    "Mähmotor gestört": "Feil på klippemotoren",
+    "Mähmotor defekt": "Klippemotoren er defekt",
+    "Schnitthöhe blockiert": "Klippehøyden er blokkert",
+    "Schnitthöhe gestört": "Feil på klippehøyden",
+    "Stoßsensor vorne gestört": "Feil på fremre kollisjonssensor",
+    "Stoßsensor hinten gestört": "Feil på bakre kollisjonssensor",
+    "Neigungssensor gestört": "Feil på hellingssensoren",
+    "Stopp-Taste gestört": "Feil på stoppknappen",
+    "Elektronik gestört": "Feil på elektronikken",
+    "Falsche PIN": "Feil PIN",
+    "Klappe offen": "Luke åpen",
+    "Ausgeschaltet, Klappe zu": "Slått av, luke lukket",
+    "Alarm: ausgeschaltet": "Alarm: slått av",
+    "Alarm: angehalten": "Alarm: stoppet",
+    "Alarm: angehoben": "Alarm: løftet",
+    "Alarm: gekippt": "Alarm: veltet",
+    "Alarm: bewegt": "Alarm: flyttet",
+    "Alarm: außerhalb des Bereichs": "Alarm: utenfor området",
+    "Zur Station": "Til ladestasjon",
+    "Mähen": "Klipp",
+    "Parken": "Parker",
+    "Pause": "Pause",
+    "Betriebsstunden": "Driftstimer",
+    "In den letzten 7 Tagen nicht gemäht": "Ikke klippet de siste 7 dagene",
+    "Mäht gerade": "Klipper nå",
+    "Gemäht": "Klippet",
+    "besteht noch": "fortsatt aktiv",
+    "1 Fahrt": "1 tur",
+    "Bestätigt": "Bekreftet",
+    "Messer": "Kniver",
+    "Schnitthöhe": "Klippehøyde",
+    "Nächster Start": "Neste start",
+    "Gesperrt": "Sperret",
+    "Demo": "Demo",
+    "Hauptbereich": "Hovedområde",
+    "Nebenbereich": "Sekundærområde",
+    "Zielpunkt": "Målpunkt",
+    "Restlebensdauer": "Gjenstående levetid",
+    "Einsatzzeit": "Brukstid",
+    "Regenpause": "Regnpause",
+    "Regen erkannt": "Regn registrert",
+    "Parkt (extern)": "Parkert (eksternt)",
+    "Mäht die Kante": "Klipper kanten",
+    "Fährt zur Zone": "Kjører til sonen",
+    "Sucht die Zone": "Søker etter sonen",
+    "Parkt wegen Regen": "Parkert på grunn av regn",
+    "Parkt, zu dunkel": "Parkert, for mørkt",
+    "Parkt, alles gemäht": "Parkert, alt er klippet",
+    "Sucht Satelliten": "Søker etter satellitter",
+    "Begrenzungsdraht verpolt": "Avgrensningskabelen er feilkoblet",
+    "Zu steil": "For bratt",
+    "Findet die Station nicht": "Finner ikke ladestasjonen",
+    "Rad blockiert": "Hjul blokkert",
+    "Klappe schließen": "Lukk luken",
+    "Zone nicht erreichbar": "Sonen kan ikke nås",
+    "Kartenfehler": "Kartfeil",
+    "Kamera gestört": "Feil på kameraet",
+    "Fehler beim Start": "Feil ved oppstart",
+    "Schwerer Fehler": "Alvorlig feil",
+    "Aus, Klappe zu": "Av, luke lukket",
+    "KI-Check": "KI-sjekk",
+    "Vorher sichern": "Sikkerhetskopier først",
+    "Installieren": "Installer",
+    "Überspringen": "Hopp over",
+    "Was ist neu": "Hva er nytt",
+    "Alle Hinweise": "Alle merknader",
+    "Keine Versionshinweise": "Ingen versjonsmerknader",
+    "KI-Einschätzung": "KI-vurdering",
+    "Breaking Change": "Brytende endring",
+    "seit": "siden",
+    "24 Std.": "24 t",
+    "Letzte 24 Std.": "Siste 24 t",
+    "Letzte 7 Tage": "Siste 7 dager",
+    "Höchster Wert": "Høyeste verdi",
+    "Tiefster Wert": "Laveste verdi",
+    "Durchschnitt": "Gjennomsnitt",
+    "Letzte 12 Monate": "Siste 12 måneder",
+    "Linie": "Linje",
+    "Balken": "Stolper",
+    "Heatmap": "Varmekart",
+    "Ø pro Monat": "Ø per måned",
+    "Ø pro Stunde": "Ø per time",
+    "letzte 12 Monate": "siste 12 måneder",
+    "Am längsten": "Lengst",
+    "Änderungen": "Endringer",
+    "Steigt": "Stiger",
+    "Fällt": "Synker",
+    "für": "i",
+    "seitdem": "siden da",
+    "Keine Änderung im Zeitraum": "Ingen endring i perioden",
+    "Hersteller": "Produsent",
+    "Modell": "Modell",
+    "Hardware": "Maskinvare",
+    "Verbunden über": "Tilkoblet via",
+    "Bereich": "Område",
+    "Integration": "Integrasjon",
+    "In Home Assistant öffnen": "Åpne i Home Assistant",
+    "Einstellungen, Umbenennen, Symbol": "Innstillinger, gi nytt navn, ikon",
+    "Gehört dazu": "Hører til",
+    "Diagnose": "Diagnostikk",
+    "Belegt": "Opptatt",
+    "Anwesend": "Til stede",
+    "Nass": "Våt",
+    "Rauch": "Røyk",
+    "Eingesteckt": "Plugget inn",
+    "Ausgesteckt": "Koblet fra",
+    "Insgesamt geöffnet": "Åpen totalt",
+    "Insgesamt Bewegung": "Bevegelse totalt",
+    "Insgesamt belegt": "Opptatt totalt",
+    "Insgesamt anwesend": "Til stede totalt",
+    "Insgesamt nass": "Våt totalt",
+    "Insgesamt verbunden": "Tilkoblet totalt",
+    "Insgesamt schwach": "Lavt totalt",
+    "Insgesamt Rauch": "Røyk totalt",
+    "Insgesamt Problem": "Problem totalt",
+    "Insgesamt entriegelt": "Ulåst totalt",
+    "Insgesamt eingesteckt": "Plugget inn totalt",
+    "Insgesamt gelaufen": "Kjørt totalt",
+    "Insgesamt an": "På totalt",
+    "Befeuchtet": "Fukter",
+    "Entfeuchtet": "Avfukter",
+    "Betrieb": "Drift",
+    "Zielfeuchte": "Ønsket fuktighet",
+    "Wassertank": "Vanntank",
+    "Komfort": "Komfort",
+    "Warnungen": "Advarsler",
+    "Aktuell keine Warnungen": "Ingen advarsler akkurat nå",
+    "Liefert gerade nichts": "Produserer ingenting akkurat nå",
+    "Liefert": "Produserer",
+    "Kein Austausch": "Ingen utveksling",
+    "Module": "Moduler",
+    "Ertrag": "Utbytte",
+    "Entladen": "Utlading",
+    "Laden": "Lading",
+    "Eingespeist gesamt": "Levert til nettet totalt",
+    "Einspeisung und Eigenversorgung": "Levering til nettet og egenforsyning",
+    "Solarleistung": "Soleffekt",
+    "Ladestand": "Ladenivå",
+    "Akkuleistung": "Batterieffekt",
+    "Netzleistung": "Netteffekt",
+    "Woher kommt der Strom": "Hvor strømmen kommer fra",
+    "Wohin geht der Solarstrom": "Hvor solstrømmen går",
+    "Bypass": "Bypass",
+    "Popup öffnen": "Åpne popup",
+    "Kachel bearbeiten": "Rediger flis",
+    "Aus in": "Av om",
+    "An für": "På i",
+    "Aus um": "Av kl.",
+    "An um": "På kl.",
+    "Stopp": "Stopp",
+    "Lauter": "Høyere",
+    "Kälter": "Kaldere",
+    "Wärmer": "Varmere",
+    "15 Min.": "15 min",
+    "30 Min.": "30 min",
+    "1 Std.": "1 t",
+    "2 Std.": "2 t",
+    "Details": "Detaljer",
+    "Ausschalten in": "Slå av om",
+    "Einschalten für": "Slå på i",
+    "Kamera live": "Kamera direkte",
+    "Live ansehen": "Se direkte",
+    "Auto": "Auto",
+    "Hat nicht geklappt": "Det gikk ikke",
+    "Alarm scharf schalten?": "Armere alarmen?",
+    "Alarm unscharf schalten?": "Deaktivere alarmen?",
+    "Code": "Kode",
+    "Energie-Dashboard": "Energidashbord",
+    "Alle Updates": "Alle oppdateringer",
+    "Nach Updates suchen": "Se etter oppdateringer",
+    "Suche nach Updates …": "Ser etter oppdateringer …",
+    "Handy klingeln lassen": "Få mobilen til å ringe",
+    "Auf der Einkaufsliste": "På handlelisten",
+    "Rezept öffnen": "Åpne oppskrift",
+    "Batterie gewechselt?": "Batteri byttet?",
+    "Gäste-WLAN an": "Gjeste-Wi-Fi på",
+    "Gäste-WLAN aus": "Gjeste-Wi-Fi av",
+    "Gäste-WLAN ausschalten?": "Slå av gjeste-Wi-Fi?",
+    "Daten aktualisieren": "Oppdater data",
+    "Auto aufwecken und Daten holen?": "Vekke bilen og hente data?",
+    "Fertig um": "Ferdig kl.",
+    "Fertig seit": "Ferdig siden",
+    "noch": "igjen",
+    "An in": "På om",
+    "Std.": "t",
+    "Min.": "min",
+    "Tipp: Kachel gedrückt halten oder rechts klicken – Schnellbedienung": "Tips: hold en flis inne eller høyreklikk på den for hurtigbetjening",
+    "Tipp: Kachel gedrückt halten – Schnellbedienung": "Tips: hold en flis inne for hurtigbetjening",
+    "Zeitschalter aus": "Stopp tidsur",
+    "Ändern auf": "Endre til",
+    "Update gestartet": "Oppdatering startet",
+    "Aufnahme an": "Opptak på",
+    "Aufnahme aus": "Opptak av",
+    "Aufnahme ausschalten?": "Slå av opptak?",
+    "Aufnahmen": "Opptak",
+    "Automatisch folgen": "Følg automatisk",
+    "Bewegungserkennung": "Bevegelsesdeteksjon",
+    "Erkennung an": "Deteksjon på",
+    "Erkennung aus": "Deteksjon av",
+    "Erkennung ausschalten?": "Slå av deteksjon?",
+    "Frigate meldet Fehler": "Frigate melder feil",
+    "Frigate startet": "Frigate starter",
+    "Frigate antwortet nicht": "Frigate svarer ikke",
+    "Gerade im Bild": "I bildet nå",
+    "Geräuscherkennung": "Lyddeteksjon",
+    "In Frigate öffnen": "Åpne i Frigate",
+    "In den Medien von Home Assistant": "I mediene i Home Assistant",
+    "Kamera aus": "Kamera av",
+    "Keine Erkennung": "Ingen deteksjon",
+    "Keine Erkennungen in den letzten 7 Tagen": "Ingen deteksjoner de siste 7 dagene",
+    "Letzte Erkennung": "Siste deteksjon",
+    "Letzte Erkennungen": "Siste deteksjoner",
+    "Liste über die Frigate-Integration nicht abrufbar": "Kunne ikke hente listen fra Frigate-integrasjonen",
+    "Noch nicht erkannt": "Ikke oppdaget ennå",
+    "Objekte": "Objekter",
+    "Objekt": "Objekt",
+    "Schnappschuss": "Øyeblikksbilde",
+    "Schnappschüsse": "Øyeblikksbilder",
+    "Zonen": "Soner",
+    "läuft noch": "pågår fortsatt",
+    "System": "System",
+    "Frigate": "Frigate",
+    "Bär": "Bjørn",
+    "Eichhörnchen": "Ekorn",
+    "Fahrrad": "Sykkel",
+    "FedEx": "FedEx",
+    "Fuchs": "Rev",
+    "Gesicht": "Ansikt",
+    "Hund": "Hund",
+    "Kaninchen": "Kanin",
+    "Katze": "Katt",
+    "Kennzeichen": "Bilskilt",
+    "Motorrad": "Motorsykkel",
+    "Mülltonne": "Avfallsdunk",
+    "Paket": "Pakke",
+    "Pferd": "Hest",
+    "Schaf": "Sau",
+    "Schirm": "Paraply",
+    "USPS": "USPS",
+    "Vogel": "Fugl",
+    "Waschbär": "Vaskebjørn",
+    "Reh": "Rådyr",
+    "Kuh": "Ku",
+    "Boot": "Båt",
+    "Lkw": "Lastebil",
+    "Bus": "Buss",
+    "Aufnahme & Erkennung": "Opptak og deteksjon",
+    "Löst die Objekterkennung aus": "Utløser objektdeteksjonen",
+    "Neuere Erkennung": "Nyere deteksjon",
+    "Ältere Erkennung": "Eldre deteksjon",
+    "Mehr anzeigen": "Vis mer",
+    "Weniger anzeigen": "Vis mindre",
+    "Alle Objekte zeigen": "Vis alle objekter",
+    "Läuft noch": "Pågår fortsatt",
+    "Privatsphäre an": "Personvern på",
+    "Hat geklingelt": "Noen ringte på",
+    "Tier": "Dyr",
+    "Schnellantworten": "Hurtigsvar",
+    "Schnellantwort": "Hurtigsvar",
+    "Spielt ab": "Spiller av",
+    "Antippen zum Stoppen": "Trykk for å stoppe",
+    "Laut an der Tür, 10 Sekunden": "Høyt ved døren, 10 sekunder",
+    "Auslösen": "Utløs sirene",
+    "Sirene läuft": "Sirenen går",
+    "An der Tür": "Ved døren",
+    "Niemand hat geklingelt": "Ingen har ringt på",
+    "Klingelton": "Ringelyd",
+    "Lautsprecher": "Høyttaler",
+    "Klingelton an der Tür": "Ringelyd ved døren",
+    "Ton aufnehmen": "Ta opp lyd",
+    "Ohne Ton hörst du die Tür nicht": "Uten lyd hører du ikke døren",
+    "Infrarot-LEDs nachts": "Infrarøde LED-er om natten",
+    "Tag/Nacht-Modus": "Dag/natt-modus",
+    "Bild gerade": "Bilde nå",
+    "Status-LED": "Status-LED",
+    "Privatsphäre": "Personvern",
+    "Kamera und Ton aus": "Kamera og lyd av",
+    "Licht am Klingelknopf": "Lys på ringeknappen",
+    "Nachts an": "På om natten",
+    "Immer an": "Alltid på",
+    "Automatische Antwort": "Automatisk svar",
+    "Schwarz-Weiß": "Svart-hvitt",
+    "Farbe mit Licht": "Farge med lys",
+    "Kamera und Ton der Klingel sind aus.": "Kamera og lyd på ringeklokken er av.",
+    "Klingel nicht erreichbar": "Ringeklokken er ikke tilgjengelig",
+    "Prüfe Strom und WLAN der Klingel.": "Sjekk strøm og Wi-Fi til ringeklokken.",
+    "Ton aus": "Lyd av",
+    "Verbindet …": "Kobler til…",
+    "Ton ist an der Klingel aus": "Lyden er av på ringeklokken",
+    "Sprechen klappt mit dieser Klingel nicht – Ton hören geht weiter": "Å snakke fungerer ikke med denne ringeklokken – du kan fortsatt lytte",
+    "Kein Zugriff aufs Mikrofon – im Browser erlauben": "Ingen tilgang til mikrofonen – tillat det i nettleseren",
+    "Sprechen nach 90 Sekunden beendet": "Samtalen ble avsluttet etter 90 sekunder",
+    "Verbindung zur Klingel beendet": "Forbindelsen til ringeklokken ble avsluttet",
+    "Ton hören": "Lytt",
+    "An der Tür abspielen?": "Spille av ved døren?",
+    "Geklingelt": "Ringt på",
+    "In den letzten 3 Tagen": "De siste 3 dagene",
+    "Kaffeevollautomat": "Helautomatisk kaffemaskin",
+    "Kaffeemaschine": "Kaffemaskin",
+    "Kaffee": "Kaffe",
+    "Kaffeekanne": "Kaffekanne",
+    "XL-Kaffee": "XL-kaffe",
+    "Milchkaffee": "Café au lait",
+    "Kaffee verkehrt": "Melk med kaffe",
+    "Kaffee mit Milch": "Kaffe med melk",
+    "Warme Milch": "Varm melk",
+    "Milchschaum": "Melkeskum",
+    "Heißwasser": "Varmt vann",
+    "Tee": "Te",
+    "Eiskaffee": "Iskaffe",
+    "Pulverkaffee": "Malt kaffe",
+    "Milchgetränke": "Melkedrikker",
+    "Mein Kaffee": "Min kaffe",
+    "Entkalken & Reinigen": "Avkalk og rengjør",
+    "Entkalkt": "Avkalker",
+    "Spült": "Skyller",
+    "Pflege läuft": "Vedlikehold pågår",
+    "Heizt auf": "Varmer opp",
+    "Wasser nachfüllen": "Fyll på vann",
+    "Wassertank ist leer": "Vanntanken er tom",
+    "Bohnen nachfüllen": "Fyll på bønner",
+    "Bohnenbehälter ist leer": "Bønnebeholderen er tom",
+    "Schale leeren": "Tøm dryppskålen",
+    "Tropfschale ist voll": "Dryppskålen er full",
+    "Satzbehälter leeren": "Tøm grutbeholderen",
+    "Kaffeesatz ist voll": "Grutbeholderen er full",
+    "Milch kühlen": "Hold melken kald",
+    "Milch in den Kühlschrank stellen": "Sett melken i kjøleskapet",
+    "Entkalkungsprogramm starten": "Start avkalkingsprogrammet",
+    "Pflegeprogramm starten": "Start vedlikeholdsprogrammet",
+    "Reinigungsprogramm starten": "Start rengjøringsprogrammet",
+    "Filter wechseln": "Bytt filter",
+    "Wasserfilter ist verbraucht": "Vannfilteret er oppbrukt",
+    "Wassertank einsetzen": "Sett inn vanntanken",
+    "Wassertank fehlt": "Vanntanken mangler",
+    "Wasser bald leer": "Snart tomt for vann",
+    "Wassertank ist fast leer": "Vanntanken er nesten tom",
+    "Schale einsetzen": "Sett inn dryppskålen",
+    "Tropfschale fehlt": "Dryppskålen mangler",
+    "Brühgruppe einsetzen": "Sett inn bryggeenheten",
+    "Brühgruppe fehlt": "Bryggeenheten mangler",
+    "Entkalken überfällig": "Avkalking på overtid",
+    "Reinigen überfällig": "Rengjøring på overtid",
+    "Entkalken & Reinigen überfällig": "Avkalking og rengjøring på overtid",
+    "Entkalken blockiert": "Avkalking blokkert",
+    "Entkalken an der Maschine fortsetzen": "Fortsett avkalkingen på maskinen",
+    "Milchsystem reinigen": "Rengjør melkesystemet",
+    "Milchsystem spülen und reinigen": "Skyll og rengjør melkesystemet",
+    "Mahlt": "Maler",
+    "Brüht vor": "Forbrygger",
+    "Brüht": "Brygger",
+    "Läuft ein": "Tappes",
+    "Milch": "Melk",
+    "Bereitet vor": "Forbereder",
+    "Getränke": "Drikker",
+    "Fernstart an der Maschine erlauben": "Tillat fjernstart på maskinen",
+    "Erst dann startet Casora Getränke aus der Ferne": "Først da kan Casora starte drikker eksternt",
+    "Stärke": "Styrke",
+    "Menge": "Mengde",
+    "Sehr mild": "Veldig mild",
+    "Mild": "Mild",
+    "Stark": "Sterk",
+    "Sehr stark": "Veldig sterk",
+    "Extra stark": "Ekstra sterk",
+    "Max": "Maks",
+    "Getränk": "Drikk",
+    "Getränk antippen, dann starten.": "Trykk på en drikk, og start den.",
+    "Maschine": "Maskin",
+    "Steckdose an": "Stikkontakt på",
+    "Steckdose aus": "Stikkontakt av",
+    "Maschine meldet einen Fehler": "Maskinen melder en feil",
+    "Hinweis im Display der Maschine ansehen": "Se meldingen på maskinens display",
+    "Wasserfilter": "Vannfilter",
+    "Filterwechsel": "Filterbytte",
+    "Warnungen in Home Assistant aktivieren": "Slå på advarsler i Home Assistant",
+    "Home Connect legt Wassertank, Bohnen, Schale und Entkalken ausgeschaltet an. Am Gerät unter Entitäten einschalten, dann meldet die Kachel sie.": "Home Connect oppretter vanntank, bønner, dryppskål og avkalking som deaktivert. Slå dem på under Entiteter på enheten, så melder flisen dem.",
+    "Getränke gesamt": "Drikker totalt",
+    "Lernt": "Lærer",
+    "Tank herausnehmen, füllen, einsetzen": "Ta ut tanken, fyll den, sett den inn igjen",
+    "Bohnen in den Behälter füllen": "Fyll bønner i beholderen",
+    "Tropfschale herausnehmen und leeren": "Ta ut og tøm dryppskålen",
+    "Behälter herausnehmen und leeren": "Ta ut og tøm beholderen",
+    "Entkalken fällig": "Tid for avkalking",
+    "Entkalkungsprogramm an der Maschine starten": "Start avkalkingsprogrammet på maskinen",
+    "Entkalken & Reinigen fällig": "Tid for avkalking og rengjøring",
+    "Pflegeprogramm an der Maschine starten": "Start vedlikeholdsprogrammet på maskinen",
+    "Reinigen fällig": "Tid for rengjøring",
+    "Reinigungsprogramm an der Maschine starten": "Start rengjøringsprogrammet på maskinen",
+    "Wasserfilter an der Maschine tauschen": "Bytt vannfilteret på maskinen",
+    "Wasser leer": "Tomt for vann",
+    "Bohnen leer": "Tomt for bønner",
+    "Schale voll": "Skålen er full",
+    "Satz voll": "Grut full",
+    "Tank fehlt": "Tanken mangler",
+    "Schale fehlt": "Skålen mangler",
+    "Behälter fehlt": "Beholderen mangler",
+    "Tank einsetzen, bis er einrastet": "Sett inn tanken til den klikker på plass",
+    "Tank bei Gelegenheit füllen": "Fyll tanken ved anledning",
+    "Tropfschale einsetzen": "Sett inn dryppskålen",
+    "Brühgruppe einsetzen, bis sie einrastet": "Sett inn bryggeenheten til den klikker på plass",
+    "Filterwechsel überfällig": "Filterbytte på overtid",
+    "Milchsystem an der Maschine spülen": "Skyll melkesystemet på maskinen",
+    "Service nötig": "Service nødvendig",
+    "Maschine vom Kundendienst prüfen lassen": "La kundeservice sjekke maskinen",
+    "Bohnenbehälter einsetzen": "Sett inn bønnebeholderen",
+    "Bohnenbehälter einsetzen, bis er einrastet": "Sett inn bønnebeholderen til den klikker på plass",
+    "Satzbehälter einsetzen": "Sett inn grutbeholderen",
+    "Satzbehälter einsetzen, bis er einrastet": "Sett inn grutbeholderen til den klikker på plass",
+    "Getränke wählst du an der Maschine.": "Drikker velger du på maskinen.",
+    "Verbindung zur Maschine prüfen": "Sjekk forbindelsen til maskinen",
+    "Eingeschaltet, aber noch nicht bereit – Getränk an der Maschine starten": "Slått på, men ikke klar ennå – start drikken på maskinen",
+    "Ausgewählt – Getränk an der Maschine starten": "Valgt – start drikken på maskinen",
+    "Start abbrechen": "Avbryt start",
+    "Abbrechen geht nur an der Maschine": "Avbryte kan du bare på maskinen",
+    "Start hat nicht geklappt": "Starten mislyktes",
+    "Abbrechen hat nicht geklappt": "Avbrytingen mislyktes",
+    "Wasser ist leer": "Tomt for vann",
+    "Bohnen sind leer": "Tomt for bønner",
+    "Schale ist voll": "Dryppskålen er full",
+    "Satzbehälter ist voll": "Grutbeholderen er full",
+    "trotzdem starten?": "starte likevel?",
+    "Trotzdem starten": "Start likevel",
+    "Abgebrochen": "Avbrutt",
+    "Startet, sobald bereit": "Starter når den er klar",
+    "Startet …": "Starter…",
+    "Hinweise⁠": "Varsler",
+    "Rückspülen": "Tilbakespyling",
+    "Getränk starten": "Start drikk",
+    "Getränk starten?": "Start drikk?",
+    "Doppio+": "Doppio+",
+    "Ristretto doppio": "Ristretto doppio",
+    "Caffè Crema doppio": "Caffè crema doppio",
+    "Americano extra": "Americano extra",
+    "Long Black": "Long black",
+    "Kaffee to go": "Kaffe to go",
+    "Cappuccino Italiano": "Cappuccino italiano",
+    "Cappuccino doppio": "Cappuccino doppio",
+    "Macchiato": "Macchiato",
+    "Latte Macchiato extra": "Latte macchiato extra",
+    "Latte Macchiato triple": "Latte macchiato triple",
+    "Kalte Milch": "Kald melk",
+    "Dampf": "Damp",
+    "Sehr heißes Wasser": "Veldig varmt vann",
+    "Schwarzer Tee": "Svart te",
+    "Kräutertee": "Urtete",
+    "Früchtetee": "Fruktte",
+    "Grüner Tee": "Grønn te",
+    "Weißer Tee": "Hvit te",
+    "Japanischer Tee": "Japansk te",
+    "Chai Latte": "Chai latte",
+    "Kakao": "Kakao",
+    "Kaffee auf Eis": "Kaffe på is",
+    "Ristretto & Espresso": "Ristretto og espresso",
+    "Galão": "Galão",
+    "Café con leche": "Café con leche",
+    "Red Eye": "Red eye",
+    "Black Eye": "Black eye",
+    "Dead Eye": "Dead eye",
+    "Café cortado": "Café cortado",
+    "Cold Brew": "Cold brew",
+    "Espresso doppio": "Espresso doppio",
+    "Caffè Crema": "Caffè crema",
+    "Caffè Grande": "Caffè grande",
+    "Kaffee starten": "Start kaffe",
+    "Kaffee starten?": "Start kaffe?",
+    "Einschalten und Kaffee starten": "Slå på og start kaffe",
+    "Heißwasser starten": "Start varmt vann",
+    "Heißwasser starten?": "Start varmt vann?",
+    "Einschalten und Heißwasser starten": "Slå på og start varmt vann",
+    "Warme Milch starten": "Start varm melk",
+    "Warme Milch starten?": "Start varm melk?",
+    "Einschalten und Warme Milch starten": "Slå på og start varm melk",
+    "Milchschaum starten": "Start melkeskum",
+    "Milchschaum starten?": "Start melkeskum?",
+    "Einschalten und Milchschaum starten": "Slå på og start melkeskum",
+    "Tee starten": "Start te",
+    "Tee starten?": "Start te?",
+    "Einschalten und Tee starten": "Slå på og start te",
+    "Kakao starten": "Start kakao",
+    "Kakao starten?": "Start kakao?",
+    "Einschalten und Kakao starten": "Slå på og start kakao",
+    "Kalte Milch starten": "Start kald melk",
+    "Kalte Milch starten?": "Start kald melk?",
+    "Einschalten und Kalte Milch starten": "Slå på og start kald melk",
+    "Dampf starten": "Start damp",
+    "Dampf starten?": "Start damp?",
+    "Einschalten und Dampf starten": "Slå på og start damp",
+    "Milchkaffee starten": "Start café au lait",
+    "Milchkaffee starten?": "Start café au lait?",
+    "Einschalten und Milchkaffee starten": "Slå på og start café au lait",
+    "Kaffeekanne starten": "Start kaffekanne",
+    "Kaffeekanne starten?": "Start kaffekanne?",
+    "Einschalten und Kaffeekanne starten": "Slå på og start kaffekanne",
+    "Sehr heißes Wasser starten": "Start svært varmt vann",
+    "Sehr heißes Wasser starten?": "Start svært varmt vann?",
+    "Einschalten und Sehr heißes Wasser starten": "Slå på og start svært varmt vann",
+    "Eiskaffee starten": "Start iskaffe",
+    "Eiskaffee starten?": "Start iskaffe?",
+    "Einschalten und Eiskaffee starten": "Slå på og start iskaffe",
+    "Kaffee mit Milch starten": "Start kaffe med melk",
+    "Kaffee mit Milch starten?": "Start kaffe med melk?",
+    "Einschalten und Kaffee mit Milch starten": "Slå på og start kaffe med melk",
+    "XL-Kaffee starten": "Start XL-kaffe",
+    "XL-Kaffee starten?": "Start XL-kaffe?",
+    "Einschalten und XL-Kaffee starten": "Slå på og start XL-kaffe",
+    "Kaffee auf Eis starten": "Start kaffe på is",
+    "Kaffee auf Eis starten?": "Start kaffe på is?",
+    "Einschalten und Kaffee auf Eis starten": "Slå på og start kaffe på is",
+    "Schwarzer Tee starten": "Start svart te",
+    "Schwarzer Tee starten?": "Start svart te?",
+    "Einschalten und Schwarzer Tee starten": "Slå på og start svart te",
+    "Kräutertee starten": "Start urtete",
+    "Kräutertee starten?": "Start urtete?",
+    "Einschalten und Kräutertee starten": "Slå på og start urtete",
+    "Früchtetee starten": "Start fruktte",
+    "Früchtetee starten?": "Start fruktte?",
+    "Einschalten und Früchtetee starten": "Slå på og start fruktte",
+    "Grüner Tee starten": "Start grønn te",
+    "Grüner Tee starten?": "Start grønn te?",
+    "Einschalten und Grüner Tee starten": "Slå på og start grønn te",
+    "Weißer Tee starten": "Start hvit te",
+    "Weißer Tee starten?": "Start hvit te?",
+    "Einschalten und Weißer Tee starten": "Slå på og start hvit te",
+    "Japanischer Tee starten": "Start japansk te",
+    "Japanischer Tee starten?": "Start japansk te?",
+    "Einschalten und Japanischer Tee starten": "Slå på og start japansk te",
+    "Kaffee verkehrt starten": "Start melkekaffe",
+    "Kaffee verkehrt starten?": "Start melkekaffe?",
+    "Einschalten und Kaffee verkehrt starten": "Slå på og start melkekaffe",
+    "Pulverkaffee starten": "Start malt kaffe",
+    "Pulverkaffee starten?": "Start malt kaffe?",
+    "Einschalten und Pulverkaffee starten": "Slå på og start malt kaffe",
+    "Kaffee to go starten": "Start kaffe to go",
+    "Kaffee to go starten?": "Start kaffe to go?",
+    "Einschalten und Kaffee to go starten": "Slå på og start kaffe to go",
+    "Mithören": "Lytt",
+    "Bei Privatsphäre aus": "Av når personvern er på",
+    "Sprechen beendet – Privatsphäre an": "Tale avsluttet – personvern på",
+    "Sprechen beendet – Klingel nicht erreichbar": "Tale avsluttet – ringeklokken er ikke tilgjengelig",
+    "Sprechen geht in diesem Browser nicht": "Tale er ikke tilgjengelig i denne nettleseren",
+    "Sprechen braucht HTTPS": "Tale krever HTTPS",
+    "Sprechen klappt mit dieser Klingel nicht – Mithören geht weiter": "Tale fungerer ikke med denne ringeklokken – lytting fungerer fortsatt",
+    "Sprechen klappt mit dieser Klingel nicht": "Tale fungerer ikke med denne ringeklokken",
+    "Sprechen geht nur über die Klingel": "Tale fungerer bare via ringeklokken",
+    "Groß anzeigen": "Vis stort",
+    "Live-Bild": "Direktebilde",
+    "Objekterkennung": "Objektgjenkjenning",
+    "Objekterkennung ausschalten?": "Slå av objektgjenkjenning?",
+    "Erkennung einschalten": "Slå på gjenkjenning",
+    "Erkennung ausschalten": "Slå av gjenkjenning",
+    "Aufnahme einschalten": "Slå på opptak",
+    "Aufnahme ausschalten": "Slå av opptak",
+    "Kein Clip vorhanden": "Ingen klipp tilgjengelig",
+    "Zone": "Sone",
+    "Alarme": "Varsler",
+    "Erkennungen": "Gjenkjenninger",
+    "Herunterladen": "Last ned",
+    "Zeitleiste": "Tidslinje",
+    "Nichts gefunden": "Ingenting funnet",
+    "Filter ändern oder zurücksetzen": "Endre eller tilbakestill filtrene",
+    "Filter zurücksetzen": "Tilbakestill filtre",
+    "Alle Aufnahmen": "Alle opptak",
+    "Keine Aufnahmen": "Ingen opptak",
+    "Aufnahme unter „Einstellungen“ einschalten": "Slå på opptak under «Innstillinger»",
+    "Frigate hat keine Aufnahmen dieser Kamera": "Frigate har ingen opptak fra dette kameraet",
+    "Aufnahme in den Einstellungen einschalten": "Slå på opptak i innstillingene",
+    "Tag": "Dag",
+    "Uhrzeit": "Klokkeslett",
+    "Aufnahme nicht abrufbar": "Kunne ikke hente opptaket",
+    "Frigate liefert dieses Video nicht": "Frigate leverer ikke denne videoen",
+    "Keine Aufnahme in dieser Stunde": "Ingen opptak denne timen",
+    "1 neuer Alarm": "1 nytt varsel",
+    "1 Erkennung": "1 gjenkjenning",
+    "1 Alarm": "1 varsel",
+    "Objekterkennung aus": "Objektgjenkjenning av",
+    "Objekterkennung einschalten": "Slå på objektgjenkjenning",
+    "Objekterkennung ausschalten": "Slå av objektgjenkjenning",
+    "Favorit ✓": "Favoritt ✓",
+    "Nur Favoriten": "Bare favoritter",
+    "Wird nicht automatisch gelöscht": "Slettes ikke automatisk",
+    "Teilen": "Del",
+    "Jetzt teilen": "Del nå",
+    "Bild herunterladen": "Last ned bilde",
+    "Gespeichert": "Lagret",
+    "Nicht geladen": "Ikke lastet",
+    "Sicher erkannt": "Sikkert gjenkjent",
+    "Als neu markieren": "Merk som ny",
+    "Alle als gesehen markieren": "Merk alle som sett",
+    "Alle als gesehen markieren?": "Merke alle som sett?",
+    "Danach steht nichts mehr als „Neu“ da.": "Etterpå vises ingenting som «Ny».",
+    "Markieren": "Merk",
+    "Zeitraum": "Tidsrom",
+    "Gesichter": "Ansikter",
+    "1 Filter aktiv": "1 filter aktivt",
+    "Alarme: wichtige Erkennungen, z. B. eine Person in einer Zone": "Varsler: viktige gjenkjenninger, f.eks. en person i en sone",
+    "Keine Favoriten": "Ingen favoritter",
+    "Im Detail einer Erkennung „Favorit“ antippen": "Trykk på «Favoritt» i en gjenkjenning",
+    "Springen nicht möglich": "Kan ikke spole i denne videoen",
+    "Ab hier:": "Herfra:",
+    "Anhalten": "Pause",
+    "Kein Live-Video · Standbild alle 2 s": "Ingen direktevideo · stillbilde hvert 2. sekund",
+    "Americano": "Americano",
+    "Cappuccino": "Cappuccino",
+    "Cortado": "Cortado",
+    "Doppio": "Doppio",
+    "Espresso": "Espresso",
+    "Espresso Macchiato": "Espresso macchiato",
+    "Latte Macchiato": "Latte macchiato",
+    "Lungo": "Lungo",
+    "Ristretto": "Ristretto",
+    "Casora Glas": "Casora Glas",
+    "Hemma": "Hemma",
+    "Hemma 1": "Hemma 1",
+    "Hemma 2": "Hemma 2",
+    "Tassen": "Kopper",
+    "Türklingel": "Ringeklokke",
+    "überfällig": "forfalt",
+    "Einschalten und": "Slå på og",
+    "HLS-Fehler": "HLS-feil",
+    "kein HLS": "ingen HLS",
+    "kein Video": "ingen video",
+    "keine Quelle": "ingen kilde",
+    "keine Reviews": "ingen reviews",
+    "lädt nicht": "laster ikke",
+    "Videofehler": "Videofeil",
+    "Unter-Liste nicht signiert": "underliste ikke signert",
+    "nicht signiert": "ikke signert",
+    "s ohne Antwort": "s uten svar",
+    "HTTP": "HTTP",
+    "YYYY-MM-DD": "YYYY-MM-DD",
+    "TEXTAREA": "TEXTAREA",
+    "Bohnen bald leer": "Snart tomt for bønner",
+    "Bohnen bei Gelegenheit nachfüllen": "Fyll på bønner ved anledning",
+    "Brühgruppe": "Bryggeenhet",
+    "Brühgruppe herausnehmen und unter Wasser ausspülen": "Ta ut bryggeenheten og skyll den under vann",
+    "Brühgruppe spülen": "Skyll bryggeenhet",
+    "Brühgruppe spülen überfällig": "Skylling av bryggeenhet forfalt",
+    "Getränk an der Maschine wählen – Casora erkennt es am Stromverlauf.": "Velg drikk på maskinen – Casora gjenkjenner den på strømforløpet.",
+    "Kaffee doppio": "Dobbel kaffe",
+    "Funkt, schickt aber keine Werte": "Sender signal, men ingen verdier",
+    "Batteriewert fehlt": "Batterinivå mangler",
+    "Cloud antwortet nicht": "Skyen svarer ikke",
+    "Seit dem Neustart noch keine Meldung": "Ingen melding siden omstarten",
+    "Erreichbar, gerade nichts zu melden": "Tilgjengelig, ingenting å melde nå",
+    "funkt, schickt aber keine Werte": "sender signal, men ingen verdier",
+    "meldet keinen Batteriewert": "melder ikke batterinivå",
+    "Haustier": "Kjæledyr",
+    "Bis 80 %": "Til 80%",
+    "Bis 100 %": "Til 100%",
+    "Lichtreserve": "Lysreserve",
+    "Wasserkocher": "Vannkoker",
+    "Warmhalten": "Hold varm",
+    "Wasserkocher nicht gefunden": "Fant ikke vannkokeren",
+    "Wirklich ausführen?": "Vil du kjøre dette?",
+    "Wirklich aktivieren?": "Vil du aktivere dette?",
+    "Zur Einkaufsliste": "Til handlelisten",
+    "Hinzufügen": "Legg til",
+    "z. B. Milch, 1 l": "f.eks. melk, 1 l",
+    "Einkaufen": "Handle",
+    "Die Liste ist leer": "Listen er tom",
+    "1 erledigt": "1 fullført",
+    "Erledigte löschen": "Slett fullførte",
+    "Erledigte löschen?": "Slette fullførte?",
+    "Liste nicht gefunden": "Fant ikke listen",
+    "Wird geladen": "Laster",
+    "eingekauft": "kjøpt",
+    "Alles": "Alt",
+    "Kacheln": "Fliser",
+    "1 Kachel": "1 flis",
+    "Ausführen": "Kjør",
+    "Velair-Modus": "Velair-modus",
+    "1 Sensor nicht erreichbar": "1 sensor ikke tilgjengelig",
+    "Diagramm": "Diagram",
+    "Linien": "Linjer",
+    "Kein Zahlenwert": "Ingen tallverdi",
+    "Dieser Sensor liefert keine Zahl.": "Denne sensoren gir ikke noe tall.",
+    "Noch keine Statistik": "Ingen statistikk ennå",
+    "Statistik nicht abrufbar": "Kan ikke hente statistikk",
+    "Home Assistant sammelt sie stündlich.": "Home Assistant samler den inn hver time.",
+    "Dieser Sensor hat keine Statistik.": "Denne sensoren har ingen statistikk.",
+    "Meldet sich nicht": "Melder seg ikke",
+    "Ungenaue Position": "Unøyaktig posisjon",
+    "Live-Tracking": "Direktesporing",
+    "Ziel": "Mål",
+    "Min. aktiv": "min aktiv",
+    "Ruhe": "Hvile",
+    "Schlaf Tag": "Søvn dag",
+    "Schlaf Nacht": "Søvn natt",
+    "Tracker": "Sporer",
+    "Energiesparen": "Strømsparing",
+    "Energiesparen ist an: der Tracker reagiert erst wieder, wenn er unterwegs ist.": "Strømsparing er på: sporeren svarer først igjen når den er i bevegelse.",
+    "Der Tracker ist gerade nicht erreichbar.": "Sporeren er ikke tilgjengelig akkurat nå.",
+    "Leicht feucht": "Lett fuktig",
+    "Häufig": "Ofte",
+    "Selten": "Sjelden",
+    "Intelligent": "Intelligent",
+    "Sehr hoch": "Svært høy",
+    "Mopp-Pad": "Moppepute",
+    "Kantenreinigung": "Kantrengjøring",
+    "Frischwassertank fehlt": "Rentvannstank mangler",
+    "Schmutzwassertank voll oder nicht eingesetzt": "Skittenvannstank full eller ikke satt inn",
+    "Staubbeutel fehlt": "Støvpose mangler",
+    "Staubbeutel prüfen": "Sjekk støvpose",
+    "Reinigungsmittel nachfüllen": "Fyll på rengjøringsmiddel",
+    "Räder reinigen": "Rengjør hjul",
+    "Wasserauslassfilter": "Vannutløpsfilter",
+    "Schmutzwassertank (Roboter)": "Skittenvannstank (robot)",
+    "noch 1 Tag": "1 dag igjen",
+    "Kein Ton von der Klingel – neuer Versuch …": "Ingen lyd fra ringeklokken, prøver igjen …",
+    "Werte": "Verdier",
+    "Bedienung": "Betjening",
+    "Wähle im Studio ein Gerät oder ergänze Werte, Verlauf und eigene Karten.": "Velg en enhet i Studio, eller legg til verdier, historikk og egne kort.",
+    "Kein Verlauf: {name} ist kein Zahlenwert.": "Ingen historikk: {name} er ikke en tallverdi.",
+    "Universal-Kachel": "Universalflis",
+    "Kein Gerät gewählt": "Ingen enhet valgt",
+    "Im Studio kannst du Werte, Verlauf, Bedienung und eigene Karten ergänzen.": "I Studio kan du legge til verdier, historikk, betjening og egne kort.",
+    "Obere Zone": "Øvre sone",
+    "Mittlere Zone": "Midtre sone",
+    "Untere Zone": "Nedre sone",
+    "Kühlteil": "Kjøledel",
+    "Gefrierteil": "Frysedel",
+    "Frischezone": "Ferskvaresone",
+    "Frischezone links": "Ferskvaresone venstre",
+    "Frischezone rechts": "Ferskvaresone høyre",
+    "Flexfach": "Fleksrom",
+    "Flaschenkühler": "Flaskekjøler",
+    "Weinfach": "Vinsone",
+    "Weinfach 2": "Vinsone 2",
+    "Weinfach 3": "Vinsone 3",
+    "Partymodus": "Festmodus",
+    "Urlaubsmodus": "Feriemodus",
+    "Eco-Modus": "Eco-modus",
+    "Sabbat-Modus": "Sabbatsmodus",
+    "Frische-Modus": "Ferskmodus",
+    "Wasserspender": "Vanndispenser",
+    "Türassistent Kühlteil": "Dørassistent kjøledel",
+    "Türassistent Gefrierteil": "Dørassistent frysedel",
+    "Superkühlen": "Superkjøling",
+    "Supergefrieren": "Superfrysing",
+    "Kühlschrank": "Kjøleskap",
+    "Gefrierschrank": "Fryseskap",
+    "Kühl-Gefrier-Kombination": "Kombiskap",
+    "Türalarm": "Døralarm",
+    "Temperaturalarm": "Temperaturalarm",
+    "Modi": "Moduser",
+    "Kein Kühlschrank gefunden": "Fant ikke noe kjøleskap",
+    "Wähle im Studio einen Temperatursensor oder Sollwert des Kühlschranks.": "Velg en temperatursensor eller måltemperatur for kjøleskapet i Studio.",
+    "SuperCool": "SuperCool",
+    "SuperFrost": "SuperFrost",
+    "Super": "Super",
+    "Vom Vortag": "Fra dagen før",
+    "Mo": "Man",
+    "Di": "Tir",
+    "Mi": "Ons",
+    "Do": "Tor",
+    "Fr": "Fre",
+    "Sa": "Lør",
+    "So": "Søn",
+    "Heizen/Kühlen": "Varme/kjøling",
+    "Horizontal": "Horisontal",
+    "Vertikal": "Vertikal",
+    "Beide": "Begge",
+    "Verteilt": "Spredt",
+    "Fokus": "Fokus",
+    "Lamellen": "Sving",
+    "Voreinstellung": "Forhåndsinnstilling",
+    "Schlafen": "Søvn",
+    "Löschen": "Slett",
+    "Speichern": "Lagre",
+    "Speichert …": "Lagrer…",
+    "Speichern hat nicht geklappt": "Kunne ikke lagre",
+    "Uhrzeit ungültig": "Ugyldig klokkeslett",
+    "Zu dieser Uhrzeit gibt es schon ein Zeitfenster": "Det finnes allerede et tidsvindu på dette klokkeslettet",
+    "Beginn": "Start",
+    "Oben": "Øvre",
+    "Unten": "Nedre",
+    "Nur Modus": "Bare modus",
+    "Neues Zeitfenster": "Nytt tidsvindu",
+    "Zeitfenster bearbeiten": "Rediger tidsvindu",
+    "Zeitfenster hinzufügen": "Legg til tidsvindu",
+    "Zeitfenster löschen?": "Slette tidsvinduet?",
+    "Noch kein Zeitplan": "Ingen tidsplan ennå",
+    "Lege das erste Zeitfenster an": "Legg til det første tidsvinduet",
+    "Zeitplan aus": "Tidsplan av",
+    "Zeitplan pausiert": "Tidsplan pauset",
+    "Manuell eingestellt": "Stilt inn manuelt",
+    "Der Zeitplan wartet, bis du fortsetzt": "Tidsplanen venter til du fortsetter",
+    "Extern gesteuert": "Styres eksternt",
+    "Alle Zeitpläne warten": "Alle tidsplaner venter",
+    "Velair": "Velair",
+    "Velair pausiert": "Velair pauset",
+    "Velair lädt …": "Velair laster…",
+    "Velair plant dieses Gerät nicht": "Velair planlegger ikke denne enheten",
+    "Velair wartet auf dich": "Velair venter på deg",
+    "Velair braucht eine Bestätigung im Velair-Panel.": "Velair trenger en bekreftelse i Velair-panelet.",
+    "Im Velair-Panel öffnen": "Åpne i Velair-panelet",
+    "Profile, Modi und Vorlagen": "Profiler, moduser og maler",
+    "Ein Profil ist aktiv – bearbeiten im Velair-Panel.": "En profil er aktiv – rediger den i Velair-panelet.",
+    "Ein Profil pausiert diesen Zeitplan.": "En profil setter denne tidsplanen på pause.",
+    "Gefühlt": "Føles som",
+    "Taupunkt": "Duggpunkt",
+    "Windböen": "Vindkast",
+    "Bewölkung": "Skydekke",
+    "Regenwahrscheinlichkeit": "Sjanse for regn",
+    "Regen heute": "Regn i dag",
+    "Niederschlag": "Nedbør",
+    "Sonneneinstrahlung": "Solinnstråling",
+    "UV-Index": "UV-indeks",
+    "Unterstream": "Understream",
+    "Hauptstream": "Hovedstream",
+    "Standard": "Standard",
+    "Stream": "Stream",
+    "Stream nicht erreichbar · Standard": "Stream ikke tilgjengelig · Standard",
+    "Wind": "Vind",
+    "Benachrichtigung": "Varsling",
+    "Jalousie offen": "Persienne åpen",
+    "Alle schließen": "Lukk alle",
+    "Bis Sonnenaufgang": "Til soloppgang",
+    "Ab Sonnenuntergang": "Fra solnedgang",
+    "Keine Jalousien ausgewählt": "Ingen persienner valgt",
+    "Jalousien wählst du im Studio unter Einstellungen › Haus & Geräte › Sicherheit.": "Velg persienner i Studio under Innstillinger › Hjem og enheter › Sikkerhet.",
+    "Liste": "Liste",
+    "Keine Einträge": "Ingen oppføringer",
+    "1 Einstellung": "1 innstilling",
+    "Nichts gewählt": "Ingenting valgt",
+    "1 Liste": "1 liste",
+    "1 Diagramm": "1 diagram",
+    "Diagramme": "Diagrammer",
+    "Die Gruppe gibt es nicht mehr. Wähle im Studio eine andere.": "Gruppen finnes ikke lenger. Velg en annen i Studio.",
+    "Wähle im Studio eine Gruppe, Geräte oder ein Label.": "Velg en gruppe, enheter eller en etikett i Studio.",
+    "Wähle im Studio Gruppen und Sensoren für diese Kachel.": "Velg grupper og sensorer for denne flisen i Studio.",
+    "Start": "Start",
+    "Hygiene+": "Hygiene+",
+    "Intensivzone": "Intensivsone",
+    "Ausreichend": "Tilstrekkelig",
+    "Später nicht möglich": "Ikke mulig senere",
+    "Früher nicht möglich": "Ikke mulig tidligere",
+    "Programm wählen": "Velg program",
+    "CO₂-neutral": "Lavutslipp",
+    "Alle Batterien": "Alle batterier",
+    "Alle Schlösser entriegeln?": "Låse opp alle låser?",
+    "Alle entriegeln": "Lås opp alle",
+    "Alle verriegeln": "Lås alle",
+    "Alles ruhig": "Alt rolig",
+    "Amtliche Warnungen erscheinen hier": "Offisielle farevarsler vises her",
+    "Im Casora Studio der Kachel den Solar-Tipp wählen": "Velg soltipset for flisen i Casora Studio",
+    "Im Studio unter Einstellungen › Haus & Geräte › Sicherheit": "I Studio under Innstillinger › Hjem og enheter › Sikkerhet",
+    "Keine offenen Updates": "Ingen ventende oppdateringer",
+    "Neue Versionen erscheinen hier": "Nye versjoner vises her",
+    "Noch keine Jalousien gewählt": "Ingen persienner valgt ennå",
+    "Pulse einrichten": "Sett opp Pulse",
+    "Im Pulse-Panel": "I Pulse-panelet",
+    "Salz, Klarspüler voll": "Salt og glansemiddel fullt",
+    "Solar-Tipp zuordnen": "Tilordne soltipset",
+    "Verläufe, Ersatz, Einstellungen": "Historikk, erstatning, innstillinger",
+    "KI-Blick": "KI-blikk",
+    "Tag/Nacht": "Dag/natt",
+    "vor 1 Woche": "for 1 uke siden",
+    "Antwortet": "Svarer",
+    "Startet um": "Starter kl.",
+    "Startet morgen um": "Starter i morgen kl.",
+    "Übersicht": "Oversikt",
+    "Im Studio Kacheln zu Räumen hinzufügen": "Legg til fliser i rom i Studio",
+    "Etwas trocken": "Litt tørr",
+    "etwas trocken": "litt tørr",
+    "Etwas feucht": "Litt fuktig",
+    "etwas feucht": "litt fuktig",
+    "Sehr feucht": "Svært fuktig",
+    "sehr feucht": "svært fuktig",
+    "Beschatten": "Skyggelegg",
+    "Heben": "Hev",
+    "Senken": "Senk",
+    "Ausfahren": "Kjør ut",
+    "Einfahren": "Kjør inn",
+    "Fährt zurück": "Returnerer",
+    "Geparkt": "Parkert",
+    "Kein Akkustand": "Ingen batterinivå",
+    "Tank": "Tank",
+    "Seit": "Siden",
+    "Pulse: Gut": "Pulse: Bra",
+    "Pulse: Lernt": "Pulse: Lærer",
+    "Pulse: Beobachten": "Pulse: Følg med",
+    "Pulse: Prüfen": "Pulse: Sjekk",
+    "Pulse: Ausgefallen": "Pulse: Sviktet",
+    "Zählt": "Teller",
+    "In Ordnung": "I orden",
+    "Von zuhause": "Hjemmefra",
+    "Alarm beenden?": "Stoppe alarmen?",
+    "Alarmanlage unscharf schalten?": "Deaktivere alarmanlegget?",
+    "Sensor offen": "Sensor åpen",
+    "Sensoren offen": "Sensorer åpne",
+    "Wirklich?": "Er du sikker?",
+    "Schloss entriegeln?": "Låse opp låsen?",
+    "Bis": "Til",
+    "Gebiet": "Område",
+    "KI-Warnung": "KI-varsel",
+    "Backup": "Sikkerhetskopi",
+    "Am niedrigsten": "Lavest",
+    "Ping": "Ping",
+    "Liste wird geladen …": "Laster listen …",
+    "Neue Einträge erscheinen hier": "Nye oppføringer vises her",
+    "Saugen und Wischen": "Støvsug og mopp",
+    "Suchen": "Søk",
+    "Tankstand": "Drivstoffnivå",
+    "Gerade kein Spiel": "Ingen kamp akkurat nå",
+    "Kein Spiel": "Ingen kamp",
+    "Gruppen": "Grupper",
+    "Heute an": "På i dag",
+    "Heute aus": "Av i dag",
+    "1 klemmt": "1 sitter fast",
+    "Schloss klemmt": "Låsen sitter fast",
+    "Einschalten auf": "Slå på til",
+    "Höchste Stunde": "Høyeste time",
+    "Niedrigste Stunde": "Laveste time",
+    "Höchster Tag": "Høyeste dag",
+    "Niedrigster Tag": "Laveste dag",
+    "Höchster Monat": "Høyeste måned",
+    "Niedrigster Monat": "Laveste måned",
+    "Lange offen": "Åpen lenge",
+    "Fenster schließen?": "Lukke vinduet?",
+    "Schließen?": "Lukke?",
+    "Stube": "Stue",
+    "Speisekammer": "Spiskammer",
+    "Gästezimmer": "Gjesterom",
+    "Kinderzimmer": "Barnerom",
+    "Babyzimmer": "Babyrom",
+    "Spielzimmer": "Lekerom",
+    "Bad": "Bad",
+    "Gäste-WC": "Gjestetoalett",
+    "Esszimmer": "Spisestue",
+    "Arbeitszimmer": "Arbeidsrom",
+    "Kino": "Kino",
+    "Heimkino": "Hjemmekino",
+    "Diele": "Gang",
+    "Eingang": "Inngang",
+    "Garten": "Hage",
+    "Balkon": "Balkong",
+    "Draußen": "Ute",
+    "Briefkasten": "Postkasse",
+    "Keller": "Kjeller",
+    "Dachboden": "Loft",
+    "Wintergarten": "Vinterhage",
+    "Werkstatt": "Verksted",
+    "Garage": "Garasje",
+    "Casora hat aufgeräumt": "Casora har ryddet opp",
+    "Alte Einträge entfernt – antippen für Details": "Gamle oppføringer fjernet – trykk for detaljer",
+    "Casora hat nach dem Update alte Einträge entfernt. Die Einzelheiten stehen unten in der Sprache von Home Assistant.": "Etter oppdateringen fjernet Casora gamle oppføringer. Detaljene nedenfor står på språket til Home Assistant.",
+    "Casora: Helfer fehlen": "Casora: hjelpere mangler",
+    "Einige Helfer konnten nicht angelegt werden": "Noen hjelpere kunne ikke opprettes",
+    "Für mich ausblenden": "Skjul for meg",
+    "Hemma 2 gibt es nicht mehr – du siehst jetzt Casora Glas.": "Hemma 2 finnes ikke lenger – du ser nå Casora Glas.",
+    "Hemma 1 gibt es nicht mehr – du siehst jetzt Casora Glas.": "Hemma 1 finnes ikke lenger – du ser nå Casora Glas.",
+    "Das Hemma-Design gibt es nicht mehr – du siehst jetzt Casora Glas.": "Hemma-designet finnes ikke lenger – du ser nå Casora Glas.",
+    "Ändern: Studio › Einstellungen › Design.": "Endre: Studio › Innstillinger › Design.",
+    "Noch nicht verfügbar": "Ikke tilgjengelig ennå",
+    "Hemma 2 gibt es in Casora nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "Hemma 2 finnes ikke lenger i Casora – du bruker nå Casora Glas, glassutseendet i Casora-oppsettet. Andre design: Studio › Innstillinger › Design.",
+    "Hemma 1 gibt es in Casora nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "Hemma 1 finnes ikke lenger i Casora – du bruker nå Casora Glas, glassutseendet i Casora-oppsettet. Andre design: Studio › Innstillinger › Design.",
+    "Das Hemma-Design gibt es nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "Hemma-designet finnes ikke lenger – du bruker nå Casora Glas, glassutseendet i Casora-oppsettet. Andre design: Studio › Innstillinger › Design.",
+    "1 Gerät": "1 enhet",
+    "Gerade kein Sonnenstrom übrig": "Ingen solstrøm til overs akkurat nå",
+    "sehr hoch": "svært høy",
+    "niedrig": "lav",
+    "hoch": "høy",
+    "extrem": "ekstrem",
+    "gekippt": "vippet",
+    "zuhause": "hjemme",
+    "unterwegs": "borte",
+    "Im Studio wählen": "Velg i Studio",
+    "Regen jetzt": "Regn nå",
+    "Sollwert": "Målverdi",
+    "Soll-Bereich": "Målområde",
+    "Netz offline": "Strømnett frakoblet",
+    "Bezug aus dem Netz": "Henter fra strømnettet",
+    "Einspeisung ins Netz": "Leverer til strømnettet",
+    "Verbraucht Strom": "Bruker strøm",
+    "Lampen": "Lamper",
+    "Insgesamt": "Totalt",
+    "Gerät in Home Assistant": "Enhet i Home Assistant",
+    "Lichter im Haus ausschalten?": "Slå av lysene i huset?",
+    "Updates jetzt installieren?": "Installere oppdateringer nå?",
+    "Keine Werte": "Ingen verdier",
+    "Solaranteil am Verbrauch": "Solandel av forbruket",
+    "Preise werden gesammelt": "Samler inn priser",
+    "Warten lohnt sich nicht.": "Det lønner seg ikke å vente.",
+    "Claude sucht ein Rezept …": "Claude leter etter en oppskrift …",
+    "kaum Unterschied": "knapt noen forskjell",
+    "abends günstiger": "billigere om kvelden",
+    "WLAN aus": "Wi-Fi av",
+    "1 WLAN an": "1 Wi-Fi på",
+    "Ziel aller": "Alle rom",
+    "Ø Ziel": "Ø mål",
+    "Lampe": "Lampe",
+    "Vorhanden": "Finnes",
+    "Fehlt": "Mangler",
+    "Ja": "Ja",
+    "unbekannt": "ukjent",
+    "Luftfeuchte · 24 Std.": "Luftfuktighet · 24 t",
+    "Räume, Geräte, Szenen": "Rom, enheter, scener",
+    "Räume, Geräte, Szenen suchen": "Søk etter rom, enheter, scener",
+    "Räume, Geräte und Szenen suchen": "Søk etter rom, enheter og scener",
+    "Suche": "Søk",
+    "Eingabe löschen": "Tøm",
+    "Ergebnisse": "Resultater",
+    "Keine Treffer": "Ingen treff",
+    "1 Treffer": "1 treff",
+    "{n} Treffer": "{n} treff",
+    "Raum öffnen": "Åpne rom",
+    "Szene starten": "Start scene",
+    "Effekte": "Effekter",
+    "Casora {v} ist da": "Casora {v} er her",
+    "Später": "Senere",
+    "Diese Version überspringen": "Hopp over denne versjonen",
+    "Im Marketplace öffnen": "Åpne i Marketplace",
+    "Release-Seite öffnen": "Åpne utgivelsessiden",
+    "Wird über den Marketplace installiert. Danach braucht Home Assistant einen Neustart.": "Installeres via Marketplace. Deretter må Home Assistant startes på nytt.",
+    "Neue Versionen installierst du über den Marketplace.": "Nye versjoner installerer du via Marketplace.",
+    "Casora {v} installieren?": "Installere Casora {v}?",
+    "Der Marketplace lädt die neue Version. Danach muss Home Assistant neu starten.": "Marketplace laster ned den nye versjonen. Deretter må Home Assistant startes på nytt.",
+    "Der Update-Eintrag vom Marketplace für Casora ist gerade nicht verfügbar. Versuche es gleich noch einmal oder aktualisiere im Marketplace.": "Oppdateringsoppføringen fra Marketplace for Casora er ikke tilgjengelig akkurat nå. Prøv igjen om litt, eller oppdater i Marketplace.",
+    "Jetzt neu starten?": "Starte på nytt nå?",
+    "Casora {v} ist installiert. Home Assistant ist beim Neustart kurz nicht erreichbar.": "Casora {v} er installert. Home Assistant er utilgjengelig et øyeblikk under omstarten.",
+    "Der Neustart hat nicht geklappt.": "Omstarten mislyktes.",
+    "Installieren hat nicht geklappt.": "Installeringen mislyktes.",
+    "Alarmanlage: Schalten hat nicht geklappt.": "Alarmanlegg: omkoblingen mislyktes.",
+    "Wird installiert …": "Installerer…",
+    "Der Marketplace hat die neue Version nicht als installiert gemeldet. Sieh im Marketplace nach.": "Marketplace har ikke meldt den nye versjonen som installert. Sjekk i Marketplace.",
+    "Vergrößern": "Forstørr",
+    "Verkleinern": "Forminsk",
+    "Dosierung": "Dosering",
+    "Behälter": "Beholder",
+    "Reicht noch": "Rekker til",
+    "Dosiermenge": "Doseringsmengde",
+    "alles in Ordnung": "alt i orden",
+    "Programm nicht erkannt": "Program ikke gjenkjent",
+    "Waschmittel nachfüllen": "Fyll på vaskemiddel",
+    "Bald nachfüllen": "Fyll på snart",
+    "1 Durchgang": "1 syklus",
+    "Alles erledigt": "Alt ferdig",
+    "Weitere Pflege": "Mer vedlikehold",
+    "Programme beibringen": "Lær inn programmer",
+    "Durchgänge in WashData zuordnen": "Tilordne sykluser i WashData",
+    "Verbrauch insgesamt": "Totalt forbruk",
+    "Voraussichtlich": "Forventet",
+    "TwinDos 1": "TwinDos 1",
+    "TwinDos 2": "TwinDos 2",
+    "1 Einstellung empfohlen": "1 innstilling anbefalt",
+    "Kochen": "Kok",
+    "Elektrisch": "Elektrisk",
+    "Garraum": "Ovnsrom",
+    "Garraumlicht": "Ovnslys",
+    "Innenbeleuchtung": "Innvendig lys",
+    "Schnelles Vorheizen": "Hurtigforvarming",
+    "Bratenthermometer": "Steketermometer",
+    "Erlaubt": "Tillatt",
+    "Angelehnt": "På gløtt",
+    "Fernstart am Gerät aktivieren": "Tillat fjernstart på enheten",
+    "Ober-/Unterhitze": "Over-/undervarme",
+    "Ober-/Unterhitze Eco": "Over-/undervarme eco",
+    "Heißluft": "Varmluft",
+    "Heißluft Eco": "Varmluft eco",
+    "Heißluftgrillen": "Varmluftsgrilling",
+    "Grill, große Fläche": "Grill, stor flate",
+    "Grill, kleine Fläche": "Grill, liten flate",
+    "Unterhitze": "Undervarme",
+    "Intensivhitze": "Intensivvarme",
+    "Pizzastufe": "Pizzafunksjon",
+    "Niedertemperaturgaren": "Lavtemperatursteking",
+    "Vorheizen": "Forvarming",
+    "Geschirr vorwärmen": "Forvarm servise",
+    "Tiefkühlgerichte": "Frysevarer",
+    "Dörren": "Tørking",
+    "Auftauen": "Tining",
+    "Gären": "Heving",
+    "Backofen": "Stekeovn",
+    "Ofen": "Ovn",
+    "Anzeige-Diagnose": "Visningsdiagnose",
+    "Kopieren": "Kopier",
+    "Kopiert": "Kopiert",
+    "Text markiert – jetzt kopieren": "Tekst markert – kopier nå",
+    "Nur Anzeigedaten dieses Geräts, keine Namen oder Geräte. Kopieren und im GitHub-Issue einfügen.": "Bare visningsdata for denne enheten, ingen navn eller enheter. Kopier og lim inn i GitHub-saken.",
+    "Druckraum": "Kammer",
+    "Externe Spule": "Ekstern spole",
+    "Luft im AMS": "Luft i AMS",
+    "Trockenmittel tauschen": "Bytt tørkemiddel",
+    "Kühlt ab": "Kjøler ned",
+    "Wird genutzt": "I bruk",
+    "Material": "Materiale",
+    "Messing": "Messing",
+    "SuperTack": "SuperTack",
+    "Leicht erhöht": "Lett forhøyet",
+    "Gefahr": "Fare",
+    "unter 30 ppm": "under 30 ppm",
+    "30 bis 49 ppm": "30 til 49 ppm",
+    "50 bis 99 ppm": "50 til 99 ppm",
+    "ab 100 ppm": "fra 100 ppm",
+    "CO-Alarm": "CO-alarm",
+    "Kohlenmonoxid": "Karbonmonoksid",
+    "Was tun": "Dette gjør du",
+    "Stufen": "Nivåer",
+    "Melder": "Detektor",
+    "CO-Melder": "CO-detektor",
+    "Bei erhöhtem Wert lüften, ab 50 ppm den Raum verlassen, ab 100 ppm Notruf 112.": "Luft ut ved forhøyet verdi, forlat rommet fra 50 ppm, ring 112 fra 100 ppm.",
+    "Fenster öffnen und Gasgeräte, Kamin und Heizung prüfen.": "Åpne vinduene og sjekk gassapparater, peis og oppvarming.",
+    "Lüften und Raum verlassen": "Luft ut og forlat rommet",
+    "Gasgeräte und offenes Feuer ausschalten, Fenster öffnen, den Raum verlassen.": "Slå av gassapparater og åpen ild, åpne vinduene, forlat rommet.",
+    "Haus verlassen, Notruf 112": "Forlat huset, ring 112",
+    "Alle nach draußen bringen, Türen offen lassen und erst wieder hinein, wenn die Feuerwehr es erlaubt.": "Få alle ut, la dørene stå åpne, og gå først inn igjen når brannvesenet tillater det.",
+    "Kein Alarm": "Ingen alarm",
+    "Rauchalarm": "Røykalarm",
+    "Lebensdauer abgelaufen": "Levetid utløpt",
+    "Gerätefehler": "Enhetsfeil",
+    "Melder tauschen": "Bytt detektor",
+    "Selbsttest": "Selvtest",
+    "Selbsttest gestartet": "Selvtest startet",
+    "Selbsttest starten? Der Melder piept laut.": "Starte selvtesten? Detektoren piper høyt.",
+    "Zuletzt erhöht": "Sist forhøyet",
+    "Nicht in 7 Tagen": "Ikke på 7 dager",
+    "Wartet auf deinen Assistenten …": "Venter på assistenten din…",
+    "Dein Assistent hat nicht rechtzeitig geantwortet": "Assistenten din svarte ikke i tide",
+    "Zu viele offene Aufträge für deinen Assistenten": "For mange åpne oppdrag for assistenten din",
+    "Der Auftrag für deinen Assistenten wurde abgebrochen": "Oppdraget til assistenten din ble avbrutt",
+    "Neustart: der Auftrag für deinen Assistenten ist verfallen": "Omstart: oppdraget til assistenten din gikk tapt",
+    "Claude prüft das Rad …": "Claude sjekker sykkelen…",
+    "Claude wertet die Heizwoche aus …": "Claude analyserer oppvarmingsuken…",
+    "Claude wertet die letzten 7 Tage aus …": "Claude analyserer de siste 7 dagene…",
+    "Frühstück": "Frokost",
+    "Mittagessen": "Lunsj",
+    "Abendessen": "Middag",
+    "Beilage": "Tilbehør",
+    "Dessert": "Dessert",
+    "Snack": "Snacks",
+    "Notiz": "Notat",
+    "Ohne Namen": "Uten navn",
+    "Mealie nicht erreichbar": "Mealie ikke tilgjengelig",
+    "In Mealie für die nächsten 7 Tage planen": "Planlegg de neste 7 dagene i Mealie",
+    "Nächstes Gericht": "Neste rett",
+    "Zutaten": "Ingredienser",
+    "Zubereitung": "Tilberedning",
+    "1 Portion": "1 porsjon",
+    "Zählt nur bei Abwesenheit": "Teller bare ved fravær",
+    "Teilweise geschlossen": "Delvis lukket",
+    "Termin hinzufügen": "Legg til avtale",
+    "Neuer Termin": "Ny avtale",
+    "Titel": "Tittel",
+    "Ort (optional)": "Sted (valgfritt)",
+    "Beschreibung (optional)": "Beskrivelse (valgfritt)",
+    "Ganztägig": "Hele dagen",
+    "Ende": "Slutt",
+    "Bitte gib einen Titel ein.": "Skriv inn en tittel.",
+    "Bitte gib Beginn und Ende an.": "Angi start og slutt.",
+    "Das Ende muss nach dem Beginn liegen.": "Slutten må være etter starten.",
+    "Der Termin konnte nicht gespeichert werden.": "Avtalen kunne ikke lagres.",
+    "Neue Aufgabe": "Ny oppgave",
+    "Aufgaben": "Oppgaver",
+    "Notiz (optional)": "Notat (valgfritt)",
+    "Fällig (optional)": "Frist (valgfritt)",
+    "Keine Listen": "Ingen lister",
+    "Keine To-do-Listen gefunden": "Fant ingen gjøremålslister",
+    "Bitte gib eine Aufgabe ein.": "Skriv inn en oppgave.",
+    "Die Aufgabe konnte nicht gespeichert werden.": "Oppgaven kunne ikke lagres.",
+    "Abhaken": "Huk av",
+    "Wieder öffnen": "Åpne igjen",
+    "Eintrag löschen?": "Slette oppføringen?",
+    "Wärmepumpe": "Varmepumpe",
+    "Warmwasser": "Varmtvann",
+    "Vorlauf": "Tur",
+    "Rücklauf": "Retur",
+    "Außen": "Ute",
+    "Leistungszahl": "COP",
+    "Verdichterleistung": "Kompressoreffekt",
+    "Verdichter": "Kompressor",
+    "Verdichter läuft": "Kompressor kjører",
+    "Verdichter aus": "Kompressor av",
+    "Einmal aufheizen": "Varm opp én gang",
+    "Aufheizen gestartet": "Oppvarming startet",
+    "Taut ab": "Avrimer",
+    "Landkarte": "Kart",
+    "Nichts auf der Karte": "Ingenting på kartet",
+    "Soll": "Mål",
+    "Ist": "Faktisk",
+    "Solltemperatur": "Måltemperatur",
+    "Heizkreispumpe": "Varmekretspumpe",
+    "Zirkulationspumpe": "Sirkulasjonspumpe",
+    "Frostschutz": "Frostsikring",
+    "Vorlauftemperatur · 24 Std.": "Turtemperatur · 24 t",
+    "Außentemperatur · 24 Std.": "Utetemperatur · 24 t",
+    "1 aktiv": "1 aktiv",
+    "1 Aktiv": "1 aktiv",
+    "1 offen": "1 åpen",
+    "1 Offen": "1 åpen",
+    "1 geöffnet": "1 åpen",
+    "1 Schwach": "1 Lavt",
+    "1 Verfügbar": "1 tilgjengelig"
+  },
+  "patterns": [
+    [
+      "^Teilweise geschlossen · Ø (\\d+) %$",
+      "Delvis lukket · Ø {1}%"
+    ],
+    [
+      "^(\\d+) % geschlossen$",
+      "{1}% lukket"
+    ],
+    [
+      "^Beschatten (\\d+) %$",
+      "Skjerming {1}%"
+    ],
+    [
+      "^Gilt für alle (\\d+)$",
+      "Gjelder alle {1}"
+    ],
+    [
+      "^Bauteil (\\d+) %$",
+      "Del {1}%"
+    ],
+    [
+      "^Zusatz (\\d+) %$",
+      "Aux {1}%"
+    ],
+    [
+      "^Druckraum (\\d+) %$",
+      "Kammer {1}%"
+    ],
+    [
+      "^(.+) reicht noch (\\d+) T\\.$",
+      "{1}: {2} d. igjen"
+    ],
+    [
+      "^(.+) fast leer$",
+      "{1} nesten tom"
+    ],
+    [
+      "^(\\d+) Kanäle$",
+      "{1} kanaler"
+    ],
+    [
+      "^(\\d+) Kanal$",
+      "{1} kanal"
+    ],
+    [
+      "^noch (\\d+) T\\.$",
+      "{1} d. igjen"
+    ],
+    [
+      "^noch ([\\d.,]+) von ([\\d.,]+) ml$",
+      "{1} av {2} ml igjen"
+    ],
+    [
+      "^([\\d.,]+ ml) dosieren$",
+      "Doser {1}"
+    ],
+    [
+      "^Solar deckt (\\d+) ?%$",
+      "Sol dekker {1}%"
+    ],
+    [
+      "^Akku deckt (\\d+) ?%$",
+      "Batteri dekker {1}%"
+    ],
+    [
+      "^Solar und Akku decken (\\d+) ?%$",
+      "Sol og batteri dekker {1}%"
+    ],
+    [
+      "^(\\d+) von (\\d+) offen$",
+      "{1} av {2} åpne"
+    ],
+    [
+      "^Nächster Start (.+)$",
+      "Neste start {1}"
+    ],
+    [
+      "^heute (\\d{1,2}:\\d\\d)$",
+      "i dag {1}"
+    ],
+    [
+      "^morgen (\\d{1,2}:\\d\\d)$",
+      "i morgen {1}"
+    ],
+    [
+      "^Pause noch (.+)$",
+      "Pauset i {1} til"
+    ],
+    [
+      "^Verzögerung (.+)$",
+      "Forsinkelse {1}"
+    ],
+    [
+      "^Zone (\\d+)$",
+      "Zone {1}"
+    ],
+    [
+      "^Schnitthöhe \\((.+)\\)$",
+      "Klippehøyde ({1})"
+    ],
+    [
+      "^Spielt ab: (.+)$",
+      "Spiller av: {1}"
+    ],
+    [
+      "^„(.+)“ an der Tür abspielen\\?$",
+      "Spille av «{1}» ved døren?"
+    ],
+    [
+      "^Geklingelt · (.+)$",
+      "Noen ringte på · {1}"
+    ],
+    [
+      "^Geklingelt (\\d{1,2}:\\d{2}.*)$",
+      "Ringte på kl. {1}"
+    ],
+    [
+      "^Treffer (\\d+) %$",
+      "Treff {1}%"
+    ],
+    [
+      "^Gestern (\\d{1,2}:\\d{2})$",
+      "I går {1}"
+    ],
+    [
+      "^Top (\\d+) Verbraucher$",
+      "Topp {1} forbrukere"
+    ],
+    [
+      "^(\\d+) Probleme$",
+      "{1} problemer"
+    ],
+    [
+      "^(\\d+) bald$",
+      "{1} snart"
+    ],
+    [
+      "^(\\d+) beobachten$",
+      "{1} å følge med på"
+    ],
+    [
+      "^(\\d+) bald fällig$",
+      "{1} forfaller snart"
+    ],
+    [
+      "^(\\d+) Batterien bald fällig$",
+      "{1} batterier må snart byttes"
+    ],
+    [
+      "^(\\d+) ausgefallen$",
+      "{1} ute av drift"
+    ],
+    [
+      "^(\\d+) prüfen$",
+      "{1} bør sjekkes"
+    ],
+    [
+      "^(\\d+) ok$",
+      "{1} ok"
+    ],
+    [
+      "^sonst alle (\\d+) Min\\.$",
+      "vanligvis hvert {1}. min"
+    ],
+    [
+      "^sonst alle (\\d+) Std\\.$",
+      "vanligvis hver {1}. t"
+    ],
+    [
+      "^sonst alle (\\d+) Tage$",
+      "vanligvis hver {1}. dag"
+    ],
+    [
+      "^alle (\\d+) Min\\.$",
+      "hvert {1}. min"
+    ],
+    [
+      "^alle (\\d+) Std\\.$",
+      "hver {1}. t"
+    ],
+    [
+      "^alle (\\d+) Tage$",
+      "hver {1}. dag"
+    ],
+    [
+      "^seit (\\d+) Min\\.$",
+      "i {1} min"
+    ],
+    [
+      "^seit (\\d+) Std\\.$",
+      "i {1} t"
+    ],
+    [
+      "^seit (\\d+) T\\.$",
+      "i {1} d."
+    ],
+    [
+      "^seit (\\d+) Tagen$",
+      "i {1} dager"
+    ],
+    [
+      "^seit (\\d+) Tag$",
+      "i {1} dag"
+    ],
+    [
+      "^Antwortet (seit .+) nicht$",
+      "Har ikke svart {1}"
+    ],
+    [
+      "^Still (seit .+)$",
+      "Stille {1}"
+    ],
+    [
+      "^zuletzt gemeldet gestern (.+)$",
+      "sist meldt i går {1}"
+    ],
+    [
+      "^zuletzt gemeldet (.+)$",
+      "sist meldt {1}"
+    ],
+    [
+      "^seit gestern (.+)$",
+      "siden i går {1}"
+    ],
+    [
+      "^Alle (\\d+) Lichter im Haus ausschalten\\?$",
+      "Slå av alle {1} lys i huset?"
+    ],
+    [
+      "^(\\d+) Geräte$",
+      "{1} enheter"
+    ],
+    [
+      "^(.+) unscharf$",
+      "{1} deaktivert"
+    ],
+    [
+      "^(.+) scharf · (.+)$",
+      "{1} armert · {2}"
+    ],
+    [
+      "^Wartet seit (.+)$",
+      "Har ventet i {1}"
+    ],
+    [
+      "^Üblich sind (.+)$",
+      "Vanligvis {1}"
+    ],
+    [
+      "^(\\d+) Einstellungen empfohlen, in WashData übernehmen$",
+      "{1} innstillinger anbefalt, ta dem i bruk i WashData"
+    ],
+    [
+      "^Ø (.+)$",
+      "Ø {1}"
+    ],
+    [
+      "^Abholung in (\\d+) Tagen$",
+      "Henting om {1} dager"
+    ],
+    [
+      "^(\\d+) von (\\d+) An$",
+      "{1} av {2} på"
+    ],
+    [
+      "^KI: 1 Update braucht Aufmerksamkeit$",
+      "KI: 1 oppdatering krever oppmerksomhet"
+    ],
+    [
+      "^KI: (\\d+) Updates brauchen Aufmerksamkeit$",
+      "KI: {1} oppdateringer krever oppmerksomhet"
+    ],
+    [
+      "^Schließt (\\d+) Updates ab$",
+      "Fullfører {1} oppdateringer"
+    ],
+    [
+      "^Backup (vor .+|gerade eben)$",
+      "Sikkerhetskopi {1}"
+    ],
+    [
+      "^Absenkung um (.+)$",
+      "Senking med {1}"
+    ],
+    [
+      "^Letzte Fahrt vor (.+) T\\.$",
+      "Siste tur for {1} dager siden"
+    ],
+    [
+      "^Diesen Monat bist du dran, danach wieder im (.+)\\.$",
+      "Det er din tur denne måneden, neste gang i {1}."
+    ],
+    [
+      "^Diesen Monat bist du dran\\.?$",
+      "Det er din tur denne måneden."
+    ],
+    [
+      "^startet in (.+)$",
+      "starter om {1}"
+    ],
+    [
+      "^trocken in etwa (\\d+) Tagen?$",
+      "tørr om ca. {1} dager"
+    ],
+    [
+      "^trocken in etwa 1 Tag$",
+      "tørr om ca. 1 dag"
+    ],
+    [
+      "^Vor (\\d+) Tagen gegossen$",
+      "Vannet for {1} dager siden"
+    ],
+    [
+      "^davon (.+) Std\\. mit Unterstützung$",
+      "{1} t med assistanse"
+    ],
+    [
+      "^in (\\d[\\d.,]*) km$",
+      "om {1} km"
+    ],
+    [
+      "^(\\d+) ?% des aktuellen Verbrauchs$",
+      "{1}% av nåværende forbruk"
+    ],
+    [
+      "^(\\d+) werden installiert$",
+      "{1} installeres"
+    ],
+    [
+      "^(\\d+) Updates brauchen Aufmerksamkeit$",
+      "{1} oppdateringer krever oppmerksomhet"
+    ],
+    [
+      "^(\\d+) Breaking Changes betreffen dich$",
+      "{1} brytende endringer berører deg"
+    ],
+    [
+      "^1 Breaking Change betrifft dich$",
+      "1 brytende endring berører deg"
+    ],
+    [
+      "^(.+) g/m³ absolut$",
+      "{1} g/m³ absolutt"
+    ],
+    [
+      "^drinnen Ø (.+)$",
+      "inne Ø {1}"
+    ],
+    [
+      "^(\\d+) Verfügbar$",
+      "{1} tilgjengelige"
+    ],
+    [
+      "^(\\d+) verfügbar$",
+      "{1} tilgjengelige"
+    ],
+    [
+      "^Heute (.+) kWh$",
+      "I dag {1} kWh"
+    ],
+    [
+      "^Heute (.+) kWh Bezug$",
+      "I dag {1} kWh fra strømnettet"
+    ],
+    [
+      "^Heute (.+) kWh entladen$",
+      "I dag {1} kWh utladet"
+    ],
+    [
+      "^(.+) km aufgezeichnet$",
+      "{1} km registrert"
+    ],
+    [
+      "^(.+) ohne Strom$",
+      "{1} uten strøm"
+    ],
+    [
+      "^(.+) von (.+) aus Solar und Akku$",
+      "{1} av {2} fra sol og batteri"
+    ],
+    [
+      "^Reinigt (.+)$",
+      "Rengjør {1}"
+    ],
+    [
+      "^Schließt das (.+)-Update ab$",
+      "Fullfører {1}-oppdateringen"
+    ],
+    [
+      "^(.+) Update verfügbar$",
+      "{1} oppdatering tilgjengelig"
+    ],
+    [
+      "^(.+) hat das Haus verlassen$",
+      "{1} dro hjemmefra"
+    ],
+    [
+      "^(.+) ist angekommen$",
+      "{1} har kommet hjem"
+    ],
+    [
+      "^(.+) ist gekippt$",
+      "{1} er vippet"
+    ],
+    [
+      "^(.+) ist gleich fertig$",
+      "{1} er snart ferdig"
+    ],
+    [
+      "^(.+) läuft$",
+      "{1} kjører"
+    ],
+    [
+      "^(.+) hat geklingelt$",
+      "{1} ringte på"
+    ],
+    [
+      "^(.+) hat fertig gereinigt$",
+      "{1} er ferdig med rengjøringen"
+    ],
+    [
+      "^(.+) reinigt$",
+      "{1} rengjør"
+    ],
+    [
+      "^(.+) ist auf der Arbeit$",
+      "{1} er på jobb"
+    ],
+    [
+      "^(.+) ist im (.+)$",
+      "{1} er på {2}"
+    ],
+    [
+      "^(.+) ist in der (.+)$",
+      "{1} er på {2}"
+    ],
+    [
+      "^(.+) ist am (.+)$",
+      "{1} er på {2}"
+    ],
+    [
+      "^(.+) ist bei (.+)$",
+      "{1} er hos {2}"
+    ],
+    [
+      "^(.+) umgeschaltet auf (.+)$",
+      "{1} byttet til {2}"
+    ],
+    [
+      "^(.+) aktiv · (Zuhause|Abwesend|Nacht|Urlaub|Bypass)$",
+      "{1} aktiv · {2}"
+    ],
+    [
+      "^Alarm scharf – (.+)$",
+      "Alarm armert – {1}"
+    ],
+    [
+      "^(.+) braucht Wasser$",
+      "{1} trenger vann"
+    ],
+    [
+      "^(.+) steht zu nass$",
+      "{1} står for vått"
+    ],
+    [
+      "^(.+) braucht Dünger$",
+      "{1} trenger gjødsel"
+    ],
+    [
+      "^(.+) ist überdüngt$",
+      "{1} er overgjødslet"
+    ],
+    [
+      "^(.+) braucht mehr Licht$",
+      "{1} trenger mer lys"
+    ],
+    [
+      "^(.+) bekommt zu viel Sonne$",
+      "{1} får for mye sol"
+    ],
+    [
+      "^(.+) steht zu kalt$",
+      "{1} står for kaldt"
+    ],
+    [
+      "^(.+) steht zu warm$",
+      "{1} står for varmt"
+    ],
+    [
+      "^(.+) steht in zu trockener Luft$",
+      "{1}: for tørr luft"
+    ],
+    [
+      "^(.+) steht in zu feuchter Luft$",
+      "{1}: for fuktig luft"
+    ],
+    [
+      "^(\\d+) Reinigungen$",
+      "{1} rengjøringer"
+    ],
+    [
+      "^(\\d+) entriegelt$",
+      "{1} ulåst"
+    ],
+    [
+      "^(\\d+) Schlösser entriegelt$",
+      "{1} låser ulåst"
+    ],
+    [
+      "^1 Tür entriegelt$",
+      "1 dør ulåst"
+    ],
+    [
+      "^(\\d+) Türen entriegelt$",
+      "{1} dører ulåst"
+    ],
+    [
+      "^(.+) entriegelt$",
+      "{1} ulåst"
+    ],
+    [
+      "^Gestern, (.+)$",
+      "I går, {1}"
+    ],
+    [
+      "^Heute, (.+)$",
+      "I dag, {1}"
+    ],
+    [
+      "^alle (\\d+) Wochen$",
+      "hver {1}. uke"
+    ],
+    [
+      "^jede Woche$",
+      "hver uke"
+    ],
+    [
+      "^Luft ([^·]+)$",
+      "Luft {1}"
+    ],
+    [
+      "^PM2,5 (.+)$",
+      "PM2,5 {1}"
+    ],
+    [
+      "^(\\d+) Tage?$",
+      "{1} dager"
+    ],
+    [
+      "^(\\d+) Stunden$",
+      "{1} timer"
+    ],
+    [
+      "^ca\\. (.+)$",
+      "approx. {1}"
+    ],
+    [
+      "^(\\d{1,2}) Uhr$",
+      "{1}:00"
+    ],
+    [
+      "^(.+) · Gehärteter Stahl$",
+      "{1} · herdet stål"
+    ],
+    [
+      "^(.+) · Edelstahl$",
+      "{1} · rustfritt stål"
+    ],
+    [
+      "^Ziel (.+)$",
+      "Mål {1}"
+    ],
+    [
+      "^Stufe (\\d+) von (\\d+)$",
+      "Trinn {1} av {2}"
+    ],
+    [
+      "^(\\d+) von (\\d+) geöffnet$",
+      "{1} av {2} åpne"
+    ],
+    [
+      "^(\\d+) von (\\d+)$",
+      "{1} of {2}"
+    ],
+    [
+      "^Temperatur · (\\d+) Stunden$",
+      "Temperatur · {1} timer"
+    ],
+    [
+      "^Leistung · (\\d+) Stunden$",
+      "Effekt · {1} timer"
+    ],
+    [
+      "^Online seit (\\d+) Stunden$",
+      "Tilkoblet i {1} timer"
+    ],
+    [
+      "^Online seit (\\d+) Tagen$",
+      "Tilkoblet i {1} dager"
+    ],
+    [
+      "^vor 1 Stunde$",
+      "for 1 time siden"
+    ],
+    [
+      "^vor (\\d+) Stunden$",
+      "for {1} timer siden"
+    ],
+    [
+      "^vor 1 Minute$",
+      "for 1 minutt siden"
+    ],
+    [
+      "^vor (\\d+) Minuten$",
+      "for {1} minutter siden"
+    ],
+    [
+      "^(\\d+) An$",
+      "{1} På"
+    ],
+    [
+      "^(\\d+) an$",
+      "{1} på"
+    ],
+    [
+      "^(\\d+) aktiv$",
+      "{1} aktive"
+    ],
+    [
+      "^(\\d+) Aktiv$",
+      "{1} aktive"
+    ],
+    [
+      "^(\\d+) Aus$",
+      "{1} Av"
+    ],
+    [
+      "^(\\d+) läuft$",
+      "{1} kjører"
+    ],
+    [
+      "^(\\d+) laufen$",
+      "{1} kjører"
+    ],
+    [
+      "^(\\d+) pausiert$",
+      "{1} pauset"
+    ],
+    [
+      "^(\\d+) offen$",
+      "{1} åpne"
+    ],
+    [
+      "^(\\d+) Offen$",
+      "{1} åpne"
+    ],
+    [
+      "^1 Schloss$",
+      "1 lås"
+    ],
+    [
+      "^(\\d+) Schlösser$",
+      "{1} låser"
+    ],
+    [
+      "^1 Raum heizt gerade$",
+      "1 rom varmes opp"
+    ],
+    [
+      "^(\\d+) Räume heizen gerade$",
+      "{1} rom varmes opp"
+    ],
+    [
+      "^(\\d+) heizen$",
+      "{1} varmer"
+    ],
+    [
+      "^(\\d+) von (\\d+) Lampen an$",
+      "{1} av {2} lamper på"
+    ],
+    [
+      "^(\\d+) von (\\d+) an$",
+      "{1} av {2} på"
+    ],
+    [
+      "^1 Raum reinigen$",
+      "Rengjør 1 rom"
+    ],
+    [
+      "^(\\d+) Räume reinigen$",
+      "Rengjør {1} rom"
+    ],
+    [
+      "^(\\d+) Räume$",
+      "{1} rom"
+    ],
+    [
+      "^1 Sensor offen$",
+      "1 sensor åpen"
+    ],
+    [
+      "^(\\d+) Sensoren offen$",
+      "{1} sensorer åpne"
+    ],
+    [
+      "^(\\d+) Öffnungen offen$",
+      "{1} åpninger åpne"
+    ],
+    [
+      "^(\\d+) Updates verfügbar$",
+      "{1} oppdateringer tilgjengelig"
+    ],
+    [
+      "^(\\d+) Geräte mit schwachem Akku$",
+      "{1} enheter med lavt batteri"
+    ],
+    [
+      "^(\\d+) Szenen$",
+      "{1} scener"
+    ],
+    [
+      "^1 Szene$",
+      "1 scene"
+    ],
+    [
+      "^(\\d+) Durchgänge$",
+      "{1} sykluser"
+    ],
+    [
+      "^In (\\d+) Durchgängen oder (\\d+) Tagen fällig$",
+      "Forfaller om {1} sykluser eller {2} dager"
+    ],
+    [
+      "^In (\\d+) Durchgängen fällig$",
+      "Forfaller om {1} sykluser"
+    ],
+    [
+      "^In (\\d+) Tagen fällig$",
+      "Forfaller om {1} dager"
+    ],
+    [
+      "^In (\\d+) Durchgängen$",
+      "Om {1} sykluser"
+    ],
+    [
+      "^Pflege in (\\d+) Durchgängen$",
+      "Vedlikehold om {1} sykluser"
+    ],
+    [
+      "^in (\\d+) Durchgängen$",
+      "om {1} sykluser"
+    ],
+    [
+      "^(\\d+) Durchgänge seit dem letzten Mal$",
+      "{1} sykluser siden sist"
+    ],
+    [
+      "^(\\d+) Tage seit dem letzten Mal$",
+      "{1} dager siden sist"
+    ],
+    [
+      "^(\\d+) Durchgänge, (\\d+) Tage seit dem letzten Mal$",
+      "{1} sykluser, {2} dager siden sist"
+    ],
+    [
+      "^In (\\d+) Durchgängen oder (\\d+) Tagen$",
+      "Om {1} sykluser eller {2} dager"
+    ],
+    [
+      "^(\\d+) Unterwegs$",
+      "{1} borte"
+    ],
+    [
+      "^(\\d+) unterwegs$",
+      "{1} borte"
+    ],
+    [
+      "^(\\d+) Räumen an$",
+      "på i {1} rom"
+    ],
+    [
+      "^(\\d+) Min\\. übrig$",
+      "{1} min igjen"
+    ],
+    [
+      "^(\\d+) Std\\. übrig$",
+      "{1} t igjen"
+    ],
+    [
+      "^(\\d+) Std\\. (\\d+) Min\\.$",
+      "{1} h {2} min"
+    ],
+    [
+      "^(\\d+) Min\\.$",
+      "{1} min"
+    ],
+    [
+      "^(\\d+) Std\\.$",
+      "{1} t"
+    ],
+    [
+      "^vor (\\d+) s$",
+      "for {1} s siden"
+    ],
+    [
+      "^vor (\\d+) Min\\.$",
+      "for {1} min siden"
+    ],
+    [
+      "^vor (\\d+) Std\\.$",
+      "for {1} t siden"
+    ],
+    [
+      "^vor (\\d+) T\\.$",
+      "for {1} d. siden"
+    ],
+    [
+      "^vor (\\d+) Tagen$",
+      "for {1} dager siden"
+    ],
+    [
+      "^vor (\\d+) Tag$",
+      "for {1} dag siden"
+    ],
+    [
+      "^vor (\\d+) Wochen$",
+      "for {1} uker siden"
+    ],
+    [
+      "^vor (\\d+) Std\\. (\\d+) Min\\.$",
+      "for {1} t {2} min siden"
+    ],
+    [
+      "^seit (\\d+) Tagen fällig$",
+      "forfalt for {1} dager siden"
+    ],
+    [
+      "^in (\\d+) Tagen$",
+      "om {1} dager"
+    ],
+    [
+      "^In (\\d+) Tagen$",
+      "Om {1} dager"
+    ],
+    [
+      "^um (\\d+) Uhr$",
+      "kl. {1}:00"
+    ],
+    [
+      "^gestern (\\d{1,2}:\\d{2})$",
+      "i går {1}"
+    ],
+    [
+      "^Fertig um (.+)$",
+      "Ferdig kl. {1}"
+    ],
+    [
+      "^Fertig gegen (.+)$",
+      "Ferdig rundt kl. {1}"
+    ],
+    [
+      "^Läuft seit (.+)$",
+      "Har kjørt siden {1}"
+    ],
+    [
+      "^läuft seit (.+)$",
+      "har kjørt siden {1}"
+    ],
+    [
+      "^noch (\\d+)[  ]s$",
+      "{1} s igjen"
+    ],
+    [
+      "^noch (\\d+)[  ]Min\\.$",
+      "{1} min igjen"
+    ],
+    [
+      "^noch (\\d+) Tage$",
+      "{1} dager igjen"
+    ],
+    [
+      "^noch (.+)$",
+      "{1} igjen"
+    ],
+    [
+      "^Zuletzt bekannt · vor (\\d+) Tagen$",
+      "Sist kjent · for {1} dager siden"
+    ],
+    [
+      "^(\\d+) neue Updates gefunden$",
+      "{1} nye oppdateringer funnet"
+    ],
+    [
+      "^Zuletzt gesucht: (.+)$",
+      "Sist sjekket: {1}"
+    ],
+    [
+      "^Zuletzt: (.+)$",
+      "Sist: {1}"
+    ],
+    [
+      "^Zuletzt (vor .+|gestern|gerade eben)$",
+      "Sist sett {1}"
+    ],
+    [
+      "^Zuletzt (.+)$",
+      "Sist {1}"
+    ],
+    [
+      "^KI-Einschätzung · vor (\\d+) Min\\.$",
+      "KI-vurdering · for {1} min siden"
+    ],
+    [
+      "^KI-Einschätzung · vor (\\d+) Std\\.$",
+      "KI-vurdering · for {1} t siden"
+    ],
+    [
+      "^KI-Einschätzung · vor (\\d+) T\\.$",
+      "KI-vurdering · for {1} d. siden"
+    ],
+    [
+      "^KI-Einschätzung · gerade eben$",
+      "KI-vurdering · nettopp"
+    ],
+    [
+      "^Letzte Fahrt vor (\\d+) Tagen$",
+      "Siste tur for {1} dager siden"
+    ],
+    [
+      "^Letzte Fahrt vor (\\d+) Tagen; Akkustand nach Lagerung unbekannt$",
+      "Siste tur for {1} dager siden; batterinivå etter lagring ukjent"
+    ],
+    [
+      "^Service fällig seit (\\S+) \\((\\d+) Tage überfällig\\)$",
+      "Service forfalt siden {1} ({2} dager forsinket)"
+    ],
+    [
+      "^davon (\\d+) Std\\. mit Unterstützung$",
+      "derav {1} t med assistanse"
+    ],
+    [
+      "^Nächster Dienst im (.+)\\.$",
+      "Neste gang i {1}."
+    ],
+    [
+      "^Verriegelt · Stand vor (\\d+) Std\\.$",
+      "Låst · status for {1} t siden"
+    ],
+    [
+      "^Entriegelt · Stand vor (\\d+) Std\\.$",
+      "Ulåst · status for {1} t siden"
+    ],
+    [
+      "^Kühlt auf (.+)$",
+      "Kjøler til {1}"
+    ],
+    [
+      "^Heizt auf (.+)$",
+      "Varmer til {1}"
+    ],
+    [
+      "^Kühl · (.+)$",
+      "Kjøling · {1}"
+    ],
+    [
+      "^Heizt · (.+)$",
+      "Varmer · {1}"
+    ],
+    [
+      "^Bereit · (.+)$",
+      "Klar · {1}"
+    ],
+    [
+      "^Automatik · (.+)$",
+      "Auto · {1}"
+    ],
+    [
+      "^Lädt · (.+)$",
+      "Lader · {1}"
+    ],
+    [
+      "^Entlädt · (.+)$",
+      "Lader ut · {1}"
+    ],
+    [
+      "^Fällig · (.+)$",
+      "Forfalt · {1}"
+    ],
+    [
+      "^Prüfen · (.+)$",
+      "Sjekk · {1}"
+    ],
+    [
+      "^Pausiert: (.+)$",
+      "Pauset: {1}"
+    ],
+    [
+      "^Akku (\\d+) ?%$",
+      "Batteri {1}%"
+    ],
+    [
+      "^Akku (.+)$",
+      "Batteri {1}"
+    ],
+    [
+      "^(\\d+) ?% Luftfeuchte$",
+      "{1}% luftfuktighet"
+    ],
+    [
+      "^(\\d+) ?% Feuchtigkeit$",
+      "{1}% fuktighet"
+    ],
+    [
+      "^(\\d+) ?% geöffnet$",
+      "{1}% åpen"
+    ],
+    [
+      "^(\\d+) ?% Geöffnet$",
+      "{1}% åpen"
+    ],
+    [
+      "^(\\d+) ?% Geschlossen$",
+      "{1}% lukket"
+    ],
+    [
+      "^Boden bei (\\d+) ?%$",
+      "Jord på {1}%"
+    ],
+    [
+      "^(\\d+) geöffnet$",
+      "{1} åpne"
+    ],
+    [
+      "^(\\d+) gekippt$",
+      "{1} vippet"
+    ],
+    [
+      "^(\\d+) ?% Akku$",
+      "{1}% batteri"
+    ],
+    [
+      "^Tank (\\d+) ?%$",
+      "Tank {1}%"
+    ],
+    [
+      "^CO₂ (\\d+) ppm$",
+      "CO₂ {1} ppm"
+    ],
+    [
+      "^Feuchte (\\d+) %$",
+      "Fuktighet {1}%"
+    ],
+    [
+      "^VOC (\\d+) ppb$",
+      "VOC {1} ppb"
+    ],
+    [
+      "^Fenster offen · noch (\\d+) Min\\.$",
+      "Vindu åpent · {1} min igjen"
+    ],
+    [
+      "^Fenster offen seit (\\d+) Tagen$",
+      "Vindu åpent i {1} dager"
+    ],
+    [
+      "^Fenster seit (\\d+) Tagen offen$",
+      "Vindu åpent i {1} dager"
+    ],
+    [
+      "^Fenster offen seit (.+)$",
+      "Vindu åpent i {1}"
+    ],
+    [
+      "^Fenster seit (.+) offen$",
+      "Vindu åpent i {1}"
+    ],
+    [
+      "^Außenluft belastet \\(PM2\\.5 (\\d+)\\)$",
+      "Uteluft forurenset (PM2,5 {1})"
+    ],
+    [
+      "^Feuchte (\\d+) % · draußen feuchter$",
+      "Fuktighet {1}% · fuktigere ute"
+    ],
+    [
+      "^Feuchte (\\d+) % · Außenwerte fehlen$",
+      "Fuktighet {1}% · mangler uteverdier"
+    ],
+    [
+      "^≈ (.+) frei · jetzt (.+)$",
+      "≈ {1} til overs · nå {2}"
+    ],
+    [
+      "^jetzt (.+)$",
+      "nå {1}"
+    ],
+    [
+      "^(.+) oder (.+)$",
+      "{1} or {2}"
+    ],
+    [
+      "^(.+) fällig$",
+      "{1} forfalt"
+    ],
+    [
+      "^(.+) ist offen$",
+      "{1} er åpen"
+    ],
+    [
+      "^(.+) nachfüllen$",
+      "Fyll på {1}"
+    ],
+    [
+      "^Alle (\\d+) Updates jetzt installieren\\?$",
+      "Installere alle {1} oppdateringer nå?"
+    ],
+    [
+      "^(\\d+) Tage$",
+      "{1} dager"
+    ],
+    [
+      "^(\\d+) Tag$",
+      "{1} dag"
+    ],
+    [
+      "^(\\d+) Woche$",
+      "{1} uke"
+    ],
+    [
+      "^(\\d+) Wochen$",
+      "{1} uker"
+    ],
+    [
+      "^Nächstes (.+)$",
+      "Neste {1}"
+    ],
+    [
+      "^Als Nächstes: (.+)$",
+      "Neste: {1}"
+    ],
+    [
+      "^Räume unterschiedlich · Ø (.+)$",
+      "Rommene varierer · snitt {1}"
+    ],
+    [
+      "^(.+) · heute Abend raus$",
+      "{1} · settes ut i kveld"
+    ],
+    [
+      "^(.+) · keine Leistung$",
+      "{1} · ingen effekt"
+    ],
+    [
+      "^(.+) · lädt$",
+      "{1} · lader"
+    ],
+    [
+      "^Aus · (.+)$",
+      "Av · {1}"
+    ],
+    [
+      "^An · (.+)$",
+      "På · {1}"
+    ],
+    [
+      "^Über (.+)$",
+      "Over {1}"
+    ],
+    [
+      "^bis (.+)$",
+      "til {1}"
+    ],
+    [
+      "^seit (.+)$",
+      "siden {1}"
+    ],
+    [
+      "^(\\d+) übersprungen$",
+      "{1} hoppet over"
+    ],
+    [
+      "^Online seit (.+)$",
+      "Tilkoblet i {1}"
+    ],
+    [
+      "^(.+) · (\\d+) Stunden$",
+      "{1} · {2} hours"
+    ],
+    [
+      "^(.+) · (\\d+) Tage$",
+      "{1} · {2} dager"
+    ],
+    [
+      "^(\\d+) ?% Luftfeuchtigkeit$",
+      "{1}% luftfuktighet"
+    ],
+    [
+      "^Einspeisung · (\\d+) % aus Solar und Akku · heute (.+)$",
+      "Innmating · {1}% fra sol og batteri · i dag {2}"
+    ],
+    [
+      "^Einspeisung · heute (.+)$",
+      "Innmating · i dag {1}"
+    ],
+    [
+      "^Einspeisung (.+)$",
+      "Innmating {1}"
+    ],
+    [
+      "^(\\d+) Kameras offline$",
+      "{1} kameraer frakoblet"
+    ],
+    [
+      "^(\\d+) Schlösser offline$",
+      "{1} låser frakoblet"
+    ],
+    [
+      "^(\\d+) Tore offen$",
+      "{1} porter åpne"
+    ],
+    [
+      "^(.+) ausgeschaltet$",
+      "{1} slått av"
+    ],
+    [
+      "^(.+) ausgelöst$",
+      "{1} utløst"
+    ],
+    [
+      "^Vor (\\d+) Min\\.$",
+      "For {1} min siden"
+    ],
+    [
+      "^Vor (\\d+) Std\\.$",
+      "For {1} t siden"
+    ],
+    [
+      "^Vor (\\d+) T\\.$",
+      "For {1} d. siden"
+    ],
+    [
+      "^Vor (\\d+) Tagen$",
+      "For {1} dager siden"
+    ],
+    [
+      "^Vor 1 Tag$",
+      "For 1 dag siden"
+    ],
+    [
+      "^Vor (\\d+) Minuten$",
+      "For {1} minutter siden"
+    ],
+    [
+      "^Vor (\\d+) Stunden$",
+      "For {1} timer siden"
+    ],
+    [
+      "^Seit (\\d+) Min\\.$",
+      "I {1} min"
+    ],
+    [
+      "^Seit (\\d+) Std\\.$",
+      "I {1} t"
+    ],
+    [
+      "^Seit (\\d+) T\\.$",
+      "I {1} d."
+    ],
+    [
+      "^Seit (.+)$",
+      "Siden {1}"
+    ],
+    [
+      "^(\\d+) Türen offen$",
+      "{1} dører åpne"
+    ],
+    [
+      "^(\\d+) Fenster offen$",
+      "{1} vinduer åpne"
+    ],
+    [
+      "^(\\d+) Fenster gekippt$",
+      "{1} vinduer vippet"
+    ],
+    [
+      "^(\\d+) Türen gekippt$",
+      "{1} dører vippet"
+    ],
+    [
+      "^(\\d+) % aus Solar und Akku · heute (.+)$",
+      "{1}% fra sol og batteri · i dag {2}"
+    ],
+    [
+      "^(\\d+) % aus Solar und Akku$",
+      "{1}% fra sol og batteri"
+    ],
+    [
+      "^heute (.+)$",
+      "i dag {1}"
+    ],
+    [
+      "^Solarbank-Fehler (.+)$",
+      "Solarbank-feil {1}"
+    ],
+    [
+      "^(.+) gespeichert$",
+      "{1} lagret"
+    ],
+    [
+      "^Modul (\\d+)$",
+      "Modul {1}"
+    ],
+    [
+      "^(\\d+) Clients$",
+      "{1} klienter"
+    ],
+    [
+      "^Gesamt (.+) kWh$",
+      "Totalt {1} kWh"
+    ],
+    [
+      "^(\\d+) Batterien schwach$",
+      "{1} batterier lave"
+    ],
+    [
+      "^Am niedrigsten: (.+) (\\d+) %$",
+      "Lavest: {1} {2}%"
+    ],
+    [
+      "^(\\d+) von (\\d+) online$",
+      "{1} av {2} tilkoblet"
+    ],
+    [
+      "^Bewegung vor (\\d+) Min\\.$",
+      "Bevegelse for {1} min siden"
+    ],
+    [
+      "^Bewegung vor (\\d+) Std\\.$",
+      "Bevegelse for {1} t siden"
+    ],
+    [
+      "^Bewegung vor (\\d+) T\\.$",
+      "Bevegelse for {1} d. siden"
+    ],
+    [
+      "^Bewegung gerade eben$",
+      "Bevegelse nettopp"
+    ],
+    [
+      "^Neu: (.+) · KI: Nicht geprüft$",
+      "Ny: {1} · KI: ikke sjekket"
+    ],
+    [
+      "^Neu: (.+) · KI: Unklar$",
+      "Ny: {1} · KI: uklart"
+    ],
+    [
+      "^Neu: (.+) · KI: KI prüft …$",
+      "Ny: {1} · KI: sjekker…"
+    ],
+    [
+      "^Neu: (.+) · $",
+      "Ny: {1} · "
+    ],
+    [
+      "^Neu: (.+)$",
+      "Ny: {1}"
+    ],
+    [
+      "^(\\d+) Termine heute$",
+      "{1} avtaler i dag"
+    ],
+    [
+      "^Reichweite (\\d[\\d.,]*)$",
+      "Rekkevidde {1}"
+    ],
+    [
+      "^Nächste Inspektion in (.+) km$",
+      "Neste service om {1} km"
+    ],
+    [
+      "^Nächste Inspektion (\\d{2}\\.\\d{2}\\.\\d{4})$",
+      "Neste service {1}"
+    ],
+    [
+      "^(\\d+) % in (\\d+) Min\\.$",
+      "{1}% om {2} min"
+    ],
+    [
+      "^(Heute|Morgen|Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag): (.+)$",
+      "{1}: {2}"
+    ],
+    [
+      "^(\\d+) Schlösser offen$",
+      "{1} låser åpne"
+    ],
+    [
+      "^(Super E5|Super E10|Diesel) · keine offen$",
+      "{1} · ingen åpne"
+    ],
+    [
+      "^(.+) offen$",
+      "{1} åpen"
+    ],
+    [
+      "^(.+) gekippt$",
+      "{1} vippet"
+    ],
+    [
+      "^Die Abholtermine kommen wieder, sobald (.+) antwortet\\.$",
+      "Hentedatoene kommer tilbake så snart {1} svarer."
+    ],
+    [
+      "^(\\d+) Akkus schwach$",
+      "{1} batterier lave"
+    ],
+    [
+      "^(\\d+) Schwach$",
+      "{1} Lave"
+    ],
+    [
+      "^(\\d+) schwach$",
+      "{1} lave"
+    ],
+    [
+      "^(.+) Akku fast leer$",
+      "{1} batteri nesten tomt"
+    ],
+    [
+      "^(.+) Akku schwach$",
+      "{1} batteri lavt"
+    ],
+    [
+      "^(\\d+) Wiedergaben$",
+      "{1} spiller"
+    ],
+    [
+      "^H (-?\\d+)°$",
+      "H {1}°"
+    ],
+    [
+      "^T (-?\\d+)°$",
+      "L {1}°"
+    ],
+    [
+      "^(\\d+) % Regen$",
+      "{1}% regn"
+    ],
+    [
+      "^Wie warm ist es (?:im|in der) (.+)\\?$",
+      "Hvor varmt er det i {1}?"
+    ],
+    [
+      "^Dimme das Licht (?:im|in der) (.+)$",
+      "Dimm lyset i {1}"
+    ],
+    [
+      "^In der Summe · (\\d+) von (\\d+)$",
+      "Medregnet · {1} av {2}"
+    ],
+    [
+      "^(\\d+) % der Summe$",
+      "{1}% av summen"
+    ],
+    [
+      "^(\\d+) % vom Haus$",
+      "{1}% av huset"
+    ],
+    [
+      "^Spitze\\s24\\sStd\\.:\\s(.+)$",
+      "Topp 24 t: {1}"
+    ],
+    [
+      "^Üblich\\sbis\\s(.+)$",
+      "Vanligvis opptil {1}"
+    ],
+    [
+      "^(\\d+) Geräte ohne Wert$",
+      "{1} enheter uten verdi"
+    ],
+    [
+      "^Nicht in der Summe · Steckt hinter (.+)$",
+      "Ikke medregnet · ligger bak {1}"
+    ],
+    [
+      "^Stand (.+) \\(verzögert\\)$",
+      "Oppdatert {1} (forsinket)"
+    ],
+    [
+      "^Stand (.+)$",
+      "Oppdatert {1}"
+    ],
+    [
+      "^Nächste Inspektion (.+)$",
+      "Neste service {1}"
+    ],
+    [
+      "^(\\d+) Termine$",
+      "{1} avtaler"
+    ],
+    [
+      "^in (\\d+) Wochen$",
+      "om {1} uker"
+    ],
+    [
+      "^in (\\d+) Monaten$",
+      "om {1} måneder"
+    ],
+    [
+      "^Platz (1|21|31)$",
+      "{1}. plass"
+    ],
+    [
+      "^Platz (2|22)$",
+      "{1}. plass"
+    ],
+    [
+      "^Platz (3|23)$",
+      "{1}. plass"
+    ],
+    [
+      "^Platz (\\d+)$",
+      "{1}. plass"
+    ],
+    [
+      "^(\\d+) Punkte$",
+      "{1} poeng"
+    ],
+    [
+      "^(\\S+ : \\S+) bei (.+)$",
+      "{1} borte mot {2}"
+    ],
+    [
+      "^(\\S+ : \\S+) gegen (.+)$",
+      "{1} mot {2}"
+    ],
+    [
+      "^bei (.+)$",
+      "borte mot {1}"
+    ],
+    [
+      "^gegen (.+)$",
+      "mot {1}"
+    ],
+    [
+      "^Heute (\\d\\d:\\d\\d)$",
+      "I dag {1}"
+    ],
+    [
+      "^Morgen (\\d\\d:\\d\\d)$",
+      "I morgen {1}"
+    ],
+    [
+      "^Mo (\\d.*)$",
+      "Man {1}"
+    ],
+    [
+      "^Di (\\d.*)$",
+      "Tir {1}"
+    ],
+    [
+      "^Mi (\\d.*)$",
+      "Ons {1}"
+    ],
+    [
+      "^Do (\\d.*)$",
+      "Tor {1}"
+    ],
+    [
+      "^Fr (\\d.*)$",
+      "Fre {1}"
+    ],
+    [
+      "^Sa (\\d.*)$",
+      "Lør {1}"
+    ],
+    [
+      "^So (\\d.*)$",
+      "Søn {1}"
+    ],
+    [
+      "^(\\d+) Monaten$",
+      "{1} måneder"
+    ],
+    [
+      "^in (\\d+) Std\\.$",
+      "om {1} t"
+    ],
+    [
+      "^in (\\d+) Min\\.$",
+      "om {1} min"
+    ],
+    [
+      "^führt (\\d+:\\d+) (bei|gegen) (.+)$",
+      "leder {1} {2} {3}"
+    ],
+    [
+      "^liegt (\\d+:\\d+) zurück (bei|gegen) (.+)$",
+      "ligger under {1} {2} {3}"
+    ],
+    [
+      "^(\\d+:\\d+)-Sieg n\\. V\\. (bei|gegen) (.+)$",
+      "{1}-seier e.e.o. {2} {3}"
+    ],
+    [
+      "^(\\d+:\\d+)-Niederlage n\\. V\\. (bei|gegen) (.+)$",
+      "{1}-tap e.e.o. {2} {3}"
+    ],
+    [
+      "^(\\d+:\\d+)-Sieg (bei|gegen) (.+)$",
+      "{1}-seier {2} {3}"
+    ],
+    [
+      "^(\\d+:\\d+)-Niederlage (bei|gegen) (.+)$",
+      "{1}-tap {2} {3}"
+    ],
+    [
+      "^Sieg i\\. E\\. (bei|gegen) (.+)$",
+      "Vant på straffer {1} {2}"
+    ],
+    [
+      "^Niederlage i\\. E\\. (bei|gegen) (.+)$",
+      "Tapte på straffer {1} {2}"
+    ],
+    [
+      "^(\\d+:\\d+) (bei|gegen) (.+)$",
+      "{1} {2} {3}"
+    ],
+    [
+      "^i\\. E\\. (\\d+:\\d+)$",
+      "straffer {1}"
+    ],
+    [
+      "^(\\d+) Lichter an$",
+      "{1} lys på"
+    ],
+    [
+      "^Soll-Bereich (.+)$",
+      "Målområde {1}"
+    ],
+    [
+      "^ab (\\d[\\d.,]*) €$",
+      "fra {1} €"
+    ],
+    [
+      "^Heute ab (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
+      "I dag fra {1}"
+    ],
+    [
+      "^Morgen ab (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
+      "I morgen fra {1}"
+    ],
+    [
+      "^Warte bis (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
+      "Vent til {1}"
+    ],
+    [
+      "^Warte bis morgen (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
+      "Vent til {1} i morgen"
+    ],
+    [
+      "^Tank reicht noch (\\d+) km\\. Ab (\\d{1,2}:\\d{2}(?: [AP]M)?) lag (.+) in den letzten 14 Tagen im Schnitt (\\d+) ct niedriger\\.$",
+      "Nok drivstoff til {1} km. Fra {2} var {3} i snitt {4} ct billigere de siste 14 dagene."
+    ],
+    [
+      "^Ab (\\d{1,2}:\\d{2}(?: [AP]M)?) lag (.+) in den letzten 14 Tagen im Schnitt (\\d+) ct niedriger\\.$",
+      "Fra {1} var {2} i snitt {3} ct billigere de siste 14 dagene."
+    ],
+    [
+      "^(Super E5|Super E10|Diesel) · ab (\\d{1,2}:\\d{2}(?: [AP]M)?) günstiger$",
+      "{1} · billigere fra {2}"
+    ],
+    [
+      "^(Super E5|Super E10|Diesel) · abends günstiger$",
+      "{1} · billigere om kvelden"
+    ],
+    [
+      "^(Super E5|Super E10|Diesel) · ab (\\d+) Uhr günstiger$",
+      "{1} · billigere fra {2}:00"
+    ],
+    [
+      "^(Super E5|Super E10|Diesel) · jetzt günstig$",
+      "{1} · god pris nå"
+    ],
+    [
+      "^(Super E5|Super E10|Diesel) · kaum Unterschied$",
+      "{1} · liten forskjell"
+    ],
+    [
+      "^(Super E5|Super E10|Diesel) · Tank knapp$",
+      "{1} · lite drivstoff"
+    ],
+    [
+      "^(Super E5|Super E10|Diesel) · Preise werden gesammelt$",
+      "{1} · samler inn priser"
+    ],
+    [
+      "^Die Empfehlung kommt, sobald genug Preise gesammelt sind, in etwa (\\d+) Tagen\\.$",
+      "Anbefalingen kommer når nok priser er samlet inn, om ca. {1} dager."
+    ],
+    [
+      "^Heute ab (\\d+) Uhr$",
+      "I dag fra {1}:00"
+    ],
+    [
+      "^Morgen ab (\\d+) Uhr$",
+      "I morgen fra {1}:00"
+    ],
+    [
+      "^Warte bis (\\d+) Uhr$",
+      "Vent til {1}:00"
+    ],
+    [
+      "^Warte bis morgen (\\d+) Uhr$",
+      "Vent til {1}:00 i morgen"
+    ],
+    [
+      "^Tank reicht noch (\\d+) km\\. Ab (\\d+) Uhr lag (.+) in den letzten 14 Tagen im Schnitt (\\d+) ct niedriger\\.$",
+      "Nok drivstoff til {1} km. Fra {2}:00 var {3} i snitt {4} ct billigere de siste 14 dagene."
+    ],
+    [
+      "^Ab (\\d+) Uhr lag (.+) in den letzten 14 Tagen im Schnitt (\\d+) ct niedriger\\.$",
+      "Fra {1}:00 var {2} i snitt {3} ct billigere de siste 14 dagene."
+    ],
+    [
+      "^(.+) liegt gerade im unteren Bereich der letzten 14 Tage\\.$",
+      "{1} er akkurat nå blant det laveste de siste 14 dagene."
+    ],
+    [
+      "^Tank bei (\\d+) %, noch etwa (\\d+) km\\. Warten lohnt sich nicht\\.$",
+      "Tank på {1}%, ca. {2} km igjen. Det lønner seg ikke å vente."
+    ],
+    [
+      "^Tank bei (\\d+) %\\. Warten lohnt sich nicht\\.$",
+      "Tank på {1}%. Det lønner seg ikke å vente."
+    ],
+    [
+      "^Noch etwa (\\d+) km\\. Warten lohnt sich nicht\\.$",
+      "Ca. {1} km igjen. Det lønner seg ikke å vente."
+    ],
+    [
+      "^(\\d[\\d.,]*) € Tief$",
+      "{1} € lavest"
+    ],
+    [
+      "^jetzt (\\d[\\d.,]*) €$",
+      "nå {1} €"
+    ],
+    [
+      "^(\\d[\\d.,]*) € Hoch$",
+      "{1} € høyest"
+    ],
+    [
+      "^(\\d+) Tankstellen in (\\d+) km$",
+      "{1} stasjoner innen {2} km"
+    ],
+    [
+      "^1 Tankstelle in (\\d+) km$",
+      "1 stasjon innen {1} km"
+    ],
+    [
+      "^(\\d[\\d.,]*) km · offen$",
+      "{1} km · åpen"
+    ],
+    [
+      "^(\\d[\\d.,]*) km · zu$",
+      "{1} km · stengt"
+    ],
+    [
+      "^(\\d+) weitere$",
+      "{1} til"
+    ],
+    [
+      "^und (\\d+) weitere$",
+      "og {1} til"
+    ],
+    [
+      "^Umkreis (\\d+) km um Zuhause$",
+      "{1} km rundt hjemmet"
+    ],
+    [
+      "^Umkreis (\\d+) km um das Auto$",
+      "{1} km rundt bilen"
+    ],
+    [
+      "^Tankerkönig antwortet gerade nicht: (.+)$",
+      "Tankerkönig svarer ikke akkurat nå: {1}"
+    ],
+    [
+      "^(.+) Uhr$",
+      "{1}"
+    ],
+    [
+      "^Reichweite (\\S+)$",
+      "Rekkevidde {1}"
+    ],
+    [
+      "^Reichweite (\\d[\\d.,]*) (\\S+)$",
+      "Rekkevidde {1} {2}"
+    ],
+    [
+      "^(\\d+) Geräte brauchen Aufmerksamkeit$",
+      "{1} enheter krever oppmerksomhet"
+    ],
+    [
+      "^(.+) antwortet nicht$",
+      "{1} svarer ikke"
+    ],
+    [
+      "^(.+) ist still$",
+      "{1} har blitt stille"
+    ],
+    [
+      "^(.+) hat sich noch nicht gemeldet$",
+      "{1} har ikke meldt seg ennå"
+    ],
+    [
+      "^(\\d+) Sensoren nicht erreichbar$",
+      "{1} sensorer ikke tilgjengelig"
+    ],
+    [
+      "^(\\d+) erledigt$",
+      "{1} utført"
+    ],
+    [
+      "^(.+) ist nicht erreichbar$",
+      "{1} er ikke tilgjengelig"
+    ],
+    [
+      "^(.+) braucht bald eine neue Batterie$",
+      "{1} trenger snart nytt batteri"
+    ],
+    [
+      "^(.+) braucht eine neue Batterie$",
+      "{1} trenger nytt batteri"
+    ],
+    [
+      "^(.+) meldet schwache Batterie$",
+      "{1} melder lavt batteri"
+    ],
+    [
+      "^(.+) wartet auf die erste Meldung$",
+      "{1} venter på første melding"
+    ],
+    [
+      "^(.+) ist ausgefallen$",
+      "{1} er ute av drift"
+    ],
+    [
+      "^(.+) sollte geprüft werden$",
+      "{1} bør sjekkes"
+    ],
+    [
+      "^(\\d+) offline$",
+      "{1} frakoblet"
+    ],
+    [
+      "^seit (\\d{1,2}:\\d{2})$",
+      "siden {1}"
+    ],
+    [
+      "^seit gestern (\\d{1,2}:\\d{2})$",
+      "siden i går {1}"
+    ],
+    [
+      "^(.+) von zuhause$",
+      "{1} hjemmefra"
+    ],
+    [
+      "^GPS · auf (\\d+) m genau$",
+      "GPS · nøyaktighet {1} m"
+    ],
+    [
+      "^Nachricht an (.+)$",
+      "Melding til {1}"
+    ],
+    [
+      "^gestern (\\d{1,2}:\\d{2}) – (\\d{1,2}:\\d{2})$",
+      "i går {1} – {2}"
+    ],
+    [
+      "^bis (\\d{1,2}:\\d\\d)$",
+      "til {1}"
+    ],
+    [
+      "^Fehler: (.+)$",
+      "Feil: {1}"
+    ],
+    [
+      "^(\\d+) Fahrten$",
+      "{1} kjøringer"
+    ],
+    [
+      "^Neue Version (.+)$",
+      "Ny versjon {1}"
+    ],
+    [
+      "^Wird installiert · (\\d+) %$",
+      "Installerer · {1}%"
+    ],
+    [
+      "^(\\d+:\\d\\d) Std\\. übrig$",
+      "{1} t igjen"
+    ],
+    [
+      "^Schicht (\\d+)/(\\d+)$",
+      "Lag {1}/{2}"
+    ],
+    [
+      "^Aktuell keine Warnungen für (.+)$",
+      "Ingen farevarsler for {1} akkurat nå"
+    ],
+    [
+      "^Warnungen · (.+)$",
+      "Farevarsler · {1}"
+    ],
+    [
+      "^(\\d+) Module liefern$",
+      "{1} moduler produserer"
+    ],
+    [
+      "^Solaranteil am Verbrauch (\\d+|< 1) %$",
+      "Solandel av forbruket {1}%"
+    ],
+    [
+      "^Solar ([\\d.,]+) kWh$",
+      "Sol {1} kWh"
+    ],
+    [
+      "^Netz ([\\d.,]+) kWh$",
+      "Strømnett {1} kWh"
+    ],
+    [
+      "^(\\d+) im Bild$",
+      "{1} i bildet"
+    ],
+    [
+      "^(\\d+) Objekte erkannt$",
+      "{1} objekter oppdaget"
+    ],
+    [
+      "^(.+) und (.+) erkannt$",
+      "{1} og {2} oppdaget"
+    ],
+    [
+      "^(.+) erkannt$",
+      "{1} oppdaget"
+    ],
+    [
+      "^([^,]+), (vor .+|gerade eben|gestern|Gestern|jetzt|\\d+ Min\\.|\\d+ Std\\.|\\d+ Tagen)$",
+      "{1}, {2}"
+    ],
+    [
+      "^(\\d{1,2}:\\d{2}) \\((.+)\\)$",
+      "{1} ({2})"
+    ],
+    [
+      "^(\\d+) neue Alarme$",
+      "{1} nye varsler"
+    ],
+    [
+      "^(\\d+) Erkennungen$",
+      "{1} deteksjoner"
+    ],
+    [
+      "^(\\d+) Std\\. aufgenommen$",
+      "{1} t tatt opp"
+    ],
+    [
+      "^(\\d+) Min\\. aufgenommen$",
+      "{1} min tatt opp"
+    ],
+    [
+      "^Heute nichts erkannt: (.+)$",
+      "Ingenting oppdaget i dag: {1}"
+    ],
+    [
+      "^In 7 Tagen nichts erkannt: (.+)$",
+      "Ingenting oppdaget på 7 dager: {1}"
+    ],
+    [
+      "^Keine (.+) heute$",
+      "Ingen {1} i dag"
+    ],
+    [
+      "^(\\d+) Alarme$",
+      "{1} varsler"
+    ],
+    [
+      "^Keine (.+) in den letzten 7 Tagen$",
+      "Ingen {1} de siste 7 dagene"
+    ],
+    [
+      "^(\\d+) Tagen$",
+      "{1} dager"
+    ],
+    [
+      "^Geklingelt (vor .+|gestern|gerade eben)$",
+      "Sist ringt på {1}"
+    ],
+    [
+      "^In den letzten (\\d+) Tagen$",
+      "De siste {1} dagene"
+    ],
+    [
+      "^Nach (\\d+) s ohne Antwort$",
+      "Etter {1} s uten svar"
+    ],
+    [
+      "^Mein Kaffee (\\d+)$",
+      "Min kaffe {1}"
+    ],
+    [
+      "^(Entkalken|Reinigen|Filterwechsel|Pflege) in 1[  ]Tasse$",
+      "{1} om 1 kopp"
+    ],
+    [
+      "^(Entkalken|Reinigen|Filterwechsel|Pflege) in (\\d+)[  ]Tassen$",
+      "{1} om {2} kopper"
+    ],
+    [
+      "^In 1[  ]Tasse$",
+      "Om 1 kopp"
+    ],
+    [
+      "^In (\\d+)[  ]Tassen$",
+      "Om {1} kopper"
+    ],
+    [
+      "^Alle Getränke \\((\\d+)\\)$",
+      "Alle drikker ({1})"
+    ],
+    [
+      "^Einschalten und (.+) starten$",
+      "Slå på og start {1}"
+    ],
+    [
+      "^(.+) starten\\?$",
+      "Starte {1}?"
+    ],
+    [
+      "^(.+) starten$",
+      "Start {1}"
+    ],
+    [
+      "^Leistung (.+) W$",
+      "Effekt {1} W"
+    ],
+    [
+      "^Heute (\\d+)$",
+      "{1} i dag"
+    ],
+    [
+      "^(\\d+) Filter aktiv$",
+      "{1} filtre aktive"
+    ],
+    [
+      "^Filter · (\\d+)$",
+      "Filter · {1}"
+    ],
+    [
+      "^(\\d+) heute$",
+      "{1} i dag"
+    ],
+    [
+      "^(\\d+) % ([A-Za-zÄÖÜäöüß].*)$",
+      "{1}% {2}"
+    ],
+    [
+      "^In 1[  ]Tag$",
+      "Om 1 dag"
+    ],
+    [
+      "^In ([\\d.,]+)[  ]l$",
+      "Om {1} l"
+    ],
+    [
+      "^([\\d.,]+) Mbit/s Download$",
+      "{1} Mbit/s nedlasting"
+    ],
+    [
+      "^([\\d.,]+) Mbit/s Upload$",
+      "{1} Mbit/s opplasting"
+    ],
+    [
+      "^Sollwert (.+)$",
+      "Settpunkt {1}"
+    ],
+    [
+      "^Zeitplan pausiert bis (\\d{1,2}:\\d\\d)$",
+      "Tidsplan pauset til {1}"
+    ],
+    [
+      "^Boost bis (\\d{1,2}:\\d\\d)$",
+      "Boost til {1}"
+    ],
+    [
+      "^Pausiert durch (.+)$",
+      "Pauset av {1}"
+    ],
+    [
+      "^Lüfter (.+)$",
+      "Vifte {1}"
+    ],
+    [
+      "^(.+) morgen ab (\\d{1,2}:\\d\\d)$",
+      "{1} i morgen fra {2}"
+    ],
+    [
+      "^(.+) am (Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag) ab (\\d{1,2}:\\d\\d)$",
+      "{1} på {2} fra {3}"
+    ],
+    [
+      "^(.+) ab (\\d{1,2}:\\d\\d)$",
+      "{1} fra {2}"
+    ],
+    [
+      "^(\\d+) Einstellungen$",
+      "{1} innstillinger"
+    ],
+    [
+      "^(\\d+) Listen$",
+      "{1} lister"
+    ],
+    [
+      "^(\\d+) Diagramme$",
+      "{1} diagrammer"
+    ],
+    [
+      "^Startet um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
+      "Starter kl. {1}"
+    ],
+    [
+      "^Startet morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) Uhr$",
+      "Starter i morgen kl. {1}"
+    ],
+    [
+      "^Um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
+      "Start kl. {1}"
+    ],
+    [
+      "^Morgen um (\\d{1,2}:\\d{2}(?: [AP]M)?) starten$",
+      "Start i morgen kl. {1}"
+    ],
+    [
+      "^(\\d+) Programme$",
+      "{1} programmer"
+    ],
+    [
+      "^(\\d+) Jalousien offen$",
+      "{1} persienner åpne"
+    ],
+    [
+      "^Alle (\\d+) anzeigen$",
+      "Vis alle {1}"
+    ],
+    [
+      "^Alle \\((\\d+)\\)$",
+      "Alle ({1})"
+    ],
+    [
+      "^Mehr \\((\\d+)\\)$",
+      "Flere ({1})"
+    ],
+    [
+      "^Jetzt (-?\\d.*)$",
+      "Nå {1}"
+    ],
+    [
+      "^(\\d+) Schlösser entriegeln\\?$",
+      "Låse opp {1} låser?"
+    ],
+    [
+      "^Ø von (\\d+) Lampen$",
+      "Ø av {1} lamper"
+    ],
+    [
+      "^(\\d+) Schlösser klemmen$",
+      "{1} låser sitter fast"
+    ],
+    [
+      "^(\\d+) klemmen$",
+      "{1} sitter fast"
+    ],
+    [
+      "^In (\\d+) T\\. · (.+)$",
+      "Om {1} d. · {2}"
+    ],
+    [
+      "^Jetzt Ø (.+)$",
+      "Nå snitt {1}"
+    ],
+    [
+      "^gefühlt (.+)$",
+      "føles som {1}"
+    ],
+    [
+      "^Regen (\\d+) ?%$",
+      "Regn {1}%"
+    ],
+    [
+      "^UV (\\d+)$",
+      "UV {1}"
+    ],
+    [
+      "^Wind (\\d.*)$",
+      "Wind {1}"
+    ],
+    [
+      "^Regen ab (\\d+) Uhr$",
+      "Regn fra {1}:00"
+    ],
+    [
+      "^(.+) frei$",
+      "{1} til overs"
+    ],
+    [
+      "^Nächstes Spiel (.+)$",
+      "Neste kamp {1}"
+    ],
+    [
+      "^(\\d+) WLANs an$",
+      "{1} Wi-Fi-nettverk på"
+    ],
+    [
+      "^Schwächste: (.+)$",
+      "Svakest: {1}"
+    ],
+    [
+      "^Zuerst wechseln: (.+)$",
+      "Bytt først: {1}"
+    ],
+    [
+      "^Jetzt: (.+)$",
+      "Nå: {1}"
+    ],
+    [
+      "^Zuletzt geöffnet (.+)$",
+      "Sist åpnet {1}"
+    ],
+    [
+      "^Profil „(.+)“$",
+      "Profil «{1}»"
+    ],
+    [
+      "^(\\d+) unbekannt$",
+      "{1} ukjente"
+    ],
+    [
+      "^Heute ([A-ZÄÖÜ][^\\d·:]*)$",
+      "{1} i dag"
+    ],
+    [
+      "^Morgen ([A-ZÄÖÜ][^\\d·:]*)$",
+      "{1} i morgen"
+    ],
+    [
+      "^(\\d+) Einstellungen empfohlen$",
+      "{1} innstillinger anbefalt"
+    ],
+    [
+      "^Letzter Test (.+)$",
+      "Siste test {1}"
+    ],
+    [
+      "^(\\d+(?:,\\d+)?) Portionen$",
+      "{1} porsjoner"
+    ],
+    [
+      "^(\\d+) von (\\d+) zu Hause$",
+      "{1} av {2} hjemme"
+    ]
+  ]
+}

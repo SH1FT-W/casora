@@ -29,7 +29,7 @@ for (const [svc, fields] of Object.entries(FIELDS)) {
   assert.ok(en[svc] && fields.every((f) => en[svc].fields[f]), 'translations: ' + svc);
   for (const f of fields) assert.ok(py.includes('"' + f + '"'), 'actions.py schema: ' + f);
 }
-for (const l of ['de', 'es', 'fr', 'it', 'nl', 'pl', 'pt']) {
+for (const l of ['de', 'es', 'fr', 'it', 'nl', 'pl', 'pt', 'nb']) {
   const t = JSON.parse(read('translations/' + l + '.json'));
   for (const svc of Object.keys(FIELDS)) assert.ok(t.services[svc] && t.services[svc].name, l + ': ' + svc);
   assert.ok(t.issues.kept_scripts && t.issues.kept_scripts.description.includes('{scripts}'), l + ': kept_scripts');

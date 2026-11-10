@@ -83,7 +83,7 @@ assert.equal(T.casora_entity_actions.hold_action.action.includes('more-info'), t
   assert.equal(show({}, 'script.example_door', 'on'), 'An', 'without tap_run unchanged (on)');
   assert.equal(show({ tap_run: true }, 'light.example', 'off'), 'Aus', 'a light ignores tap_run');
   assert.equal(T.casora_entity.state_display.includes('Bereit'), false, 'other tiles keep their text');
-  for (const lang of ['en', 'es', 'fr', 'it', 'nl', 'pl', 'pt']) {
+  for (const lang of ['en', 'es', 'fr', 'it', 'nl', 'pl', 'pt', 'nb']) {
     const ex = JSON.parse(read('custom_components/casora/translations/dashboard/phrases/' + lang + '.json')).exact;
     for (const k of ['Bereit', 'Läuft']) assert.ok(ex[k], lang + ': ' + k);
   }
@@ -103,7 +103,7 @@ assert.ok(/f\.when\(tile\.variables \|\| \{\}, tile\)\)\.forEach/.test(panel), '
 assert.ok(/script: "entity_actions"/.test(read('custom_components/casora/panel/casora-panel-b-ux.js')), 'a script becomes "Entity with buttons"');
 const mehr = read('custom_components/casora/panel/casora-panel-b-mehr.js');
 assert.ok(/SWITCH_DOMAINS = \[[^\]]*"script"[^\]]*"button"/.test(mehr), '"Ask before switching" offered for scripts and buttons');
-for (const lang of ['de', 'es', 'fr', 'it', 'nl', 'pl', 'pt']) {
+for (const lang of ['de', 'es', 'fr', 'it', 'nl', 'pl', 'pt', 'nb']) {
   const ex = JSON.parse(read('custom_components/casora/translations/panel/' + lang + '.json')).exact;
   for (const k of ['Tap runs it', fieldSrc[1], 'Run it', 'A calm question before this runs. For the front door, the gate or everything off.',
     'A calm question before this runs – on the tile and in its popup. For the front door, the gate or everything off.']) assert.ok(ex[k], lang + ': ' + k);
@@ -134,11 +134,11 @@ nt = { entity: 'script.example_door', variables: {} }; rtd(nt, { id: 'entity' })
 nt = { entity: 'script.example_door', variables: {} }; rtd(nt, EA); assert.equal(nt.variables.confirm_toggle, undefined, 'no question by default');
 assert.ok(/_fillTile\(tile, type, entity\) \{\n\s*tile\.entity = entity;\n\s*runTapDefault\(tile, type\);/.test(panel), 'set where a new tile gets its device');
 assert.ok(/if \(!prev && v && [^\n]+\n\s*runTapDefault\(tile, type\);/.test(panel), 'and when a tile added without a device gets its first one');
-for (const lang of ['de', 'es', 'fr', 'it', 'nl', 'pl', 'pt']) {
+for (const lang of ['de', 'es', 'fr', 'it', 'nl', 'pl', 'pt', 'nb']) {
   const ex = JSON.parse(read('custom_components/casora/translations/panel/' + lang + '.json')).exact;
   for (const k of ['With confirmation', confSrc[1]]) assert.ok(ex[k], lang + ': ' + k);
 }
-for (const lang of ['en', 'es', 'fr', 'it', 'nl', 'pl', 'pt']) {
+for (const lang of ['en', 'es', 'fr', 'it', 'nl', 'pl', 'pt', 'nb']) {
   const ex = JSON.parse(read('custom_components/casora/translations/dashboard/phrases/' + lang + '.json')).exact;
   for (const k of ['Wirklich ausführen?', 'Wirklich aktivieren?', 'Ausführen', 'Aktivieren']) assert.ok(ex[k], lang + ': ' + k);
 }

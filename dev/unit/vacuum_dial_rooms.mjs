@@ -74,7 +74,7 @@ h = V.inner('v_rooms', c, S);
 assert.ok(/class="hv-go"[^>]*>1 Raum reinigen</.test(h), 'button with a chosen room');
 
 // Every language has the hint.
-for (const l of ['en', 'es', 'fr', 'it', 'nl', 'pl', 'pt']) {
+for (const l of ['en', 'es', 'fr', 'it', 'nl', 'pl', 'pt', 'nb']) {
   const ex = JSON.parse(read('custom_components/casora/translations/dashboard/phrases/' + l + '.json')).exact;
   assert.ok(ex['Räume antippen'], l + ': Räume antippen');
 }

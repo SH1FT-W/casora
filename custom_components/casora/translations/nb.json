@@ -1,0 +1,420 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Casora",
+        "description": "Legger til Casora Studio i sidepanelet."
+      }
+    },
+    "abort": {
+      "already_configured": "Casora er allerede satt opp."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Casora – Innstillinger",
+        "description": "La felt stå tomme, så velger Casora selv: standard-KI fra Innstillinger → KI-oppgaver og utesensorer etter navn.",
+        "data": {
+          "ai_task_entity": "KI for coacher, kameraer og planter",
+          "ai_task_web_entity": "KI med nettsøk (oppdateringssjekk, oppskrift)",
+          "outdoor_temperature": "Utetemperatur",
+          "outdoor_humidity": "Luftfuktighet ute",
+          "price_kwh": "Strømpris",
+          "ki_hinweise": "Merknader til KI-en",
+          "rezept_liste": "Handleliste for ingrediensene (ukens oppskrift)",
+          "ki_plan_energie": "Energicoach automatisk",
+          "ki_plan_heizung": "Varmecoach automatisk",
+          "ki_plan_lueftung": "Luftecoach automatisk",
+          "ki_plan_rezept": "Ukens oppskrift automatisk",
+          "ki_plan_update": "Oppdateringssjekk",
+          "lueften_push": "Send luftevarsel som push til",
+          "lueften_personen": "Varsle bare når noen er hjemme",
+          "update_push": "Varsle om nye Casora-versjoner",
+          "beta_updates": "Betaversjoner"
+        },
+        "data_description": {
+          "ki_hinweise": "Legges ved hver vurdering, f.eks. «Soveromsvinduet står vippet med vilje.»",
+          "ki_plan_energie": "Automatisk: søndager kl. 18:00. Egen tid f.eks. «sun 18:00» (ukedag på engelsk, mon til sun).",
+          "ki_plan_heizung": "Automatisk: mandager kl. 07:00, bare i fyringssesongen.",
+          "ki_plan_lueftung": "Automatisk: lørdager kl. 10:00.",
+          "ki_plan_rezept": "Automatisk: mandager kl. 06:00.",
+          "ki_plan_update": "Daglig: én gang om dagen. Av: ingen KI-vurdering i oppdateringspopupen.",
+          "lueften_push": "«Luft ut nå» (kl. 7–22) og «Lukk vinduet» (kl. 7–23) etter 10 min, CO₂ over 2500 ppm med en gang. Tomt = ingen pushvarsler.",
+          "lueften_personen": "«Luft ut nå» bare når en av disse personene er hjemme. Tomt = hvem som helst.",
+          "update_push": "Ett pushvarsel per ny versjon til de valgte mobilene. Trykk på det for å åpne Casora-oppdateringene. Tomt = av.",
+          "beta_updates": "Prøv nye funksjoner tidligere. Betaer kan ha feil. Bruker du Marketplace, slår du på betaer der i stedet."
+        }
+      }
+    },
+    "error": {
+      "invalid_plan": "Ugyldig tid. Tillatt: Av, Automatisk eller f.eks. «sun 18:00».",
+      "invalid": "Ugyldig verdi."
+    }
+  },
+  "selector": {
+    "ki_plan": {
+      "options": {
+        "off": "Av",
+        "auto": "Automatisk"
+      }
+    },
+    "ki_plan_update": {
+      "options": {
+        "off": "Av",
+        "daily": "Daglig",
+        "manual": "Bare ved knappetrykk"
+      }
+    },
+    "ai_choice": {
+      "options": {
+        "mcp": "Din egen assistent (MCP)"
+      }
+    }
+  },
+  "services": {
+    "energie_coach": {
+      "name": "Energicoach",
+      "description": "Vurderer forrige ukes data fra energidashbordet med KI.",
+      "fields": {}
+    },
+    "heizungs_coach": {
+      "name": "Varmecoach",
+      "description": "Vurderer forrige ukes oppvarmingstid og temperaturer med KI.",
+      "fields": {
+        "nur_heizsaison": {
+          "name": "Bare i fyringssesongen",
+          "description": "Bare i fyringssesongen"
+        }
+      }
+    },
+    "lueftungs_coach": {
+      "name": "Luftecoach",
+      "description": "Vurderer forrige ukes luftfuktighet, CO₂ og vindusåpninger med KI.",
+      "fields": {}
+    },
+    "kamera_beschreiben": {
+      "name": "Beskriv kamerabilde",
+      "description": "Lar KI-en beskrive det gjeldende kamerabildet.",
+      "fields": {
+        "entity_id": {
+          "name": "Entitet",
+          "description": "Entitet"
+        }
+      }
+    },
+    "pflanzen_doktor": {
+      "name": "Plantedoktor",
+      "description": "Stelletips for en plante ut fra 7 dager med måleverdier.",
+      "fields": {
+        "plant": {
+          "name": "Plante",
+          "description": "Plante"
+        }
+      }
+    },
+    "aquarium_doktor": {
+      "name": "Akvariedoktor",
+      "description": "KI-vurdering av et akvarium ut fra 7 dager med temperatur, utstyr, lys og lekkasjesensor.",
+      "fields": {
+        "temp": {
+          "name": "Temperatursensor",
+          "description": "Vanntemperaturen i akvariet"
+        },
+        "name": {
+          "name": "Navn",
+          "description": "Navnet på akvariet"
+        },
+        "devices": {
+          "name": "Utstyr",
+          "description": "Liste over enheter: label, entity, power"
+        },
+        "light": {
+          "name": "Lys",
+          "description": "Akvarielys"
+        },
+        "leak": {
+          "name": "Lekkasjesensor",
+          "description": "Lekkasjesensor ved akvariet"
+        }
+      }
+    },
+    "ebike_check": {
+      "name": "Sykkelsjekk",
+      "description": "KI-vurdering av elsykkelen: service, slitasje etter kjørelengde og batteristell.",
+      "fields": {
+        "entities": {
+          "name": "Entiteter",
+          "description": "Sykkelens entiteter"
+        },
+        "name": {
+          "name": "Navn",
+          "description": "Navnet på sykkelen"
+        }
+      }
+    },
+    "update_pruefen": {
+      "name": "Sjekk oppdatering med KI",
+      "description": "Sjekker versjonsmerknadene til ventende oppdateringer mot dette systemet.",
+      "fields": {
+        "entity_id": {
+          "name": "Entitet",
+          "description": "Entitet"
+        }
+      }
+    },
+    "update_bestaetigen": {
+      "name": "Bekreft KI-sjekk",
+      "description": "Låser opp «Oppdater» etter at advarselen er lest.",
+      "fields": {
+        "entity_id": {
+          "name": "Entitet",
+          "description": "Entitet"
+        }
+      }
+    },
+    "rezept_neu": {
+      "name": "Ny oppskriftsidé",
+      "description": "Lar KI-en foreslå en ukens oppskrift.",
+      "fields": {}
+    },
+    "rezept_auf_liste": {
+      "name": "Ingredienser til handlelisten",
+      "description": "Legger oppskriftens ingredienser i handlelisten.",
+      "fields": {}
+    },
+    "umstellen": {
+      "name": "Bytt til Casora-navn",
+      "description": "Konverterer eldre dashbord til Casora-navn (med sikkerhetskopi).",
+      "fields": {
+        "probelauf": {
+          "name": "Bare tell, ikke endre noe",
+          "description": "Bare tell, ikke endre noe"
+        }
+      }
+    },
+    "einrichten": {
+      "name": "Sett opp",
+      "description": "Oppretter manglende Casora-hjelpere og -skript (kjøres automatisk ved oppstart) og melder fra om det som ikke kunne opprettes."
+    },
+    "setup_overview": {
+      "name": "Oppsettsoversikt",
+      "description": "Bare lesing: rom, enheter uten område og enheter som ennå ikke ligger på noen Casora-flis, hver med en foreslått flistype. For din egen assistent, for eksempel via en MCP-server."
+    },
+    "setup_plan": {
+      "name": "Foreslå en inndeling",
+      "description": "Sjekker en foreslått inndeling (hvilken enhet som får en flis i hvilket område, med flisnavn og -type) og svarer med en forhåndsvisning. Endrer ikke noe dashbord: Casora Studio viser forslaget, du sjekker det, legger til flisene og lagrer. For din egen assistent, for eksempel via en MCP-server.",
+      "fields": {
+        "dashboard": {
+          "name": "Dashbord",
+          "description": "Adressen (url_path) til et Casora-dashbord. Tomt: det eneste, ellers det første."
+        },
+        "rooms": {
+          "name": "Rom",
+          "description": "Liste med (area_id, devices: [(device_id, name?, tile?)]): name er flisnavnet, tile flistypen (tomt: Casoras forslag)."
+        }
+      }
+    },
+    "set_timer": {
+      "name": "Sett tidsur",
+      "description": "Slår en entitet av eller på etter et antall minutter. Erstatter et eksisterende tidsur for samme entitet. Når tidsuret er ute, utløser Casora hendelsen casora_timer_finished (entity_id, action, reason: expired, manual eller cancelled). Kan svare med entity_id, at og start.",
+      "fields": {
+        "entity_id": {
+          "name": "Entitet",
+          "description": "Entiteten som skal slås av eller på"
+        },
+        "minutes": {
+          "name": "Minutter",
+          "description": "Etter hvor mange minutter (heltall, 1–1440)"
+        },
+        "action": {
+          "name": "Handling",
+          "description": "turn_off (standard) eller turn_on"
+        }
+      }
+    },
+    "cancel_timer": {
+      "name": "Avbryt tidsur",
+      "description": "Fjerner tidsuret til en entitet (hendelsen casora_timer_finished med reason cancelled).",
+      "fields": {
+        "entity_id": {
+          "name": "Entitet",
+          "description": "Entitet"
+        }
+      }
+    },
+    "ai_generate": {
+      "name": "Generer med KI",
+      "description": "Som KI-oppgave: generer data, men uten valgt KI brukes den første KI-oppgaven. Brukes av Casoras KI-flyter.",
+      "fields": {
+        "task_name": {
+          "name": "Oppgavenavn",
+          "description": "Navnet på oppgaven."
+        },
+        "instructions": {
+          "name": "Instruksjoner",
+          "description": "Hva KI-en skal gjøre."
+        },
+        "entity_id": {
+          "name": "KI-oppgave",
+          "description": "Tomt: den foretrukne KI-oppgaven fra innstillingene, ellers den første."
+        },
+        "structure": {
+          "name": "Struktur",
+          "description": "Feltene i svaret."
+        },
+        "attachments": {
+          "name": "Vedlegg",
+          "description": "Bilder og andre medier."
+        }
+      }
+    },
+    "light_smart_toggle": {
+      "name": "Smart lysbryter",
+      "description": "Slår et lys eller en lysgruppe av eller på. Ved avslåing husker Casora hvilke lamper som var på, og slår på akkurat de samme igjen.",
+      "fields": {
+        "light_entity": {
+          "name": "Lys",
+          "description": "Lys eller lysgruppe"
+        }
+      }
+    },
+    "thermostat_overlay_toggle": {
+      "name": "Vis/skjul termostatkontroller",
+      "description": "Åpner temperaturkontrollene til en termostatflis, lukker dem ved et nytt trykk eller bytter til en annen flis.",
+      "fields": {
+        "thermostat_entity_id": {
+          "name": "Flis",
+          "description": "Nøkkelen til termostatflisen det ble trykket på"
+        }
+      }
+    },
+    "actions_overlay_toggle": {
+      "name": "Vis/skjul handlinger",
+      "description": "Åpner handlingene til en flis, lukker dem ved et nytt trykk eller bytter til en annen flis.",
+      "fields": {
+        "actions_entity_id": {
+          "name": "Flis",
+          "description": "Nøkkelen til flisen det ble trykket på"
+        }
+      }
+    },
+    "restart_toggle": {
+      "name": "Omstart med bekreftelse",
+      "description": "Første trykk ber om bekreftelse, andre trykk starter enheten på nytt og viser «Ferdig», og et trykk på det skjuler det.",
+      "fields": {
+        "button_entity": {
+          "name": "Omstartsknapp",
+          "description": "Knappen som starter enheten på nytt"
+        },
+        "helper_entity": {
+          "name": "Bekreftelseshjelper",
+          "description": "Bryteren som viser bekreftelsen"
+        },
+        "done_entity": {
+          "name": "Ferdig-hjelper",
+          "description": "Bryteren som viser «Ferdig»"
+        }
+      }
+    },
+    "ai_jobs": {
+      "name": "Åpne KI-jobber",
+      "description": "Bare lesing: KI-jobbene som venter på din egen assistent (KI-valget «Din egen assistent (MCP)»), med instruksjoner, svarfelt og vedlegg."
+    },
+    "ai_answer": {
+      "name": "Besvar en KI-jobb",
+      "description": "Din egen assistent besvarer en åpen KI-jobb. Sjekker svaret mot jobbens felt og returnerer ok eller feilene.",
+      "fields": {
+        "job_id": {
+          "name": "Jobb",
+          "description": "job_id fra casora.ai_jobs."
+        },
+        "data": {
+          "name": "Svar",
+          "description": "Et objekt med nøklene til jobbens felt."
+        }
+      }
+    },
+    "ai_cancel": {
+      "name": "Avbryt en KI-jobb",
+      "description": "Forkaster en åpen KI-jobb; funksjonen som venter på den, melder en feil.",
+      "fields": {
+        "job_id": {
+          "name": "Jobb",
+          "description": "job_id fra casora.ai_jobs."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "media_paused": {
+        "name": "Casora Medier pauset"
+      },
+      "lueften": {
+        "name": "Casora Lufting"
+      },
+      "energie": {
+        "name": "Casora Energicoach"
+      },
+      "heizung": {
+        "name": "Casora Varmecoach"
+      },
+      "lueftung": {
+        "name": "Casora Luftecoach"
+      },
+      "rezept": {
+        "name": "Casora Ukens oppskrift"
+      },
+      "kamera": {
+        "name": "Casora Kamera-KI"
+      },
+      "pflanzen": {
+        "name": "Casora Plante-KI"
+      },
+      "update": {
+        "name": "Casora KI-analyse av oppdatering"
+      },
+      "aquarium": {
+        "name": "Casora Akvarie-KI"
+      },
+      "ebike": {
+        "name": "Casora Elsykkel-KI"
+      },
+      "timers": {
+        "name": "Casora Tidsur"
+      }
+    },
+    "binary_sensor": {
+      "lueften_hinweis": {
+        "name": "Casora Luftetips"
+      },
+      "solar_tipp": {
+        "name": "Casora Soltips"
+      }
+    }
+  },
+  "exceptions": {
+    "timer_domain_blocked": {
+      "message": "Tidsur er ikke tillatt for {domain}: {entity_id}"
+    },
+    "timer_entity_not_found": {
+      "message": "Fant ikke entiteten: {entity_id}"
+    },
+    "timer_invalid_minutes": {
+      "message": "Ugyldig antall minutter: {minutes}. Bruk et heltall fra 1 til {max}."
+    },
+    "setup_plan_no_dashboard": {
+      "message": "Det finnes ikke noe Casora-dashbord ennå. Opprett et i Casora Studio først."
+    },
+    "setup_plan_not_casora": {
+      "message": "{dashboard} er ikke et Casora-dashbord. Casora-dashbord: {dashboards}"
+    }
+  },
+  "issues": {
+    "kept_scripts": {
+      "title": "Casora beholdt noen gamle skript",
+      "description": "Tidligere Casora-versjoner la skript inn i scripts.yaml. Casora har fjernet dem, men beholdt disse fordi de fortsatt er i bruk, er endret av deg eller ikke står i scripts.yaml: {scripts}. Casoras kort trenger dem ikke lenger (de bruker integrasjonens egne handlinger, som casora.light_smart_toggle). Trenger du dem heller ikke selv, kan du slette dem under Innstillinger › Automasjoner og scener › Skript."
+    }
+  }
+}

@@ -227,6 +227,22 @@ TEXT: dict[str, dict[str, str]] = {
         "by": "por",
         "and": "e",
     },
+    "nb": {
+        "title": "Casora har ryddet opp",
+        "intro": "Casora har fjernet gamle oppføringer:",
+        "scripts": "{n} skript fra tidligere versjoner",
+        "script": "1 skript fra en tidligere versjon",
+        "file": "filen {path}",
+        "end": "Casora trenger dem ikke lenger.",
+        "kept": "Casora har beholdt:",
+        "file_failed": "Filen {path} kunne ikke slettes. Casora trenger den ikke lenger, du kan slette den selv.",
+        "in_use": "er fortsatt i bruk",
+        "edited": "er endret av deg",
+        "not_in_scripts_yaml": "står ikke i scripts.yaml",
+        "failed": "kunne ikke slettes",
+        "by": "av",
+        "and": "og",
+    },
 }
 
 

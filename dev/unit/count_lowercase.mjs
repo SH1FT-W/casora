@@ -44,7 +44,7 @@ assert.equal(tr('en', '3 an'), '3 on');
 assert.equal(tr('en', '2 offen'), '2 open');
 assert.equal(tr('en', '2 schwach'), '2 low');
 assert.equal(tr('en', '3 verfügbar'), '3 available');
-for (const lang of ['es', 'fr', 'it', 'nl', 'pl', 'pt']) {
+for (const lang of ['es', 'fr', 'it', 'nl', 'pl', 'pt', 'nb']) {
   for (const s of ['3 an', '2 offen', '2 schwach', '3 verfügbar']) assert.ok(tr(lang, s), lang + ': ' + s);
 }
 // Studio (English source, German table): „3 on“ → „3 an“.

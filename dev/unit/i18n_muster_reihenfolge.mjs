@@ -27,7 +27,7 @@ const EXPECT = [
 for (const [de, want] of EXPECT) assert.equal(en(de), want, de);
 
 // These texts must not stay German in any other language.
-for (const lang of ['es', 'fr', 'it', 'nl', 'pl', 'pt']) {
+for (const lang of ['es', 'fr', 'it', 'nl', 'pl', 'pt', 'nb']) {
   const tr = translator(lang);
   for (const [de] of EXPECT) {
     const out = tr(de);

@@ -34,7 +34,7 @@ assert.ok(hm.indexOf('id: "howto"') > 0 && hm.indexOf('id: "howto"') < hm.indexO
 assert.ok(/if \(id === "howto"\) return this\._helpTopics\(\);/.test(hm));
 
 // Every text in every Studio language.
-for (const l of ['de', 'es', 'fr', 'it', 'nl', 'pl', 'pt']) {
+for (const l of ['de', 'es', 'fr', 'it', 'nl', 'pl', 'pt', 'nb']) {
   const T = JSON.parse(read(`translations/panel/${l}.json`)).exact;
   ['How do I …?', 'Show me', 'Keep my order', 'Help'].concat(H.flatMap((h) => [h.title, h.text]))
     .forEach((k) => assert.ok(T[k], l + ': ' + k));

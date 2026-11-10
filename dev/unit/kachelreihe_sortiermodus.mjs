@@ -152,7 +152,7 @@ delete win.CASORA_SORT_MODE;
     assert.ok('tile_sort' in tpl.casora_mobile_bg.variables, 'casora_mobile_bg declares tile_sort (phone mirror)');
   }
   const hint = /hint: "([^"]+)"/.exec(field)[1];
-  for (const lang of ['de', 'es', 'fr', 'it', 'nl', 'pl', 'pt']) {
+  for (const lang of ['de', 'es', 'fr', 'it', 'nl', 'pl', 'pt', 'nb']) {
     const ex = JSON.parse(read(`custom_components/casora/translations/panel/${lang}.json`)).exact;
     for (const k of ['Sort tiles', 'After a short pause', 'Only when opening', 'Right away', hint]) assert.ok(ex[k], `${lang}: ${k}`);
   }

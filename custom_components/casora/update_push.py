@@ -41,6 +41,7 @@ TEXT = {
     "nl": ("Casora {v} is er", "Nieuwe versie beschikbaar"),
     "pl": ("Casora {v} już jest", "Dostępna nowa wersja"),
     "pt": ("Já chegou o Casora {v}", "Nova versão disponível"),
+    "nb": ("Casora {v} er her", "Ny versjon tilgjengelig"),
 }
 
 

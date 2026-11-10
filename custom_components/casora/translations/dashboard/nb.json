@@ -1,0 +1,14 @@
+{
+  "filter.all": "Hjem",
+  "filter.climate": "Klima",
+  "filter.energy": "Energi",
+  "filter.lights": "Belysning",
+  "filter.media": "Medier",
+  "filter.presence": "Personer",
+  "filter.security": "Sikkerhet",
+  "presence.all_away": "Alle borte",
+  "presence.all_home": "Alle hjemme",
+  "presence.group.title": "Personer",
+  "presence.n_away": "{n} borte",
+  "presence.person": "Person"
+}

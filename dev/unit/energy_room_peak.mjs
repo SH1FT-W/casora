@@ -199,7 +199,7 @@ assert.equal(calls.at(-1).o.trend, '25 % vom Haus', 'house share first');
 assert.equal(asked.length, n0, 'no scale asked when the house is known');
 
 // Every language has both lines; the patterns match the non-breaking lines.
-for (const l of ['en', 'fr', 'es', 'it', 'nl', 'pt', 'pl']) {
+for (const l of ['en', 'fr', 'es', 'it', 'nl', 'pt', 'pl', 'nb']) {
   const j = JSON.parse(fs.readFileSync(new URL(`../../custom_components/casora/translations/dashboard/phrases/${l}.json`, import.meta.url), 'utf8'));
   const all = Object.values(j).flat().filter((x) => Array.isArray(x));
   for (const [key, line, val] of [['^Spitze\\s24', 'Spitze 24 Std.: 2,9 kW', '2,9 kW'], ['^Üblich\\sbis','Üblich bis 500 W', '500 W']]) {

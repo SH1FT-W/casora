@@ -56,7 +56,7 @@ assert.match(zoom, /clientY - y0 > 80/, 'swipe down does not close the big view'
 assert.doesNotMatch(zoom, /appendChild|insertBefore/, 'big view moves the picture (the live stream would restart)');
 const tpl = JSON.parse(rd('custom_components/casora/panel/casora-templates.json')).templates.casora_popup_camera;
 assert.ok(/stage\('image', \{ html: streamHtml, zoom: true,/.test(JSON.stringify(tpl)), 'camera popup does not ask for the big view');
-for (const l of ['en', 'es', 'fr', 'it', 'nl', 'pl', 'pt']) {
+for (const l of ['en', 'es', 'fr', 'it', 'nl', 'pl', 'pt', 'nb']) {
   const ph = JSON.parse(rd(`custom_components/casora/translations/dashboard/phrases/${l}.json`));
   assert.ok(ph.exact['Vergrößern'] && ph.exact['Verkleinern'], `phrases ${l}: Vergrößern/Verkleinern missing`);
 }

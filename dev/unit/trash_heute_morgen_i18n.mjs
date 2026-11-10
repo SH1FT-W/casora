@@ -31,7 +31,7 @@ assert.equal(en('Heute 3'), '3 today');
 assert.equal(en('Heute 14:05'), 'Today 14:05');
 
 const DAY = /\b(Heute|Morgen)\b/;
-for (const lang of ['es', 'fr', 'it', 'nl', 'pl', 'pt']) {
+for (const lang of ['es', 'fr', 'it', 'nl', 'pl', 'pt', 'nb']) {
   const tr = translator(lang);
   for (const de of ['Heute Restmüll', 'Morgen Restmüll', 'Heute Bio', 'Morgen Papier']) {
     const out = tr(de);

@@ -106,7 +106,7 @@ The washer and dryer popup shows progress, finish time, program and phase. When 
 
 A new dashboard sorts devices into their rooms (lights, then heating, air, blinds, media and appliances), groups a room once it has two or more lights, blinds or locks, and puts your favourites on Home.
 
-Casora ships room photos for 31 room types, by day and by night, for rooms without photos of their own. It follows Home Assistant's language: English, German, Spanish, French, Italian, Dutch, Polish and Portuguese.
+Casora ships room photos for 31 room types, by day and by night, for rooms without photos of their own. It follows Home Assistant's language: English, German, Spanish, French, Italian, Dutch, Polish, Portuguese and Norwegian.
 
 **Known limits.** The e-bike tile is for bikes with the Bosch Smart System and reads the Bosch eBike integration (Marketplace: Xunil99/ha-bosch-ebike); other e-bikes show no values. The aquarium tile is not found automatically: add it in the Studio and pick the light, light profile, dosing pump buttons and sensors in its advanced fields.
 
