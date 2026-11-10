@@ -89,9 +89,11 @@ port_setzen() {
 import json, os, re, sys
 cfg, port, host = sys.argv[1], int(sys.argv[2]), sys.argv[3]
 st = os.path.join(cfg, ".storage", "http")
+migrated = False
 if os.path.exists(st):
     with open(st) as f:
         d = json.load(f)
+    migrated = bool(d.get("data", {}).get("yaml_migration_done"))
     s = d.setdefault("data", {}).setdefault("stable", {})
     s["server_port"] = port
     s["server_host"] = [host]
@@ -101,9 +103,11 @@ if os.path.exists(st):
     os.replace(st + ".neu", st)
 y = os.path.join(cfg, "configuration.yaml")
 t = open(y).read() if os.path.exists(y) else ""
-blk = f"http:\n  server_host: {host}\n  server_port: {port}\n"
+# Once HA has moved the http settings into .storage/http, an http: block in configuration.yaml is ignored
+# and HA warns (broken from 2027.2): then only remove it.
+blk = "" if migrated else f"http:\n  server_host: {host}\n  server_port: {port}\n"
 t2, n = re.subn(r"(?m)^http:[^\n]*\n(?:[ \t]+[^\n]*\n|[ \t]*\n(?=[ \t]))*", blk, t)
-if n == 0:
+if n == 0 and blk:
     t2 = t.rstrip("\n") + ("\n\n" if t else "") + blk
 if t2 != t:
     with open(y, "w") as f:
