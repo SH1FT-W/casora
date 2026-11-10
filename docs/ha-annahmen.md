@@ -168,6 +168,13 @@ Kern-Integrationen (Schlüssel im Test geprüft):
 - `cookidoo` (Rezept, `03-popups.js`, `ki.py`), `mealie` (Rezept als zweite Quelle, `03-popups.js`, `mealie_plan.py`, #140), `backup` (`03-popups.js`), `proximity` (`15-person.js`),
   `unifi` (Netzwerk, `00-finder.js`), `lamarzocco` (Kaffee, `25-coffee.js`), `tankerkoenig` (nur `platform`,
   `tanken.py`)
+- Ladesäulen in der Nähe (#168, `charging.py`): Standort des Autos aus dem `device_tracker` seines Geräts (Zustand
+  nicht `home`, Attribute `latitude`/`longitude`), sonst `hass.config.latitude/longitude`. Daten von Open Charge Map
+  (`/v3/poi`, Schlüssel im Kopf `X-API-Key`, `compact=false&verbose=false`): `AddressInfo.Title/AddressLine1/Town/
+  Latitude/Longitude`, `StatusTypeID` (100, 150, 200, 210 = nicht in Betrieb), `UsageTypeID` (2, 3 = privat),
+  `UsageCost` (Freitext), `OperatorInfo.Title`, `NumberOfPoints`, je `Connections`-Eintrag `PowerKW`, `CurrentTypeID`
+  (10/20 = AC, 30 = DC, fehlt oft), `Quantity`. Keine Live-Belegung. Tests `dev/unit/charging_parse_test.py`,
+  `dev/pytest/test_charging.py`.
 - Netzwerk-Kachel (#98, `00-finder.js` `netFields`/`network`, Test `dev/unit/network_finder.mjs`): `fritz`
   (`kb_s_received`/`kb_s_sent`, `is_connected`, `external_ip`/`external_ipv6`), `upnp` (`download_speed`/`upload_speed`,
   `wan_status`, `external_ip`), `synology_dsm` (`network_up`/`network_down`; Plattform `synology_dsm` macht nie ein

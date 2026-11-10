@@ -374,6 +374,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     from .tanken import async_setup_tanken
 
     await async_setup_tanken(hass)
+    # Chargers near the car in the car popup (charging.py): asks only with the user's key, only on demand.
+    from .charging import async_setup_charging
+
+    await async_setup_charging(hass)
     # Live-Aktivitäten auf dem Handy (live_activity.py): Geräte wie die Kacheln finden, Store statt Optionen.
     from .live_activity import async_setup_live
 
@@ -478,6 +482,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     tk = hass.data.get(DOMAIN, {}).pop("tanken", None)
     if tk:
         tk.stop()
+    hass.data.get(DOMAIN, {}).pop("charging", None)
     live = hass.data.get(DOMAIN, {}).pop("live", None)
     if live:
         live.stop()
