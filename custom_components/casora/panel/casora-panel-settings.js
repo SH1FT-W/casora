@@ -144,6 +144,9 @@
         { k: "fuel", fuel: true, title: "Fuel prices",
           plain: "Gas stations nearby in the car window: price, distance, open or closed.",
           kw: "tanken benzin diesel e5 e10 tankstelle tankerkönig umkreis auto" },
+        { k: "charging", charging: true, title: "Chargers nearby",
+          plain: "Public chargers nearby in the car window: distance, power, AC or DC.",
+          kw: "laden ladesäule ladestation ladepunkt elektroauto e-auto wallbox openchargemap open charge map ac dc hpc umkreis auto" },
       ] },
     { id: "ai", label: "AI", icon: "assist", tone: "set-ai",
       sub: "What the AI checks for you, how often, and which AI does it.",
@@ -414,13 +417,15 @@
     const optionsDirty = (cs) => !!cs.opt && JSON.stringify(cleanOpts(cs.O)) !== cs.O0;
     // Fuel prices: draft without the key; F.key is only there when a new one was typed (or "" = remove).
     const tankenDirty = (cs) => !!cs.tk && JSON.stringify(cs.F) !== cs.F0;
+    // Chargers nearby (charging.py): draft without the key, like fuel prices.
+    const chargingDirty = (cs) => !!cs.ch && JSON.stringify(cs.C) !== cs.C0;
     const liveDirty = (self) => typeof self._csLiveDirty === "function" && self._csLiveDirty();
     // Issue 129: the design's scope ("all" / "casora") is a draft like the rest; the switch sits on the design page.
     const scopeDirty = (cs) => cs.scope !== undefined && cs.scope !== cs.scope0;
     // Settings for all dashboards (drafts above).
     P._csOwnDirty = function () {
       const cs = this._cs;
-      return !!cs && (settingsDirty(cs) || optionsDirty(cs) || tankenDirty(cs) || scopeDirty(cs) || liveDirty(this));
+      return !!cs && (settingsDirty(cs) || optionsDirty(cs) || tankenDirty(cs) || chargingDirty(cs) || scopeDirty(cs) || liveDirty(this));
     };
     // New structure: this dashboard's settings belong to the same bar – when they were changed on one of its pages
     // (_csDashTouched, set in _markDirty below). Edits elsewhere in the Studio keep "Done" as before.
@@ -438,6 +443,12 @@
       (r.cars || []).forEach((c) => { cars[c.device_id] = c.fuel; });
       cs.F = { radius: r.radius, cars };
       cs.F0 = JSON.stringify(cs.F);
+    };
+
+    const takeCharging = (cs, r) => {
+      cs.ch = r;
+      cs.C = { radius: r.radius };
+      cs.C0 = JSON.stringify(cs.C);
     };
 
     const takeOptions = (cs, r) => {
@@ -507,8 +518,17 @@
         cs.tkErr = e && e.code === "unknown_command" ? "old" : ((e && e.message) || String(e));
       }
       })();
+      const charging = (async () => {
+      try {
+        takeCharging(cs, await hass.callWS({ type: "casora/charging/get" }));
+        cs.chErr = null;
+      } catch (e) {
+        cs.ch = null;
+        cs.chErr = e && e.code === "unknown_command" ? "old" : ((e && e.message) || String(e));
+      }
+      })();
       const live = typeof this._csLiveLoad === "function" ? this._csLiveLoad(cs) : null;
-      await Promise.all([own, opts, fuel, live]);
+      await Promise.all([own, opts, fuel, charging, live]);
       cs.loaded = true;
       cs.at = Date.now();
       return true;
@@ -580,6 +600,13 @@
           takeTanken(cs, await this._hass.callWS(msg));
           cs.tkTest = null;
           done.push(t("Saved. Fuel prices follow within 10 minutes."));
+        }
+        if (chargingDirty(cs)) {
+          const msg = { type: "casora/charging/set", radius: cs.C.radius };
+          if (cs.C.key !== undefined) msg.key = cs.C.key;
+          takeCharging(cs, await this._hass.callWS(msg));
+          cs.chTest = null;
+          done.push(t("Saved. The car window shows chargers nearby now."));
         }
         if (scopeDirty(cs)) {
           const CT = window.casoraTheme;
@@ -935,6 +962,100 @@
       }
     };
 
+    // ── Chargers nearby (charging.py, issue 168) ─────────────────────────────
+    const chargingTestText = (r) => {
+      if (r.ok) {
+        return r.count ? t("Works: {n} chargers within {r} km.").replace("{n}", r.count).replace("{r}", r.radius)
+          : t("Works, but no charger within {r} km.").replace("{r}", r.radius);
+      }
+      const codes = { format: "The key doesn't have the right format.", key: "Open Charge Map doesn't accept this key.",
+        wait: "Asked just now. Please try again in a moment.", timeout: "Open Charge Map doesn't answer right now.",
+        net: "No connection to Open Charge Map.", limit: "Too many requests. Please try again later." };
+      return codes[r.code] ? t(codes[r.code]) : (t("Didn't work:") + " " + (r.message || r.code));
+    };
+    P._csFillCharging = function (host) {
+      const cs = this._cs;
+      if (!cs.ch) {
+        this._flowGroup(host, { footer: cs.chErr === "old"
+          ? t("This page appears after Home Assistant has restarted with the new Casora version.")
+          : t("The settings could not be loaded.") + " " + (cs.chErr || "") });
+        return;
+      }
+      const ch = cs.ch, C = cs.C;
+      if (!ch.key_set) host.appendChild(el("div", "cs-note", t("Not set up yet: the car popup shows no chargers. A free Open Charge Map key below turns them on.")));
+      // 1 · Key
+      const g = this._flowGroup(host, { header: t("1 · Key"),
+        footer: t("The key stays in Home Assistant and never goes to the browser. Casora asks Open Charge Map only when a car window asks for chargers, at most every 30 minutes per place.") });
+      const r1 = this._flowRow(g, { title: t("Free Open Charge Map key"), sub: t("Sign in there, then My Profile, My Apps") });
+      const a = el("a", "cs-tk-link", t("Get one") + " ↗");
+      a.href = "https://openchargemap.org/site/profile/applications";
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.style.cssText = "margin-left:auto;font-size:var(--t-callout);font-weight:600;color:var(--accent);text-decoration:none;white-space:nowrap";
+      r1.row.appendChild(a);
+      const r2 = this._flowRow(g, { title: t("Key"), sub: ch.key_set ? (C.key === "" ? t("Removed when you save") : t("Saved")) : t("Paste") });
+      r2.row.classList.add("casora-prow");
+      const box = el("div", "casora-pctl");
+      const inp = el("input", "fin cs-ch-key");
+      // Masked like a password; the stored key never comes back into the form.
+      inp.type = "password";
+      inp.autocomplete = "off";
+      inp.spellcheck = false;
+      inp.setAttribute("autocapitalize", "off");
+      inp.setAttribute("data-no-i18n", "");
+      inp.setAttribute("aria-label", t("Key"));
+      inp.placeholder = ch.key_set ? "••••••••-••••-••••-••••-••••••••••••" : "00000000-0000-0000-0000-000000000000";
+      inp.value = C.key || "";
+      inp.style.cssText = "flex:1 1 260px;min-width:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace";
+      inp.oninput = () => {
+        const v = inp.value.trim();
+        if (v) C.key = v; else delete C.key;
+        this._csBar();
+      };
+      box.appendChild(inp);
+      if (ch.key_set) box.appendChild(btn(t("Remove"), () => { C.key = ""; this._csRepaint(); }, true));
+      r2.row.appendChild(box);
+      // Test request: with the typed key, otherwise with the stored one.
+      const r3 = this._flowRow(g, { title: t("Test request"), sub: cs.chTest ? chargingTestText(cs.chTest) : t("Asks Open Charge Map once around your home.") });
+      r3.row.classList.add("casora-prow", "cs-ch-test");
+      const sub3 = r3.row.querySelector(".rtext > span");
+      if (sub3) {
+        sub3.setAttribute("data-no-i18n", "");
+        if (cs.chTest) sub3.style.color = cs.chTest.ok ? "var(--casora-studio-good, #34c759)" : "var(--casora-studio-danger, #ff453a)";
+      }
+      const tb = btn(cs.chBusy ? t("Testing…") : t("Test now"), async () => {
+        const key = C.key || null;
+        if (!key && !ch.key_set) { cs.chTest = { ok: false, code: "format" }; this._csRepaint(); return; }
+        cs.chBusy = true; this._csRepaint();
+        try { cs.chTest = await this._hass.callWS(key ? { type: "casora/charging/test", key } : { type: "casora/charging/test" }); }
+        catch (e) { cs.chTest = { ok: false, code: "error", message: (e && e.message) || String(e) }; }
+        cs.chBusy = false;
+        this._csRepaint();
+      }, true);
+      tb.disabled = !!cs.chBusy;
+      const c3 = el("div", "casora-pctl");
+      c3.appendChild(tb);
+      r3.row.appendChild(c3);
+      // 2 · Area
+      const g2 = this._flowGroup(host, { header: t("2 · Area"),
+        footer: t("Around home, or around the car while it is out and about (if it reports its location). Between 1 and 50 km.") });
+      const rr = this._flowRow(g2, { title: t("Radius"), sub: t("Around home") });
+      const wrap = el("div", "cs-num");
+      const rin = el("input", "cs-ch-radius");
+      rin.type = "text";
+      rin.inputMode = "decimal";
+      rin.value = String(C.radius).replace(".", decimalSep(this));
+      rin.setAttribute("aria-label", t("Radius"));
+      rin.oninput = () => {
+        const v = Number(rin.value.trim().replace(",", "."));
+        if (isFinite(v) && v > 0) C.radius = Math.max(1, Math.min(ch.radius_max || 50, Math.round(v * 10) / 10));
+        this._csBar();
+      };
+      wrap.append(rin, el("span", "", "km"));
+      rr.row.appendChild(wrap);
+      host.appendChild(el("p", "cs-lede", t("Data: Open Charge Map and its data providers, CC BY 4.0. No live availability and hardly any prices.")));
+    };
+
     // ── Fuel prices (tanken.py) ──────────────────────────────────────────────
     const FUEL_LABELS = { e5: "Super E5", e10: "Super E10", diesel: "Diesel", off: "Off" };
     const tankenTestText = (self, r) => {
@@ -1224,6 +1345,7 @@
       if (!cs || !cs.loaded) { box.appendChild(el("p", "cs-lede", t("Loading settings…"))); return; }
       if (b.page === "live") { if (typeof this._csFillLive === "function") this._csFillLive(box); dedupe(box); return; }
       if (b.fuel) { this._csFillTanken(box); dedupe(box); return; }
+      if (b.charging) { this._csFillCharging(box); dedupe(box); return; }
       if (b.hemma) { this._csHemmaGroup(box); if (!box.querySelector(".fgroup")) box.remove(); else dedupe(box); return; }
       if (b.personal) {
         if (typeof this._casoraPersonalGroups === "function") this._casoraPersonalGroups(box, cs.S, b.personal, rerender);

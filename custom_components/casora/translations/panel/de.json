@@ -3034,7 +3034,24 @@
     "Home Assistant's map right on the tile, with the title and who is home. A tap opens it large in the popup: persons and zones, geo location data if you like, the way people took and the zoom you set. Without the map: a small tile with a title and a symbol.": "Die Karte von Home Assistant direkt auf der Kachel, mit Titel und wer zu Hause ist. Antippen öffnet sie groß im Popup: Personen und Zonen, auf Wunsch Geo-Standortdaten, zurückgelegte Wege und den eingestellten Zoom. Ohne Karte: eine kleine Kachel mit Titel und Symbol.",
     "Heating circuit pump": "Heizkreispumpe",
     "Hot water circulation pump": "Warmwasser-Zirkulationspumpe",
-    "Frost protection": "Frostschutz"
+    "Frost protection": "Frostschutz",
+    "Chargers nearby": "Ladesäulen in der Nähe",
+    "Public chargers nearby in the car window: distance, power, AC or DC.": "Öffentliche Ladesäulen in der Nähe im Auto-Popup: Entfernung, Leistung, AC oder DC.",
+    "Not set up yet: the car popup shows no chargers. A free Open Charge Map key below turns them on.": "Noch nicht eingerichtet: Das Auto-Popup zeigt keine Ladesäulen. Ein kostenloser Open-Charge-Map-Schlüssel unten schaltet sie ein.",
+    "The key stays in Home Assistant and never goes to the browser. Casora asks Open Charge Map only when a car window asks for chargers, at most every 30 minutes per place.": "Der Schlüssel bleibt in Home Assistant und geht nie an den Browser. Casora fragt Open Charge Map nur, wenn ein Auto-Popup Ladesäulen zeigt, höchstens alle 30 Minuten je Ort.",
+    "Free Open Charge Map key": "Kostenloser Open-Charge-Map-Schlüssel",
+    "Sign in there, then My Profile, My Apps": "Dort anmelden, dann My Profile, My Apps",
+    "Get one": "Holen",
+    "Asks Open Charge Map once around your home.": "Fragt Open Charge Map einmal rund um Zuhause.",
+    "Works: {n} chargers within {r} km.": "Klappt: {n} Ladesäulen in {r} km.",
+    "Works, but no charger within {r} km.": "Klappt, aber keine Ladesäule in {r} km.",
+    "Open Charge Map doesn't accept this key.": "Open Charge Map nimmt diesen Schlüssel nicht an.",
+    "Open Charge Map doesn't answer right now.": "Open Charge Map antwortet gerade nicht.",
+    "No connection to Open Charge Map.": "Keine Verbindung zu Open Charge Map.",
+    "Too many requests. Please try again later.": "Zu viele Abfragen. Bitte später noch einmal.",
+    "Around home, or around the car while it is out and about (if it reports its location). Between 1 and 50 km.": "Rund um Zuhause, oder um das Auto, wenn es unterwegs ist und seinen Standort meldet. Zwischen 1 und 50 km.",
+    "Saved. The car window shows chargers nearby now.": "Gespeichert. Das Auto-Popup zeigt jetzt Ladesäulen in der Nähe.",
+    "Data: Open Charge Map and its data providers, CC BY 4.0. No live availability and hardly any prices.": "Daten: Open Charge Map und seine Datenlieferanten, CC BY 4.0. Keine Live-Belegung und kaum Preise."
   },
   "patterns": [
     [
