@@ -2633,6 +2633,10 @@
       var rowsT = [];
       var itT = tank() && tank().item ? tank().item(p, states) : null;
       if (itT) rowsT.push(itT);
+      /* Chargers nearby for a car with a battery only (45-charging.js, issue 168); no row without a key. */
+      var CH = window._casoraCharge;
+      var itC = r.ev && CH && CH.item ? CH.item(p, states) : null;
+      if (itC) rowsT.push(itC);
       return rowsT.length ? UI.group(rowsT, r.ev ? 'Akku' : 'Tank') : '';
     }
     if (name === 'state_s' || name === 'state_s3') {

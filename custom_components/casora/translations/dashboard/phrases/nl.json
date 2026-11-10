@@ -2889,7 +2889,23 @@
     "Zirkulationspumpe": "Circulatiepomp",
     "Frostschutz": "Vorstbeveiliging",
     "Vorlauftemperatur · 24 Std.": "Aanvoertemperatuur · 24 u",
-    "Außentemperatur · 24 Std.": "Buitentemperatuur · 24 u"
+    "Außentemperatur · 24 Std.": "Buitentemperatuur · 24 u",
+    "1 Ladepunkt": "1 laadpunt",
+    "Ladepunkte": "laadpunten",
+    "Daten: Open Charge Map, CC BY 4.0": "Gegevens: Open Charge Map, CC BY 4.0",
+    "Gleich noch einmal versuchen": "Probeer het zo nog eens",
+    "Keine Ladesäule in diesem Umkreis": "Geen laadpaal binnen deze straal",
+    "Keine Ladesäule passt zum Filter": "Geen laadpaal past bij het filter",
+    "Kostenlos": "Gratis",
+    "kostenlos": "gratis",
+    "Ladesäule": "Laadpaal",
+    "Ladesäulen": "Laadpalen",
+    "Ladesäulen werden geladen": "Laadpalen worden geladen",
+    "Open Charge Map antwortet gerade nicht": "Open Charge Map reageert nu niet",
+    "Open Charge Map nimmt den Schlüssel nicht an": "Open Charge Map accepteert de sleutel niet",
+    "Zu viele Abfragen, später noch einmal": "Te veel verzoeken, probeer het later opnieuw",
+    "Rund um Zuhause": "Rond huis",
+    "Rund um das Auto": "Rond de auto"
   },
   "patterns": [
     [
@@ -5163,6 +5179,22 @@
     [
       "^(\\d+) von (\\d+) zu Hause$",
       "{1} van {2} thuis"
+    ],
+    [
+      "^(\\d+) Ladepunkte$",
+      "{1} laadpunten"
+    ],
+    [
+      "^ab (\\d[\\d.,]*) km$",
+      "vanaf {1} km"
+    ],
+    [
+      "^Alle (\\d+)$",
+      "Alle {1}"
+    ],
+    [
+      "^Kostenlos (\\d+)$",
+      "Gratis {1}"
     ]
   ]
 }

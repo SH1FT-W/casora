@@ -52,6 +52,9 @@ async def async_setup(hass: HomeAssistant, config) -> bool:
     # Fake-Tankerkönig (tankerkoenig.py): Casora fragt im Testhaus nur dort, nie im Netz.
     from .tankerkoenig import setup as tankerkoenig_setup
     tankerkoenig_setup(hass)
+    # Fake Open Charge Map (openchargemap.py): chargers near the car, asked only there in the test house.
+    from .openchargemap import setup as openchargemap_setup
+    openchargemap_setup(hass)
     if DOMAIN in config and not hass.config_entries.async_entries(DOMAIN):
         hass.async_create_task(
             hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_IMPORT}, data={})

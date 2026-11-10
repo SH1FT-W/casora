@@ -150,7 +150,7 @@ Rooms, tiles, badges and popups, changed in place with a live preview for deskto
 
 - **No cloud.** Casora runs inside your Home Assistant: no account, no analytics, no telemetry. Dashboards, versions and settings are part of its regular backups.
 - **AI only if you ask.** With an AI task set up, Casora can place and name devices and adds helpers such as an energy, heating and ventilation coach, camera descriptions or a plant doctor. They run on your own provider, show a cost estimate first and all start switched off.
-- **Online only for what you use:** AI, integration logos from `brands.home-assistant.io`, the check for new Casora releases on GitHub and, if you use them, fuel prices, the football table and the status of your card requests. The full list is in the [guide](docs/guide.md#privacy-in-detail).
+- **Online only for what you use:** AI, integration logos from `brands.home-assistant.io`, the check for new Casora releases on GitHub and, if you use them, fuel prices, chargers nearby, the football table and the status of your card requests. The full list is in the [guide](docs/guide.md#privacy-in-detail).
 
 <a id="good-to-know"></a>
 ## Good to know

@@ -2882,7 +2882,23 @@
     "1 Offen": "1 åpen",
     "1 geöffnet": "1 åpen",
     "1 Schwach": "1 Lavt",
-    "1 Verfügbar": "1 tilgjengelig"
+    "1 Verfügbar": "1 tilgjengelig",
+    "1 Ladepunkt": "1 ladepunkt",
+    "Ladepunkte": "ladepunkter",
+    "Daten: Open Charge Map, CC BY 4.0": "Data: Open Charge Map, CC BY 4.0",
+    "Gleich noch einmal versuchen": "Prøv igjen om litt",
+    "Keine Ladesäule in diesem Umkreis": "Ingen ladestasjon innenfor denne radiusen",
+    "Keine Ladesäule passt zum Filter": "Ingen ladestasjon passer til filteret",
+    "Kostenlos": "Gratis",
+    "kostenlos": "gratis",
+    "Ladesäule": "Ladestasjon",
+    "Ladesäulen": "Ladestasjoner",
+    "Ladesäulen werden geladen": "Laster ladestasjoner",
+    "Open Charge Map antwortet gerade nicht": "Open Charge Map svarer ikke akkurat nå",
+    "Open Charge Map nimmt den Schlüssel nicht an": "Open Charge Map godtar ikke nøkkelen",
+    "Zu viele Abfragen, später noch einmal": "For mange forespørsler, prøv igjen senere",
+    "Rund um Zuhause": "Rundt hjemmet",
+    "Rund um das Auto": "Rundt bilen"
   },
   "patterns": [
     [
@@ -5156,6 +5172,22 @@
     [
       "^(\\d+) von (\\d+) zu Hause$",
       "{1} av {2} hjemme"
+    ],
+    [
+      "^(\\d+) Ladepunkte$",
+      "{1} ladepunkter"
+    ],
+    [
+      "^ab (\\d[\\d.,]*) km$",
+      "fra {1} km"
+    ],
+    [
+      "^Alle (\\d+)$",
+      "Alle {1}"
+    ],
+    [
+      "^Kostenlos (\\d+)$",
+      "Gratis {1}"
     ]
   ]
 }

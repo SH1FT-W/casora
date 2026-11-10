@@ -12,6 +12,7 @@ WebSocket:
   casora/charging/get  (admin) → {key_set, radius, radius_max, status}
   casora/charging/set  (admin) ← {key?: str ("" = remove), radius?: km}
   casora/charging/test (admin) ← {key?: str} → {ok, count, message}
+  casora/charging/ready (any user) → {ready}
   casora/charging/list (any user) ← {device_id?: str} → {ready, origin, radius, updated, stations: […], error}
 """
 
@@ -380,6 +381,14 @@ async def ws_test(hass: HomeAssistant, connection: websocket_api.ActiveConnectio
     connection.send_result(msg["id"], await ch.async_test(msg.get("key")))
 
 
+@websocket_api.websocket_command({vol.Required("type"): "casora/charging/ready"})
+@callback
+def ws_ready(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
+    """Whether a key is set, for the row in the car popup. Asks nobody."""
+    ch = _ch(hass)
+    connection.send_result(msg["id"], {"ready": bool(ch and ch.ready)})
+
+
 @websocket_api.websocket_command({
     vol.Required("type"): "casora/charging/list",
     vol.Optional("device_id"): vol.Any(None, str),
@@ -398,7 +407,7 @@ async def async_setup_charging(hass: HomeAssistant) -> Charging:
     await ch.async_load()
     hass.data.setdefault(DOMAIN, {})["charging"] = ch
     if not hass.data[DOMAIN].get("charging_ws"):
-        for cmd in (ws_get, ws_set, ws_test, ws_list):
+        for cmd in (ws_get, ws_set, ws_test, ws_ready, ws_list):
             websocket_api.async_register_command(hass, cmd)
         hass.data[DOMAIN]["charging_ws"] = True
     return ch

@@ -2889,7 +2889,23 @@
     "Zirkulationspumpe": "Pompe de bouclage",
     "Frostschutz": "Protection antigel",
     "Vorlauftemperatur · 24 Std.": "Température de départ · 24 h",
-    "Außentemperatur · 24 Std.": "Température extérieure · 24 h"
+    "Außentemperatur · 24 Std.": "Température extérieure · 24 h",
+    "1 Ladepunkt": "1 point de charge",
+    "Ladepunkte": "points de charge",
+    "Daten: Open Charge Map, CC BY 4.0": "Données : Open Charge Map, CC BY 4.0",
+    "Gleich noch einmal versuchen": "Réessaie dans un instant",
+    "Keine Ladesäule in diesem Umkreis": "Aucune borne dans ce rayon",
+    "Keine Ladesäule passt zum Filter": "Aucune borne ne correspond au filtre",
+    "Kostenlos": "Gratuit",
+    "kostenlos": "gratuit",
+    "Ladesäule": "Borne",
+    "Ladesäulen": "Bornes",
+    "Ladesäulen werden geladen": "Chargement des bornes",
+    "Open Charge Map antwortet gerade nicht": "Open Charge Map ne répond pas pour l'instant",
+    "Open Charge Map nimmt den Schlüssel nicht an": "Open Charge Map n'accepte pas la clé",
+    "Zu viele Abfragen, später noch einmal": "Trop de requêtes, réessaie plus tard",
+    "Rund um Zuhause": "Autour de la maison",
+    "Rund um das Auto": "Autour de la voiture"
   },
   "patterns": [
     [
@@ -5163,6 +5179,22 @@
     [
       "^(\\d+) von (\\d+) zu Hause$",
       "{1} sur {2} à la maison"
+    ],
+    [
+      "^(\\d+) Ladepunkte$",
+      "{1} points de charge"
+    ],
+    [
+      "^ab (\\d[\\d.,]*) km$",
+      "à partir de {1} km"
+    ],
+    [
+      "^Alle (\\d+)$",
+      "Toutes {1}"
+    ],
+    [
+      "^Kostenlos (\\d+)$",
+      "Gratuit {1}"
     ]
   ]
 }

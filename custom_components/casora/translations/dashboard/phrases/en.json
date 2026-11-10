@@ -2871,7 +2871,23 @@
     "Zirkulationspumpe": "Circulation pump",
     "Frostschutz": "Frost protection",
     "Vorlauftemperatur · 24 Std.": "Supply temperature · 24 h",
-    "Außentemperatur · 24 Std.": "Outdoor temperature · 24 h"
+    "Außentemperatur · 24 Std.": "Outdoor temperature · 24 h",
+    "1 Ladepunkt": "1 charging point",
+    "Ladepunkte": "charging points",
+    "Daten: Open Charge Map, CC BY 4.0": "Data: Open Charge Map, CC BY 4.0",
+    "Gleich noch einmal versuchen": "Try again in a moment",
+    "Keine Ladesäule in diesem Umkreis": "No charger within this radius",
+    "Keine Ladesäule passt zum Filter": "No charger matches the filter",
+    "Kostenlos": "Free",
+    "kostenlos": "free",
+    "Ladesäule": "Charger",
+    "Ladesäulen": "Chargers",
+    "Ladesäulen werden geladen": "Loading chargers",
+    "Open Charge Map antwortet gerade nicht": "Open Charge Map is not answering right now",
+    "Open Charge Map nimmt den Schlüssel nicht an": "Open Charge Map does not accept the key",
+    "Zu viele Abfragen, später noch einmal": "Too many requests, try again later",
+    "Rund um Zuhause": "Around home",
+    "Rund um das Auto": "Around the car"
   },
   "patterns": [
     [
@@ -5145,6 +5161,22 @@
     [
       "^(\\d+) von (\\d+) zu Hause$",
       "{1} of {2} at home"
+    ],
+    [
+      "^(\\d+) Ladepunkte$",
+      "{1} charging points"
+    ],
+    [
+      "^ab (\\d[\\d.,]*) km$",
+      "from {1} km"
+    ],
+    [
+      "^Alle (\\d+)$",
+      "All {1}"
+    ],
+    [
+      "^Kostenlos (\\d+)$",
+      "Free {1}"
     ]
   ]
 }
