@@ -23,7 +23,7 @@ await check('keine eigene Zeile „Einstellungen“ (Unterseiten direkt unter de
 await check('Unterseiten direkt unter der Überschrift', cs === head + 1, side.map((k) => k.text));
 await check('Unterseiten vor „Updates“', cu < 0 || cs < cu, { cs, cu });
 const subs = side.filter((k) => /cs-sub/.test(k.cls)).map((k) => k.text);
-await check('die acht Kacheln als Zeilen (Aussehen zuerst)', subs.length === 8 && /^Aussehen/.test(subs[0]), subs);
+await check('die neun Kacheln als Zeilen (Aussehen zuerst)', subs.length === 9 && /^Aussehen/.test(subs[0]), subs);
 
 await page.evaluate(() => window.__pierce('.cs-sub')[0].click());
 await page.waitForTimeout(2500);

@@ -2904,7 +2904,20 @@
     "im Umkreis": "within the radius",
     "leer": "empty",
     "voll": "full",
-    "Der Akku ist gut gefüllt.": "The battery is well charged."
+    "Der Akku ist gut gefüllt.": "The battery is well charged.",
+    "Abend am Meer": "Evening by the sea",
+    "Alpenglühen": "Alpenglow",
+    "Aufgang": "Sunrise",
+    "Bergsee": "Mountain lake",
+    "Dünen": "Dunes",
+    "Fjord am Morgen": "Fjord in the morning",
+    "Landschaften": "Landscapes",
+    "Nebelwald": "Misty forest",
+    "Polarlicht": "Northern lights",
+    "Sanfte Hügel": "Rolling hills",
+    "Untergang": "Sunset",
+    "Winternacht": "Winter night",
+    "Canyon": "Canyon"
   },
   "patterns": [
     [
@@ -5210,6 +5223,14 @@
     [
       "^Schnellste, (.+)$",
       "Fastest, {1}"
+    ],
+    [
+      "^Noch (\\d+) Std\\. (\\d+) Min\\. Tageslicht$",
+      "{1} h {2} min of daylight left"
+    ],
+    [
+      "^Noch (\\d+) Min\\. Tageslicht$",
+      "{1} min of daylight left"
     ]
   ]
 }

@@ -2922,7 +2922,20 @@
     "im Umkreis": "nel raggio",
     "leer": "scarica",
     "voll": "carica",
-    "Der Akku ist gut gefüllt.": "La batteria è ben carica."
+    "Der Akku ist gut gefüllt.": "La batteria è ben carica.",
+    "Abend am Meer": "Sera sul mare",
+    "Alpenglühen": "Bagliore alpino",
+    "Aufgang": "Alba",
+    "Bergsee": "Lago di montagna",
+    "Dünen": "Dune",
+    "Fjord am Morgen": "Fiordo al mattino",
+    "Landschaften": "Paesaggi",
+    "Nebelwald": "Bosco nella nebbia",
+    "Polarlicht": "Aurora boreale",
+    "Sanfte Hügel": "Dolci colline",
+    "Untergang": "Tramonto",
+    "Winternacht": "Notte d’inverno",
+    "Canyon": "Canyon"
   },
   "patterns": [
     [
@@ -5228,6 +5241,14 @@
     [
       "^Schnellste, (.+)$",
       "La più veloce, {1}"
+    ],
+    [
+      "^Noch (\\d+) Std\\. (\\d+) Min\\. Tageslicht$",
+      "Ancora {1} h {2} min di luce"
+    ],
+    [
+      "^Noch (\\d+) Min\\. Tageslicht$",
+      "Ancora {1} min di luce"
     ]
   ]
 }

@@ -23,60 +23,44 @@
   var loc = function () { return window.casoraLocale ? window.casoraLocale() : 'de-DE'; };
   var langOf = function () { return String(loc()).slice(0, 2).toLowerCase(); };
 
+  // label: the name in the Studio (its texts are English at the source, translations/panel).
   S.KINDS = [
-    { id: 'himmel', label: 'Himmel' }, { id: 'land', label: 'Landschaften' }, { id: 'fotos', label: 'Fotos' },
-    { id: 'wort', label: 'Wortuhr' },
+    { id: 'himmel', label: 'Sky' }, { id: 'land', label: 'Landscapes' }, { id: 'fotos', label: 'Photos' },
+    { id: 'wort', label: 'Word clock' },
   ];
 
   // ── The time as people say it ────────────────────────────────────────────
   // Five-minute steps. A line marked acc is the part that changes most (drawn in the accent colour).
-  var NUM = {
-    de: ['zwölf', 'eins', 'zwei', 'drei', 'vier', 'fünf', 'sechs', 'sieben', 'acht', 'neun', 'zehn', 'elf'],
-    en: ['twelve', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven'],
-    nl: ['twaalf', 'een', 'twee', 'drie', 'vier', 'vijf', 'zes', 'zeven', 'acht', 'negen', 'tien', 'elf'],
-    nb: ['tolv', 'ett', 'to', 'tre', 'fire', 'fem', 'seks', 'sju', 'åtte', 'ni', 'ti', 'elleve'],
-    es: ['doce', 'una', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez', 'once'],
-    fr: ['douze', 'une', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf', 'dix', 'onze'],
-    it: ['dodici', 'una', 'due', 'tre', 'quattro', 'cinque', 'sei', 'sette', 'otto', 'nove', 'dieci', 'undici'],
-    pt: ['doze', 'uma', 'duas', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove', 'dez', 'onze'],
-    plN: ['dwunasta', 'pierwsza', 'druga', 'trzecia', 'czwarta', 'piąta', 'szósta', 'siódma', 'ósma', 'dziewiąta', 'dziesiąta', 'jedenasta'],
-    plG: ['dwunastej', 'pierwszej', 'drugiej', 'trzeciej', 'czwartej', 'piątej', 'szóstej', 'siódmej', 'ósmej', 'dziewiątej', 'dziesiątej', 'jedenastej'],
-  };
-  // Minute phrases per step (5 … 55). next: the phrase belongs to the coming hour.
-  var STEP = {
-    de: [['fünf nach'], ['zehn nach'], ['Viertel nach'], ['zwanzig nach'], ['fünf vor halb', 1], ['halb', 1], ['fünf nach halb', 1], ['zwanzig vor', 1], ['Viertel vor', 1], ['zehn vor', 1], ['fünf vor', 1]],
-    en: [['five past'], ['ten past'], ['quarter past'], ['twenty past'], ['twenty-five past'], ['half past'], ['twenty-five to', 1], ['twenty to', 1], ['quarter to', 1], ['ten to', 1], ['five to', 1]],
-    nl: [['vijf over'], ['tien over'], ['kwart over'], ['tien voor half', 1], ['vijf voor half', 1], ['half', 1], ['vijf over half', 1], ['tien over half', 1], ['kwart voor', 1], ['tien voor', 1], ['vijf voor', 1]],
-    nb: [['fem over'], ['ti over'], ['kvart over'], ['ti på halv', 1], ['fem på halv', 1], ['halv', 1], ['fem over halv', 1], ['ti over halv', 1], ['kvart på', 1], ['ti på', 1], ['fem på', 1]],
-    es: [['y cinco'], ['y diez'], ['y cuarto'], ['y veinte'], ['y veinticinco'], ['y media'], ['menos veinticinco', 1], ['menos veinte', 1], ['menos cuarto', 1], ['menos diez', 1], ['menos cinco', 1]],
-    fr: [['cinq'], ['dix'], ['et quart'], ['vingt'], ['vingt-cinq'], ['et demie'], ['moins vingt-cinq', 1], ['moins vingt', 1], ['moins le quart', 1], ['moins dix', 1], ['moins cinq', 1]],
-    it: [['e cinque'], ['e dieci'], ['e un quarto'], ['e venti'], ['e venticinque'], ['e mezza'], ['meno venticinque', 1], ['meno venti', 1], ['meno un quarto', 1], ['meno dieci', 1], ['meno cinque', 1]],
-    pt: [['e cinco'], ['e dez'], ['e um quarto'], ['e vinte'], ['e vinte e cinco'], ['e meia'], ['menos vinte e cinco', 1], ['menos vinte', 1], ['menos um quarto', 1], ['menos dez', 1], ['menos cinco', 1]],
-    pl: [['pięć po'], ['dziesięć po'], ['kwadrans po'], ['dwadzieścia po'], ['dwadzieścia pięć po'], ['wpół do', 1], ['za dwadzieścia pięć', 1], ['za dwadzieścia', 1], ['za kwadrans', 1], ['za dziesięć', 1], ['za pięć', 1]],
-  };
+  // The words per language as one piece of data (not texts of the interface: nothing here is translated).
+  // lang:hours 12,1…11 | the eleven five-minute steps (> = belongs to the coming hour) | lead | lead at one o'clock |
+  // word after a full hour | extra (de: „ein“ before Uhr; fr: the hour words; pl: the hours in the genitive).
+  var WORDS = {};
+  ('de:zwölf,eins,zwei,drei,vier,fünf,sechs,sieben,acht,neun,zehn,elf|fünf nach,zehn nach,Viertel nach,zwanzig nach,fünf vor halb>,halb>,fünf nach halb>,zwanzig vor>,Viertel vor>,zehn vor>,fünf vor>|Es ist|Es ist|Uhr|ein;en:twelve,one,two,three,four,five,six,seven,eight,nine,ten,eleven|five past,ten past,quarter past,twenty past,twenty-five past,half past,twenty-five to>,twenty to>,quarter to>,ten to>,five to>|It is|It is|o’clock|;nl:twaalf,een,twee,drie,vier,vijf,zes,zeven,acht,negen,tien,elf|vijf over,tien over,kwart over,tien voor half>,vijf voor half>,half>,vijf over half>,tien over half>,kwart voor>,tien voor>,vijf voor>|Het is|Het is|uur|;nb:tolv,ett,to,tre,fire,fem,seks,sju,åtte,ni,ti,elleve|fem over,ti over,kvart over,ti på halv>,fem på halv>,halv>,fem over halv>,ti over halv>,kvart på>,ti på>,fem på>|Klokken er|Klokken er||;es:doce,una,dos,tres,cuatro,cinco,seis,siete,ocho,nueve,diez,once|y cinco,y diez,y cuarto,y veinte,y veinticinco,y media,menos veinticinco>,menos veinte>,menos cuarto>,menos diez>,menos cinco>|Son las|Es la|en punto|;fr:douze,une,deux,trois,quatre,cinq,six,sept,huit,neuf,dix,onze|cinq,dix,et quart,vingt,vingt-cinq,et demie,moins vingt-cinq>,moins vingt>,moins le quart>,moins dix>,moins cinq>|Il est|Il est|pile| heure, heures;it:dodici,una,due,tre,quattro,cinque,sei,sette,otto,nove,dieci,undici|e cinque,e dieci,e un quarto,e venti,e venticinque,e mezza,meno venticinque>,meno venti>,meno un quarto>,meno dieci>,meno cinque>|Sono le|È l’|in punto|;pt:doze,uma,duas,três,quatro,cinco,seis,sete,oito,nove,dez,onze|e cinco,e dez,e um quarto,e vinte,e vinte e cinco,e meia,menos vinte e cinco>,menos vinte>,menos um quarto>,menos dez>,menos cinco>|São|É|em ponto|;pl:dwunasta,pierwsza,druga,trzecia,czwarta,piąta,szósta,siódma,ósma,dziewiąta,dziesiąta,jedenasta|pięć po,dziesięć po,kwadrans po,dwadzieścia po,dwadzieścia pięć po,wpół do>,za dwadzieścia pięć>,za dwadzieścia>,za kwadrans>,za dziesięć>,za pięć>|Jest|Jest||dwunastej,pierwszej,drugiej,trzeciej,czwartej,piątej,szóstej,siódmej,ósmej,dziewiątej,dziesiątej,jedenastej').split(';').forEach(function (row) {
+    var i = row.indexOf(':'), f = row.slice(i + 1).split('|');
+    WORDS[row.slice(0, i)] = { num: f[0].split(','), step: f[1].split(',').map(function (x) { return [x.replace('>', ''), />$/.test(x)]; }),
+      lead: f[2], lead1: f[3], full: f[4], extra: f[5] ? f[5].split(',') : [] };
+  });
   S.words = function (lang, h, m) {
-    var l = STEP[lang] ? lang : 'en';
+    var l = WORDS[lang] ? lang : 'en', W = WORDS[l];
     var step = Math.round(m / 5) % 12, hour = (h + (Math.round(m / 5) === 12 ? 1 : 0)) % 12;
-    var st = step ? STEP[l][step - 1] : null;
-    var hh = (hour + (st && st[1] ? 1 : 0)) % 12;
+    var st = step ? W.step[step - 1] : null;
+    var hh = (hour + (st && st[1] ? 1 : 0)) % 12, one = hh === 1;
     var line = function (t, acc) { return { t: t, acc: !!acc }; };
-    if (l === 'de') return step ? [line('Es ist'), line(st[0], 1), line(NUM.de[hh])] : [line('Es ist'), line(hh === 1 ? 'ein' : NUM.de[hh], 1), line('Uhr')];
-    if (l === 'en') return step ? [line('It is'), line(st[0], 1), line(NUM.en[hh])] : [line('It is'), line(NUM.en[hh], 1), line('o’clock')];
-    if (l === 'nl') return step ? [line('Het is'), line(st[0], 1), line(NUM.nl[hh])] : [line('Het is'), line(NUM.nl[hh], 1), line('uur')];
-    if (l === 'nb') return step ? [line('Klokken er'), line(st[0], 1), line(NUM.nb[hh])] : [line('Klokken er'), line(NUM.nb[hh], 1)];
     if (l === 'pl') {
       // po + genitive of this hour; wpół do + genitive of the coming one; za … + nominative of the coming one.
-      if (!step) return [line('Jest'), line(NUM.plN[hh], 1)];
-      var gen = step <= 6;
-      return [line('Jest'), line(st[0], 1), line(gen ? NUM.plG[hh] : NUM.plN[hh])];
+      if (!step) return [line(W.lead), line(W.num[hh], 1)];
+      return [line(W.lead), line(st[0], 1), line(step <= 6 ? W.extra[hh] : W.num[hh])];
     }
-    // Hour first: es, fr, it, pt.
-    var one = hh === 1;
-    var lead = { es: one ? 'Es la' : 'Son las', it: one ? 'È l’' : 'Sono le', pt: one ? 'É' : 'São', fr: 'Il est' }[l];
-    var hourT = l === 'fr' ? NUM.fr[hh] + (one ? ' heure' : ' heures') : NUM[l][hh];
-    var first = l === 'it' && one ? lead + hourT : lead + ' ' + hourT;
-    var tail = step ? st[0] : { es: 'en punto', it: 'in punto', pt: 'em ponto', fr: 'pile' }[l];
-    return [line(first), line(tail, 1)];
+    if (l === 'es' || l === 'fr' || l === 'it' || l === 'pt') {
+      // Hour first, then the minutes.
+      var hourT = l === 'fr' ? W.num[hh] + (one ? W.extra[0] : W.extra[1]) : W.num[hh];
+      var lead = one ? W.lead1 : W.lead;
+      return [line(l === 'it' && one ? lead + hourT : lead + ' ' + hourT), line(step ? st[0] : W.full, 1)];
+    }
+    if (step) return [line(W.lead), line(st[0], 1), line(W.num[hh])];
+    var out = [line(W.lead), line(l === 'de' && one ? W.extra[0] : W.num[hh], 1)];
+    if (W.full) out.push(line(W.full));
+    return out;
   };
 
   // ── Sun and sky ──────────────────────────────────────────────────────────
@@ -314,7 +298,9 @@
       var pts = function (to) { var d = ''; for (var i = 0; i <= 60; i++) { var p = at(to * i / 60); d += (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); } return d; };
       var p = share == null ? null : at(share);
       var left = sun && share != null ? Math.round((sun.set - +ctx.now) / 60000) : null;
-      var mid = share == null ? T('Nacht') : left >= 60 ? T('Noch ' + Math.floor(left / 60) + ' Std. ' + (left % 60) + ' Min. Tageslicht') : T('Noch ' + left + ' Min. Tageslicht');
+      // Whole sentences with placeholders: the translation works on the finished text.
+      var mid = share == null ? T('Nacht') : left >= 60 ? T('Noch {h} Std. {m} Min. Tageslicht'.replace('{h}', Math.floor(left / 60)).replace('{m}', left % 60))
+        : T('Noch {m} Min. Tageslicht'.replace('{m}', left));
       return '<div class="cs-bg" style="background:linear-gradient(180deg, ' + sky[0] + ' 0%, ' + sky[1] + ' 36%, ' + sky[2] + ' 74%, ' + sky[3] + ' 100%)"></div><div class="cs-in">'
         + '<div class="cs-top"><div><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div>'
         + (wx ? '<div class="cs-wx"><div class="cs-t"><img src="' + esc(wx.icon) + '" alt="">' + (wx.temp != null ? wx.temp + '°' : '') + '</div><p>' + esc(wx.text) + '</p></div>' : '') + '</div>'

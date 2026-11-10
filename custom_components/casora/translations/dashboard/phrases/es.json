@@ -2922,7 +2922,20 @@
     "im Umkreis": "en el radio",
     "leer": "vacía",
     "voll": "llena",
-    "Der Akku ist gut gefüllt.": "La batería está bien cargada."
+    "Der Akku ist gut gefüllt.": "La batería está bien cargada.",
+    "Abend am Meer": "Atardecer junto al mar",
+    "Alpenglühen": "Resplandor alpino",
+    "Aufgang": "Amanecer",
+    "Bergsee": "Lago de montaña",
+    "Dünen": "Dunas",
+    "Fjord am Morgen": "Fiordo por la mañana",
+    "Landschaften": "Paisajes",
+    "Nebelwald": "Bosque en la niebla",
+    "Polarlicht": "Aurora boreal",
+    "Sanfte Hügel": "Colinas suaves",
+    "Untergang": "Atardecer",
+    "Winternacht": "Noche de invierno",
+    "Canyon": "Cañón"
   },
   "patterns": [
     [
@@ -5228,6 +5241,14 @@
     [
       "^Schnellste, (.+)$",
       "El más rápido, {1}"
+    ],
+    [
+      "^Noch (\\d+) Std\\. (\\d+) Min\\. Tageslicht$",
+      "Quedan {1} h {2} min de luz"
+    ],
+    [
+      "^Noch (\\d+) Min\\. Tageslicht$",
+      "Quedan {1} min de luz"
     ]
   ]
 }

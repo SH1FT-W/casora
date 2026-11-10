@@ -16,7 +16,7 @@ const win = {};
 const doc = { createElement: () => ({ style: {}, classList: { add() {}, toggle() {}, contains() { return false; } }, setAttribute() {}, appendChild() {} }), getElementById: () => null };
 new Function('window', 'document', 'customElements', 'localStorage', src)(win, doc, { whenDefined: () => ({ then() {} }), get: () => null }, { getItem: () => null });
 const NEU = win.casoraSettingsMap && win.casoraSettingsMap.tiles;
-assert.ok(Array.isArray(NEU) && NEU.length === 8, 'eight tiles');
+assert.ok(Array.isArray(NEU) && NEU.length === 9, 'nine tiles');
 
 // The previous settings (26.11.9): pages, their personal sections, the dashboard sections the topics linked, the topic ids.
 const pageIds = ['design', 'home', 'calendar', 'alerts', 'dashboards', 'ai', 'outdoor', 'vent', 'live', 'fuel'];

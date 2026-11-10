@@ -2922,7 +2922,20 @@
     "im Umkreis": "dans le rayon",
     "leer": "vide",
     "voll": "pleine",
-    "Der Akku ist gut gefüllt.": "La batterie est bien chargée."
+    "Der Akku ist gut gefüllt.": "La batterie est bien chargée.",
+    "Abend am Meer": "Soir au bord de la mer",
+    "Alpenglühen": "Lueur alpine",
+    "Aufgang": "Lever",
+    "Bergsee": "Lac de montagne",
+    "Dünen": "Dunes",
+    "Fjord am Morgen": "Fjord au matin",
+    "Landschaften": "Paysages",
+    "Nebelwald": "Forêt dans la brume",
+    "Polarlicht": "Aurore boréale",
+    "Sanfte Hügel": "Douces collines",
+    "Untergang": "Coucher",
+    "Winternacht": "Nuit d’hiver",
+    "Canyon": "Canyon"
   },
   "patterns": [
     [
@@ -5228,6 +5241,14 @@
     [
       "^Schnellste, (.+)$",
       "La plus rapide, {1}"
+    ],
+    [
+      "^Noch (\\d+) Std\\. (\\d+) Min\\. Tageslicht$",
+      "Encore {1} h {2} min de jour"
+    ],
+    [
+      "^Noch (\\d+) Min\\. Tageslicht$",
+      "Encore {1} min de jour"
     ]
   ]
 }

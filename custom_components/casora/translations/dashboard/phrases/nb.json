@@ -2915,7 +2915,20 @@
     "leer": "tomt",
     "voll": "fullt",
     "Der Akku ist gut gefüllt.": "Batteriet er godt ladet.",
-    "Nebel": "Tåke"
+    "Nebel": "Tåke",
+    "Abend am Meer": "Kveld ved havet",
+    "Alpenglühen": "Alpeglød",
+    "Aufgang": "Soloppgang",
+    "Bergsee": "Fjellvann",
+    "Dünen": "Sanddyner",
+    "Fjord am Morgen": "Fjord om morgenen",
+    "Landschaften": "Landskap",
+    "Nebelwald": "Tåkeskog",
+    "Polarlicht": "Nordlys",
+    "Sanfte Hügel": "Bølgende åser",
+    "Untergang": "Solnedgang",
+    "Winternacht": "Vinternatt",
+    "Canyon": "Juv"
   },
   "patterns": [
     [
@@ -5221,6 +5234,14 @@
     [
       "^Schnellste, (.+)$",
       "Raskeste, {1}"
+    ],
+    [
+      "^Noch (\\d+) Std\\. (\\d+) Min\\. Tageslicht$",
+      "{1} t {2} min dagslys igjen"
+    ],
+    [
+      "^Noch (\\d+) Min\\. Tageslicht$",
+      "{1} min dagslys igjen"
     ]
   ]
 }
