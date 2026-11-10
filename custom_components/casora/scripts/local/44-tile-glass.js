@@ -132,7 +132,11 @@
       // Inside the tile's shadow root. A style on the page never reaches in here,
       // and an unstyled SVG path is black.
       style.textContent = [
-        '.cs-glass{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;border-radius:inherit;color:var(--primary-text-color,currentColor);}',
+        '.cs-glass{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;border-radius:inherit;',
+        'color:var(--casora-icon-color-current,var(--casora-tone-general,var(--casora-color-teal,var(--accent-color))));}',
+        '.cs-glass .cs-fill{fill:currentColor;fill-opacity:.34;}',
+        '.cs-glass .cs-line{fill:none;stroke:color-mix(in srgb,currentColor 68%,#000);stroke-width:1.75;',
+        'stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke;}',
         'ha-card > :not(.cs-glass){position:relative;z-index:1;}',
         '.cs-glass svg{position:absolute;inset:0;width:100%;height:100%;display:block;}',
         '.cs-chips{position:absolute;right:14px;bottom:14px;z-index:3;display:flex;flex-direction:column;',
@@ -159,10 +163,10 @@
     var ln = line(pts, 100, 48);
     var ar = area(pts, 100, 48);
     if (!ln) { svg.innerHTML = ''; return; }
-    // The card's own ink, not a white panel. A light wash under the line, the line itself readable.
-    svg.innerHTML = '<path d="' + ar + '" fill="currentColor" fill-opacity="0.07" stroke="none"/>'
-      + '<path d="' + ln + '" fill="none" stroke="currentColor" stroke-opacity="0.55" stroke-width="1.6"'
-      + ' stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>';
+    // Theme colour under the line, a darker stroke along the top. Classes, so the
+    // shadow root's own style supplies them.
+    svg.innerHTML = '<path class="cs-fill" d="' + ar + '"/>'
+      + '<path class="cs-line" d="' + ln + '"/>';
   }
 
   function paintChips(layer, h, ids) {
