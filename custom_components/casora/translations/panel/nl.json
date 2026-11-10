@@ -3002,8 +3002,8 @@
     "Tasks": "Taken",
     "Add list …": "Lijst toevoegen …",
     "Empty: every to-do list in your home.": "Leeg: alle takenlijsten in huis.",
-    "The clock needs the Time & Date integration with the option \"Time\".": "De klok heeft de integratie „Tijd en datum” met de optie „Tijd” nodig.",
-    "Add Time & Date": "„Tijd en datum” toevoegen"
+    "To use the clock, add the Time & Date integration and choose \"Time\".": "Om de klok te gebruiken, voeg de integratie “Tijd en datum” toe en kies “Tijd”.",
+    "Add Time & Date": "“Tijd en datum” toevoegen"
   },
   "patterns": [
     [

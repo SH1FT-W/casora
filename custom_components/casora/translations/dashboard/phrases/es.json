@@ -2867,7 +2867,7 @@
     "Abhaken": "Marcar",
     "Wieder öffnen": "Reabrir",
     "Eintrag löschen?": "¿Eliminar esta entrada?",
-    "Uhr braucht Uhrzeit & Datum": "El reloj necesita Fecha y hora"
+    "Uhr ohne Zeitsensor – tippen zum Einrichten": "El reloj no tiene sensor de hora: toca para configurarlo"
   },
   "patterns": [
     [

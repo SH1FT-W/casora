@@ -2867,7 +2867,7 @@
     "Abhaken": "Afvinken",
     "Wieder öffnen": "Heropenen",
     "Eintrag löschen?": "Dit item verwijderen?",
-    "Uhr braucht Uhrzeit & Datum": "Klok heeft Tijd en datum nodig"
+    "Uhr ohne Zeitsensor – tippen zum Einrichten": "Klok heeft geen tijdsensor – tik om in te stellen"
   },
   "patterns": [
     [

@@ -2849,7 +2849,7 @@
     "Abhaken": "Tick off",
     "Wieder öffnen": "Reopen",
     "Eintrag löschen?": "Delete this item?",
-    "Uhr braucht Uhrzeit & Datum": "Clock needs Time & Date"
+    "Uhr ohne Zeitsensor – tippen zum Einrichten": "Clock has no time sensor – tap to set it up"
   },
   "patterns": [
     [

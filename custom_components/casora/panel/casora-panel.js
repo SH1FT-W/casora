@@ -2329,7 +2329,7 @@ const mediaSources = () => [
 ];
 
 // #30: the clock reads sensor.time when "Time sensor" is empty ("Automatic"); the sensor needs HA's Time & Date integration.
-const CLOCK_NEEDS_TIME_DATE = "The clock needs the Time & Date integration with the option \"Time\".";
+const CLOCK_NEEDS_TIME_DATE = "To use the clock, add the Time & Date integration and choose \"Time\".";
 // HA's "add this integration" page (My Home Assistant); the setup check and the clock warning use it.
 const flowStartUrl = (domain) => "https://my.home-assistant.io/redirect/config_flow_start/?domain=" + encodeURIComponent(domain);
 // True when this field is the clock's Time sensor and the clock reads a missing sensor.time (also shows the Add button).

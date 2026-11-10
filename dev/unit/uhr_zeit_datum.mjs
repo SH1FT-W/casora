@@ -108,28 +108,40 @@ const run = (admin, states, input) => {
   const hass = { locale: { time_format: '24' } };
   const vars = {};
   for (const [k, v] of Object.entries(wrapper.variables)) vars[k] = typeof v === 'string' && v.startsWith('[[[') ? expr(v, { variables: input, hass }) : v;
-  const win = { casoraEsc: (t) => String(t), casoraIsAdmin: () => admin };
+  const win = { casoraEsc: (t) => String(t), casoraIsAdmin: () => admin, casoraTr: (t) => t };
   new Function('window', ruleSrc)(win);
   return new Function('window', 'states', 'variables', 'return (function(){' + tpl.replace(/^\[\[\[|\]\]\]\s*$/g, '') + '})()')(win, states, vars);
 };
 const strip = (h) => h.replace(/<[^>]*>/g, '');
-const hint = strip(run(true, none, { time_entity: 'sensor.time' }));
-assert.ok(hint.length > 0 && /Uhrzeit & Datum/.test(hint), 'admin sees the hint naming the integration');
+const HINT = 'Uhr ohne Zeitsensor – tippen zum Einrichten';
+const hintHtml = run(true, none, { time_entity: 'sensor.time' });
+assert.equal(strip(hintHtml).trim(), '--:--', 'admin sees only --:-- as text (fits the clock spot)');
+assert.ok(/<ha-icon[^>]*mdi:clock-alert-outline/.test(hintHtml), 'plus a small warning icon');
+assert.ok(hintHtml.includes('title="' + HINT + '"'), 'explanation in title');
+assert.ok(hintHtml.includes('aria-label="' + HINT + '"'), 'explanation in aria-label');
+assert.ok(hintHtml.includes('casoraClockHintGo'), 'still clickable to the Studio Time section');
 assert.match(run(true, none, {}), /text-transform:none/, 'hint does not inherit the clock uppercase');
-assert.equal(run(false, none, { time_entity: 'sensor.time' }), '', 'non-admin sees no text');
+assert.equal(run(false, none, { time_entity: 'sensor.time' }), '', 'non-admin sees nothing (no --:--, no icon)');
 assert.equal(run(true, withTime, { time_entity: 'sensor.time' }), '21:07', 'rule false: time as before');
 assert.equal(run(true, none, { time_entity: 'sensor.uhr_wohnzimmer' }), '', 'other missing sensor: empty as before');
 assert.equal(run(true, none, { time_entity: 'sensor.time', show_time: false }), '', 'clock off (through the wrapper): no hint');
+// The title is translated in the tile itself (attributes are not translated on the way out).
+assert.ok(/casoraTr/.test(tpl), 'tile translates the title phrase');
 // Texts exist in every dashboard language.
 for (const l of ['en', 'es', 'fr', 'it', 'nl', 'pl', 'pt']) {
   const ph = JSON.parse(src(`custom_components/casora/translations/dashboard/phrases/${l}.json`)).exact;
-  assert.ok(ph[hint], l + ': ' + hint);
+  assert.ok(ph[HINT], l + ': ' + HINT);
+}
+const OLD = 'Uhr braucht Uhrzeit & Datum';
+for (const l of ['en', 'es', 'fr', 'it', 'nl', 'pl', 'pt']) {
+  assert.ok(!(OLD in JSON.parse(src(`custom_components/casora/translations/dashboard/phrases/${l}.json`)).exact), l + ': old phrase removed');
 }
 // Studio texts exist in every panel language, with the HA titles.
 const titles = { de: 'Uhrzeit & Datum', en: 'Time & Date', es: 'Fecha y hora', fr: 'Date et heure', it: 'Ora e data', nl: 'Tijd en datum', pt: 'Hora & Data', pl: 'Czas i data' };
 for (const [l, title] of Object.entries(titles)) {
   const ph = JSON.parse(src(`custom_components/casora/translations/panel/${l}.json`)).exact;
   assert.ok(ph[CLOCK_NEEDS_TIME_DATE].includes(title), l + ': warning names ' + title);
+  assert.ok(/^(To use|Om de|Um die|Pour|Para|Per|Aby|Para)/.test(ph[CLOCK_NEEDS_TIME_DATE]), l + ': new wording ("To use the clock, ...")');
   assert.ok(ph['Add Time & Date'].includes(title), l + ': button names ' + title);
 }
 console.log('ok uhr_zeit_datum');

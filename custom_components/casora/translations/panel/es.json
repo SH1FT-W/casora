@@ -3002,8 +3002,8 @@
     "Tasks": "Tareas",
     "Add list …": "Añadir lista …",
     "Empty: every to-do list in your home.": "Vacío: todas las listas de tu casa.",
-    "The clock needs the Time & Date integration with the option \"Time\".": "El reloj necesita la integración «Fecha y hora» con la opción «Hora».",
-    "Add Time & Date": "Añadir «Fecha y hora»"
+    "To use the clock, add the Time & Date integration and choose \"Time\".": "Para usar el reloj, añade la integración “Fecha y hora” y elige “Hora”.",
+    "Add Time & Date": "Añadir “Fecha y hora”"
   },
   "patterns": [
     [

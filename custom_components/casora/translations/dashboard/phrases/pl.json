@@ -2867,7 +2867,7 @@
     "Abhaken": "Odhacz",
     "Wieder öffnen": "Otwórz ponownie",
     "Eintrag löschen?": "Usunąć ten wpis?",
-    "Uhr braucht Uhrzeit & Datum": "Zegar wymaga: Czas i data"
+    "Uhr ohne Zeitsensor – tippen zum Einrichten": "Zegar nie ma czujnika czasu – dotknij, aby skonfigurować"
   },
   "patterns": [
     [

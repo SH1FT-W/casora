@@ -3002,7 +3002,7 @@
     "Tasks": "Zadania",
     "Add list …": "Dodaj listę …",
     "Empty: every to-do list in your home.": "Puste: wszystkie listy zadań w domu.",
-    "The clock needs the Time & Date integration with the option \"Time\".": "Zegar wymaga integracji „Czas i data” z opcją „Czas”.",
+    "To use the clock, add the Time & Date integration and choose \"Time\".": "Aby korzystać z zegara, dodaj integrację „Czas i data” i wybierz „Czas”.",
     "Add Time & Date": "Dodaj „Czas i data”"
   },
   "patterns": [

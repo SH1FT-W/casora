@@ -2867,7 +2867,7 @@
     "Abhaken": "Spunta",
     "Wieder öffnen": "Riapri",
     "Eintrag löschen?": "Eliminare questa voce?",
-    "Uhr braucht Uhrzeit & Datum": "L'orologio richiede Ora e data"
+    "Uhr ohne Zeitsensor – tippen zum Einrichten": "L'orologio non ha un sensore dell'ora: tocca per configurarlo"
   },
   "patterns": [
     [

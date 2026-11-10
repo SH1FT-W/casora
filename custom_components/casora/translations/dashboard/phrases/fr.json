@@ -2867,7 +2867,7 @@
     "Abhaken": "Cocher",
     "Wieder öffnen": "Rouvrir",
     "Eintrag löschen?": "Supprimer cette entrée ?",
-    "Uhr braucht Uhrzeit & Datum": "L'horloge a besoin de Date et heure"
+    "Uhr ohne Zeitsensor – tippen zum Einrichten": "L'horloge n'a pas de capteur d'heure – touche pour la configurer"
   },
   "patterns": [
     [
