@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Builds the colour designs that are Casora in another colour world: theme_salbei.yaml („Casora Salbei“),
-theme_marine.yaml („Casora Marine“) and theme_daemmerung.yaml („Casora Dämmerung“).
+theme_marine.yaml („Casora Marine“), theme_daemmerung.yaml („Casora Dämmerung“) and theme_farbe.yaml („Casora Farbe“).
 
 Like Casora Nebel (tools/build-nebel-theme.py, whose colour reader this uses) each file holds only what differs from
 theme_weich.yaml; theme.py lays it over the finished Casora design (casora-theme-base). When Casora changes, rebuild:
@@ -70,6 +70,17 @@ DESIGNS = [
      "neutral": lambda l: (258, 0.7, -0.02) if l > 0.5 else (256, 1.6, -0.01),
      "accent": (12, 0.64),
      "fix": fix("#D9694F", "#B4513A", "#A8482F", "#F08A6E", "#F6B19C", "#D9694F", "#C2BDD0")},
+    {"file": "theme_farbe.yaml", "name": "Casora Farbe",
+     "what": "Eingeschaltete Kacheln in der Farbe ihres Geräts, weicher Farbverlauf statt Leinen.",
+     "neutral": lambda l: (16, 1.3, 0.0) if l > 0.5 else (300, 1.5, -0.012),
+     "accent": (348, 0.60),
+     "fix": fix("#D9506B", "#B03A55", "#A8344F", "#FF8FA3", "#FFC2CD", "#D9607A", "#D8C4C0"),
+     # Tiles that are on take their device tone as the fill (the templates mix it in by this share), text on them white.
+     "extra": {"top": {"casora-tile-tone-share": "100%", "casora-tile-tone-ink": "#FFFFFF", "casora-tile-tone-ink-2": "rgba(255,255,255,0.86)"},
+               "light": {"hero-wash": "linear-gradient(90deg, rgba(255,222,196,0.80) 0%, rgba(255,190,180,0.40) 38%, rgba(230,180,225,0) 62%), "
+                                      "linear-gradient(0deg, rgba(250,228,226,0.92) 0%, rgba(240,205,225,0.32) 34%, rgba(240,205,225,0) 55%)"},
+               "dark": {"hero-wash": "linear-gradient(90deg, rgba(70,32,60,0.74) 0%, rgba(60,32,84,0.34) 38%, rgba(40,36,84,0) 62%), "
+                                     "linear-gradient(0deg, rgba(36,24,44,0.92) 0%, rgba(40,28,60,0.32) 34%, rgba(40,28,60,0) 55%)"}}},
 ]
 
 
@@ -105,7 +116,7 @@ def build(design):
             nv = v if k in nebel.KEEP else nebel.recolor(v)
             if nv != v:
                 res[k] = nv
-        for k, v in design["fix"].get(sect, {}).items():
+        for k, v in {**design["fix"].get(sect, {}), **design.get("extra", {}).get(sect, {})}.items():
             if vals.get(k) != v:
                 res[k] = v
         out[sect] = res

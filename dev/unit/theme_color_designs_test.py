@@ -1,4 +1,4 @@
-"""The colour designs Casora Salbei, Marine and Dämmerung (tools/build-color-themes.py): Casora in another colour
+"""The colour designs Casora Salbei, Marine, Dämmerung and Farbe (tools/build-color-themes.py): Casora in another colour
 world. Each file is current, builds on Casora, keeps Casora's build and signal colours, has light and dark, and
 really differs from Casora and from the others.
 
@@ -59,6 +59,20 @@ for d in gen.DESIGNS:
 
 r = subprocess.run([sys.executable, os.path.join(ROOT, "tools/build-color-themes.py"), "--check"], capture_output=True, text=True)
 check(r.returncode == 0, "the files match theme_weich.yaml: " + r.stdout.strip().replace("\n", " · "))
+
+# Casora Farbe: tiles that are on take their device tone as the fill. The templates mix the tone in by
+# --casora-tile-tone-share (default 0% = today's light plate), and only Farbe sets that share.
+for d in gen.DESIGNS:
+    t = yaml.safe_load(open(os.path.join(CC, d["file"]), encoding="utf-8"))[d["name"]]
+    check((t.get("casora-tile-tone-share") == "100%") == (d["name"] == "Casora Farbe"), f"{d['name']}: tone fill only in Farbe")
+for f in ("theme_weich.yaml", "theme_nebel.yaml", "theme_glas.yaml"):
+    p = os.path.join(CC, f)
+    check(not os.path.exists(p) or "casora-tile-tone-share" not in open(p, encoding="utf-8").read(), f"{f} does not set the tone share")
+tpl = open(os.path.join(ROOT, "dashboards/casora/button_card_templates.json"), encoding="utf-8").read()
+mix = "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
+check(tpl.count(mix) == 33, f"every active tile state mixes its tone into the fill ({tpl.count(mix)})")
+check('"--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current' not in tpl, "no active state left without the mix")
+check(tpl.count("var(--casora-tile-tone-share, 0%)") == tpl.count("var(--casora-tile-tone-share"), "the share always defaults to 0%")
 
 print("OK" if not FAILS else f"{len(FAILS)} Fehler")
 sys.exit(1 if FAILS else 0)

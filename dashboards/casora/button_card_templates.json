@@ -21,7 +21,7 @@
               "--casora-active-overlay-opacity": "1"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-active-overlay-dur": "0s"
@@ -33,7 +33,7 @@
               "--casora-icon-color-current": "[[[\n  /* Fehler oder abgebrochener Druck: rot wie im Popup. */\n  const bad = states[variables.entity_error]?.state === 'on'\n    || (entity?.state || '').toLowerCase() === 'failed';\n  return bad ? 'var(--casora-color-red, #FF4245)' : 'var(--casora-color-teal, #00c3d0)';\n]]]\n"
             },
             {
-              "--casora-icon-circle-bg": "var(--casora-icon-color-current)"
+              "--casora-icon-circle-bg": "color-mix(in srgb, var(--casora-tile-tone-chip, rgba(255,255,255,0.28)) var(--casora-tile-tone-share, 0%), var(--casora-icon-color-current))"
             }
           ],
           "entity_picture": [
@@ -54,7 +54,7 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             }
           ],
           "state": [
@@ -296,7 +296,7 @@
               "--casora-active-overlay-opacity": "1"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-active-overlay-dur": "0s"
@@ -311,7 +311,7 @@
               "--casora-icon-color-current": "[[[\n  const colorMap = {\n    armed_home: 'var(--casora-color-teal, #00c3d0)',\n    armed_away: 'var(--casora-color-orange, #ff9230)',\n    armed_night: 'var(--casora-color-teal, #00c3d0)',\n    armed_vacation: 'var(--casora-color-yellow, #ffcc00)',\n    armed_custom_bypass: 'var(--casora-color-orange, #ff9230)',\n    triggered: 'var(--casora-color-red, #ff4245)',\n  };\n  const base = colorMap[entity?.state] || 'var(--casora-color-teal, #00c3d0)';\n  /* Weich: Stufenfarbe wie Badge, Popup und Mitteilungen (scharf = ok, ausgelöst = Gefahr). */\n  const lv = window.casoraSecurityLevel ? window.casoraSecurityLevel(hass, [entity?.entity_id]) : null;\n  return lv ? window.casoraSecurityColor(lv, base) : base;\n]]]\n"
             },
             {
-              "--casora-icon-circle-bg": "var(--casora-icon-color-current)"
+              "--casora-icon-circle-bg": "color-mix(in srgb, var(--casora-tile-tone-chip, rgba(255,255,255,0.28)) var(--casora-tile-tone-share, 0%), var(--casora-icon-color-current))"
             }
           ],
           "entity_picture": [
@@ -335,7 +335,7 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             }
           ],
           "state": [
@@ -480,7 +480,7 @@
               "--casora-active-overlay-opacity": "1"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-active-overlay-dur": "0s"
@@ -495,7 +495,7 @@
               "--casora-icon-color-current": "var(--casora-color-orange, #FF9230)"
             },
             {
-              "--casora-icon-circle-bg": "var(--casora-icon-color-current)"
+              "--casora-icon-circle-bg": "color-mix(in srgb, var(--casora-tile-tone-chip, rgba(255,255,255,0.28)) var(--casora-tile-tone-share, 0%), var(--casora-icon-color-current))"
             },
             {
               "--casora-icon-mask-active": "0"
@@ -522,12 +522,12 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             }
           ],
           "state": [
             {
-              "color": "var(--casora-entity-state-active-color)"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink-2, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-state-active-color))"
             }
           ]
         },
@@ -593,13 +593,13 @@
               "--casora-icon-color-current": "var(--casora-color-teal, #00c3d0)"
             },
             {
-              "--casora-icon-circle-bg": "var(--casora-icon-color-current)"
+              "--casora-icon-circle-bg": "color-mix(in srgb, var(--casora-tile-tone-chip, rgba(255,255,255,0.28)) var(--casora-tile-tone-share, 0%), var(--casora-icon-color-current))"
             },
             {
               "--casora-active-overlay-opacity": "1"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-active-overlay-dur": "0s"
@@ -629,12 +629,12 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             }
           ],
           "state": [
             {
-              "color": "var(--casora-entity-state-active-color)"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink-2, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-state-active-color))"
             }
           ]
         },
@@ -686,7 +686,7 @@
               "--casora-active-overlay-opacity": "1"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-active-overlay-dur": "0s"
@@ -701,7 +701,7 @@
               "--casora-icon-color-current": "var(--casora-color-red, #FF453A)"
             },
             {
-              "--casora-icon-circle-bg": "var(--casora-icon-color-current)"
+              "--casora-icon-circle-bg": "color-mix(in srgb, var(--casora-tile-tone-chip, rgba(255,255,255,0.28)) var(--casora-tile-tone-share, 0%), var(--casora-icon-color-current))"
             },
             {
               "--casora-icon-mask-active": "0"
@@ -728,12 +728,12 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             }
           ],
           "state": [
             {
-              "color": "var(--casora-entity-state-active-color)"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink-2, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-state-active-color))"
             }
           ]
         },
@@ -747,7 +747,7 @@
               "--casora-active-overlay-opacity": "1"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-active-overlay-dur": "0s"
@@ -762,7 +762,7 @@
               "--casora-icon-color-current": "var(--casora-color-orange, #FF9230)"
             },
             {
-              "--casora-icon-circle-bg": "var(--casora-icon-color-current)"
+              "--casora-icon-circle-bg": "color-mix(in srgb, var(--casora-tile-tone-chip, rgba(255,255,255,0.28)) var(--casora-tile-tone-share, 0%), var(--casora-icon-color-current))"
             },
             {
               "--casora-icon-mask-active": "0"
@@ -789,12 +789,12 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             }
           ],
           "state": [
             {
-              "color": "var(--casora-entity-state-active-color)"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink-2, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-state-active-color))"
             }
           ]
         },
@@ -2911,7 +2911,7 @@
               "--casora-active-overlay-opacity": "1"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-active-overlay-dur": "0s"
@@ -2926,7 +2926,7 @@
               "--casora-icon-color-current": "[[[ const B = window.casoraBattery; return B ? B.color(B.scan(states, variables, hass).worst) : 'var(--casora-battery-yellow, #FFD600)'; ]]]"
             },
             {
-              "--casora-icon-circle-bg": "var(--casora-icon-color-current)"
+              "--casora-icon-circle-bg": "color-mix(in srgb, var(--casora-tile-tone-chip, rgba(255,255,255,0.28)) var(--casora-tile-tone-share, 0%), var(--casora-icon-color-current))"
             },
             {
               "--casora-icon-mask-active": "0"
@@ -2953,12 +2953,12 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             }
           ],
           "state": [
             {
-              "color": "var(--casora-entity-state-active-color)"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink-2, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-state-active-color))"
             }
           ]
         },
@@ -2997,7 +2997,7 @@
               "--casora-active-overlay-opacity": "1"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-active-overlay-dur": "0s"
@@ -3012,7 +3012,7 @@
               "--casora-icon-color-current": "[[[ const P = window._casoraPulse; return P ? P.color(P.scan(hass, states).worst) : 'var(--casora-color-orange, #DE8A4E)'; ]]]"
             },
             {
-              "--casora-icon-circle-bg": "var(--casora-icon-color-current)"
+              "--casora-icon-circle-bg": "color-mix(in srgb, var(--casora-tile-tone-chip, rgba(255,255,255,0.28)) var(--casora-tile-tone-share, 0%), var(--casora-icon-color-current))"
             },
             {
               "--casora-icon-mask-active": "0"
@@ -3039,12 +3039,12 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             }
           ],
           "state": [
             {
-              "color": "var(--casora-entity-state-active-color)"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink-2, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-state-active-color))"
             }
           ]
         },
@@ -3630,7 +3630,7 @@
               "--casora-active-overlay-opacity": "1"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-active-overlay-dur": "0s"
@@ -3645,7 +3645,7 @@
               "--casora-icon-color-current": "var(--casora-icon-inactive-color)"
             },
             {
-              "--casora-icon-circle-bg": "var(--casora-icon-color-current)"
+              "--casora-icon-circle-bg": "color-mix(in srgb, var(--casora-tile-tone-chip, rgba(255,255,255,0.28)) var(--casora-tile-tone-share, 0%), var(--casora-icon-color-current))"
             },
             {
               "--casora-icon-mask-active": "0"
@@ -3672,12 +3672,12 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             }
           ],
           "state": [
             {
-              "color": "var(--casora-entity-state-active-color)"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink-2, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-state-active-color))"
             }
           ]
         },
@@ -3956,7 +3956,7 @@
               "--casora-active-overlay-dur": "0s"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-entity-top-gradient": "none"
@@ -3977,7 +3977,7 @@
               "--casora-icon-use-mask": "[[[\n  const pic = entity?.attributes?.entity_picture || '';\n  if (pic && (pic.startsWith('/api/') || pic.startsWith('http'))) return '0';\n  return '1';\n]]]\n"
             },
             {
-              "--casora-icon-circle-bg": "var(--casora-icon-color-current)"
+              "--casora-icon-circle-bg": "color-mix(in srgb, var(--casora-tile-tone-chip, rgba(255,255,255,0.28)) var(--casora-tile-tone-share, 0%), var(--casora-icon-color-current))"
             },
             {
               "--casora-icon-mask-active": "0"
@@ -5017,7 +5017,7 @@
               "--casora-active-overlay-opacity": "1"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-active-overlay-dur": "0s"
@@ -5032,7 +5032,7 @@
               "--casora-icon-color-current": "var(--casora-color-red, #FF453A)"
             },
             {
-              "--casora-icon-circle-bg": "var(--casora-icon-color-current)"
+              "--casora-icon-circle-bg": "color-mix(in srgb, var(--casora-tile-tone-chip, rgba(255,255,255,0.28)) var(--casora-tile-tone-share, 0%), var(--casora-icon-color-current))"
             },
             {
               "--casora-icon-mask-active": "0"
@@ -5059,12 +5059,12 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             }
           ],
           "state": [
             {
-              "color": "var(--casora-entity-state-active-color)"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink-2, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-state-active-color))"
             }
           ]
         },
@@ -5078,7 +5078,7 @@
               "--casora-active-overlay-opacity": "1"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-active-overlay-dur": "0s"
@@ -5093,7 +5093,7 @@
               "--casora-icon-color-current": "var(--casora-color-orange, #FF9230)"
             },
             {
-              "--casora-icon-circle-bg": "var(--casora-icon-color-current)"
+              "--casora-icon-circle-bg": "color-mix(in srgb, var(--casora-tile-tone-chip, rgba(255,255,255,0.28)) var(--casora-tile-tone-share, 0%), var(--casora-icon-color-current))"
             },
             {
               "--casora-icon-mask-active": "0"
@@ -5120,12 +5120,12 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             }
           ],
           "state": [
             {
-              "color": "var(--casora-entity-state-active-color)"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink-2, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-state-active-color))"
             }
           ]
         },
@@ -5401,7 +5401,7 @@
               "--casora-active-overlay-opacity": "1"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-active-overlay-dur": "0s"
@@ -5422,7 +5422,7 @@
               "--casora-icon-use-mask": "1"
             },
             {
-              "--casora-icon-circle-bg": "var(--casora-icon-color-current)"
+              "--casora-icon-circle-bg": "color-mix(in srgb, var(--casora-tile-tone-chip, rgba(255,255,255,0.28)) var(--casora-tile-tone-share, 0%), var(--casora-icon-color-current))"
             }
           ],
           "entity_picture": [
@@ -5446,12 +5446,12 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             }
           ],
           "state": [
             {
-              "color": "var(--casora-entity-state-active-color)"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink-2, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-state-active-color))"
             }
           ]
         },
@@ -10053,7 +10053,7 @@
               "--casora-active-overlay-opacity": "1"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-active-overlay-dur": "0s"
@@ -10091,7 +10091,7 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             }
           ],
           "state": [
@@ -10184,7 +10184,7 @@
               "--casora-active-overlay-opacity": "1"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-active-overlay-dur": "0s"
@@ -10205,7 +10205,7 @@
               "--casora-icon-use-mask": "1"
             },
             {
-              "--casora-icon-circle-bg": "var(--casora-icon-color-current)"
+              "--casora-icon-circle-bg": "color-mix(in srgb, var(--casora-tile-tone-chip, rgba(255,255,255,0.28)) var(--casora-tile-tone-share, 0%), var(--casora-icon-color-current))"
             },
             {
               "--casora-icon-mask-active": "0"
@@ -10232,12 +10232,12 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             }
           ],
           "state": [
             {
-              "color": "var(--casora-entity-state-active-color)"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink-2, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-state-active-color))"
             }
           ]
         },
@@ -10251,7 +10251,7 @@
               "--casora-active-overlay-opacity": "1"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-active-overlay-dur": "0s"
@@ -10272,7 +10272,7 @@
               "--casora-icon-use-mask": "1"
             },
             {
-              "--casora-icon-circle-bg": "var(--casora-icon-color-current)"
+              "--casora-icon-circle-bg": "color-mix(in srgb, var(--casora-tile-tone-chip, rgba(255,255,255,0.28)) var(--casora-tile-tone-share, 0%), var(--casora-icon-color-current))"
             },
             {
               "--casora-icon-mask-active": "0"
@@ -10299,12 +10299,12 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             }
           ],
           "state": [
             {
-              "color": "var(--casora-entity-state-active-color)"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink-2, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-state-active-color))"
             }
           ]
         },
@@ -11832,7 +11832,7 @@
               "--casora-active-overlay-opacity": "1"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-active-overlay-dur": "0s"
@@ -11853,7 +11853,7 @@
               "--casora-icon-use-mask": "1"
             },
             {
-              "--casora-icon-circle-bg": "var(--casora-icon-color-current)"
+              "--casora-icon-circle-bg": "color-mix(in srgb, var(--casora-tile-tone-chip, rgba(255,255,255,0.28)) var(--casora-tile-tone-share, 0%), var(--casora-icon-color-current))"
             }
           ],
           "entity_picture": [
@@ -11877,12 +11877,12 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             }
           ],
           "state": [
             {
-              "color": "var(--casora-entity-state-active-color)"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink-2, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-state-active-color))"
             }
           ]
         },
@@ -16420,7 +16420,7 @@
               "--casora-active-overlay-opacity": "1"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-active-overlay-dur": "0s"
@@ -16435,7 +16435,7 @@
               "--casora-icon-color-current": "[[[ /* Laufende Szene in ihrer Studio-Farbe (1.1.2), sonst Gelb. */ const SC = window._casoraSC; const ids = SC ? SC.list(states, typeof hass !== 'undefined' ? hass : null, variables) : []; const act = SC && SC.activeList ? SC.activeList(ids, states) : []; const clr = act.length && window.casoraSceneColor ? window.casoraSceneColor(act[0]) : null; return clr || 'var(--casora-color-yellow, #FFCC00)'; ]]]"
             },
             {
-              "--casora-icon-circle-bg": "var(--casora-icon-color-current)"
+              "--casora-icon-circle-bg": "color-mix(in srgb, var(--casora-tile-tone-chip, rgba(255,255,255,0.28)) var(--casora-tile-tone-share, 0%), var(--casora-icon-color-current))"
             },
             {
               "--casora-icon-mask-active": "0"
@@ -16462,12 +16462,12 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             }
           ],
           "state": [
             {
-              "color": "var(--casora-entity-state-active-color)"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink-2, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-state-active-color))"
             }
           ]
         },
@@ -16655,13 +16655,13 @@
               "--casora-icon-color-current": "var(--casora-color-teal, #00c3d0)"
             },
             {
-              "--casora-icon-circle-bg": "var(--casora-icon-color-current)"
+              "--casora-icon-circle-bg": "color-mix(in srgb, var(--casora-tile-tone-chip, rgba(255,255,255,0.28)) var(--casora-tile-tone-share, 0%), var(--casora-icon-color-current))"
             },
             {
               "--casora-active-overlay-opacity": "1"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-active-overlay-dur": "0s"
@@ -16691,12 +16691,12 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             }
           ],
           "state": [
             {
-              "color": "var(--casora-entity-state-active-color)"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink-2, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-state-active-color))"
             }
           ]
         },
@@ -17477,7 +17477,7 @@
               "--casora-active-overlay-opacity": "1"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-active-overlay-dur": "0s"
@@ -17504,7 +17504,7 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             }
           ],
           "state": [
@@ -17568,7 +17568,7 @@
               "--casora-active-overlay-opacity": "1"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-active-overlay-dur": "0s"
@@ -17583,7 +17583,7 @@
               "--casora-icon-color-current": "var(--casora-color-orange, #FF9230)"
             },
             {
-              "--casora-icon-circle-bg": "var(--casora-icon-color-current)"
+              "--casora-icon-circle-bg": "color-mix(in srgb, var(--casora-tile-tone-chip, rgba(255,255,255,0.28)) var(--casora-tile-tone-share, 0%), var(--casora-icon-color-current))"
             },
             {
               "--casora-icon-mask-active": "0"
@@ -17610,12 +17610,12 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             }
           ],
           "state": [
             {
-              "color": "var(--casora-entity-state-active-color)"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink-2, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-state-active-color))"
             }
           ]
         },
@@ -17708,7 +17708,7 @@
               "--casora-active-overlay-opacity": "1"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-active-overlay-dur": "0s"
@@ -17741,12 +17741,12 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             }
           ],
           "state": [
             {
-              "color": "var(--casora-entity-state-active-color)"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink-2, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-state-active-color))"
             }
           ]
         },
@@ -17760,7 +17760,7 @@
               "--casora-active-overlay-opacity": "1"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-active-overlay-dur": "0s"
@@ -17793,12 +17793,12 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             }
           ],
           "state": [
             {
-              "color": "var(--casora-entity-state-active-color)"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink-2, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-state-active-color))"
             }
           ]
         },
@@ -17848,7 +17848,7 @@
               "--casora-active-overlay-opacity": "1"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-active-overlay-dur": "0s"
@@ -17863,7 +17863,7 @@
               "--casora-icon-color-current": "var(--casora-color-red, #FF453A)"
             },
             {
-              "--casora-icon-circle-bg": "var(--casora-icon-color-current)"
+              "--casora-icon-circle-bg": "color-mix(in srgb, var(--casora-tile-tone-chip, rgba(255,255,255,0.28)) var(--casora-tile-tone-share, 0%), var(--casora-icon-color-current))"
             },
             {
               "--casora-icon-mask-active": "0"
@@ -17890,12 +17890,12 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             }
           ],
           "state": [
             {
-              "color": "var(--casora-entity-state-active-color)"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink-2, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-state-active-color))"
             }
           ]
         },
@@ -17909,7 +17909,7 @@
               "--casora-active-overlay-opacity": "1"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-active-overlay-dur": "0s"
@@ -17924,7 +17924,7 @@
               "--casora-icon-color-current": "var(--casora-color-orange, #FF9230)"
             },
             {
-              "--casora-icon-circle-bg": "var(--casora-icon-color-current)"
+              "--casora-icon-circle-bg": "color-mix(in srgb, var(--casora-tile-tone-chip, rgba(255,255,255,0.28)) var(--casora-tile-tone-share, 0%), var(--casora-icon-color-current))"
             },
             {
               "--casora-icon-mask-active": "0"
@@ -17951,12 +17951,12 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             }
           ],
           "state": [
             {
-              "color": "var(--casora-entity-state-active-color)"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink-2, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-state-active-color))"
             }
           ]
         },
@@ -18078,7 +18078,7 @@
               "--casora-active-overlay-opacity": "1"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-active-overlay-dur": "0s"
@@ -18093,7 +18093,7 @@
               "--casora-icon-color-current": "var(--casora-color-orange, #FF9230)"
             },
             {
-              "--casora-icon-circle-bg": "var(--casora-icon-color-current)"
+              "--casora-icon-circle-bg": "color-mix(in srgb, var(--casora-tile-tone-chip, rgba(255,255,255,0.28)) var(--casora-tile-tone-share, 0%), var(--casora-icon-color-current))"
             },
             {
               "--casora-icon-mask-active": "0"
@@ -18120,12 +18120,12 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             }
           ],
           "state": [
             {
-              "color": "var(--casora-entity-state-active-color)"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink-2, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-state-active-color))"
             }
           ]
         },
@@ -18467,7 +18467,7 @@
               "--casora-active-overlay-opacity": "1"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-active-overlay-dur": "0s"
@@ -18506,12 +18506,12 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             }
           ],
           "state": [
             {
-              "color": "var(--casora-entity-state-active-color)"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink-2, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-state-active-color))"
             }
           ]
         },
@@ -18570,7 +18570,7 @@
               "--casora-active-overlay-opacity": "1"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-active-overlay-dur": "0s"
@@ -18585,7 +18585,7 @@
               "--casora-icon-color-current": "[[[ const M = window._casoraMower; return M ? M.color(M.of(entity, hass, states)) : 'var(--casora-color-green, #6AAE78)'; ]]]"
             },
             {
-              "--casora-icon-circle-bg": "var(--casora-icon-color-current)"
+              "--casora-icon-circle-bg": "color-mix(in srgb, var(--casora-tile-tone-chip, rgba(255,255,255,0.28)) var(--casora-tile-tone-share, 0%), var(--casora-icon-color-current))"
             },
             {
               "--casora-icon-mask-active": "0"
@@ -18612,12 +18612,12 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             }
           ],
           "state": [
             {
-              "color": "var(--casora-entity-state-active-color)"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink-2, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-state-active-color))"
             }
           ]
         },
@@ -18659,7 +18659,7 @@
               "--casora-active-overlay-opacity": "1"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-active-overlay-dur": "0s"
@@ -18674,7 +18674,7 @@
               "--casora-icon-color-current": "[[[ const P = window._casoraPet; return P ? P.color(P.of(entity, hass, states)) : 'var(--casora-color-teal, #4E9E95)'; ]]]"
             },
             {
-              "--casora-icon-circle-bg": "var(--casora-icon-color-current)"
+              "--casora-icon-circle-bg": "color-mix(in srgb, var(--casora-tile-tone-chip, rgba(255,255,255,0.28)) var(--casora-tile-tone-share, 0%), var(--casora-icon-color-current))"
             },
             {
               "--casora-icon-mask-active": "0"
@@ -18701,12 +18701,12 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             }
           ],
           "state": [
             {
-              "color": "var(--casora-entity-state-active-color)"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink-2, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-state-active-color))"
             }
           ]
         },
@@ -18834,7 +18834,7 @@
               "--casora-active-overlay-opacity": "1"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-active-overlay-dur": "0s"
@@ -18849,7 +18849,7 @@
               "--casora-icon-color-current": "[[[ const K = window._casoraCoffee; const s = K ? K.of(entity, hass, states) : null; return K && s ? K.color(s) : 'var(--casora-color-teal, #4E9E95)'; ]]]"
             },
             {
-              "--casora-icon-circle-bg": "var(--casora-icon-color-current)"
+              "--casora-icon-circle-bg": "color-mix(in srgb, var(--casora-tile-tone-chip, rgba(255,255,255,0.28)) var(--casora-tile-tone-share, 0%), var(--casora-icon-color-current))"
             },
             {
               "--casora-icon-mask-active": "0"
@@ -18876,12 +18876,12 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             }
           ],
           "state": [
             {
-              "color": "var(--casora-entity-state-active-color)"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink-2, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-state-active-color))"
             }
           ]
         },
@@ -19175,7 +19175,7 @@
               "--casora-active-overlay-opacity": "1"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-active-overlay-dur": "0s"
@@ -19190,7 +19190,7 @@
               "--casora-icon-color-current": "[[[ const K = window._casoraFridge; const s = K ? K.of(entity, hass, states, variables) : null; return K && s ? K.color(s) : 'var(--casora-color-teal, #4E9E95)'; ]]]"
             },
             {
-              "--casora-icon-circle-bg": "var(--casora-icon-color-current)"
+              "--casora-icon-circle-bg": "color-mix(in srgb, var(--casora-tile-tone-chip, rgba(255,255,255,0.28)) var(--casora-tile-tone-share, 0%), var(--casora-icon-color-current))"
             },
             {
               "--casora-icon-mask-active": "0"
@@ -19217,12 +19217,12 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             }
           ],
           "state": [
             {
-              "color": "var(--casora-entity-state-active-color)"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink-2, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-state-active-color))"
             }
           ]
         },
@@ -19287,7 +19287,7 @@
               "--casora-active-overlay-opacity": "1"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-active-overlay-dur": "0s"
@@ -19302,7 +19302,7 @@
               "--casora-icon-color-current": "[[[ const O = window.casoraOvenFind; return O ? O.color(O.level(hass, entity?.entity_id, states)) : 'var(--casora-color-orange, #DE8A4E)'; ]]]"
             },
             {
-              "--casora-icon-circle-bg": "var(--casora-icon-color-current)"
+              "--casora-icon-circle-bg": "color-mix(in srgb, var(--casora-tile-tone-chip, rgba(255,255,255,0.28)) var(--casora-tile-tone-share, 0%), var(--casora-icon-color-current))"
             },
             {
               "--casora-icon-mask-active": "0"
@@ -19329,12 +19329,12 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             }
           ],
           "state": [
             {
-              "color": "var(--casora-entity-state-active-color)"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink-2, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-state-active-color))"
             }
           ]
         },
@@ -19673,7 +19673,7 @@
               "--casora-active-overlay-opacity": "1"
             },
             {
-              "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+              "--casora-entity-overlay-tint": "color-mix(in srgb, var(--casora-icon-color-current, var(--casora-color-teal, #4E9E95)) var(--casora-tile-tone-share, 0%), var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)))"
             },
             {
               "--casora-active-overlay-dur": "0s"
@@ -19688,7 +19688,7 @@
               "--casora-icon-color-current": "[[[ const C = window._casoraCo; return C ? C.tileColor(entity, hass) : 'var(--casora-color-green, #6AAE78)'; ]]]"
             },
             {
-              "--casora-icon-circle-bg": "var(--casora-icon-color-current)"
+              "--casora-icon-circle-bg": "color-mix(in srgb, var(--casora-tile-tone-chip, rgba(255,255,255,0.28)) var(--casora-tile-tone-share, 0%), var(--casora-icon-color-current))"
             },
             {
               "--casora-icon-mask-active": "0"
@@ -19715,12 +19715,12 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             }
           ],
           "state": [
             {
-              "color": "var(--casora-entity-state-active-color)"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink-2, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-state-active-color))"
             }
           ]
         }

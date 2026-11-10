@@ -8,10 +8,12 @@ const src = fs.readFileSync(new URL('../../custom_components/casora/panel/casora
 const from = src.indexOf('const CASORA_ACCENTS = [');
 const to = src.indexOf('const colorLabel = ', from);
 assert.ok(from > 0 && to > from);
-const mk = new Function('CASORA_THEME', 'getComputedStyle', 'document',
+const mk = new Function('CASORA_THEME', 'getComputedStyle', 'document', 'CASORA_FAMILY',
   src.slice(from, to) + '\nreturn { CASORA_ACCENTS, accentsShown, accentLabel, setTheme: (t) => { ACCENT_THEME = t; } };');
 let purple = '';
-const P = mk('Casora', () => ({ getPropertyValue: (n) => (n === '--casora-color-purple' ? purple : '') }), { documentElement: {} });
+const P = mk('Casora', () => ({ getPropertyValue: (n) => (n === '--casora-color-purple' ? purple : '') }), { documentElement: {} },
+  // Designs built like Casora (casora-panel.js CASORA_FAMILY): Casora and its recoloured siblings.
+  ['Casora'].concat(src.match(/const CASORA_FAMILY = \[CASORA_THEME, ([^\]]+)\]/)[1].split(',').map((x) => x.trim().slice(1, -1))));
 const keys = (l) => l.map((a) => a.key);
 const ALL = keys(P.CASORA_ACCENTS);
 
