@@ -1,8 +1,8 @@
 // Wall-panel screensaver. A dashboard turns it on under Settings › Tapping & tablet › Wall tablet
 // (casora_screensaver on the room hero, same place as casora_idle_home). After that many minutes
 // without a tap the dashboard is covered by a large clock, a photo and, when configured, the
-// weather forecast and one calendar. A tap or a key brings the dashboard back. Online photos
-// rotate on their own, the same way as the wall app. They do not follow the weather.
+// weather forecast and one calendar. A tap or a key brings the dashboard back. The background
+// is one choice: dark, local photos, or live wallpapers.
 (function () {
   if (typeof window === 'undefined') return;
   if (window._casoraScreensaver && window._casoraScreensaver._booted) return;
@@ -24,16 +24,6 @@
     windy: 'mdi:weather-windy',
     'windy-variant': 'mdi:weather-windy-variant',
   };
-  // Online pictures are opt-in (mode "unsplash"). Otherwise the clock sits on a
-  // dark ground, or on photos already stored in this Home Assistant. The online
-  // photo is a rotating picture, with these Unsplash photos only as backup.
-  var UNSPLASH = [
-    'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1920&q=80',
-    'https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1920&q=80',
-    'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1920&q=80',
-    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1920&q=80',
-  ];
-
   function minutes(v) {
     var n = parseFloat(v);
     if (!isFinite(n) || n <= 0) return 0;
@@ -52,14 +42,9 @@
 
   function photo(kind, seed, mode, localList) {
     var n = Math.abs(Number(seed) || 0);
-    if (mode === 'unsplash') return 'https://picsum.photos/seed/casora-wall-' + n + '/1920/1080';
-    if (!localList || !localList.length) return '';
+    if (mode === 'live' || mode === 'unsplash') return 'https://picsum.photos/seed/casora-wall-' + n + '/1920/1080';
+    if (mode !== 'photo' || !localList || !localList.length) return '';
     return localList[n % localList.length];
-  }
-
-  function fallbackPhoto(seed) {
-    var n = Math.abs(Number(seed) || 0) % UNSPLASH.length;
-    return UNSPLASH[n];
   }
 
   function upcoming(events, now, limit) {
@@ -79,7 +64,6 @@
   api.minutes = minutes;
   api.bucket = bucket;
   api.photo = photo;
-  api.fallbackPhoto = fallbackPhoto;
   api.upcoming = upcoming;
   window._casoraScreensaver = api;
   if (!window.document || window.document.nodeType !== 9) return;
@@ -343,15 +327,12 @@
     var img = layer.querySelector('.cs-ss-photo');
     var seed = Math.floor(Date.now() / ROTATE_MS);
     var url = '';
-    if (mode === 'unsplash' || mode === 'photo') {
+    if (mode === 'live' || mode === 'unsplash' || mode === 'photo') {
       url = photo(bucket(state), seed, mode, localPhotos);
     }
-    if (!url) { img.onerror = null; img.removeAttribute('src'); img.hidden = true; return; }
+    img.onerror = null;
+    if (!url) { img.removeAttribute('src'); img.hidden = true; return; }
     img.hidden = false;
-    img.onerror = mode === 'unsplash' ? function () {
-      var backup = fallbackPhoto(seed);
-      if (img.getAttribute('src') !== backup) img.setAttribute('src', backup);
-    } : null;
     if (img.getAttribute('src') !== url) img.setAttribute('src', url);
   }
 

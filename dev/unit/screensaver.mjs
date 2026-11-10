@@ -33,10 +33,9 @@ assert.equal(S.bucket(''), 'cloudy');
 assert.equal(S.photo('sunny', 0, '', []), '', 'dark does not load a picture');
 assert.equal(S.photo('sunny', 0, 'photo', []), '', 'local photos with an empty library stay dark');
 assert.equal(S.photo('sunny', 0, 'photo', ['/api/casora/photo/a', '/api/casora/photo/b']), '/api/casora/photo/a');
-assert.ok(S.photo('sunny', 0, 'unsplash', []).indexOf('picsum.photos/seed/casora-wall-') > 0, 'online is opt-in');
-assert.equal(S.photo('rainy', 0, 'unsplash', []), S.photo('sunny', 0, 'unsplash', []), 'online photo does not follow the weather');
-assert.ok(S.fallbackPhoto(0).indexOf('images.unsplash.com') > 0, 'unsplash is only the backup');
-assert.notEqual(S.fallbackPhoto(0), S.fallbackPhoto(1));
+assert.equal(S.photo('sunny', 0, 'live', ['/api/casora/photo/a']), 'https://picsum.photos/seed/casora-wall-0/1920/1080');
+assert.equal(S.photo('rainy', 1, 'live', []), S.photo('sunny', 1, 'live', []));
+assert.equal(S.fallbackPhoto, undefined);
 
 const now = Date.parse('2026-11-07T15:00:00');
 const rows = S.upcoming([
@@ -49,4 +48,5 @@ assert.deepEqual(rows.map((r) => r.summary), ['Soon', 'Tomorrow']);
 assert.ok(read('custom_components/casora/scripts/casora-local.js').includes("'43-screensaver'"), 'module in MODULES');
 assert.ok(read('custom_components/casora/panel/casora-panel.js').includes('casora_screensaver'), 'studio setting');
 assert.ok(!/weather\.[a-z0-9_]+/.test(read('custom_components/casora/scripts/local/43-screensaver.js')), 'no weather entity id');
-assert.ok(/unsplash\.com/.test(read('custom_components/casora/scripts/local/43-screensaver.js')), 'unsplash urls exist for the opt-in');
+assert.ok(read('custom_components/casora/panel/casora-panel.js').includes('Live wallpapers'), 'live or local is a setting');
+assert.ok(!/unsplash\.com/.test(read('custom_components/casora/scripts/local/43-screensaver.js')), 'no second photo source');
