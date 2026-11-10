@@ -11,7 +11,8 @@ const to = src.indexOf('const isCasoraTheme = ', from);
 assert.ok(from > 0 && to > from);
 const { CASORA_THEMES, THEME_RENAMED } = new Function(src.slice(from, to) + '\nreturn { CASORA_THEMES, THEME_RENAMED };')();
 
-assert.deepEqual(CASORA_THEMES.map((x) => x.name), ['Casora', 'Casora Nebel', 'Casora Glas'], 'Casora, Nebel und Glas zur Wahl');
+assert.deepEqual(CASORA_THEMES.map((x) => x.name), ['Casora', 'Casora Nebel', 'Casora Glas', 'Casora Salbei', 'Casora Marine', 'Casora Dämmerung'],
+  'Casora, Nebel, Glas and the three colour designs on offer');
 // Hinweis nach der Umstellung: casora-core.js liest die Benutzerdaten von theme.py, ein Text je Hemma-Look
 const coreTxt = fs.readFileSync(new URL('scripts/casora-core.js', cc), 'utf8');
 assert.ok(/casora_theme_notice/.test(coreTxt) && /THEME_NOTICE_KEY = "casora_theme_notice"/.test(read('theme.py')), 'Hinweis-Schlüssel in theme.py und casora-core.js gleich');
