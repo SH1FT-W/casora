@@ -2408,7 +2408,7 @@ const SECTIONS = [
         options: ["", "photo", "unsplash"],
         optionLabels: { "": "Dark", photo: "My photos", unsplash: "Online (Unsplash)" },
         when: (v) => v.casora_screensaver != null && v.casora_screensaver !== "",
-        hint: "Dark stays on this Home Assistant. My photos uses pictures already in Casora. Online loads a weather photo from Unsplash, only when you choose it." },
+        hint: "Dark stays on this Home Assistant. My photos uses pictures already in Casora. Online loads a new photo every 15 minutes, and uses Unsplash only if that photo does not load." },
       // Halten auf Kacheln (22-halten.js): leer = Schnellmenü. casora-core.js setzt daraus window._casoraHoldMode,
       // ans Handy geht es über casora_mobile_bg. Je Kachel überstimmbar (variables.hold_mode, Kachel-Inspektor).
       { key: "hold_mode", sub: "hold", label: "Hold on tiles", type: "select", auto: true, scope: "dashboard",

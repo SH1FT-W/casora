@@ -1,5 +1,5 @@
-// Wall-panel screensaver (scripts/local/43-screensaver.js): idle minutes, which photo a weather
-// state picks, and which calendar events are still ahead.
+// Wall-panel screensaver (scripts/local/43-screensaver.js): idle minutes, the photo choice,
+// and which calendar events are still ahead.
 //   node dev/unit/screensaver.mjs
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -33,8 +33,10 @@ assert.equal(S.bucket(''), 'cloudy');
 assert.equal(S.photo('sunny', 0, '', []), '', 'dark does not load a picture');
 assert.equal(S.photo('sunny', 0, 'photo', []), '', 'local photos with an empty library stay dark');
 assert.equal(S.photo('sunny', 0, 'photo', ['/api/casora/photo/a', '/api/casora/photo/b']), '/api/casora/photo/a');
-assert.ok(S.photo('sunny', 0, 'unsplash', []).indexOf('images.unsplash.com') > 0, 'unsplash is opt-in');
-assert.notEqual(S.photo('rainy', 0, 'unsplash', []), S.photo('sunny', 0, 'unsplash', []), 'rain is not the sun photo');
+assert.ok(S.photo('sunny', 0, 'unsplash', []).indexOf('picsum.photos/seed/casora-wall-') > 0, 'online is opt-in');
+assert.equal(S.photo('rainy', 0, 'unsplash', []), S.photo('sunny', 0, 'unsplash', []), 'online photo does not follow the weather');
+assert.ok(S.fallbackPhoto(0).indexOf('images.unsplash.com') > 0, 'unsplash is only the backup');
+assert.notEqual(S.fallbackPhoto(0), S.fallbackPhoto(1));
 
 const now = Date.parse('2026-11-07T15:00:00');
 const rows = S.upcoming([
