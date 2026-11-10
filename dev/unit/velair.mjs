@@ -104,6 +104,28 @@ assert.equal(V.status(z, at(2026, 10, 26, 7, 0)), '18° ab 08:30');
 assert.equal(V.status(z, at(2026, 10, 26, 23, 0)), '20,5° morgen ab 07:00');
 assert.equal(V.status(z, at(2026, 10, 28, 9, 0)), 'Kühlen am Freitag ab 12:00');
 
+// Issue 170: every day starts with its own 16° block at 00:00 and ends on 16°. In the evening the next change is
+// tomorrow's 06:25, not midnight: a block that sets what already runs is no change.
+const day170 = [{ start: '00:00', temperature: 16 }, { start: '06:25', temperature: 22.5 }, { start: '08:35', temperature: 20.5 },
+  { start: '18:00', temperature: 16 }];
+const week170 = Object.fromEntries(V.WD.map((wd) => [wd, day170.map((b) => ({ ...b }))]));
+// 2026-11-10 is a Tuesday.
+a = V.at(week170, at(2026, 11, 10, 21, 30));
+assert.equal(a.now.temperature, 16);
+assert.deepEqual([a.next.start, a.next.days, a.next.wd, a.next.block.temperature], [385, 1, 'wednesday', 22.5], 'midnight is skipped: same target');
+assert.equal(V.status({ ...z, schedule: week170 }, at(2026, 11, 10, 21, 30)), '22,5° morgen ab 06:25');
+// Earlier the same day the next change is today's, as before.
+a = V.at(week170, at(2026, 11, 10, 7, 0));
+assert.deepEqual([a.next.start, a.next.days, a.next.block.temperature], [515, 0, 20.5]);
+// The same temperature with another mode is a change; a week of one single target has no next change.
+const mode170 = { monday: [{ start: '00:00', temperature: 16, hvac_mode: 'heat' }, { start: '12:00', temperature: 16, hvac_mode: 'cool' }] };
+a = V.at(mode170, at(2026, 11, 9, 8, 0));
+assert.deepEqual([a.next.start, a.next.block.hvac_mode], [720, 'cool']);
+const flat170 = Object.fromEntries(V.WD.map((wd) => [wd, [{ start: '00:00', temperature: 16 }]]));
+a = V.at(flat170, at(2026, 11, 10, 21, 30));
+assert.equal(a.next, null, 'one target all week: no next change');
+assert.equal(V.status({ ...z, schedule: flat170 }, at(2026, 11, 10, 21, 30)), 'Zeitplan · 16°');
+
 // ── States of the zone ──
 F._seed(response({ zone_runtime: { [ID]: { state: 'paused', control_mode: 'automatic', pause_count: 1, until: null } } }));
 z = V.zone(F.data(), ID);

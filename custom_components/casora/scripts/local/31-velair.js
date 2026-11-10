@@ -6,7 +6,7 @@
 // (00-finder.js), which also holds the source table. Without data (Velair not loaded) the popup is a plain climate popup.
 //   window._casoraVelair.zone(data, id)            → the climate's schedule as Casora reads it (pure)
 //   window._casoraVelair.daySegments(sched, wd)    → [{ from, to, block, i, carried }] for one weekday, minutes 0…1440
-//   window._casoraVelair.at(sched, date)           → { now, next: { block, wd, start, days } } (pure)
+//   window._casoraVelair.at(sched, date)           → { now, next: { block, wd, start, days } } (pure); next = the next real change
 //   window._casoraVelair.change(blocks, i, patch)  → { blocks } | { error } – edit/add (i = -1)/remove (patch null)
 //   window._casoraVelair.svc.*                     → service specs (day, pause, resume, resumeAuto)
 //   window._casoraVelair.popup(entity, states, hass, variables) – popup casora_popup_velair
@@ -120,17 +120,28 @@
     });
     return out;
   };
+  // What a block sets, without its start: two blocks that set the same are no change (issue 170).
+  var effect = function (b) {
+    var o = {};
+    Object.keys(b || {}).sort().forEach(function (k) { if (k !== 'start' && k !== 'id' && b[k] != null && b[k] !== '') o[k] = b[k]; });
+    if (!o.action) o.action = 'set_temperature';
+    return JSON.stringify(o);
+  };
+  // now: the block that runs. next: the next block that changes something – a block that sets what already runs
+  // (every day starting with its own 16° at 00:00 after an evening on 16°) is skipped; null when nothing changes all week.
   V.at = function (sched, date) {
     date = date || new Date();
     var wd = V.weekday(date), m = date.getHours() * 60 + date.getMinutes();
     var segs = V.daySegments(sched, wd);
     var now = segs.filter(function (s) { return s.from <= m && m < s.to; })[0] || null;
-    var next = null;
-    segs.some(function (s) { if (!s.carried && s.from > m) { next = { block: s.block, wd: wd, start: s.from, days: 0 }; return true; } return false; });
-    for (var d = 1; !next && d <= 7; d++) {
-      var w = WD[(WD.indexOf(wd) + d) % 7], l = blocksOf(sched, w);
-      if (l.length) next = { block: l[0].b, wd: w, start: l[0].m, days: d };
+    var coming = [];
+    segs.forEach(function (s) { if (!s.carried && s.from > m) coming.push({ block: s.block, wd: wd, start: s.from, days: 0 }); });
+    for (var d = 1; d <= 7; d++) {
+      var w = WD[(WD.indexOf(wd) + d) % 7];
+      blocksOf(sched, w).forEach(function (x) { if (d < 7 || x.m <= m) coming.push({ block: x.b, wd: w, start: x.m, days: d }); });
     }
+    var run = now ? effect(now.block) : null, next = null;
+    coming.some(function (c) { if (effect(c.block) !== run) { next = c; return true; } return false; });
     return { now: now ? now.block : null, next: next };
   };
 
