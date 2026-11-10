@@ -29036,6 +29036,25 @@ class CasoraPanel extends HTMLElement {
       addRow("Name", nameIn);
     }
 
+    // Draft until Save settings. The tile template reads variables.display_name.
+    // Home Assistant's own entity and device names are not changed.
+    if (!isCustom) {
+      const disp = document.createElement("input");
+      disp.value = String((tile.variables || {}).display_name || "");
+      disp.placeholder = friendlyOf(tile.entity) || "Same as Home Assistant";
+      disp.onchange = () => {
+        const v = disp.value.trim();
+        if (v) tile.variables = { ...(tile.variables || {}), display_name: v };
+        else if (tile.variables) {
+          delete tile.variables.display_name;
+          if (!Object.keys(tile.variables).length) delete tile.variables;
+        }
+        this._markDirty();
+        this._syncPreview();
+      };
+      addRow("Name in Casora", disp);
+    }
+
     // Only a template that reads variables.icon can use one of Casora's icons.
     // button-card's own icon: key wants an mdi name, so it stays in the YAML.
     if (type.raw && tile.template) {
