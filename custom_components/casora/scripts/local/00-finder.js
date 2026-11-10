@@ -1549,9 +1549,13 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     };
     var W = null;
     try { W = window.casoraDevice && window.casoraDevice.waste ? window.casoraDevice.waste(hass, {}) : null; } catch (e) { W = null; }
-    var best = null;
+    var best = null, R = hass.entities || {};
     Object.keys(S).forEach(function (id) {
       if (id.indexOf('calendar.') !== 0 || (W && W.calendar === id)) return;
+      // A calendar hidden or disabled in Home Assistant is not shown (reported in #157: the Workday sensor's calendar,
+      // hidden with its device); the Workday integration's calendar („Workday Sensor“ every working day) is no appointment.
+      var e = R[id];
+      if (e && (e.hidden || e.disabled_by || e.platform === 'workday')) return;
       var a = S[id].attributes || {};
       if (!a.message || !a.start_time) return;
       var d = new Date(String(a.start_time).replace(' ', 'T'));

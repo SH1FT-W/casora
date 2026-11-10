@@ -24,4 +24,14 @@ assert.equal(next({ 'calendar.a': cal('Zahnarzt', '2026-11-09 15:00:00') }, { bi
 assert.equal(next({ 'calendar.waste': cal('Bio', '2026-11-09 00:00:00', { all_day: true }) }, { calendar: 'calendar.waste', bins: [] }), '', 'the waste calendar is not an event');
 assert.match(next({}, { bins: [{ label: 'Papier', days: 3 }] }), /^Donnerstag Papier$/, 'a weekday within the week');
 assert.equal(next({}, { bins: [{ label: 'Papier', days: null }] }), '', 'no date: left out');
+// Reported in #157: a calendar hidden in Home Assistant (the Workday sensor's calendar, hidden with its device)
+// stood under the greeting as „Heute Workday Sensor“. Hidden and disabled calendars are not shown, and the Workday
+// integration's calendar is no appointment even when it is visible.
+const reg = (entities) => (S) => { window.casoraDevice = { waste: () => ({ bins: [] }) }; return window.casoraHomeNext({ states: S, entities, locale: { language: 'de' } }, on, now); };
+const two = { 'calendar.workday_sensor': cal('Workday Sensor', '2026-11-09 00:00:00', { all_day: true }), 'calendar.familie': cal('Zahnarzt', '2026-11-10 15:00:00') };
+assert.equal(reg({ 'calendar.workday_sensor': { hidden: true, platform: 'workday' }, 'calendar.familie': { platform: 'google' } })(two), 'Morgen 15:00 Zahnarzt', 'a hidden calendar is left out');
+assert.equal(reg({ 'calendar.workday_sensor': { hidden: true, platform: 'workday' } })({ 'calendar.workday_sensor': two['calendar.workday_sensor'] }), '', 'only a hidden calendar: no line');
+assert.equal(reg({ 'calendar.familie': { disabled_by: 'user', platform: 'google' } })({ 'calendar.familie': two['calendar.familie'] }), '', 'a disabled calendar is left out');
+assert.equal(reg({ 'calendar.workday_sensor': { platform: 'workday' }, 'calendar.familie': { platform: 'google' } })(two), 'Morgen 15:00 Zahnarzt', 'the Workday calendar is no appointment');
+assert.equal(reg({})(two).includes('Zahnarzt') || reg({})(two).includes('Workday'), true, 'calendars without a registry entry (YAML) still count');
 console.log('ok – line under the greeting');

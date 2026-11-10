@@ -168,6 +168,9 @@ Kern-Integrationen (Schlüssel im Test geprüft):
 - `cookidoo` (Rezept, `03-popups.js`, `ki.py`), `mealie` (Rezept als zweite Quelle, `03-popups.js`, `mealie_plan.py`, #140), `backup` (`03-popups.js`), `proximity` (`15-person.js`),
   `unifi` (Netzwerk, `00-finder.js`), `lamarzocco` (Kaffee, `25-coffee.js`), `tankerkoenig` (nur `platform`,
   `tanken.py`)
+- `workday` (HA core): legt neben dem Binärsensor einen Kalender `calendar.*` mit `platform: workday` an, dessen Termin
+  an jedem Arbeitstag wie der Sensor heißt. Kein Termin für die Zeile unter der Begrüßung (#157, `00-finder.js`
+  `casoraHomeNext`; versteckte Kalender über `hass.entities[id].hidden`; Test `dev/unit/begruessung_naechstes.mjs`).
 - Ladesäulen in der Nähe (#168, `charging.py`): Standort des Autos aus dem `device_tracker` seines Geräts (Zustand
   nicht `home`, Attribute `latitude`/`longitude`), sonst `hass.config.latitude/longitude`. Daten von Open Charge Map
   (`/v3/poi`, Schlüssel im Kopf `X-API-Key`, `compact=false&verbose=false`): `AddressInfo.Title/AddressLine1/Town/
