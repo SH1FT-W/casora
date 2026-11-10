@@ -225,6 +225,17 @@ for (const run of RUNS) {
   const r3 = await rows(page);
   await check(run.tag + ': Gratis zeigt die drei mit kostenloser Angabe', r3 && r3.names.length === 3 && r3.names.every((n) => /Möbelhaus|Supermarkt|Hotel/.test(n)), r3 && r3.names);
   await pic(run.tag + '_4_gratis');
+  const gearShown = await page.evaluate(() => { const g = window.casoraPopup.element.shadowRoot.querySelector('.header-gear'); return !!g && !g.hidden; });
+  await check(run.tag + ': Zahnrad im Kopf der Ladesäulen-Seite', gearShown);
+  if (run.tag === 'Desktop') {
+    // The gear opens Studio › Settings › Chargers nearby.
+    await page.evaluate(() => window.casoraPopup.element.shadowRoot.querySelector('.header-gear').click());
+    const studioOk = await page.waitForFunction(() => /^\/casora-studio/.test(location.pathname)
+      && window.__pierce && window.__pierce('.cs-ch-key').some((e) => e.getBoundingClientRect().width > 0), null, { timeout: 20000 }).then(() => true, () => false);
+    await check(run.tag + ': Zahnrad führt zu den Ladesäulen-Einstellungen', studioOk, await page.evaluate(() => location.pathname + location.search));
+    await pic(run.tag + '_5_studio');
+    errs.length = 0;
+  }
   await check(run.tag + ': keine Fehler in der Konsole', errs.length === 0, errs.slice(0, 3));
   await page.evaluate(() => { if (window.casoraPopup) window.casoraPopup.close(); });
 }

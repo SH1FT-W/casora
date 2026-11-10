@@ -8308,7 +8308,8 @@ window.casoraMenuGlass = {
       this._subEyebrow = this._backFn && prevTitle && !this._headFixed ? prevTitle : null;
       this._headerBack.setAttribute('aria-label', window.casoraTr ? window.casoraTr('Zurück') : 'Zurück');
       this._headerGear.setAttribute('aria-label', window.casoraTr ? window.casoraTr('Einstellungen') : 'Einstellungen');
-      this._headerGear.hidden = !!this._backFn || cfg.close === false || /^\/casora-studio/.test(location.pathname) || !window.casoraIsAdmin();
+      // A sub page has no gear, unless it names its own settings section (cfg.gear, the chargers page).
+      this._headerGear.hidden = (!!this._backFn && !cfg.gear) || cfg.close === false || /^\/casora-studio/.test(location.pathname) || !window.casoraIsAdmin();
       this.toggleAttribute('has-back', !!this._backFn);
       this._cfgCurrent = data || {};
       if (this._rowTitle && this._cfgCurrent.title !== this._cfgTitle) {
@@ -9508,8 +9509,9 @@ window.casoraMenuGlass = {
     var seg = (location.pathname || '').split('/').filter(Boolean);
     var phone = /[-_]mobile$/i.test(seg[0] || '');
     var dash = (seg[0] || '').replace(/[-_]mobile$/i, '');
-    var id = el._casoraEntity, kind = 'start', text = '';
-    if (!id) {
+    var gear = (el._cfgCurrent || {}).gear;
+    var id = gear ? null : el._casoraEntity, kind = typeof gear === 'string' ? gear : 'start', text = '';
+    if (!id && !gear) {
       try { text = JSON.stringify((el._cfgCurrent || {}).content || {}); } catch (e) { text = ''; }
       GEAR_BLOCK.some(function (g) { if (g[0].test(text)) { kind = g[1]; return true; } return false; });
     }

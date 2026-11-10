@@ -363,7 +363,9 @@
     if (!H || !H.page) return;
     var C = window._casoraCar, m = C && C.map ? C.map(arg || null) : {}, ids = Object.keys(m).map(function (k) { return m[k]; });
     X.load(key, X.device(arg || null));
-    H.page('Ladesäulen', ids.slice(0, 1), 'return window._casoraCharge ? window._casoraCharge.inner(' + JSON.stringify(key) + ') : "";', null);
+    H.page('Ladesäulen', ids.slice(0, 1), 'return window._casoraCharge ? window._casoraCharge.inner(' + JSON.stringify(key) + ') : "";', null,
+      // The gear leads to Studio › Settings › Chargers nearby, as the fuel view's leads to its settings.
+      { gear: 'charging' });
   };
   X.check();
 })();
