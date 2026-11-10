@@ -166,7 +166,7 @@ def snapshot(fixture: dict, skip: list[str] | tuple = ()) -> dict:
         # registry_platform: registered under another integration's name (Velair, velair.py), as in a real house.
         entities[eid] = {"entity_id": eid, "platform": e.get("registry_platform") or "casora_mock", "device_id": did if did in devices else None,
                          "area_id": area_id.get(e.get("area")), "name": e.get("name"), "icon": e.get("icon"),
-                         "translation_key": e.get("translation_key"), "hidden": False,
+                         "translation_key": e.get("translation_key"), "hidden": bool(e.get("hidden")),
                          "entity_category": e.get("entity_category") or DEFAULT_CATEGORY.get(domain)}
         states[eid] = {"entity_id": eid, "state": e["state"], "attributes": dict(e.get("attributes") or {})}
     return {"states": states, "entities": entities, "devices": devices, "areas": areas}
