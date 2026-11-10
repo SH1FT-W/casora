@@ -2881,7 +2881,15 @@
     "Aufheizen gestartet": "Chauffe lancée",
     "Taut ab": "Dégivrage",
     "Landkarte": "Carte",
-    "Nichts auf der Karte": "Rien sur la carte"
+    "Nichts auf der Karte": "Rien sur la carte",
+    "Soll": "Consigne",
+    "Ist": "Réelle",
+    "Solltemperatur": "Température de consigne",
+    "Heizkreispumpe": "Pompe du circuit de chauffage",
+    "Zirkulationspumpe": "Pompe de bouclage",
+    "Frostschutz": "Protection antigel",
+    "Vorlauftemperatur · 24 Std.": "Température de départ · 24 h",
+    "Außentemperatur · 24 Std.": "Température extérieure · 24 h"
   },
   "patterns": [
     [

@@ -1,6 +1,6 @@
 // Heat pump tile and popup (#132, scripts/local/44-waermepumpe.js, casoraHeatPumpFind in 00-finder.js): the Studio's
 // fields found on the climate's device by translation_key or the entity's own words (never the entity id), the tile
-// text (program, hot water, compressor), the circle and highlight, the climate with current_temperature null, the
+// text (the heating's target and whether the pump runs), the circle and highlight, the climate with current_temperature null, the
 // popup parts (presets as moons with climate.set_preset_mode, water_heater.set_temperature, button.press) and the
 // wiring (module, templates, Studio type, English texts). Made-up entities only.
 //   node dev/unit/waermepumpe.mjs
@@ -35,6 +35,10 @@ const entries = [
   E('sensor.demo_d', '3.0', { friendly_name: 'Demo Pumpe Leistungszahl' }, { translation_key: 'cop_total' }),
   E('sensor.demo_e', '2.9', { friendly_name: 'Demo Pumpe Leistungszahl Heizung' }, { translation_key: 'cop_heating' }),
   E('sensor.demo_f', '6.0', { friendly_name: 'Demo Pumpe Verdichterleistung', device_class: 'power', unit_of_measurement: 'kW' }, { translation_key: 'compressor_power' }),
+  E('binary_sensor.demo_hk', 'on', { friendly_name: 'Demo Pumpe Heizkreisumwälzpumpe', device_class: 'running' }, { translation_key: 'circulation_pump' }),
+  E('binary_sensor.demo_zirk', 'off', { friendly_name: 'Demo Pumpe WW-Zirkulationspumpe', device_class: 'running' }, { translation_key: 'domestic_hot_water_circulation_pump' }),
+  E('binary_sensor.demo_frost', 'off', { friendly_name: 'Demo Pumpe Frostschutz' }, { translation_key: 'frost_protection' }),
+  E('binary_sensor.demo_ww', 'off', { friendly_name: 'Demo Pumpe WW-Aufladung', device_class: 'running' }, { translation_key: 'domestic_hot_water_charging' }),
 ];
 const hass = (overrides) => {
   const states = {}; const entities = {};
@@ -52,7 +56,8 @@ const ID = 'climate.demo_waermepumpe';
 const h0 = hass();
 win.casoraDeviceEntities = undefined;
 eq(F.find(h0, ID), { water: 'water_heater.demo_warmwasser', charge: 'button.demo_laden_an', charging: 'binary_sensor.demo_laden',
-  outdoor: 'sensor.demo_a', supply: 'sensor.demo_c', return: 'sensor.demo_b', cop: 'sensor.demo_d', power: 'sensor.demo_f', compressor: 'binary_sensor.demo_kompressor' });
+  outdoor: 'sensor.demo_a', supply: 'sensor.demo_c', return: 'sensor.demo_b', cop: 'sensor.demo_d', power: 'sensor.demo_f', compressor: 'binary_sensor.demo_kompressor',
+  pump: 'binary_sensor.demo_hk', circulation: 'binary_sensor.demo_zirk', frost: 'binary_sensor.demo_frost' });
 assert.equal(F.field(h0, ID, 'nope'), null);
 assert.equal(F.isPump(h0, ID), true, 'water heater and compressor on the same device');
 
@@ -66,6 +71,8 @@ const nf = F.find(named, ID);
 assert.equal(nf.outdoor, 'sensor.demo_a'); assert.equal(nf.supply, 'sensor.demo_c'); assert.equal(nf.return, 'sensor.demo_b');
 assert.equal(nf.compressor, 'binary_sensor.demo_kompressor', 'German word Kompressor');
 assert.equal(nf.cop, 'sensor.demo_d', 'the plain COP before „Heizung“');
+// The pumps by their words: the heating circuit's is not the hot water's, and the other way round.
+assert.equal(nf.pump, 'binary_sensor.demo_hk'); assert.equal(nf.circulation, 'binary_sensor.demo_zirk'); assert.equal(nf.frost, 'binary_sensor.demo_frost');
 // Only the entity's own words count, not the device name nor the entity id.
 const dv = hass();
 dv.devices[DEV].name = 'Kompressor Außen';
@@ -75,15 +82,17 @@ assert.notEqual(F.field(dv, ID, 'outdoor'), 'sensor.demo_b', 'the device name is
 
 // ── Tile ────────────────────────────────────────────────────────────────────────────────────────────────────
 const h1 = hass();
+// Feedback on the first beta (#132): the heating's target and whether the pump works, not program and hot water.
 let t = H.tileText(h1.states[ID], h1, {});
-eq(t, { full: 'Zuhause · Wasser 42,9° / 50° · Aus', short: 'Zuhause 43/50°' });
-assert.equal(H.tileText(h1.states[ID], h1, {}, true).short, 'Zuhause', 'phone: the program alone when both do not fit');
-const ecoH = hass({ [ID]: { ...h1.states[ID], attributes: { ...h1.states[ID].attributes, preset_mode: 'eco' } } });
-assert.equal(H.tileText(ecoH.states[ID], ecoH, {}, true).short, 'Eco 43/50°', 'phone: both when they fit');
+eq(t, { full: 'Soll 19° · Bereit', short: '19° · Bereit' });
+assert.equal(H.tileText(h1.states[ID], h1, {}, true).short, '19°', 'phone: the target alone when both do not fit');
 assert.equal(H.tileOn(h1.states[ID], h1, {}), false, 'compressor off: circle plain');
 assert.equal(H.active(h1.states[ID], h1, {}), false, 'compressor off: tile not highlighted');
 const h2 = hass({ 'binary_sensor.demo_kompressor': { entity_id: 'binary_sensor.demo_kompressor', state: 'on', attributes: { friendly_name: 'x' } } });
-assert.match(H.tileText(h2.states[ID], h2, {}).full, /· Läuft$/);
+eq(H.tileText(h2.states[ID], h2, {}), { full: 'Soll 19° · Läuft', short: '19° · Läuft' });
+assert.equal(H.tileText(h2.states[ID], h2, {}, true).short, '19° · Läuft', 'phone: both when they fit');
+const h2h = hass({ ...{ 'binary_sensor.demo_kompressor': h2.states['binary_sensor.demo_kompressor'] }, [ID]: { ...h1.states[ID], attributes: { ...h1.states[ID].attributes, hvac_action: 'heating' } } });
+assert.equal(H.tileText(h2h.states[ID], h2h, {}).full, 'Soll 19° · Heizt', 'the compressor runs for the heating: Heizt; for hot water: Läuft');
 assert.equal(H.tileOn(h2.states[ID], h2, {}), true);
 assert.equal(H.active(h2.states[ID], h2, {}), true);
 // Compressor set to nothing (another brand): the thermostat's rule, the word falls away, no NaN or undefined.
@@ -93,6 +102,7 @@ none.entities['binary_sensor.demo_kompressor'] = undefined;
 delete none.entities['binary_sensor.demo_kompressor'];
 const tn = H.tileText(none.states[ID], none, {});
 assert.ok(!/undefined|NaN|Läuft/.test(JSON.stringify(tn)), JSON.stringify(tn));
+assert.equal(tn.full, 'Soll 19° · Bereit', 'no compressor known: the heating\'s own word (hvac_action idle)');
 assert.equal(H.tileOn(none.states[ID], none, {}), true, 'no compressor known: any mode but off is on');
 assert.equal(H.active(none.states[ID], none, {}), null, 'no compressor known: the thermostat decides the highlight');
 // Studio field wins over the find; a set entity that vanished is simply gone, not a crash.
@@ -100,7 +110,7 @@ const h3 = hass();
 const set = H.model(h3, ID, { water_heater_entity: 'water_heater.demo_warmwasser', compressor_entity: 'binary_sensor.gone' });
 assert.equal(set.compressor, null);
 const offStates = hass({ [ID]: { ...h1.states[ID], state: 'off' } });
-assert.match(H.tileText(offStates.states[ID], offStates, {}).full, /^Aus · /, 'heating off first');
+assert.equal(H.tileText(offStates.states[ID], offStates, {}).full, 'Aus', 'heating off: just that');
 const dead = hass({ [ID]: { ...h1.states[ID], state: 'unavailable' } });
 assert.equal(H.tileText(dead.states[ID], dead, {}).full, 'Nicht verfügbar');
 
@@ -122,7 +132,10 @@ win._casoraUI = {
 assert.equal(H.sec('hero', { id: ID, vars: {} }, h1.states, h1), 'Bereit|Verdichter aus');
 H.sec('stage', { id: ID, vars: {} }, h1.states, h1);
 let st = captured.pop().o;
-assert.equal(st.value, 19); assert.equal(st.current, null); assert.equal(st.foot, null, 'no „Jetzt“ without a reading');
+assert.equal(st.value, 19); assert.equal(st.current, null); assert.equal(st.foot, null, 'no „Ist“ without a reading');
+assert.equal(st.caption, 'Soll'); assert.equal(st.label, 'Solltemperatur');
+H.sec('stage', { id: ID, vars: { temp_sensor: 'sensor.raum' } }, withSensor.states, withSensor);
+assert.equal(captured.pop().o.foot, 'Ist 20,5 °C');
 assert.equal(st.min, 3); assert.equal(st.max, 60); assert.equal(st.step, 1);
 assert.equal(st.minus.svc.service, 'set_temperature');
 assert.equal(st.minus.svc.data.temperature, 18);
@@ -137,14 +150,31 @@ assert.equal(st.state, 'off'); assert.ok(!st.minus, 'off: no − / +');
 const w = JSON.parse(H.sec('water', { id: ID, vars: {} }, h1.states, h1));
 assert.equal(w.label, 'Warmwasser');
 assert.equal(w.rows[0].value, '42,9 °C');
+eq(w.rows.slice(0, 2).map((r) => r.label), ['Ist', 'Soll']);
+assert.ok(!w.rows[0].entity && w.rows[0].noChev, 'the reading leads nowhere (the water heater\'s page is the device\'s list)');
 assert.match(w.rows[1].endHtml, /set_temperature&quot;,&quot;data&quot;:\{&quot;temperature&quot;:51/);
 assert.match(w.rows[1].endHtml, /water_heater/);
 assert.equal(w.rows[2].label, 'Einmal aufheizen');
 eq(w.rows[2].svc.target, { entity_id: 'button.demo_laden_an' });
 assert.equal(w.rows[2].svc.domain, 'button');
+// Status: compressor, both pumps, frost protection, each only when the device has it.
+const sg = JSON.parse(H.sec('status', { id: ID, vars: {} }, h1.states, h1));
+assert.equal(sg.label, 'Zustand');
+eq(Object.fromEntries(sg.rows.map((r) => [r.label, r.value])), { Verdichter: 'Aus', Heizkreispumpe: 'Läuft', Zirkulationspumpe: 'Aus', Frostschutz: 'Aus' });
+assert.equal(H.sec('status', { id: ID, vars: {} }, { [ID]: h1.states[ID] }, { ...h1, entities: {}, states: { [ID]: h1.states[ID] } }), '', 'nothing known: no group');
+// Values: COP and compressor power are found by the Studio's search no more, only shown when chosen.
 const v = JSON.parse(H.sec('values', { id: ID, vars: {} }, h1.states, h1));
-const lbls = Object.fromEntries(v.rows.map((r) => [r.label, r.value]));
-eq(lbls, { 'Außen': '9,8 °C', Vorlauf: '25,6 °C', 'Rücklauf': '25,5 °C', Leistungszahl: '3', Verdichterleistung: '6 kW', Verdichter: 'Aus' });
+eq(Object.fromEntries(v.rows.map((r) => [r.label, r.value])), { 'Außen': '9,8 °C', Vorlauf: '25,6 °C', 'Rücklauf': '25,5 °C' });
+const v2 = JSON.parse(H.sec('values', { id: ID, vars: { cop_entity: 'sensor.demo_d', power_entity: 'sensor.demo_f' } }, h1.states, h1));
+eq(Object.fromEntries(v2.rows.map((r) => [r.label, r.value])), { 'Außen': '9,8 °C', Vorlauf: '25,6 °C', 'Rücklauf': '25,5 °C', Leistungszahl: '3', Verdichterleistung: '6 kW' });
+// The Verlauf says which temperature it is.
+win._casoraSoftKit = { secCard: (w2, code) => ({ code }), layout: (o) => o };
+win._casoraUI.soft = () => true;
+const pop = H.popup(h1.states[ID], h1, {});
+assert.equal(pop.fields.chart.card.title, 'Vorlauftemperatur · 24 Std.');
+eq(pop.right, ['water', 'status', 'values']);
+const noSupply = hass(); delete noSupply.states['sensor.demo_c']; delete noSupply.entities['sensor.demo_c'];
+assert.equal(H.popup(noSupply.states[ID], noSupply, {}).fields.chart.card.title, 'Außentemperatur · 24 Std.');
 
 // ── Wiring ─────────────────────────────────────────────────────────────────────────────────────────────────
 assert.ok(read('custom_components/casora/scripts/casora-local.js').includes("'44-waermepumpe'"));
@@ -157,10 +187,11 @@ const built = JSON.parse(read('custom_components/casora/panel/casora-templates.j
 assert.ok(built.casora_heat_pump && built.casora_popup_heat_pump, 'templates built');
 const types = read('custom_components/casora/panel/casora-panel-types.js');
 assert.match(types, /id: "casora_heat_pump", like: "thermostat"/);
-for (const k of ['water_heater_entity', 'charge_button', 'compressor_entity', 'outdoor_entity', 'supply_entity', 'return_entity', 'cop_entity', 'power_entity', 'temp_sensor'])
+for (const k of ['water_heater_entity', 'charge_button', 'compressor_entity', 'outdoor_entity', 'supply_entity', 'return_entity', 'cop_entity', 'power_entity', 'temp_sensor', 'pump_entity', 'circulation_entity', 'frost_entity'])
   assert.ok(types.includes(`key: "${k}"`), 'Studio field ' + k);
 assert.ok(!/warmepumpe/.test(read('custom_components/casora/scripts/local/44-waermepumpe.js')), 'no reporter entity names');
 const en = JSON.parse(read('custom_components/casora/translations/dashboard/phrases/en.json')).exact;
-for (const k of ['Wärmepumpe', 'Warmwasser', 'Vorlauf', 'Rücklauf', 'Verdichter läuft', 'Einmal aufheizen', 'Leistungszahl']) assert.ok(en[k], 'en: ' + k);
+for (const k of ['Wärmepumpe', 'Warmwasser', 'Vorlauf', 'Rücklauf', 'Verdichter läuft', 'Einmal aufheizen', 'Leistungszahl', 'Soll', 'Ist', 'Solltemperatur', 'Heizkreispumpe',
+  'Zirkulationspumpe', 'Frostschutz', 'Vorlauftemperatur · 24 Std.', 'Außentemperatur · 24 Std.']) assert.ok(en[k], 'en: ' + k);
 
 console.log('ok – waermepumpe');

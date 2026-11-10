@@ -3031,7 +3031,10 @@
     "Dark map": "Carte sombre",
     "Map on the tile": "Carte sur la tuile",
     "The tile shows the map itself, large. Off: a small tile with a title and a symbol.": "La tuile affiche la carte elle-même, en grand. Désactivé : une petite tuile avec un titre et un symbole.",
-    "Home Assistant's map right on the tile, with the title and who is home. A tap opens it large in the popup: persons and zones, geo location data if you like, the way people took and the zoom you set. Without the map: a small tile with a title and a symbol.": "La carte de Home Assistant directement sur la tuile, avec le titre et qui est à la maison. Un toucher l'ouvre en grand : personnes et zones, données de géolocalisation au besoin, trajets et zoom choisi. Sans carte : une petite tuile avec un titre et un symbole."
+    "Home Assistant's map right on the tile, with the title and who is home. A tap opens it large in the popup: persons and zones, geo location data if you like, the way people took and the zoom you set. Without the map: a small tile with a title and a symbol.": "La carte de Home Assistant directement sur la tuile, avec le titre et qui est à la maison. Un toucher l'ouvre en grand : personnes et zones, données de géolocalisation au besoin, trajets et zoom choisi. Sans carte : une petite tuile avec un titre et un symbole.",
+    "Heating circuit pump": "Pompe du circuit de chauffage",
+    "Hot water circulation pump": "Pompe de bouclage d’eau chaude",
+    "Frost protection": "Protection antigel"
   },
   "patterns": [
     [

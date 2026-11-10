@@ -1,9 +1,11 @@
 // @zustand: arbeit
 // @parallel: ui
 // @deckt: custom_components/casora/scripts/local/44-waermepumpe.js#_casoraHeatPump custom_components/casora/scripts/local/00-finder.js#casoraHeatPumpFind dashboards/casora/button_card_templates.json#casora_heat_pump
-// Heat pump tile and popup (issue #132) on made-up entities: the tile says program, hot water and whether the
-// compressor runs; the popup has the target on the dial, the presets as moons, the hot water and the values. A
-// climate with current_temperature null shows the target only, an optional sensor adds „Jetzt“. A plain thermostat
+// Heat pump tile and popup (issue #132) on made-up entities: the tile says the heating's target and whether the pump
+// runs („Soll 19° · Läuft“, the reporter's feedback on the first beta); the popup has the target on the dial, the presets
+// as moons, the hot water (Ist, Soll), the status (compressor, pumps, frost protection) and the values, the Verlauf
+// names its temperature. A climate with current_temperature null shows the target only, an optional sensor adds „Ist“.
+// COP and compressor power show only when chosen in the Studio. A plain thermostat
 // on the same entity stays as it was. Nothing is saved: the states exist only in this browser (fakeStates).
 import { open, casoraDashboard, dashboard, check, need, finish, stable, fakeStates, usePage } from './lib.mjs';
 
@@ -21,10 +23,14 @@ const FAKE = {
   'sensor.demo_ruecklauf': { state: '25.5', attributes: { friendly_name: 'Demo Rücklauf', device_class: 'temperature', unit_of_measurement: '°C' } },
   'sensor.demo_leistungszahl': { state: '3.0', attributes: { friendly_name: 'Demo Leistungszahl' } },
   'sensor.demo_leistung': { state: '6.0', attributes: { friendly_name: 'Demo Verdichterleistung', device_class: 'power', unit_of_measurement: 'kW' } },
+  'binary_sensor.demo_heizkreispumpe': { state: 'on', attributes: { friendly_name: 'Demo Heizkreispumpe', device_class: 'running' } },
+  'binary_sensor.demo_zirkulation': { state: 'off', attributes: { friendly_name: 'Demo Zirkulation', device_class: 'running' } },
+  'binary_sensor.demo_frostschutz': { state: 'off', attributes: { friendly_name: 'Demo Frostschutz' } },
   'sensor.demo_raum': { state: '20.5', attributes: { friendly_name: 'Demo Raum', device_class: 'temperature', unit_of_measurement: '°C' } },
 };
 const VARS = { water_heater_entity: WATER, charge_button: BTN, compressor_entity: COMP, outdoor_entity: 'sensor.demo_aussen',
-  supply_entity: 'sensor.demo_vorlauf', return_entity: 'sensor.demo_ruecklauf', cop_entity: 'sensor.demo_leistungszahl', power_entity: 'sensor.demo_leistung' };
+  supply_entity: 'sensor.demo_vorlauf', return_entity: 'sensor.demo_ruecklauf', cop_entity: 'sensor.demo_leistungszahl', power_entity: 'sensor.demo_leistung',
+  pump_entity: 'binary_sensor.demo_heizkreispumpe', circulation_entity: 'binary_sensor.demo_zirkulation', frost_entity: 'binary_sensor.demo_frostschutz' };
 
 const dash = await casoraDashboard();
 await need('a Casora dashboard', dash);
@@ -66,9 +72,9 @@ await readyTile('qa-r609'); await readyTile('qa-r609-plain');
 await page.waitForTimeout(500);
 
 let t = await tileText('qa-r609');
-await check('tile: active program', /Zuhause/.test(t.full), t);
-await check('tile: hot water current and target', /42,9° \/ 50°/.test(t.full), t);
-await check('tile: compressor off', /· Aus$/.test(t.full), t);
+await check('tile: the heating\'s target', /^Soll 19°/.test(t.full), t);
+await check('tile: no program and no hot water any more', !/Zuhause|Wasser|42,9/.test(t.full), t);
+await check('tile: compressor off, the pump waits', /· Bereit$/.test(t.full), t);
 const off = t.circle;
 await check('tile: the icon circle is not coloured while the compressor is off', /puck-off-bg/.test(off), off);
 
@@ -102,11 +108,13 @@ const look = () => {
 let pop = await stable(page, look, null, { max: 15000, quiet: 800, until: (v) => v && v.open && v.value });
 await need('popup open with its dial', pop && pop.open && pop.stages.includes('S2'), pop);
 await check('dial shows the target 19', pop.value.startsWith('19'), pop.value);
-await check('climate with current_temperature null: the dial has no „Jetzt“', !/Jetzt \d/.test(pop.stage), pop.stage);
+await check('climate with current_temperature null: the dial has no „Ist“', !/(Ist|Jetzt) \d/.test(pop.stage), pop.stage);
+await check('the dial says „Soll“', /Soll/.test(pop.stage) && !/Ziel/.test(pop.stage), pop.stage);
 await check('the four presets are moons', ['Komfort', 'Eco', 'Zuhause', 'Schlafen'].every((w) => pop.moons.some((m) => m.includes(w))), pop.moons);
-await check('the supply temperature as the Verlauf', pop.charts === 1, pop.charts);
-await check('hot water row with current and target', pop.rows.some((r) => /42,9 °C/.test(r)) && pop.rows.some((r) => /Ziel.*50,0 °C/.test(r)), pop.rows);
-await check('values rows', [/Außen.*9,8 °C/, /Vorlauf.*25,6 °C/, /Rücklauf.*25,5 °C/, /Leistungszahl.*3/, /Verdichterleistung.*6 kW/, /Verdichter.*Läuft/].every((re) => pop.rows.some((r) => re.test(r))), pop.rows);
+await check('the supply temperature as the Verlauf, named', pop.charts === 1 && /Vorlauftemperatur · 24 Std\./i.test(pop.text), pop.charts);
+await check('hot water rows „Ist“ and „Soll“', pop.rows.some((r) => /^Ist.*42,9 °C/.test(r)) && pop.rows.some((r) => /^Soll.*50,0 °C/.test(r)) && !pop.rows.some((r) => /^(Jetzt|Ziel)/.test(r)), pop.rows);
+await check('status rows: compressor, both pumps, frost protection', [/^Verdichter.*Läuft/, /^Heizkreispumpe.*Läuft/, /^Zirkulationspumpe.*Aus/, /^Frostschutz.*Aus/].every((re) => pop.rows.some((r) => re.test(r))), pop.rows);
+await check('values rows (COP and power because they are chosen)', [/Außen.*9,8 °C/, /Vorlauf.*25,6 °C/, /Rücklauf.*25,5 °C/, /Leistungszahl.*3/, /Verdichterleistung.*6 kW/].every((re) => pop.rows.some((r) => re.test(r))), pop.rows);
 
 // The presets, the hot water target and the one-time charge call the right services.
 const click = async (test) => {
@@ -146,6 +154,6 @@ await mount('qa-r609b', 'casora_heat_pump', { ...VARS, temp_sensor: 'sensor.demo
 await readyTile('qa-r609b');
 await page.mouse.click(300 + 150, 300 + 100);
 pop = await stable(page, look, null, { max: 15000, quiet: 800, until: (v) => v && v.open && v.value });
-await check('optional sensor: the dial shows „Jetzt 20,5 °C“', /Jetzt 20,5 °C/.test(pop.stage), pop.stage);
+await check('optional sensor: the dial shows „Ist 20,5 °C“', /Ist 20,5 °C/.test(pop.stage), pop.stage);
 
 await finish();

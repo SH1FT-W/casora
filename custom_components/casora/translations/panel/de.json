@@ -3031,7 +3031,10 @@
     "Dark map": "Dunkle Karte",
     "Map on the tile": "Karte auf der Kachel",
     "The tile shows the map itself, large. Off: a small tile with a title and a symbol.": "Die Kachel zeigt die Karte selbst, groß. Aus: eine kleine Kachel mit Titel und Symbol.",
-    "Home Assistant's map right on the tile, with the title and who is home. A tap opens it large in the popup: persons and zones, geo location data if you like, the way people took and the zoom you set. Without the map: a small tile with a title and a symbol.": "Die Karte von Home Assistant direkt auf der Kachel, mit Titel und wer zu Hause ist. Antippen öffnet sie groß im Popup: Personen und Zonen, auf Wunsch Geo-Standortdaten, zurückgelegte Wege und den eingestellten Zoom. Ohne Karte: eine kleine Kachel mit Titel und Symbol."
+    "Home Assistant's map right on the tile, with the title and who is home. A tap opens it large in the popup: persons and zones, geo location data if you like, the way people took and the zoom you set. Without the map: a small tile with a title and a symbol.": "Die Karte von Home Assistant direkt auf der Kachel, mit Titel und wer zu Hause ist. Antippen öffnet sie groß im Popup: Personen und Zonen, auf Wunsch Geo-Standortdaten, zurückgelegte Wege und den eingestellten Zoom. Ohne Karte: eine kleine Kachel mit Titel und Symbol.",
+    "Heating circuit pump": "Heizkreispumpe",
+    "Hot water circulation pump": "Warmwasser-Zirkulationspumpe",
+    "Frost protection": "Frostschutz"
   },
   "patterns": [
     [

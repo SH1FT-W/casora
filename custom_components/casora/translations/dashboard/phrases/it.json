@@ -2881,7 +2881,15 @@
     "Aufheizen gestartet": "Riscaldamento avviato",
     "Taut ab": "Sbrinamento",
     "Landkarte": "Mappa",
-    "Nichts auf der Karte": "Niente sulla mappa"
+    "Nichts auf der Karte": "Niente sulla mappa",
+    "Soll": "Impostata",
+    "Ist": "Attuale",
+    "Solltemperatur": "Temperatura impostata",
+    "Heizkreispumpe": "Pompa del circuito di riscaldamento",
+    "Zirkulationspumpe": "Pompa di ricircolo",
+    "Frostschutz": "Protezione antigelo",
+    "Vorlauftemperatur · 24 Std.": "Temperatura di mandata · 24 h",
+    "Außentemperatur · 24 Std.": "Temperatura esterna · 24 h"
   },
   "patterns": [
     [

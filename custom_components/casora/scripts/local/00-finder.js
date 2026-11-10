@@ -3803,7 +3803,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
 // field falls back to the climate's own device (with its sub-devices): by translation_key first (HA's ViCare keys),
 // then by the entity's own words in the common languages (never the entity id, never the device's name). Nothing
 // found: the row stays away. Other makers' keys simply go into the table below.
-//   casoraHeatPumpFind.field(hass, climate, key) → entity_id | null (water, charge, charging, outdoor, supply, return, cop, power, compressor)
+//   casoraHeatPumpFind.field(hass, climate, key) → entity_id | null (water, charge, charging, outdoor, supply, return, cop, power, compressor, pump, circulation, frost)
 //   casoraHeatPumpFind.find(hass, climate)       → all of them { water: …, charge: …, … }
 //   casoraHeatPumpFind.isPump(hass, climate)     → the climate looks like a heat pump (Studio: suggested first)
 (function () {
@@ -3826,6 +3826,12 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
       avoid: /heiz|heating|warm|dhw|hot.?water|cool|k(ü|ue)hl/i },
     power: { domain: 'sensor', dc: 'power', keys: ['compressor_power'], like: COMPRESSOR },
     compressor: { domain: 'binary_sensor', keys: ['compressor'], like: COMPRESSOR },
+    // Heating circuit pump, hot water circulation pump, frost protection (the popup's status rows).
+    pump: { domain: 'binary_sensor', keys: ['circulation_pump'], like: /heizkreis|umw(ä|ae|a)lzpumpe|heating.?circuit|circulation.?pump|circulateur|circolatore/i,
+      not: /ww|warmwasser|trinkwasser|dhw|hot.?water|zirkulation|eau.?chaude|sanitari/i },
+    circulation: { domain: 'binary_sensor', keys: ['domestic_hot_water_circulation_pump'],
+      like: /zirkulation|(dhw|hot.?water).*(circulation|recirculation)|bouclage|ricircolo/i },
+    frost: { domain: 'binary_sensor', keys: ['frost_protection'], like: /frost|antigel|antigelo|vorst|anticongel/i },
   };
   // The entity's own words: its friendly name without the device's name (each entity carries it: „Testpumpe Kompressor“).
   var wordsOf = function (hass, e) {

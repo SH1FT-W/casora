@@ -368,7 +368,8 @@ Home Connect aus HACS (Wäsche/Spüler: `00-finder.js` `casoraLaundryFind.SOURCE
   `button.press`. Leere Studio-Felder findet `casoraHeatPumpFind` über das Gerät der Klima-Entität und zuerst über
   ViCares `translation_key` (`domestic_hot_water`, `activate_onetimecharge`, `one_time_charge`, `compressor`,
   `outside_temperature`, `supply_temperature`, `return_temperature`, `secondary_circuit_supply_temperature`, `cop_total`,
-  `compressor_power`), sonst über den eigenen Namen der Entität (mehrsprachig, nie Entity-ID). Code: `44-waermepumpe.js`,
+  `compressor_power`, für die Statuszeilen `circulation_pump`, `domestic_hot_water_circulation_pump`, `frost_protection`
+  als `binary_sensor` mit `on`/`off`), sonst über den eigenen Namen der Entität (mehrsprachig, nie Entity-ID). Code: `44-waermepumpe.js`,
   `00-finder.js` `casoraHeatPumpFind`, `casora-panel-types.js` `casora_heat_pump`; Tests `dev/unit/waermepumpe.mjs`,
   `dev/qa/regress/r614_waermepumpe.mjs`.
 - Karte `map` (Frontend, Community-Karte „Landkarte“, #159): HAs Karten-Karte `hui-map-card` nimmt `entities`, `geo_location_sources` (`all` oder Quellnamen), `hours_to_show`, `default_zoom`, `theme_mode` (`auto`/`light`/`dark`) und `aspect_ratio` (`B:H`); ohne `entities` und ohne `geo_location_sources` wirft `setConfig`. Sie zeichnet ihre runden Entitäts-Marker (`ha-entity-marker`) mit `--card-background-color`; das Popup setzt diese Variable transparent, Casora setzt sie darum am Bühnen-Platz der Karte zurück. Zuordnung `geo_location`: Attribut `source` der Entität. Code: `44-landkarte.js`, `casora-panel-types.js` `casora_map`; Tests `dev/unit/landkarte.mjs`, `dev/qa/regress/r616_landkarte.mjs`.

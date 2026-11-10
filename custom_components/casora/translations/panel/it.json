@@ -3031,7 +3031,10 @@
     "Dark map": "Mappa scura",
     "Map on the tile": "Mappa sulla scheda",
     "The tile shows the map itself, large. Off: a small tile with a title and a symbol.": "La scheda mostra la mappa stessa, in grande. Disattivato: una scheda piccola con titolo e simbolo.",
-    "Home Assistant's map right on the tile, with the title and who is home. A tap opens it large in the popup: persons and zones, geo location data if you like, the way people took and the zoom you set. Without the map: a small tile with a title and a symbol.": "La mappa di Home Assistant direttamente sulla scheda, con il titolo e chi è a casa. Un tocco la apre in grande: persone e zone, dati di geolocalizzazione se vuoi, percorsi e lo zoom scelto. Senza mappa: una scheda piccola con titolo e simbolo."
+    "Home Assistant's map right on the tile, with the title and who is home. A tap opens it large in the popup: persons and zones, geo location data if you like, the way people took and the zoom you set. Without the map: a small tile with a title and a symbol.": "La mappa di Home Assistant direttamente sulla scheda, con il titolo e chi è a casa. Un tocco la apre in grande: persone e zone, dati di geolocalizzazione se vuoi, percorsi e lo zoom scelto. Senza mappa: una scheda piccola con titolo e simbolo.",
+    "Heating circuit pump": "Pompa del circuito di riscaldamento",
+    "Hot water circulation pump": "Pompa di ricircolo acqua calda",
+    "Frost protection": "Protezione antigelo"
   },
   "patterns": [
     [

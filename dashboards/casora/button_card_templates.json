@@ -19458,6 +19458,9 @@
       "return_entity": null,
       "cop_entity": null,
       "power_entity": null,
+      "pump_entity": null,
+      "circulation_entity": null,
+      "frost_entity": null,
       "active_override": "[[[\n  /* Highlighted while the compressor runs; without a known compressor the thermostat's rule (window._casoraHeatPump.active). */\n  const P = window._casoraHeatPump;\n  return P ? P.active(entity, hass, variables) : null;\n]]]\n"
     },
     "hold_action": {
@@ -19465,7 +19468,7 @@
       "haptic": "medium",
       "casora_popup": null
     },
-    "state_display": "[[[\n  /* „Zuhause · Wasser 42,9° / 50° · Läuft“, narrow „Zuhause · 42,9° / 50°“ (window._casoraHeatPump.tileText); in the Studio\n     preview, which has no modules, the preset or the mode word. */\n  const fit = (t, a) => window.casoraStateFit?.(t, undefined, a) ?? (window.casoraEsc || String)(t);\n  const P = window._casoraHeatPump;\n  const t = P ? P.tileText(entity, hass, variables, (this.offsetWidth || 999) < 240) : { full: entity?.attributes?.preset_mode || entity?.state || '', short: '' };\n  return fit(t.full, t.short || t.full);\n]]]\n",
+    "state_display": "[[[\n  /* „Soll 19° · Läuft“, narrow „19° · Läuft“ (window._casoraHeatPump.tileText); in the Studio\n     preview, which has no modules, the preset or the mode word. */\n  const fit = (t, a) => window.casoraStateFit?.(t, undefined, a) ?? (window.casoraEsc || String)(t);\n  const P = window._casoraHeatPump;\n  const t = P ? P.tileText(entity, hass, variables, (this.offsetWidth || 999) < 240) : { full: entity?.attributes?.preset_mode || entity?.state || '', short: '' };\n  return fit(t.full, t.short || t.full);\n]]]\n",
     "custom_fields": {
       "temp_puck": "[[[\n  /* The thermostat's circle without its tap: a heat pump is not switched from the tile (#132), a tap on the icon opens the\n     popup like a tap on the tile. Coloured while the compressor runs, without a known compressor in every mode but off. */\n  const esc = window.casoraEsc || ((t) => String(t ?? '').replace(/[&<>\"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', \"'\": '&#39;' }[c])));\n  const P = window._casoraHeatPump;\n  const s = String(entity?.state || '').toLowerCase();\n  const isOn = P ? P.tileOn(entity, hass, variables) : (!!s && !['off', 'unavailable', 'unknown'].includes(s));\n  const isCool = isOn && (P ? P.tileCool(entity) : (s === 'cool' || entity?.attributes?.hvac_action === 'cooling'));\n  const circleBg = isCool ? 'var(--casora-puck-cool-color, #00d2e0)' : isOn ? 'var(--casora-puck-heat-color, #FF4245)' : 'var(--casora-puck-off-bg, rgba(0,0,0,0.20))';\n  const iconColor = isOn ? 'rgba(255,255,255,0.9)'\n    : 'color-mix(in srgb, var(--casora-icon-off-ink, transparent) var(--casora-icon-off-mix, 0%), var(--casora-puck-heat-color, #FF4245))';\n  const url = window.casoraIconUrl ? window.casoraIconUrl('heat_pump') : '/casora_assets/icons/heat_pump.svg';\n  return `<div class=\"casora-icon-circle\" style=\"--casora-icon-circle-bg:${esc(circleBg)};cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;\"><div style=\"width:58%;height:58%;background-color:${esc(iconColor)};-webkit-mask-image:url('${esc(url)}');mask-image:url('${esc(url)}');-webkit-mask-size:contain;mask-size:contain;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;\"></div></div>`;\n]]]\n"
     }

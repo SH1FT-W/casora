@@ -2881,7 +2881,15 @@
     "Aufheizen gestartet": "Calentamiento iniciado",
     "Taut ab": "Descongelando",
     "Landkarte": "Mapa",
-    "Nichts auf der Karte": "Nada en el mapa"
+    "Nichts auf der Karte": "Nada en el mapa",
+    "Soll": "Consigna",
+    "Ist": "Real",
+    "Solltemperatur": "Temperatura de consigna",
+    "Heizkreispumpe": "Bomba del circuito de calefacción",
+    "Zirkulationspumpe": "Bomba de recirculación",
+    "Frostschutz": "Protección antihielo",
+    "Vorlauftemperatur · 24 Std.": "Temperatura de impulsión · 24 h",
+    "Außentemperatur · 24 Std.": "Temperatura exterior · 24 h"
   },
   "patterns": [
     [

@@ -1,17 +1,19 @@
 // ── Heat pump (tile casora_heat_pump, issue 132) ────────────────────────────────────────────────────────────────────
 // Tile and popup on a climate entity; everything else is optional (Studio fields, else casoraHeatPumpFind in
-// 00-finder.js finds it on the climate's device). The tile says program · hot water · whether the compressor runs;
-// a plain thermostat tile is untouched (template casora_heat_pump = casora_thermostat + casora_popup_heat_pump).
+// 00-finder.js finds it on the climate's device). The tile says the heating's target and whether the pump runs
+// („Soll 19° · Läuft“, reporter's feedback on the first beta); a plain thermostat tile is untouched (template
+// casora_heat_pump = casora_thermostat + casora_popup_heat_pump).
 // Popup v3 „Bühne“ (popup-richtlinien-v3.md §4 S2, §4.8): the target on the dial, the presets as moons, right the hot
-// water (now, target with − / +, one-time charge) and the values (outdoor, supply, return, COP, compressor), the supply
-// temperature as the Verlauf under the dial.
-// A climate without current_temperature (ViCare): the dial shows the target only, an optional sensor adds „Jetzt“.
+// water (Ist, Soll with − / +, one-time charge), the status (compressor, heating circuit pump, hot water circulation
+// pump, frost protection) and the values (outdoor, supply, return; COP and compressor power only when chosen in the
+// Studio), the supply temperature as the Verlauf under the dial. Heating people say Soll and Ist, so does this popup.
+// A climate without current_temperature (ViCare): the dial shows the target only, an optional sensor adds „Ist“.
 //   window._casoraHeatPump.model(hass, id, vars)      → the pump's values
 //   window._casoraHeatPump.tileText(st, hass, vars, narrow) → { full, short } for casoraStateFit
 //   window._casoraHeatPump.tileOn(st, hass, vars)     → the circle: true = coloured
 //   window._casoraHeatPump.active(st, hass, vars)     → highlighted tile (true/false; null = unknown, thermostat rule)
 //   window._casoraHeatPump.popup(entity, hass, vars)  – the popup's cards
-//   window._casoraHeatPump.sec(part, c, states, hass) – the v3 parts (hero, stage, water, values)
+//   window._casoraHeatPump.sec(part, c, states, hass) – the v3 parts (hero, stage, water, status, values)
 (function () {
   if (window._casoraHeatPump) return;
   var H = window._casoraHeatPump = {};
@@ -74,12 +76,18 @@
     m.outdoor = ent('outdoor_entity', 'outdoor');
     m.supply = ent('supply_entity', 'supply');
     m.ret = ent('return_entity', 'return');
-    m.cop = ent('cop_entity', 'cop');
-    m.power = ent('power_entity', 'power');
+    // COP and compressor power: only when chosen in the Studio (mostly fixed figures, not for the first page).
+    var own = function (varName) { var x = varId(v, varName); return x && S[x] ? x : null; };
+    m.cop = own('cop_entity');
+    m.power = own('power_entity');
+    m.pump = ent('pump_entity', 'pump');
+    m.circulation = ent('circulation_entity', 'circulation');
+    m.frost = ent('frost_entity', 'frost');
     m.watchStage = [id, m.sensor].filter(Boolean);
     m.watchWater = [id, m.water, m.charge, f.charging, m.compressor].filter(Boolean);
-    m.watchValues = [id, m.outdoor, m.supply, m.ret, m.cop, m.power, m.compressor].filter(Boolean);
-    m.watch = m.watchStage.concat(m.watchWater, m.watchValues).filter(function (x, i, l) { return l.indexOf(x) === i; });
+    m.watchStatus = [id, m.compressor, m.pump, m.circulation, m.frost].filter(Boolean);
+    m.watchValues = [id, m.outdoor, m.supply, m.ret, m.cop, m.power].filter(Boolean);
+    m.watch = m.watchStage.concat(m.watchWater, m.watchStatus, m.watchValues).filter(function (x, i, l) { return l.indexOf(x) === i; });
     return m;
   };
 
@@ -95,23 +103,22 @@
   };
   var deg = function (n) { return n == null ? '–' : nf(n) + '°'; };
 
-  // Tile: program · hot water · compressor; short for a narrow tile (the circle carries the compressor there).
+  // Whether the pump works: off; the compressor runs: what for when the heating says so (Heizt, Kühlt, Taut ab), else
+  // Läuft (hot water); it stands: Bereit (on and waiting). Without a known compressor the heating's own word.
+  H.runWord = function (m) {
+    if (m.dead || m.off || m.running == null) return H.word(m);
+    if (!m.running) return T('Bereit');
+    return /^(heating|preheating|cooling|defrosting)$/.test(String(m.action)) ? H.word(m) : T('Läuft');
+  };
+  // Tile: the heating's target · whether the pump works („Soll 19° · Läuft“); short for a narrow tile („19° · Läuft“,
+  // a phone tile holds about eleven characters).
   H.tileText = function (st, hass, vars, narrow) {
     if (!st) return { full: '', short: '' };
     var m = H.model(hass, st.entity_id, vars);
-    if (m.dead) return { full: H.word(m), short: H.word(m) };
-    var lead = m.off ? T('Aus') : H.presetWord(hass, m.st, m.preset) || H.word(m);
-    var run = m.running == null || m.off ? '' : T(m.running ? 'Läuft' : 'Aus');
-    if (m.waterNow == null && m.waterTarget == null) {
-      var t = run ? lead + ' · ' + run : lead;
-      return { full: t, short: t };
-    }
-    var w = deg(m.waterNow) + ' / ' + deg(m.waterTarget);
-    // Short („Zuhause 43/50°“); a phone tile holds about ten characters (the program alone then: the circle carries the
-    // compressor, the popup the temperatures).
-    var rd = function (n) { return n == null ? '–' : nf(Math.round(n), 0); };
-    var sh = lead + ' ' + rd(m.waterNow) + '/' + rd(m.waterTarget) + '°';
-    return { full: [lead, T('Wasser') + ' ' + w, run].filter(Boolean).join(' · '), short: narrow && sh.length > 11 ? lead : sh };
+    var run = H.runWord(m);
+    if (m.dead || m.off || m.target == null) return { full: run, short: run };
+    var sh = deg(m.target) + ' · ' + run;
+    return { full: T('Soll') + ' ' + sh, short: narrow && sh.length > 11 ? deg(m.target) : sh };
   };
   // Coloured circle: the compressor runs; with no compressor known, every mode but off (the thermostat's rule).
   H.tileOn = function (st, hass, vars) {
@@ -185,8 +192,8 @@
         return { icon: PRESET_ICON[String(p).toLowerCase()] || 'mdi:tune-variant', text: H.presetWord(h, m.st, p), active: m.preset === p,
           svc: { domain: 'climate', service: 'set_preset_mode', data: { preset_mode: p }, target: { entity_id: c.id } } };
       });
-      var foot = m.current != null ? T('Jetzt') + ' ' + nf(m.current) + ' ' + m.unit : null;
-      var base = { caption: 'Ziel', label: 'Zieltemperatur', unit: m.target != null ? m.unit : '', digits: m.step < 1 ? 1 : 0,
+      var foot = m.current != null ? T('Ist') + ' ' + nf(m.current) + ' ' + m.unit : null;
+      var base = { caption: 'Soll', label: 'Solltemperatur', unit: m.target != null ? m.unit : '', digits: m.step < 1 ? 1 : 0,
         step: m.step, min: m.min, max: m.max, heat: true, current: m.current, foot: foot,
         moons: moons.length >= 2 ? function () { return UI.quick(moons, 'Programm'); } : [] };
       if (m.dead || m.off || m.target == null) {
@@ -204,9 +211,10 @@
       var ws = S[m.water], rows = [];
       if (!usable(ws)) rows.push({ entity: m.water, icon: 'mdi:water-thermometer-outline', label: 'Warmwasser', value: T('Nicht verfügbar'), valueTone: 'warn' });
       else {
-        rows.push({ entity: m.water, icon: 'mdi:water-thermometer-outline', iconTone: m.running ? 'accent' : null, label: 'Jetzt',
-          value: m.waterNow == null ? '–' : nf(m.waterNow) + ' ' + m.waterUnit });
-        rows.push({ icon: 'mdi:thermostat', label: 'Ziel', endHtml: targetCtl(m), noChev: true });
+        // No way on from this row: the water heater's own page is the device's list of everything, not a reading.
+        rows.push({ icon: 'mdi:water-thermometer-outline', iconTone: m.running ? 'accent' : null, label: 'Ist',
+          value: m.waterNow == null ? '–' : nf(m.waterNow) + ' ' + m.waterUnit, noChev: true });
+        rows.push({ icon: 'mdi:thermostat', label: 'Soll', endHtml: targetCtl(m), noChev: true });
       }
       if (m.charge && S[m.charge]) {
         var free = S[m.charge].state !== 'unavailable';
@@ -215,14 +223,23 @@
       }
       return UI.group(rows, 'Warmwasser');
     }
+    if (part === 'status') {
+      var onOff = function (id, icon, label, onWord, offWord) {
+        var x = id && S[id];
+        if (!x) return null;
+        var on = x.state === 'on';
+        return { entity: id, icon: icon, iconTone: on ? 'accent' : null, label: label,
+          value: !usable(x) ? T('Nicht verfügbar') : T(on ? onWord : offWord), valueTone: usable(x) ? null : 'warn' };
+      };
+      var sl = [onOff(m.compressor, 'mdi:heat-pump-outline', 'Verdichter', 'Läuft', 'Aus'),
+        onOff(m.pump, 'mdi:pump', 'Heizkreispumpe', 'Läuft', 'Aus'),
+        onOff(m.circulation, 'mdi:rotate-right', 'Zirkulationspumpe', 'Läuft', 'Aus'),
+        onOff(m.frost, 'mdi:snowflake-alert', 'Frostschutz', 'An', 'Aus')].filter(Boolean);
+      return sl.length ? UI.group(sl, 'Zustand') : '';
+    }
     if (part === 'values') {
       var list = [valueRow(h, m.outdoor, 'mdi:home-thermometer-outline', 'Außen'), valueRow(h, m.supply, 'mdi:thermometer-chevron-up', 'Vorlauf'),
         valueRow(h, m.ret, 'mdi:thermometer-chevron-down', 'Rücklauf'), valueRow(h, m.cop, 'mdi:gauge', 'Leistungszahl', 1), valueRow(h, m.power, 'mdi:flash-outline', 'Verdichterleistung')].filter(Boolean);
-      if (m.compressor && S[m.compressor]) {
-        var on = m.running === true, cs = S[m.compressor];
-        list.push({ entity: m.compressor, icon: 'mdi:heat-pump-outline', iconTone: on ? 'accent' : null, label: 'Verdichter',
-          value: !usable(cs) ? T('Nicht verfügbar') : T(on ? 'Läuft' : 'Aus'), valueTone: usable(cs) ? null : 'warn' });
-      }
       return list.length ? UI.group(list, 'Werte') : '';
     }
     return '';
@@ -236,20 +253,24 @@
     if (H.v3()) {
       var KIT = window._casoraSoftKit;
       var keep = {};
-      ['temp_sensor', 'water_heater_entity', 'charge_button', 'compressor_entity', 'outdoor_entity', 'supply_entity', 'return_entity', 'cop_entity', 'power_entity'].forEach(function (k) {
+      ['temp_sensor', 'water_heater_entity', 'charge_button', 'compressor_entity', 'pump_entity', 'circulation_entity', 'frost_entity', 'outdoor_entity', 'supply_entity',
+        'return_entity', 'cop_entity', 'power_entity'].forEach(function (k) {
         var v = varId(vars, k); if (v) keep[k] = v;
       });
       var cj = JSON.stringify({ id: id, vars: keep });
       var call = function (p) { return 'return window._casoraHeatPump ? window._casoraHeatPump.sec(' + JSON.stringify(p) + ', ' + cj + ', states, hass) : "";'; };
       var f = { hero: { card: KIT.secCard(m.watch, call('hero'), S) }, stage: { card: KIT.secCard(m.watchStage, call('stage'), S) } };
       if (m.water) f.water = { card: KIT.secCard(m.watchWater, call('water'), S) };
+      if (m.watchStatus.length > 1) f.status = { card: KIT.secCard(m.watchStatus, call('status'), S) };
       if (m.watchValues.length > 1) f.values = { card: KIT.secCard(m.watchValues, call('values'), S) };
-      // The Verlauf under the dial (§7.1: 120 high, temperature orange): the supply, else the outdoor temperature.
+      // The Verlauf under the dial (§7.1: 120 high, temperature orange): the supply, else the outdoor temperature; its
+      // title names which one.
       var hist = m.supply && S[m.supply] ? m.supply : m.outdoor && S[m.outdoor] ? m.outdoor : null;
-      if (hist) f.chart = { card: { type: 'custom:casora-chart', kind: 'line', span: '24h', source: 'history', title: 'Temperatur · 24 Std.',
+      if (hist) f.chart = { card: { type: 'custom:casora-chart', kind: 'line', span: '24h', source: 'history', title: 'Vorlauftemperatur · 24 Std.',
         series: [{ entity: hist, name: hist === m.supply ? 'Vorlauf' : 'Außen', unit: /F/.test(m.unit) ? '°F' : '°C', color: 'var(--casora-color-orange, #FF9F0A)' }],
         height: 120, readout: 'own', plate: true }, do_not_eval: true };
-      return KIT.layout({ fields: f, top: ['hero'], stage: 'stage', left: [], right: ['water', 'values'], entity: id });
+      if (hist && hist !== m.supply) f.chart.card.title = 'Außentemperatur · 24 Std.';
+      return KIT.layout({ fields: f, top: ['hero'], stage: 'stage', left: [], right: ['water', 'status', 'values'], entity: id });
     }
     var ents = [id].concat(m.watch).filter(function (x, i, a) { return S[x] && a.indexOf(x) === i; });
     return { type: 'vertical-stack', cards: [{ type: 'entities', entities: ents }] };

@@ -2863,7 +2863,15 @@
     "Aufheizen gestartet": "Heating up started",
     "Taut ab": "Defrosting",
     "Landkarte": "Map",
-    "Nichts auf der Karte": "Nothing on the map"
+    "Nichts auf der Karte": "Nothing on the map",
+    "Soll": "Target",
+    "Ist": "Actual",
+    "Solltemperatur": "Target temperature",
+    "Heizkreispumpe": "Heating circuit pump",
+    "Zirkulationspumpe": "Circulation pump",
+    "Frostschutz": "Frost protection",
+    "Vorlauftemperatur · 24 Std.": "Supply temperature · 24 h",
+    "Außentemperatur · 24 Std.": "Outdoor temperature · 24 h"
   },
   "patterns": [
     [

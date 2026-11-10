@@ -2881,7 +2881,15 @@
     "Aufheizen gestartet": "Aquecimento iniciado",
     "Taut ab": "A descongelar",
     "Landkarte": "Mapa",
-    "Nichts auf der Karte": "Nada no mapa"
+    "Nichts auf der Karte": "Nada no mapa",
+    "Soll": "Definida",
+    "Ist": "Atual",
+    "Solltemperatur": "Temperatura definida",
+    "Heizkreispumpe": "Bomba do circuito de aquecimento",
+    "Zirkulationspumpe": "Bomba de recirculação",
+    "Frostschutz": "Proteção antigelo",
+    "Vorlauftemperatur · 24 Std.": "Temperatura de ida · 24 h",
+    "Außentemperatur · 24 Std.": "Temperatura exterior · 24 h"
   },
   "patterns": [
     [

@@ -3031,7 +3031,10 @@
     "Dark map": "Ciemna mapa",
     "Map on the tile": "Mapa na kafelku",
     "The tile shows the map itself, large. Off: a small tile with a title and a symbol.": "Kafelek pokazuje samą mapę, w dużym rozmiarze. Wyłączone: mały kafelek z tytułem i symbolem.",
-    "Home Assistant's map right on the tile, with the title and who is home. A tap opens it large in the popup: persons and zones, geo location data if you like, the way people took and the zoom you set. Without the map: a small tile with a title and a symbol.": "Mapa Home Assistant bezpośrednio na kafelku, z tytułem i informacją, kto jest w domu. Dotknięcie otwiera ją w dużym oknie: osoby i strefy, opcjonalnie dane geolokalizacji, przebyte drogi i ustawione przybliżenie. Bez mapy: mały kafelek z tytułem i symbolem."
+    "Home Assistant's map right on the tile, with the title and who is home. A tap opens it large in the popup: persons and zones, geo location data if you like, the way people took and the zoom you set. Without the map: a small tile with a title and a symbol.": "Mapa Home Assistant bezpośrednio na kafelku, z tytułem i informacją, kto jest w domu. Dotknięcie otwiera ją w dużym oknie: osoby i strefy, opcjonalnie dane geolokalizacji, przebyte drogi i ustawione przybliżenie. Bez mapy: mały kafelek z tytułem i symbolem.",
+    "Heating circuit pump": "Pompa obiegu grzewczego",
+    "Hot water circulation pump": "Pompa cyrkulacyjna ciepłej wody",
+    "Frost protection": "Ochrona przed zamarzaniem"
   },
   "patterns": [
     [

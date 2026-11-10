@@ -2881,7 +2881,15 @@
     "Aufheizen gestartet": "Podgrzewanie rozpoczęte",
     "Taut ab": "Odszranianie",
     "Landkarte": "Mapa",
-    "Nichts auf der Karte": "Nic na mapie"
+    "Nichts auf der Karte": "Nic na mapie",
+    "Soll": "Zadana",
+    "Ist": "Aktualna",
+    "Solltemperatur": "Temperatura zadana",
+    "Heizkreispumpe": "Pompa obiegu grzewczego",
+    "Zirkulationspumpe": "Pompa cyrkulacyjna",
+    "Frostschutz": "Ochrona przed zamarzaniem",
+    "Vorlauftemperatur · 24 Std.": "Temperatura zasilania · 24 h",
+    "Außentemperatur · 24 Std.": "Temperatura zewnętrzna · 24 h"
   },
   "patterns": [
     [

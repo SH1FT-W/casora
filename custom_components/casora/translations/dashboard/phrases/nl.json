@@ -2881,7 +2881,15 @@
     "Aufheizen gestartet": "Opwarmen gestart",
     "Taut ab": "Ontdooit",
     "Landkarte": "Kaart",
-    "Nichts auf der Karte": "Niets op de kaart"
+    "Nichts auf der Karte": "Niets op de kaart",
+    "Soll": "Gewenst",
+    "Ist": "Actueel",
+    "Solltemperatur": "Gewenste temperatuur",
+    "Heizkreispumpe": "Pomp verwarmingscircuit",
+    "Zirkulationspumpe": "Circulatiepomp",
+    "Frostschutz": "Vorstbeveiliging",
+    "Vorlauftemperatur · 24 Std.": "Aanvoertemperatuur · 24 u",
+    "Außentemperatur · 24 Std.": "Buitentemperatuur · 24 u"
   },
   "patterns": [
     [

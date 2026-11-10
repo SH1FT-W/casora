@@ -3031,7 +3031,10 @@
     "Dark map": "Donkere kaart",
     "Map on the tile": "Kaart op de tegel",
     "The tile shows the map itself, large. Off: a small tile with a title and a symbol.": "De tegel toont de kaart zelf, groot. Uit: een kleine tegel met titel en symbool.",
-    "Home Assistant's map right on the tile, with the title and who is home. A tap opens it large in the popup: persons and zones, geo location data if you like, the way people took and the zoom you set. Without the map: a small tile with a title and a symbol.": "De kaart van Home Assistant direct op de tegel, met de titel en wie thuis is. Een tik opent hem groot: personen en zones, desgewenst geolocatiegegevens, afgelegde wegen en de ingestelde zoom. Zonder kaart: een kleine tegel met titel en symbool."
+    "Home Assistant's map right on the tile, with the title and who is home. A tap opens it large in the popup: persons and zones, geo location data if you like, the way people took and the zoom you set. Without the map: a small tile with a title and a symbol.": "De kaart van Home Assistant direct op de tegel, met de titel en wie thuis is. Een tik opent hem groot: personen en zones, desgewenst geolocatiegegevens, afgelegde wegen en de ingestelde zoom. Zonder kaart: een kleine tegel met titel en symbool.",
+    "Heating circuit pump": "Pomp verwarmingscircuit",
+    "Hot water circulation pump": "Circulatiepomp warm water",
+    "Frost protection": "Vorstbeveiliging"
   },
   "patterns": [
     [
