@@ -93,6 +93,12 @@ function resolveCardConfig(cfg) {
   return c;
 }
 
+// A pasted card (casora_custom) is as tall as its own lines. The phone grid's
+// fixed rows would otherwise clip it to one tile.
+function isGrowCard(cfg) {
+  return tplList(resolveCardConfig(cfg)).includes('casora_custom');
+}
+
 // Opt in with ?casora_rowlog=1 on the dashboard URL. Off, this costs one
 // property read per call and prints nothing.
 let ROWLOG = null;
@@ -1047,6 +1053,39 @@ class CasoraSmartRow extends HTMLElement {
     });
   }
 
+  // Phone and portrait-tablet grids use fixed 66px rows. A pasted card spans as
+  // many of those rows as its own lines need, across the full width.
+  _phoneGrid() {
+    return window.matchMedia(
+      '(max-width: 767px) and (orientation: portrait), (max-height: 500px) and (orientation: portrait), (max-height: 500px) and (orientation: landscape), (max-height: 600px) and (orientation: landscape) and (hover: hover)'
+    ).matches;
+  }
+
+  _scheduleGrow(wrapper) {
+    const run = () => this._fitGrow(wrapper);
+    requestAnimationFrame(run);
+    setTimeout(run, 400);
+    setTimeout(run, 1200);
+  }
+
+  _fitGrow(wrapper) {
+    if (!wrapper || wrapper.dataset.grow !== '1' || !wrapper.isConnected) return;
+    if (!this._phoneGrid()) { wrapper.style.removeProperty('grid-row'); return; }
+    const card = wrapper.firstElementChild;
+    if (!card) return;
+    const row = parseFloat(getComputedStyle(this).getPropertyValue('--casora-tile-row-h-current')) || 66;
+    const gap = this._container ? (parseFloat(getComputedStyle(this._container).rowGap) || 8) : 8;
+    if (wrapper.style.gridRow !== 'span 16') {
+      wrapper.style.gridRow = 'span 16';
+      requestAnimationFrame(() => this._fitGrow(wrapper));
+      return;
+    }
+    const h = Math.ceil(card.getBoundingClientRect().height);
+    if (h < 40) return;
+    const span = Math.min(16, Math.max(2, Math.ceil((h + 2) / (row + gap))));
+    wrapper.style.gridRow = 'span ' + span;
+  }
+
   _scheduleLargeFill(wrapper) {
     const run = () => this._stampLargeFill(wrapper);
     requestAnimationFrame(run);
@@ -1254,6 +1293,7 @@ class CasoraSmartRow extends HTMLElement {
         wrapper.dataset.idx = String(i);
         wrapper.style.setProperty('--casora-position-index', String(i));
         if (cardFlag(this._config.cards[i], 'full_width')) wrapper.dataset.fullwidth = '1';
+        if (isGrowCard(this._config.cards[i])) { wrapper.dataset.grow = '1'; this._scheduleGrow(wrapper); }
         if (cardFlag(this._config.cards[i], 'collapsed_spacer')) wrapper.dataset.collapsedSpacer = '1';
         if (isCardDisabled(this._config.cards[i], this._scrollMode, this._hass && this._hass.user)) {
           wrapper.dataset.off = '1';
@@ -1307,6 +1347,7 @@ class CasoraSmartRow extends HTMLElement {
       wrapper.dataset.idx = String(i);
       wrapper.style.setProperty('--casora-position-index', String(i));
       if (cardFlag(cfg, 'full_width')) wrapper.dataset.fullwidth = '1';
+      if (isGrowCard(cfg)) { wrapper.dataset.grow = '1'; this._scheduleGrow(wrapper); }
       if (isRawCard(cfg)) wrapper.dataset.raw = '1';
       if (cardFlag(cfg, 'collapsed_spacer')) wrapper.dataset.collapsedSpacer = '1';
       if (getCardSize(cfg, this._scrollMode) === 'large') {
@@ -1992,6 +2033,13 @@ class CasoraSmartRow extends HTMLElement {
         width: var(--casora-entity-col-width-current, var(--casora-entity-col-width-desktop, 300px));
         scroll-snap-align: start;
       }
+      /* Tablet columns are narrower than the desktop tile the card was laid out for. */
+      .card-wrapper[data-grow="1"] {
+        flex-basis: max(var(--casora-entity-col-width-current, 280px), 280px);
+        width: max(var(--casora-entity-col-width-current, 280px), 280px);
+        height: auto;
+        overflow: visible;
+      }
 
       /* Phones reach this row only through the mobile dashboard, so portrait
          and landscape share one in-flow scrolling layout. */
@@ -2040,6 +2088,18 @@ class CasoraSmartRow extends HTMLElement {
         ${this._sortEnabled ? `
         /* Child combinator load-bearing - see the collapsed-spacer rule below. */
         #container > .card-wrapper[data-size="large"] { grid-row: span 2; }
+        #container > .card-wrapper[data-grow="1"] {
+          grid-column: 1 / -1 !important;
+          width: 100% !important;
+          height: auto !important;
+          overflow: visible !important;
+          align-self: start;
+        }
+        #container > .card-wrapper[data-grow="1"] > *,
+        #container > .card-wrapper[data-grow="1"] > hui-conditional-card > hui-card,
+        #container > .card-wrapper[data-grow="1"] > hui-conditional-card > hui-card > * {
+          height: auto !important;
+        }
         /* Passes the track height down for the card's own height:100%. */
         #container > .card-wrapper > * { display: block; height: 100%; }
         /* Bedingte Karte (conditional): HA legt die Kachel in ein inline-hui-card, dort
