@@ -34,7 +34,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .tanken import AWAY_KM, km_between, scrub, valid_key
+from .tanken import AWAY_KM, km_between, offset_km, scrub, valid_key
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,6 +95,12 @@ def is_free(cost: Any) -> bool:
     return bool(FREE_RE.search(s)) and not re.search(r"\b(not|nicht|kein|no)\b", s, re.I)
 
 
+def domain_of(url: Any) -> str | None:
+    """The operator's web domain (for its logo in the browser), or None when it is not a plain host name."""
+    m = re.match(r"^https?://(?:www\.)?([a-z0-9][a-z0-9.-]{1,80}\.[a-z]{2,24})(?:[/:?#]|$)", str(url or "").strip().lower())
+    return m.group(1) if m else None
+
+
 def current_of(conn: dict[str, Any]) -> str | None:
     """"ac", "dc" or None for one connection: the current type, else guessed from the power."""
     cur = conn.get("CurrentTypeID")
@@ -111,7 +117,8 @@ def current_of(conn: dict[str, Any]) -> str | None:
 def parse_pois(data: Any, lat0: float, lng0: float, radius: float | None = None) -> list[dict[str, Any]]:
     """Answer of /v3/poi → chargers in use, nearest first.
 
-    One entry: n name, op operator, a address line, lat/lng (4 places ≈ 10 m), d km, kw strongest plug,
+    One entry: n name, op operator, w the operator's web domain, a address line, lat/lng (4 places ≈ 10 m), d km, x/y km east/north of the
+    centre, kw strongest plug,
     ac/dc/hpc whether it has such a plug, points number of plugs (None unknown), free.
     """
     if not isinstance(data, list):
@@ -159,8 +166,11 @@ def parse_pois(data: Any, lat0: float, lng0: float, radius: float | None = None)
         out.append({
             "n": str(adr.get("Title") or "").strip() or line or op_name,
             "op": op_name,
+            "w": domain_of(op.get("WebsiteURL")) if op_name else None,
             "a": ", ".join(x for x in (line, town) if x),
             "lat": round(lat, 4), "lng": round(lng, 4), "d": d,
+            # Place relative to the search centre in km (east, north) for the dot map: the centre itself stays here.
+            "x": offset_km(lat0, lng0, lat, lng)[0], "y": offset_km(lat0, lng0, lat, lng)[1],
             "kw": round(kw, 1) if kw is not None else None,
             **kinds,
             "points": int(n) if isinstance(n, int) and not isinstance(n, bool) and n > 0 else None,

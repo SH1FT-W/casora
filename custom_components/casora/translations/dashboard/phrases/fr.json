@@ -2905,7 +2905,24 @@
     "Open Charge Map nimmt den Schlüssel nicht an": "Open Charge Map n'accepte pas la clé",
     "Zu viele Abfragen, später noch einmal": "Trop de requêtes, réessaie plus tard",
     "Rund um Zuhause": "Autour de la maison",
-    "Rund um das Auto": "Autour de la voiture"
+    "Rund um das Auto": "Autour de la voiture",
+    "Schnellste": "La plus rapide",
+    "Gratis": "Gratuit",
+    "Leistung unbekannt": "Puissance inconnue",
+    "1 Ladesäule": "1 borne",
+    "Beste Wahl": "Meilleur choix",
+    "Jetzt laden": "Charger maintenant",
+    "Bald laden": "Charger bientôt",
+    "Laden nicht nötig": "Pas besoin de charger",
+    "Keine Ladesäule": "Aucune borne",
+    "Keine kostenlose Ladesäule": "Aucune borne gratuite",
+    "Ladeleistung": "Puissance de charge",
+    "Ladesäulen gerade nicht abrufbar": "Bornes indisponibles pour le moment",
+    "Ladesäulen in der Nähe": "Bornes à proximité",
+    "im Umkreis": "dans le rayon",
+    "leer": "vide",
+    "voll": "pleine",
+    "Der Akku ist gut gefüllt.": "La batterie est bien chargée."
   },
   "patterns": [
     [
@@ -5193,8 +5210,32 @@
       "Toutes {1}"
     ],
     [
-      "^Kostenlos (\\d+)$",
+      "^Gratis (\\d+)$",
       "Gratuit {1}"
+    ],
+    [
+      "^(\\d+) Ladesäulen$",
+      "{1} bornes"
+    ],
+    [
+      "^Nächste (\\d[\\d.,]*) km$",
+      "La plus proche à {1} km"
+    ],
+    [
+      "^Nächster Schnelllader: (.+), (.+)\\.$",
+      "Borne rapide la plus proche : {1}, {2}."
+    ],
+    [
+      "^Nächste Ladesäule: (.+), (.+)\\.$",
+      "Borne la plus proche : {1}, {2}."
+    ],
+    [
+      "^Der Akku reicht noch etwa (\\S+) (\\S+)\\.$",
+      "La batterie tient encore environ {1} {2}."
+    ],
+    [
+      "^Schnellste, (.+)$",
+      "La plus rapide, {1}"
     ]
   ]
 }

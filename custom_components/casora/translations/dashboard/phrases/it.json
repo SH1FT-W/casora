@@ -2905,7 +2905,24 @@
     "Open Charge Map nimmt den Schlüssel nicht an": "Open Charge Map non accetta la chiave",
     "Zu viele Abfragen, später noch einmal": "Troppe richieste, riprova più tardi",
     "Rund um Zuhause": "Intorno a casa",
-    "Rund um das Auto": "Intorno all'auto"
+    "Rund um das Auto": "Intorno all'auto",
+    "Schnellste": "La più veloce",
+    "Gratis": "Gratis",
+    "Leistung unbekannt": "Potenza sconosciuta",
+    "1 Ladesäule": "1 colonnina",
+    "Beste Wahl": "Scelta migliore",
+    "Jetzt laden": "Ricarica ora",
+    "Bald laden": "Ricarica presto",
+    "Laden nicht nötig": "Non serve ricaricare",
+    "Keine Ladesäule": "Nessuna colonnina",
+    "Keine kostenlose Ladesäule": "Nessuna colonnina gratuita",
+    "Ladeleistung": "Potenza di ricarica",
+    "Ladesäulen gerade nicht abrufbar": "Colonnine non disponibili al momento",
+    "Ladesäulen in der Nähe": "Colonnine vicine",
+    "im Umkreis": "nel raggio",
+    "leer": "scarica",
+    "voll": "carica",
+    "Der Akku ist gut gefüllt.": "La batteria è ben carica."
   },
   "patterns": [
     [
@@ -5193,8 +5210,32 @@
       "Tutte {1}"
     ],
     [
-      "^Kostenlos (\\d+)$",
+      "^Gratis (\\d+)$",
       "Gratis {1}"
+    ],
+    [
+      "^(\\d+) Ladesäulen$",
+      "{1} colonnine"
+    ],
+    [
+      "^Nächste (\\d[\\d.,]*) km$",
+      "La più vicina a {1} km"
+    ],
+    [
+      "^Nächster Schnelllader: (.+), (.+)\\.$",
+      "Colonnina rapida più vicina: {1}, {2}."
+    ],
+    [
+      "^Nächste Ladesäule: (.+), (.+)\\.$",
+      "Colonnina più vicina: {1}, {2}."
+    ],
+    [
+      "^Der Akku reicht noch etwa (\\S+) (\\S+)\\.$",
+      "La batteria basta ancora per circa {1} {2}."
+    ],
+    [
+      "^Schnellste, (.+)$",
+      "La più veloce, {1}"
     ]
   ]
 }

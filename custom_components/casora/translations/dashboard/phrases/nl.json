@@ -2905,7 +2905,24 @@
     "Open Charge Map nimmt den Schlüssel nicht an": "Open Charge Map accepteert de sleutel niet",
     "Zu viele Abfragen, später noch einmal": "Te veel verzoeken, probeer het later opnieuw",
     "Rund um Zuhause": "Rond huis",
-    "Rund um das Auto": "Rond de auto"
+    "Rund um das Auto": "Rond de auto",
+    "Schnellste": "Snelste",
+    "Gratis": "Gratis",
+    "Leistung unbekannt": "Vermogen onbekend",
+    "1 Ladesäule": "1 laadpaal",
+    "Beste Wahl": "Beste keuze",
+    "Jetzt laden": "Nu laden",
+    "Bald laden": "Binnenkort laden",
+    "Laden nicht nötig": "Laden niet nodig",
+    "Keine Ladesäule": "Geen laadpaal",
+    "Keine kostenlose Ladesäule": "Geen gratis laadpaal",
+    "Ladeleistung": "Laadvermogen",
+    "Ladesäulen gerade nicht abrufbar": "Laadpalen nu niet beschikbaar",
+    "Ladesäulen in der Nähe": "Laadpalen in de buurt",
+    "im Umkreis": "binnen de straal",
+    "leer": "leeg",
+    "voll": "vol",
+    "Der Akku ist gut gefüllt.": "De accu is goed geladen."
   },
   "patterns": [
     [
@@ -5193,8 +5210,32 @@
       "Alle {1}"
     ],
     [
-      "^Kostenlos (\\d+)$",
+      "^Gratis (\\d+)$",
       "Gratis {1}"
+    ],
+    [
+      "^(\\d+) Ladesäulen$",
+      "{1} laadpalen"
+    ],
+    [
+      "^Nächste (\\d[\\d.,]*) km$",
+      "Dichtstbijzijnde {1} km"
+    ],
+    [
+      "^Nächster Schnelllader: (.+), (.+)\\.$",
+      "Dichtstbijzijnde snellader: {1}, {2}."
+    ],
+    [
+      "^Nächste Ladesäule: (.+), (.+)\\.$",
+      "Dichtstbijzijnde laadpaal: {1}, {2}."
+    ],
+    [
+      "^Der Akku reicht noch etwa (\\S+) (\\S+)\\.$",
+      "De accu gaat nog ongeveer {1} {2} mee."
+    ],
+    [
+      "^Schnellste, (.+)$",
+      "Snelste, {1}"
     ]
   ]
 }

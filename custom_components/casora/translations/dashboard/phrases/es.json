@@ -2905,7 +2905,24 @@
     "Open Charge Map nimmt den Schlüssel nicht an": "Open Charge Map no acepta la clave",
     "Zu viele Abfragen, später noch einmal": "Demasiadas consultas, inténtalo más tarde",
     "Rund um Zuhause": "Alrededor de casa",
-    "Rund um das Auto": "Alrededor del coche"
+    "Rund um das Auto": "Alrededor del coche",
+    "Schnellste": "Más rápido",
+    "Gratis": "Gratis",
+    "Leistung unbekannt": "Potencia desconocida",
+    "1 Ladesäule": "1 cargador",
+    "Beste Wahl": "Mejor opción",
+    "Jetzt laden": "Cargar ahora",
+    "Bald laden": "Cargar pronto",
+    "Laden nicht nötig": "No hace falta cargar",
+    "Keine Ladesäule": "Ningún cargador",
+    "Keine kostenlose Ladesäule": "Ningún cargador gratuito",
+    "Ladeleistung": "Potencia de carga",
+    "Ladesäulen gerade nicht abrufbar": "Cargadores no disponibles ahora",
+    "Ladesäulen in der Nähe": "Cargadores cercanos",
+    "im Umkreis": "en el radio",
+    "leer": "vacía",
+    "voll": "llena",
+    "Der Akku ist gut gefüllt.": "La batería está bien cargada."
   },
   "patterns": [
     [
@@ -5193,8 +5210,32 @@
       "Todos {1}"
     ],
     [
-      "^Kostenlos (\\d+)$",
+      "^Gratis (\\d+)$",
       "Gratis {1}"
+    ],
+    [
+      "^(\\d+) Ladesäulen$",
+      "{1} cargadores"
+    ],
+    [
+      "^Nächste (\\d[\\d.,]*) km$",
+      "El más cercano a {1} km"
+    ],
+    [
+      "^Nächster Schnelllader: (.+), (.+)\\.$",
+      "Cargador rápido más cercano: {1}, {2}."
+    ],
+    [
+      "^Nächste Ladesäule: (.+), (.+)\\.$",
+      "Cargador más cercano: {1}, {2}."
+    ],
+    [
+      "^Der Akku reicht noch etwa (\\S+) (\\S+)\\.$",
+      "La batería alcanza para unos {1} {2} más."
+    ],
+    [
+      "^Schnellste, (.+)$",
+      "El más rápido, {1}"
     ]
   ]
 }

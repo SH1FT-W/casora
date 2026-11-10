@@ -2898,7 +2898,24 @@
     "Open Charge Map nimmt den Schlüssel nicht an": "Open Charge Map godtar ikke nøkkelen",
     "Zu viele Abfragen, später noch einmal": "For mange forespørsler, prøv igjen senere",
     "Rund um Zuhause": "Rundt hjemmet",
-    "Rund um das Auto": "Rundt bilen"
+    "Rund um das Auto": "Rundt bilen",
+    "Schnellste": "Raskeste",
+    "Gratis": "Gratis",
+    "Leistung unbekannt": "Ukjent effekt",
+    "1 Ladesäule": "1 ladestasjon",
+    "Beste Wahl": "Beste valg",
+    "Jetzt laden": "Lad nå",
+    "Bald laden": "Lad snart",
+    "Laden nicht nötig": "Ikke nødvendig å lade",
+    "Keine Ladesäule": "Ingen ladestasjon",
+    "Keine kostenlose Ladesäule": "Ingen gratis ladestasjon",
+    "Ladeleistung": "Ladeeffekt",
+    "Ladesäulen gerade nicht abrufbar": "Ladestasjoner er ikke tilgjengelige akkurat nå",
+    "Ladesäulen in der Nähe": "Ladestasjoner i nærheten",
+    "im Umkreis": "innenfor radiusen",
+    "leer": "tomt",
+    "voll": "fullt",
+    "Der Akku ist gut gefüllt.": "Batteriet er godt ladet."
   },
   "patterns": [
     [
@@ -5186,8 +5203,32 @@
       "Alle {1}"
     ],
     [
-      "^Kostenlos (\\d+)$",
+      "^Gratis (\\d+)$",
       "Gratis {1}"
+    ],
+    [
+      "^(\\d+) Ladesäulen$",
+      "{1} ladestasjoner"
+    ],
+    [
+      "^Nächste (\\d[\\d.,]*) km$",
+      "Nærmeste {1} km"
+    ],
+    [
+      "^Nächster Schnelllader: (.+), (.+)\\.$",
+      "Nærmeste hurtiglader: {1}, {2}."
+    ],
+    [
+      "^Nächste Ladesäule: (.+), (.+)\\.$",
+      "Nærmeste ladestasjon: {1}, {2}."
+    ],
+    [
+      "^Der Akku reicht noch etwa (\\S+) (\\S+)\\.$",
+      "Batteriet rekker omtrent {1} {2} til."
+    ],
+    [
+      "^Schnellste, (.+)$",
+      "Raskeste, {1}"
     ]
   ]
 }

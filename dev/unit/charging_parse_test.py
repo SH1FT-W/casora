@@ -49,7 +49,8 @@ def conn(kw, cur=None, qty=None, status=50):
 
 DATA = [
     poi("Autohof Schnelllader", 0.05, [conn(300, 30, 4), conn(22, 20, 2)], NumberOfPoints=6,
-        OperatorInfo={"ID": 1, "Title": "Testladenetz"}, UsageTypeID=4, UsageCost="0,59 €/kWh"),
+        OperatorInfo={"ID": 1, "Title": "Testladenetz", "WebsiteURL": "https://www.Testladenetz.example/de/laden?x=1"},
+        UsageTypeID=4, UsageCost="0,59 €/kWh"),
     poi("Rathaus", 0.01, [conn(11, 20), conn(11, 20)], OperatorInfo={"ID": 45, "Title": "(Business Owner at Location)"},
         UsageTypeID=1, UsageCost="Free"),
     poi("Möbelhaus", 0.02, [conn(50)], UsageCost="0"),                      # no current type: 50 kW is DC
@@ -72,7 +73,11 @@ check("nearest first with the distance in km", [s["d"] for s in out] == sorted(s
 hpc = by["Autohof Schnelllader"]
 check("HPC: DC from 150 kW, AC plug next to it counted too",
       (hpc["hpc"], hpc["dc"], hpc["ac"], hpc["kw"], hpc["points"]) == (True, True, True, 300.0, 6))
-check("operator named, not free at a price", hpc["op"] == "Testladenetz" and hpc["free"] is False)
+check("operator named with its web domain, not free at a price",
+      hpc["op"] == "Testladenetz" and hpc["w"] == "testladenetz.example" and hpc["free"] is False)
+check("no domain from odd addresses", [charging.domain_of(x) for x in (None, "", "javascript:alert(1)", "http://127.0.0.1/", "https://a b.de", "ftp://x.de")] == [None] * 6)
+check("placeholder operator has no domain", by["Rathaus"]["w"] is None)
+check("place relative to the centre in km", abs(hpc["y"] - 5.53) < 0.05 and hpc["x"] == 0.0)
 r = by["Rathaus"]
 check("AC only, free by its cost text, placeholder operator dropped",
       (r["ac"], r["dc"], r["hpc"], r["free"], r["op"], r["kw"]) == (True, False, False, True, "", 11.0))

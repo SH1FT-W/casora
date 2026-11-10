@@ -2887,7 +2887,24 @@
     "Open Charge Map nimmt den Schlüssel nicht an": "Open Charge Map does not accept the key",
     "Zu viele Abfragen, später noch einmal": "Too many requests, try again later",
     "Rund um Zuhause": "Around home",
-    "Rund um das Auto": "Around the car"
+    "Rund um das Auto": "Around the car",
+    "Schnellste": "Fastest",
+    "Gratis": "Free",
+    "Leistung unbekannt": "Power unknown",
+    "1 Ladesäule": "1 charger",
+    "Beste Wahl": "Best choice",
+    "Jetzt laden": "Charge now",
+    "Bald laden": "Charge soon",
+    "Laden nicht nötig": "No need to charge",
+    "Keine Ladesäule": "No charger",
+    "Keine kostenlose Ladesäule": "No free charger",
+    "Ladeleistung": "Charging power",
+    "Ladesäulen gerade nicht abrufbar": "Chargers not available right now",
+    "Ladesäulen in der Nähe": "Chargers nearby",
+    "im Umkreis": "within the radius",
+    "leer": "empty",
+    "voll": "full",
+    "Der Akku ist gut gefüllt.": "The battery is well charged."
   },
   "patterns": [
     [
@@ -5175,8 +5192,32 @@
       "All {1}"
     ],
     [
-      "^Kostenlos (\\d+)$",
+      "^Gratis (\\d+)$",
       "Free {1}"
+    ],
+    [
+      "^(\\d+) Ladesäulen$",
+      "{1} chargers"
+    ],
+    [
+      "^Nächste (\\d[\\d.,]*) km$",
+      "Nearest {1} km"
+    ],
+    [
+      "^Nächster Schnelllader: (.+), (.+)\\.$",
+      "Nearest fast charger: {1}, {2}."
+    ],
+    [
+      "^Nächste Ladesäule: (.+), (.+)\\.$",
+      "Nearest charger: {1}, {2}."
+    ],
+    [
+      "^Der Akku reicht noch etwa (\\S+) (\\S+)\\.$",
+      "The battery lasts about another {1} {2}."
+    ],
+    [
+      "^Schnellste, (.+)$",
+      "Fastest, {1}"
     ]
   ]
 }

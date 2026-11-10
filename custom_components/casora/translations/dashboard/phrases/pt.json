@@ -2905,7 +2905,24 @@
     "Open Charge Map nimmt den Schlüssel nicht an": "O Open Charge Map não aceita a chave",
     "Zu viele Abfragen, später noch einmal": "Demasiados pedidos, tenta mais tarde",
     "Rund um Zuhause": "À volta de casa",
-    "Rund um das Auto": "À volta do carro"
+    "Rund um das Auto": "À volta do carro",
+    "Schnellste": "Mais rápido",
+    "Gratis": "Grátis",
+    "Leistung unbekannt": "Potência desconhecida",
+    "1 Ladesäule": "1 carregador",
+    "Beste Wahl": "Melhor escolha",
+    "Jetzt laden": "Carregar agora",
+    "Bald laden": "Carregar em breve",
+    "Laden nicht nötig": "Não é preciso carregar",
+    "Keine Ladesäule": "Nenhum carregador",
+    "Keine kostenlose Ladesäule": "Nenhum carregador gratuito",
+    "Ladeleistung": "Potência de carregamento",
+    "Ladesäulen gerade nicht abrufbar": "Carregadores indisponíveis de momento",
+    "Ladesäulen in der Nähe": "Carregadores próximos",
+    "im Umkreis": "no raio",
+    "leer": "vazia",
+    "voll": "cheia",
+    "Der Akku ist gut gefüllt.": "A bateria está bem carregada."
   },
   "patterns": [
     [
@@ -5193,8 +5210,32 @@
       "Todos {1}"
     ],
     [
-      "^Kostenlos (\\d+)$",
+      "^Gratis (\\d+)$",
       "Grátis {1}"
+    ],
+    [
+      "^(\\d+) Ladesäulen$",
+      "{1} carregadores"
+    ],
+    [
+      "^Nächste (\\d[\\d.,]*) km$",
+      "O mais próximo a {1} km"
+    ],
+    [
+      "^Nächster Schnelllader: (.+), (.+)\\.$",
+      "Carregador rápido mais próximo: {1}, {2}."
+    ],
+    [
+      "^Nächste Ladesäule: (.+), (.+)\\.$",
+      "Carregador mais próximo: {1}, {2}."
+    ],
+    [
+      "^Der Akku reicht noch etwa (\\S+) (\\S+)\\.$",
+      "A bateria dá para mais cerca de {1} {2}."
+    ],
+    [
+      "^Schnellste, (.+)$",
+      "O mais rápido, {1}"
     ]
   ]
 }

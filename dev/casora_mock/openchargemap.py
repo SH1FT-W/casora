@@ -65,6 +65,8 @@ def answer(lat: float, lng: float, rad: float, limit: int) -> list:
         if op:
             p["OperatorID"] = 45 if op.startswith("(") else 3000 + i
             p["OperatorInfo"] = {"ID": p["OperatorID"], "Title": op}
+            if not op.startswith("("):
+                p["OperatorInfo"]["WebsiteURL"] = "https://www." + re.sub(r"[^a-z]", "", op.lower()) + ".example/"
         if cost is not None:
             p["UsageCost"] = cost
         if points is not None:

@@ -2905,7 +2905,24 @@
     "Open Charge Map nimmt den Schlüssel nicht an": "Open Charge Map nie akceptuje klucza",
     "Zu viele Abfragen, später noch einmal": "Zbyt wiele zapytań, spróbuj później",
     "Rund um Zuhause": "Wokół domu",
-    "Rund um das Auto": "Wokół samochodu"
+    "Rund um das Auto": "Wokół samochodu",
+    "Schnellste": "Najszybsza",
+    "Gratis": "Bezpłatne",
+    "Leistung unbekannt": "Moc nieznana",
+    "1 Ladesäule": "1 ładowarka",
+    "Beste Wahl": "Najlepszy wybór",
+    "Jetzt laden": "Naładuj teraz",
+    "Bald laden": "Naładuj wkrótce",
+    "Laden nicht nötig": "Ładowanie niepotrzebne",
+    "Keine Ladesäule": "Brak ładowarki",
+    "Keine kostenlose Ladesäule": "Brak bezpłatnej ładowarki",
+    "Ladeleistung": "Moc ładowania",
+    "Ladesäulen gerade nicht abrufbar": "Ładowarki chwilowo niedostępne",
+    "Ladesäulen in der Nähe": "Ładowarki w pobliżu",
+    "im Umkreis": "w promieniu",
+    "leer": "pusty",
+    "voll": "pełny",
+    "Der Akku ist gut gefüllt.": "Akumulator jest dobrze naładowany."
   },
   "patterns": [
     [
@@ -5193,8 +5210,32 @@
       "Wszystkie {1}"
     ],
     [
-      "^Kostenlos (\\d+)$",
+      "^Gratis (\\d+)$",
       "Bezpłatne {1}"
+    ],
+    [
+      "^(\\d+) Ladesäulen$",
+      "Ładowarki: {1}"
+    ],
+    [
+      "^Nächste (\\d[\\d.,]*) km$",
+      "Najbliższa {1} km"
+    ],
+    [
+      "^Nächster Schnelllader: (.+), (.+)\\.$",
+      "Najbliższa szybka ładowarka: {1}, {2}."
+    ],
+    [
+      "^Nächste Ladesäule: (.+), (.+)\\.$",
+      "Najbliższa ładowarka: {1}, {2}."
+    ],
+    [
+      "^Der Akku reicht noch etwa (\\S+) (\\S+)\\.$",
+      "Akumulator wystarczy jeszcze na około {1} {2}."
+    ],
+    [
+      "^Schnellste, (.+)$",
+      "Najszybsza, {1}"
     ]
   ]
 }
