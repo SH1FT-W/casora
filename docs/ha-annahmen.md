@@ -149,6 +149,10 @@ Plattform-Basisklassen (siehe `dev/casora_mock/entity.py`), und die Annahmen unt
 Nur im Testhaus, kein Test: `async_update_entity(area_id=…)` lehnt seit 2026.10 einen eigenen Bereich für
 Entitäten ohne eigenen Namen ab (`dev/casora_mock/__init__.py` `build_registry`, fängt den `ValueError` ab).
 
+Nur im Testhaus, kein Test: `async_update_entity_options(id, "sensor", …)` ersetzt den ganzen `sensor`-Block der
+Optionen; der Mock schreibt deshalb eine Kopie mit nur geändertem `suggested_display_precision` (`dev/casora_mock/registry_rules.py`,
+Test `dev/unit/mock_registry_test.py`). `hidden_by` setzt der Mock nur auf `integration` oder `None`, nie auf `user`.
+
 ## Fremde Integrationen
 
 Kern-Integrationen (Schlüssel im Test geprüft):

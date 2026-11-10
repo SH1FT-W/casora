@@ -767,7 +767,10 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
     # Display-only platforms: the real base classes bring HA's defaults (category, device class),
     # state and attributes still come from the store (MockEntity first in the MRO).
     class MSensor(MockEntity, SensorEntity):
-        pass
+        # Fixture's display_precision as the integration's suggested precision; HA keeps it in the registry.
+        @property
+        def suggested_display_precision(self) -> int | None:
+            return self.mock.entities[self._key].get("display_precision")
 
     class MBinarySensor(MockEntity, BinarySensorEntity):
         @property

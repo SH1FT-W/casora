@@ -26,6 +26,7 @@ from homeassistant.util import dt as dt_util
 
 from .entity import PLATFORMS, build_classes
 from .haus import compose
+from .registry_rules import hidden_by_for, sensor_options_for
 
 DOMAIN = "casora_mock"
 _LOGGER = logging.getLogger(__name__)
@@ -181,6 +182,10 @@ class CasoraMock:
                 upd["icon"] = e["icon"]
             if e.get("name") and entry.name != e["name"]:
                 upd["name"] = e["name"]
+            # Hidden as the integration hides it; a user's own hiding stays (registry_rules.py).
+            hidden_by = hidden_by_for(bool(e.get("hidden")), entry.hidden_by)
+            if hidden_by != entry.hidden_by:
+                upd["hidden_by"] = er.RegistryEntryHider(hidden_by) if hidden_by else None
             if upd:
                 try:
                     ents.async_update_entity(entry.entity_id, **upd)
@@ -190,6 +195,13 @@ class CasoraMock:
                     upd.pop("area_id", None)
                     if upd:
                         ents.async_update_entity(entry.entity_id, **upd)
+            # Another integration's entity has no sensor object: its suggested precision goes into the registry.
+            # Our own sensors return it from MSensor.suggested_display_precision, and HA writes it.
+            if e.get("registry_platform"):
+                current = entry.options.get("sensor")
+                wanted = sensor_options_for(current, e.get("display_precision"))
+                if wanted != (current or None):
+                    ents.async_update_entity_options(entry.entity_id, "sensor", wanted)
 
     # ── Zustände ────────────────────────────────────────────────────────
     def apply_fixture(self) -> None:
