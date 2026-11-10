@@ -9357,7 +9357,10 @@ window.casoraMenuGlass = {
         y0 = t.clientY;
         dy = 0;
         dragging = false;
-        var onGrab = e.composedPath && e.composedPath().indexOf(grab) !== -1;
+        var path = e.composedPath ? e.composedPath() : [];
+        // Issue 159: a touch that starts on a map moves the map (down too), it never drags the sheet.
+        if (path.some(isMapNode) || (onMap && onMap.id === t.identifier && onMap.x === t.clientX && onMap.y === t.clientY)) return;
+        var onGrab = path.indexOf(grab) !== -1;
         tracking = onGrab || content.scrollTop <= 0;
       };
 
@@ -9398,6 +9401,18 @@ window.casoraMenuGlass = {
           surface.style.removeProperty('transition');
         }, 260);
       };
+
+      // HA's map (ha-map) and the map libraries of other cards (MapLibre, Leaflet) pan with one finger.
+      var isMapNode = (n) => !!n && (n.localName === 'ha-map' || (n.classList
+        && (n.classList.contains('maplibregl-map') || n.classList.contains('leaflet-container'))));
+      // Noted on the way in: button-card stops a touchstart inside a card with actions and sends its own from the
+      // card, so the one that arrives here no longer names the map it began on.
+      var onMap = null;
+      surface.addEventListener('touchstart', (e) => {
+        var t = e.touches && e.touches.length === 1 && e.touches[0];
+        if (onMap && t && onMap.id === t.identifier && onMap.x === t.clientX && onMap.y === t.clientY) return;
+        onMap = t && e.composedPath && e.composedPath().some(isMapNode) ? { id: t.identifier, x: t.clientX, y: t.clientY } : null;
+      }, { capture: true, passive: true });
 
       surface.addEventListener('touchstart', start, { passive: true });
       surface.addEventListener('touchmove', move, { passive: false });
