@@ -24,8 +24,35 @@
     windy: 'mdi:weather-windy',
     'windy-variant': 'mdi:weather-windy-variant',
   };
-  // No remote pictures. An empty list leaves the dark ground; the user's own
-  // Casora photos are passed in when the background is set to photos.
+  // Online pictures are opt-in (mode "unsplash"). Otherwise the clock sits on a
+  // dark ground, or on photos already stored in this Home Assistant.
+  var UNSPLASH = {
+    sunny: [
+      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1920&q=80',
+      'https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1920&q=80',
+    ],
+    rainy: [
+      'https://images.unsplash.com/photo-1428592953211-077101b2021b?auto=format&fit=crop&w=1920&q=80',
+      'https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?auto=format&fit=crop&w=1920&q=80',
+    ],
+    snowy: [
+      'https://images.unsplash.com/photo-1491002052546-bf38f186af56?auto=format&fit=crop&w=1920&q=80',
+      'https://images.unsplash.com/photo-1483664852095-d6cc6870702d?auto=format&fit=crop&w=1920&q=80',
+    ],
+    fog: [
+      'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1920&q=80',
+      'https://images.unsplash.com/photo-1485236715568-263c8c6d4a0e?auto=format&fit=crop&w=1920&q=80',
+    ],
+    cloudy: [
+      'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1920&q=80',
+      'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1920&q=80',
+    ],
+    night: [
+      'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?auto=format&fit=crop&w=1920&q=80',
+      'https://images.unsplash.com/photo-1507400492013-162706c8c05e?auto=format&fit=crop&w=1920&q=80',
+    ],
+  };
+
   function minutes(v) {
     var n = parseFloat(v);
     if (!isFinite(n) || n <= 0) return 0;
@@ -42,7 +69,8 @@
     return 'cloudy';
   }
 
-  function photo(list, seed) {
+  function photo(kind, seed, mode, localList) {
+    var list = mode === 'unsplash' ? (UNSPLASH[kind] || UNSPLASH.cloudy) : localList;
     if (!list || !list.length) return '';
     var n = Math.abs(Number(seed) || 0) % list.length;
     return list[n];
@@ -324,9 +352,12 @@
       });
     }).catch(function () { localPhotos = []; });
   }
-  function paintPhoto(mode) {
+  function paintPhoto(state, mode) {
     var img = layer.querySelector('.cs-ss-photo');
-    var url = mode === 'photo' ? photo(localPhotos, Math.floor(Date.now() / ROTATE_MS)) : '';
+    var url = '';
+    if (mode === 'unsplash' || mode === 'photo') {
+      url = photo(bucket(state), Math.floor(Date.now() / ROTATE_MS), mode, localPhotos);
+    }
     if (!url) { img.removeAttribute('src'); img.hidden = true; return; }
     img.hidden = false;
     if (img.getAttribute('src') !== url) img.setAttribute('src', url);
@@ -397,8 +428,8 @@
     shown = true;
     var wx = vars.weather_entity || '';
     paintClock(view.hass);
-    loadPhotos(view.hass);
-    paintPhoto(vars.casora_screensaver_bg || '');
+    if ((vars.casora_screensaver_bg || '') === 'photo') loadPhotos(view.hass);
+    paintPhoto(view.hass.states[wx] && view.hass.states[wx].state, vars.casora_screensaver_bg || '');
     paintWeather(view.hass, wx);
     paintCalendar(view.hass);
     takeForecast(view.hass, wx);
@@ -462,8 +493,8 @@
     if (shown) {
       var vars = readVars(view.config);
       var wx = vars.weather_entity || '';
-      loadPhotos(view.hass);
-      paintPhoto(vars.casora_screensaver_bg || '');
+      if ((vars.casora_screensaver_bg || '') === 'photo') loadPhotos(view.hass);
+      paintPhoto(view.hass.states[wx] && view.hass.states[wx].state, vars.casora_screensaver_bg || '');
       paintWeather(view.hass, wx);
       if (Date.now() - eventsAt > 300000) takeEvents(view.hass, vars.casora_screensaver_calendar || '');
       return;
