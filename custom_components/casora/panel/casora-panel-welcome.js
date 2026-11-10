@@ -30,7 +30,6 @@
       n0t: "Einstellungen an der Kachel", n0: "Reiter in der Seitenleiste, Zahnrad im Popup.",
       n1t: "Neue Kachel: Aufgaben", n1: "Alle To-do-Listen in einer Kachel, mit Filter und Fälligkeit.",
       n2t: "Termine anlegen", n2: "Direkt im Kalender-Popup, mit Ort und Beschreibung.",
-      n3t: "Bildschirmschoner", n3: "Große Uhr mit Wetterfoto und Kalender fürs Wand-Tablet.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -43,7 +42,6 @@
       n0t: "Settings at the tile", n0: "Tabs in the side panel, a gear in the popup.",
       n1t: "New tile: Tasks", n1: "All your to-do lists on one tile, with filters and due dates.",
       n2t: "Add events", n2: "Right in the calendar popup, with location and description.",
-      n3t: "Screensaver", n3: "A large clock with a weather photo and a calendar, for a wall tablet.",
     },
     // Spanish: same keys as en (dev/unit/welcome_es.mjs); a missing key falls back to English.
     es: {
@@ -57,7 +55,6 @@
       n0t: "Ajustes en la tarjeta", n0: "Pestañas en el panel lateral, engranaje en el popup.",
       n1t: "Nuevo mosaico: Tareas", n1: "Todas tus listas en un mosaico, con filtros y fechas.",
       n2t: "Añadir eventos", n2: "En el popup del calendario, con lugar y descripción.",
-      n3t: "Protector de pantalla", n3: "Un reloj grande con foto del tiempo y un calendario, para la tablet de pared.",
     },
     fr: {
       welcomeTitle: "Bienvenue dans Casora",
@@ -73,7 +70,6 @@
       n0t: "Réglages sur la tuile", n0: "Onglets dans le panneau, roue dentée dans le popup.",
       n1t: "Nouvelle tuile : Tâches", n1: "Toutes tes listes sur une tuile, avec filtres et échéances.",
       n2t: "Ajouter des événements", n2: "Dans le popup du calendrier, avec lieu et description.",
-      n3t: "Écran de veille", n3: "Une grande horloge avec une photo météo et un calendrier, pour la tablette murale.",
     },
     it: {
       welcomeTitle: "Ti diamo il benvenuto in Casora",
@@ -89,7 +85,6 @@
       n0t: "Impostazioni sulla scheda", n0: "Schede nel pannello, ingranaggio nel popup.",
       n1t: "Nuova tessera: Attività", n1: "Tutti gli elenchi in una tessera, con filtri e scadenze.",
       n2t: "Aggiungi eventi", n2: "Nel popup del calendario, con luogo e descrizione.",
-      n3t: "Salvaschermo", n3: "Un orologio grande con foto del meteo e un calendario, per il tablet a parete.",
     },
     nl: {
       welcomeTitle: "Welkom bij Casora",
@@ -105,7 +100,6 @@
       n0t: "Instellingen bij de tegel", n0: "Tabbladen in het zijpaneel, tandwiel in de popup.",
       n1t: "Nieuwe tegel: Taken", n1: "Al je takenlijsten op één tegel, met filters en vervaldatums.",
       n2t: "Afspraken toevoegen", n2: "Direct in de agenda-popup, met locatie en beschrijving.",
-      n3t: "Schermbeveiliging", n3: "Een grote klok met een weerfoto en een kalender, voor de wandtablet.",
     },
     pl: {
       welcomeTitle: "Witaj w Casora",
@@ -121,7 +115,6 @@
       n0t: "Ustawienia przy kafelku", n0: "Zakładki w panelu, koło zębate w oknie.",
       n1t: "Nowy kafelek: Zadania", n1: "Wszystkie listy na jednym kafelku, z filtrami i terminami.",
       n2t: "Dodawaj wydarzenia", n2: "W oknie kalendarza, z miejscem i opisem.",
-      n3t: "Wygaszacz", n3: "Duży zegar ze zdjęciem pogody i kalendarzem, na tablet na ścianie.",
     },
     pt: {
       welcomeTitle: "Bem-vindo ao Casora",
@@ -137,7 +130,6 @@
       n0t: "Definições no mosaico", n0: "Separadores no painel, roda dentada no popup.",
       n1t: "Novo mosaico: Tarefas", n1: "Todas as listas num mosaico, com filtros e prazos.",
       n2t: "Adicionar eventos", n2: "No popup do calendário, com local e descrição.",
-      n3t: "Proteção de ecrã", n3: "Um relógio grande com foto do tempo e um calendário, para o tablet de parede.",
     },
   };
   // Texts for a language: its own, English for anything it does not have (yet).
@@ -155,7 +147,6 @@
     ["mdi:cog-outline", "n0t", "n0"],
     ["mdi:format-list-checks", "n1t", "n1"],
     ["mdi:calendar-plus", "n2t", "n2"],
-    ["mdi:clock-outline", "n3t", "n3"],
   ];
 
   // Decide on load - before the Studio writes its own casora.* keys.

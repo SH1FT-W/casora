@@ -24,35 +24,8 @@
     windy: 'mdi:weather-windy',
     'windy-variant': 'mdi:weather-windy-variant',
   };
-  // Landscape photos, one set per weather. A missing image leaves the dark ground.
-  var PHOTOS = {
-    sunny: [
-      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1920&q=80',
-      'https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1920&q=80',
-    ],
-    rainy: [
-      'https://images.unsplash.com/photo-1428592953211-077101b2021b?auto=format&fit=crop&w=1920&q=80',
-      'https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?auto=format&fit=crop&w=1920&q=80',
-    ],
-    snowy: [
-      'https://images.unsplash.com/photo-1491002052546-bf38f186af56?auto=format&fit=crop&w=1920&q=80',
-      'https://images.unsplash.com/photo-1483664852095-d6cc6870702d?auto=format&fit=crop&w=1920&q=80',
-    ],
-    fog: [
-      'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1920&q=80',
-      'https://images.unsplash.com/photo-1485236715568-263c8c6d4a0e?auto=format&fit=crop&w=1920&q=80',
-    ],
-    cloudy: [
-      'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1920&q=80',
-      'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1920&q=80',
-    ],
-    night: [
-      'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?auto=format&fit=crop&w=1920&q=80',
-      'https://images.unsplash.com/photo-1507400492013-162706c8c05e?auto=format&fit=crop&w=1920&q=80',
-    ],
-  };
-  var ROTATING = PHOTOS.sunny.concat(PHOTOS.cloudy, PHOTOS.night, PHOTOS.fog);
-
+  // No remote pictures. An empty list leaves the dark ground; the user's own
+  // Casora photos are passed in when the background is set to photos.
   function minutes(v) {
     var n = parseFloat(v);
     if (!isFinite(n) || n <= 0) return 0;
@@ -69,8 +42,8 @@
     return 'cloudy';
   }
 
-  function photo(kind, seed, mode) {
-    var list = mode === 'photo' ? ROTATING : (PHOTOS[kind] || PHOTOS.cloudy);
+  function photo(list, seed) {
+    if (!list || !list.length) return '';
     var n = Math.abs(Number(seed) || 0) % list.length;
     return list[n];
   }
@@ -103,21 +76,9 @@
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
   };
-  var WORDS = {
-    none: { nb: 'Ingen avtaler', de: 'Keine Termine', en: 'No events' },
-    allday: { nb: 'Hele dagen', de: 'Ganztägig', en: 'All day' },
-  };
-
-  function langOf(hass) {
-    var l = (hass && (hass.language || (hass.locale && hass.locale.language))) || '';
-    l = String(l || (typeof navigator !== 'undefined' ? navigator.language : '') || 'en').toLowerCase();
-    if (l.indexOf('nb') === 0 || l.indexOf('no') === 0 || l.indexOf('nn') === 0) return 'nb';
-    if (l.indexOf('de') === 0) return 'de';
-    return 'en';
-  }
-  function word(hass, key) {
-    var pack = WORDS[key] || {};
-    return pack[langOf(hass)] || pack.en || '';
+  function word(key) {
+    var de = key === 'allday' ? 'Ganztägig' : 'Keine Termine';
+    return (typeof window.casoraTr === 'function' && window.casoraTr(de)) || de;
   }
   function use24(hass) {
     var fmt = hass && hass.locale && hass.locale.time_format;
@@ -191,9 +152,11 @@
     style.textContent = [
       '.cs-ss{position:fixed;inset:0;z-index:2147483000;background:#101010;color:#FFF4C4;',
       'font-family:var(--primary-font-family,var(--ha-font-family,system-ui,sans-serif));',
-      'display:flex;flex-direction:column;cursor:pointer;}',
-      '.cs-ss-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}',
-      '.cs-ss-scrim{position:absolute;inset:0;background:rgba(0,0,0,.28);}',
+      'display:none !important;flex-direction:column;cursor:pointer;touch-action:none;',
+      '-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}',
+      '.cs-ss.cs-ss-on{display:flex !important;}',
+      '.cs-ss-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;}',
+      '.cs-ss-scrim{position:absolute;inset:0;background:rgba(0,0,0,.28);pointer-events:none;}',
       '.cs-ss-clock{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;',
       'text-shadow:0 8px 24px rgba(0,0,0,.55);font-variant-numeric:tabular-nums;}',
       '.cs-ss-time{font-weight:300;font-size:min(26vw,34vh);letter-spacing:-.03em;line-height:.9;}',
@@ -223,12 +186,12 @@
     document.head.appendChild(style);
     layer = document.createElement('div');
     layer.className = 'cs-ss';
-    layer.setAttribute('role', 'dialog');
     layer.hidden = true;
-    layer.innerHTML = '<img class="cs-ss-photo" alt="">'
+    layer.style.setProperty('display', 'none', 'important');
+    layer.innerHTML = '<img class="cs-ss-photo" alt="" draggable="false">'
       + '<div class="cs-ss-scrim"></div>'
       + '<div class="cs-ss-clock"><div class="cs-ss-time"></div><div class="cs-ss-date"></div></div>'
-      + '<div class="cs-ss-bar"><div class="cs-ss-col cs-ss-wx"></div><div class="cs-ss-rule"></div><div class="cs-ss-col cs-ss-cal"></div></div>';
+      + '<div class="cs-ss-bar"><div class="cs-ss-col cs-ss-wx" data-cs-entity=""></div><div class="cs-ss-rule"></div><div class="cs-ss-col cs-ss-cal" data-cs-entity=""></div></div>';
     document.body.appendChild(layer);
     return layer;
   }
@@ -318,7 +281,7 @@
     if (!rows.length) {
       var empty = document.createElement('div');
       empty.className = 'cs-ss-empty';
-      empty.textContent = word(hass, 'none');
+      empty.textContent = word('none');
       col.appendChild(empty);
       return;
     }
@@ -336,7 +299,7 @@
       title.textContent = ev.summary || '—';
       var span = document.createElement('div');
       span.className = 'cs-ss-span';
-      if (ev.allDay) span.textContent = word(hass, 'allday');
+      if (ev.allDay) span.textContent = word('allday');
       else {
         var a = new Intl.DateTimeFormat(loc, hour).format(ev.start);
         span.textContent = ev.end ? a + ' – ' + new Intl.DateTimeFormat(loc, hour).format(ev.end) : a;
@@ -349,9 +312,23 @@
     });
   }
 
-  function paintPhoto(state, mode) {
+  var localPhotos = [];
+  var photosAt = 0;
+  function loadPhotos(hass) {
+    if (!hass || !hass.callWS || Date.now() - photosAt < 300000) return;
+    photosAt = Date.now();
+    hass.callWS({ type: 'casora/photos' }).then(function (msg) {
+      var map = (msg && msg.photos) || {};
+      localPhotos = Object.keys(map).map(function (k) { return map[k]; }).filter(function (u) {
+        return typeof u === 'string' && u.indexOf('/api/casora/photo/') === 0;
+      });
+    }).catch(function () { localPhotos = []; });
+  }
+  function paintPhoto(mode) {
     var img = layer.querySelector('.cs-ss-photo');
-    var url = photo(bucket(state), Math.floor(Date.now() / ROTATE_MS), mode);
+    var url = mode === 'photo' ? photo(localPhotos, Math.floor(Date.now() / ROTATE_MS)) : '';
+    if (!url) { img.removeAttribute('src'); img.hidden = true; return; }
+    img.hidden = false;
     if (img.getAttribute('src') !== url) img.setAttribute('src', url);
   }
 
@@ -414,11 +391,14 @@
   function show(view) {
     var vars = readVars(view.config);
     ensure();
+    layer.style.removeProperty('display');
     layer.hidden = false;
+    layer.classList.add('cs-ss-on');
     shown = true;
     var wx = vars.weather_entity || '';
     paintClock(view.hass);
-    paintPhoto(view.hass.states[wx] && view.hass.states[wx].state, vars.casora_screensaver_bg || '');
+    loadPhotos(view.hass);
+    paintPhoto(vars.casora_screensaver_bg || '');
     paintWeather(view.hass, wx);
     paintCalendar(view.hass);
     takeForecast(view.hass, wx);
@@ -429,20 +409,49 @@
 
   function hide() {
     shown = false;
-    if (layer) layer.hidden = true;
+    if (layer) {
+      layer.classList.remove('cs-ss-on');
+      layer.hidden = true;
+      // Inline, so a stylesheet display never keeps the cover on screen.
+      layer.style.setProperty('display', 'none', 'important');
+    }
     dropForecast();
     releaseWake();
     bump();
   }
 
-  window.addEventListener('pointerdown', function () {
-    if (shown) hide();
-    else bump();
-  }, true);
-  window.addEventListener('keydown', function () {
-    if (shown) hide();
-    else bump();
-  }, true);
+  // A tap on the weather or the calendar stays. Anywhere else on the cover (clock, photo)
+  // closes it at once. The whole gesture is swallowed, so the dashboard underneath never
+  // sees it and does not navigate or reload.
+  var eatUntil = 0;
+  function onEntity(ev) {
+    var path = (ev.composedPath && ev.composedPath()) || [];
+    for (var i = 0; i < path.length; i++) {
+      var n = path[i];
+      if (!n || n === layer) return false;
+      if (n.getAttribute && n.hasAttribute('data-cs-entity')) return true;
+    }
+    return false;
+  }
+  function block(ev) {
+    ev.stopPropagation();
+    if (ev.cancelable) ev.preventDefault();
+  }
+  function onGesture(ev) {
+    if (shown) {
+      if (onEntity(ev)) { block(ev); return; }
+      hide();
+      eatUntil = Date.now() + 900;
+      block(ev);
+      return;
+    }
+    if (Date.now() < eatUntil) { block(ev); return; }
+    if (ev.type === 'pointerdown' || ev.type === 'touchstart' || ev.type === 'keydown') bump();
+  }
+  ['pointerdown', 'pointerup', 'pointercancel', 'touchstart', 'touchend', 'touchcancel', 'click', 'auxclick', 'contextmenu'].forEach(function (t) {
+    window.addEventListener(t, onGesture, true);
+  });
+  window.addEventListener('keydown', onGesture, true);
 
   setInterval(function () {
     var view = dash();
@@ -453,7 +462,8 @@
     if (shown) {
       var vars = readVars(view.config);
       var wx = vars.weather_entity || '';
-      paintPhoto(view.hass.states[wx] && view.hass.states[wx].state, vars.casora_screensaver_bg || '');
+      loadPhotos(view.hass);
+      paintPhoto(vars.casora_screensaver_bg || '');
       paintWeather(view.hass, wx);
       if (Date.now() - eventsAt > 300000) takeEvents(view.hass, vars.casora_screensaver_calendar || '');
       return;

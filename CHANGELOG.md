@@ -10,8 +10,6 @@ Settings where you need them, a new Tasks tile, and new events right from the ca
 
 ### New
 - **Tasks tile:** all your to-do lists on one tile. The popup filters by list, sorts by due date, ticks items off and adds new ones with a note and a due date where the list supports them. The filter is per browser.
-- **Screensaver:** under Settings, Tapping & tablet, Wall tablet. After 1, 2, 5 or 10 idle minutes a large clock covers the dashboard, over a photo that follows the weather. The forecast and one calendar sit along the bottom. A tap outside the calendar and the weather brings the dashboard back.
- all your to-do lists on one tile. The popup filters by list, sorts by due date, ticks items off and adds new ones with a note and a due date where the list supports them. The filter is per browser.
 - **Add an event (#146):** the calendar popup can create events with location and description, in any calendar that accepts them.
 - **Tile side panel in tabs:** clicking a tile in the Studio shows Tile, Popup and, where there are shared settings, a tab such as "All blinds". Popup fields are one click away, shared values take effect with "Save settings".
 - **Gear in every popup:** admins jump straight to that tile's Popup tab in the Studio. Popups without a tile open their section of the settings.
