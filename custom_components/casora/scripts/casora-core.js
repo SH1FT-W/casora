@@ -9445,6 +9445,24 @@ window.casoraMenuGlass = {
     return !u || u.is_admin !== false;
   };
 
+  // The clock (top bar) reads the chosen time sensor, else sensor.time – which only exists with HA's core "Time & Date"
+  // integration (option "Time"). True when the clock is on, reads sensor.time and that is not among the states.
+  // One rule for the clock tile's admin hint and the Studio warning (dev/unit/uhr_zeit_datum.mjs).
+  window.casoraClockNeedsTimeDate = function (showTime, timeEntity, states) {
+    if (showTime === false) return false;
+    if ((timeEntity || 'sensor.time') !== 'sensor.time') return false;
+    return !(states && states['sensor.time']);
+  };
+
+  // Tap on the clock hint: an admin goes to the Studio of this dashboard (Time section there).
+  window.casoraClockHintGo = function () {
+    if (!window.casoraIsAdmin()) return;
+    var seg = (location.pathname || '').split('/').filter(Boolean);
+    var dash = (seg[0] || '').replace(/[-_]mobile$/i, '');
+    window.history.pushState(null, '', '/casora-studio' + (dash ? '?dash=' + encodeURIComponent(dash) : ''));
+    window.dispatchEvent(new CustomEvent('location-changed', { bubbles: true, composed: true }));
+  };
+
   // The Studio panel is on the page (it registers itself, casora-panel.js connectedCallback): popups render as its
   // preview. Hints that only invite the admin to add more (GitHub issue 125) show there, never in the live dashboard.
   window.casoraInStudio = function () {

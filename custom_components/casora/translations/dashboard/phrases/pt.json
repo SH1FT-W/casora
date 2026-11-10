@@ -2866,7 +2866,8 @@
     "Die Aufgabe konnte nicht gespeichert werden.": "Não foi possível guardar a tarefa.",
     "Abhaken": "Marcar",
     "Wieder öffnen": "Reabrir",
-    "Eintrag löschen?": "Eliminar esta entrada?"
+    "Eintrag löschen?": "Eliminar esta entrada?",
+    "Uhr: Zeit & Datum fehlt": "Relógio: falta Hora e data"
   },
   "patterns": [
     [

@@ -3001,7 +3001,9 @@
     "60 % then means 60 % closed and the tile lights up only while it is not fully open. On an awning, Extend and Retract swap. Everything Casora counts stays the same.": "60 % significa quindi 60 % chiuso e la tessera si illumina solo finché il dispositivo non è completamente aperto. Su una tenda da sole Estendi e Ritrai si scambiano. Tutto ciò che Casora conta resta uguale.",
     "Tasks": "Attività",
     "Add list …": "Aggiungi elenco …",
-    "Empty: every to-do list in your home.": "Vuoto: tutti gli elenchi della casa."
+    "Empty: every to-do list in your home.": "Vuoto: tutti gli elenchi della casa.",
+    "The clock needs the Time & Date integration with the option \"Time\". Home Assistant does not add it by default.": "L'orologio richiede l'integrazione «Ora e data» con l'opzione «Ora». Home Assistant non la aggiunge più di default.",
+    "Add Time & Date": "Aggiungi «Ora e data»"
   },
   "patterns": [
     [

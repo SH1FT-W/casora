@@ -2328,7 +2328,11 @@ const mediaSources = () => [
       steam: "Keep Steam", both: "Show both" } },
 ];
 
-const fieldFault = (f, val, hass) => {
+// #30: the clock reads sensor.time when "Time sensor" is empty ("Automatic"); the sensor needs HA's Time & Date integration.
+const CLOCK_NEEDS_TIME_DATE = "The clock needs the Time & Date integration with the option \"Time\". Home Assistant does not add it by default.";
+const fieldFault = (f, val, hass, vars) => {
+  if (f.key === "time_entity" && hass && window.casoraClockNeedsTimeDate
+    && window.casoraClockNeedsTimeDate(vars && vars.show_time, val, hass.states)) return CLOCK_NEEDS_TIME_DATE;
   if (!f.domains || !val || !hass) return "";
   const st = hass.states[val];
   if (!st) return "This entity no longer exists. Pick another one.";
@@ -2496,6 +2500,7 @@ const SECTIONS = [
       // The new Studio hides the section text (blurb), so the note sits right under "Show clock" (user test 4, E-T3;
       // until 26.10 it stood under the 12-hour switch at the bottom).
       { key: "show_time", label: "Show clock", type: "bool", boolDefault: true, always: true, ord: -1,
+        reveals: true, // the warning under "Time sensor" follows the switch
         hint: "For desktop and tablet – the phone layout has no clock." },
       // Always visible: without an entry the clock takes sensor.time, and that should show.
       { ...E("time_entity", "Time sensor", ["sensor"]), always: true, placeholder: "Automatic" },
@@ -19094,10 +19099,17 @@ class CasoraPanel extends HTMLElement {
         };
         const addFault = (val) => {
           if (faultEl) { faultEl.remove(); faultEl = null; }
-          const why = fieldFault(f, val, this._hass);
+          const why = fieldFault(f, val, this._hass, room.variables);
           if (!why) return;
           const w = document.createElement("div");
           w.className = "fieldwarn"; w.textContent = why;
+          if (why === CLOCK_NEEDS_TIME_DATE) {
+            const a = document.createElement("button");
+            a.type = "button"; a.className = "linkbtn"; a.textContent = "Add Time & Date";
+            a.onclick = () => window.open("https://my.home-assistant.io/redirect/config_flow_start/?domain=time_date", "_blank", "noopener,noreferrer");
+            w.appendChild(document.createTextNode(" "));
+            w.appendChild(a);
+          }
           faultEl = w;
           const after = whyEl && whyEl.parentNode ? whyEl : hintEl && hintEl.parentNode ? hintEl
             : (row.parentNode ? row : null);
@@ -19291,6 +19303,7 @@ class CasoraPanel extends HTMLElement {
           row.appendChild(this._boolSwitch(flip(cur), f.invert ? !f.boolDefault : f.boolDefault, (v) => {
             setVar(f.key, flip(v), f);
             filled(f);
+            if (f.reveals) this._renderForm();
           }, f.label));
           addDrop(row, f);
           fs.appendChild(row);
@@ -21234,7 +21247,7 @@ class CasoraPanel extends HTMLElement {
       if (id === "howto") return this._helpTopics();
       if (id === "diag") return this._diagShow();
       if (id === "whatsNew") return window.casoraWelcomeShow(id);
-      window.open(id === "issue" ? ISSUES : DOCS, "_blank", "noopener");
+      window.open(id === "issue" ? ISSUES : DOCS, "_blank", "noopener,noreferrer");
     });
   }
 

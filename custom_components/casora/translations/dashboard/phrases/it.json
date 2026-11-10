@@ -2866,7 +2866,8 @@
     "Die Aufgabe konnte nicht gespeichert werden.": "Impossibile salvare l'attività.",
     "Abhaken": "Spunta",
     "Wieder öffnen": "Riapri",
-    "Eintrag löschen?": "Eliminare questa voce?"
+    "Eintrag löschen?": "Eliminare questa voce?",
+    "Uhr: Zeit & Datum fehlt": "Orologio: manca Ora e data"
   },
   "patterns": [
     [

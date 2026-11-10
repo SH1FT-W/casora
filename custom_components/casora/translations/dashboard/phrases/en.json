@@ -2848,7 +2848,8 @@
     "Die Aufgabe konnte nicht gespeichert werden.": "The task could not be saved.",
     "Abhaken": "Tick off",
     "Wieder öffnen": "Reopen",
-    "Eintrag löschen?": "Delete this item?"
+    "Eintrag löschen?": "Delete this item?",
+    "Uhr: Zeit & Datum fehlt": "Clock: Time & Date missing"
   },
   "patterns": [
     [

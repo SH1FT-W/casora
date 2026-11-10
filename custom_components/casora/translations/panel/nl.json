@@ -3001,7 +3001,9 @@
     "60 % then means 60 % closed and the tile lights up only while it is not fully open. On an awning, Extend and Retract swap. Everything Casora counts stays the same.": "60 % betekent dan 60 % gesloten en de tegel licht alleen op zolang het apparaat niet helemaal open is. Bij een zonnescherm wisselen Uitrollen en Inrollen om. Alles wat Casora telt blijft gelijk.",
     "Tasks": "Taken",
     "Add list …": "Lijst toevoegen …",
-    "Empty: every to-do list in your home.": "Leeg: alle takenlijsten in huis."
+    "Empty: every to-do list in your home.": "Leeg: alle takenlijsten in huis.",
+    "The clock needs the Time & Date integration with the option \"Time\". Home Assistant does not add it by default.": "De klok heeft de integratie „Tijd en datum” met de optie „Tijd” nodig. Home Assistant voegt die niet meer standaard toe.",
+    "Add Time & Date": "„Tijd en datum” toevoegen"
   },
   "patterns": [
     [

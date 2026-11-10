@@ -2866,7 +2866,8 @@
     "Die Aufgabe konnte nicht gespeichert werden.": "La tâche n'a pas pu être enregistrée.",
     "Abhaken": "Cocher",
     "Wieder öffnen": "Rouvrir",
-    "Eintrag löschen?": "Supprimer cette entrée ?"
+    "Eintrag löschen?": "Supprimer cette entrée ?",
+    "Uhr: Zeit & Datum fehlt": "Horloge : Heure et date manquant"
   },
   "patterns": [
     [
