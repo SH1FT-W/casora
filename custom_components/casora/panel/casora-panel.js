@@ -1610,6 +1610,7 @@ function phoneCondSnapshot(pair) {
   ((pair.link || {}).links || []).forEach((link) => {
     const room = rooms[link.room], sec = sections[link.section];
     if (link.section === null || !room || !sec) return;
+    // The phone tile the pair sync gives each conditional room tile (assignTwins, issue 158).
     const byKey = new Map();
     (sec.tiles || []).forEach((mt) => {
       if (!mt || mt.type !== "conditional") return;
@@ -1617,17 +1618,94 @@ function phoneCondSnapshot(pair) {
       if (!byKey.has(k)) byKey.set(k, []);
       byKey.get(k).push(mt);
     });
-    const used = new Map();
-    (room.tiles || []).forEach((t) => {
+    const lists = new Map();
+    (room.tiles || []).forEach((t, i) => {
       if (!t || t.type !== "conditional") return;
-      const k = tileTwinKey(t), list = byKey.get(k);
-      if (!list) return;
-      const n = used.get(k) || 0;
-      used.set(k, n + 1);
-      if (n < list.length) out.set(t, condChain(list[n]));
+      const k = tileTwinKey(t);
+      if (!lists.has(k)) lists.set(k, []);
+      lists.get(k).push(i);
+    });
+    lists.forEach((list, k) => {
+      const mts = byKey.get(k);
+      if (!mts) return;
+      const seen = new Set();
+      assignTwins(room.tiles, list, mts).at.forEach((i, mt) => {
+        if (seen.has(i)) return;
+        seen.add(i);
+        out.set(room.tiles[i], condChain(mt));
+      });
     });
   });
   return out;
+}
+
+// What a tile is, without what only the phone keeps on it: among tiles with the same twin key (two Universal tiles
+// without a device, two hosted cards without a title) the phone's copy belongs to the room tile that reads the same.
+function tileTwinSig(t) {
+  const c = clone(t);
+  for (let v = c, d = 0; v && typeof v === "object" && d < 5; v = v.type === "conditional" ? v.card : null, d++) {
+    if (!v.variables) continue;
+    MOBILE_ONLY_TILE_KEYS.forEach((k) => { delete v.variables[k]; });
+    if (!Object.keys(v.variables).length) delete v.variables;
+  }
+  return stable(c);
+}
+
+// Casora's own copy of a room tile on the phone (marker casora_from_room), not a derived tile.
+const isRoomCopy = (mt) => !!mt && !(mt.variables && mt.variables.casora_derived)
+  && (tileView(mt).variables || {}).casora_from_room === true;
+
+// Issue 158: which room tile each phone tile of ONE twin key stands for. Tiles of one kind on one device (or, like two
+// Universal tiles, on none) share a key. Each phone tile takes a room tile of its own: the one that reads the same
+// first (so deleting or moving one of them in the room takes the right copy along), the rest in the phone's order.
+// Known limits: tiles that read exactly the same cannot be told apart, and a phone tile that no longer reads like its
+// room tile (kept in step only by syncTwinTile, which carries neither a hosted card nor a symbol) goes by its place.
+// More on the phone than in the room: a copy of Casora's follows its twin out (surplus); a tile without the marker
+// stays with the last room tile, as before. One exception: a tile from before the marker that is Casora's shape (the
+// rule the sync has for such tiles anyway) goes when a copy of Casora's already stands for that room tile – it is the
+// leftover of a deleted twin, and the room tile would show twice.
+// roomTiles: the room's tiles, list: the indices with this key, mts: the phone tiles with it.
+function assignTwins(roomTiles, list, mts) {
+  const at = new Map(), surplus = new Set();
+  if (mts.length === 1 && list.length === 1) { at.set(mts[0], list[0]); return { at, surplus }; }
+  const holder = new Map();
+  const take = (mt, i) => { at.set(mt, i); holder.set(i, mt); };
+  const sigs = new Map(list.map((i) => [i, tileTwinSig(roomTiles[i])]));
+  const own = new Map(mts.map((mt) => [mt, tileTwinSig(mt)]));
+  // Same place and same reading first: a tile that is where it belongs stays there. Without this, two phone tiles
+  // that both read like the second room tile took turns at it on every sync.
+  mts.forEach((mt, n) => { if (n < list.length && sigs.get(list[n]) === own.get(mt)) take(mt, list[n]); });
+  mts.forEach((mt) => {
+    if (at.has(mt)) return;
+    const i = list.find((x) => !holder.has(x) && sigs.get(x) === own.get(mt));
+    if (i !== undefined) take(mt, i);
+  });
+  mts.forEach((mt) => {
+    if (at.has(mt)) return;
+    const i = list.find((x) => !holder.has(x));
+    if (i !== undefined) { take(mt, i); return; }
+    if (isRoomCopy(mt)) { surplus.add(mt); return; }
+    const last = list[list.length - 1];
+    const v = tileView(mt);
+    const old = (v.variables || {}).casora_from_room === undefined && (!!tileTypeOf(v) || !!carouselId(carouselOf(mt)));
+    if (old && isRoomCopy(holder.get(last))) surplus.add(mt); else at.set(mt, last);
+  });
+  return { at, surplus };
+}
+
+// A phone copy made anew from its room tile, with what only the phone keeps on it. Among several tiles with one twin
+// key the copy has to read exactly like its room tile (hosted card and symbol included), or the next sync could not
+// tell them apart.
+function rebuildTwinCopy(twin, mt) {
+  const next = clone(twin);
+  for (let a = next, b = mt, d = 0; a && b && d < 5; d++) {
+    const keep = {};
+    MOBILE_ONLY_TILE_KEYS.forEach((k) => { if (b.variables && b.variables[k] !== undefined) keep[k] = clone(b.variables[k]); });
+    if (Object.keys(keep).length) a.variables = { ...(a.variables || {}), ...keep };
+    if (a.type !== "conditional" || b.type !== "conditional") break;
+    a = a.card; b = b.card;
+  }
+  return next;
 }
 
 function syncPairTiles(pair) {
@@ -1654,9 +1732,8 @@ function syncPairTiles(pair) {
         if (id && p && !carouselId(p)) p.variables = { ...(p.variables || {}), casora_carousel: id };
       });
     }
-    // Gleiche Kacheln (Art + Entität) mehrfach im Raum: der Reihe nach zuordnen, die erste
-    // Handy-Kachel zur ersten im Raum usw. – sonst bekamen alle die Einstellungen (auch „Größe
-    // am Handy“) der letzten. Mehr am Handy als im Raum: die übrigen zur letzten, wie bisher.
+    // Gleiche Kacheln (Art + Entität) mehrfach im Raum: jede Handy-Kachel gehört zu einer eigenen Raum-Kachel –
+    // sonst bekamen alle die Einstellungen (auch „Größe am Handy“) der letzten. Zuordnung weiter unten (Issue 158).
     const byKey = new Map();
     (room.tiles || []).forEach((t, i) => {
       if (!t) return;
@@ -1675,14 +1752,29 @@ function syncPairTiles(pair) {
       if (!byPlain.has(k)) byPlain.set(k, []);
       byPlain.get(k).push(i);
     });
-    const phoneKeys = new Set((sec.tiles || []).filter(Boolean).map(tileTwinKey));
+    // Counted per key (issue 158): of several equal tiles each phone tile takes a room tile of its own, the one whose
+    // tile inside reads the same first. A phone tile whose key is still in the room is only reshaped when the phone
+    // has one more of them than the room (one of several equal tiles got or lost its condition) and its twin is plain
+    // to see.
+    const phoneKeys = new Map();
+    (sec.tiles || []).filter(Boolean).forEach((mt) => { const k = tileTwinKey(mt); phoneKeys.set(k, (phoneKeys.get(k) || 0) + 1); });
+    const reshaped = new Set();
     (sec.tiles || []).forEach((mt, si) => {
-      if (!mt || byKey.has(tileTwinKey(mt))) return;
+      if (!mt) return;
+      const key = tileTwinKey(mt);
+      const spare = byKey.has(key) && phoneKeys.get(key) > byKey.get(key).length;
+      if (byKey.has(key) && !spare) return;
       const inner = innerTile(mt);
       // Nur eine einzelne Kachel (keine Sammelkarte) und nur, wenn der Raum sie anders umhüllt.
       if (!inner || isContainerCard(inner)) return;
-      const list = byPlain.get(plainKey(mt));
-      const ti = list && list.find((x) => !phoneKeys.has(tileTwinKey(room.tiles[x])));
+      const free = (byPlain.get(plainKey(mt)) || []).filter((x) => { const k = tileTwinKey(room.tiles[x]);
+        return k !== key && !reshaped.has(x) && (phoneKeys.get(k) || 0) < byKey.get(k).length; });
+      let ti = free[0];
+      if (free.length > 1 || spare) {
+        const sg = tileTwinSig(inner);
+        const same = free.find((x) => tileTwinSig(innerTile(room.tiles[x])) === sg);
+        ti = same !== undefined ? same : (spare ? undefined : free[0]);
+      }
       if (ti === undefined) return;
       const twin = room.tiles[ti];
       const tIn = innerTile(twin);
@@ -1695,21 +1787,36 @@ function syncPairTiles(pair) {
       });
       if (Object.keys(keep).length) nIn.variables = { ...(nIn.variables || {}), ...keep };
       sec.tiles[si] = next;
-      phoneKeys.add(tileTwinKey(next));
+      reshaped.add(ti);
+      phoneKeys.set(key, phoneKeys.get(key) - 1);
+      phoneKeys.set(tileTwinKey(next), (phoneKeys.get(tileTwinKey(next)) || 0) + 1);
     });
-    const used = new Map();
     const at = new Map();
-    const onPhone = new Set();
+    // Issue 158: each phone tile takes a room tile of its own (assignTwins), "is there one on the phone" let only the
+    // first of several equal tiles across.
+    const twinAt = new Map();
+    const taken = new Set();
+    const surplus = new Set();
+    const several = new Set();
+    const groups = new Map();
     (sec.tiles || []).forEach((mt) => {
       if (!mt) return;
       const k = tileTwinKey(mt);
-      onPhone.add(k);
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(mt);
+    });
+    groups.forEach((mts, k) => {
       const list = byKey.get(k);
-      const n = used.get(k) || 0;
-      used.set(k, n + 1);
-      const ti = list ? list[Math.min(n, list.length - 1)] : -1;
+      if (!list) return;
+      const a = assignTwins(room.tiles, list, mts);
+      a.at.forEach((i, mt) => { twinAt.set(mt, i); taken.add(i); });
+      a.surplus.forEach((mt) => surplus.add(mt));
+      if (mts.length > 1 || list.length > 1) mts.forEach((mt) => several.add(mt));
+    });
+    (sec.tiles || []).forEach((mt, si) => {
+      if (!mt || surplus.has(mt)) return;
+      const ti = twinAt.has(mt) ? twinAt.get(mt) : -1;
       const twin = ti >= 0 ? room.tiles[ti] : null;
-      if (twin) at.set(mt, ti);
       if (!twin) {
         const copied = (tileView(mt).variables || {}).casora_from_room;
         if (!(copied === undefined ? !!tileTypeOf(mt) : copied)) {
@@ -1717,7 +1824,17 @@ function syncPairTiles(pair) {
         }
         return;
       }
-      syncTwinTile(twin, mt);
+      // One of several with this key: Casora's copy is the room tile again, whole (a single tile is kept in step
+      // as it always was).
+      const plain = innerTile(twin);
+      if (several.has(mt) && isRoomCopy(mt) && plain && !isContainerCard(plain) && !carouselId(carouselOf(twin))) {
+        const next = rebuildTwinCopy(twin, mt);
+        sec.tiles[si] = next;
+        at.set(next, ti);
+      } else {
+        at.set(mt, ti);
+        syncTwinTile(twin, mt);
+      }
       synced++;
     });
 
@@ -1732,9 +1849,7 @@ function syncPairTiles(pair) {
       // Karussell mit Kennung (1.4) gehört aufs Handy; importierte ohne Kennung wie bisher nicht.
       if (!t || (!tv.entity && tv.template !== CUSTOM_TEMPLATE && !(ty && (ty.noEntity || ty.ownData))
         && !carouselId(carouselOf(t)))) return;
-      const key = tileTwinKey(t);
-      if (onPhone.has(key)) return;
-      onPhone.add(key);
+      if (taken.has(ti)) return;
       sec.tiles = sec.tiles || [];
       const copy = clone(t);
       const cv = tileView(copy);
@@ -1746,7 +1861,7 @@ function syncPairTiles(pair) {
 
     const before = (sec.tiles || []).length;
     sec.tiles = (sec.tiles || []).filter((mt) => {
-      if (!mt) return false;
+      if (!mt || surplus.has(mt)) return false;
       if (mt.variables && mt.variables.casora_derived) return true;
       if (byKey.has(tileTwinKey(mt))) return true;
       // Only a tile Casora copied out of the room follows its twin out again.
@@ -26439,8 +26554,19 @@ class CasoraPanel extends HTMLElement {
     const order = rooms.map((r, i) => i);
     if (own !== null && rooms[own]) order.unshift(...order.splice(own, 1));
     for (const i of order) {
-      const hit = (rooms[i].tiles || []).find((t) => t && tileTwinKey(t) === key);
-      if (hit) return { tile: hit, roomIndex: i };
+      const tiles = rooms[i].tiles || [];
+      const list = tiles.map((t, x) => (t && tileTwinKey(t) === key ? x : -1)).filter((x) => x >= 0);
+      if (!list.length) continue;
+      // Several tiles with this key (issue 158): the room tile the pair sync gives this phone tile (assignTwins).
+      let x = list[0];
+      if (i === own) {
+        const mts = ((sec && sec.tiles) || []).filter((t) => t && tileTwinKey(t) === key);
+        if ((list.length > 1 || mts.length > 1) && mts.includes(tile)) {
+          const a = assignTwins(tiles, list, mts).at;
+          if (a.has(tile)) x = a.get(tile);
+        }
+      }
+      return { tile: tiles[x], roomIndex: i };
     }
     return null;
   }
@@ -30013,7 +30139,7 @@ window.__casoraPanelInternals = {
   applyMotion, markPhoneManaged, applyFirstRun, CASORA_THEMES, ensureCustomFontCss, sceneBadgeOn, dropNavScenes,
   parseCardText, cardToText,
   isDefaultHomeName, homeRoomWord, shotLang, isHomeRoom, roomLabel, storedRoomName, HOME_ROOM_NAME, markAutoHome, isDefaultHome, setHomeName, badgeOrderOf, BADGE_ORDER_IDS,
-  linkPair, syncPairRooms, syncPairTiles, syncTwinTile, phoneCondSnapshot, condChain, condModel, condWrite, syncRoomChips, phoneRoomBadgeVars, PHONE_ROOM_OVERRIDE, phoneRoundTrips, phoneStale, phoneRoomKeys, carryPhoneSizes, restorePhoneSizes, hasTileSize, setInnerSize, expandMobileConfig, extractMobileConfig,
+  linkPair, syncPairRooms, syncPairTiles, syncTwinTile, assignTwins, tileTwinSig, phoneCondSnapshot, condChain, condModel, condWrite, syncRoomChips, phoneRoomBadgeVars, PHONE_ROOM_OVERRIDE, phoneRoundTrips, phoneStale, phoneRoomKeys, carryPhoneSizes, restorePhoneSizes, hasTileSize, setInnerSize, expandMobileConfig, extractMobileConfig,
   deriveEnergyRooms, energyManual, energyBackToAuto, fillHomeLights, homeLightsEdit, homeLightsOldPick, fixHomeLightSlots, phoneSlotsMatch, roomVisibility, homePickOrder, MENU_ICONS, SECTIONS, tileTwinKey,
   CASORA_ACCENTS, accentsShown, accentLabel, swatchCss,
   condStates, condLoadSeen, isCarouselCard, isPageTile, carouselOf, carouselId, markCarousel, CAROUSEL_CARD, CAROUSEL_TILE,
