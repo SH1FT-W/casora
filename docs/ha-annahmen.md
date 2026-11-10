@@ -225,7 +225,10 @@ installiert nichts (HACS-Review hacs/default#12143): die eigene Update-Entität 
 neue Versionen und Versionshinweise, ohne `INSTALL`. Mit HACS ruft das Studio HAs öffentlichen Dienst `update.install`
 an HACS' Update-Entität für Casora auf (HACS-Quelle `update.py`, 25.10.2026: Funktionen `INSTALL` + `SPECIFIC_VERSION`
 + `PROGRESS`, `version` = Release-Tag `v<version>`, danach `installed_version` = neue Version und Neustart nötig);
-eine Beta geht mit ihrem Tag als `version`. „In HACS öffnen“ führt zu `/hacs/repository/<GitHub-ID>` (ab HA 2026.11
+eine Beta geht mit ihrem Tag als `version`, ebenso ein Release, das der Marketplace bzw. HACS noch nicht bemerkt hat:
+ohne `version` verweigert HA den Aufruf, wenn die Entität kein Update kennt (`update/services.py`,
+`translation_key` `no_update_available`, „No update available for …“; #153, Test `r84_updates_via_hacs`).
+„In HACS öffnen“ führt zu `/hacs/repository/<GitHub-ID>` (ab HA 2026.11
 mit dem Marketplace zu `/marketplace/repository/<GitHub-ID>`; dessen `update.install` liefert wie HACS danach
 `installed_version` = neue Version, Zustand `off` (live geprüft mit 2026.11.0b4), verweigert aber mit
 `translation_key` `warning_not_accepted`, solange dieser Nutzer die Erststart-Warnung des Marketplace nicht gelesen hat

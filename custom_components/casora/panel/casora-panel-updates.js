@@ -352,8 +352,9 @@
       this._cuRepaint();
       try {
         const data = { entity_id: d.entity_id };
-        // A version other than HACS' newest (a beta) goes by its release tag.
-        if (version && want !== bare(st.attributes && st.attributes.latest_version)) data.version = "v" + want;
+        // A version other than the Marketplace's newest goes by its release tag: a beta, and (issue 153) a release the
+        // Marketplace has not noticed yet. Without a version Home Assistant refuses there ("No update available").
+        if (want !== bare(st.attributes && st.attributes.latest_version)) data.version = "v" + want;
         await this._hass.callService("update", "install", data);
       } catch (e) {
         this._cuErr = t("Installing didn't work.") + " " + ((e && e.message) || e);

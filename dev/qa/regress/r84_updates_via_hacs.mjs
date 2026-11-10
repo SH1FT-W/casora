@@ -50,6 +50,11 @@ await page.evaluate(({ E, URL_HACS }) => {
     h.callService = async (domain, service, data) => {
       if (domain === 'update') {
         const q = window.__qaUpd; q.calls.push([domain, service, data]);
+        // Home Assistant's own rule (update/services.py): without a version, an entity that knows no update refuses.
+        const a = ((document.querySelector('home-assistant').hass.states[q.entity] || {}).attributes) || {};
+        if (service === 'install' && !data.version && (!a.latest_version || a.latest_version === a.installed_version)) {
+          throw Object.assign(new Error('No update available for ' + q.entity + '.'), { translation_key: 'no_update_available' });
+        }
         if (service === 'install') { q.done = true; q.doneVer = data.version ? String(data.version).replace(/^v/, '') : null; }
         return [];
       }
@@ -68,9 +73,12 @@ await page.evaluate(({ E, URL_HACS }) => {
   };
   window.addEventListener('hass-more-info', (ev) => window.__qaUpd.moreInfo.push(ev.detail && ev.detail.entityId), true);
 }, { E, URL_HACS });
-await fakeStates(page, { [E]: { state: 'on', attributes: { friendly_name: 'Casora Update', installed_version: 'v1.0.0',
-  latest_version: 'v9.9.9', in_progress: false, supported_features: 23, release_url: 'https://github.com/SH1FT-W/casora/releases/v9.9.9' } } },
+// The Marketplace's entry knows the same newest version as Casora's list (the usual case).
+const NEWEST = await page.evaluate(async () => (await document.querySelector('home-assistant').hass.callWS({ type: 'casora/updates/list', force: false, language: 'de' })).latest);
+const hacsEntry = (latest) => fakeStates(page, { [E]: { state: latest === 'v1.0.0' ? 'off' : 'on', attributes: { friendly_name: 'Casora Update', installed_version: 'v1.0.0',
+  latest_version: latest, in_progress: false, supported_features: 23, release_url: 'https://github.com/SH1FT-W/casora/releases/' + latest } } },
 { sticky: true });
+await hacsEntry('v' + NEWEST);
 
 const LABEL = /Im Marketplace öffnen|Open in the Marketplace/;
 const INSTALL = /^(Installieren|Install)$/;
@@ -155,6 +163,21 @@ await openUpdates();
 await clickHero(LABEL.source);
 const q5 = await page.evaluate(() => window.__qaUpd);
 await check('ohne HACS-Seite: Mehr-Info von HACS\' Eintrag', q5.moreInfo.includes(E) && !q5.pushed.length, q5);
+
+// 4b) GitHub issue 153: right after a release the Marketplace (HACS before HA 2026.11) has not noticed the new
+// version yet (its entry: no update), while
+// Casora's own list already offers it. "Install" sent no version, Home Assistant answered "No update available" and
+// the button seemed dead. It now asks for exactly the version it names.
+await page.evaluate((u) => Object.assign(window.__qaUpd, { calls: [], done: false, doneVer: null, url: u }), URL_HACS);
+await hacsEntry('v1.0.0');
+await openUpdates();
+await check('Marketplace kennt die neue Version noch nicht: Installieren gedrückt', await clickHero(INSTALL.source));
+const q6 = await page.evaluate(() => window.__qaUpd);
+await check('update.install mit genau der angebotenen Version', q6.calls.length === 1 && q6.calls[0][1] === 'install'
+  && q6.calls[0][2].entity_id === E && q6.calls[0][2].version === 'v' + NEWEST, q6.calls);
+const h6 = await hero();
+await check('danach: Neustart nötig, kein „hat nicht geklappt“', h6 && /Neustart nötig|restart needed/i.test(h6.text) && !/geklappt|didn't work|No update available/i.test(h6.text), h6);
+await hacsEntry('v' + NEWEST);
 
 // 5) No HACS entry for Casora: no button, hint.
 await page.evaluate(() => Object.assign(window.__qaUpd, { done: false, entity: null, url: null }));
