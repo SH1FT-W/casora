@@ -66,3 +66,14 @@ custom_components/casora/scripts/local/13-schloss.js | tt | markup from L.trigTe
 custom_components/casora/scripts/local/13-schloss.js | re:^(?:vl|body|bed|gap|zus|ver|line|left|right)$ | markup built in L.html from UI builders and escaped texts | 9
 custom_components/casora/scripts/local/02-devices.js | zcss | CSS from UI.zoomCss, a constant built from theme tokens, no user data | 1
 custom_components/casora/scripts/local/02-devices.js | HH.chart(window._hpChartTitle(c.power), plate).replace(/<\/div>$/, '') | printer power Verlauf: HH.chart escapes its title, plate is a constant style | 1
+# 45-charging.js (issue 168; distances, powers and counts are numbers; colours and CSS come from the code, every text goes through esc)
+custom_components/casora/scripts/local/45-charging.js | re:^k\.(?:T\.)?\w+$ | design tokens from tok() / UI.tokens (CSS constants) | 35
+custom_components/casora/scripts/local/45-charging.js | re:^(?:c|x\.c|X\.cls\(s\))\.color$ | colour of the fixed CLASSES table | 4
+custom_components/casora/scripts/local/45-charging.js | x.c.k | key of the fixed CLASSES table | 1
+custom_components/casora/scripts/local/45-charging.js | c | colour token chosen by the advice's tone (k.WARN / k.GOOD / k.SUB) | 1
+custom_components/casora/scripts/local/45-charging.js | re:^\((?:A\.tone === 'neutral' \? k\.ROW : k\.TINT\(c\)|i \? k\.ROW : k\.TINT\(c\.color\)|x\.n \? x\.c\.color : k\.ROW)\)$ | one of two design tokens | 3
+custom_components/casora/scripts/local/45-charging.js | re:^\(i \? 'background:' .* : 'background:' \+ c\.color \+ ';color:#fff'\)$ | CSS from constants, a design token and the CLASSES colour | 1
+custom_components/casora/scripts/local/45-charging.js | re:^(?:x\.n|hh|R|reach|px|pos|more|h)$ | number computed by the code (count, pixels, percent, kilometres) | 11
+custom_components/casora/scripts/local/45-charging.js | dim | size built from a number, or the constant 100% | 2
+custom_components/casora/scripts/local/45-charging.js | re:^at\((?:px\(s\)|free)\)$ | CSS position built from numbers | 2
+custom_components/casora/scripts/local/45-charging.js | re:^(?:X\.body\(key\)|sp\(12\)|out|inner|seg|colL|colR|X\.mark\(s, 40\)|dots\(all, picks, d\.radius, k, wide \? 220 : 200\))$ | markup built by the module itself: every text in it goes through esc(), UI.* escape their own | 13

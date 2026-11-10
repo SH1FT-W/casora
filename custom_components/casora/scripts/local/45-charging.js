@@ -2,7 +2,7 @@
 // A row „Ladesäulen“ in the car popup's battery section (window._casoraCar, 03-popups.js) and a sub page in the same
 // popup, built like the fuel view (12-tanken.js): left the recommendation from the battery level (charge now, soon,
 // not needed) with the battery scale, the chargers per speed class as columns, and three tiles (nearest, fastest,
-// free); right a dot map of the radius, a switch Nächste / Schnellste / Gratis and the list. Every charger wears the
+// free); right a dot map of the radius, a switch Nächste / Schnellste / Kostenlos and the list. Every charger wears the
 // colour of its speed class: up to 11 kW blue, up to 49 kW teal, from 50 kW yellow, from 150 kW orange. A row or tile
 // opens the place in the map app. Source line „Daten: Open Charge Map, CC BY 4.0“.
 // Data: websocket casora/charging/list, asked when the page opens (Casora keeps the answer for half an hour). Without
@@ -35,7 +35,7 @@
   var pill = function (s) {
     var c = X.cls(s);
     return '<span data-no-i18n style="display:inline-flex;align-items:center;height:26px;padding:0 10px;margin-left:10px;border-radius:999px;'
-      + 'font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;'
+      + 'font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;'
       + 'background:color-mix(in srgb, ' + c.color + ' 24%, transparent);color:color-mix(in srgb, ' + c.color + ' 78%, currentColor);">'
       + esc(kwText(s)) + (s.kw != null && (s.dc || s.ac) ? ' ' + (s.dc ? 'DC' : 'AC') : '') + '</span>';
   };
@@ -88,7 +88,7 @@
   //    list right; one column on the phone) ────────────────────────────────
   var ERR = { wait: 'Gleich noch einmal versuchen', key: 'Open Charge Map nimmt den Schlüssel nicht an',
     limit: 'Zu viele Abfragen, später noch einmal', timeout: 'Open Charge Map antwortet gerade nicht' };
-  var SORTS = [['near', 'Nächste'], ['fast', 'Schnellste'], ['free', 'Gratis']];
+  var SORTS = [['near', 'Nächste'], ['fast', 'Schnellste'], ['free', 'Kostenlos']];
   var BOLT = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M11 15H6l7-14v8h5l-7 14z'/%3E%3C/svg%3E";
   var tok = function () {
     var UI = window._casoraUI || {}, T = UI.tokens || {}, dark = false;
@@ -113,7 +113,7 @@
   // The nearest, the fastest and the nearest free charger (each once).
   X.picks = function (all) {
     var fast = X.sorted(all, 'fast')[0], free = X.sorted(all, 'free')[0], out = [];
-    [['Nächste', all[0]], ['Schnellste', fast && fast.kw != null ? fast : null], ['Gratis', free]].forEach(function (t) {
+    [['Nächste', all[0]], ['Schnellste', fast && fast.kw != null ? fast : null], ['Kostenlos', free]].forEach(function (t) {
       if (t[1] && !out.some(function (o) { return o[1] === t[1]; })) out.push(t);
     });
     return out;
@@ -137,7 +137,7 @@
     var out = '<div class="ch-verdict" style="background:' + (A.tone === 'neutral' ? k.ROW : k.TINT(c)) + ';border-radius:' + k.RAD + ';padding:18px 20px 16px;">'
       + '<div style="font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:' + c + '">' + esc(A.eyebrow) + '</div>'
       + '<div style="font-size:21px;font-weight:800;letter-spacing:-.015em;color:' + k.T.ink + ';margin:4px 0;line-height:1.2">' + esc(A.title) + '</div>'
-      + '<div class="ch-why" style="font-size:13.5px;font-weight:500;line-height:1.4;color:' + k.SUB + '">' + esc(A.text) + '</div>';
+      + '<div class="ch-why" style="font-size:14px;font-weight:500;line-height:1.4;color:' + k.SUB + '">' + esc(A.text) + '</div>';
     // Battery scale empty → now → full.
     if (soc != null) {
       var pos = Math.max(0, Math.min(100, Math.round(soc)));
@@ -165,7 +165,7 @@
           + '<span data-no-i18n style="font-size:13px;font-weight:700;color:' + k.T.ink + ';font-variant-numeric:tabular-nums">' + x.n + '</span>'
           + '<i style="display:block;width:100%;border-radius:10px 10px 4px 4px;min-height:4px;height:' + Math.round(x.n / max * 72) + 'px;background:' + (x.n ? x.c.color : k.ROW) + '"></i></div>';
       }).join('') + '</div>'
-      + '<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:6px 0 0;font-size:11.5px;font-weight:600;color:' + k.SUB + ';text-align:center;white-space:nowrap">'
+      + '<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:6px 0 0;font-size:12px;font-weight:600;color:' + k.SUB + ';text-align:center;white-space:nowrap">'
       + CLASSES.map(function (c) { return '<span data-no-i18n>' + esc(c.label) + '</span>'; }).join('') + '</div></div>';
   };
   // Operator logo, loaded at run time from Google's favicon service by the operator's web domain (as the fuel view
@@ -212,8 +212,8 @@
           + X.mark(s, 40)
           + '<div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:' + k.SUB + ';margin-top:8px">' + esc(t[0]) + '</div>'
           + '<div data-no-i18n style="font-size:20px;font-weight:700;letter-spacing:-.02em;color:' + k.T.ink + ';font-variant-numeric:tabular-nums">' + esc(km(s.d)) + '</div>'
-          + '<div data-no-i18n style="font-size:13.5px;font-weight:600;color:' + k.T.ink + ';max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(short(s.n || s.a)) + '</div>'
-          + '<div data-no-i18n style="font-size:12.5px;font-weight:500;color:' + k.SUB + '">' + esc(kwText(s) + (s.kw != null && (s.dc || s.ac) ? ' ' + (s.dc ? 'DC' : 'AC') : '')) + '</div></div>';
+          + '<div data-no-i18n style="font-size:14px;font-weight:600;color:' + k.T.ink + ';max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(short(s.n || s.a)) + '</div>'
+          + '<div data-no-i18n style="font-size:13px;font-weight:500;color:' + k.SUB + '">' + esc(kwText(s) + (s.kw != null && (s.dc || s.ac) ? ' ' + (s.dc ? 'DC' : 'AC') : '')) + '</div></div>';
       }).join('') + '</div>';
   };
   // Dot map without a map service: the radius, the search centre and every charger as a dot in its class colour at its
@@ -231,7 +231,7 @@
       + '<i style="position:absolute;top:0;bottom:0;left:50%;width:2px;margin-left:-1px;background:' + k.ROW + '"></i>'
       + '<i style="position:absolute;left:50%;top:50%;width:' + (2 * R) + 'px;height:' + (2 * R) + 'px;margin:-' + R + 'px 0 0 -' + R + 'px;box-sizing:border-box;border-radius:50%;'
       +   'background:color-mix(in srgb, ' + k.ACC + ' 12%, transparent);border:1.5px solid color-mix(in srgb, ' + k.ACC + ' 45%, transparent)"></i>'
-      + '<span data-no-i18n style="position:absolute;left:calc(50% + ' + Math.round(R * 0.78) + 'px);top:calc(50% + ' + Math.round(R * 0.72) + 'px);font-size:11.5px;font-weight:600;color:' + k.SUB + '">' + esc(fmt(reach, 0)) + ' km</span>';
+      + '<span data-no-i18n style="position:absolute;left:calc(50% + ' + Math.round(R * 0.78) + 'px);top:calc(50% + ' + Math.round(R * 0.72) + 'px);font-size:12px;font-weight:600;color:' + k.SUB + '">' + esc(fmt(reach, 0)) + ' km</span>';
     inside.forEach(function (s) {
       out += '<i class="ch-dot" style="position:absolute;' + at(px(s)) + 'width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:' + X.cls(s).color + ';box-shadow:0 0 0 2px ' + (k.dark ? 'rgba(0,0,0,.35)' : 'rgba(255,255,255,.8)') + '"></i>';
     });
@@ -249,7 +249,7 @@
       if (!free) return;
       placed.push([free[0], free[1], w]);
       out += '<span class="ch-pin" data-no-i18n style="position:absolute;' + at(free) + 'box-sizing:border-box;height:' + hh + 'px;line-height:' + hh + 'px;padding:0 10px;border-radius:999px;'
-        + 'font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;box-shadow:0 2px 8px -3px rgba(0,0,0,.35);'
+        + 'font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;box-shadow:0 2px 8px -3px rgba(0,0,0,.35);'
         + (i ? 'background:' + (k.dark ? '#2f2a25' : '#fff') + ';color:' + k.T.ink : 'background:' + c.color + ';color:#fff') + '">' + esc(text) + '</span>';
     });
     return out + '</div>';
@@ -294,7 +294,7 @@
     var fastOne = all.filter(function (s) { return s.kw != null && s.kw >= 50; })[0];
     var A = X.advice({ soc: car.soc, range: car.range, unit: car.unit, nearest: all[0], fast: fastOne });
     var head = UI.line('ab ' + km(all[0].d), [all.length === 1 ? '1 Ladesäule' : all.length + ' Ladesäulen', where, rad]) + sp(20);
-    var L = UI.label('Empfehlung') + verdict(A, car.soc, k) + sp(10) + power(all, k) + sp(18) + UI.label('Beste Wahl') + top3(picks, k);
+    var colL = UI.label('Empfehlung') + verdict(A, car.soc, k) + sp(10) + power(all, k) + sp(18) + UI.label('Beste Wahl') + top3(picks, k);
     var list = X.sorted(all, sort), more = Math.max(0, list.length - 12);
     var shown = list.slice(0, 12);
     // The row gets a placeholder picture; the logo mark takes its place (as in the fuel view).
@@ -305,12 +305,12 @@
     });
     var listHtml = rows.length ? UI.group(rows, null, null, { keepNames: true }).replace(/<img src="casora-tank-logo:(\d+)"[^>]*>/g, function (m, i) { return X.mark(shown[+i], null); })
       : UI.group([{ icon: 'mdi:ev-station', iconTone: 'rgba(255,255,255,0.18)', label: 'Keine kostenlose Ladesäule' }], null);
-    if (more) listHtml += '<div class="ch-more" data-no-i18n style="font-size:12.5px;font-weight:600;text-align:center;margin-top:10px;color:' + k.SUB + '">+ ' + more + '</div>';
+    if (more) listHtml += '<div class="ch-more" data-no-i18n style="font-size:13px;font-weight:600;text-align:center;margin-top:10px;color:' + k.SUB + '">+ ' + more + '</div>';
     var seg = '<div class="ch-seg">' + UI.segments(SORTS.map(function (x) { return { label: x[1], active: x[0] === sort, attrs: { 'data-casora-charge-f': x[0] } }; }), null) + '</div>';
-    var R = UI.label('In der Nähe') + dots(all, picks, d.radius, k, wide ? 220 : 200) + sp(12) + seg + sp(12) + '<div class="ch-list">' + listHtml + '</div>';
+    var colR = UI.label('In der Nähe') + dots(all, picks, d.radius, k, wide ? 220 : 200) + sp(12) + seg + sp(12) + '<div class="ch-list">' + listHtml + '</div>';
     return wrap(head + (wide
-      ? '<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:var(--casora-popup-col-gap, 26px);align-items:start"><div>' + L + '</div><div>' + R + '</div></div>'
-      : L + sp(18) + R) + sp(18) + footer);
+      ? '<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:var(--casora-popup-col-gap, 26px);align-items:start"><div>' + colL + '</div><div>' + colR + '</div></div>'
+      : colL + sp(18) + colR) + sp(18) + footer);
   };
   X.inner = function (key) {
     return '<div data-casora-charge-box="' + esc(key) + '" onclick="window._casoraCharge.tap(event)">' + X.body(key) + '</div>';

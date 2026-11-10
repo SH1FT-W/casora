@@ -2900,7 +2900,6 @@
     "Rund um Zuhause": "Rundt hjemmet",
     "Rund um das Auto": "Rundt bilen",
     "Schnellste": "Raskeste",
-    "Gratis": "Gratis",
     "Leistung unbekannt": "Ukjent effekt",
     "1 Ladesäule": "1 ladestasjon",
     "Beste Wahl": "Beste valg",
@@ -5197,14 +5196,6 @@
     [
       "^ab (\\d[\\d.,]*) km$",
       "fra {1} km"
-    ],
-    [
-      "^Alle (\\d+)$",
-      "Alle {1}"
-    ],
-    [
-      "^Gratis (\\d+)$",
-      "Gratis {1}"
     ],
     [
       "^(\\d+) Ladesäulen$",

@@ -2907,7 +2907,6 @@
     "Rund um Zuhause": "Rond huis",
     "Rund um das Auto": "Rond de auto",
     "Schnellste": "Snelste",
-    "Gratis": "Gratis",
     "Leistung unbekannt": "Vermogen onbekend",
     "1 Ladesäule": "1 laadpaal",
     "Beste Wahl": "Beste keuze",
@@ -5204,14 +5203,6 @@
     [
       "^ab (\\d[\\d.,]*) km$",
       "vanaf {1} km"
-    ],
-    [
-      "^Alle (\\d+)$",
-      "Alle {1}"
-    ],
-    [
-      "^Gratis (\\d+)$",
-      "Gratis {1}"
     ],
     [
       "^(\\d+) Ladesäulen$",

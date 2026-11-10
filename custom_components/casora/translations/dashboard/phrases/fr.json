@@ -2907,7 +2907,6 @@
     "Rund um Zuhause": "Autour de la maison",
     "Rund um das Auto": "Autour de la voiture",
     "Schnellste": "La plus rapide",
-    "Gratis": "Gratuit",
     "Leistung unbekannt": "Puissance inconnue",
     "1 Ladesäule": "1 borne",
     "Beste Wahl": "Meilleur choix",
@@ -5204,14 +5203,6 @@
     [
       "^ab (\\d[\\d.,]*) km$",
       "à partir de {1} km"
-    ],
-    [
-      "^Alle (\\d+)$",
-      "Toutes {1}"
-    ],
-    [
-      "^Gratis (\\d+)$",
-      "Gratuit {1}"
     ],
     [
       "^(\\d+) Ladesäulen$",

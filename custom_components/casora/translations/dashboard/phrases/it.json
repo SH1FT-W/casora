@@ -2907,7 +2907,6 @@
     "Rund um Zuhause": "Intorno a casa",
     "Rund um das Auto": "Intorno all'auto",
     "Schnellste": "La più veloce",
-    "Gratis": "Gratis",
     "Leistung unbekannt": "Potenza sconosciuta",
     "1 Ladesäule": "1 colonnina",
     "Beste Wahl": "Scelta migliore",
@@ -5204,14 +5203,6 @@
     [
       "^ab (\\d[\\d.,]*) km$",
       "da {1} km"
-    ],
-    [
-      "^Alle (\\d+)$",
-      "Tutte {1}"
-    ],
-    [
-      "^Gratis (\\d+)$",
-      "Gratis {1}"
     ],
     [
       "^(\\d+) Ladesäulen$",

@@ -172,8 +172,8 @@ for (const run of RUNS) {
   const res = await tap(page);
   const W = run.en ? { row: 'Chargers', segs: ['Nearest*', 'Fastest', 'Free'], data: 'Data: Open Charge Map, CC BY 4.0', home: 'Around home', pts: '2 charging points',
       n: '10 chargers', tops: ['Nearest', 'Fastest', 'Free'], v: ['Battery 64', 'No need to charge', '312 km'], p: 'Charging power', fast: 'Fastest', free: 'Free' }
-    : { row: 'Ladesäulen', segs: ['Nächste*', 'Schnellste', 'Gratis'], data: 'Daten: Open Charge Map, CC BY 4.0', home: 'Rund um Zuhause', pts: '2 Ladepunkte',
-      n: '10 Ladesäulen', tops: ['Nächste', 'Schnellste', 'Gratis'], v: ['Akku 64', 'Laden nicht nötig', '312 km'], p: 'Ladeleistung', fast: 'Schnellste', free: 'Gratis' };
+    : { row: 'Ladesäulen', segs: ['Nächste*', 'Schnellste', 'Kostenlos'], data: 'Daten: Open Charge Map, CC BY 4.0', home: 'Rund um Zuhause', pts: '2 Ladepunkte',
+      n: '10 Ladesäulen', tops: ['Nächste', 'Schnellste', 'Kostenlos'], v: ['Akku 64', 'Laden nicht nötig', '312 km'], p: 'Ladeleistung', fast: 'Schnellste', free: 'Kostenlos' };
   await check(run.tag + ': Auto-Popup zeigt die Zeile ' + W.row, res && res.text.includes(W.row), res);
   await pic(run.tag + '_1_auto');
   const at = await spot(page, W.row);
