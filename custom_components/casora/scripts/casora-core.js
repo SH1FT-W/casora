@@ -9454,13 +9454,21 @@ window.casoraMenuGlass = {
     return !(states && states['sensor.time']);
   };
 
-  // Tap on the clock hint: an admin goes to the Studio of this dashboard (Time section there).
+  // Go to the Studio of this dashboard (and the room the page shows, not on the phone layout); query is appended to
+  // ?dash=..., e.g. '&tile=...' or '&settings=...'. One place for the popup gear and the clock hint.
+  window.casoraStudioGo = function (query) {
+    var seg = (location.pathname || '').split('/').filter(Boolean);
+    var phone = /[-_]mobile$/i.test(seg[0] || '');
+    var dash = (seg[0] || '').replace(/[-_]mobile$/i, '');
+    var url = '/casora-studio' + (seg[1] && !phone ? '/' + encodeURIComponent(seg[1]) : '') + '?dash=' + encodeURIComponent(dash) + (query || '');
+    window.history.pushState(null, '', url);
+    window.dispatchEvent(new CustomEvent('location-changed', { bubbles: true, composed: true }));
+  };
+
+  // Tap on the clock hint: an admin goes to the Studio's Time section (?section=time).
   window.casoraClockHintGo = function () {
     if (!window.casoraIsAdmin()) return;
-    var seg = (location.pathname || '').split('/').filter(Boolean);
-    var dash = (seg[0] || '').replace(/[-_]mobile$/i, '');
-    window.history.pushState(null, '', '/casora-studio' + (dash ? '?dash=' + encodeURIComponent(dash) : ''));
-    window.dispatchEvent(new CustomEvent('location-changed', { bubbles: true, composed: true }));
+    window.casoraStudioGo('&section=time');
   };
 
   // The Studio panel is on the page (it registers itself, casora-panel.js connectedCallback): popups render as its
@@ -9502,19 +9510,13 @@ window.casoraMenuGlass = {
   var GEAR_BLOCK = [[/casora_popup_(cover|security_covers)/, 'security'], [/casora_popup_contacts/, 'contacts'], [/casora_popup_battery/, 'battery'],
     [/casora_popup_scenes/, 'scenes'], [/casora_popup_media/, 'media'], [/casora_popup_calendar/, 'calendars'], [/casora_popup_trash/, 'waste']];
   window.casoraPopupGear = function (el) {
-    var seg = (location.pathname || '').split('/').filter(Boolean);
-    var phone = /[-_]mobile$/i.test(seg[0] || '');
-    var dash = (seg[0] || '').replace(/[-_]mobile$/i, '');
     var id = el._casoraEntity, kind = 'start', text = '';
     if (!id) {
       try { text = JSON.stringify((el._cfgCurrent || {}).content || {}); } catch (e) { text = ''; }
       GEAR_BLOCK.some(function (g) { if (g[0].test(text)) { kind = g[1]; return true; } return false; });
     }
-    var url = '/casora-studio' + (seg[1] && !phone ? '/' + encodeURIComponent(seg[1]) : '') + '?dash=' + encodeURIComponent(dash)
-      + (id ? '&tile=' + encodeURIComponent(id) + '&tab=popup' : '&settings=' + kind);
     if (window.casoraPopup) window.casoraPopup.close();
-    window.history.pushState(null, '', url);
-    window.dispatchEvent(new CustomEvent('location-changed', { bubbles: true, composed: true }));
+    window.casoraStudioGo(id ? '&tile=' + encodeURIComponent(id) + '&tab=popup' : '&settings=' + kind);
   };
   window.casoraPopup = {
     // src (optional): auslösende Kachel für den Weich-Ring, auch wenn das Popup-Element erst jetzt entsteht.

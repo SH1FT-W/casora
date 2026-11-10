@@ -2329,10 +2329,14 @@ const mediaSources = () => [
 ];
 
 // #30: the clock reads sensor.time when "Time sensor" is empty ("Automatic"); the sensor needs HA's Time & Date integration.
-const CLOCK_NEEDS_TIME_DATE = "The clock needs the Time & Date integration with the option \"Time\". Home Assistant does not add it by default.";
+const CLOCK_NEEDS_TIME_DATE = "The clock needs the Time & Date integration with the option \"Time\".";
+// HA's "add this integration" page (My Home Assistant); the setup check and the clock warning use it.
+const flowStartUrl = (domain) => "https://my.home-assistant.io/redirect/config_flow_start/?domain=" + encodeURIComponent(domain);
+// True when this field is the clock's Time sensor and the clock reads a missing sensor.time (also shows the Add button).
+const clockFaultOn = (f, val, hass, vars) => f.key === "time_entity" && !!hass && !!window.casoraClockNeedsTimeDate
+  && window.casoraClockNeedsTimeDate(vars && vars.show_time, val, hass.states);
 const fieldFault = (f, val, hass, vars) => {
-  if (f.key === "time_entity" && hass && window.casoraClockNeedsTimeDate
-    && window.casoraClockNeedsTimeDate(vars && vars.show_time, val, hass.states)) return CLOCK_NEEDS_TIME_DATE;
+  if (clockFaultOn(f, val, hass, vars)) return CLOCK_NEEDS_TIME_DATE;
   if (!f.domains || !val || !hass) return "";
   const st = hass.states[val];
   if (!st) return "This entity no longer exists. Pick another one.";
@@ -6971,6 +6975,18 @@ class CasoraPanel extends HTMLElement {
     if (!want) return 0;
     const i = rooms.findIndex((r) => r.path === want);
     return i < 0 ? 0 : i;
+  }
+  // ?section=time|weather opens that dashboard-wide section (the clock hint in the dashboard), once per call.
+  _sectionFromRoute() {
+    let want = "";
+    try { want = new URLSearchParams(window.location.search).get("section") || ""; } catch (e) { want = ""; }
+    if (!want) return;
+    try {
+      const u = new URL(window.location.href);
+      u.searchParams.delete("section");
+      window.history.replaceState(window.history.state, "", u.pathname + u.search + u.hash);
+    } catch (e) { /* the address stays */ }
+    if (want === "time" || want === "weather") this._pvPick(want);
   }
   // Halten-Menü „Kachel bearbeiten“: ?tile=<entität> wählt die Kachel gleich aus (einmal je Aufruf).
   _tileFromRoute() {
@@ -16247,7 +16263,7 @@ class CasoraPanel extends HTMLElement {
       row.target = "_blank";
       row.rel = "noreferrer";
       row.href = add
-        ? "https://my.home-assistant.io/redirect/config_flow_start/?domain=" + encodeURIComponent(r.id)
+        ? flowStartUrl(r.id)
         : "https://my.home-assistant.io/redirect/hacs_repository/?owner="
           + encodeURIComponent(owner) + "&repository=" + encodeURIComponent(repository)
           + (r.kind === "integration" ? "&category=integration" : "");
@@ -16474,6 +16490,7 @@ class CasoraPanel extends HTMLElement {
       this._renderForm();
       requestAnimationFrame(() => this._playEntrance());
       this._tileFromRoute();
+      this._sectionFromRoute();
       if (this._settingsFromRoute) this._settingsFromRoute();
       if (!this._saveBlocked) setTimeout(() => this._offerDraft(), 400);
       if (this._sizeNote) {
@@ -19103,10 +19120,10 @@ class CasoraPanel extends HTMLElement {
           if (!why) return;
           const w = document.createElement("div");
           w.className = "fieldwarn"; w.textContent = why;
-          if (why === CLOCK_NEEDS_TIME_DATE) {
+          if (clockFaultOn(f, val, this._hass, room.variables)) {
             const a = document.createElement("button");
             a.type = "button"; a.className = "linkbtn"; a.textContent = "Add Time & Date";
-            a.onclick = () => window.open("https://my.home-assistant.io/redirect/config_flow_start/?domain=time_date", "_blank", "noopener,noreferrer");
+            a.onclick = () => window.open(flowStartUrl("time_date"), "_blank", "noopener,noreferrer");
             w.appendChild(document.createTextNode(" "));
             w.appendChild(a);
           }
@@ -21247,7 +21264,7 @@ class CasoraPanel extends HTMLElement {
       if (id === "howto") return this._helpTopics();
       if (id === "diag") return this._diagShow();
       if (id === "whatsNew") return window.casoraWelcomeShow(id);
-      window.open(id === "issue" ? ISSUES : DOCS, "_blank", "noopener,noreferrer");
+      window.open(id === "issue" ? ISSUES : DOCS, "_blank", "noopener");
     });
   }
 

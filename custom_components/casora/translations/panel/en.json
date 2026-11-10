@@ -14,7 +14,7 @@
     "Household": "Household",
     "Name or entity": "Name or entity",
     "No device matches the filter.": "No device matches the filter.",
-    "The clock needs the Time & Date integration with the option \"Time\". Home Assistant does not add it by default.": "The clock needs the Time & Date integration with the option \"Time\". Home Assistant does not add it by default.",
+    "The clock needs the Time & Date integration with the option \"Time\".": "The clock needs the Time & Date integration with the option \"Time\".",
     "Add Time & Date": "Add Time & Date"
   },
   "patterns": [

@@ -2849,7 +2849,7 @@
     "Abhaken": "Tick off",
     "Wieder öffnen": "Reopen",
     "Eintrag löschen?": "Delete this item?",
-    "Uhr: Zeit & Datum fehlt": "Clock: Time & Date missing"
+    "Uhr braucht Uhrzeit & Datum": "Clock needs Time & Date"
   },
   "patterns": [
     [

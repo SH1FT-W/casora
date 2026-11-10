@@ -3002,8 +3002,8 @@
     "Tasks": "Aufgaben",
     "Add list …": "Liste hinzufügen …",
     "Empty: every to-do list in your home.": "Leer: alle To-do-Listen im Haus.",
-    "The clock needs the Time & Date integration with the option \"Time\". Home Assistant does not add it by default.": "Die Uhr braucht die Integration „Zeit & Datum“ mit der Option „Zeit“. Home Assistant fügt sie nicht mehr von selbst hinzu.",
-    "Add Time & Date": "„Zeit & Datum“ hinzufügen"
+    "The clock needs the Time & Date integration with the option \"Time\".": "Die Uhr braucht die Integration „Uhrzeit & Datum“ mit der Option „Uhrzeit“.",
+    "Add Time & Date": "„Uhrzeit & Datum“ hinzufügen"
   },
   "patterns": [
     [

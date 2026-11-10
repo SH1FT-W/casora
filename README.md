@@ -64,7 +64,7 @@ Anything else gets the **Universal tile** or an **own badge**, each with a popup
 
 You need **Home Assistant 2026.9** or newer, [UI eXtension](https://github.com/Lint-Free-Technology/uix) (the successor to card-mod; use it instead of card-mod, not both) and [button-card](https://github.com/custom-cards/button-card). An **AI task** in Home Assistant is optional, for the AI features.
 
-Optional: for the clock in the top bar (desktop and tablet), the **Time & Date** integration with the option **Time**. Home Assistant no longer adds it by default; the Studio warns when the clock needs it.
+For the clock in the top bar (desktop and tablet): the **Time & Date** integration with the option **Time**.
 
 1. **Install it.** Search for **Casora** under **Settings > Marketplace** (called HACS before Home Assistant 2026.11), download it together with **UI eXtension** and **button-card** if you don't have them yet, and restart Home Assistant.
 2. **Add the integrations.** Under **Settings > Devices & services > Add integration** add **Casora**, and **UI eXtension** if it isn't added yet. UIX does nothing until it is added there.

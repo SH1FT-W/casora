@@ -3002,7 +3002,7 @@
     "Tasks": "Zadania",
     "Add list …": "Dodaj listę …",
     "Empty: every to-do list in your home.": "Puste: wszystkie listy zadań w domu.",
-    "The clock needs the Time & Date integration with the option \"Time\". Home Assistant does not add it by default.": "Zegar wymaga integracji „Czas i data” z opcją „Czas”. Home Assistant nie dodaje jej już domyślnie.",
+    "The clock needs the Time & Date integration with the option \"Time\".": "Zegar wymaga integracji „Czas i data” z opcją „Czas”.",
     "Add Time & Date": "Dodaj „Czas i data”"
   },
   "patterns": [

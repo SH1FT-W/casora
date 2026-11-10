@@ -2867,7 +2867,7 @@
     "Abhaken": "Cocher",
     "Wieder öffnen": "Rouvrir",
     "Eintrag löschen?": "Supprimer cette entrée ?",
-    "Uhr: Zeit & Datum fehlt": "Horloge : Heure et date manquant"
+    "Uhr braucht Uhrzeit & Datum": "L'horloge a besoin de Date et heure"
   },
   "patterns": [
     [

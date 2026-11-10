@@ -3002,7 +3002,7 @@
     "Tasks": "Taken",
     "Add list …": "Lijst toevoegen …",
     "Empty: every to-do list in your home.": "Leeg: alle takenlijsten in huis.",
-    "The clock needs the Time & Date integration with the option \"Time\". Home Assistant does not add it by default.": "De klok heeft de integratie „Tijd en datum” met de optie „Tijd” nodig. Home Assistant voegt die niet meer standaard toe.",
+    "The clock needs the Time & Date integration with the option \"Time\".": "De klok heeft de integratie „Tijd en datum” met de optie „Tijd” nodig.",
     "Add Time & Date": "„Tijd en datum” toevoegen"
   },
   "patterns": [
