@@ -103,7 +103,8 @@ const look = () => {
     value: n ? n.textContent.trim() : '', text: R.textContent.replace(/\s+/g, ' '),
     moons: moons.map((m) => m.textContent.replace(/\s+/g, ' ').trim()),
     active: moons.filter((m) => m.classList.contains('on') || m.getAttribute('aria-pressed') === 'true' || m.getAttribute('aria-checked') === 'true').map((m) => m.textContent.trim()),
-    charts: all.filter((x) => x.nodeName === 'CASORA-CHART' && vis(x)).length, rows: rows.map((r) => r.textContent.replace(/\s+/g, ' ').trim()) };
+    charts: all.filter((x) => x.nodeName === 'CASORA-CHART' && vis(x)).length,
+    chartTitle: (all.find((x) => !x.children.length && vis(x) && / · 24 Std\.$/.test(x.textContent.trim())) || {}).textContent || '', rows: rows.map((r) => r.textContent.replace(/\s+/g, ' ').trim()) };
 };
 let pop = await stable(page, look, null, { max: 15000, quiet: 800, until: (v) => v && v.open && v.value });
 await need('popup open with its dial', pop && pop.open && pop.stages.includes('S2'), pop);
@@ -111,7 +112,7 @@ await check('dial shows the target 19', pop.value.startsWith('19'), pop.value);
 await check('climate with current_temperature null: the dial has no „Ist“', !/(Ist|Jetzt) \d/.test(pop.stage), pop.stage);
 await check('the dial says „Soll“', /Soll/.test(pop.stage) && !/Ziel/.test(pop.stage), pop.stage);
 await check('the four presets are moons', ['Komfort', 'Eco', 'Zuhause', 'Schlafen'].every((w) => pop.moons.some((m) => m.includes(w))), pop.moons);
-await check('the supply temperature as the Verlauf, named', pop.charts === 1 && /Vorlauftemperatur · 24 Std\./i.test(pop.text), pop.charts);
+await check('the supply temperature as the Verlauf, named', pop.charts === 1 && pop.chartTitle.trim() === 'Vorlauftemperatur · 24 Std.', [pop.charts, pop.chartTitle]);
 await check('hot water rows „Ist“ and „Soll“', pop.rows.some((r) => /^Ist.*42,9 °C/.test(r)) && pop.rows.some((r) => /^Soll.*50,0 °C/.test(r)) && !pop.rows.some((r) => /^(Jetzt|Ziel)/.test(r)), pop.rows);
 await check('status rows: compressor, both pumps, frost protection', [/^Verdichter.*Läuft/, /^Heizkreispumpe.*Läuft/, /^Zirkulationspumpe.*Aus/, /^Frostschutz.*Aus/].every((re) => pop.rows.some((r) => re.test(r))), pop.rows);
 await check('values rows (COP and power because they are chosen)', [/Außen.*9,8 °C/, /Vorlauf.*25,6 °C/, /Rücklauf.*25,5 °C/, /Leistungszahl.*3/, /Verdichterleistung.*6 kW/].every((re) => pop.rows.some((r) => re.test(r))), pop.rows);
