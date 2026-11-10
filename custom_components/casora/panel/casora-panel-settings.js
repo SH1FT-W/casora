@@ -1480,7 +1480,8 @@
       return this._csShow("n-start");
     };
     // Preview of the screensaver (scripts/local/46-screensaver.js draws it, the same code as on the tablet): it shows
-    // the kind picked in the draft right away, nothing is saved by looking. Chips let one look at every kind.
+    // the kind picked in the draft right away, nothing is saved by looking. Chips let one look at every kind; where the
+    // house has nothing to show right now (nothing playing, no appointments), the preview shows an example.
     P._csSaverPreview = function (box, card) {
       const SV = window._casoraSaver;
       const wrap = el("div", "cs-saver");
@@ -1500,7 +1501,7 @@
       };
       let show = picked() || SV.KINDS[0].id;
       const cfg = this._state && this._state.config ? this._state.config : null;
-      const live = SV.mount(stage, null, { kind: () => show, every: 30000,
+      const live = SV.mount(stage, null, { kind: () => show, every: 30000, sample: true,
         context: () => ({ config: cfg, vars: typeof SV.vars === "function" ? SV.vars(cfg) : {} }) });
       this._csSaverLive = live;
       const chips = el("div", "cs-saver-chips");

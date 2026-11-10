@@ -2931,7 +2931,8 @@
     "Zur Kenntnis": "For your information",
     "aus dem Netz": "from the grid",
     "ins Netz": "to the grid",
-    "Akku gibt ab": "Battery discharging"
+    "Akku gibt ab": "Battery discharging",
+    "Arzttermin": "Doctor"
   },
   "patterns": [
     [

@@ -720,6 +720,24 @@
         return '<div class="cs-it" style="--cs-c:' + TONE_C[r.tone] + '"><i></i><div><b>' + esc(r.label) + '</b>' + (r.sub ? '<span data-no-i18n>' + esc(r.sub) + '</span>' : '') + '</div></div>';
       }).join('') + '</div>' : '') + '</div>';
   };
+  // What a preview shows where the house has nothing to show right now (nothing playing, energy not set up, no
+  // appointments, no forecast): an example, so every screensaver can be looked at before it is picked.
+  S.sample = function (ctx) {
+    var now = +ctx.now, d0 = new Date(now); d0.setHours(0, 0, 0, 0);
+    var at = function (day, h, m) { return +d0 + day * 86400000 + h * 3600000 + (m || 0) * 60000; };
+    if (!ctx.wx) ctx.wx = { temp: 11, text: T('Teils bewölkt'), icon: '/casora_assets/weather/partly-cloudy-day-fill.svg' };
+    if (!ctx.hourly.length) ctx.hourly = Array.from({ length: 24 }, function (_, i) {
+      return { datetime: new Date(now + i * 3600000).toISOString(), temperature: 7.5 + Math.cos((new Date(now + i * 3600000).getHours() - 15) / 24 * 2 * Math.PI) * 4, precipitation: [0, 0, 0.4, 1.3, 0.8, 0.2][i] || 0 };
+    });
+    if (!ctx.daily.length) ctx.daily = ['partlycloudy', 'rainy', 'cloudy', 'sunny', 'sunny', 'rainy', 'partlycloudy'].map(function (c, i) {
+      return { datetime: new Date(at(i, 12)).toISOString(), condition: c, temperature: [11, 9, 8, 12, 13, 10, 9][i], templow: [4, 5, 3, 2, 4, 6, 5][i] };
+    });
+    if (!ctx.events.length) ctx.events = [[0, 8, 30, 45, 'Arzttermin'], [0, 12, 30, 60, 'Mittagessen'], [0, 18, 30, 90, 'Einkaufen'], [0, 20, 45, 75, 'Kino'], [1, 10, 0, 120, 'Einkaufen'], [4, 20, 15, 135, 'Kino'], [5, 10, 30, 150, 'Mittagessen']]
+      .map(function (e) { return { title: T(e[4]), start: at(e[0], e[1], e[2]), end: at(e[0], e[1], e[2]) + e[3] * 60000, allDay: false }; });
+    if (!ctx.media) ctx.media = { title: 'Golden Hour', artist: 'Casora', where: T('Wohnzimmer'), cover: '', dur: 228, pos: 87 };
+    if (!ctx.energy) ctx.energy = { solar: 3240, grid: -1180, battery: -640, soc: 72, hasSolar: true, hasBattery: true, house: 1420 };
+    return ctx;
+  };
   S.context = function (o) {
     o = o || {};
     var hass = o.hass || hassOf(), now = o.now || new Date(), vars = o.vars || {};
@@ -771,6 +789,7 @@
       var want = typeof o.kind === 'function' ? o.kind() : kind;
       var base = (typeof o.context === 'function' ? o.context() : o.context) || {};
       var ctx = S.context(Object.assign({}, base, { kind: S.kindAt(want, base.now || new Date()) }));
+      if (o.sample) ctx = S.sample(ctx);
       var html = S.html(want, ctx);
       if (html !== last) { last = html; host.innerHTML = html; }
       // Wander a few pixels so nothing burns in (not in a preview).

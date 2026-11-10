@@ -150,6 +150,11 @@ const he = { states: { 'sensor.pv': { state: '2.5', attributes: { unit_of_measur
 assert.deepEqual(JSON.parse(JSON.stringify(S.energy(he))), { solar: 2500, grid: -700, battery: null, soc: null, hasSolar: true, hasBattery: false, house: 1800 });
 delete win.casoraEnergyHouse;
 assert.equal(S.KINDS.length, 10, 'ten screensavers');
+// A preview shows an example where the house has nothing; what the house has stays.
+const bare = S.sample(ctx({ wx: null, hourly: [], daily: [], events: [], bins: [], media: null, energy: null, bell: [], people: [] }));
+for (const k of ['wetter', 'linie', 'woche', 'musik', 'energie']) assert.ok(new RegExp('data-kind="' + k + '"').test(S.html(k, bare)), 'example for ' + k);
+assert.ok(/Golden Hour/.test(S.html('musik', bare)) && /Arzttermin|Einkaufen/.test(S.html('linie', bare)));
+assert.equal(S.sample(ctx({ media, hourly, daily, events, energy: null })).media.title, 'Song "A"', 'real data wins over the example');
 
 assert.ok(read('custom_components/casora/scripts/casora-local.js').includes("'46-screensaver'"), 'module in MODULES');
 console.log('ok screensaver');
