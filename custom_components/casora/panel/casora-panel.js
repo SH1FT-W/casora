@@ -19115,6 +19115,7 @@ class CasoraPanel extends HTMLElement {
           fs.appendChild(h);
         };
         const addFault = (val) => {
+          if (f.key === "time_entity") this._clockRuleReady(() => addFault(val));
           if (faultEl) { faultEl.remove(); faultEl = null; }
           const why = fieldFault(f, val, this._hass, room.variables);
           if (!why) return;
@@ -25000,6 +25001,16 @@ class CasoraPanel extends HTMLElement {
   // Loads the dashboard scripts once and redraws when the player module is there. With button-card
   // already defined _casoraCardsReady loads nothing and returns at once, while casora-local.js may
   // still be running – so the loader's own "casora-local-loaded" counts as well.
+  // #30: casoraClockNeedsTimeDate lives in casora-core.js, which the Studio loads only on demand. Loads it once,
+  // then calls done (the field re-checks its warning). No retry when the load does not bring the rule.
+  _clockRuleReady(done) {
+    if (typeof window.casoraClockNeedsTimeDate === "function" || typeof this._casoraCardsReady !== "function") return;
+    if (!this._clockRuleWait) {
+      this._clockRuleWait = Promise.resolve(this._casoraCardsReady()).catch(() => false);
+    }
+    this._clockRuleWait.then(() => { if (typeof window.casoraClockNeedsTimeDate === "function") done(); });
+  }
+
   _npSoftLoad() {
     if (this._npSoftWait) return;
     this._npSoftWait = true;

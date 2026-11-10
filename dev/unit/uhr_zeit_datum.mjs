@@ -53,6 +53,33 @@ assert.equal(flowStartUrl('time_date'), 'https://my.home-assistant.io/redirect/c
 assert.ok(panel.includes('window.open(flowStartUrl("time_date")'), 'button uses the shared URL builder');
 assert.ok(panel.includes('flowStartUrl(r.id)'), 'setup check uses the same builder');
 
+// --- fresh Studio load: the rule lives in casora-core.js, which the Studio loads on demand. _clockRuleReady loads it
+// (once) and calls back, so the field re-checks its warning. ---
+const readySrc = slice(panel, /  _clockRuleReady\(done\) \{[\s\S]*?\n  \}\n/, '_clockRuleReady');
+const mkHost = (win, loader) => new Function('window', 'loader', 'return {' + readySrc.replace(/^  _clockRuleReady/, '_clockRuleReady') + (loader ? ', _casoraCardsReady: loader' : '') + '};')(win, loader);
+{
+  let calls = 0, loads = 0;
+  const win = {};
+  const host = mkHost(win, async () => { loads++; await null; win.casoraClockNeedsTimeDate = needs; return true; });
+  host._clockRuleReady(() => calls++);
+  host._clockRuleReady(() => calls++);
+  assert.equal(calls, 0, 'not called synchronously: the rule is missing');
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(loads, 1, 'one load for several callers');
+  assert.equal(calls, 2, 'both callers re-check once the rule is loaded');
+  host._clockRuleReady(() => calls++);
+  assert.equal(calls, 2, 'rule present: nothing to do, no loop');
+  // loader that does not deliver the rule: no callback, no retry loop
+  let c2 = 0; const w2 = {};
+  const h2 = mkHost(w2, async () => true);
+  h2._clockRuleReady(() => c2++);
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(c2, 0, 'rule still missing after load: no callback');
+  // no loader at all: no crash
+  mkHost({}, null)._clockRuleReady(() => { throw new Error('must not call'); });
+}
+assert.ok(/if \(f\.key === "time_entity"\) this\._clockRuleReady\(\(\) => addFault\(val\)\);/.test(panel), 'time_entity field re-checks its warning after the load');
+
 // --- go to the Studio (one helper for the popup gear and the clock hint) ---
 const go = (admin, pathname, query) => {
   const calls = [];
