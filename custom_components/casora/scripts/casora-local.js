@@ -252,6 +252,7 @@ const MODULES = [
   '41-display-diag',
   '42-co',
   '43-aufgaben',
+  '44-tile-glass',
 ];
 
 const START_MODULES = MODULES.slice(0, 5);

@@ -5039,6 +5039,19 @@ const TILE_TYPES = [
     ] },
 ];
 
+// Day history behind the glass (44-tile-glass.js). Off until a tile asks.
+// A draft like every other tile field: it takes effect with Save settings.
+TILE_TYPES.forEach((t) => {
+  if (!Array.isArray(t.fields)) return;
+  t.fields.push(
+    { key: "history_bg", label: "Day history in the background", type: "bool", advanced: true, tileLevel: true,
+      hint: "A faint graph of the last 24 hours, in the tile. A switch shows when it was on. A climate shows its temperature." },
+    { ...LIST("tile_info", "Extra on the tile", ["sensor", "binary_sensor", "input_number", "input_boolean"]),
+      advanced: true, tileLevel: true,
+      hint: "Small readings on the tile. Empty shows nothing extra." },
+  );
+});
+
 const CUSTOM_TILE = { id: "__custom", label: "Custom card\u2026" };
 
 // A pasted card has no template, so none of its own keys are Casora's to edit.
