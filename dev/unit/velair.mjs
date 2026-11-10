@@ -126,6 +126,47 @@ a = V.at(flat170, at(2026, 11, 10, 21, 30));
 assert.equal(a.next, null, 'one target all week: no next change');
 assert.equal(V.status({ ...z, schedule: flat170 }, at(2026, 11, 10, 21, 30)), 'Zeitplan · 16°');
 
+// ── Room groups (Velair 1.9, issue 170) ──
+// Two climates share one schedule: the zone hangs on the group's id (group.<hex>, no HA entity), member_to_unit
+// names each climate's owner, configured_entities keeps the real climates (custom_components/velair/api.py).
+const GID = 'group.0123456789abcdef', LEFT = 'climate.couch_left', RIGHT = 'climate.couch_right';
+F._seed(response({
+  configured_entities: [ID, LEFT, RIGHT], control_units: [ID, GID],
+  room_groups: { [GID]: { id: GID, name: 'Wohnzimmer', members: [LEFT, RIGHT], temperature_entity_id: LEFT, delivery_mode: 'all' } },
+  member_to_unit: { [LEFT]: GID, [RIGHT]: GID },
+  zones: { [ID]: { enabled: true, schedule: JSON.parse(JSON.stringify(WEEK)) }, [GID]: { enabled: true, schedule: week170 } },
+  zone_runtime: { [ID]: { state: 'scheduled', control_mode: 'automatic' }, [GID]: { state: 'paused', control_mode: 'automatic', pause_count: 1 } },
+}));
+for (const member of [LEFT, RIGHT]) {
+  const zg = V.zone(F.data(), member);
+  assert.ok(zg, member + ': a member of a room group has the group\'s schedule');
+  assert.deepEqual([zg.id, zg.owner, zg.group, zg.members.length, zg.zonePaused], [member, GID, 'Wohnzimmer', 2, true]);
+  assert.equal(V.at(zg.schedule, at(2026, 11, 10, 7, 0)).now.temperature, 22.5);
+  assert.equal(F.managed(hass, member), true);
+}
+z = V.zone(F.data(), ID);
+assert.deepEqual([z.owner, z.group, z.members], [ID, null, null], 'a single climate is its own unit');
+assert.equal(V.zone(F.data(), GID), null, 'the group id is no climate of Home Assistant');
+// A profile that owns the group's zone wins for its members too.
+F._seed(response({
+  configured_entities: [LEFT, RIGHT], room_groups: { [GID]: { id: GID, name: 'Wohnzimmer', members: [LEFT, RIGHT] } }, member_to_unit: { [LEFT]: GID, [RIGHT]: GID },
+  zones: { [GID]: { enabled: true, schedule: week170 } }, zone_runtime: {},
+  active_profile_ids: ['p1'], profiles: [{ key: 'p1', name: 'Urlaub', zones: { [GID]: { behavior: 'pause' } } }],
+}));
+assert.deepEqual([V.zone(F.data(), LEFT).source, V.zone(F.data(), LEFT).profile], ['profile_pause', 'Urlaub']);
+F._seed(response());
+z = V.zone(F.data(), ID);
+
+// The Velair tile offers the trend line of the thermostat tile it is built on (issue 170).
+{
+  const types = fs.readFileSync(new URL('../../custom_components/casora/panel/casora-panel-types.js', import.meta.url), 'utf8');
+  const velair = types.slice(types.indexOf('id: "casora_velair"'), types.indexOf('// Chart (community card'));
+  assert.ok(/key: "sparkline", label: "Trend on tile"/.test(velair), 'Studio field „Trend on tile“ on the Velair tile');
+  const tpl = JSON.parse(fs.readFileSync(new URL('../../dashboards/casora/button_card_templates.json', import.meta.url), 'utf8'));
+  const T = tpl.templates || tpl;
+  assert.ok([].concat(T.casora_velair.template).includes('casora_thermostat') && JSON.stringify(T.casora_thermostat).includes('sparkline'), 'the tile template draws it');
+}
+
 // ── States of the zone ──
 F._seed(response({ zone_runtime: { [ID]: { state: 'paused', control_mode: 'automatic', pause_count: 1, until: null } } }));
 z = V.zone(F.data(), ID);

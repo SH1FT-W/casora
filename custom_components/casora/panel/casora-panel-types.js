@@ -516,6 +516,9 @@ window.CASORA_TILE_TYPES = [
     fields: [
       { key: "temp_sensor", label: "Temperature sensor", domains: ["sensor"], classes: ["temperature"] },
       { key: "show_toggle", label: "Toggle button", type: "bool", boolDefault: true },
+      // As on the thermostat tile (issue 170): casora_velair is casora_thermostat, which draws the line.
+      { key: "sparkline", label: "Trend on tile", type: "bool", advanced: true, tileLevel: true,
+        hint: "A small line of the room temperature over the last 24 hours." },
       TITLE_NAME] },
   // Chart (community card, card request #50): any numeric sensor with a state class (CPU load of System Monitor,
   // temperature, power, energy). Tile: value with unit and a 24 h sparkline; popup: Casora's own chart over
