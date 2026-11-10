@@ -101,5 +101,55 @@ assert.ok(/cs-dark/.test(h), 'dark design by night theme');
 h = S.html('fotos', ctx({ rooms: [{ name: '<b>x</b>', url: 'javascript:"x' }] }));
 assert.ok(!/<b>x<\/b>/.test(h) && !/"x/.test(h.replace(/&quot;/g, '')), 'names and addresses are escaped');
 
+// The six that show the house's data. Everything is handed in, nothing is asked for.
+const at = (x) => Date.parse('2026-11-10T' + x);
+const events = [
+  { title: 'Zahnarzt', start: at('09:00:00'), end: at('09:45:00'), allDay: false },
+  { title: 'Elternabend <i>', start: at('18:30:00'), end: at('20:00:00'), allDay: false },
+  { title: 'Sperrmüll', start: Date.parse('2026-11-12T00:00:00'), end: null, allDay: true },
+];
+const daily = [0, 1, 2, 3, 4].map((i) => ({ datetime: new Date(at('12:00:00') + i * 86400000).toISOString(), condition: 'rainy', temperature: 10 + i, templow: 3 + i }));
+const hourly = Array.from({ length: 24 }, (_, i) => ({ datetime: new Date(at('17:00:00') + i * 3600000).toISOString(), temperature: 8 + Math.sin(i / 4) * 4, precipitation: i === 3 ? 1.2 : 0 }));
+h = S.html('wetter', ctx({ hourly, daily }));
+assert.ok(/data-kind="wetter"/.test(h) && /cs-curve/.test(h) && /<rect /.test(h) && (h.match(/cs-wd"/g) || []).length === 5 && /11°/.test(h), 'weather: curve, rain, five days');
+assert.ok(/data-kind="wetter"/.test(S.html('wetter', ctx({ hourly: [], daily: [] }))) && !/cs-curve/.test(S.html('wetter', ctx({ hourly: [], daily: [] }))), 'weather without forecast: now alone');
+assert.ok(/data-kind="himmel"/.test(S.html('wetter', ctx({ wx: null }))), 'no weather entity: the sky');
+h = S.html('linie', ctx({ events }));
+assert.ok(/Zahnarzt/.test(h) && /cs-past/.test(h) && /cs-next/.test(h) && /in 1 Std\. 48 Min\./.test(h) && /cs-now/.test(h), 'day line: past, next, now');
+assert.ok(!/<i>"|Elternabend <i>/.test(h) && /Elternabend &lt;i&gt;/.test(h), 'appointment titles are escaped');
+h = S.html('linie', ctx({ events: [] }));
+assert.ok(/Heute nichts mehr/.test(h) && /Heute keine Termine/.test(h), 'day line without appointments');
+h = S.html('woche', ctx({ events, daily, bins: [{ label: 'Restmüll', days: 1 }] }));
+assert.ok((h.match(/class="cs-col[ "]/g) || []).length === 7 && /cs-today/.test(h) && /Restmüll/.test(h) && /ganztägig/.test(h) && /2 Termine · 1 Abholung/.test(h) && !/Zahnarzt/.test(h), 'week: seven days, events, waste; what is over today is gone');
+const media = { title: 'Song "A"', artist: 'Band', where: 'Wohnzimmer', cover: '/api/x.jpg', dur: 200, pos: 50 };
+h = S.html('musik', ctx({ media }));
+assert.ok(/data-kind="musik"/.test(h) && /Song &quot;A&quot;/.test(h) && /width:25\.0%/.test(h) && /0:50/.test(h) && /3:20/.test(h), 'music: title, progress');
+assert.ok(/data-kind="himmel"/.test(S.html('musik', ctx({ media: null }))), 'nothing playing: the sky');
+h = S.html('energie', ctx({ energy: { solar: 3200, grid: -1200, battery: -500, soc: 64, hasSolar: true, hasBattery: true, house: 1500 } }));
+assert.ok(/3,2 kW|3\.2 kW/.test(h) && /ins Netz/.test(h) && /Akku lädt/.test(h) && /64 %/.test(h) && /100 %/.test(h), 'energy: sun, feed-in, battery, all own power');
+h = S.html('energie', ctx({ energy: { solar: null, grid: 800, battery: null, soc: null, hasSolar: false, hasBattery: false, house: 800 } }));
+assert.ok(/aus dem Netz/.test(h) && !/cs-sun|cs-bat/.test(h) && /0 %/.test(h), 'energy with the grid alone');
+assert.ok(/data-kind="himmel"/.test(S.html('energie', ctx({ energy: null }))), 'energy not set up: the sky');
+h = S.html('ruhe', ctx({ bell: [], people: [{ name: 'anna', home: true }, { name: 'ben', home: false }] }));
+assert.ok(/Alles ruhig/.test(h) && /Nichts braucht dich/.test(h) && /cs-away/.test(h) && !/cs-right/.test(h), 'house at rest: nothing to do');
+h = S.html('ruhe', ctx({ bell: [{ label: 'Fenster offen', sub: 'Bad', tone: 'warn' }, { label: 'Update', sub: '', tone: 'info' }], people: [] }));
+assert.ok(/Fast alles ruhig/.test(h) && /Eine Sache braucht dich/.test(h) && /Fenster offen/.test(h), 'house at rest: one thing asks for someone');
+// What the helpers read from Home Assistant.
+const hs = { entities: { 'calendar.work': { platform: 'workday' }, 'calendar.hidden': { hidden: true } }, states: {
+  'calendar.family': {}, 'calendar.work': {}, 'calendar.hidden': {},
+  'media_player.a': { state: 'playing', last_updated: '2026-11-10T10:00:00', attributes: { media_title: 'A', friendly_name: 'Bad' } },
+  'media_player.b': { state: 'paused', last_updated: '2026-11-10T11:00:00', attributes: { media_title: 'B' } },
+  'person.x': { state: 'home', attributes: { friendly_name: 'X' } } } };
+assert.deepEqual(Array.from(S.calendars(hs)), ['calendar.family'], 'calendars: no hidden ones, not the Workday one');
+assert.equal(S.playing(hs).title, 'A', 'playing: the one that plays');
+assert.equal(S.playing({ states: {} }), null);
+assert.deepEqual(JSON.parse(JSON.stringify(S.people(hs))), [{ name: 'X', home: true }]);
+assert.equal(S.energy(hs), null, 'energy: nothing without the energy helpers');
+win.casoraEnergyHouse = () => ({ solar: ['sensor.pv'], grid: ['sensor.grid'], battery: [] });
+const he = { states: { 'sensor.pv': { state: '2.5', attributes: { unit_of_measurement: 'kW' } }, 'sensor.grid': { state: '-700', attributes: { unit_of_measurement: 'W' } } } };
+assert.deepEqual(JSON.parse(JSON.stringify(S.energy(he))), { solar: 2500, grid: -700, battery: null, soc: null, hasSolar: true, hasBattery: false, house: 1800 });
+delete win.casoraEnergyHouse;
+assert.equal(S.KINDS.length, 10, 'ten screensavers');
+
 assert.ok(read('custom_components/casora/scripts/casora-local.js').includes("'46-screensaver'"), 'module in MODULES');
 console.log('ok screensaver');

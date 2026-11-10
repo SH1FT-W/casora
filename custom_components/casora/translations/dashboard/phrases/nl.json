@@ -2935,7 +2935,21 @@
     "Sanfte Hügel": "Glooiende heuvels",
     "Untergang": "Ondergang",
     "Winternacht": "Winternacht",
-    "Canyon": "Canyon"
+    "Canyon": "Canyon",
+    "1 Abholung": "1 ophaling",
+    "Eigener Strom": "Eigen stroom",
+    "Eine Sache braucht dich": "Eén ding heeft je nodig",
+    "Erzeugung jetzt": "Opwekking nu",
+    "Fast alles ruhig": "Bijna alles rustig",
+    "Haus verbraucht": "Huis verbruikt",
+    "Heute nichts mehr": "Vandaag niets meer",
+    "Nichts braucht dich": "Niets heeft je nodig",
+    "Sonne": "Zon",
+    "Verbrauch jetzt": "Verbruik nu",
+    "Zur Kenntnis": "Ter info",
+    "aus dem Netz": "van het net",
+    "ins Netz": "naar het net",
+    "Akku gibt ab": "Accu ontlaadt"
   },
   "patterns": [
     [
@@ -5249,6 +5263,18 @@
     [
       "^Noch (\\d+) Min\\. Tageslicht$",
       "Nog {1} min daglicht"
+    ],
+    [
+      "^(\\d+) Abholungen$",
+      "{1} ophalingen"
+    ],
+    [
+      "^in (\\d+) Std\\. (\\d+) Min\\.$",
+      "over {1} u {2} min"
+    ],
+    [
+      "^(\\d+) Dinge brauchen dich$",
+      "{1} dingen hebben je nodig"
     ]
   ]
 }

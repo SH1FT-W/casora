@@ -2917,7 +2917,21 @@
     "Sanfte Hügel": "Rolling hills",
     "Untergang": "Sunset",
     "Winternacht": "Winter night",
-    "Canyon": "Canyon"
+    "Canyon": "Canyon",
+    "1 Abholung": "1 pickup",
+    "Eigener Strom": "Own power",
+    "Eine Sache braucht dich": "One thing needs you",
+    "Erzeugung jetzt": "Generation now",
+    "Fast alles ruhig": "Almost all quiet",
+    "Haus verbraucht": "House uses",
+    "Heute nichts mehr": "Nothing more today",
+    "Nichts braucht dich": "Nothing needs you",
+    "Sonne": "Sun",
+    "Verbrauch jetzt": "Use now",
+    "Zur Kenntnis": "For your information",
+    "aus dem Netz": "from the grid",
+    "ins Netz": "to the grid",
+    "Akku gibt ab": "Battery discharging"
   },
   "patterns": [
     [
@@ -5231,6 +5245,18 @@
     [
       "^Noch (\\d+) Min\\. Tageslicht$",
       "{1} min of daylight left"
+    ],
+    [
+      "^(\\d+) Abholungen$",
+      "{1} pickups"
+    ],
+    [
+      "^in (\\d+) Std\\. (\\d+) Min\\.$",
+      "in {1} h {2} min"
+    ],
+    [
+      "^(\\d+) Dinge brauchen dich$",
+      "{1} things need you"
     ]
   ]
 }

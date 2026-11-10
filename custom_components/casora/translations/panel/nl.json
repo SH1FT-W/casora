@@ -3065,7 +3065,11 @@
     "Photos": "Foto's",
     "Word clock": "Woordklok",
     "Sky follows the sun and the weather. Landscapes are drawn, nothing is loaded. Photos shows this dashboard's room photos.": "Hemel volgt de zon en het weer. Landschappen zijn getekend, er wordt niets geladen. Foto's toont de kamerfoto's van dit dashboard.",
-    "The preview appears once the dashboard's scripts have loaded.": "Het voorbeeld verschijnt zodra de scripts van het dashboard geladen zijn."
+    "The preview appears once the dashboard's scripts have loaded.": "Het voorbeeld verschijnt zodra de scripts van het dashboard geladen zijn.",
+    "Day line": "Daglijn",
+    "Week": "Week",
+    "Energy flow": "Energiestroom",
+    "House at rest": "Huis in rust"
   },
   "patterns": [
     [

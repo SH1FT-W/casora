@@ -2935,7 +2935,21 @@
     "Sanfte Hügel": "Łagodne wzgórza",
     "Untergang": "Zachód",
     "Winternacht": "Zimowa noc",
-    "Canyon": "Kanion"
+    "Canyon": "Kanion",
+    "1 Abholung": "1 odbiór",
+    "Eigener Strom": "Własny prąd",
+    "Eine Sache braucht dich": "Jedna rzecz wymaga uwagi",
+    "Erzeugung jetzt": "Produkcja teraz",
+    "Fast alles ruhig": "Prawie wszystko spokojnie",
+    "Haus verbraucht": "Dom zużywa",
+    "Heute nichts mehr": "Dziś już nic",
+    "Nichts braucht dich": "Nic nie wymaga uwagi",
+    "Sonne": "Słońce",
+    "Verbrauch jetzt": "Zużycie teraz",
+    "Zur Kenntnis": "Do wiadomości",
+    "aus dem Netz": "z sieci",
+    "ins Netz": "do sieci",
+    "Akku gibt ab": "Akumulator oddaje energię"
   },
   "patterns": [
     [
@@ -5249,6 +5263,18 @@
     [
       "^Noch (\\d+) Min\\. Tageslicht$",
       "Jeszcze {1} min światła dziennego"
+    ],
+    [
+      "^(\\d+) Abholungen$",
+      "{1} odbiorów"
+    ],
+    [
+      "^in (\\d+) Std\\. (\\d+) Min\\.$",
+      "za {1} godz. {2} min"
+    ],
+    [
+      "^(\\d+) Dinge brauchen dich$",
+      "{1} rzeczy wymaga uwagi"
     ]
   ]
 }

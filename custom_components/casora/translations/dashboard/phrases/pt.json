@@ -2935,7 +2935,21 @@
     "Sanfte Hügel": "Colinas suaves",
     "Untergang": "Pôr do sol",
     "Winternacht": "Noite de inverno",
-    "Canyon": "Desfiladeiro"
+    "Canyon": "Desfiladeiro",
+    "1 Abholung": "1 recolha",
+    "Eigener Strom": "Energia própria",
+    "Eine Sache braucht dich": "Uma coisa precisa de ti",
+    "Erzeugung jetzt": "Produção agora",
+    "Fast alles ruhig": "Quase tudo calmo",
+    "Haus verbraucht": "A casa consome",
+    "Heute nichts mehr": "Mais nada hoje",
+    "Nichts braucht dich": "Nada precisa de ti",
+    "Sonne": "Sol",
+    "Verbrauch jetzt": "Consumo agora",
+    "Zur Kenntnis": "Para conhecimento",
+    "aus dem Netz": "da rede",
+    "ins Netz": "para a rede",
+    "Akku gibt ab": "A bateria descarrega"
   },
   "patterns": [
     [
@@ -5249,6 +5263,18 @@
     [
       "^Noch (\\d+) Min\\. Tageslicht$",
       "Ainda {1} min de luz"
+    ],
+    [
+      "^(\\d+) Abholungen$",
+      "{1} recolhas"
+    ],
+    [
+      "^in (\\d+) Std\\. (\\d+) Min\\.$",
+      "em {1} h {2} min"
+    ],
+    [
+      "^(\\d+) Dinge brauchen dich$",
+      "{1} coisas precisam de ti"
     ]
   ]
 }

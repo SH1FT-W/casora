@@ -2928,7 +2928,21 @@
     "Sanfte Hügel": "Bølgende åser",
     "Untergang": "Solnedgang",
     "Winternacht": "Vinternatt",
-    "Canyon": "Juv"
+    "Canyon": "Juv",
+    "1 Abholung": "1 henting",
+    "Eigener Strom": "Egen strøm",
+    "Eine Sache braucht dich": "Én ting trenger deg",
+    "Erzeugung jetzt": "Produksjon nå",
+    "Fast alles ruhig": "Nesten alt rolig",
+    "Haus verbraucht": "Huset bruker",
+    "Heute nichts mehr": "Ikke mer i dag",
+    "Nichts braucht dich": "Ingenting trenger deg",
+    "Sonne": "Sol",
+    "Verbrauch jetzt": "Forbruk nå",
+    "Zur Kenntnis": "Til orientering",
+    "aus dem Netz": "fra nettet",
+    "ins Netz": "til nettet",
+    "Akku gibt ab": "Batteriet lades ut"
   },
   "patterns": [
     [
@@ -5242,6 +5256,18 @@
     [
       "^Noch (\\d+) Min\\. Tageslicht$",
       "{1} min dagslys igjen"
+    ],
+    [
+      "^(\\d+) Abholungen$",
+      "{1} hentinger"
+    ],
+    [
+      "^in (\\d+) Std\\. (\\d+) Min\\.$",
+      "om {1} t {2} min"
+    ],
+    [
+      "^(\\d+) Dinge brauchen dich$",
+      "{1} ting trenger deg"
     ]
   ]
 }

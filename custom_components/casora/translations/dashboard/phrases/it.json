@@ -2935,7 +2935,21 @@
     "Sanfte Hügel": "Dolci colline",
     "Untergang": "Tramonto",
     "Winternacht": "Notte d’inverno",
-    "Canyon": "Canyon"
+    "Canyon": "Canyon",
+    "1 Abholung": "1 ritiro",
+    "Eigener Strom": "Energia propria",
+    "Eine Sache braucht dich": "Una cosa ha bisogno di te",
+    "Erzeugung jetzt": "Produzione ora",
+    "Fast alles ruhig": "Quasi tutto tranquillo",
+    "Haus verbraucht": "La casa consuma",
+    "Heute nichts mehr": "Nient'altro oggi",
+    "Nichts braucht dich": "Niente ha bisogno di te",
+    "Sonne": "Sole",
+    "Verbrauch jetzt": "Consumo ora",
+    "Zur Kenntnis": "Per conoscenza",
+    "aus dem Netz": "dalla rete",
+    "ins Netz": "in rete",
+    "Akku gibt ab": "La batteria si scarica"
   },
   "patterns": [
     [
@@ -5249,6 +5263,18 @@
     [
       "^Noch (\\d+) Min\\. Tageslicht$",
       "Ancora {1} min di luce"
+    ],
+    [
+      "^(\\d+) Abholungen$",
+      "{1} ritiri"
+    ],
+    [
+      "^in (\\d+) Std\\. (\\d+) Min\\.$",
+      "tra {1} h {2} min"
+    ],
+    [
+      "^(\\d+) Dinge brauchen dich$",
+      "{1} cose hanno bisogno di te"
     ]
   ]
 }

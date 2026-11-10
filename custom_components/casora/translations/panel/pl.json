@@ -3065,7 +3065,11 @@
     "Photos": "Zdjęcia",
     "Word clock": "Zegar słowny",
     "Sky follows the sun and the weather. Landscapes are drawn, nothing is loaded. Photos shows this dashboard's room photos.": "Niebo podąża za słońcem i pogodą. Krajobrazy są rysowane, nic nie jest pobierane. Zdjęcia pokazują zdjęcia pomieszczeń tego pulpitu.",
-    "The preview appears once the dashboard's scripts have loaded.": "Podgląd pojawi się po załadowaniu skryptów pulpitu."
+    "The preview appears once the dashboard's scripts have loaded.": "Podgląd pojawi się po załadowaniu skryptów pulpitu.",
+    "Day line": "Linia dnia",
+    "Week": "Tydzień",
+    "Energy flow": "Przepływ energii",
+    "House at rest": "Dom w spoczynku"
   },
   "patterns": [
     [

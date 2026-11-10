@@ -3065,7 +3065,11 @@
     "Photos": "Bilder",
     "Word clock": "Ordklokke",
     "Sky follows the sun and the weather. Landscapes are drawn, nothing is loaded. Photos shows this dashboard's room photos.": "Himmel følger solen og været. Landskapene er tegnet, ingenting lastes. Bilder viser rombildene til dette dashbordet.",
-    "The preview appears once the dashboard's scripts have loaded.": "Forhåndsvisningen vises når dashbordets skript er lastet."
+    "The preview appears once the dashboard's scripts have loaded.": "Forhåndsvisningen vises når dashbordets skript er lastet.",
+    "Day line": "Dagslinje",
+    "Week": "Uke",
+    "Energy flow": "Energiflyt",
+    "House at rest": "Huset i ro"
   },
   "patterns": [
     [

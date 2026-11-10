@@ -3,8 +3,10 @@
 // back. Set per dashboard in the Studio (Settings › Screensaver): casora_screensaver (minutes, empty = off),
 // casora_screensaver_kind (which one, „mix“ = one after the other) and casora_screensaver_calendar. Like
 // casora_idle_home they ride in the hero card of each view.
-// Every screensaver is drawn from what the house knows (time, sun, weather, the dashboard's room photos); nothing is
-// loaded from another server. The same drawing serves the Studio's preview (mount into any box): all sizes are
+// Ten screensavers: sky, drawn landscapes, room photos, word clock, weather, day line, week, music, energy flow and
+// the house at rest. Every one is drawn from what the house knows (time, sun, weather and its forecast, calendars,
+// waste dates, the playing media player, the energy settings, the bell, the dashboard's room photos); nothing is
+// loaded from another server. One that has nothing to show (no music playing, energy not set up) shows the sky. The same drawing serves the Studio's preview (mount into any box): all sizes are
 // container units, so it looks the same small and full screen. The content wanders a few pixels every minute, so
 // nothing burns in.
 //   window._casoraSaver.KINDS                  → [{ id, label, needs }]
@@ -26,7 +28,9 @@
   // label: the name in the Studio (its texts are English at the source, translations/panel).
   S.KINDS = [
     { id: 'himmel', label: 'Sky' }, { id: 'land', label: 'Landscapes' }, { id: 'fotos', label: 'Photos' },
-    { id: 'wort', label: 'Word clock' },
+    { id: 'wort', label: 'Word clock' }, { id: 'wetter', label: 'Weather' }, { id: 'linie', label: 'Day line' },
+    { id: 'woche', label: 'Week' }, { id: 'musik', label: 'Music' }, { id: 'energie', label: 'Energy flow' },
+    { id: 'ruhe', label: 'House at rest' },
   ];
 
   // ── The time as people say it ────────────────────────────────────────────
@@ -226,6 +230,135 @@
     });
     return out;
   };
+  // ── Data that has to be asked for (kept in the module, a repaint follows when it arrives) ────────────────
+  var DATA = S._data = { fc: {}, ev: {}, at: {} }, listeners = [];
+  var changed = function () { listeners.slice().forEach(function (fn) { try { fn(); } catch (e) { /* the listener's own */ } }); };
+  // Forecast of the weather entity: type „hourly“ or „daily“ (weather/subscribe_forecast, one answer is enough).
+  S.forecast = function (hass, entityId, type) {
+    var key = entityId + '|' + type;
+    if (!hass || !entityId || !hass.connection || !hass.connection.subscribeMessage) return DATA.fc[key] || [];
+    if (!(DATA.at[key] && Date.now() - DATA.at[key] < 900000)) {
+      DATA.at[key] = Date.now();
+      var unsub = null, done = false;
+      var stop = function () { if (typeof unsub === 'function') { try { unsub(); } catch (e) { /* closed */ } unsub = null; } };
+      Promise.resolve(hass.connection.subscribeMessage(function (msg) {
+        var list = msg && msg.forecast;
+        if (Array.isArray(list)) { DATA.fc[key] = list; done = true; stop(); changed(); }
+      }, { type: 'weather/subscribe_forecast', entity_id: entityId, forecast_type: type })).then(function (u) {
+        unsub = u;
+        if (done) stop();
+      }, function () { /* this weather source has no such forecast */ });
+    }
+    return DATA.fc[key] || [];
+  };
+  // The calendars that count: visible ones, not the Workday integration's (as under the greeting, #157).
+  S.calendars = function (hass, only) {
+    var R = (hass && hass.entities) || {}, S0 = (hass && hass.states) || {};
+    if (only && S0[only]) return [only];
+    return Object.keys(S0).filter(function (id) {
+      var e = R[id];
+      return id.indexOf('calendar.') === 0 && !(e && (e.hidden || e.disabled_by || e.platform === 'workday'));
+    }).sort().slice(0, 8);
+  };
+  // Events of the coming days from Home Assistant's calendar API: [{ title, start, end, allDay }] sorted by start.
+  S.events = function (hass, ids, days) {
+    var key = ids.join(',') + '|' + days;
+    if (!hass || !ids.length || typeof hass.callApi !== 'function') return DATA.ev[key] || [];
+    if (!(DATA.at[key] && Date.now() - DATA.at[key] < 600000)) {
+      DATA.at[key] = Date.now();
+      var a = new Date(); a.setHours(0, 0, 0, 0);
+      var b = new Date(a.getTime() + days * 86400000);
+      var q = '?start=' + encodeURIComponent(a.toISOString()) + '&end=' + encodeURIComponent(b.toISOString());
+      Promise.all(ids.map(function (id) {
+        return hass.callApi('GET', 'calendars/' + id + q).then(function (rows) { return rows || []; }, function () { return []; });
+      })).then(function (lists) {
+        var out = [];
+        lists.forEach(function (rows) {
+          rows.forEach(function (ev) {
+            var all = !(ev.start && ev.start.dateTime);
+            var st = all ? (ev.start && ev.start.date ? ev.start.date + 'T00:00:00' : null) : ev.start.dateTime;
+            var en = ev.end ? (all ? (ev.end.date ? ev.end.date + 'T00:00:00' : null) : ev.end.dateTime) : null;
+            var t0 = Date.parse(st);
+            if (isNaN(t0)) return;
+            out.push({ title: String(ev.summary || ''), start: t0, end: en ? Date.parse(en) : null, allDay: all });
+          });
+        });
+        out.sort(function (x, y) { return x.start - y.start; });
+        DATA.ev[key] = out;
+        changed();
+      });
+    }
+    return DATA.ev[key] || [];
+  };
+  // Waste pickups as the waste tile knows them: [{ label, days }] (0 = today).
+  S.waste = function (hass) {
+    try {
+      var W = window.casoraDevice && window.casoraDevice.waste ? window.casoraDevice.waste(hass, {}) : null;
+      return (W && Array.isArray(W.bins) ? W.bins : []).filter(function (b) { return b && b.days != null && isFinite(b.days) && b.days >= 0; })
+        .map(function (b) { return { label: String(b.label || ''), days: Math.round(b.days) }; }).sort(function (x, y) { return x.days - y.days; });
+    } catch (e) { return []; }
+  };
+  // What plays right now: the media player that is playing and has a title (the one changed last).
+  S.playing = function (hass) {
+    var S0 = (hass && hass.states) || {}, R = (hass && hass.entities) || {}, best = null;
+    Object.keys(S0).forEach(function (id) {
+      var st = S0[id], a = st.attributes || {}, e = R[id];
+      if (id.indexOf('media_player.') !== 0 || st.state !== 'playing' || !a.media_title || (e && (e.hidden || e.disabled_by))) return;
+      if (!best || String(st.last_updated) > String(best.st.last_updated)) best = { id: id, st: st };
+    });
+    if (!best) return null;
+    var a = best.st.attributes;
+    var dur = Number(a.media_duration), pos = Number(a.media_position), at = Date.parse(a.media_position_updated_at || '');
+    if (isFinite(pos) && !isNaN(at)) pos = Math.min(isFinite(dur) ? dur : pos + 1e9, pos + (Date.now() - at) / 1000);
+    return { title: String(a.media_title), artist: String(a.media_artist || a.media_album_name || a.app_name || ''), where: String(a.friendly_name || ''),
+      cover: a.entity_picture_local || a.entity_picture || '', dur: isFinite(dur) && dur > 0 ? dur : null, pos: isFinite(pos) && pos >= 0 ? pos : null };
+  };
+  // The house's power right now from Home Assistant's energy settings (00-finder.js): watts, signed as HA keeps them
+  // (grid + = from the grid, battery + = from the battery); house = everything that comes in.
+  var W_FACTOR = { mW: 0.001, W: 1, kW: 1000, MW: 1e6 };
+  S.energy = function (hass) {
+    if (typeof window.casoraEnergyHouse !== 'function') return null;
+    var H = window.casoraEnergyHouse(hass), S0 = (hass && hass.states) || {};
+    if (!H) return null;
+    var sum = function (ids) {
+      var t = 0, any = false;
+      ids.forEach(function (id) {
+        var st = S0[id], n = st ? parseFloat(st.state) : NaN;
+        if (!isFinite(n)) return;
+        t += n * (W_FACTOR[String((st.attributes || {}).unit_of_measurement || 'W')] || 1);
+        any = true;
+      });
+      return any ? t : null;
+    };
+    var solar = H.solar.length ? sum(H.solar) : null, grid = sum(H.grid), bat = H.battery.length ? sum(H.battery) : null;
+    if (grid == null) return null;
+    var soc = null;
+    if (H.battery.length && typeof window.casoraEnergyBatterySoc === 'function') {
+      var sid = window.casoraEnergyBatterySoc(hass, H.battery[0]), sv = sid && S0[sid] ? parseFloat(S0[sid].state) : NaN;
+      if (isFinite(sv)) soc = Math.round(sv);
+    }
+    return { solar: solar, grid: grid, battery: bat, soc: soc, hasSolar: H.solar.length > 0, hasBattery: H.battery.length > 0,
+      house: Math.max(0, (solar || 0) + grid + (bat || 0)) };
+  };
+  // What the bell holds right now (casora-core.js): the rows that ask for someone first.
+  S.bell = function () {
+    var N = window._casoraNotify, rows = [];
+    try { rows = N && Array.isArray(N.rows) ? N.rows : []; } catch (e) { rows = []; }
+    return rows.filter(function (r) { return r && r.label; }).map(function (r) {
+      return { label: String(r.label), sub: String(r.sub || ''), tone: r.tone === 'bad' ? 'bad' : r.tone === 'warn' ? 'warn' : 'info', rank: r.rank || 9 };
+    }).sort(function (x, y) { return (x.tone === 'bad' ? 0 : x.tone === 'warn' ? 1 : 2) - (y.tone === 'bad' ? 0 : y.tone === 'warn' ? 1 : 2); });
+  };
+  S.people = function (hass) {
+    var S0 = (hass && hass.states) || {}, R = (hass && hass.entities) || {};
+    return Object.keys(S0).filter(function (id) { return id.indexOf('person.') === 0 && !(R[id] && R[id].hidden); }).sort().slice(0, 5).map(function (id) {
+      return { name: String((S0[id].attributes || {}).friendly_name || id.slice(7)), home: S0[id].state === 'home' };
+    });
+  };
+  var kw = function (w) { var a = Math.abs(w); return a >= 1000 ? (a / 1000).toLocaleString(loc(), { maximumFractionDigits: 1 }) + ' kW' : Math.round(a) + ' W'; };
+  var wxIcon = function (cond) { return '/casora_assets/weather/' + (WX[cond] || 'cloudy-fill') + '.svg'; };
+  var dayName = function (ts, short) { return new Intl.DateTimeFormat(loc(), { weekday: short ? 'short' : 'long' }).format(new Date(ts)); };
+  var sameDay = function (a, b) { var x = new Date(a), y = new Date(b); return x.getFullYear() === y.getFullYear() && x.getMonth() === y.getMonth() && x.getDate() === y.getDate(); };
+
   var timeText = function (now, hass) {
     var h12 = hass && hass.locale && hass.locale.time_format === '12';
     var h = now.getHours();
@@ -277,9 +410,93 @@
     + '.cs-sv .cs-foot b{font-weight:700;font-variant-numeric:tabular-nums;}'
     + '.cs-sv .cs-foot .cs-fw{display:flex;align-items:center;gap:' + u(12) + ';font-weight:700;}'
     + '.cs-sv .cs-foot img{width:' + u(40) + ';height:' + u(40) + ';}.cs-sv.cs-wort:not(.cs-dark) .cs-foot img{filter:brightness(0);}.cs-sv.cs-dark .cs-foot img{filter:brightness(0) invert(1);}'
+    // Shared by the six data screensavers: a small clock top left, a line of text top right, quiet plates.
+    + '.cs-sv .cs-head{position:absolute;left:' + u(64) + ';right:' + u(64) + ';top:' + u(48) + ';display:flex;justify-content:space-between;align-items:flex-end;gap:' + u(24) + ';}'
+    + '.cs-sv .cs-head .cs-time{font-size:' + u(92) + ';margin-left:-' + u(4) + ';}.cs-sv .cs-head .cs-date{font-size:' + u(19) + ';margin-top:' + u(4) + ';color:rgba(246,239,230,.64);}'
+    + '.cs-sv .cs-sum{text-align:right;font-size:' + u(20) + ';font-weight:600;color:rgba(246,239,230,.64);min-width:0;}'
+    + '.cs-sv .cs-sum b{display:block;font-size:' + u(30) + ';font-weight:700;color:#F6EFE6;letter-spacing:-.02em;}'
+    + '.cs-sv .cs-cap{font-size:' + u(13) + ';font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(246,239,230,.64);}'
+    + '.cs-sv .cs-body{position:absolute;left:' + u(64) + ';right:' + u(64) + ';top:' + u(214) + ';bottom:' + u(56) + ';}'
+    + '.cs-sv.cs-wetter{background:linear-gradient(170deg, #2C3E57 0%, #1E2A3B 55%, #171F2B 100%);}'
+    + '.cs-sv .cs-wnow{display:flex;align-items:center;gap:' + u(24) + ';}'
+    + '.cs-sv .cs-wnow img{width:' + u(120) + ';height:' + u(120) + ';filter:brightness(0) invert(1);}'
+    + '.cs-sv .cs-wnow b{font-size:' + u(140) + ';font-weight:500;letter-spacing:-.05em;line-height:1;}'
+    + '.cs-sv .cs-wnow p{font-size:' + u(22) + ';font-weight:600;color:rgba(246,239,230,.64);}.cs-sv .cs-wnow p:first-child{color:#F6EFE6;font-weight:700;}'
+    + '.cs-sv .cs-wk{position:absolute;right:0;top:-' + u(160) + ';width:' + u(400) + ';display:flex;flex-direction:column;gap:' + u(4) + ';}'
+    + '.cs-sv .cs-wd{display:grid;grid-template-columns:' + u(54) + ' ' + u(40) + ' ' + u(44) + ' 1fr ' + u(44) + ';align-items:center;gap:' + u(10) + ';height:' + u(44) + ';font-size:' + u(18) + ';font-weight:600;font-variant-numeric:tabular-nums;}'
+    + '.cs-sv .cs-wd img{width:' + u(30) + ';height:' + u(30) + ';filter:brightness(0) invert(1);}.cs-sv .cs-wd span{color:rgba(246,239,230,.64);text-align:right;}.cs-sv .cs-wd em{font-style:normal;text-align:right;}'
+    + '.cs-sv .cs-wd i{position:relative;height:' + u(8) + ';border-radius:99px;background:rgba(255,255,255,.1);}.cs-sv .cs-wd i u{position:absolute;top:0;bottom:0;border-radius:99px;background:linear-gradient(90deg, #5B8FC9, #E8B04A);}'
+    + '.cs-sv .cs-curve{position:absolute;left:0;right:0;bottom:0;height:' + u(300) + ';}.cs-sv .cs-curve svg{width:100%;height:100%;display:block;overflow:visible;}'
+    + '.cs-sv .cs-pk{position:absolute;transform:translate(-50%, -135%);font-size:' + u(17) + ';font-weight:700;font-variant-numeric:tabular-nums;}.cs-sv .cs-pk.cs-lo{transform:translate(-50%, 45%);}'
+    + '.cs-sv .cs-hours{position:absolute;left:0;right:0;bottom:-' + u(30) + ';display:flex;justify-content:space-between;font-size:' + u(15) + ';font-weight:600;color:rgba(246,239,230,.64);}'
+    + '.cs-sv.cs-linie{background:radial-gradient(100% 80% at 58% 56%, #2A2622 0%, #181512 70%);}'
+    + '.cs-sv .cs-line{position:absolute;left:0;right:0;top:50%;height:' + u(6) + ';margin-top:-' + u(3) + ';border-radius:99px;background:rgba(255,255,255,.16);}'
+    + '.cs-sv .cs-line u{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:#4E9E95;}'
+    + '.cs-sv .cs-tick{position:absolute;top:50%;width:' + u(60) + ';margin:' + u(18) + ' 0 0 -' + u(30) + ';text-align:center;font-size:' + u(14) + ';font-weight:600;color:rgba(246,239,230,.64);font-variant-numeric:tabular-nums;}'
+    + '.cs-sv .cs-now{position:absolute;top:50%;width:' + u(22) + ';height:' + u(22) + ';margin:-' + u(11) + ' 0 0 -' + u(11) + ';border-radius:50%;background:#F6EFE6;box-shadow:0 0 0 ' + u(11) + ' rgba(78,158,149,.28);}'
+    + '.cs-sv .cs-ev{position:absolute;width:' + u(210) + ';margin-left:-' + u(105) + ';background:rgba(255,255,255,.07);border-radius:' + u(20) + ';padding:' + u(14) + ' ' + u(16) + ';}'
+    + '.cs-sv .cs-ev.cs-up{bottom:calc(50% + ' + u(34) + ');}.cs-sv .cs-ev.cs-down{top:calc(50% + ' + u(52) + ');}.cs-sv .cs-ev.cs-past{opacity:.5;}.cs-sv .cs-ev.cs-next{background:color-mix(in srgb, #4E9E95 34%, #2a2622);}'
+    + '.cs-sv .cs-ev b{display:block;font-size:' + u(17.5) + ';font-weight:700;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.cs-sv .cs-ev span{font-size:' + u(14.5) + ';font-weight:600;color:rgba(246,239,230,.64);font-variant-numeric:tabular-nums;}'
+    + '.cs-sv .cs-dot{position:absolute;top:50%;width:' + u(13) + ';height:' + u(13) + ';margin:-' + u(6.5) + ' 0 0 -' + u(6.5) + ';border-radius:50%;background:#F6EFE6;}.cs-sv .cs-dot.cs-past{opacity:.5;}'
+    + '.cs-sv .cs-empty{position:absolute;left:0;right:0;top:calc(50% + ' + u(70) + ');text-align:center;font-size:' + u(22) + ';font-weight:600;color:rgba(246,239,230,.64);}'
+    + '.cs-sv.cs-woche{background:radial-gradient(110% 90% at 20% 0%, #26302F 0%, #171614 62%);}'
+    + '.cs-sv .cs-cols{position:absolute;inset:0;display:grid;grid-template-columns:repeat(7, minmax(0, 1fr));gap:' + u(10) + ';}'
+    + '.cs-sv .cs-col{background:rgba(255,255,255,.05);border-radius:' + u(24) + ';padding:' + u(16) + ' ' + u(12) + ' ' + u(14) + ';display:flex;flex-direction:column;min-width:0;overflow:hidden;}'
+    + '.cs-sv .cs-col.cs-today{background:color-mix(in srgb, #4E9E95 30%, #232120);}.cs-sv .cs-col.cs-today .cs-cap{color:#F6EFE6;}'
+    + '.cs-sv .cs-col .cs-n{font-size:' + u(38) + ';font-weight:600;letter-spacing:-.03em;line-height:1.05;margin-top:' + u(2) + ';font-variant-numeric:tabular-nums;}'
+    + '.cs-sv .cs-cw{display:flex;align-items:center;gap:' + u(8) + ';margin-top:' + u(14) + ';font-size:' + u(16) + ';font-weight:700;font-variant-numeric:tabular-nums;min-height:' + u(30) + ';}'
+    + '.cs-sv .cs-cw img{width:' + u(30) + ';height:' + u(30) + ';filter:brightness(0) invert(1);}.cs-sv .cs-cw span{color:rgba(246,239,230,.64);font-weight:600;}'
+    + '.cs-sv .cs-li{margin-top:' + u(16) + ';display:flex;flex-direction:column;gap:' + u(8) + ';}'
+    + '.cs-sv .cs-e{border-radius:' + u(14) + ';padding:' + u(9) + ' ' + u(10) + ';background:rgba(255,255,255,.07);border-left:' + u(4) + ' solid var(--cs-c, #8a857d);}'
+    + '.cs-sv .cs-e b{font-size:' + u(14.5) + ';font-weight:700;line-height:1.2;overflow:hidden;overflow-wrap:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}.cs-sv .cs-e span{font-size:' + u(13) + ';font-weight:600;color:rgba(246,239,230,.64);font-variant-numeric:tabular-nums;}'
+    + '.cs-sv .cs-none{margin-top:' + u(16) + ';font-size:' + u(14) + ';font-weight:600;color:rgba(246,239,230,.34);}'
+    + '.cs-sv.cs-musik{background:linear-gradient(135deg, #3A2F45 0%, #2D2540 50%, #162036 100%);}'
+    + '.cs-sv .cs-blur{position:absolute;inset:-12%;background-size:cover;background-position:center;filter:blur(' + u(60) + ') saturate(1.3) brightness(.55);}'
+    + '.cs-sv .cs-cover{position:absolute;left:' + u(80) + ';top:50%;width:' + u(440) + ';height:' + u(440) + ';margin-top:-' + u(220) + ';border-radius:' + u(34) + ';overflow:hidden;background:rgba(255,255,255,.08) center/cover no-repeat;box-shadow:0 ' + u(40) + ' ' + u(80) + ' -' + u(30) + ' rgba(0,0,0,.7);}'
+    + '.cs-sv .cs-corner{position:absolute;right:' + u(80) + ';top:' + u(54) + ';text-align:right;}.cs-sv .cs-corner .cs-time{font-size:' + u(72) + ';}.cs-sv .cs-corner .cs-date{font-size:' + u(18) + ';margin-top:' + u(4) + ';}'
+    + '.cs-sv .cs-meta{position:absolute;left:' + u(590) + ';right:' + u(80) + ';top:50%;transform:translateY(-46%);min-width:0;}'
+    + '.cs-sv .cs-meta h2{font-size:' + u(58) + ';font-weight:700;letter-spacing:-.03em;line-height:1.05;margin-top:' + u(12) + ';overflow-wrap:anywhere;}.cs-sv .cs-meta h3{font-size:' + u(28) + ';font-weight:600;color:rgba(246,239,230,.64);margin-top:' + u(10) + ';letter-spacing:-.01em;}'
+    + '.cs-sv .cs-prog{height:' + u(8) + ';border-radius:99px;background:rgba(255,255,255,.16);margin-top:' + u(52) + ';position:relative;}.cs-sv .cs-prog u{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:#F6EFE6;}'
+    + '.cs-sv .cs-tt{display:flex;justify-content:space-between;font-size:' + u(16) + ';font-weight:600;color:rgba(246,239,230,.64);margin-top:' + u(10) + ';font-variant-numeric:tabular-nums;}'
+    + '.cs-sv.cs-energie{background:radial-gradient(110% 80% at 50% 46%, #252B2A 0%, #161918 72%);}'
+    + '.cs-sv .cs-flow{position:absolute;left:0;right:0;top:' + u(70) + ';bottom:' + u(200) + ';}'
+    // A node hangs on its point by the centre of its circle (--cs-r = the circle's radius); the text follows below.
+    + '.cs-sv .cs-fn{position:absolute;--cs-r:' + u(56) + ';transform:translate(-50%, calc(var(--cs-r) * -1));text-align:center;width:' + u(240) + ';}'
+    + '.cs-sv .cs-fn.cs-house{--cs-r:' + u(75) + ';}'
+    + '.cs-sv .cs-fn i{display:grid;place-items:center;margin:0 auto;border-radius:50%;border:' + u(3) + ' solid var(--cs-c);background:#1B1F1E;width:' + u(112) + ';height:' + u(112) + ';}'
+    + '.cs-sv .cs-fn.cs-house i{width:' + u(150) + ';height:' + u(150) + ';}.cs-sv .cs-fn svg{width:44%;height:44%;}'
+    + '.cs-sv .cs-fn b{display:block;font-size:' + u(30) + ';font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1;margin-top:' + u(12) + ';}.cs-sv .cs-fn span{font-size:' + u(15) + ';font-weight:600;color:rgba(246,239,230,.64);}'
+    + '.cs-sv .cs-fl{position:absolute;top:64%;height:0;margin-top:-' + u(2.5) + ';border-top:' + u(5) + ' dotted var(--cs-c);}'
+    + '.cs-sv .cs-fl.cs-l{left:calc(18% + ' + u(74) + ');right:calc(50% + ' + u(93) + ');}.cs-sv .cs-fl.cs-r{left:calc(50% + ' + u(93) + ');right:calc(18% + ' + u(74) + ');}'
+    + '.cs-sv .cs-fl.cs-v{left:50%;width:0;height:auto;margin:0 0 0 -' + u(2.5) + ';border-top:0;border-left:' + u(5) + ' dotted var(--cs-c);top:calc(11% + ' + u(140) + ');bottom:calc(36% + ' + u(93) + ');}'
+    + '.cs-sv .cs-bal{position:absolute;left:' + u(64) + ';right:' + u(64) + ';bottom:' + u(52) + ';display:grid;grid-template-columns:repeat(4, minmax(0, 1fr));gap:' + u(14) + ';}'
+    + '.cs-sv .cs-bal div{background:rgba(255,255,255,.055);border-radius:' + u(22) + ';padding:' + u(16) + ' ' + u(22) + ' ' + u(18) + ';min-width:0;}'
+    + '.cs-sv .cs-bal b{display:block;font-size:' + u(28) + ';font-weight:700;margin-top:' + u(4) + ';letter-spacing:-.02em;font-variant-numeric:tabular-nums;}'
+    + '.cs-sv.cs-ruhe{background:radial-gradient(90% 90% at 12% 8%, #22302D 0%, #191714 58%);}'
+    + '.cs-sv .cs-left{position:absolute;left:' + u(80) + ';top:0;bottom:0;width:' + u(560) + ';display:flex;flex-direction:column;justify-content:center;}'
+    + '.cs-sv .cs-left .cs-time{font-size:' + u(172) + ';margin-left:-' + u(8) + ';}.cs-sv .cs-left .cs-date{font-size:' + u(25) + ';margin-top:' + u(8) + ';color:rgba(246,239,230,.64);}'
+    + '.cs-sv .cs-say{font-size:' + u(38) + ';font-weight:700;letter-spacing:-.02em;margin-top:' + u(56) + ';}.cs-sv .cs-say small{display:block;font-size:' + u(20) + ';font-weight:600;color:rgba(246,239,230,.64);margin-top:' + u(6) + ';letter-spacing:0;}'
+    + '.cs-sv .cs-ppl{display:flex;flex-wrap:wrap;gap:' + u(10) + ';margin-top:' + u(44) + ';}'
+    + '.cs-sv .cs-p{display:flex;align-items:center;gap:' + u(10) + ';padding:' + u(7) + ' ' + u(16) + ' ' + u(7) + ' ' + u(7) + ';border-radius:999px;background:rgba(255,255,255,.07);font-size:' + u(16) + ';font-weight:600;}.cs-sv .cs-p.cs-away{opacity:.55;}'
+    + '.cs-sv .cs-p i{width:' + u(30) + ';height:' + u(30) + ';border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:' + u(14) + ';font-weight:700;color:#1b1916;background:#E8B04A;}.cs-sv .cs-p.cs-away i{background:#9b958c;}'
+    + '.cs-sv .cs-right{position:absolute;right:' + u(80) + ';top:0;bottom:0;width:' + u(400) + ';display:flex;flex-direction:column;justify-content:center;gap:' + u(12) + ';}'
+    + '.cs-sv .cs-it{display:flex;align-items:center;gap:' + u(16) + ';background:rgba(255,255,255,.06);border-radius:' + u(22) + ';padding:' + u(15) + ' ' + u(18) + ';min-width:0;}'
+    + '.cs-sv .cs-it i{width:' + u(14) + ';height:' + u(14) + ';border-radius:50%;flex:none;background:var(--cs-c);}'
+    + '.cs-sv .cs-it b{display:block;font-size:' + u(18) + ';font-weight:700;line-height:1.25;}.cs-sv .cs-it span{font-size:' + u(15) + ';font-weight:600;color:rgba(246,239,230,.64);}'
     // Narrow boxes (portrait tablet): the big time gives way.
     + '@container (aspect-ratio < 1){.cs-sv .cs-top{flex-direction:column;}.cs-sv .cs-wx{text-align:left;padding-top:0;}.cs-sv .cs-wx .cs-t{justify-content:flex-start;}'
-    + '.cs-sv .cs-top .cs-time{font-size:' + u(150) + ';}.cs-sv .cs-words{font-size:' + u(104) + ';}.cs-sv .cs-bar{flex-direction:column;align-items:flex-start;}.cs-sv .cs-name{text-align:left;}}';
+    + '.cs-sv .cs-top .cs-time{font-size:' + u(150) + ';}.cs-sv .cs-words{font-size:' + u(104) + ';}.cs-sv .cs-bar{flex-direction:column;align-items:flex-start;}.cs-sv .cs-name{text-align:left;}'
+    // Weather: the days go under the current weather. Week: seven rows instead of seven columns.
+    + '.cs-sv .cs-wk{position:static;width:auto;margin-top:' + u(44) + ';}.cs-sv.cs-wetter .cs-body{display:flex;flex-direction:column;}.cs-sv .cs-wnow{order:-1;}'
+    + '.cs-sv .cs-cols{grid-template-columns:minmax(0, 1fr);grid-auto-rows:minmax(0, 1fr);}'
+    + '.cs-sv .cs-col{flex-direction:row;align-items:center;gap:' + u(16) + ';padding:' + u(8) + ' ' + u(22) + ';}.cs-sv .cs-col .cs-cap{width:' + u(58) + ';flex:none;}'
+    + '.cs-sv .cs-col .cs-n{width:' + u(52) + ';flex:none;margin:0;}.cs-sv .cs-cw{width:' + u(118) + ';flex:none;margin:0;}'
+    + '.cs-sv .cs-li{flex-direction:row;flex:1;min-width:0;margin:0;}.cs-sv .cs-e{flex:0 1 ' + u(190) + ';min-width:0;}.cs-sv .cs-none{margin:0;}'
+    // Day line: narrower cards. Music and the house at rest: one under the other.
+    + '.cs-sv .cs-ev{width:' + u(132) + ';margin-left:-' + u(66) + ';padding:' + u(10) + ' ' + u(12) + ';}.cs-sv .cs-ev b{font-size:' + u(15) + ';}.cs-sv .cs-ev span{font-size:' + u(13) + ';}'
+    + '.cs-sv .cs-cover{left:50%;top:' + u(210) + ';margin:0 0 0 -' + u(220) + ';}.cs-sv .cs-meta{left:' + u(80) + ';top:' + u(710) + ';transform:none;}'
+    + '.cs-sv .cs-left{position:static;width:auto;display:block;padding:' + u(170) + ' ' + u(80) + ' 0;}'
+    + '.cs-sv .cs-right{position:static;width:auto;padding:' + u(56) + ' ' + u(80) + ' 0;}}';
 
   var bar = function (ctx, name, sub) {
     var wx = ctx.wx;
@@ -335,12 +552,192 @@
         + (wx && wx.temp != null ? '<div class="cs-fw"><img src="' + esc(wx.icon) + '" alt="">' + wx.temp + '°</div>' : '') + '</div></div>';
     },
   };
+  var head = function (ctx, title, sub) {
+    return '<div class="cs-head"><div><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div>'
+      + (title ? '<div class="cs-sum"><b>' + esc(title) + '</b>' + esc(sub || '') + '</div>' : '') + '</div>';
+  };
+  var clockOf = function (ts) { return hm(ts); };
+  // Now, the coming 24 hours as a curve with the rain under it, and the coming days.
+  DRAW.wetter = function (ctx) {
+    var wx = ctx.wx;
+    if (!wx) return DRAW.himmel(ctx);
+    var hours = (ctx.hourly || []).slice(0, 24), days = (ctx.daily || []).slice(0, 5);
+    var W = 1052, H = 300, base = H - 40;
+    var curve = '';
+    var temps = hours.map(function (x) { return Number(x.temperature); }).filter(isFinite);
+    if (temps.length >= 6) {
+      var lo = Math.min.apply(null, temps), hi = Math.max.apply(null, temps), span = Math.max(1, hi - lo);
+      var X = function (i) { return i / (hours.length - 1) * W; }, Y = function (t) { return 34 + (1 - (t - lo) / span) * (base - 110); };
+      var d = '', rain = '', maxR = Math.max.apply(null, hours.map(function (x) { return Number(x.precipitation) || 0; }).concat([0]));
+      hours.forEach(function (x, i) {
+        var t = Number(x.temperature);
+        if (isFinite(t)) d += (d ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(t).toFixed(1);
+        var r = Number(x.precipitation) || 0;
+        if (r > 0 && maxR > 0) {
+          var bh = 12 + r / maxR * 52;
+          rain += '<rect x="' + (X(i) - 11).toFixed(1) + '" y="' + (base - bh).toFixed(1) + '" width="22" height="' + bh.toFixed(1) + '" rx="6" fill="#5B8FC9"/>';
+        }
+      });
+      var iLo = temps.indexOf(lo), iHi = temps.indexOf(hi);
+      var pct = function (x) { return Math.min(97, Math.max(3, x / W * 100)).toFixed(1); };
+      curve = '<div class="cs-curve"><svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true">'
+        + '<defs><linearGradient id="cs-tf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E8B04A" stop-opacity=".36"/><stop offset="1" stop-color="#E8B04A" stop-opacity="0"/></linearGradient></defs>'
+        + '<path d="' + d + 'L' + W + ' ' + base + 'L0 ' + base + 'Z" fill="url(#cs-tf)"/>' + rain
+        + '<path d="' + d + '" fill="none" stroke="#E8B04A" stroke-width="3.5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>'
+        + '<line x1="0" y1="' + base + '" x2="' + W + '" y2="' + base + '" stroke="rgba(255,255,255,.22)" stroke-width="2" vector-effect="non-scaling-stroke"/>'
+        + '</svg>'
+        + '<b class="cs-pk" style="left:' + pct(X(iHi)) + '%;top:' + (Y(hi) / H * 100).toFixed(1) + '%">' + Math.round(hi) + '°</b>'
+        + (iLo !== iHi ? '<b class="cs-pk cs-lo" style="left:' + pct(X(iLo)) + '%;top:' + (Y(lo) / H * 100).toFixed(1) + '%">' + Math.round(lo) + '°</b>' : '')
+        + '<div class="cs-hours">' + [0, 6, 12, 18, 23].filter(function (i) { return hours[i] && hours[i].datetime; }).map(function (i) {
+          return '<span>' + (i ? esc(clockOf(Date.parse(hours[i].datetime))) : esc(T('Jetzt'))) + '</span>';
+        }).join('') + '</div></div>';
+    }
+    var los = days.map(function (x) { return Number(x.templow); }).filter(isFinite), his = days.map(function (x) { return Number(x.temperature); }).filter(isFinite);
+    var mn = Math.min.apply(null, los.concat(his)), mx = Math.max.apply(null, his.concat(los)), sp = Math.max(1, mx - mn);
+    var week = days.length && his.length ? '<div class="cs-wk">' + days.map(function (x) {
+      var lo2 = Number(x.templow), hi2 = Number(x.temperature);
+      var bar = isFinite(lo2) && isFinite(hi2) ? '<i><u style="left:' + ((lo2 - mn) / sp * 100).toFixed(0) + '%;right:' + ((mx - hi2) / sp * 100).toFixed(0) + '%"></u></i>' : '<i></i>';
+      return '<div class="cs-wd"><b>' + esc(dayName(Date.parse(x.datetime), true)) + '</b><img src="' + esc(wxIcon(x.condition)) + '" alt=""><span>' + (isFinite(lo2) ? Math.round(lo2) + '°' : '') + '</span>'
+        + bar + '<em>' + (isFinite(hi2) ? Math.round(hi2) + '°' : '') + '</em></div>';
+    }).join('') + '</div>' : '';
+    return '<div class="cs-in">' + head(ctx) + '<div class="cs-body">' + week
+      + '<div class="cs-wnow"><img src="' + esc(wx.icon) + '" alt=""><b>' + (wx.temp != null ? wx.temp + '°' : '') + '</b><div><p>' + esc(wx.text) + '</p></div></div>'
+      + curve + '</div></div>';
+  };
+  // The day as one line from 6 to 24: what was, where now is, what comes; the next appointment big at the top.
+  DRAW.linie = function (ctx) {
+    var now = +ctx.now, d0 = new Date(ctx.now); d0.setHours(0, 0, 0, 0);
+    var from = +d0 + 6 * 3600000, to = +d0 + 24 * 3600000;
+    var pos = function (t) { return Math.max(0, Math.min(100, (t - from) / (to - from) * 100)); };
+    var today = (ctx.events || []).filter(function (e) { return !e.allDay && sameDay(e.start, now) && e.start >= from; }).slice(0, 6);
+    var next = (ctx.events || []).filter(function (e) { return !e.allDay && e.start > now; })[0] || null;
+    var mins = next ? Math.round((next.start - now) / 60000) : null;
+    var inText = next ? (mins >= 60 ? T('in {h} Std. {m} Min.'.replace('{h}', Math.floor(mins / 60)).replace('{m}', mins % 60)) : T('in {m} Min.'.replace('{m}', mins))) : '';
+    var whenNext = next && !sameDay(next.start, now) ? dayName(next.start) + ' ' + clockOf(next.start) : inText;
+    var out = '<div class="cs-in">' + head(ctx, next ? next.title : T('Heute nichts mehr'), next ? whenNext : '')
+      + '<div class="cs-body"><div class="cs-line"><u style="width:' + pos(now).toFixed(1) + '%"></u></div>';
+    [6, 9, 12, 15, 18, 21, 24].forEach(function (h) { out += '<div class="cs-tick" style="left:' + ((h - 6) / 18 * 100).toFixed(2) + '%">' + h + '</div>'; });
+    var last = { up: -100, down: -100 };
+    today.forEach(function (e, i) {
+      var p = pos(e.start), past = (e.end || e.start) < now;
+      // Above and below in turn; two on the same side keep their distance.
+      var side = i % 2 ? 'down' : 'up';
+      if (p - last[side] < 19) side = side === 'up' ? 'down' : 'up';
+      if (p - last[side] < 19) { out += '<div class="cs-dot' + (past ? ' cs-past' : '') + '" style="left:' + p.toFixed(1) + '%"></div>'; return; }
+      last[side] = p;
+      var left = Math.max(10, Math.min(90, p));
+      out += '<div class="cs-dot' + (past ? ' cs-past' : '') + '" style="left:' + p.toFixed(1) + '%"></div>'
+        + '<div class="cs-ev cs-' + side + (past ? ' cs-past' : '') + (e === next ? ' cs-next' : '') + '" style="left:' + left.toFixed(1) + '%"><b data-no-i18n>' + esc(e.title) + '</b><span>'
+        + esc(clockOf(e.start) + (e.end ? ' – ' + clockOf(e.end) : '')) + '</span></div>';
+    });
+    if (now >= from) out += '<div class="cs-now" style="left:' + pos(now).toFixed(1) + '%"></div>';
+    if (!today.length) out += '<div class="cs-empty">' + esc(T('Heute keine Termine')) + '</div>';
+    return out + '</div></div>';
+  };
+  // Seven days side by side: weather, appointments, waste. Today stands out.
+  var TONES = ['#4E9E95', '#5B8FC9', '#6AAE78', '#DE8A4E', '#E8B04A'];
+  DRAW.woche = function (ctx) {
+    var d0 = new Date(ctx.now); d0.setHours(0, 0, 0, 0);
+    var ev = ctx.events || [], bins = ctx.bins || [], daily = ctx.daily || [];
+    var nEv = 0, nBin = 0, cols = '';
+    for (var i = 0; i < 7; i++) {
+      var day = +d0 + i * 86400000, items = [];
+      ev.filter(function (e) { return sameDay(e.start, day) && (i || e.allDay || (e.end || e.start) >= +ctx.now); }).slice(0, 4).forEach(function (e, j) {
+        items.push('<div class="cs-e" style="--cs-c:' + TONES[(i + j) % TONES.length] + '"><b data-no-i18n>' + esc(e.title) + '</b><span>' + esc(e.allDay ? T('ganztägig') : clockOf(e.start)) + '</span></div>');
+        nEv++;
+      });
+      bins.filter(function (b) { return b.days === i; }).slice(0, 2).forEach(function (b) {
+        items.push('<div class="cs-e"><b data-no-i18n>' + esc(b.label) + '</b><span>' + esc(T('Abholung')) + '</span></div>');
+        nBin++;
+      });
+      var f = daily.filter(function (x) { return sameDay(Date.parse(x.datetime), day); })[0];
+      var hi = f ? Number(f.temperature) : NaN, lo = f ? Number(f.templow) : NaN;
+      cols += '<div class="cs-col' + (i ? '' : ' cs-today') + '"><div class="cs-cap">' + esc(i ? dayName(day, true) : T('Heute')) + '</div><div class="cs-n">' + new Date(day).getDate() + '</div>'
+        + '<div class="cs-cw">' + (f ? '<img src="' + esc(wxIcon(f.condition)) + '" alt="">' + (isFinite(hi) ? Math.round(hi) + '°' : '') + (isFinite(lo) ? '<span>' + Math.round(lo) + '°</span>' : '') : '') + '</div>'
+        + (items.length ? '<div class="cs-li">' + items.join('') + '</div>' : '<div class="cs-none">' + esc(T('Nichts geplant')) + '</div>') + '</div>';
+    }
+    var sub = [nEv === 1 ? T('1 Termin') : T('{n} Termine'.replace('{n}', nEv)), nBin === 1 ? T('1 Abholung') : T('{n} Abholungen'.replace('{n}', nBin))].join(' · ');
+    return '<div class="cs-in">' + head(ctx, T('Diese Woche'), sub) + '<div class="cs-body"><div class="cs-cols">' + cols + '</div></div></div>';
+  };
+  // What is playing, big with its cover; the background is the cover out of focus.
+  var mmss = function (sec) { var s2 = Math.max(0, Math.round(sec)); return Math.floor(s2 / 60) + ':' + String(s2 % 60).padStart(2, '0'); };
+  DRAW.musik = function (ctx) {
+    var m = ctx.media;
+    if (!m) return DRAW.himmel(ctx);
+    var pct = m.dur && m.pos != null ? Math.max(0, Math.min(100, m.pos / m.dur * 100)) : null;
+    var pic = m.cover ? 'background-image:url(&quot;' + esc(m.cover) + '&quot;)' : '';
+    return (m.cover ? '<div class="cs-blur" style="' + pic + '"></div>' : '') + '<div class="cs-in"><div class="cs-cover" style="' + pic + '"></div>'
+      + '<div class="cs-corner"><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div>'
+      + '<div class="cs-meta"><div class="cs-cap" data-no-i18n>' + esc(m.where) + '</div><h2 data-no-i18n>' + esc(m.title) + '</h2>' + (m.artist ? '<h3 data-no-i18n>' + esc(m.artist) + '</h3>' : '')
+      + (pct != null ? '<div class="cs-prog"><u style="width:' + pct.toFixed(1) + '%"></u></div><div class="cs-tt"><span>' + mmss(m.pos) + '</span><span>' + mmss(m.dur) + '</span></div>' : '')
+      + '</div></div>';
+  };
+  // Where the power goes right now: sun, battery and grid around the house, a dotted line for every flow.
+  var GLYPH = {
+    sun: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></g></svg>',
+    house: '<svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" fill="currentColor"/></svg>',
+    battery: '<svg viewBox="0 0 24 24"><rect x="6" y="5" width="12" height="16" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><rect x="9" y="11" width="6" height="7" rx="1" fill="currentColor"/><path d="M10 3h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+    grid: '<svg viewBox="0 0 24 24"><path d="M12 3 8 21M12 3l4 18M6 9h12M7 15h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  };
+  DRAW.energie = function (ctx) {
+    var e = ctx.energy;
+    if (!e) return DRAW.himmel(ctx);
+    var node = function (cls, x, y, glyph, color, value, label) {
+      return '<div class="cs-fn ' + cls + '" style="left:' + x + '%;top:' + y + '%;--cs-c:' + color + ';color:' + color + '"><i>' + GLYPH[glyph] + '</i><b style="color:#F6EFE6">' + esc(value) + '</b><span>' + esc(label) + '</span></div>';
+    };
+    // A dotted line from rim to rim, drawn only while power flows: cs-v sun–house, cs-l battery–house, cs-r house–grid.
+    var flow = function (cls, color, on) { return on ? '<div class="cs-fl ' + cls + '" style="--cs-c:' + color + '"></div>' : ''; };
+    var out = '<div class="cs-in">' + head(ctx) + '<div class="cs-flow">';
+    if (e.hasSolar) out += flow('cs-v', '#E8B04A', (e.solar || 0) > 20) + node('cs-sun', 50, 11, 'sun', '#E8B04A', kw(e.solar || 0), T('Sonne'));
+    if (e.hasBattery) out += flow('cs-l', '#4E9E95', Math.abs(e.battery || 0) > 20)
+      + node('cs-bat', 18, 64, 'battery', '#4E9E95', e.soc != null ? e.soc + ' %' : kw(e.battery || 0),
+        Math.abs(e.battery || 0) <= 20 ? T('Akku') : (e.battery > 0 ? T('Akku gibt ab') : T('Akku lädt')) + (e.soc != null ? ' · ' + kw(e.battery) : ''));
+    out += flow('cs-r', '#5B8FC9', Math.abs(e.grid) > 20)
+      + node('cs-grid', 82, 64, 'grid', '#5B8FC9', kw(e.grid), Math.abs(e.grid) <= 20 ? T('Netz') : e.grid > 0 ? T('aus dem Netz') : T('ins Netz'))
+      + node('cs-house', 50, 64, 'house', '#F6EFE6', kw(e.house), T('Haus verbraucht')) + '</div>';
+    var own = e.house > 0 ? Math.max(0, Math.min(100, Math.round((e.house - Math.max(0, e.grid)) / e.house * 100))) : null;
+    var tiles = [[T('Verbrauch jetzt'), kw(e.house)]];
+    if (e.hasSolar) tiles.push([T('Erzeugung jetzt'), kw(e.solar || 0)]);
+    tiles.push([e.grid > 0 ? T('Bezug') : T('Einspeisung'), kw(e.grid)]);
+    if (own != null) tiles.push([T('Eigener Strom'), own + ' %']);
+    return out + '<div class="cs-bal" style="grid-template-columns:repeat(' + tiles.length + ', minmax(0, 1fr))">' + tiles.map(function (t) {
+      return '<div><span class="cs-cap">' + esc(t[0]) + '</span><b>' + esc(t[1]) + '</b></div>';
+    }).join('') + '</div></div>';
+  };
+  // The time, one sentence about the house, who is home, and only what asks for someone.
+  var TONE_C = { bad: '#D35A4E', warn: '#DE8A4E', info: '#5B8FC9' };
+  DRAW.ruhe = function (ctx) {
+    var rows = (ctx.bell || []).slice(0, 5), people = ctx.people || [];
+    var n = rows.filter(function (r) { return r.tone !== 'info'; }).length;
+    var say = !rows.length ? T('Alles ruhig') : n ? T('Fast alles ruhig') : T('Alles ruhig');
+    var small = !rows.length ? T('Nichts braucht dich') : n === 1 ? T('Eine Sache braucht dich') : n > 1 ? T('{n} Dinge brauchen dich'.replace('{n}', n)) : T('Zur Kenntnis');
+    return '<div class="cs-in"><div class="cs-left"><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div>'
+      + '<div class="cs-say">' + esc(say) + '<small>' + esc(small) + '</small></div>'
+      + (people.length ? '<div class="cs-ppl">' + people.map(function (p) {
+        return '<div class="cs-p' + (p.home ? '' : ' cs-away') + '"><i data-no-i18n>' + esc(p.name.charAt(0).toUpperCase()) + '</i><span data-no-i18n>' + esc(p.name) + '</span></div>';
+      }).join('') + '</div>' : '') + '</div>'
+      + (rows.length ? '<div class="cs-right">' + rows.map(function (r) {
+        return '<div class="cs-it" style="--cs-c:' + TONE_C[r.tone] + '"><i></i><div><b>' + esc(r.label) + '</b>' + (r.sub ? '<span data-no-i18n>' + esc(r.sub) + '</span>' : '') + '</div></div>';
+      }).join('') + '</div>' : '') + '</div>';
+  };
   S.context = function (o) {
     o = o || {};
     var hass = o.hass || hassOf(), now = o.now || new Date(), vars = o.vars || {};
     var dark = !!(hass && hass.themes && hass.themes.darkMode);
+    var kind = o.kind || '';
+    var need = function (list) { return !kind || list.indexOf(kind) > -1; };
+    var cals = o.events === undefined && need(['linie', 'woche']) ? S.calendars(hass) : [];
     return { now: now, hass: hass, vars: vars, dark: dark, sun: o.sun !== undefined ? o.sun : S.sunTimes(hass, now),
-      wx: o.wx !== undefined ? o.wx : S.weather(hass, vars.weather_entity), rooms: o.rooms || S.rooms(o.config, hass, dark) };
+      wx: o.wx !== undefined ? o.wx : S.weather(hass, vars.weather_entity), rooms: o.rooms || S.rooms(o.config, hass, dark),
+      // Asked for only when the screensaver on show needs it.
+      hourly: o.hourly !== undefined ? o.hourly : need(['wetter']) ? S.forecast(hass, vars.weather_entity, 'hourly') : [],
+      daily: o.daily !== undefined ? o.daily : need(['wetter', 'woche']) ? S.forecast(hass, vars.weather_entity, 'daily') : [],
+      events: o.events !== undefined ? o.events : cals.length ? S.events(hass, cals, 8) : [],
+      bins: o.bins !== undefined ? o.bins : need(['woche']) ? S.waste(hass) : [],
+      media: o.media !== undefined ? o.media : need(['musik']) ? S.playing(hass) : null,
+      energy: o.energy !== undefined ? o.energy : need(['energie']) ? S.energy(hass) : null,
+      bell: o.bell !== undefined ? o.bell : need(['ruhe']) ? S.bell() : [],
+      people: o.people !== undefined ? o.people : need(['ruhe']) ? S.people(hass) : [] };
   };
   // „mix“ shows one after the other, five minutes each.
   S.kindAt = function (kind, now) {
@@ -350,6 +747,8 @@
   };
   S.html = function (kind, ctx) {
     var k = S.kindAt(kind, ctx.now);
+    // Nothing to show (no weather entity, nothing playing, energy not set up): the sky, with its own look.
+    if ((k === 'wetter' && !ctx.wx) || (k === 'musik' && !ctx.media) || (k === 'energie' && !ctx.energy)) k = 'himmel';
     return '<div class="cs-sv cs-' + k + (ctx.dark ? ' cs-dark' : '') + '" data-kind="' + k + '">' + DRAW[k](ctx) + '</div>';
   };
   S.mount = function (host, kind, o) {
@@ -369,8 +768,10 @@
       root.appendChild(s2);
     }
     var update = function () {
-      var ctx = S.context(typeof o.context === 'function' ? o.context() : o.context);
-      var html = S.html(typeof o.kind === 'function' ? o.kind() : kind, ctx);
+      var want = typeof o.kind === 'function' ? o.kind() : kind;
+      var base = (typeof o.context === 'function' ? o.context() : o.context) || {};
+      var ctx = S.context(Object.assign({}, base, { kind: S.kindAt(want, base.now || new Date()) }));
+      var html = S.html(want, ctx);
       if (html !== last) { last = html; host.innerHTML = html; }
       // Wander a few pixels so nothing burns in (not in a preview).
       if (o.drift) {
@@ -381,7 +782,9 @@
     };
     update();
     timer = setInterval(update, o.every || 20000);
-    return { update: update, destroy: function () { clearInterval(timer); host.innerHTML = ''; } };
+    // Data that arrives later (forecast, calendar) repaints at once.
+    listeners.push(update);
+    return { update: update, destroy: function () { clearInterval(timer); listeners.splice(listeners.indexOf(update), 1); host.innerHTML = ''; } };
   };
 
   // The settings of the dashboard: the first value found on a view's hero card.
