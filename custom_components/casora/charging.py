@@ -161,6 +161,8 @@ def parse_pois(data: Any, lat0: float, lng0: float, radius: float | None = None)
         # Open Charge Map's placeholders ("(Unknown Operator)", "(Business Owner at Location)") are no operator.
         if op_name.startswith("("):
             op_name = ""
+        # „Tesla (including non-tesla)“, „Shell Recharge Solutions (DE)“: the bracket is Open Charge Map's note.
+        op_name = re.sub(r"\s*\([^)]*\)\s*$", "", op_name).strip()
         town = str(adr.get("Town") or "").strip()
         line = str(adr.get("AddressLine1") or "").strip()
         out.append({

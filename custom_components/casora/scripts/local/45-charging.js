@@ -89,7 +89,7 @@
   var ERR = { wait: 'Gleich noch einmal versuchen', key: 'Open Charge Map nimmt den Schlüssel nicht an',
     limit: 'Zu viele Abfragen, später noch einmal', timeout: 'Open Charge Map antwortet gerade nicht' };
   var SORTS = [['near', 'Nächste'], ['fast', 'Schnellste'], ['free', 'Gratis']];
-  var BOLT = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M13 2 4.5 13.5H11L10 22l8.5-11.5H13z'/%3E%3C/svg%3E";
+  var BOLT = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M11 15H6l7-14v8h5l-7 14z'/%3E%3C/svg%3E";
   var tok = function () {
     var UI = window._casoraUI || {}, T = UI.tokens || {}, dark = false;
     try { dark = matchMedia('(prefers-color-scheme: dark)').matches; } catch (e) { /* no matter */ }
@@ -171,6 +171,16 @@
   // Operator logo, loaded at run time from Google's favicon service by the operator's web domain (as the fuel view
   // does for brands; nothing is in the repo). Under it sits the bolt in the class colour: it shows until the logo is
   // there and stays when there is none (the service's 16 px globe counts as none).
+  // Operators whose own address in Open Charge Map is old or has no usable icon: their domain by name. Else the
+  // domain Open Charge Map has (s.w, charging.py).
+  var KNOWN = [[/ionity/i, 'ionity.eu'], [/\benbw\b/i, 'enbw.com'], [/tesla/i, 'tesla.com'], [/allego/i, 'allego.eu'],
+    [/ewe ?go/i, 'ewe-go.de'], [/shell ?recharge|newmotion/i, 'shellrecharge.com'], [/fastned/i, 'fastned.nl'],
+    [/\be\.?on\b/i, 'eon.de'], [/ubitricity/i, 'ubitricity.com'], [/vattenfall|incharge/i, 'vattenfall.de'],
+    [/\belli\b/i, 'elli.eco'], [/\bmer\b/i, 'mer.eco']];
+  X.domain = function (s) {
+    for (var i = 0; i < KNOWN.length; i++) if (KNOWN[i][0].test(s.op || '')) return KNOWN[i][1];
+    return s.w || null;
+  };
   var FAV = function (d) { return 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(d) + '&sz=128'; };
   var SEEN = {};
   X.lg = function (img, failed) {
@@ -180,13 +190,16 @@
     else img.remove();
   };
   X.mark = function (s, size) {
-    var c = X.cls(s), logo = s.w && SEEN[s.w] !== false;
-    return '<span class="ch-logo" data-logo="' + (logo && SEEN[s.w] ? 'bild' : 'blitz') + '" style="position:relative;display:grid;place-items:center;width:' + size + 'px;height:' + size + 'px;flex:none;overflow:hidden;'
-      + 'border-radius:var(--casora-soft-icon-radius, 30%);background:' + c.color + '">'
-      + '<span style="width:56%;height:56%;background:#fff;-webkit-mask:url(&quot;' + BOLT + '&quot;) center/contain no-repeat;mask:url(&quot;' + BOLT + '&quot;) center/contain no-repeat"></span>'
-      + (logo ? '<img src="' + esc(FAV(s.w)) + '" data-w="' + esc(s.w) + '" alt="" decoding="async" referrerpolicy="no-referrer" '
+    // Every part placed absolutely: the list row's own rules for spans and pictures must not move the bolt.
+    // size null: fill the slot it stands in (the list row's picture slot has its own size).
+    var c = X.cls(s), w = X.domain(s), logo = w && SEEN[w] !== false, dim = size ? size + 'px' : '100%';
+    return '<span class="ch-logo" data-logo="' + (logo && SEEN[w] ? 'bild' : 'blitz') + '" style="position:relative;display:block;box-sizing:border-box;margin:0;padding:0;'
+      + 'width:' + dim + ';height:' + dim + ';flex:none;overflow:hidden;border-radius:var(--casora-soft-icon-radius, 30%);background:' + c.color + '">'
+      + '<i style="position:absolute;left:22%;top:22%;width:56%;height:56%;margin:0;padding:0;background:#fff;'
+      + '-webkit-mask:url(&quot;' + BOLT + '&quot;) center/contain no-repeat;mask:url(&quot;' + BOLT + '&quot;) center/contain no-repeat"></i>'
+      + (logo ? '<img src="' + esc(FAV(w)) + '" data-w="' + esc(w) + '" alt="" decoding="async" referrerpolicy="no-referrer" '
         + 'onload="window._casoraCharge.lg(this)" onerror="window._casoraCharge.lg(this,1)" '
-        + 'style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#fff;opacity:' + (SEEN[s.w] ? 1 : 0) + ';transition:opacity .18s">' : '')
+        + 'style="position:absolute;left:0;top:0;width:100%;height:100%;margin:0;padding:0;border-radius:0;object-fit:cover;background:#fff;opacity:' + (SEEN[w] ? 1 : 0) + ';transition:opacity .18s">' : '')
       + '</span>';
   };
   // Three tiles like the fuel view's cheapest three: the pick's word, the distance big, the place, the power.
@@ -290,7 +303,7 @@
       return { image: 'casora-tank-logo:' + i, imageFit: 'cover', label: s.n || s.a || 'Ladesäule', labelLit: !!(s.n || s.a),
         sub: km(s.d) + (sub ? ' · ' + sub : ''), endHtml: pill(s), url: X.mapUrl(s) };
     });
-    var listHtml = rows.length ? UI.group(rows, null, null, { keepNames: true }).replace(/<img src="casora-tank-logo:(\d+)"[^>]*>/g, function (m, i) { return X.mark(shown[+i], 38); })
+    var listHtml = rows.length ? UI.group(rows, null, null, { keepNames: true }).replace(/<img src="casora-tank-logo:(\d+)"[^>]*>/g, function (m, i) { return X.mark(shown[+i], null); })
       : UI.group([{ icon: 'mdi:ev-station', iconTone: 'rgba(255,255,255,0.18)', label: 'Keine kostenlose Ladesäule' }], null);
     if (more) listHtml += '<div class="ch-more" data-no-i18n style="font-size:12.5px;font-weight:600;text-align:center;margin-top:10px;color:' + k.SUB + '">+ ' + more + '</div>';
     var seg = '<div class="ch-seg">' + UI.segments(SORTS.map(function (x) { return { label: x[1], active: x[0] === sort, attrs: { 'data-casora-charge-f': x[0] } }; }), null) + '</div>';

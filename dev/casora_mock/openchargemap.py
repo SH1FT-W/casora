@@ -19,23 +19,27 @@ PATH = "/api/casora_mock/openchargemap/poi"
 BAD_KEY = "00000000-0000-0000-0000-000000000000"
 KEY_RE = re.compile(r"^[0-9a-fA-F-]{36}$")
 
-# Invented: name, operator, place (km east, km north), plugs [(kW, current type id or None, quantity)], usage cost,
+# Invented places with real operator names (their logos, like the fuel fake's brands): name, operator, place (km east, km north), plugs [(kW, current type id or None, quantity)], usage cost,
 # number of points, status type id. Imported entries come without operator, cost and number of points.
 CHARGERS = [
-    ("Rathausplatz", "Stadtwerke Musterstadt", 0.3, 0.2, [(22, 20, 2)], None, 2, 50),
+    ("Rathausplatz", "EnBW", 0.3, 0.2, [(22, 20, 2)], None, 2, 50),
     ("Möbelhaus Nordpark", None, -0.9, 0.7, [(22, 20, 4)], "Free", 4, 50),
-    ("Parkhaus Am Markt", "Stadtwerke Musterstadt", 0.6, -0.9, [(11, 20, 6)], "0,45 €/kWh", 6, 50),
-    ("Schnellladepark Autohof Nord", "Testladenetz", 2.4, 3.9, [(300, 30, 8), (22, 20, 2)], "0,59 €/kWh", 10, 50),
+    ("Parkhaus Am Markt", "EnBW", 0.6, -0.9, [(11, 20, 6)], "0,45 €/kWh", 6, 50),
+    ("Schnellladepark Autohof Nord", "IONITY", 2.4, 3.9, [(300, 30, 8), (22, 20, 2)], "0,59 €/kWh", 10, 50),
     ("Supermarkt Lindenallee", None, -1.6, -1.2, [(50, 30, 1), (22, 20, 2)], "kostenlos", 3, 50),
-    ("Bahnhof Ostseite", "Testladenetz", 1.9, -0.4, [(150, 30, 2)], None, 2, 50),
+    ("Bahnhof Ostseite", "Tesla (including non-tesla)", 1.9, -0.4, [(150, 30, 2)], None, 2, 50),
     ("Teststraße 14", None, -0.2, 1.8, [(22, None, None), (22, None, None)], None, None, 50),
     ("Hotel Zur Post", "(Business Owner at Location)", 3.1, -2.2, [(11, 20, 1)], "0", 1, 50),
-    ("Gewerbepark Süd", "Testladenetz", -2.8, -3.4, [(75, 30, 2)], "0,55 €/kWh", 2, 50),
-    ("Alte Molkerei", None, 0.9, 2.6, [(3.7, 10, 1)], None, 1, 50),
-    ("Tankstelle am Ring (stillgelegt)", "Testladenetz", 0.4, 0.5, [(50, 30, 1)], None, 1, 200),
+    ("Gewerbepark Süd", "Allego BV", -2.8, -3.4, [(75, 30, 2)], "0,55 €/kWh", 2, 50),
+    ("Alte Molkerei", "be emobil", 0.9, 2.6, [(3.7, 10, 1)], None, 1, 50),
+    ("Tankstelle am Ring (stillgelegt)", "IONITY", 0.4, 0.5, [(50, 30, 1)], None, 1, 200),
     ("Firmenhof Mustermann", None, 0.1, -0.3, [(22, 20, 2)], None, 2, 50),
 ]
 PRIVATE = {"Firmenhof Mustermann"}
+# As Open Charge Map has them: some old (be emobil, Tesla's Australian page), some fine.
+SITES = {"EnBW": "https://www.enbw.com/elektromobilitaet", "IONITY": "https://ionity.eu/", "Allego BV": "https://www.allego.eu/",
+         "Tesla (including non-tesla)": "https://www.tesla.com/en_AU/support/non-tesla-supercharging",
+         "be emobil": "http://www.be-emobil.de/"}
 
 
 def answer(lat: float, lng: float, rad: float, limit: int) -> list:
@@ -66,7 +70,7 @@ def answer(lat: float, lng: float, rad: float, limit: int) -> list:
             p["OperatorID"] = 45 if op.startswith("(") else 3000 + i
             p["OperatorInfo"] = {"ID": p["OperatorID"], "Title": op}
             if not op.startswith("("):
-                p["OperatorInfo"]["WebsiteURL"] = "https://www." + re.sub(r"[^a-z]", "", op.lower()) + ".example/"
+                p["OperatorInfo"]["WebsiteURL"] = SITES.get(op, "https://www.example.org/")
         if cost is not None:
             p["UsageCost"] = cost
         if points is not None:

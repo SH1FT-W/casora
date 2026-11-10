@@ -77,6 +77,8 @@ check("operator named with its web domain, not free at a price",
       hpc["op"] == "Testladenetz" and hpc["w"] == "testladenetz.example" and hpc["free"] is False)
 check("no domain from odd addresses", [charging.domain_of(x) for x in (None, "", "javascript:alert(1)", "http://127.0.0.1/", "https://a b.de", "ftp://x.de")] == [None] * 6)
 check("placeholder operator has no domain", by["Rathaus"]["w"] is None)
+check("Open Charge Map's note in brackets leaves the operator name",
+      charging.parse_pois([poi("X", 0.01, [conn(22, 20)], OperatorInfo={"ID": 2, "Title": "Tesla (including non-tesla)"})], LAT, LNG)[0]["op"] == "Tesla")
 check("place relative to the centre in km", abs(hpc["y"] - 5.53) < 0.05 and hpc["x"] == 0.0)
 r = by["Rathaus"]
 check("AC only, free by its cost text, placeholder operator dropped",

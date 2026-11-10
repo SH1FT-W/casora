@@ -19,8 +19,8 @@ await need('ein Casora-Dashboard', desk, all.map((d) => d.url));
 const KEY = '12345678-abcd-4ef0-9876-0123456789ab';
 const CAR = 'sensor.testlimousine_state_of_charge';
 
-// One-coloured PNG of any size for the caught logo addresses: nothing depends on the net. The fake's „Testladenetz“
-// gets a real logo, „Stadtwerke Musterstadt“ the service's 16 px placeholder (the bolt has to stay).
+// One-coloured PNG of any size for the caught logo addresses: nothing depends on the net. be emobil gets the
+// service's 16 px placeholder (the bolt has to stay), the others a logo. R618_ECHT=1 loads the real logos (pictures).
 const png = (w, h) => {
   const chunk = (t, d) => { const l = Buffer.alloc(4); l.writeUInt32BE(d.length); const td = Buffer.concat([Buffer.from(t), d]);
     const c = Buffer.alloc(4); c.writeUInt32BE(zlib.crc32(td) >>> 0); return Buffer.concat([l, td, c]); };
@@ -29,8 +29,8 @@ const png = (w, h) => {
   return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ih),
     chunk('IDAT', zlib.deflateSync(Buffer.concat(Array(h).fill(row)))), chunk('IEND', Buffer.alloc(0))]);
 };
-const routeLogos = (pg) => pg.route(/s2\/favicons/, (r) => r.fulfill({ status: 200, contentType: 'image/png',
-  body: /domain=testladenetz\.example/.test(r.request().url()) ? png(128, 128) : png(16, 16) }));
+const routeLogos = (pg) => process.env.R618_ECHT ? null : pg.route(/s2\/favicons/, (r) => r.fulfill({ status: 200, contentType: 'image/png',
+  body: /domain=be-emobil\.de/.test(r.request().url()) ? png(16, 16) : png(128, 128) }));
 const ws = (pg, msg) => pg.evaluate((m) => document.querySelector('home-assistant').hass.callWS(m), msg);
 const popupText = (pg) => pg.evaluate(() => {
   const P = window.casoraPopup, s = P && P.surface;
@@ -76,6 +76,10 @@ const rows = (pg) => pg.evaluate(() => {
     more: box.querySelector('.ch-more') ? txt(box.querySelector('.ch-more')) : '',
     cards: [...box.querySelectorAll('.ch-c')].map((e) => ({ t: txt(e), go: e.getAttribute('data-casora-go'), over: e.scrollWidth > e.clientWidth + 1 })),
     pills: [...new Set([...box.querySelectorAll('.ch-list .hui-end span')].map((e) => getComputedStyle(e).backgroundColor))].length,
+    bolt: [...box.querySelectorAll('.ch-logo[data-logo="blitz"]')].map((e) => { const a = e.getBoundingClientRect(), b = e.querySelector('i').getBoundingClientRect();
+      return { dx: Math.round((b.x + b.width / 2) - (a.x + a.width / 2)), dy: Math.round((b.y + b.height / 2) - (a.y + a.height / 2)) }; }),
+    fit: [...box.querySelectorAll('.ch-list .ch-logo')].map((e) => { const a = e.getBoundingClientRect(), p = e.parentElement.getBoundingClientRect();
+      return Math.abs(a.x - p.x) <= 1 && Math.abs(a.y - p.y) <= 1 && Math.abs(a.width - p.width) <= 1 && Math.abs(a.height - p.height) <= 1; }),
     logos: [...box.querySelectorAll('.ch-list .ch-logo')].map((e) => e.getAttribute('data-logo') + (e.querySelector('img') ? '+img' : '')),
     bars: [...box.querySelectorAll('.ch-bar')].map((e) => e.dataset.k + ':' + e.dataset.n),
     verdict: box.querySelector('.ch-verdict') ? txt(box.querySelector('.ch-verdict')) : '', scale: !!box.querySelector('.ch-scale'),
@@ -195,10 +199,13 @@ for (const run of RUNS) {
   await check(run.tag + ': 10 Ladesäulen, die nächste zuerst, stillgelegte und private fehlen',
     r1.names.length === 10 && /^Rathausplatz/.test(r1.names[0]) && !r1.names.some((n) => /stillgelegt|Firmenhof/.test(n)), r1.names);
   await check(run.tag + ': Entfernung, Betreiber, Ladepunkte, Leistung in vier Farben',
-    /0[.,]4 km · Stadtwerke Musterstadt · /.test(r1.names[0]) && r1.names[0].includes(W.pts) && r1.names[0].includes('22 kW AC') && r1.pills === 4, { row: r1.names[0], pills: r1.pills });
-  // Stadtwerke (placeholder picture) keep the bolt; Bahnhof, Gewerbepark and Schnellladepark (Testladenetz) show the logo.
+    /0[.,]4 km · EnBW · /.test(r1.names[0]) && r1.names[0].includes(W.pts) && r1.names[0].includes('22 kW AC') && r1.pills === 4, { row: r1.names[0], pills: r1.pills });
+  // EnBW, Tesla, Allego and IONITY show their logo; no operator, a placeholder operator or a 16 px placeholder picture
+  // (be emobil at Alte Molkerei) keep the bolt.
   await check(run.tag + ': Betreiber-Logo, wo es eines gibt, sonst der Blitz',
-    JSON.stringify(r1.logos) === JSON.stringify(['blitz', 'blitz', 'blitz', 'blitz', 'bild+img', 'blitz', 'blitz', 'blitz', 'bild+img', 'bild+img']), r1.logos);
+    JSON.stringify(r1.logos) === JSON.stringify(['bild+img', 'blitz', 'bild+img', 'blitz', 'bild+img', 'blitz', 'blitz', 'blitz', 'bild+img', 'bild+img']), r1.logos);
+  await check(run.tag + ': Logo und Blitz füllen ihr Feld genau', r1.fit.every((f) => f), r1.fit);
+  await check(run.tag + ': Blitz mittig im Feld', r1.bolt.every((b) => Math.abs(b.dx) <= 1 && Math.abs(b.dy) <= 1), r1.bolt);
   await check(run.tag + ': Zeile führt zur Karte', r1.go.length === 10 && r1.go.every((u) => /^https:\/\/www\.google\.com\/maps\/search\/\?api=1&query=-?\d/.test(u)), r1.go.slice(0, 2));
   await check(run.tag + ': Fußzeile mit Suchort, Stand und Quelle', r1.src.includes(W.home) && r1.src.includes('10 km') && r1.src.includes(W.data), r1.src);
   if (!run.mobile) await check(run.tag + ': zwei Spalten, Karte rechts neben der Empfehlung', r1.left && r1.map && r1.map.x > r1.left.x + r1.left.w - 2 && Math.abs(r1.map.y - r1.left.y) < 12, { left: r1.left, map: r1.map });
