@@ -1810,7 +1810,11 @@
     var p = num(states, c.progress);
     if (p != null) return Math.max(0, Math.min(100, p));
     var r = remOf(c, states), e = elOf(c, states);
-    return r != null && e != null && r + e > 0 ? e / (r + e) * 100 : null;
+    if (r != null && e != null && r + e > 0) return e / (r + e) * 100;
+    /* No run time (LG ThinQ washers and dryers have no "running" sensor, issue 162): the cycle's total time and
+       what is left of it. More left than the total (time was added): no percent. */
+    var t = e == null && r != null ? mins(states, c.total) : null;
+    return t != null && t > 0 && r <= t ? (t - r) / t * 100 : null;
   };
   var doorOpen = function (c, states) {
     var d = c.door && states[c.door];

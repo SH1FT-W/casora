@@ -561,7 +561,14 @@ def _snap_appliance(found: Found, g, now: datetime, lang: int) -> Snap:
     el = _seconds(g("elapsed"))
     if el is not None and el >= 0:
         s.start_ts = int(now.timestamp() - el)
-    laundry = found.kind in ("washer", "dryer")
+    if s.pct is None and el is None and s.end_ts:
+        # No progress and no run time (LG ThinQ washers and dryers, issue 162): the cycle's total time and what is
+        # left of it. More left than the total (time was added): no percent.
+        total = _seconds(g("total"))
+        left = s.end_ts - now.timestamp()
+        if total and 0 < left <= total:
+            s.pct = int((total - left) / total * 100)
+    laundry =found.kind in ("washer", "dryer")
     pct_t = _pct_text(s.pct, lang) if s.pct is not None else None
     if ph == "done":
         s.pct = 100

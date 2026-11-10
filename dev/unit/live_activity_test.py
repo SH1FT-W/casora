@@ -153,6 +153,18 @@ st("sensor.a_state", "BSH.Common.EnumType.OperationState.Run"); st("sensor.a_pro
 s = la.snapshot(alt, S.get, NOW, 0)
 check("Home Connect Alt: state as the Home Connect key", s.phase == "run" and s.program == "Eco 50°", s)
 
+# LG ThinQ washer (issue 162): HA core gives it no run time and no progress, only the total time and the time left.
+lg = Found("d-lg", "washer", "lg_thinq", "ungetestet", {"state": "sensor.l_state", "remaining": "sensor.l_rem", "elapsed": None,
+                                                         "total": "sensor.l_total", "count": "sensor.l_count"}, name="W")
+st("sensor.l_state", "spinning"); st("sensor.l_total", "45", unit_of_measurement="min", device_class="duration")
+st("sensor.l_rem", (NOW + timedelta(minutes=9)).isoformat(), device_class="timestamp")
+s = la.snapshot(lg, S.get, NOW, 0)
+check("LG washer: percent from total time and time left", s.phase == "run" and s.pct == 80 and s.message.startswith("Läuft") and "80" in s.message, s)
+st("sensor.l_rem", (NOW + timedelta(minutes=60)).isoformat(), device_class="timestamp")
+check("LG washer: more left than the total gives no percent", la.snapshot(lg, S.get, NOW, 0).pct is None)
+st("sensor.l_rem", (NOW + timedelta(minutes=9)).isoformat(), device_class="timestamp"); st("sensor.l_total", "unknown")
+check("LG washer: no total gives no percent", la.snapshot(lg, S.get, NOW, 0).pct is None)
+
 # Robot vacuum: room as main value, done on docking with area/duration, stays
 st("vacuum.v", "cleaning"); st("sensor.v_status", "segment_cleaning"); st("sensor.v_room", "Küche"); st("sensor.v_pct", "40")
 st("sensor.v_area", "32.4", unit_of_measurement="m²"); st("sensor.v_time", "2700", unit_of_measurement="s"); st("sensor.v_err", "none")
