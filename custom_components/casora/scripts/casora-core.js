@@ -14627,6 +14627,7 @@ window.casoraMenuGlass = {
   window.casoraStateWord = function (h, cur) {
     if (!cur) return '';
     var tr = function (x) { return window.casoraTr ? window.casoraTr(x) : x; };
+    if (/^humidifier\./.test(cur.entity_id) && cur.state === 'on' && (cur.attributes || {}).action === 'idle') return tr('Inaktiv');
     var txt = '';
     try { txt = h && h.formatEntityState ? h.formatEntityState(cur) : cur.state; } catch (e) { txt = cur.state; }
     if (cur.state === 'unavailable') txt = /^(camera|lock)\./.test(cur.entity_id) ? tr('Offline') : tr('Nicht verfügbar');

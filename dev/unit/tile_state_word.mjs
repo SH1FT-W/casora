@@ -35,5 +35,6 @@ assert.equal(run('casora_entity', ent('select', 'ready'), hass), 'Bereit', 'raw 
 assert.equal(run('casora_entity', { entity_id: 'sensor.t', state: '21.5', attributes: {} }, hass), '21.5', 'measurement: HA\'s text');
 assert.equal(run('casora_entity_actions', ent('media_player', 'idle'), hass), 'Inaktiv');
 assert.equal(run('casora_humidifier', ent('humidifier', 'on'), hass), 'An');
+assert.equal(run('casora_humidifier', { ...ent('humidifier', 'on'), attributes: { action: 'idle' } }, hass), 'Inaktiv', 'humidifier idle matches popup');
 assert.equal(run('casora_game', ent('media_player', 'idle'), hass), 'Inaktiv', 'game tile (esc was undefined there)');
 console.log('ok tile_state_word');
