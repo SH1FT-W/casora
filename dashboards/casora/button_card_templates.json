@@ -4012,12 +4012,12 @@
           ],
           "name": [
             {
-              "color": "var(--casora-entity-ink-name, var(--casora-entity-name-active, var(--primary-text-color)))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-ink-name, var(--casora-entity-name-active, var(--primary-text-color))))"
             }
           ],
           "state": [
             {
-              "color": "var(--casora-entity-ink-state, var(--casora-entity-state-active-color, var(--casora-entity-state-active, var(--secondary-text-color))))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink-2, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-ink-state, var(--casora-entity-state-active-color, var(--casora-entity-state-active, var(--secondary-text-color)))))"
             }
           ],
           "custom_fields": {
@@ -10096,7 +10096,7 @@
           ],
           "state": [
             {
-              "color": "var(--casora-entity-name-active, var(--primary-text-color))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink-2, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-name-active, var(--primary-text-color)))"
             },
             {
               "opacity": "1"
@@ -17509,7 +17509,7 @@
           ],
           "state": [
             {
-              "color": "var(--casora-entity-state-active-color, var(--casora-entity-state-active, var(--secondary-text-color)))"
+              "color": "color-mix(in srgb, var(--casora-tile-tone-ink-2, #fff) var(--casora-tile-tone-share, 0%), var(--casora-entity-state-active-color, var(--casora-entity-state-active, var(--secondary-text-color))))"
             },
             {
               "text-transform": "none"
