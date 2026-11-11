@@ -314,7 +314,11 @@ const evaluate = (popup, view, s, rec) => {
     const top = s.tl[0];
     const tm = parseSince(top.time, now);
     // At HA's start last_changed is the start, not a change: then the recorder's time is the truth and not checked here.
-    if (tm && isFinite(s.last) && !atStart && (tm.hi < s.last - 60e3 || tm.lo > s.last + 60e3)) add('verlauf', `neueste Verlaufszeile „${top.title}“ um ${top.time}, letzte Änderung war ${hm(s.last)}`);
+    // An entity that vanished and came back (integration reload, a blip to unavailable) has a fresh last_changed with
+    // the same state as before: then the recorder's start of the current state is the truth, as the popup shows it.
+    const segs = rec.stats.segs, cur = segs[segs.length - 1];
+    const since = cur && cur.s === s.state && cur.start < s.last - 60e3 ? cur.start : s.last;
+    if (tm && isFinite(s.last) && !atStart && (tm.hi < since - 60e3 || tm.lo > since + 60e3)) add('verlauf', `neueste Verlaufszeile „${top.title}“ um ${top.time}, letzte Änderung war ${hm(s.last)}`);
     // Each row is a change; the start of the 24 h window is none (the state was already so before).
     for (const r of s.tl) { const t = parseSince(r.time, now); if (t && Math.abs(t.lo - (now - 864e5)) < 120e3) add('verlauf', `Verlaufszeile „${r.title}“ nennt den Beginn des 24-Std.-Zeitraums als Änderung`); }
     if (!/seitdem|since then|^$/i.test(top.sub)) add('verlauf', `neueste Verlaufszeile „${top.title}“ sagt „${top.sub}“ statt „seitdem“`);
