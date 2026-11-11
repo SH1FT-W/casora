@@ -2922,7 +2922,35 @@
     "im Umkreis": "en el radio",
     "leer": "vacía",
     "voll": "llena",
-    "Der Akku ist gut gefüllt.": "La batería está bien cargada."
+    "Der Akku ist gut gefüllt.": "La batería está bien cargada.",
+    "Abend am Meer": "Atardecer junto al mar",
+    "Alpenglühen": "Resplandor alpino",
+    "Aufgang": "Amanecer",
+    "Bergsee": "Lago de montaña",
+    "Dünen": "Dunas",
+    "Fjord am Morgen": "Fiordo por la mañana",
+    "Landschaften": "Paisajes",
+    "Nebelwald": "Bosque en la niebla",
+    "Polarlicht": "Aurora boreal",
+    "Sanfte Hügel": "Colinas suaves",
+    "Untergang": "Atardecer",
+    "Winternacht": "Noche de invierno",
+    "Canyon": "Cañón",
+    "1 Abholung": "1 recogida",
+    "Eigener Strom": "Energía propia",
+    "Eine Sache braucht dich": "Una cosa te necesita",
+    "Erzeugung jetzt": "Generación ahora",
+    "Fast alles ruhig": "Casi todo tranquilo",
+    "Haus verbraucht": "La casa consume",
+    "Heute nichts mehr": "Nada más hoy",
+    "Nichts braucht dich": "Nada te necesita",
+    "Sonne": "Sol",
+    "Verbrauch jetzt": "Consumo ahora",
+    "Zur Kenntnis": "Para tu información",
+    "aus dem Netz": "de la red",
+    "ins Netz": "a la red",
+    "Akku gibt ab": "La batería se descarga",
+    "Arzttermin": "Médico"
   },
   "patterns": [
     [
@@ -5228,6 +5256,26 @@
     [
       "^Schnellste, (.+)$",
       "El más rápido, {1}"
+    ],
+    [
+      "^Noch (\\d+) Std\\. (\\d+) Min\\. Tageslicht$",
+      "Quedan {1} h {2} min de luz"
+    ],
+    [
+      "^Noch (\\d+) Min\\. Tageslicht$",
+      "Quedan {1} min de luz"
+    ],
+    [
+      "^(\\d+) Abholungen$",
+      "{1} recogidas"
+    ],
+    [
+      "^in (\\d+) Std\\. (\\d+) Min\\.$",
+      "en {1} h {2} min"
+    ],
+    [
+      "^(\\d+) Dinge brauchen dich$",
+      "{1} cosas te necesitan"
     ]
   ]
 }

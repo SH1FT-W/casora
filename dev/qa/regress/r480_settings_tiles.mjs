@@ -111,7 +111,7 @@ await part('Aufbau', async () => {
 await P('p._bOpenSettings(null);');
 await wait(1500);
 const start = await P(`return { page: p._csPage, tiles: [...p.shadowRoot.querySelectorAll('.cn-grid .cs-hubtile')].map((b) => b.dataset.tile) };`);
-await check('Zahnrad öffnet die neue Startseite mit acht Kacheln', start.page === 'n-start' && start.tiles.length === 8, start);
+await check('Zahnrad öffnet die neue Startseite mit neun Kacheln', start.page === 'n-start' && start.tiles.length === 9, start);
 map = await P(`return window.casoraSettingsMap.tiles.map((t) => ({ id: t.id, blocks: t.blocks.map((b) => ({ k: b.k, adv: !!b.adv, sec: b.sec || null, link: !!b.updates, personal: !!b.personal })) }));`);
 for (const tile of map) {
   await openTile(tile.id, false);

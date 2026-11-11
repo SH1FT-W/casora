@@ -2922,7 +2922,35 @@
     "im Umkreis": "dans le rayon",
     "leer": "vide",
     "voll": "pleine",
-    "Der Akku ist gut gefüllt.": "La batterie est bien chargée."
+    "Der Akku ist gut gefüllt.": "La batterie est bien chargée.",
+    "Abend am Meer": "Soir au bord de la mer",
+    "Alpenglühen": "Lueur alpine",
+    "Aufgang": "Lever",
+    "Bergsee": "Lac de montagne",
+    "Dünen": "Dunes",
+    "Fjord am Morgen": "Fjord au matin",
+    "Landschaften": "Paysages",
+    "Nebelwald": "Forêt dans la brume",
+    "Polarlicht": "Aurore boréale",
+    "Sanfte Hügel": "Douces collines",
+    "Untergang": "Coucher",
+    "Winternacht": "Nuit d’hiver",
+    "Canyon": "Canyon",
+    "1 Abholung": "1 collecte",
+    "Eigener Strom": "Électricité propre",
+    "Eine Sache braucht dich": "Une chose demande ton attention",
+    "Erzeugung jetzt": "Production actuelle",
+    "Fast alles ruhig": "Presque tout est calme",
+    "Haus verbraucht": "La maison consomme",
+    "Heute nichts mehr": "Plus rien aujourd'hui",
+    "Nichts braucht dich": "Rien ne demande ton attention",
+    "Sonne": "Soleil",
+    "Verbrauch jetzt": "Consommation actuelle",
+    "Zur Kenntnis": "Pour information",
+    "aus dem Netz": "du réseau",
+    "ins Netz": "vers le réseau",
+    "Akku gibt ab": "La batterie se décharge",
+    "Arzttermin": "Médecin"
   },
   "patterns": [
     [
@@ -5228,6 +5256,26 @@
     [
       "^Schnellste, (.+)$",
       "La plus rapide, {1}"
+    ],
+    [
+      "^Noch (\\d+) Std\\. (\\d+) Min\\. Tageslicht$",
+      "Encore {1} h {2} min de jour"
+    ],
+    [
+      "^Noch (\\d+) Min\\. Tageslicht$",
+      "Encore {1} min de jour"
+    ],
+    [
+      "^(\\d+) Abholungen$",
+      "{1} collectes"
+    ],
+    [
+      "^in (\\d+) Std\\. (\\d+) Min\\.$",
+      "dans {1} h {2} min"
+    ],
+    [
+      "^(\\d+) Dinge brauchen dich$",
+      "{1} choses demandent ton attention"
     ]
   ]
 }

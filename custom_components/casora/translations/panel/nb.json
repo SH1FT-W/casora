@@ -3051,7 +3051,25 @@
     "Too many requests. Please try again later.": "For mange forespørsler. Prøv igjen senere.",
     "Around home, or around the car while it is out and about (if it reports its location). Between 1 and 50 km.": "Rundt hjemmet, eller rundt bilen når den er ute og kjører (hvis den melder posisjonen sin). Mellom 1 og 50 km.",
     "Saved. The car window shows chargers nearby now.": "Lagret. Bilvinduet viser nå ladestasjoner i nærheten.",
-    "Data: Open Charge Map and its data providers, CC BY 4.0. No live availability and hardly any prices.": "Data: Open Charge Map og dataleverandørene deres, CC BY 4.0. Ingen sanntidsstatus og nesten ingen priser."
+    "Data: Open Charge Map and its data providers, CC BY 4.0. No live availability and hardly any prices.": "Data: Open Charge Map og dataleverandørene deres, CC BY 4.0. Ingen sanntidsstatus og nesten ingen priser.",
+    "Screensaver": "Skjermsparer",
+    "What a wall tablet shows when nobody touches it.": "Hva et veggnettbrett viser når ingen tar på det.",
+    "Pick a screensaver and after how long it starts. The picture shows what it looks like.": "Velg en skjermsparer og når den starter. Bildet viser hvordan den ser ut.",
+    "Start the screensaver": "Start skjermspareren",
+    "After 15 minutes": "Etter 15 minutter",
+    "After 30 minutes": "Etter 30 minutter",
+    "Tablets only. After this time without a touch the screensaver covers the dashboard. A touch brings it back.": "Bare på nettbrett. Etter denne tiden uten berøring legger skjermspareren seg over dashbordet. En berøring henter det tilbake.",
+    "One after the other": "Én etter én",
+    "Sky": "Himmel",
+    "Landscapes": "Landskap",
+    "Photos": "Bilder",
+    "Word clock": "Ordklokke",
+    "Sky follows the sun and the weather. Landscapes are drawn, nothing is loaded. Photos shows this dashboard's room photos.": "Himmel følger solen og været. Landskapene er tegnet, ingenting lastes. Bilder viser rombildene til dette dashbordet.",
+    "The preview appears once the dashboard's scripts have loaded.": "Forhåndsvisningen vises når dashbordets skript er lastet.",
+    "Day line": "Dagslinje",
+    "Week": "Uke",
+    "Energy flow": "Energiflyt",
+    "House at rest": "Huset i ro"
   },
   "patterns": [
     [

@@ -3051,7 +3051,25 @@
     "Too many requests. Please try again later.": "Zbyt wiele zapytań. Spróbuj ponownie później.",
     "Around home, or around the car while it is out and about (if it reports its location). Between 1 and 50 km.": "Wokół domu albo wokół samochodu, gdy jest w drodze (jeśli zgłasza swoją lokalizację). Od 1 do 50 km.",
     "Saved. The car window shows chargers nearby now.": "Zapisano. Okno samochodu pokazuje teraz ładowarki w pobliżu.",
-    "Data: Open Charge Map and its data providers, CC BY 4.0. No live availability and hardly any prices.": "Dane: Open Charge Map i jego dostawcy danych, CC BY 4.0. Bez dostępności na żywo i prawie bez cen."
+    "Data: Open Charge Map and its data providers, CC BY 4.0. No live availability and hardly any prices.": "Dane: Open Charge Map i jego dostawcy danych, CC BY 4.0. Bez dostępności na żywo i prawie bez cen.",
+    "Screensaver": "Wygaszacz ekranu",
+    "What a wall tablet shows when nobody touches it.": "Co pokazuje tablet ścienny, gdy nikt go nie dotyka.",
+    "Pick a screensaver and after how long it starts. The picture shows what it looks like.": "Wybierz wygaszacz ekranu i po jakim czasie się włącza. Obraz pokazuje, jak wygląda.",
+    "Start the screensaver": "Włącz wygaszacz ekranu",
+    "After 15 minutes": "Po 15 minutach",
+    "After 30 minutes": "Po 30 minutach",
+    "Tablets only. After this time without a touch the screensaver covers the dashboard. A touch brings it back.": "Tylko na tabletach. Po tym czasie bez dotyku wygaszacz zakrywa pulpit. Dotknięcie go przywraca.",
+    "One after the other": "Jeden po drugim",
+    "Sky": "Niebo",
+    "Landscapes": "Krajobrazy",
+    "Photos": "Zdjęcia",
+    "Word clock": "Zegar słowny",
+    "Sky follows the sun and the weather. Landscapes are drawn, nothing is loaded. Photos shows this dashboard's room photos.": "Niebo podąża za słońcem i pogodą. Krajobrazy są rysowane, nic nie jest pobierane. Zdjęcia pokazują zdjęcia pomieszczeń tego pulpitu.",
+    "The preview appears once the dashboard's scripts have loaded.": "Podgląd pojawi się po załadowaniu skryptów pulpitu.",
+    "Day line": "Linia dnia",
+    "Week": "Tydzień",
+    "Energy flow": "Przepływ energii",
+    "House at rest": "Dom w spoczynku"
   },
   "patterns": [
     [

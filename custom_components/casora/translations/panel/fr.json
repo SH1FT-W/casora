@@ -3051,7 +3051,25 @@
     "Too many requests. Please try again later.": "Trop de requêtes. Réessaie plus tard.",
     "Around home, or around the car while it is out and about (if it reports its location). Between 1 and 50 km.": "Autour de la maison, ou autour de la voiture quand elle est en route (si elle signale sa position). Entre 1 et 50 km.",
     "Saved. The car window shows chargers nearby now.": "Enregistré. La fenêtre voiture affiche maintenant les bornes proches.",
-    "Data: Open Charge Map and its data providers, CC BY 4.0. No live availability and hardly any prices.": "Données : Open Charge Map et ses fournisseurs de données, CC BY 4.0. Pas de disponibilité en direct et presque pas de prix."
+    "Data: Open Charge Map and its data providers, CC BY 4.0. No live availability and hardly any prices.": "Données : Open Charge Map et ses fournisseurs de données, CC BY 4.0. Pas de disponibilité en direct et presque pas de prix.",
+    "Screensaver": "Économiseur d'écran",
+    "What a wall tablet shows when nobody touches it.": "Ce qu'affiche une tablette murale quand personne ne la touche.",
+    "Pick a screensaver and after how long it starts. The picture shows what it looks like.": "Choisis un économiseur d'écran et quand il démarre. L'image montre à quoi il ressemble.",
+    "Start the screensaver": "Démarrer l'économiseur d'écran",
+    "After 15 minutes": "Après 15 minutes",
+    "After 30 minutes": "Après 30 minutes",
+    "Tablets only. After this time without a touch the screensaver covers the dashboard. A touch brings it back.": "Tablettes uniquement. Après ce temps sans toucher, l'économiseur d'écran recouvre le tableau de bord. Un toucher le ramène.",
+    "One after the other": "L'un après l'autre",
+    "Sky": "Ciel",
+    "Landscapes": "Paysages",
+    "Photos": "Photos",
+    "Word clock": "Horloge en mots",
+    "Sky follows the sun and the weather. Landscapes are drawn, nothing is loaded. Photos shows this dashboard's room photos.": "Ciel suit le soleil et la météo. Les paysages sont dessinés, rien n'est chargé. Photos montre les photos des pièces de ce tableau de bord.",
+    "The preview appears once the dashboard's scripts have loaded.": "L'aperçu apparaît dès que les scripts du tableau de bord sont chargés.",
+    "Day line": "Fil de la journée",
+    "Week": "Semaine",
+    "Energy flow": "Flux d'énergie",
+    "House at rest": "Maison au calme"
   },
   "patterns": [
     [

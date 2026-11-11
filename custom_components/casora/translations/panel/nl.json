@@ -3051,7 +3051,25 @@
     "Too many requests. Please try again later.": "Te veel verzoeken. Probeer het later opnieuw.",
     "Around home, or around the car while it is out and about (if it reports its location). Between 1 and 50 km.": "Rond huis, of rond de auto als die onderweg is (als hij zijn locatie meldt). Tussen 1 en 50 km.",
     "Saved. The car window shows chargers nearby now.": "Opgeslagen. Het autovenster toont nu laadpalen in de buurt.",
-    "Data: Open Charge Map and its data providers, CC BY 4.0. No live availability and hardly any prices.": "Gegevens: Open Charge Map en zijn gegevensleveranciers, CC BY 4.0. Geen live beschikbaarheid en nauwelijks prijzen."
+    "Data: Open Charge Map and its data providers, CC BY 4.0. No live availability and hardly any prices.": "Gegevens: Open Charge Map en zijn gegevensleveranciers, CC BY 4.0. Geen live beschikbaarheid en nauwelijks prijzen.",
+    "Screensaver": "Schermbeveiliging",
+    "What a wall tablet shows when nobody touches it.": "Wat een wandtablet toont als niemand hem aanraakt.",
+    "Pick a screensaver and after how long it starts. The picture shows what it looks like.": "Kies een schermbeveiliging en wanneer die start. Het beeld laat zien hoe die eruitziet.",
+    "Start the screensaver": "Schermbeveiliging starten",
+    "After 15 minutes": "Na 15 minuten",
+    "After 30 minutes": "Na 30 minuten",
+    "Tablets only. After this time without a touch the screensaver covers the dashboard. A touch brings it back.": "Alleen op tablets. Na deze tijd zonder aanraking bedekt de schermbeveiliging het dashboard. Een aanraking haalt het terug.",
+    "One after the other": "Om de beurt",
+    "Sky": "Hemel",
+    "Landscapes": "Landschappen",
+    "Photos": "Foto's",
+    "Word clock": "Woordklok",
+    "Sky follows the sun and the weather. Landscapes are drawn, nothing is loaded. Photos shows this dashboard's room photos.": "Hemel volgt de zon en het weer. Landschappen zijn getekend, er wordt niets geladen. Foto's toont de kamerfoto's van dit dashboard.",
+    "The preview appears once the dashboard's scripts have loaded.": "Het voorbeeld verschijnt zodra de scripts van het dashboard geladen zijn.",
+    "Day line": "Daglijn",
+    "Week": "Week",
+    "Energy flow": "Energiestroom",
+    "House at rest": "Huis in rust"
   },
   "patterns": [
     [

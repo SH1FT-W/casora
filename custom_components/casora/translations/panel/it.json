@@ -3051,7 +3051,25 @@
     "Too many requests. Please try again later.": "Troppe richieste. Riprova più tardi.",
     "Around home, or around the car while it is out and about (if it reports its location). Between 1 and 50 km.": "Intorno a casa, o intorno all'auto quando è fuori (se comunica la sua posizione). Tra 1 e 50 km.",
     "Saved. The car window shows chargers nearby now.": "Salvato. La finestra dell'auto mostra ora le colonnine vicine.",
-    "Data: Open Charge Map and its data providers, CC BY 4.0. No live availability and hardly any prices.": "Dati: Open Charge Map e i suoi fornitori di dati, CC BY 4.0. Nessuna disponibilità in tempo reale e quasi nessun prezzo."
+    "Data: Open Charge Map and its data providers, CC BY 4.0. No live availability and hardly any prices.": "Dati: Open Charge Map e i suoi fornitori di dati, CC BY 4.0. Nessuna disponibilità in tempo reale e quasi nessun prezzo.",
+    "Screensaver": "Salvaschermo",
+    "What a wall tablet shows when nobody touches it.": "Cosa mostra un tablet a parete quando nessuno lo tocca.",
+    "Pick a screensaver and after how long it starts. The picture shows what it looks like.": "Scegli un salvaschermo e dopo quanto parte. L'immagine mostra come appare.",
+    "Start the screensaver": "Avvia il salvaschermo",
+    "After 15 minutes": "Dopo 15 minuti",
+    "After 30 minutes": "Dopo 30 minuti",
+    "Tablets only. After this time without a touch the screensaver covers the dashboard. A touch brings it back.": "Solo sui tablet. Dopo questo tempo senza tocchi il salvaschermo copre la dashboard. Un tocco la riporta.",
+    "One after the other": "Uno dopo l'altro",
+    "Sky": "Cielo",
+    "Landscapes": "Paesaggi",
+    "Photos": "Foto",
+    "Word clock": "Orologio a parole",
+    "Sky follows the sun and the weather. Landscapes are drawn, nothing is loaded. Photos shows this dashboard's room photos.": "Cielo segue il sole e il meteo. I paesaggi sono disegnati, non viene caricato nulla. Foto mostra le foto delle stanze di questa dashboard.",
+    "The preview appears once the dashboard's scripts have loaded.": "L'anteprima appare quando gli script della dashboard sono caricati.",
+    "Day line": "Linea del giorno",
+    "Week": "Settimana",
+    "Energy flow": "Flusso di energia",
+    "House at rest": "Casa in quiete"
   },
   "patterns": [
     [

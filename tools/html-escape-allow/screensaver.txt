@@ -1,0 +1,16 @@
+# 46-screensaver.js (screensavers for wall tablets): the drawn landscapes and the sky are SVG built from numbers and
+# from the fixed SCENES and SKY tables; every text (time, date, weather, room and scene names) goes through esc().
+custom_components/casora/scripts/local/46-screensaver.js | re:^\(.*\)\.toFixed\(\d\)$ | number: SVG geometry computed by the code | 34
+custom_components/casora/scripts/local/46-screensaver.js | re:^(?:w|h|H|W|mx|my|mr|wy|th|k|s\.sun\.r|\(mx \+ mr \* 0\.42\))$ | number: size, position or index computed by the code | 27
+custom_components/casora/scripts/local/46-screensaver.js | d | SVG path built from numbers | 3
+custom_components/casora/scripts/local/46-screensaver.js | re:^(?:s\.sun\.c|s\.mist|s\.water\.[ab]|s\.sky\[0\]|sky\[[0-3]\]|col|c)$ | colour of the fixed SCENES / SKY tables (or mixed from two of them) | 19
+custom_components/casora/scripts/local/46-screensaver.js | id | element id built from the fixed scene id | 10
+custom_components/casora/scripts/local/46-screensaver.js | re:^(?:stops|ridge\(.*\)|pts\((?:share|1)\)|out\.join\(''\)|DRAW\[k\]\(ctx\)|bar\(ctx, .*\))$ | markup built by the module itself: SVG from numbers, texts through esc() | 8
+custom_components/casora/scripts/local/46-screensaver.js | re:^\(?wx(?: && wx)?\.temp.*$ | the temperature as a rounded number; the weather text next to it goes through esc() | 4
+# The six data screensavers (weather, day line, week, music, energy flow, house at rest): titles of appointments,
+# media and bell rows go through esc(); what is listed here are numbers, fixed tables and the module's own markup.
+custom_components/casora/scripts/local/46-screensaver.js | re:^(?:base|x|y|new|pct\(X\(i(?:Hi|Lo)\)\))$ | number: position computed by the code (new Date(day).getDate() is the day of the month) | 9
+custom_components/casora/scripts/local/46-screensaver.js | re:^(?:color|TONES\[\(i \+ j\) % TONES\.length\]|TONE_C\[r\.tone\])$ | colour from the fixed tables of the module | 5
+custom_components/casora/scripts/local/46-screensaver.js | re:^(?:cls|side|GLYPH\[glyph\])$ | fixed class name or glyph of the module | 4
+custom_components/casora/scripts/local/46-screensaver.js | re:^(?:pic|out|week|rain|curve|cols|bar|items\.join\(\'\'\)|head\(ctx.*\)|node\(.*\)|flow\(.*\))$ | markup built by the module itself: numbers and fixed values, every text through esc() | 19
+custom_components/casora/scripts/local/46-screensaver.js | re:^mmss\(m\.(?:pos|dur)\)$ | minutes:seconds built from a number | 2

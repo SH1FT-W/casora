@@ -2394,6 +2394,7 @@ const STUDIO_ICON = {
   "set-vent": ["main", "var(--casora-color-blue, #0A84FF)"],
   "set-fuel": ["main", "var(--casora-color-teal, #00C3D0)"],
   "set-live": ["energy", "var(--casora-color-green, #30D158)"],
+  "set-saver": ["info", "var(--casora-color-blue, #0A84FF)"],
   // Erststart und Umzug
   "flow-rooms": ["main", "#2fd6e0"],
   "flow-devices": ["light", "#ffb340"],
@@ -2521,6 +2522,19 @@ const SECTIONS = [
         optionLabels: { "": "Off", "1": "After 1 minute", "2": "After 2 minutes",
           "5": "After 5 minutes", "10": "After 10 minutes" },
         hint: "Tablets only. Brings one back to Home after a while without use." },
+      // Screensaver for wall tablets (scripts/local/46-screensaver.js). Off until a dashboard turns it on; the kind
+      // "" shows one after the other. Drawn on the Studio's Screensaver page with a preview (casora-panel-settings.js).
+      { key: "casora_screensaver", sub: "chrome", label: "Start the screensaver", type: "select", auto: true, scope: "dashboard",
+        options: ["", "1", "2", "5", "10", "15", "30"],
+        optionLabels: { "": "Off", "1": "After 1 minute", "2": "After 2 minutes", "5": "After 5 minutes",
+          "10": "After 10 minutes", "15": "After 15 minutes", "30": "After 30 minutes" },
+        hint: "Tablets only. After this time without a touch the screensaver covers the dashboard. A touch brings it back." },
+      { key: "casora_screensaver_kind", sub: "chrome", label: "Screensaver", type: "select", auto: true, scope: "dashboard",
+        options: ["", "himmel", "land", "fotos", "wort", "wetter", "linie", "woche", "musik", "energie", "ruhe"],
+        optionLabels: { "": "One after the other", himmel: "Sky", land: "Landscapes", fotos: "Photos", wort: "Word clock", wetter: "Weather",
+          linie: "Day line", woche: "Week", musik: "Music", energie: "Energy flow", ruhe: "House at rest" },
+        when: (v) => v.casora_screensaver != null && v.casora_screensaver !== "",
+        hint: "Sky follows the sun and the weather. Landscapes are drawn, nothing is loaded. Photos shows this dashboard's room photos." },
       // Halten auf Kacheln (22-halten.js): leer = Schnellmenü. casora-core.js setzt daraus window._casoraHoldMode,
       // ans Handy geht es über casora_mobile_bg. Je Kachel überstimmbar (variables.hold_mode, Kachel-Inspektor).
       { key: "hold_mode", sub: "hold", label: "Hold on tiles", type: "select", auto: true, scope: "dashboard",
