@@ -2932,7 +2932,8 @@
     "aus dem Netz": "from the grid",
     "ins Netz": "to the grid",
     "Akku gibt ab": "Battery discharging",
-    "Arzttermin": "Doctor"
+    "Arzttermin": "Doctor",
+    "Lamellenstellung": "Slats"
   },
   "patterns": [
     [
