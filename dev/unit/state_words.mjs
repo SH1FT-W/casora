@@ -12,6 +12,7 @@ const show = (kind, state, variables = {}, id = 'sensor.example', attributes = {
 for (const kind of ['casora_3d_printer', 'casora_air_purifier', 'casora_media', 'casora_vacuum']) {
   assert.equal(show(kind, 'idle'), 'Inaktiv', `${kind}: idle`);
 }
+assert.equal(show('casora_air_purifier', 'standby'), 'Bereitschaft', 'standby is not idle');
 for (const [raw, word] of [['inactive', 'Inaktiv'], ['ready', 'Bereit'], ['off', 'Aus'], ['finished', 'Fertig']]) {
   assert.equal(show('casora_appliance', raw), word, `appliance: ${raw}`);
 }
