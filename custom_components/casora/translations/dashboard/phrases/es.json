@@ -5276,6 +5276,14 @@
     [
       "^(\\d+) Dinge brauchen dich$",
       "{1} cosas te necesitan"
+    ],
+    [
+      "^(.+) aus$",
+      "{1} apagado"
+    ],
+    [
+      "^(.+) aktiv$",
+      "{1} activo"
     ]
   ]
 }

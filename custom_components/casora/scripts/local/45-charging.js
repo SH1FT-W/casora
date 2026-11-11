@@ -54,12 +54,16 @@
     return null;
   };
 
-  // Whether a key is set: one call per page load that asks Casora only, never Open Charge Map.
+  // Whether a key is set: asks Casora only, never Open Charge Map. Without a key it asks again after a minute at the
+  // earliest: a key entered in the Studio while a wall tablet or the app keeps the dashboard open counted only after
+  // a reload (#174).
   X.check = function () {
-    var h = hassOf();
-    if (X._asked || !h || !h.callWS) return;
-    X._asked = true;
-    h.callWS({ type: 'casora/charging/ready' }).then(function (r) { X.ready = !!(r && r.ready); }, function () { X.ready = false; });
+    var h = hassOf(), now = Date.now();
+    if (X._asking || (X._askedAt && now - X._askedAt < 60000) || !h || !h.callWS) return;
+    X._asking = true;
+    X._askedAt = now;
+    h.callWS({ type: 'casora/charging/ready' }).then(function (r) { X.ready = !!(r && r.ready); X._asking = false; },
+      function () { X.ready = false; X._asking = false; });
   };
 
   // „Testladenetz · 6 Ladepunkte · kostenlos“: what is known, nothing made up (the power stands in the pill).
@@ -84,7 +88,7 @@
 
   // ── Row in the car popup ─────────────────────────────────────────────────
   X.item = function (p, states) {
-    if (X.ready === null) X.check();
+    if (!X.ready) X.check();
     if (!X.ready) return null;
     var d = X.data[p || ''];
     var first = d && d.stations && d.stations[0];

@@ -5269,6 +5269,14 @@
     [
       "^(\\d+) Dinge brauchen dich$",
       "{1} ting trenger deg"
+    ],
+    [
+      "^(.+) aus$",
+      "{1} av"
+    ],
+    [
+      "^(.+) aktiv$",
+      "{1} aktiv"
     ]
   ]
 }

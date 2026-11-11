@@ -5276,6 +5276,14 @@
     [
       "^(\\d+) Dinge brauchen dich$",
       "{1} choses demandent ton attention"
+    ],
+    [
+      "^(.+) aus$",
+      "{1} éteint"
+    ],
+    [
+      "^(.+) aktiv$",
+      "{1} actif"
     ]
   ]
 }

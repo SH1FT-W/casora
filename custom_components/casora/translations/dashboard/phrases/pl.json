@@ -5276,6 +5276,14 @@
     [
       "^(\\d+) Dinge brauchen dich$",
       "{1} rzeczy wymaga uwagi"
+    ],
+    [
+      "^(.+) aus$",
+      "{1} wył."
+    ],
+    [
+      "^(.+) aktiv$",
+      "{1} aktywny"
     ]
   ]
 }
