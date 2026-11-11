@@ -2921,41 +2921,6 @@ window.casoraMenuGlass = {
       return em;
     };
 
-    /* alt: the tile's own short form for narrow tiles ("22,2° · Heizt" instead of "22,2° +1"); without it the
-       first part and a counter as below. alt equal to text: no counter, the text itself ends with "…" (thermostat). */
-    window.casoraStateFit = function (text, weight, alt) {
-      const t = text == null ? '' : String(text);
-      if (!t) return '';
-      const em = window.casoraTextEm(t, weight);
-      const escHtml = window.casoraEsc || ((x) => String(x == null ? '' : x).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
-      if (!(em > 0)) return escHtml(t);
-      const a = alt == null ? '' : String(alt);
-      if (a) {
-        return '<casora-statefit data-casora-clip style="display:inline-block;vertical-align:top;max-width:calc(100cqi - '
-          + 'var(--casora-tile-state-inset, 0px));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'
-          + '<span class="sf-f">' + escHtml(t) + '</span><span class="sf-s" style="display:none;max-width:100%">'
-          + '<span style="min-width:0;overflow:hidden;text-overflow:ellipsis">' + escHtml(a) + '</span></span></casora-statefit>';
-      }
-      /* 1.4.1: überall (Handy und Desktop) dieselbe Schriftgröße – kein Verkleinern mehr. Passt ein Text
-         mit „ · “ nicht, zeigt casora-statefit den ersten Teil ganz und zählt den Rest („Trocknet Mopp +3“,
-         alles im Popup); passt auch der erste Teil nicht, endet er mit „…“. Beide Fassungen stehen im HTML,
-         damit casora-i18n sie übersetzt; das Element misst nur und schaltet um. */
-      const parts = t.split(' · ');
-      let short = '';
-      if (parts.length > 1) {
-        let more = parts.length - 1;
-        const tail = /\s\+(\d+)$/.exec(parts[parts.length - 1]);
-        if (tail) more += Number(tail[1]);
-        // Der Zähler bleibt immer sichtbar; zu lang wird nur der erste Teil gekürzt („Trocknu… +1“).
-        short = '<span class="sf-s" style="display:none;max-width:100%;align-items:baseline">'
-          + '<span style="min-width:0;overflow:hidden;text-overflow:ellipsis">' + escHtml(parts[0]) + '</span>'
-          + '<span style="flex:none;margin-left:6px;padding:0 6px;border-radius:999px;font-size:.86em;font-weight:700;'
-          + 'background:color-mix(in srgb, currentColor 14%, transparent)" data-no-i18n>+' + more + '</span></span>';
-      }
-      return '<casora-statefit data-casora-clip style="display:inline-block;vertical-align:top;max-width:calc(100cqi - '
-        + 'var(--casora-tile-state-inset, 0px));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'
-        + '<span class="sf-f">' + escHtml(t) + '</span>' + short + '</casora-statefit>';
-    };
     /* The top bar clock without sensor.time (#172): Home Assistant no longer adds the Time & Date integration, and
        the clock stayed empty. The device's own time stands in, in Home Assistant's time zone when the user's
        profile says "server" (hass.locale.time_zone), and an element ticks it at every full minute. */
@@ -2991,6 +2956,41 @@ window.casoraMenuGlass = {
         }
       });
     }
+    /* alt: the tile's own short form for narrow tiles ("22,2° · Heizt" instead of "22,2° +1"); without it the
+       first part and a counter as below. alt equal to text: no counter, the text itself ends with "…" (thermostat). */
+    window.casoraStateFit = function (text, weight, alt) {
+      const t = text == null ? '' : String(text);
+      if (!t) return '';
+      const em = window.casoraTextEm(t, weight);
+      const escHtml = window.casoraEsc || ((x) => String(x == null ? '' : x).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
+      if (!(em > 0)) return escHtml(t);
+      const a = alt == null ? '' : String(alt);
+      if (a) {
+        return '<casora-statefit data-casora-clip style="display:inline-block;vertical-align:top;max-width:calc(100cqi - '
+          + 'var(--casora-tile-state-inset, 0px));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'
+          + '<span class="sf-f">' + escHtml(t) + '</span><span class="sf-s" style="display:none;max-width:100%">'
+          + '<span style="min-width:0;overflow:hidden;text-overflow:ellipsis">' + escHtml(a) + '</span></span></casora-statefit>';
+      }
+      /* 1.4.1: überall (Handy und Desktop) dieselbe Schriftgröße – kein Verkleinern mehr. Passt ein Text
+         mit „ · “ nicht, zeigt casora-statefit den ersten Teil ganz und zählt den Rest („Trocknet Mopp +3“,
+         alles im Popup); passt auch der erste Teil nicht, endet er mit „…“. Beide Fassungen stehen im HTML,
+         damit casora-i18n sie übersetzt; das Element misst nur und schaltet um. */
+      const parts = t.split(' · ');
+      let short = '';
+      if (parts.length > 1) {
+        let more = parts.length - 1;
+        const tail = /\s\+(\d+)$/.exec(parts[parts.length - 1]);
+        if (tail) more += Number(tail[1]);
+        // Der Zähler bleibt immer sichtbar; zu lang wird nur der erste Teil gekürzt („Trocknu… +1“).
+        short = '<span class="sf-s" style="display:none;max-width:100%;align-items:baseline">'
+          + '<span style="min-width:0;overflow:hidden;text-overflow:ellipsis">' + escHtml(parts[0]) + '</span>'
+          + '<span style="flex:none;margin-left:6px;padding:0 6px;border-radius:999px;font-size:.86em;font-weight:700;'
+          + 'background:color-mix(in srgb, currentColor 14%, transparent)" data-no-i18n>+' + more + '</span></span>';
+      }
+      return '<casora-statefit data-casora-clip style="display:inline-block;vertical-align:top;max-width:calc(100cqi - '
+        + 'var(--casora-tile-state-inset, 0px));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'
+        + '<span class="sf-f">' + escHtml(t) + '</span>' + short + '</casora-statefit>';
+    };
     // Statuszeile (1.4.1): voller Text oder Kurzform, je nachdem, was in die Breite passt.
     if (!customElements.get('casora-statefit')) {
       customElements.define('casora-statefit', class extends HTMLElement {
