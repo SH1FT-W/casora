@@ -3,6 +3,7 @@
 // Now tile and popup head share casoraCoverSummary/casoraCoverSummaryText: the same members, the same
 // average, the count first ("3 von 6 geöffnet · Ø 70 %", narrow "3 von 6 geöffnet").
 //   node dev/unit/cover_group_summary.mjs
+// @deckt: custom_components/casora/scripts/casora-core.js#casoraCoverSummary,casoraCoverSummaryText, custom_components/casora/scripts/local/34-security-covers.js#casoraCoverClosedUpTo, custom_components/casora/scripts/local/35-phone-hub.js
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -96,6 +97,24 @@ for (const t of ['casora_cover', 'casora_popup_cover']) {
 }
 
 // ── Translations: every part has a phrase in every language ──
+// #177: a cover within its „Gilt als geschlossen bis“ value (security.closed_up_to / closed_up_to_by, the rule of
+// window.casoraCoverOpen) counts as closed in „X von Y geöffnet“ too: the garage door at 1 % said closed in its row
+// and open in the count („11 von 17“ with 10 open). In motion it still counts as open.
+{
+  w.casoraCoverClosedUpTo = (id) => (id === 'cover.tor' ? 5 : 0);
+  const G = { 'cover.tor': cov('open', 1), 'cover.r1': cov('open', 100), 'cover.r2': cov('closed', 0), 'cover.r3': cov('open', 3) };
+  const ids = ['cover.tor', 'cover.r1', 'cover.r2', 'cover.r3'];
+  assert.equal(sum(G, ids).open, 2, '#177: the door within its value is closed, the blind at 3 % without one is open');
+  assert.equal(sum({ ...G, 'cover.tor': cov('closing', 1) }, ids).open, 3, '#177: closing within the value still counts as open');
+  delete w.casoraCoverClosedUpTo;
+  assert.equal(sum(G, ids).open, 3, 'without the security module: as before');
+  // The phone overview's „Jalousien“ row counts with the same summary, not with a rule of its own.
+  const hub = read('custom_components/casora/scripts/local/35-phone-hub.js');
+  assert.ok(/casoraCoverSummary\(S, blindsOut\)/.test(hub), '#177: phone overview counts with casoraCoverSummary');
+  const sec = read('custom_components/casora/scripts/local/34-security-covers.js');
+  assert.ok(/window\.casoraCoverClosedUpTo = C\.closedUpTo/.test(sec), '#177: the threshold is shared on window');
+}
+
 for (const lang of ['en', 'es', 'fr', 'it', 'nl', 'pl', 'pt', 'nb']) {
   const P = JSON.parse(read(`custom_components/casora/translations/dashboard/phrases/${lang}.json`));
   const hit = (x) => P.exact[x] != null || P.patterns.some(([re]) => new RegExp(re).test(x));

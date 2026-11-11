@@ -307,8 +307,10 @@
       if (cat === 'climate' && blindsOut.length && homeVar('climate_blinds') !== false
           && !chips.some(function (c) { return /casora_badge_climate_covers/.test(c.tpl || ''); })) {
         var h = document.querySelector('home-assistant'), S = (h && h.hass && h.hass.states) || {};
-        var open = blindsOut.filter(function (id) { var st = S[id] || {}, p = Number((st.attributes || {}).current_position);
-          return ['open', 'opening'].indexOf(st.state) >= 0 || (isFinite(p) && p > 0); }).length;
+        // The same count as the blinds popup head (#177: „Gilt als geschlossen bis“ counts as closed).
+        var open = window.casoraCoverSummary ? window.casoraCoverSummary(S, blindsOut).open
+          : blindsOut.filter(function (id) { var st = S[id] || {}, p = Number((st.attributes || {}).current_position);
+            return ['open', 'opening'].indexOf(st.state) >= 0 || (isFinite(p) && p > 0); }).length;
         chips.push({ blinds: blindsOut.slice(), title: 'Jalousien', icon: 'cover_open', ids: blindsOut.slice(),
           sub: open ? (open === 1 ? '1 geöffnet' : open + ' geöffnet') : (blindsOut.length > 1 ? 'Alle geschlossen' : 'Geschlossen') });
         chips = climSort(chips);

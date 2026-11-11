@@ -61,6 +61,7 @@
     return s !== 'closed' || (isFinite(pos) && pos > 0);
   };
   window.casoraCoverOpen = C.coverOpen;
+  window.casoraCoverClosedUpTo = C.closedUpTo;   // the blinds count („X von Y geöffnet“) uses the same value (#177)
 
   C.isOpen = function (st) { return C.coverOpen(st, 'blind'); };
 

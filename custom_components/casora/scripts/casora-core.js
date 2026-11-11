@@ -12650,7 +12650,10 @@ window.casoraMenuGlass = {
       var p = posOf(id);
       if (s === 'opening') opening = true;
       if (s === 'closing') closing = true;
-      if (p != null ? p > 0 : (s === 'open' || s === 'opening' || s === 'stopping')) open++;
+      // Within its „Gilt als geschlossen bis“ value a cover at rest is closed, as for security (#177, casoraCoverOpen).
+      var upTo = window.casoraCoverClosedUpTo ? window.casoraCoverClosedUpTo(id) : 0;
+      var closedHere = upTo > 0 && (s === 'open' || s === 'closed') && p != null && p <= upTo;
+      if (!closedHere && (p != null ? p > 0 : (s === 'open' || s === 'opening' || s === 'stopping'))) open++;
       if (p != null) { sum += p; n++; }
     });
     var avg = n ? Math.round(sum / n) : (list.length ? Math.round(open * 100 / list.length) : null);
