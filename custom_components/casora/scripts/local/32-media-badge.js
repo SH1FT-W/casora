@@ -7,7 +7,7 @@
 //   window._casoraMediaBadge.ids(variables)                  → configured players (entity_1 … entity_14), unique
 //   window._casoraMediaBadge.kind(s, timeout, states)        → 'run' | 'pause' | 'rest' (the badge's rule)
 //   window._casoraMediaBadge.count(ids, states, timeout, pc) → { active, run, paused, sub } (sub = "1 läuft" …)
-//   window._casoraMediaBadge.word(s)                         → state word (Läuft, An, Pausiert, Bereit, Aus …)
+//   window._casoraMediaBadge.word(s)                         → state word (Läuft, An, Pausiert, Inaktiv, Aus …)
 //   window._casoraMediaBadge.rows(ids, states, hass, timeout, pcCfg) → popup rows, running first
 //   window._casoraMediaBadge.popup(states, hass, variables)  – popup casora_popup_media
 //   window._casoraMediaBadge.sec(part, C, states, hass)      – live parts (hero, list)
@@ -70,7 +70,7 @@
     return st === 'playing' || st === 'buffering' ? 'Läuft'
       : st === 'on' ? 'An'
       : st === 'paused' ? 'Pausiert'
-      : st === 'idle' ? 'Bereit'
+      : st === 'idle' ? 'Inaktiv'
       : st === 'standby' ? 'Standby'
       : st === 'off' ? 'Aus'
       : 'Nicht verfügbar';

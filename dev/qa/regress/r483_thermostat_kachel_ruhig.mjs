@@ -3,8 +3,8 @@
 // @deckt: custom_components/casora/scripts/casora-core.js custom_components/casora/scripts/local/06-kalender.js
 // Thermostat and floor-heating tiles read too busy (owner, 02.11.2026): „21,4° · Heizt auf 22°“, „22° · Ziel 22°“,
 // „21° · Automatik · 20–24°“, and an Automatik tile showed its icon grey like „Aus“. Now every tile width says only
-// „<room> · <state>“ – „Heizt“, „Kühlt“, „Bereit“ (idle at the target), „Automatik“, „Aus“ – no target, no range;
-// the icon is grey only when off. The popup keeps „Heizt auf 22°“. Automatik is „An“ like Heizt/Bereit: switch on
+// „<room> · <state>“ – „Heizt“, „Kühlt“, „Inaktiv“ (idle at the target), „Automatik“, „Aus“ – no target, no range;
+// the icon is grey only when off. The popup keeps „Heizt auf 22°“. Automatik is „An“ like Heizt/Inaktiv: switch on
 // (desktop) and active surface; only Aus is inactive (owner, 02.11.2026).
 // States are faked in the browser only (fakeStates), on the desktop (1440×900) and on the phone (393×852), both light.
 // CASORA_LOCAL=1: casora_thermostat from this checkout is put under the dashboard in the browser only.
@@ -65,7 +65,7 @@ const CASES = {
   automatik: { state: 'auto', attributes: { hvac_action: 'idle', current_temperature: 21, temperature: null, target_temp_low: 20, target_temp_high: 24 } },
   aus: { state: 'off', attributes: { hvac_action: 'off', current_temperature: 21, temperature: 22, target_temp_low: null, target_temp_high: null } },
 };
-const WORD = { heizt: 'Heizt', bereit: 'Bereit', automatik: 'Automatik', aus: 'Aus' };
+const WORD = { heizt: 'Heizt', bereit: 'Inaktiv', automatik: 'Automatik', aus: 'Aus' };
 
 const run = async (where, pg, hit) => {
   const seen = {};

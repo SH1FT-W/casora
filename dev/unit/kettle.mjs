@@ -13,6 +13,7 @@ const box = { window: win, document: stub(), setTimeout, console, getComputedSty
 vm.createContext(box);
 for (const f of ['00-finder.js', '37-kettle.js']) vm.runInContext(fs.readFileSync(LOCAL + f, 'utf8'), box);
 const K = win._casoraKettle, F = win.casoraKettleFind;
+assert.equal(K.word({ t: null }), 'Inaktiv', 'no temperature or running/off signal: inactive');
 
 const st = (state, a) => ({ state, attributes: a || {}, last_changed: new Date(Date.now() - 120000).toISOString() });
 const hass = {

@@ -266,7 +266,7 @@ html = V.sec('ctl', ID, states, hass, null);
 assert.ok(/Modus/.test(html) && /Aus,Heizen,Kühlen/.test(html), 'modes');
 assert.ok(/Lüfter/.test(html) && /Auto,Niedrig/.test(html), 'fan modes');
 assert.ok(/data-casora-step="0.5"/.test(html) && /21,0/.test(html), 'target stepper');
-assert.equal(V.sec('hero', ID, states, hass, null), '<div class="hui-line">20,4° · Ziel 21° · ' + esc(V.status(V.zone(F.data(), ID))) + '</div>');
+assert.equal(V.sec('hero', ID, states, hass, null), '<div class="hui-line">20,4° · Inaktiv · Ziel 21° · ' + esc(V.status(V.zone(F.data(), ID))) + '</div>');
 
 // ── Without data for this climate: a quiet line, no empty area ──
 F._seed(response({ configured_entities: ['climate.x'], zones: { 'climate.x': { enabled: true, schedule: {} } } }));

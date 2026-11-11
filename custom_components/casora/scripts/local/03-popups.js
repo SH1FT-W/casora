@@ -536,10 +536,10 @@
     if (a.cooling) { var c = deg(t != null ? t : hi); return c ? 'Kühlt auf ' + c : 'Kühlt'; }
     if (F.heating(o, states)) { var h = deg(t != null ? t : lo); return h ? 'Heizt auf ' + h : 'Heizt'; }
     if (e.state === 'auto' || e.state === 'heat_cool') return tt ? 'Automatik · ' + tt : 'Automatik';
-    if (e.state === 'heat' || e.state === 'cool') return tt ? 'Ziel ' + tt : 'Bereit';
+    if (e.state === 'heat' || e.state === 'cool') return tt ? 'Inaktiv · Ziel ' + tt : 'Inaktiv';
     if (e.state === 'dry') return 'Entfeuchten';
     if (e.state === 'fan_only') return 'Nur Lüfter';
-    return tt ? 'Bereit · ' + tt : 'Bereit';
+    return tt ? 'Inaktiv · ' + tt : 'Inaktiv';
   };
 
   var plate = 'background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));border-radius:var(--casora-popup-row-radius, 20px);'

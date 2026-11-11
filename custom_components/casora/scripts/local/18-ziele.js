@@ -122,7 +122,7 @@
     if (st && window.casoraContactTilted && window.casoraContactTilted(h, id)) return 'Gekippt';
     return Z.stateWord(h, id, st ? st.state : null);
   };
-  var RAW_WORD = { connected: 'Verbunden', disconnected: 'Getrennt', online: 'Online', offline: 'Offline', idle: 'Bereit',
+  var RAW_WORD = { connected: 'Verbunden', disconnected: 'Getrennt', online: 'Online', offline: 'Offline', idle: 'Inaktiv',
     on: 'An', off: 'Aus', open: 'Geöffnet', closed: 'Geschlossen', home: 'Zuhause', not_home: 'Unterwegs' };
 
   // ── Verlauf holen (je Entität und Zeitraum einmal je Zustandswechsel) ───────

@@ -154,14 +154,14 @@
         return out;
       }
       var st = entity && entity.entity_id ? String(entity.state == null ? '' : entity.state).trim().toLowerCase() : '';
-      // On tap: Run it (#86, #90) reads like the tile: a script "Bereit", while it runs "Läuft"; a scene or button
-      // "Bereit" instead of its last-run time, also before its first run ("unknown"). Unavailable still hides it.
+      // On tap: Run it (#86, #90) reads like the tile: Start, or Läuft while a script runs; a scene or button
+      // offers Start instead of its last-run time, also before its first run (unknown). Unavailable still hides it.
       var runs = String(b.tap || '') === 'run' && entity && entity.entity_id && window.casoraRunService
         && !!window.casoraRunService(String(entity.entity_id)) && st !== 'unavailable';
       if (runs) {
         if (!out.title) out.title = (entity.attributes && entity.attributes.friendly_name) || entity.entity_id;
         var going = /^script\./.test(String(entity.entity_id)) && st === 'on';
-        out.sub = going ? 'Läuft' : 'Bereit';
+        out.sub = going ? 'Läuft' : 'Start';
         out.active = /^script\./.test(String(entity.entity_id)) ? going : true;
         return out;
       }

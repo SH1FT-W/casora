@@ -37,7 +37,7 @@ assert.equal(s.label, 'Befeuchtet'); assert.equal(s.on, true); assert.equal(s.cu
 assert.equal(s.target, 50); assert.deepEqual(s.modes, ['normal', 'sleep', 'baby']);
 states[ID] = { entity_id: ID, state: 'on', attributes: Object.assign({}, base, { current_humidity: undefined, action: 'idle' }) };
 s = H.status(c, states, hass);
-assert.equal(s.current, 42, 'ohne Attribut: Feuchtesensor am Gerät'); assert.equal(s.label, 'Bereit');
+assert.equal(s.current, 42, 'ohne Attribut: Feuchtesensor am Gerät'); assert.equal(s.label, 'Inaktiv');
 states[ID] = { entity_id: ID, state: 'off', attributes: base };
 s = H.status(c, states, hass);
 assert.equal(s.label, 'Aus'); assert.equal(s.mode, null);

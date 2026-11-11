@@ -222,7 +222,7 @@ const hz = { formatEntityState: (e) => fmt[e.state] ?? e.state };
 const sword = (id, state, attrs = {}) => S.stateWord(hz, { entity_id: id, state, attributes: attrs });
 assert.equal(sword('light.qa_a', 'on'), 'An', 'HA\'s „Ein“ → „An“');
 assert.equal(sword('switch.qa_a', 'off'), 'Aus');
-assert.equal(sword('media_player.qa_a', 'idle'), 'Bereit', '„Leerlauf“ → „Bereit“');
+assert.equal(sword('media_player.qa_a', 'idle'), 'Inaktiv', 'idle is inactive, not ready to start');
 assert.equal(sword('sensor.qa_spueler', 'ready'), 'Bereit', 'raw „ready“ → „Bereit“');
 assert.equal(sword('media_player.qa_a', 'playing'), 'Wiedergabe', 'HA\'s word where the list has none');
 assert.equal(sword('sensor.qa_temp', '21.5'), '21,5 °C', 'a measurement shows its value');

@@ -941,7 +941,7 @@
     "Rainy": "Regn",
     "Clear": "Klart",
     "Healthy": "Frisk",
-    "Idle": "Klar",
+    "Idle": "Inaktiv",
     "Inactive": "Inaktiv",
     "None active": "Ingen aktive",
     "Empty fields use the plant's own sensors.": "Tomme felt bruker plantens egne sensorer.",

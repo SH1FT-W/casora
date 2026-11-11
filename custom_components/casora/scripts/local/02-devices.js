@@ -1581,7 +1581,7 @@
   // [text, tone, active, kind] – kind: off | idle | delay | run | pause | attn | done | clean | error
   var STATE = {
     /* WashData */
-    off: ['Aus', null, false, 'off'], idle: ['Bereit', 'good', false, 'idle'], starting: ['Startet', 'accent', true, 'run'],
+    off: ['Aus', null, false, 'off'], idle: ['Inaktiv', 'good', false, 'idle'], starting: ['Startet', 'accent', true, 'run'],
     running: ['Läuft', 'accent', true, 'run'], paused: ['Pausiert', 'warn', true, 'pause'], user_paused: ['Pausiert', 'warn', true, 'pause'],
     ending: ['Endet gleich', 'accent', true, 'run'], finished: ['Fertig', 'good', false, 'done'], anti_wrinkle: ['Knitterschutz', 'accent', true, 'run'],
     delay_wait: ['Startet später', 'accent', true, 'delay'], interrupted: ['Unterbrochen', 'bad', false, 'error'],
@@ -1590,7 +1590,7 @@
     clean: ['Fertig', 'good', false, 'clean'],
     unknown: ['Unbekannt', null, false, 'off'], unavailable: ['Nicht verfügbar', 'bad', false, 'error'],
     /* Home Connect (dishwasher too) */
-    inactive: ['Aus', null, false, 'off'], ready: ['Bereit', 'good', false, 'idle'], delayedstart: ['Startet später', 'accent', true, 'delay'],
+    inactive: ['Inaktiv', null, false, 'off'], ready: ['Bereit', 'good', false, 'idle'], delayedstart: ['Startet später', 'accent', true, 'delay'],
     run: ['Läuft', 'accent', true, 'run'], pause: ['Pausiert', 'warn', true, 'pause'], actionrequired: ['Eingriff nötig', 'bad', true, 'attn'],
     error: ['Fehler', 'bad', false, 'error'], aborting: ['Wird abgebrochen', 'bad', true, 'run'],
     /* Miele */
@@ -3626,7 +3626,7 @@
   var STATUS = {
     running: ['Druckt', 'accent', true], pause: ['Pausiert', 'warn', true], prepare: ['Vorbereitung', 'accent', true],
     init: ['Vorbereitung', 'accent', true], slicing: ['Slicen', 'accent', true], finish: ['Fertig', 'good', false],
-    failed: ['Fehlgeschlagen', 'bad', false], idle: ['Bereit', null, false], offline: ['Offline', 'bad', false],
+    failed: ['Fehlgeschlagen', 'bad', false], idle: ['Inaktiv', null, false], offline: ['Offline', 'bad', false],
     unknown: ['Unbekannt', null, false], unavailable: ['Nicht verfügbar', 'bad', false],
   };
   var STEP = {
@@ -4492,7 +4492,7 @@
   var DIM = U.DIM;
 
   var STATUS = {
-    starting: 'Startet', charger_disconnected: 'Dock getrennt', idle: 'Bereit', remote_control_active: 'Fernsteuerung aktiv',
+    starting: 'Startet', charger_disconnected: 'Dock getrennt', idle: 'Inaktiv', remote_control_active: 'Fernsteuerung aktiv',
     cleaning: 'Reinigt', returning_home: 'Kehrt zurück', manual_mode: 'Manueller Modus', charging: 'Lädt',
     charging_problem: 'Ladefehler', paused: 'Pausiert', spot_cleaning: 'Punktreinigung', error: 'Fehler',
     shutting_down: 'Fährt herunter', updating: 'Aktualisiert', docking: 'Fährt zum Dock', going_to_target: 'Fährt zum Ziel',
@@ -4679,7 +4679,7 @@
     var dock = !run && (DOCKWORK.indexOf(status) !== -1 || drying);
     var error = raw === 'error' || status === 'error';
     var label = drying && !run && DOCKWORK.indexOf(status) === -1 ? 'Trocknet Mopp'
-      : STATUS[status] || STATUS[raw] || (raw === 'docked' ? 'Angedockt' : raw === 'idle' ? 'Bereit' : raw === 'unavailable' ? 'Nicht verfügbar' : raw || 'Unbekannt');
+      : STATUS[status] || STATUS[raw] || (raw === 'docked' ? 'Angedockt' : raw === 'idle' ? 'Inaktiv' : raw === 'unavailable' ? 'Nicht verfügbar' : raw || 'Unbekannt');
     return { label: label, run: run, paused: paused, dock: dock, error: error, dead: raw === 'unavailable',
       busy: run || paused || (c.activeStates || []).indexOf(status) !== -1 };
   };
@@ -5451,8 +5451,8 @@
    the word, „Fertig gegen 14:30 Uhr“ under it. Same state words as the tile's popup before (template casora_appliance). */
 (function () {
   var DISH = { run: ['Läuft', true], pause: ['Pausiert', true], actionrequired: ['Eingriff nötig', true], finished: ['Fertig', false],
-    error: ['Fehler', false], aborting: ['Stoppt …', true], delayedstart: ['Startet später', true], ready: ['Bereit', false], inactive: ['Aus', false] };
-  var GEN = { off: ['Aus', false], idle: ['Bereit', false], starting: ['Startet', true], running: ['Läuft', true], paused: ['Pausiert', false],
+    error: ['Fehler', false], aborting: ['Stoppt …', true], delayedstart: ['Startet später', true], ready: ['Bereit', false], inactive: ['Inaktiv', false] };
+  var GEN = { off: ['Aus', false], idle: ['Inaktiv', false], starting: ['Startet', true], running: ['Läuft', true], paused: ['Pausiert', false],
     user_paused: ['Pausiert', false], ending: ['Endet', true], finished: ['Fertig', false], anti_wrinkle: ['Knitterschutz', true],
     delay_wait: ['Startet später', false], interrupted: ['Unterbrochen', false], force_stopped: ['Gestoppt', false], rinse: ['Spülen', true],
     clean: ['Reinigung', true], unknown: ['Unbekannt', false] };

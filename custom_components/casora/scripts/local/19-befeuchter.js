@@ -51,7 +51,7 @@
     var water = c.water && states[c.water] ? num(states[c.water].state) : null;
     var low = c.waterLow && states[c.waterLow] ? states[c.waterLow].state === 'on' : null;
     var label = dead ? 'Nicht verfügbar' : !on ? 'Aus' : a.action === 'humidifying' ? 'Befeuchtet' : a.action === 'drying' ? 'Entfeuchtet'
-      : a.action === 'idle' ? 'Bereit' : 'An';
+      : a.action === 'idle' ? 'Inaktiv' : 'An';
     return { on: on, dead: dead, label: label, mode: on ? a.mode || null : null, modes: Array.isArray(a.available_modes) ? a.available_modes : [],
       target: num(a.humidity), min: num(a.min_humidity), max: num(a.max_humidity), current: current, water: water, waterLow: low,
       dehum: a.device_class === 'dehumidifier' };

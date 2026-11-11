@@ -941,7 +941,7 @@
     "Rainy": "Deszczowo",
     "Clear": "Bezchmurnie",
     "Healthy": "Zdrowa",
-    "Idle": "Gotowe",
+    "Idle": "Nieaktywne",
     "Inactive": "Nieaktywne",
     "None active": "Żadna aktywna",
     "Empty fields use the plant's own sensors.": "Puste pola używają własnych czujników rośliny.",

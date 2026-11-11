@@ -941,7 +941,7 @@
     "Rainy": "Regnerisch",
     "Clear": "Klar",
     "Healthy": "Gesund",
-    "Idle": "Bereit",
+    "Idle": "Inaktiv",
     "Inactive": "Inaktiv",
     "None active": "Keine aktiv",
     "Empty fields use the plant's own sensors.": "Leere Felder nutzen die Sensoren der Pflanze.",

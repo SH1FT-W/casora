@@ -30,8 +30,8 @@ const range = { temperature: undefined, target_temp_low: 20, target_temp_high: 2
 // Every case: full text and the short form are the same, so narrow tiles keep the word.
 const same = (t) => [t, t];
 assert.deepEqual(tile('heat', at('heating', 21)), same('22,2° · Heizt'), 'heating: no "auf 22°"');
-assert.deepEqual(tile('heat', at('idle', 22)), same('22,2° · Bereit'), 'at the target: "Bereit", no "Ziel"');
-assert.deepEqual(tile('heat', at('idle', 22, { temperature: undefined })), same('22,2° · Bereit'), 'no target: no number');
+assert.deepEqual(tile('heat', at('idle', 22)), same('22,2° · Inaktiv'), 'at the target: inactive, not ready to start');
+assert.deepEqual(tile('heat', at('idle', 22, { temperature: undefined })), same('22,2° · Inaktiv'), 'no target: no number');
 assert.deepEqual(tile('cool', at('cooling', 25)), same('22,2° · Kühlt'));
 assert.deepEqual(tile('heat', at('heating', 18, range)), same('22,2° · Heizt'), 'range: no bound on the tile');
 assert.deepEqual(tile('cool', at('cooling', 26, range)), same('22,2° · Kühlt'));
@@ -42,7 +42,7 @@ assert.deepEqual(tile('heat_cool', at('cooling', 26, range)), same('22,2° · K�
 assert.deepEqual(tile('off', at('idle', 18)), same('22,2° · Aus'), 'off with the room reading');
 // Without a sensor (review 2, fam-15/E09): the thermostat's own reading in front, the room's (Klima badge) wins.
 assert.deepEqual(tile('heat', at('heating', 21), false), same('21° · Heizt'), 'without a sensor: own reading');
-assert.deepEqual(tile('heat', at('idle', 22), false), same('22° · Bereit'));
+assert.deepEqual(tile('heat', at('idle', 22), false), same('22° · Inaktiv'));
 assert.deepEqual(tile('auto', at('idle', 21, range), false), same('21° · Automatik'));
 assert.deepEqual(tile('off', at('idle', 21.1), false), same('21,1° · Aus'), 'off still shows the room');
 assert.deepEqual(tile('off', at('off', undefined), false), same('Aus'), 'off without a reading: only "Aus"');
@@ -110,14 +110,14 @@ for (const [st, act] of [['heat', 'heating'], ['heat', 'idle'], ['auto', 'idle']
 const strings = (o) => (typeof o === 'string' ? [o] : o && typeof o === 'object' ? Object.values(o).flatMap(strings) : []);
 const holder = strings(T.casora_thermostat).find((s) => s.includes('const statusText = (e) =>'));
 assert.ok(holder, 'statusText in the template');
-const statusSrc = JSON.parse('"' + cut(holder, 'const statusText = (e) =>', "return 'Bereit';\\n  };") + "return 'Bereit';\\n  };" + '"');
+const statusSrc = JSON.parse('"' + cut(holder, 'const statusText = (e) =>', "return 'Inaktiv';\\n  };") + "return 'Inaktiv';\\n  };" + '"');
 const fmt = (n) => n.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 const num = (v) => { const n = parseFloat(v); return isNaN(n) ? null : n; };
 const act = (e) => win.casoraClimateActive(e) || {};
 const statusText = new Function('num', 'fmt', 'act', statusSrc + ' return statusText;')(num, fmt, act);
 const E = (state, attributes) => ({ state, attributes });
 assert.equal(statusText(E('heat', at('heating', 21))), 'Heizt auf 22,0 °C');
-assert.equal(statusText(E('heat', at('idle', 22))), 'Ziel 22,0 °C');
+assert.equal(statusText(E('heat', at('idle', 22))), 'Inaktiv · Ziel 22,0 °C');
 assert.equal(statusText(E('cool', at('cooling', 25))), 'Kühlt auf 22,0 °C', 'cooling was the raw mode');
 assert.equal(statusText(E('heat_cool', at('idle', 22, range))), 'Automatik · 20,0–24,0 °C');
 assert.equal(statusText(E('dry', at(null, 22))), 'Entfeuchten');
@@ -136,7 +136,7 @@ assert.equal(statusText(E('off', at(null, 22))), 'Aus');
   const F = w._casoraFbh;
   const st = (state, attributes) => F.status({ id: 'climate.x' }, { 'climate.x': { state, attributes } });
   assert.equal(st('heat', at('heating', 21)), 'Heizt auf 22,0 °C');
-  assert.equal(st('heat', at('idle', 22)), 'Ziel 22,0 °C', 'was "An · 22,0 °C"');
+  assert.equal(st('heat', at('idle', 22)), 'Inaktiv · Ziel 22,0 °C', 'idle word agrees with the tile');
   assert.equal(st('cool', at('cooling', 25, range)), 'Kühlt auf 24,0 °C');
   assert.equal(st('auto', at('idle', 22, range)), 'Automatik · 20,0–24,0 °C');
   assert.equal(st('fan_only', at(null, 22)), 'Nur Lüfter');

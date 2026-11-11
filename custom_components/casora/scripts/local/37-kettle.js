@@ -83,7 +83,7 @@
     if (m.dead) return 'Nicht erreichbar';
     if (m.heating) return 'Heizt';
     if (m.keepWarm) return 'Warmhalten';
-    if (m.t == null) return m.heating === false ? 'Aus' : '';
+    if (m.t == null) return m.heating === false ? 'Aus' : 'Inaktiv';
     var c = m.f ? (m.t - 32) * 5 / 9 : m.t;
     return c >= 80 ? 'Heiß' : c >= 45 ? 'Warm' : m.heating === false ? 'Aus' : 'Kalt';
   };
@@ -92,7 +92,7 @@
     var m = K.model(hass, st.entity_id, vars);
     if (m.dead) return 'Nicht erreichbar';
     var w = m.heating ? 'Heizt' : m.keepWarm ? 'Warmhalten' : m.heating === false ? 'Aus' : '';
-    return [m.t != null ? fmt(m.t) + '°' : null, w].filter(Boolean).join(' · ');
+    return [m.t != null ? fmt(m.t) + '°' : null, w || (m.t == null ? 'Inaktiv' : '')].filter(Boolean).join(' · ');
   };
   K.active = function (st, hass, vars) { if (!st || !hass) return false; var m = K.model(hass, st.entity_id, vars); return !!(m.heating || m.keepWarm); };
 
@@ -134,7 +134,7 @@
     var h = states && states !== hass.states ? Object.assign({}, hass, { states: states }) : hass;
     var m = K.model(h, c.id, c.vars), S = h.states || {};
     // Head: the word („Heizt“, „Warmhalten“, „Heiß“); the frame swaps it for „Seit …“ where the S7 wheel says it.
-    if (part === 'hero') return UI.line(K.word(m) || (m.t != null ? fmt(m.t) + ' ' + unitOf(m) : 'Bereit'), []);
+    if (part === 'hero') return UI.line(K.word(m) || (m.t != null ? fmt(m.t) + ' ' + unitOf(m) : 'Inaktiv'), []);
     if (part === 'stage') {
       var hs = S[m.heater];
       // Moons: the water_heater's modes (with a start switch the head switches it off, so no „Aus“ moon).
@@ -162,7 +162,7 @@
         return UI.stage('chart', { icon: 'mdi:kettle-outline', caption: 'Wasser', value: fmt(m.t), unit: unitOf(m),
           ring: { min: m.f ? 32 : 0, max: m.f ? 212 : 100, heat: true }, state: m.dead ? 'na' : null, moons: moons });
       }
-      return UI.stage('status', { tone: 'off', icon: 'mdi:kettle-outline', text: K.word(m) || 'Bereit', state: m.dead ? 'na' : null, moons: moons });
+      return UI.stage('status', { tone: 'off', icon: 'mdi:kettle-outline', text: K.word(m) || 'Inaktiv', state: m.dead ? 'na' : null, moons: moons });
     }
     if (part === 'rows') {
       // The rest in one plate: keep warm (switch row), whether it heats, the mode when there are too many for moons.

@@ -941,7 +941,7 @@
     "Rainy": "Chuvoso",
     "Clear": "Limpo",
     "Healthy": "Saudável",
-    "Idle": "Em repouso",
+    "Idle": "Inativo",
     "Inactive": "Inativo",
     "None active": "Nenhum ativo",
     "Empty fields use the plant's own sensors.": "Os campos vazios usam os sensores da própria planta.",

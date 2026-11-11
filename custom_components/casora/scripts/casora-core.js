@@ -14583,7 +14583,7 @@ window.casoraMenuGlass = {
   var BOOL = { on: 'An', off: 'Aus' };
   // Raw English states HA could not translate (custom integrations, select options): the word list's words
   // („ready“ → „Bereit“, review 2 DH-14). Anything else stays as the device wrote it.
-  var RAW = { ready: 'Bereit', idle: 'Bereit', 'default': 'Standard', running: 'Läuft', paused: 'Pausiert', standby: 'Standby',
+  var RAW = { ready: 'Bereit', idle: 'Inaktiv', inactive: 'Inaktiv', 'default': 'Standard', running: 'Läuft', paused: 'Pausiert', standby: 'Standby',
     error: 'Fehler', charging: 'Lädt', discharging: 'Entlädt', auto: 'Automatik', automatic: 'Automatik', manual: 'Manuell',
     normal: 'Normal', none: 'Keine', home: 'Zuhause', away: 'Unterwegs', sleep: 'Schlafen', done: 'Fertig', finished: 'Fertig', present: 'Vorhanden', absent: 'Fehlt' };
   window._casoraRawWord = function (t) {
@@ -14591,7 +14591,7 @@ window.casoraMenuGlass = {
     return Object.prototype.hasOwnProperty.call(RAW, k) ? RAW[k] : (Object.prototype.hasOwnProperty.call(RAW, k.toLowerCase()) && /^[a-z_]+$/i.test(k) && k === k.toLowerCase() ? RAW[k.toLowerCase()] : t);
   };
   // The state word of a popup head and of the search rows (wortliste): the words of HA in the language of the user, but a
-  // state the word list names takes the Casora word („idle“/„ready“ → „Bereit“, German „Ein“ of HA → „An“), a camera or lock that is
+  // state the word list names takes the Casora word (idle → Inaktiv, ready → Bereit, German Ein → An), a camera or lock that is
   // gone says „Offline“. '' = nothing to say (unknown). null = no word of its own: a measurement of the entity, on/off of
   // a group, binary_sensor or calendar without a device class, a raw code („failed“, „PRE“) – the caller says something
   // else (the popup head: since when).

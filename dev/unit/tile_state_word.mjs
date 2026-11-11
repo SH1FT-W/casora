@@ -22,18 +22,18 @@ const hass = { formatEntityState: (e) => HA[e.state] ?? e.state };
 const word = (s, id) => window.casoraStateWord(hass, { entity_id: id, state: s, attributes: {} });
 
 const mp = (s) => ({ entity_id: 'media_player.speaker', state: s, attributes: { friendly_name: 'Speaker' } });
-assert.equal(run('casora_media', mp('idle'), hass), 'Bereit', 'media tile: idle is „Bereit“');
+assert.equal(run('casora_media', mp('idle'), hass), 'Inaktiv', 'media tile: idle is inactive');
 for (const s of ['idle', 'paused', 'on', 'off', 'standby']) {
   assert.equal(run('casora_media', mp(s), hass), word(s, 'media_player.speaker'), 'media tile = popup word: ' + s);
 }
-assert.equal(run('casora_media', mp('idle'), {}), 'Bereit', 'without HA formatting still „Bereit“');
+assert.equal(run('casora_media', mp('idle'), {}), 'Inaktiv', 'without HA formatting still inactive');
 // The plain tiles that showed HA's word take the same word.
 const ent = (d, s) => ({ entity_id: d + '.x', state: s, attributes: {} });
-assert.equal(run('casora_entity', ent('media_player', 'idle'), hass), 'Bereit');
+assert.equal(run('casora_entity', ent('media_player', 'idle'), hass), 'Inaktiv');
 assert.equal(run('casora_entity', ent('switch', 'on'), hass), 'An', 'HA\'s „Ein“ is „An“');
 assert.equal(run('casora_entity', ent('select', 'ready'), hass), 'Bereit', 'raw English token');
 assert.equal(run('casora_entity', { entity_id: 'sensor.t', state: '21.5', attributes: {} }, hass), '21.5', 'measurement: HA\'s text');
-assert.equal(run('casora_entity_actions', ent('media_player', 'idle'), hass), 'Bereit');
+assert.equal(run('casora_entity_actions', ent('media_player', 'idle'), hass), 'Inaktiv');
 assert.equal(run('casora_humidifier', ent('humidifier', 'on'), hass), 'An');
-assert.equal(run('casora_game', ent('media_player', 'idle'), hass), 'Bereit', 'game tile (esc was undefined there)');
+assert.equal(run('casora_game', ent('media_player', 'idle'), hass), 'Inaktiv', 'game tile (esc was undefined there)');
 console.log('ok tile_state_word');

@@ -95,6 +95,11 @@ assert.equal(c.profiles.length, 3);
 for (const e of ['binary_sensor.w9', 'sensor.wp1', 'sensor.wp2']) assert.ok(L.watch(c).includes(e), 'watch ' + e);
 const ch = L.resolve(S['sensor.h1'], {}, S, hass);
 const cm = L.resolve(S['sensor.m1'], {}, S, hass);
+// The tile and popup share these state words, without changing program behavior.
+for (const [raw, word] of [['off', 'Aus'], ['inactive', 'Inaktiv'], ['idle', 'Inaktiv'], ['ready', 'Bereit'], ['finished', 'Fertig']]) {
+  const states = { ...S, 'sensor.w1': { ...S['sensor.w1'], state: raw } };
+  assert.equal(L.state(states, 'sensor.w1')[0], word, `popup: ${raw}`);
+}
 assert.equal(ch.idos1, 'sensor.h3');
 assert.equal(cm.twin2, 'sensor.m4');
 

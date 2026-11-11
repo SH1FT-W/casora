@@ -41,7 +41,7 @@
   // ── Words ─────────────────────────────────────────────────────────────────
   // HA states (lawn_mower, plus Landroid's own) and Gardena activities.
   var STATE = { mowing: 'Mäht', docked: 'In der Station', paused: 'Pausiert', returning: 'Fährt zur Station', error: 'Fehler',
-    idle: 'Bereit', starting: 'Startet', edgecut: 'Mäht die Kante', zoning: 'Fährt zur Zone', searching_zone: 'Sucht die Zone',
+    idle: 'Inaktiv', starting: 'Startet', edgecut: 'Mäht die Kante', zoning: 'Fährt zur Zone', searching_zone: 'Sucht die Zone',
     escaped_digital_fence: 'Außerhalb des Mähbereichs', rain_delayed: 'Regenpause' };
   var RUNNING = { mowing: 1, edgecut: 1, zoning: 1, starting: 1 };
   var RETURNING = { returning: 1, searching_zone: 1 };

@@ -40,7 +40,8 @@ Bis zur Wahl gilt der heutige Stand der Nachbarstellen, nicht die Empfehlung.
 | Wird verriegelt … / Wird entriegelt … / Wird geöffnet … **(V9)** | Locking… / Unlocking… / Opening… | – | Schloss |
 | Läuft | Running | „Aktiv“ für Geräteprogramme | Waschmaschine |
 | Zahl + läuft | „1 läuft“ (klein) | – | Medien-Gruppenbadge |
-| Bereit | Ready | „Leerlauf“, „Idle“ | Geräte im Leerlauf, Luftreiniger, Medien-Player (idle; Kopf und Popup dasselbe Wort, 01.11.2026) |
+| Bereit | Ready | als Wort für Leerlauf | startbereite Geräte (z. B. Waschmaschine im Zustand ready); nicht idle |
+| Inaktiv | Inactive | „Bereit“, „Leerlauf“, „Idle“ für idle | Thermostat am Ziel, Wärmepumpe, Medien-Player, Sauger, 3D-Drucker, Luftreiniger, Wasserkocher ohne Temperatur; Kachel, Popup und Kopf gleich |
 | Pausiert | Paused | „Angehalten“ | Medien, Geräte |
 | Fertig / Fertig gegen 14:30 | Done / Done around 14:30 | „Beendet“ | Waschmaschine |
 | Lädt / Entlädt | Charging / Discharging | – | Akku |
@@ -93,7 +94,7 @@ Bis zur Wahl gilt der heutige Stand der Nachbarstellen, nicht die Empfehlung.
 |---|---|---|---|
 | Prozent „62 %“ (mit Leerzeichen) | „62%“ (ohne; macht `casora-i18n` automatisch) | „62%“ im Deutschen **(V1: heute 9 Stellen)**, „62 %“ im Englischen | „Akku 62 %“ / „Battery 62%“ |
 | Temperatur „21,5 °C“, kurz „22°“ | „21.5 °C“, „22°“ | „21.5 °C“ im Deutschen | Thermostat „Heizt auf 22°“ |
-| Thermostat-/Fußbodenheizungs-Kachel (jede Breite, auch Gruppe/Haus): Raum vorn, dann nur der Zustand – „21,4° · Heizt“, „25,1° · Kühlt“, am Ziel/Leerlauf „22° · Bereit“, „21° · Automatik“, „21° · Aus“ (ohne Messwert nur „Aus“); Symbol grau, Schalter aus und Fläche inaktiv nur bei Aus – Automatik gilt als „An“. Popup und Popup-Kopf mit Ziel: „Heizt auf 22°“ / „Kühlt auf 24°“, „Ziel 22°“, „Automatik · 20–24°“ | Kachel „21.4° · Heating“, „Ready“, „Auto“; Popup „Heating to 22°“, „Target 22°“, „Auto · 20–24°“ | auf der Kachel „Heizt auf 22°“, „Ziel 22°“ oder eine Spanne; „An · 22°“ (Schalterwort neben zwei Zahlen), roher Modus („cool“) | Kachel, Kachel-Popup, Popup-Kopf (`dev/unit/thermostat_wording.mjs`, `dev/qa/regress/r483_thermostat_kachel_ruhig.mjs`) |
+| Thermostat-/Fußbodenheizungs-Kachel (jede Breite, auch Gruppe/Haus): Raum vorn, dann nur der Zustand – „21,4° · Heizt“, „25,1° · Kühlt“, am Ziel/Leerlauf „22° · Inaktiv“, „21° · Automatik“, „21° · Aus“ (ohne Messwert nur „Aus“); Symbol grau, Schalter aus und Fläche inaktiv nur bei Aus – Automatik gilt als „An“. Popup und Popup-Kopf mit Ziel: „Heizt auf 22°“ / „Kühlt auf 24°“, „Inaktiv · Ziel 22°“, „Automatik · 20–24°“ | Kachel „21.4° · Heating“, „Inactive“, „Auto“; Popup „Heating to 22°“, „Inactive · Target 22°“, „Auto · 20–24°“ | auf der Kachel „Heizt auf 22°“, „Inaktiv · Ziel 22°“ oder eine Spanne; „An · 22°“ (Schalterwort neben zwei Zahlen), roher Modus („cool“) | Kachel, Kachel-Popup, Popup-Kopf (`dev/unit/thermostat_wording.mjs`, `dev/qa/regress/r483_thermostat_kachel_ruhig.mjs`) |
 | Energie/Leistung | „3,2 kWh“, „850 W“ | „3,2 kWh“ im Englischen (Zahl kommt aus `casoraLocale`) | Energie-Popup |
 | Dezimal / Tausender | „1,5“ / „1.234“ – immer `toLocaleString(casoraLocale())` bzw. `casoraNum` | `toFixed()` für Anzeige, `replace('.', ',')` | – |
 | Uhrzeit | „14:30“, „um 8 Uhr“ | „14.30 Uhr“ | EN „7:00 PM“ kommt aus dem Browser-Format |

@@ -186,7 +186,7 @@
     if (s.alarms.length) return s.alarms[0].text;
     if (s.doorsOpen.length) return narrow || !temps ? doorText(s) : doorText(s) + ' · ' + temps;
     if (s.modesOn.length) return narrow || !temps ? s.modesOn[0] : s.modesOn[0] + ' · ' + temps;
-    return temps || 'Bereit';
+    return temps || 'An';
   };
   F.active = function (s) { return !!(s && !s.dead && (s.alarms.length || s.doorsOpen.length || s.modesOn.length)); };
   F.color = function (s) {
@@ -319,7 +319,7 @@
       // The status line („hero“) stands on top and goes into the head – not again under the wheel.
       var zs = s.dead ? null : F.stageZone(C, S);
       if (!zs) return UI.stage('status', { tone: s.dead ? 'off' : s.alarms.length ? 'bad' : 'good', icon: 'mdi:fridge-outline',
-        text: s.dead ? 'Nicht verfügbar' : F.temps(s, false) || 'Bereit', state: s.dead ? 'na' : null });
+        text: s.dead ? 'Nicht verfügbar' : F.temps(s, false) || 'An', state: s.dead ? 'na' : null });
       var zz = zs.z, dz0 = s.zones[zs.i] || {}, idS = zz.set || zz.climate, stS = S[idS], aS = stS.attributes || {};
       var clim = !!zz.climate;
       var curS = clim ? num(aS.temperature) : num(stS.state);

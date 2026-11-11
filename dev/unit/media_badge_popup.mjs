@@ -76,7 +76,7 @@ assert.equal(B.kind(states[ID.webosLive], 10, states), 'run');
 for (const k of ['idleTitle', 'standby', 'off', 'gone']) assert.equal(B.kind(states[ID[k]], 10, states), 'rest', k);
 assert.equal(B.kind(undefined, 10, states), 'rest');
 assert.equal(B.word(states[ID.tvOn]), 'An');
-assert.equal(B.word(states[ID.idleTitle]), 'Bereit');
+assert.equal(B.word(states[ID.idleTitle]), 'Inaktiv');
 assert.equal(B.word(states[ID.standby]), 'Standby');
 assert.equal(B.word(states[ID.gone]), 'Nicht verfügbar');
 assert.equal(B.word(undefined), 'Nicht verfügbar');
@@ -129,7 +129,7 @@ assert.deepEqual(song.svc, { domain: 'media_player', service: 'media_play_pause'
 assert.equal(song.action, 'Pausieren');
 assert.equal(song.sub, 'Song – Band');
 assert.equal(bath.action, 'Abspielen');
-assert.equal(groups[1].rows[0].value, 'Bereit');
+assert.equal(groups[1].rows[0].value, 'Inaktiv');
 assert.equal(groups[1].rows[0].sub, undefined, 'a resting player does not show its old title');
 assert.ok(list.indexOf('LG webOS TV') < list.indexOf('Echo Dot'));
 assert.equal(B.sec('hero', C, states, hass), '<div class="hui-line">2 laufen · 6 Geräte</div>');
@@ -157,11 +157,11 @@ assert.equal(B.sec('hero', C, states, hass), '<div class="hui-line">2 laufen · 
     'media_player.qa_s': 'Echo Schlafzimmer' }, 'only the words all players share are dropped');
 }
 
-// Nothing plays: the popup still lists the devices (with Aus/Bereit) instead of opening nothing.
+// Nothing plays: the popup still lists the devices (with Aus/Inaktiv) instead of opening nothing.
 groups.length = 0;
 B.sec('list', { ids: [ID.off, ID.idleTitle], timeout: 10 }, states, hass);
 assert.deepEqual(groups.map((g) => g.label), ['Geräte']);
-assert.deepEqual(groups[0].rows.map((r) => r.value), ['Bereit', 'Aus']);
+assert.deepEqual(groups[0].rows.map((r) => r.value), ['Inaktiv', 'Aus']);
 assert.match(B.sec('hero', { ids: [ID.off, ID.idleTitle] }, states, hass), /Nichts läuft · 2 Geräte/);
 assert.match(B.sec('list', { ids: [] }, states, hass), /Noch kein Gerät zugeordnet/);
 // Escaping: names come from HA.

@@ -249,7 +249,7 @@
     if (mode === 'unavailable') return 'Nicht verfügbar';
     if (words) {
       var aw = window.casoraClimateActive ? window.casoraClimateActive(st) || {} : {};
-      return aw.cooling ? 'Kühlt' : aw.heating ? 'Heizt' : mode === 'cool' || mode === 'heat' ? 'Bereit'
+      return aw.cooling ? 'Kühlt' : aw.heating ? 'Heizt' : mode === 'cool' || mode === 'heat' ? 'Inaktiv'
         : mode === 'auto' || mode === 'heat_cool' ? 'Automatik' : mode === 'dry' ? 'Entfeuchten' : mode === 'fan_only' ? 'Nur Lüfter' : 'Aus';
     }
     var room = roomTemp != null ? nf(Math.round(roomTemp * 10) / 10) + '° · ' : '';
@@ -258,7 +258,7 @@
     var act = window.casoraClimateActive ? window.casoraClimateActive(st) || {} : {};
     if (act.cooling) return room + 'Kühlt auf ' + deg(a.temperature != null ? a.temperature : a.target_temp_high);
     if (act.heating) return room + 'Heizt auf ' + deg(a.temperature != null ? a.temperature : a.target_temp_low);
-    if (mode === 'cool' || mode === 'heat') return room + (target ? 'Ziel ' + target : 'Bereit');
+    if (mode === 'cool' || mode === 'heat') return room + (target ? 'Inaktiv · Ziel ' + target : 'Inaktiv');
     if (mode === 'auto' || mode === 'heat_cool') return room + (target ? 'Automatik · ' + target : 'Automatik');
     if (mode === 'dry') return room + 'Entfeuchten';
     if (mode === 'fan_only') return room + 'Nur Lüfter';

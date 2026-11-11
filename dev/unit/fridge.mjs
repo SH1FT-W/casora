@@ -55,6 +55,7 @@ let C = K.find(hass(), 'sensor.combi_obere_zone', {});
 let s = K.status(C, states);
 assert.equal(K.tileText(s), '7 °C · −18 °C'); assert.equal(K.tileText(s, true), '7° · −18°');
 assert.equal(K.active(s), false, 'calm when nothing is special');
+assert.equal(K.tileText({ ...s, zones: s.zones.map(z => ({ ...z, temp: null, set: null })) }), 'An', 'powered fridge without temperatures');
 states['switch.combi_untere_zone_superfrost'].state = 'on';
 s = K.status(K.find(hass(), 'sensor.combi_obere_zone', {}), states);
 assert.equal(K.tileText(s), 'SuperFrost · 7 °C · −18 °C'); assert.equal(K.active(s), true);

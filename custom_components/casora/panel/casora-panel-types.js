@@ -831,14 +831,19 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   // not loaded in the panel (e.g. washing machine via _casoraLaundry).
   const WORDS = {
     de: { running: "Läuft", run: "Läuft", starting: "Startet", ending: "Endet", paused: "Pausiert",
-          user_paused: "Pausiert", finished: "Fertig", finish: "Fertig", off: "Aus", idle: "Bereit",
+          user_paused: "Pausiert", finished: "Fertig", finish: "Fertig", off: "Aus", idle: "Inaktiv", inactive: "Inaktiv",
           ready: "Bereit", anti_wrinkle: "Knitterschutz", rinse: "Spülen", clean: "Reinigen",
           delay_wait: "Startet später", printing: "Druckt", on: "An" },
-    en: { running: "Running", run: "Running", off: "Off", idle: "Ready", ready: "Ready", finished: "Finished" },
+    en: { running: "Running", run: "Running", off: "Off", idle: "Inactive", inactive: "Inactive", ready: "Ready", finished: "Finished" },
     es: { running: "En marcha", run: "En marcha", starting: "Iniciando", ending: "Termina", paused: "En pausa",
-          user_paused: "En pausa", finished: "Terminado", finish: "Terminado", off: "Apagado", idle: "Listo",
+          user_paused: "En pausa", finished: "Terminado", finish: "Terminado", off: "Apagado", idle: "Inactivo", inactive: "Inactivo",
           ready: "Listo", anti_wrinkle: "Antiarrugas", rinse: "Aclarar", clean: "Limpiar",
           delay_wait: "Empieza más tarde", printing: "Imprimiendo", on: "Encendido" },
+    fr: { idle: "Inactif", inactive: "Inactif" },
+    it: { idle: "Inattivo", inactive: "Inattivo" },
+    nl: { idle: "Inactief", inactive: "Inactief" },
+    pl: { idle: "Nieaktywne", inactive: "Nieaktywne" },
+    pt: { idle: "Inativo", inactive: "Inativo" },
   };
   const OURS = new Set((window.CASORA_TILE_TYPES || []).map((t) => t.template));
   const OWN_DATA = new Set(["casora_trash"]);

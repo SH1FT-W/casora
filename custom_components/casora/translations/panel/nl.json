@@ -941,7 +941,7 @@
     "Rainy": "Regenachtig",
     "Clear": "Helder",
     "Healthy": "Gezond",
-    "Idle": "Gereed",
+    "Idle": "Inactief",
     "Inactive": "Inactief",
     "None active": "Geen actief",
     "Empty fields use the plant's own sensors.": "Lege velden gebruiken de eigen sensoren van de plant.",
