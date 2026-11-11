@@ -35,6 +35,12 @@ assert.deepEqual(rows(car(EV), st([[EV[0], 'unavailable', '%'], [EV[1], 'unavail
 
 const ICE = ['sensor.qa_benziner_fuel_level', 'sensor.qa_benziner_remaining_range_total'];
 assert.deepEqual(rows(car(ICE), st([[ICE[0], '55', '%'], [ICE[1], '600', 'km']])), [], 'no battery: no charger row');
+// The old way with a name prefix (variables.car): C.id builds sensor.<prefix>_akku even when there is none, so a
+// diesel got the row (gate e2e t12: prefix and finder disagreed). Only a sensor that exists counts.
+const PRE = st([['sensor.qa_diesel_tankfullstand', '55', '%']]);
+assert.equal(car([]).read('qa_diesel', PRE).plug, false, 'prefix, no charge sensor: no battery');
+assert.equal(car([]).read('qa_diesel', { ...PRE, ...st([['sensor.qa_diesel_akku', 'unavailable', '%']]) }).plug, true,
+  'prefix, charge sensor asleep: a battery');
 
 // 2. The key: asked again (at most once a minute) while none is set.
 const charging = read('custom_components/casora/scripts/local/45-charging.js');

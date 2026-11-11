@@ -2477,7 +2477,7 @@
       inspKmKm: dk('inspektionsdistanz'), scrKm: dk('scr_reichweite'), known: known,
       range: val('reichweite_kombiniert'), tank: fuel != null ? fuel : soc, ev: fuel == null && soc != null, km: val('kilometerstand'),
       /* A battery to charge: a level sensor, also on a plug-in hybrid and while the car sleeps (unavailable) (#174). */
-      plug: soc != null || !!C.id(p, 'akku', 'sensor'),
+      plug: soc != null || !!(function () { var id = C.id(p, 'akku', 'sensor'); return id && states[id]; })(),
       tankL: val('tankmenge'), tankLU: /^l$/i.test(unit('tankmenge') || 'l') ? 'l' : unit('tankmenge'),
       scr: val('scr_reichweite'), oil: val('olstand'), v12: val('12v_batteriespannung'),
       out: val('aussentemperatur'), outUnit: unit('aussentemperatur') || '°C', open: openDoors.concat(openWins), openDoors: openDoors, openWins: openWins, locked: locked,
