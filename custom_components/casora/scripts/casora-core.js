@@ -4510,6 +4510,13 @@ window.casoraMenuGlass = {
   const SAFE = 'env(safe-area-inset-top, 0px)';
   const off = (v) => `calc(${v} + ${SAFE})`;
 
+  // Until the theme defines the photo (a moment after the first paint) a demo photo stands in: the one of the
+  // colour scheme, or dark mode downloads the day photo it never shows (gate r453, 11.11.2026).
+  function heroFallback() {
+    const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return 'url("/casora_assets/rooms/home-demo' + (dark ? '-night' : '') + '.jpg")';
+  }
+
   const BG = {
     image:
       'linear-gradient(to bottom,'
@@ -4539,8 +4546,7 @@ window.casoraMenuGlass = {
       + ' var(--casora-mobile-hero-c-lower, #51473d)'
       + ` ${off('var(--casora-mobile-hero-p-lower, 83%)')},`
       + ' var(--casora-mobile-hero-c-base, #3b352e)'
-      + ` ${off('var(--casora-mobile-hero-p-base, 100%)')}),`
-      + ' var(--casora-mobile-hero-img, url("/casora_assets/rooms/home-demo.jpg"))',
+      + ` ${off('var(--casora-mobile-hero-p-base, 100%)')}),`,
     sizePortrait: '100% 100%, 100% 100%, 100% 100%, 100% 100%, auto '
       + off('var(--casora-mobile-hero-height, 36.5%)'),
     sizeLandscape: '100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% auto',
@@ -4599,7 +4605,7 @@ window.casoraMenuGlass = {
       h.style.backgroundColor = 'var(--primary-background-color, #0d1117)';
       return;
     }
-    h.style.backgroundImage    = BG.image;
+    h.style.backgroundImage    = BG.image + ' var(--casora-mobile-hero-img, ' + heroFallback() + ')';
     h.style.backgroundSize     = LANDSCAPE_MQ.matches ? BG.sizeLandscape : sizePortraitPx(); // casora-local-patch
     h.style.backgroundPosition = BG.position;
     h.style.backgroundRepeat   = 'no-repeat';
