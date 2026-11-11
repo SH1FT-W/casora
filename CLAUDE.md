@@ -52,7 +52,9 @@ Adressen, Zugangsdaten) in Code, Tests, Commits oder PR-Texten.
   `bK` (26.10.58b1), Vorabversion, Patch-Gate reicht, nur `.qa/release-notes-<version>.md` (englisch) nötig, manifest auf die
   Beta-Nummer. Betas zählen nicht als Release-Nummer; das stabile Release danach bündelt und bekommt das volle Gate. Nach jeder Beta die enthaltenen
   Issues auf `in-beta` setzen, in der Sprache des Melders kommentieren (Link, Bitte um Feedback, Wiederöffnen erwünscht, Hinweis aufs
-  Freitag-Release) und schließen. Während ein Gate läuft, nichts committen: Es prüft genau einen Commit.
+  Freitag-Release) und schließen.
+- Gates über `dev/qa/gate-kopie.sh <optionen von gate.sh>` starten: Es prüft den aktuellen Commit in der eigenen
+  Arbeitskopie `../casora-gate` und kopiert das Ergebnis zurück, main bleibt währenddessen frei für Commits.
 
 ## Nicht anfassen
 - Version (`manifest.json`), `CHANGELOG*.md`, „Neu“-Popup (`casora-panel-welcome.js`, WHATS_NEW),

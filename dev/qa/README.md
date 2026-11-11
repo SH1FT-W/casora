@@ -11,6 +11,7 @@ dev/qa/gate.sh --voll           # volles Gate, Pflicht für jedes Release (YY.M.
 dev/qa/gate.sh --patch          # Grundprüfungen + nur die betroffenen Tests (Zwischenstand; Freigabe nur für alte X.Y.Z mit Z>0)
 dev/qa/gate.sh --nachholen      # nach einem roten Lauf: nur die roten und seitdem geänderten Tests
 dev/qa/gate.sh --dry-run        # Plan zeigen (Umfang, Zuordnung Datei → Tests, HAs, Zeitschätzung)
+dev/qa/gate-kopie.sh …          # wie gate.sh, aber in der Arbeitskopie ../casora-gate: dieser Checkout bleibt frei, Ergebnis kommt zurück
 ```
 
 Typischer Ablauf: Gate laufen lassen → ein Test rot, weil der Test selbst unsauber war → Test
