@@ -87,7 +87,7 @@ const need = (keys) => keys.forEach((k) => assert.ok(de[k], 'de.json: ' + k));
   assert.ok(/^ {2}casora-color-violet: "#7E6A9E"/m.test(weich) && /^ {6}casora-color-violet: "#[0-9A-F]{6}"/m.test(weich), 'Weich: Lila hell und dunkel');
   assert.ok(!/casora-color-violet/.test(nebel), 'Nebel erbt es von Casora (Grundton nicht warm, bleibt)');
   assert.ok(/const accentsShown = \(keep\) => CASORA_ACCENTS\.filter\(\(a\) => \(!a\.soft \|\| casoraLookTheme\(\)\)/.test(main), 'unter Hemma nicht gezeigt');
-  assert.ok(/casoraLookTheme = \(\) => ACCENT_THEME === CASORA_THEME \|\| ACCENT_THEME === "Casora Nebel"/.test(main), 'Casora und Nebel');
+  assert.ok(/casoraLookTheme = \(\) => CASORA_FAMILY\.includes\(ACCENT_THEME\)/.test(main) && /const CASORA_FAMILY = \[CASORA_THEME, "Casora Nebel"/.test(main), 'Casora, Nebel and the colour designs');
   // Drei seit den eigenen Badges (#53): deren Farbwahl nimmt dieselbe Palette.
   assert.equal((main.match(/accentsShown\(cur2?\)\.forEach/g) || []).length, 3, 'Szenenliste, Kachelfarbe und eigene Badges nutzen die gezeigte Palette');
   assert.ok(/PI\.accentsShown \? PI\.accentsShown\(\)/.test(read('panel/casora-panel-b-plus.js')), 'Szenen-Dialog: dieselbe Palette');

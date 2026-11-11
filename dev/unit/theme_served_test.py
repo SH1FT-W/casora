@@ -36,7 +36,7 @@ def check(cond, msg):
 
 # 1. Designs
 themes = theme.load_themes()
-check(list(themes) == ["Casora", "Casora Glas", "Casora Nebel"], f"designs: {list(themes)}")
+check(list(themes) == ["Casora", "Casora Dämmerung", "Casora Farbe", "Casora Glas", "Casora Marine", "Casora Nebel", "Casora Salbei"], f"designs: {list(themes)}")
 check(all(set(t["modes"]) == {"light", "dark"} for t in themes.values()), "every design has light and dark")
 check(themes["Casora"].get("uix-theme") == "Casora" and themes[G].get("uix-theme") == G, "uix-theme names the design")
 check("casora-theme-base" not in themes["Casora Nebel"], "control key not in the design")
