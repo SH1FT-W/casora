@@ -31,7 +31,7 @@ Adressen, Zugangsdaten) in Code, Tests, Commits oder PR-Texten.
   `dev/unit/vorlagen_print_js.mjs` ist ein Hilfsskript mit Argumenten, kein Test.
 - Neues Python-Modul: `python3 dev/unit/no_config_writes_test.py` und `dev/unit/no_foreign_internals_test.py` laufen
   lassen; greift es auf HA zu, `docs/ha-annahmen.md` im selben Commit ergänzen.
-- Für einen gemeldeten Fehler möglichst einen Test ergänzen (`dev/unit/` ohne HA,
+- Jeder Bugfix bekommt einen Regressionstest, der ohne den Fix rot ist (`dev/unit/` ohne HA,
   `dev/qa/regress/` mit Test-HA – siehe `dev/qa/README.md`).
 
 ## Version
@@ -61,6 +61,5 @@ Adressen, Zugangsdaten) in Code, Tests, Commits oder PR-Texten.
   Vorschaubilder unter `assets/themes/`, `.github/`, Versionszeile in `docs/index.html` – das gehört zum Release.
 
 ## Pull Requests
-- „Fixes #N“ nur, wenn der PR alles erledigt, worum das Issue bittet. Löst er nur einen Teil,
-  „Refs #N“ – sonst schließt GitHub das Issue beim Mergen.
+- Issues immer mit „Refs #N“ nennen, nie „Fixes #N“: geschlossen wird nach der Beta von Hand (siehe oben).
 - Im PR-Text sagen, was bewusst nicht enthalten ist.
