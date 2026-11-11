@@ -46,7 +46,7 @@ const state = () => P(`const r = p.shadowRoot, st = r.querySelector('.cs-saver-s
     text: sv ? sv.textContent.replace(/\\s+/g, ' ').slice(0, 160) : '' };`);
 let s = await state();
 await check('Vorschau gezeichnet', s.stage && KINDS.includes(s.kind) && s.w > 400 && s.h > 250, JSON.stringify(s).slice(0, 300));
-await check('ein Chip je Bildschirmschoner', JSON.stringify(s.chips) === JSON.stringify(KINDS), s.chips.join(','));
+await check('ein Chip je Bildschirmschoner, vorn „Nacheinander“ (gewählt, solange nichts gewählt ist)', JSON.stringify(s.chips) === JSON.stringify(['mix', ...KINDS]) && s.pressed === 'mix', s.chips.join(',') + ' · ' + s.pressed);
 await check('Startzeit als Einstellung', s.minutes);
 await pic('seite');
 for (const k of KINDS) {
@@ -54,7 +54,9 @@ for (const k of KINDS) {
   await wait(k === 'fotos' ? 900 : 350);
   s = await state();
   // Photos without a room photo shows a landscape; everything else draws itself (the preview brings an example).
-  await check('Chip ' + k + ' zeichnet ' + k, s.kind === k && s.pressed === k && s.text.length > 3, s.kind + ' · ' + s.text.slice(0, 80));
+  // The chip chooses (owner 11.11.2026: it only changed the picture, which looked like a choice): the draft has it.
+  const dk = await P(`return [...new Set(p._state.compact.rooms.map((r) => r.variables.casora_screensaver_kind || ''))];`);
+  await check('Chip ' + k + ' zeichnet ' + k + ' und wählt ihn im Entwurf', s.kind === k && s.pressed === k && s.text.length > 3 && dk.length === 1 && dk[0] === k, s.kind + ' · ' + JSON.stringify(dk) + ' · ' + s.text.slice(0, 60));
   await pic('vorschau_' + k);
 }
 // Photos (owner 11.11.2026): the preview drew a landscape although the rooms have photos (the Studio does not run the
