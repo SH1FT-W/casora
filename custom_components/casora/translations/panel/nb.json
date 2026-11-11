@@ -3076,7 +3076,10 @@
     "Casora Salbei": "Casora Salbei",
     "Casora Marine": "Casora Marine",
     "Casora Dämmerung": "Casora Dämmerung",
-    "Tiles that are on in the colour of their device, a soft colour wash.": "Fliser som er på, i fargen til enheten, med en myk fargeovergang."
+    "Tiles that are on in the colour of their device, a soft colour wash.": "Fliser som er på, i fargen til enheten, med en myk fargeovergang.",
+    "Updates badge": "Oppdateringsmerke",
+    "Shows only while updates are waiting, with their number by kind. A tap opens the list of updates.": "Vises bare mens oppdateringer venter, med antallet etter type. Et trykk åpner listen over oppdateringer.",
+    "None waiting": "Ingen venter"
   },
   "patterns": [
     [
@@ -3794,6 +3797,10 @@
     [
       "^Suggestion from your assistant: (\\d+) devices in (\\d+) rooms$",
       "Forslag fra assistenten din: {1} enheter i {2} rom"
+    ],
+    [
+      "^(\\d+) available$",
+      "{1} tilgjengelig"
     ]
   ],
   "The dashboard of this suggestion is gone. Discard it and ask your assistant again.": "Dashbordet for dette forslaget finnes ikke lenger. Forkast det og spør assistenten din på nytt.",

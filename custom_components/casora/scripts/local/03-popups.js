@@ -4011,6 +4011,15 @@
     var e = hass && hass.entities && hass.entities[id], p = e && e.platform;
     return p === 'hassio' ? 'ha' : p === 'marketplace' || p === 'hacs' ? 'mp' : 'dev';
   };
+  // Updates that wait for the user: on and not installing right now, sorted. The Updates badge (#167) counts these
+  // and shows nothing at 0.
+  X.pending = function (states) {
+    states = states || {};
+    return Object.keys(states).filter(function (id) {
+      var e = states[id];
+      return id.indexOf('update.') === 0 && e && e.state === 'on' && !(e.attributes || {}).in_progress;
+    }).sort();
+  };
   // ids (already sorted) → [{ key, label, ids }] in the order of X.KINDS, empty kinds left out; the order inside a kind
   // stays. label is null when only one kind has entries (no headings then).
   X.groups = function (ids, hass) {

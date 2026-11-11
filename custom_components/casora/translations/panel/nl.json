@@ -3076,7 +3076,10 @@
     "Casora Salbei": "Casora Salbei",
     "Casora Marine": "Casora Marine",
     "Casora Dämmerung": "Casora Dämmerung",
-    "Tiles that are on in the colour of their device, a soft colour wash.": "Ingeschakelde tegels in de kleur van hun apparaat, een zacht kleurverloop."
+    "Tiles that are on in the colour of their device, a soft colour wash.": "Ingeschakelde tegels in de kleur van hun apparaat, een zacht kleurverloop.",
+    "Updates badge": "Update-badge",
+    "Shows only while updates are waiting, with their number by kind. A tap opens the list of updates.": "Verschijnt alleen zolang er updates wachten, met hun aantal per soort. Een tik opent de lijst met updates.",
+    "None waiting": "Geen wachtend"
   },
   "patterns": [
     [
@@ -3794,6 +3797,10 @@
     [
       "^Suggestion from your assistant: (\\d+) devices in (\\d+) rooms$",
       "Voorstel van je assistent: {1} apparaten in {2} ruimtes"
+    ],
+    [
+      "^(\\d+) available$",
+      "{1} beschikbaar"
     ]
   ],
   "The dashboard of this suggestion is gone. Discard it and ask your assistant again.": "Het dashboard van dit voorstel bestaat niet meer. Verwerp het en vraag je assistent opnieuw.",

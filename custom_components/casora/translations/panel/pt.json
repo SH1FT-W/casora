@@ -3076,7 +3076,10 @@
     "Casora Salbei": "Casora Salbei",
     "Casora Marine": "Casora Marine",
     "Casora Dämmerung": "Casora Dämmerung",
-    "Tiles that are on in the colour of their device, a soft colour wash.": "Os mosaicos ligados na cor do seu dispositivo, com um gradiente suave."
+    "Tiles that are on in the colour of their device, a soft colour wash.": "Os mosaicos ligados na cor do seu dispositivo, com um gradiente suave.",
+    "Updates badge": "Emblema de atualizações",
+    "Shows only while updates are waiting, with their number by kind. A tap opens the list of updates.": "Só aparece enquanto houver atualizações à espera, com o número por tipo. Um toque abre a lista de atualizações.",
+    "None waiting": "Nenhuma à espera"
   },
   "patterns": [
     [
@@ -3794,6 +3797,10 @@
     [
       "^Suggestion from your assistant: (\\d+) devices in (\\d+) rooms$",
       "Sugestão do teu assistente: {1} dispositivos em {2} divisões"
+    ],
+    [
+      "^(\\d+) available$",
+      "{1} disponíveis"
     ]
   ],
   "The dashboard of this suggestion is gone. Discard it and ask your assistant again.": "O painel desta sugestão já não existe. Descarta-a e pergunta de novo ao teu assistente.",

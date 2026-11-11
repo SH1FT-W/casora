@@ -602,13 +602,14 @@
   `;
 
   const BADGES = [["climate", "Climate"], ["lights", "Lights"], ["people", "People"], ["media", "Media"], ["security", "Security"], ["energy", "Energy"],
-    ["custom", "Own badges"]];
+    ["custom", "Own badges"], ["updates", "Updates badge"]];
   const BADGE_KEY = { climate: /^(climate_entity|temp_sensor|humidity_sensor|quality_sensor)/, lights: /^light_(entity|group)/,
     people: /^presence_entity/, media: /^(media_|now_playing_|psn_)/, security: /^security_/, energy: /^energy_(entity|power|cost)/,
-    custom: /^custom_badges$/ };
+    custom: /^custom_badges$/, updates: /^(show_updates|updates_title)$/ };
   const BADGE_WORDS = { climate: "klima temperatur luft feuchte reihenfolge sortieren order", lights: "licht lampen beleuchtung", people: "personen anwesenheit leute",
     media: "medien musik fernseher tv", security: "sicherheit schloss tür kamera alarm kurz ausführlich ausfuehrlich ausgeschrieben unterzeile symbole short detailed summary reihenfolge sortieren order", energy: "energie strom verbrauch",
-    custom: "eigene badges vorlage template jinja eigenes badge own custom" };
+    custom: "eigene badges vorlage template jinja eigenes badge own custom",
+    updates: "updates aktualisierungen marketplace hacs firmware update badge" };
 
   customElements.whenDefined("casora-panel").then(() => {
     const P = customElements.get("casora-panel").prototype;
@@ -1154,6 +1155,7 @@
         const keys = Object.keys(V).filter((k) => V[k] !== null && V[k] !== "" && V[k] !== undefined);
         BADGES.forEach(([bid, label]) => {
           if (V["show_" + bid] === false) return;
+          if (bid === "updates" && i !== 0) return; // Home only (#167)
           if (i !== this._room && !keys.some((k) => BADGE_KEY[bid].test(k))) return;
           const own = V[bid + "_title"];
           out.push({ kind: "badge", id: "b:" + i + ":" + bid, label: own || tr(label), sub: this._roomLabel(r), path: this._roomLabel(r) + " › " + tr("Badges"), here: i === this._room, words: "badge " + tr(label) + " " + BADGE_WORDS[bid],

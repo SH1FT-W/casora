@@ -673,7 +673,8 @@ const PHONE_FILTERS = ["climate", "lights", "people", "media", "security", "ener
 // vorn, Szenen (nur Home, als Badge) hinten. Gespeicherte Listen gehen vor, was darin fehlt,
 // folgt in dieser Reihenfolge – ältere Listen ohne „scenes“ behalten Szenen also am Ende.
 // Wie im Hemma-Original: Medien zuletzt (erscheint nur bei Wiedergabe und verschiebt so nichts).
-const BADGE_ORDER_IDS = ["security", "climate", "lights", "people", "energy", "scenes", "media"];
+// The Updates badge (#167) shows only while updates wait: last, after media, so it never shifts the others.
+const BADGE_ORDER_IDS = ["security", "climate", "lights", "people", "energy", "scenes", "media", "updates"];
 
 const BADGE_SWITCH_KEYS = ["climate", "lights", "people", "media", "security", "energy"].map((id) => "show_" + id);
 
@@ -2956,6 +2957,16 @@ const SECTIONS = [
     label: "Own badges", bid: "custom", icon: "badge", iconColor: studioIcon("badges"), group: "badges",
     blurb: "Badges of your own: a device's state or the text of a template.",
     fields: [{ key: "custom_badges", label: "Own badges", type: "custombadges", always: true }],
+  },
+  {
+    // Updates badge (#167): only on Home (the phone start page reads Home's settings), off by default, shown only
+    // while updates wait; a tap opens the Updates popup (casora_badge_updates).
+    label: "Updates badge", title: "Updates", bid: "updates", icon: "updates", iconColor: "var(--casora-color-teal, #00C3D0)",
+    group: "badges", homeOnly: true, toggleFn: "updatesBadge",
+    blurb: "Shows only while updates are waiting, with their number by kind. A tap opens the list of updates.",
+    fields: [
+      { ...T("updates_title", "Name on the badge"), always: true, ord: -1, placeholder: "Updates" },
+    ],
   },
 ];
 
@@ -18938,6 +18949,7 @@ class CasoraPanel extends HTMLElement {
     SECTIONS.forEach((sec) => {
       if (only && !only.has(sec.label)) return;
       if (sec.roomOnly && onHome) return;
+      if (sec.homeOnly && !onHome) return;
       const fs = document.createElement("section");
       fs.className = "card";
       fs.dataset.k = sec.label;
@@ -19030,6 +19042,12 @@ class CasoraPanel extends HTMLElement {
         get: () => this._scenesMode() !== "off",
         // Einschalten: als Badge auf Home – so wie Casora neue Dashboards anlegt.
         set: () => this._setScenesMode(this._scenesMode() === "off" ? "badge" : "off"),
+      } : (sec.toggleFn === "updatesBadge" ? {
+        get: () => room.variables.show_updates === true,
+        set: () => {
+          if (room.variables.show_updates === true) delete room.variables.show_updates;
+          else room.variables.show_updates = true;
+        },
       } : (sec.toggleFn === "roomScenes" ? {
         get: () => room.variables.show_scenes === true,
         set: () => {
@@ -19048,7 +19066,7 @@ class CasoraPanel extends HTMLElement {
             if (room.variables.show_media === false) delete room.variables.show_media;
           }
         },
-      } : null)));
+      } : null))));
 
       if (toggle) {
         const on = toggle.get();
@@ -24866,6 +24884,14 @@ class CasoraPanel extends HTMLElement {
       if (!own || ids.length) out.push({ id: "scenes", label: "Scenes", icon: "scenes", color: studioIcon("scenes"),
         dim: !act, text: act ? act + " active" : "None active", subs });
     }
+    // Updates badge on Home (#167): the dashboard hides it while nothing waits; here it stays, dimmed, so it can be found.
+    if (V.show_updates === true) {
+      const st = (this._hass && this._hass.states) || {};
+      const n = Object.keys(st).filter((id) => id.startsWith("update.") && st[id].state === "on"
+        && !(st[id].attributes || {}).in_progress).length;
+      out.push({ id: "updates", label: "Updates", icon: "updates", color: "var(--casora-color-teal, #00C3D0)",
+        dim: !n, text: n ? n + " available" : "None waiting", subs: [] });
+    }
     // „Name auf dem Badge“: eigener Name statt des Standardnamens, unübersetzt (wie im Dashboard).
     out.forEach((b) => {
       const own = String(V[b.id + "_title"] || "").trim();
@@ -27186,7 +27212,7 @@ class CasoraPanel extends HTMLElement {
       || !!RV.psn_1 || !!RV.psn_2);
     const onHome = isHomeRoom(room, ((this._state || {}).compact || {}).rooms || []);
     SECTIONS.filter((sec) => sec.group === "badges" && sec.icon && !shown.has(sec.bid)
-      && !(sec.bid === "media" && mediaSetUp) && !(sec.roomOnly && onHome))
+      && !(sec.bid === "media" && mediaSetUp) && !(sec.roomOnly && onHome) && !(sec.homeOnly && !onHome))
       .sort((a, b) => rank(a.bid) - rank(b.bid)).forEach((sec) => {
       const el = pill({ id: String(sec.label).toLowerCase(), label: secName(sec),
         icon: sec.icon, color: sec.iconColor || "var(--ink)", subs: [] }, false);

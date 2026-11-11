@@ -255,7 +255,9 @@ scheitern. Das Updates-Popup (`casora_popup_updates`, „Alle aktualisieren“) 
 selbst nicht im Test.
 
 Updates-Kachel, -Popup und Glocke: Update-Entität `on` = offen (auch während `in_progress`), `off` bei übersprungener
-Version. „Installiert, Neustart fehlt“ = `off`, `installed_version == latest_version` und „restart“ in
+Version. Das Updates-Badge (#167, `_casoraUpdX.pending` in `scripts/local/03-popups.js`) zählt nur `on` ohne
+`in_progress`; die Art (Home Assistant, Marketplace, Geräte) kommt aus `hass.entities[id].platform` (`hassio`,
+`marketplace`/`hacs`, sonst Gerät). Test: `dev/unit/updates_badge.mjs`. „Installiert, Neustart fehlt“ = `off`, `installed_version == latest_version` und „restart“ in
 `release_summary` (HACS: „Restart of Home Assistant required“) bzw. ab HA 2026.11 ein Neustart-Reparatur-Hinweis
 des Marketplace für diese Entität (Liste aus `casora/updates/restarts`, siehe Tabelle) – eine Regel, `scripts/casora-core.js`
 `casoraNeedsRestart`. Test: `dev/unit/updates_restart_live.mjs`, `dev/unit/updates_restart_marketplace.mjs`; der HACS-Text

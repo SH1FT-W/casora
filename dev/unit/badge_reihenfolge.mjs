@@ -33,12 +33,12 @@ const { BADGE_ORDER_IDS, badgeOrderOf, markPhoneManaged } =
   new Function(code + '\nreturn { BADGE_ORDER_IDS, badgeOrderOf, markPhoneManaged };')();
 
 // ── Reihenfolge ──────────────────────────────────────────────────────────────
-assert.deepEqual(BADGE_ORDER_IDS, ['security', 'climate', 'lights', 'people', 'energy', 'scenes', 'media'],
+assert.deepEqual(BADGE_ORDER_IDS, ['security', 'climate', 'lights', 'people', 'energy', 'scenes', 'media', 'updates'],
   'Standard = was das Dashboard ohne badge_order zeichnet');
 assert.deepEqual(badgeOrderOf(undefined), BADGE_ORDER_IDS);
-// Ältere gespeicherte Liste ohne Szenen: Szenen bleibt hinten.
+// Ältere gespeicherte Liste ohne Szenen: Szenen bleibt hinten, das Updates-Badge (#167) danach.
 assert.deepEqual(badgeOrderOf(['climate', 'lights', 'people', 'media', 'security', 'energy']),
-  ['climate', 'lights', 'people', 'media', 'security', 'energy', 'scenes']);
+  ['climate', 'lights', 'people', 'media', 'security', 'energy', 'scenes', 'updates']);
 assert.deepEqual(badgeOrderOf(['scenes', 'x', 'energy', 'scenes']).slice(0, 3), ['scenes', 'energy', 'security']);
 
 const T = JSON.parse(fs.readFileSync(new URL('../../dashboards/casora/button_card_templates.json', import.meta.url), 'utf8'));
@@ -69,7 +69,7 @@ const HOST = {
   casora_badge_security_group: 'security', casora_badge_climate_group: 'climate', casora_badge_temp: 'climate',
   casora_badge_humidity: 'climate', casora_badge_air_quality: 'climate', casora_badge_light_group: 'lights',
   casora_badge_presence_group: 'people', casora_badge_presence: 'people', casora_badge_media_group: 'media',
-  casora_badge_energy_group: 'energy', casora_badge_scene_group: 'scenes',
+  casora_badge_energy_group: 'energy', casora_badge_scene_group: 'scenes', casora_badge_updates: 'updates',
 };
 for (const [tpl, id] of Object.entries(HOST)) {
   const want = `order:var(--casora-badge-order-${id},${BADGE_ORDER_IDS.indexOf(id) + 1})`;

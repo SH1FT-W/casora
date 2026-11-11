@@ -12,7 +12,7 @@ const sec = src.slice(src.indexOf('label: "Room scenes"'), src.indexOf('label: "
 assert.ok(/title: "Scenes", bid: "scenes"/.test(sec) && /roomOnly: true, toggleFn: "roomScenes"/.test(sec), 'room scenes section');
 assert.ok(/LIST\("scene_entities", "Scenes", \["scene"\]\)/.test(sec), 'scene list field');
 assert.ok(/if \(sec\.roomOnly && onHome\) return;/.test(src), 'not on Home (Home keeps the dashboard-wide Scenes)');
-assert.ok(/!\(sec\.roomOnly && onHome\)\)/.test(src), 'no dashed placeholder on Home');
+assert.ok(/!\(sec\.roomOnly && onHome\)/.test(src), 'no dashed placeholder on Home');
 assert.ok(/get: \(\) => room\.variables\.show_scenes === true,/.test(src), 'off unless show_scenes is true');
 assert.ok(/V\.scene_entities = this\._areaScenes\(room\);/.test(src), 'turning on fills the area scenes');
 assert.ok(src.includes(":scope > .scenesorder[data-bid=\"scenes\"]"), "Home's order card only removes itself");
