@@ -122,6 +122,7 @@
   };
   // Coloured circle: the compressor runs; with no compressor known, every mode but off (the thermostat's rule).
   H.tileOn = function (st, hass, vars) {
+    if (!st) return false;   // drawn before its entity exists (a move, a fresh start)
     var m = H.model(hass, st.entity_id, vars);
     if (m.dead) return false;
     return m.running != null ? m.running && !m.off : !m.off;

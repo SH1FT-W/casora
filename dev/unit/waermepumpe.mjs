@@ -113,6 +113,10 @@ const offStates = hass({ [ID]: { ...h1.states[ID], state: 'off' } });
 assert.equal(H.tileText(offStates.states[ID], offStates, {}).full, 'Aus', 'heating off: just that');
 const dead = hass({ [ID]: { ...h1.states[ID], state: 'unavailable' } });
 assert.equal(H.tileText(dead.states[ID], dead, {}).full, 'Nicht verfügbar');
+// Gate b13 (t19, a move): the tile is drawn before its entity exists; every tile helper takes a missing state.
+assert.equal(H.tileOn(undefined, dead, {}), false, 'no state yet: circle plain, no error');
+eq(H.tileText(undefined, dead, {}), { full: '', short: '' });
+assert.equal(H.active(undefined, dead, {}), null);
 
 // ── Model: current_temperature null (ViCare); optional sensor ─────────────────────────────────────────────
 let m = H.model(h1, ID, {});
