@@ -645,13 +645,16 @@
   };
   // Seven days side by side: weather, appointments, waste. Today stands out.
   var TONES = ['#4E9E95', '#5B8FC9', '#6AAE78', '#DE8A4E', '#E8B04A'];
+  var norm = function (s) { return String(s || '').trim().replace(/\s+/g, ' ').toLowerCase(); };
   DRAW.woche = function (ctx) {
     var d0 = new Date(ctx.now); d0.setHours(0, 0, 0, 0);
     var ev = ctx.events || [], bins = ctx.bins || [], daily = ctx.daily || [];
     var nEv = 0, nBin = 0, cols = '';
     for (var i = 0; i < 7; i++) {
       var day = +d0 + i * 86400000, items = [];
-      ev.filter(function (e) { return sameDay(e.start, day) && (i || e.allDay || (e.end || e.start) >= +ctx.now); }).slice(0, 4).forEach(function (e, j) {
+      // A waste integration gives a pickup twice, as a calendar event and as a sensor (#171): the pickup line wins.
+      var binNames = bins.filter(function (b) { return b.days === i; }).map(function (b) { return norm(b.label); });
+      ev.filter(function (e) { return sameDay(e.start, day) && (i || e.allDay || (e.end || e.start) >= +ctx.now) && binNames.indexOf(norm(e.title)) < 0; }).slice(0, 4).forEach(function (e, j) {
         items.push('<div class="cs-e" style="--cs-c:' + TONES[(i + j) % TONES.length] + '"><b data-no-i18n>' + esc(e.title) + '</b><span>' + esc(e.allDay ? T('ganztägig') : clockOf(e.start)) + '</span></div>');
         nEv++;
       });

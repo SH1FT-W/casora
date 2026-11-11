@@ -121,6 +121,11 @@ h = S.html('linie', ctx({ events: [] }));
 assert.ok(/Heute nichts mehr/.test(h) && /Heute keine Termine/.test(h), 'day line without appointments');
 h = S.html('woche', ctx({ events, daily, bins: [{ label: 'Restmüll', days: 1 }] }));
 assert.ok((h.match(/class="cs-col[ "]/g) || []).length === 7 && /cs-today/.test(h) && /Restmüll/.test(h) && /ganztägig/.test(h) && /2 Termine · 1 Abholung/.test(h) && !/Zahnarzt/.test(h), 'week: seven days, events, waste; what is over today is gone');
+// #171: a waste integration gives the same pickup as a calendar event and as a sensor; it shows once.
+h = S.html('woche', ctx({ events: [{ title: ' gelbe Tonne', start: Date.parse('2026-11-11T00:00:00'), end: null, allDay: true }], daily, bins: [{ label: 'Gelbe Tonne', days: 1 }] }));
+assert.ok((h.match(/elbe Tonne/g) || []).length === 1 && /Abholung</.test(h) && /0 Termine · 1 Abholung/.test(h), 'week: a pickup also in a calendar shows once (#171)');
+h = S.html('woche', ctx({ events: [{ title: 'Gelbe Tonne', start: Date.parse('2026-11-13T00:00:00'), end: null, allDay: true }], daily, bins: [{ label: 'Gelbe Tonne', days: 1 }] }));
+assert.ok((h.match(/Gelbe Tonne/g) || []).length === 2, 'week: the same name on another day stays');
 const media = { title: 'Song "A"', artist: 'Band', where: 'Wohnzimmer', cover: '/api/x.jpg', dur: 200, pos: 50 };
 h = S.html('musik', ctx({ media }));
 assert.ok(/data-kind="musik"/.test(h) && /Song &quot;A&quot;/.test(h) && /width:25\.0%/.test(h) && /0:50/.test(h) && /3:20/.test(h), 'music: title, progress');
