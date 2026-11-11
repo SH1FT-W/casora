@@ -311,7 +311,7 @@ VAC_TEXT = {
     "charging_complete": ("Geladen", "Charged", "Cargado", "Chargé", "Carico", "Opgeladen", "Naładowany", "Carregado", "Ladet"),
     "charger_disconnected": ("Abgedockt", "Undocked", "Fuera de la base",
                              "Hors station", "Fuori dalla base", "Uit dock", "Poza stacją", "Fora da base", "Frakoblet stasjonen"),
-    "idle": ("Inaktiv", "Inactive", "Inactivo", "Inactif", "Inattivo", "Inactief", "Nieaktywne", "Inativo", "Inaktiv"),
+    "idle": ("Inaktiv", "Inactive", "Inactivo", "Inactif", "Inattivo", "Inactief", "Nieakt.", "Inativo", "Inaktiv"),
     "error": ("Fehler", "Error", "Error", "Erreur", "Errore", "Fout", "Błąd", "Erro", "Feil"),
     "charging_problem": ("Ladeproblem", "Charging problem", "Problema de carga", "Problème de charge",
                          "Problema di carica", "Laadprobleem", "Problem z ładowaniem", "Problema de carga", "Problem med lading"),

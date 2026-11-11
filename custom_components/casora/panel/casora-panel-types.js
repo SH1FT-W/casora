@@ -842,7 +842,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
     fr: { idle: "Inactif", inactive: "Inactif" },
     it: { idle: "Inattivo", inactive: "Inattivo" },
     nl: { idle: "Inactief", inactive: "Inactief" },
-    pl: { idle: "Nieaktywne", inactive: "Nieaktywne" },
+    pl: { idle: "Nieakt.", inactive: "Nieakt." },
     pt: { idle: "Inativo", inactive: "Inativo" },
   };
   const OURS = new Set((window.CASORA_TILE_TYPES || []).map((t) => t.template));

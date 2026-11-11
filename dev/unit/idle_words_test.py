@@ -15,7 +15,7 @@ class IdleWordsTest(unittest.TestCase):
                      and isinstance(node.value, ast.Dict)
                      and any(isinstance(key, ast.Constant) and key.value == "idle" and isinstance(value, ast.Tuple)
                              for key, value in zip(node.value.keys, node.value.values)))
-        expected = ("Inaktiv", "Inactive", "Inactivo", "Inactif", "Inattivo", "Inactief", "Nieaktywne", "Inativo")
+        expected = ("Inaktiv", "Inactive", "Inactivo", "Inactif", "Inattivo", "Inactief", "Nieakt.", "Inativo")
         self.assertEqual(words["idle"], expected)
         for index, lang in enumerate(("de", "en", "es", "fr", "it", "nl", "pl", "pt")):
             with self.subTest(language=lang):
