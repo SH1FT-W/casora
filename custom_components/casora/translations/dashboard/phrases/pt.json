@@ -2950,7 +2950,8 @@
     "aus dem Netz": "da rede",
     "ins Netz": "para a rede",
     "Akku gibt ab": "A bateria descarrega",
-    "Arzttermin": "Médico"
+    "Arzttermin": "Médico",
+    "Lamellenstellung": "Lâminas"
   },
   "patterns": [
     [
@@ -5276,6 +5277,14 @@
     [
       "^(\\d+) Dinge brauchen dich$",
       "{1} coisas precisam de ti"
+    ],
+    [
+      "^(.+) aus$",
+      "{1} desligado"
+    ],
+    [
+      "^(.+) aktiv$",
+      "{1} ativo"
     ]
   ]
 }

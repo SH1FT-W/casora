@@ -2932,7 +2932,8 @@
     "aus dem Netz": "from the grid",
     "ins Netz": "to the grid",
     "Akku gibt ab": "Battery discharging",
-    "Arzttermin": "Doctor"
+    "Arzttermin": "Doctor",
+    "Lamellenstellung": "Slats"
   },
   "patterns": [
     [
@@ -5258,6 +5259,14 @@
     [
       "^(\\d+) Dinge brauchen dich$",
       "{1} things need you"
+    ],
+    [
+      "^(.+) aus$",
+      "{1} off"
+    ],
+    [
+      "^(.+) aktiv$",
+      "{1} active"
     ]
   ]
 }

@@ -2943,7 +2943,8 @@
     "aus dem Netz": "fra nettet",
     "ins Netz": "til nettet",
     "Akku gibt ab": "Batteriet lades ut",
-    "Arzttermin": "Lege"
+    "Arzttermin": "Lege",
+    "Lamellenstellung": "Lameller"
   },
   "patterns": [
     [
@@ -5269,6 +5270,14 @@
     [
       "^(\\d+) Dinge brauchen dich$",
       "{1} ting trenger deg"
+    ],
+    [
+      "^(.+) aus$",
+      "{1} av"
+    ],
+    [
+      "^(.+) aktiv$",
+      "{1} aktiv"
     ]
   ]
 }

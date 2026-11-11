@@ -2921,6 +2921,41 @@ window.casoraMenuGlass = {
       return em;
     };
 
+    /* The top bar clock without sensor.time (#172): Home Assistant no longer adds the Time & Date integration, and
+       the clock stayed empty. The device's own time stands in, in Home Assistant's time zone when the user's
+       profile says "server" (hass.locale.time_zone), and an element ticks it at every full minute. */
+    window.casoraClockText = function (hass, use12, now) {
+      const d = now || new Date();
+      const tz = hass && hass.locale && hass.locale.time_zone === 'server' && hass.config && hass.config.time_zone;
+      let h = d.getHours(), m = d.getMinutes();
+      if (tz) {
+        try {
+          const p = new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(d);
+          h = Number((p.find((x) => x.type === 'hour') || {}).value); m = Number((p.find((x) => x.type === 'minute') || {}).value);
+        } catch (e) { /* the device's zone */ }
+      }
+      const mm = String(m).padStart(2, '0');
+      if (!use12) return String(h).padStart(2, '0') + ':' + mm;
+      return ((h % 12) || 12) + ':' + mm + ' ' + (h >= 12 ? 'PM' : 'AM');
+    };
+    window.casoraClockHtml = function (use12, suffix) {
+      const esc = window.casoraEsc || ((x) => String(x == null ? '' : x).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
+      return '<casora-clock data-h12="' + (use12 ? '1' : '') + '" data-suffix="' + esc(suffix || '') + '">' + esc(window.casoraClockText(rootHass(), use12)) + '</casora-clock>';
+    };
+    const rootHass = () => { try { const ha = document.querySelector('home-assistant'); return (ha && ha.hass) || null; } catch (e) { return null; } };
+    if (!customElements.get('casora-clock')) {
+      customElements.define('casora-clock', class extends HTMLElement {
+        connectedCallback() { this._tick(); }
+        disconnectedCallback() { clearTimeout(this._t); }
+        _tick() {
+          clearTimeout(this._t);
+          const sx = this.dataset.suffix;
+          const t = window.casoraClockText(rootHass(), this.dataset.h12 === '1');
+          this.textContent = (sx ? t + ' ' + sx : t).toUpperCase();
+          this._t = setTimeout(() => this._tick(), 60050 - (Date.now() % 60000));
+        }
+      });
+    }
     /* alt: the tile's own short form for narrow tiles ("22,2° · Heizt" instead of "22,2° +1"); without it the
        first part and a counter as below. alt equal to text: no counter, the text itself ends with "…" (thermostat). */
     window.casoraStateFit = function (text, weight, alt) {

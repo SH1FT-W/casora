@@ -2476,6 +2476,8 @@
       rangeU: du('reichweite_kombiniert'), kmU: du('kilometerstand'), inspU: du('inspektionsdistanz'), scrU: du('scr_reichweite'),
       inspKmKm: dk('inspektionsdistanz'), scrKm: dk('scr_reichweite'), known: known,
       range: val('reichweite_kombiniert'), tank: fuel != null ? fuel : soc, ev: fuel == null && soc != null, km: val('kilometerstand'),
+      /* A battery to charge: a level sensor, also on a plug-in hybrid and while the car sleeps (unavailable) (#174). */
+      plug: soc != null || !!C.id(p, 'akku', 'sensor'),
       tankL: val('tankmenge'), tankLU: /^l$/i.test(unit('tankmenge') || 'l') ? 'l' : unit('tankmenge'),
       scr: val('scr_reichweite'), oil: val('olstand'), v12: val('12v_batteriespannung'),
       out: val('aussentemperatur'), outUnit: unit('aussentemperatur') || '°C', open: openDoors.concat(openWins), openDoors: openDoors, openWins: openWins, locked: locked,
@@ -2633,9 +2635,10 @@
       var rowsT = [];
       var itT = tank() && tank().item ? tank().item(p, states) : null;
       if (itT) rowsT.push(itT);
-      /* Chargers nearby for a car with a battery only (45-charging.js, issue 168); no row without a key. */
+      /* Chargers nearby for a car with a battery to charge, plug-in hybrids too (45-charging.js, #168, #174); no row
+         without a key. */
       var CH = window._casoraCharge;
-      var itC = r.ev && CH && CH.item ? CH.item(p, states) : null;
+      var itC = r.plug && CH && CH.item ? CH.item(p, states) : null;
       if (itC) rowsT.push(itC);
       return rowsT.length ? UI.group(rowsT, r.ev ? 'Akku' : 'Tank') : '';
     }

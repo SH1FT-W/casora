@@ -2950,7 +2950,8 @@
     "aus dem Netz": "du réseau",
     "ins Netz": "vers le réseau",
     "Akku gibt ab": "La batterie se décharge",
-    "Arzttermin": "Médecin"
+    "Arzttermin": "Médecin",
+    "Lamellenstellung": "Lames"
   },
   "patterns": [
     [
@@ -5276,6 +5277,14 @@
     [
       "^(\\d+) Dinge brauchen dich$",
       "{1} choses demandent ton attention"
+    ],
+    [
+      "^(.+) aus$",
+      "{1} éteint"
+    ],
+    [
+      "^(.+) aktiv$",
+      "{1} actif"
     ]
   ]
 }

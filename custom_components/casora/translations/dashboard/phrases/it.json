@@ -2950,7 +2950,8 @@
     "aus dem Netz": "dalla rete",
     "ins Netz": "in rete",
     "Akku gibt ab": "La batteria si scarica",
-    "Arzttermin": "Medico"
+    "Arzttermin": "Medico",
+    "Lamellenstellung": "Lamelle"
   },
   "patterns": [
     [
@@ -5276,6 +5277,14 @@
     [
       "^(\\d+) Dinge brauchen dich$",
       "{1} cose hanno bisogno di te"
+    ],
+    [
+      "^(.+) aus$",
+      "{1} spento"
+    ],
+    [
+      "^(.+) aktiv$",
+      "{1} attivo"
     ]
   ]
 }
