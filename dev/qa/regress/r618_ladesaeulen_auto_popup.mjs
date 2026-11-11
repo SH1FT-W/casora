@@ -10,6 +10,7 @@
 // „Daten: Open Charge Map, CC BY 4.0“. A row or tile leads to the map. Chargers out of use and private ones are missing.
 // The chargers come from the test house's fake Open Charge Map (dev/casora_mock/openchargemap.py); the key is removed
 // again at the end. Pictures: R618_BILD=1.
+// #176: on an Android phone the switch did not react to a finger; the run „Android“ taps with the touch screen.
 import zlib from 'node:zlib';
 import { open, casoraDashboards, dashboard, check, need, finish, usePage, atFinish, shot } from './lib.mjs';
 
@@ -142,13 +143,16 @@ const pic = async (label) => { if (process.env.R618_BILD) await shot(label); };
 
 const RUNS = [{ tag: 'Desktop', o: { width: 1440, height: 900, theme: 'Casora' } },
   { tag: 'Handy', o: { width: 393, height: 852, mobile: true, theme: 'Casora' }, mobile: true },
-  { tag: 'Englisch', o: { width: 1440, height: 900, theme: 'Casora', lang: 'en' }, en: true }];
+  { tag: 'Englisch', o: { width: 1440, height: 900, theme: 'Casora', lang: 'en' }, en: true },
+  { tag: 'Android', o: { width: 412, height: 915, mobile: true, theme: 'Casora',
+    userAgent: 'Mozilla/5.0 (Linux; Android 15; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36' }, mobile: true, touch: true }];
 let first = true;
 for (const run of RUNS) {
   const { page } = await open(run.o);
   usePage(page);
   await routeLogos(page);
   const errs = [];
+  const press = (q) => run.touch ? page.touchscreen.tap(q.x, q.y) : page.mouse.click(q.x, q.y);
   page.on('pageerror', (e) => errs.push('pageerror: ' + String(e && e.message || e)));
   page.on('console', (m) => { if (m.type() === 'error' && /casora|button-card|_casoraCharge|TypeError/i.test(m.text())) errs.push(m.text()); });
   const url = run.mobile ? (all.find((d) => d.mobile && d.url === desk.url + '-mobile') || desk).url : desk.url;
@@ -178,7 +182,7 @@ for (const run of RUNS) {
   await pic(run.tag + '_1_auto');
   const at = await spot(page, W.row);
   await need(run.tag + ': Zeile gefunden', at, res);
-  await page.mouse.click(at.x, at.y);
+  await press(at);
   const pg = await untilText(page, /Rathausplatz/);
   await page.waitForTimeout(700);
   await check(run.tag + ': Seite ' + W.row + ' mit Liste', pg && pg.title === W.row && /Rathausplatz/.test(pg.text), pg);
@@ -206,8 +210,8 @@ for (const run of RUNS) {
     JSON.stringify(r1.logos) === JSON.stringify(['bild+img', 'blitz', 'bild+img', 'blitz', 'bild+img', 'blitz', 'blitz', 'blitz', 'bild+img', 'bild+img']), r1.logos);
   await check(run.tag + ': Logo und Blitz füllen ihr Feld genau', r1.fit.every((f) => f), r1.fit);
   await check(run.tag + ': Blitz mittig im Feld', r1.bolt.every((b) => Math.abs(b.dx) <= 1 && Math.abs(b.dy) <= 1), r1.bolt);
-  // The phone run is an iPhone: Apple Maps there, Google Maps elsewhere.
-  const mapRe = run.mobile ? /^https:\/\/maps\.apple\.com\/\?ll=-?\d[^&]*&q=./ : /^https:\/\/www\.google\.com\/maps\/search\/\?api=1&query=-?\d/;
+  // The phone run is an iPhone: Apple Maps there, Google Maps elsewhere (Android too).
+  const mapRe = run.mobile && !run.touch ? /^https:\/\/maps\.apple\.com\/\?ll=-?\d[^&]*&q=./ : /^https:\/\/www\.google\.com\/maps\/search\/\?api=1&query=-?\d/;
   await check(run.tag + ': Zeile führt zur Karte', r1.go.length === 10 && r1.go.every((u) => mapRe.test(u)), r1.go.slice(0, 2));
   await check(run.tag + ': Fußzeile mit Suchort, Stand und Quelle', r1.src.includes(W.home) && r1.src.includes('10 km') && r1.src.includes(W.data), r1.src);
   if (!run.mobile) await check(run.tag + ': zwei Spalten, Karte rechts neben der Empfehlung', r1.left && r1.map && r1.map.x > r1.left.x + r1.left.w - 2 && Math.abs(r1.map.y - r1.left.y) < 12, { left: r1.left, map: r1.map });
@@ -215,14 +219,14 @@ for (const run of RUNS) {
   await pic(run.tag + '_2_seite');
   const fa = await seg(page, W.fast);
   await need(run.tag + ': Umschalter Schnellste gefunden', fa, r1.segs);
-  await page.mouse.click(fa.x, fa.y);
+  await press(fa);
   await page.waitForTimeout(500);
   const r2 = await rows(page);
   await check(run.tag + ': Schnellste sortiert nach Leistung', r2 && r2.segs[1] === W.fast + '*' && r2.names.length === 10 && /^Schnellladepark/.test(r2.names[0]) && /^Bahnhof Ostseite/.test(r2.names[1]), r2 && { segs: r2.segs, names: r2.names.slice(0, 3) });
   await pic(run.tag + '_3_schnellste');
   const fr = await seg(page, W.free);
   await need(run.tag + ': Umschalter Gratis gefunden', fr, r2 && r2.segs);
-  await page.mouse.click(fr.x, fr.y);
+  await press(fr);
   await page.waitForTimeout(500);
   const r3 = await rows(page);
   await check(run.tag + ': Gratis zeigt die drei mit kostenloser Angabe', r3 && r3.names.length === 3 && r3.names.every((n) => /Möbelhaus|Supermarkt|Hotel/.test(n)), r3 && r3.names);

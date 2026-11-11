@@ -325,7 +325,7 @@
       : colL + sp(18) + colR) + sp(18) + footer);
   };
   X.inner = function (key) {
-    return '<div data-casora-charge-box="' + esc(key) + '" onclick="window._casoraCharge.tap(event)">' + X.body(key) + '</div>';
+    return '<div data-casora-charge-box="' + esc(key) + '">' + X.body(key) + '</div>';
   };
   // Every box of this car in the open popup (the page is a card of its own, so through the shadow roots).
   var boxes = function (key) {
@@ -365,11 +365,25 @@
     }
     if (!f || !box) return;
     ev.preventDefault(); ev.stopPropagation();
+    if (Date.now() - tapAt < 400) return;   // the click that follows a finger's touchend
+    tapAt = Date.now();
     if (window.casoraHaptic) window.casoraHaptic('selection');
     var key = box.dataset.casoraChargeBox;
     X.filter[key] = f;
     box.innerHTML = X.body(key);
   };
+  // A finger (#176): an inline onclick never fired on a phone, the popup's touch handling swallows the click. Like
+  // the fuel view: click and a touchend without swiping, caught on the document.
+  var tapAt = 0, tp = null;
+  if (document.addEventListener) {
+    document.addEventListener('touchstart', function (ev) { var t = ev.touches && ev.touches[0]; tp = t ? { x: t.clientX, y: t.clientY, moved: false } : null; }, { capture: true, passive: true });
+    document.addEventListener('touchmove', function (ev) {
+      var t = ev.touches && ev.touches[0];
+      if (tp && t && (Math.abs(t.clientX - tp.x) > 10 || Math.abs(t.clientY - tp.y) > 10)) tp.moved = true;
+    }, { capture: true, passive: true });
+    document.addEventListener('click', X.tap, true);
+    document.addEventListener('touchend', function (ev) { var moved = !!(tp && tp.moved); tp = null; if (!moved) X.tap(ev); }, true);
+  }
   (window._casoraPages || (window._casoraPages = {})).charging = function (arg) {
     var H = window._casoraHH, key = arg || '';
     if (!H || !H.page) return;

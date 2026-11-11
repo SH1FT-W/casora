@@ -4014,15 +4014,15 @@
     var e = hass && hass.entities && hass.entities[id], p = e && e.platform;
     return p === 'hassio' ? 'ha' : p === 'marketplace' || p === 'hacs' ? 'mp' : 'dev';
   };
-  // Updates that wait for the user: on and not installing right now, sorted. The Updates badge (#167) counts these
-  // and shows nothing at 0. The id is checked before the state is read: through button-card's state proxy every read
+  // Updates on offer, sorted: every update entity that is on, also one installing right now, so the Updates badge
+  // (#167) counts what the popup counts ("4 Updates verfügbar, 1 wird installiert"); nothing at 0. The id is checked before the state is read: through button-card's state proxy every read
   // subscribes the card, and reading all states made the badge watch the whole house.
   X.pending = function (states) {
     states = states || {};
     return Object.keys(states).filter(function (id) {
       if (id.indexOf('update.') !== 0) return false;
       var e = states[id];
-      return !!e && e.state === 'on' && !(e.attributes || {}).in_progress;
+      return !!e && e.state === 'on';
     }).sort();
   };
   // ids (already sorted) → [{ key, label, ids }] in the order of X.KINDS, empty kinds left out; the order inside a kind

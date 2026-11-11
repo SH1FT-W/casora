@@ -23,8 +23,8 @@ const states = {
 };
 const hass = { entities: { 'update.core': { platform: 'hassio' }, 'update.mosquitto': { platform: 'hassio' }, 'update.card': { platform: 'hacs' },
   'update.router': { platform: 'unifi' } } };
-assert.deepEqual(X.pending(states), ['update.card', 'update.core', 'update.mosquitto', 'update.router'],
-  'waiting = on and not installing, only update entities');
+assert.deepEqual(X.pending(states), ['update.card', 'update.core', 'update.installing', 'update.mosquitto', 'update.router'],
+  'on offer = on, one installing too (the popup counts it, the badge did not: #167), only update entities');
 assert.deepEqual(X.pending({}), []);
 // button-card's state proxy subscribes a card to every entity it reads: only update entities may be read
 // (reading all of them made the badge watch the whole house, r341).
@@ -43,9 +43,11 @@ const js = (s) => s.trim().replace(/^\[\[\[/, '').replace(/\]\]\]$/, '');
 const evalTpl = (s, variables, st, h = hass) => new Function('window', 'states', 'hass', 'variables', 'user', js(s))(w, st, h, variables, {});
 const name = (st, v = {}) => evalTpl(B.name, v, st);
 const html = name(states);
-assert.ok(/data-kind="ha"[^]*>2<\/span>/.test(html) && /data-kind="mp"[^]*>1<\/span>/.test(html) && /data-kind="dev"[^]*>1<\/span>/.test(html), html);
+assert.ok(/data-kind="ha"[^]*>2<\/span>/.test(html) && /data-kind="mp"[^]*>1<\/span>/.test(html) && /data-kind="dev"[^]*>2<\/span>/.test(html), html);
 assert.ok(html.includes('mdi:home-assistant') && html.includes('mdi:storefront-outline') && html.includes('mdi:chip'), 'an icon per kind');
 assert.ok(/<div class="badge-title">Updates<\/div>/.test(html), 'default name');
+// #167: one update installing and one waiting: the badge says 2 like the popup.
+assert.ok(name({ 'update.router': upd(), 'update.fw': upd({ in_progress: true }) }).includes('2 verfügbar'), 'installing counts');
 const one = name({ 'update.card': upd() });
 assert.ok(one.includes('<div class="badge-sub">1 verfügbar</div>') && !one.includes('data-kind'), one);
 assert.ok(name(states, { title: 'Neu <b>' }).includes('data-no-i18n>Neu &lt;b&gt;</div>'), 'own name, escaped');
@@ -56,7 +58,7 @@ assert.equal(display({ enabled: false }, states), 'none', 'hidden when switched 
 assert.ok(/display:\$\{enabled && n > 0 \? 'inline-block' : 'none'\}/.test(B.extra_styles), 'host hidden the same way');
 // Without the module (template still works): the same rule inline.
 const bare = { document: doc }; bare.window = bare;
-assert.ok(new Function('window', 'states', 'hass', 'variables', 'user', js(B.name))(bare, states, hass, {}, {}).includes('4 verfügbar'), 'without the module: a plain count');
+assert.ok(new Function('window', 'states', 'hass', 'variables', 'user', js(B.name))(bare, states, hass, {}, {}).includes('5 verfügbar'), 'without the module: a plain count');
 
 // Rows: Home's header (desktop, tablet) and the phone start page, both only with show_updates === true.
 const rowCard = (cards) => cards.find((c) => c.template === 'casora_badge_updates');
