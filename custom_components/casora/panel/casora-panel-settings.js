@@ -1518,7 +1518,9 @@
         return rooms ? { views: rooms.map((r) => ({ title: nameOf(r), cards: [{ variables: r.variables || {} }] })) } : null;
       };
       const picked = () => String((typeof SV.vars === "function" ? SV.vars(draft()) : {}).casora_screensaver_kind || "");
-      let show = picked() || SV.KINDS[0].id, last = picked();
+      // The chips choose (owner 11.11.2026: they looked like a choice but only changed the picture, and „One after the
+      // other“, the default, had no chip). A tap writes casora_screensaver_kind to the draft like the select below.
+      let show = picked() || "mix", last = picked();
       // Room photos: the Studio does not run the dashboard's casoraPhotoUrl, so the photos showed none and the preview
       // drew a landscape. The Studio's own photo list gives the address (shipped examples by their public path).
       const photoUrl = (ref) => {
@@ -1538,8 +1540,20 @@
       chips.style.cssText = "display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 0;";
       const paint = () => {
         chips.textContent = "";
-        SV.KINDS.forEach((k) => {
-          const c = btn(t(k.label), () => { show = k.id; live.update(); paint(); photos(); }, show !== k.id);
+        [{ id: "mix", label: "One after the other" }].concat(SV.KINDS).forEach((k) => {
+          const c = btn(t(k.label), () => {
+            if (show === k.id) return;
+            show = k.id;
+            const rooms = (this._state && this._state.compact && this._state.compact.rooms) || [];
+            const v = k.id === "mix" ? undefined : k.id;
+            rooms.forEach((r) => { r.variables = r.variables || {}; if (v) r.variables.casora_screensaver_kind = v; else delete r.variables.casora_screensaver_kind; });
+            if (typeof this._mirrorToPair === "function") this._mirrorToPair("casora_screensaver_kind", v, rooms);
+            if (typeof this._markDirty === "function") this._markDirty();
+            last = picked();
+            // The select below shows the new choice: the page is drawn again (the preview follows the draft).
+            if (typeof this._csRender === "function") { this._csRender(); return; }
+            live.update(); paint(); photos();
+          }, show !== k.id);
           c.classList.add("cs-saver-chip");
           c.dataset.kind = k.id;
           c.setAttribute("aria-pressed", show === k.id ? "true" : "false");
@@ -1599,7 +1613,7 @@
         const p = picked();
         if (p === last) return;
         last = p;
-        if (p) { show = p; live.update(); paint(); photos(); }
+        show = p || "mix"; live.update(); paint(); photos();
       }, 700);
     };
     P._csFillNeu = function (host, page) {
