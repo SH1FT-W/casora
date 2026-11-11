@@ -19991,7 +19991,6 @@
       "casora_badge_base",
       "casora_popup_updates"
     ],
-    "triggers_update": "all",
     "icon": "mdi:download",
     "show_icon": true,
     "show_label": false,

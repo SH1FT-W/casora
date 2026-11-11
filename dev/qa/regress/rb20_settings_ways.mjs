@@ -6,7 +6,7 @@
 //   2. This dashboard's sections are drawn in their tile (bell: "Nur dieses Dashboard"), no jump to the inspector.
 //   3. Updates from the tile "Updates & Einrichtung" have "‹ Updates & Einrichtung".
 //   4. Search: "Personen" finds the bell of this dashboard, "tueren" finds doors and windows and opens the tile at
-//      that block, no match says so and keeps the eight tiles; back from a hit returns to the search with its text.
+//      that block, no match says so and keeps the tiles (nine with the screensaver); back from a hit returns to the search with its text.
 //   5. A tile opened another way also leads back to the start.
 // Desktop 1440 and phone 393 (WebKit). Nothing is saved.
 import { open, studio, studioDashboard, check, need, finish, usePage } from './lib.mjs';
@@ -67,7 +67,7 @@ for (const [tag, opts] of [['Desktop', { width: 1440, height: 900, dark: true }]
   const none = await search('xyzabc');
   const hint = await H(() => [...window.__panel().shadowRoot.querySelectorAll('#pane .cs-lede')].map((x) => x.textContent).join(' | '));
   const tiles = await H(() => [...window.__panel().shadowRoot.querySelectorAll('.cs-hubtile')].filter((x) => x.getClientRects().length).length);
-  await check(tag + ': kein Treffer: Hinweis und die acht Kacheln bleiben', /Kein Treffer/.test(hint) && tiles === 8, { hint, tiles, none });
+  await check(tag + ': kein Treffer: Hinweis und die neun Kacheln bleiben', /Kein Treffer/.test(hint) && tiles === 9, { hint, tiles, none });
   await search('Türen');
   await page.locator('.frow').filter({ has: page.locator('b', { hasText: /^Türen und Fenster$/ }) }).first().click();
   await page.waitForTimeout(2200);

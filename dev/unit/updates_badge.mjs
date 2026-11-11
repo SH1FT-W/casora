@@ -26,13 +26,19 @@ const hass = { entities: { 'update.core': { platform: 'hassio' }, 'update.mosqui
 assert.deepEqual(X.pending(states), ['update.card', 'update.core', 'update.mosquitto', 'update.router'],
   'waiting = on and not installing, only update entities');
 assert.deepEqual(X.pending({}), []);
+// button-card's state proxy subscribes a card to every entity it reads: only update entities may be read
+// (reading all of them made the badge watch the whole house, r341).
+const reads = [];
+const proxy = new Proxy(states, { get: (o, k) => { reads.push(k); return o[k]; } });
+X.pending(proxy);
+assert.deepEqual(reads.filter((k) => !String(k).startsWith('update.')), [], 'reads only update entities');
 
 // The template: two kinds or more → a count per kind with its icon; one kind → "N verfügbar"; nothing → hidden.
 const tpl = JSON.parse(read('dashboards/casora/button_card_templates.json'));
 const B = tpl.casora_badge_updates;
 assert.ok(B, 'casora_badge_updates');
 assert.deepEqual(B.template, ['casora_badge_base', 'casora_popup_updates'], 'a tap opens the Updates popup');
-assert.equal(B.triggers_update, 'all', 'follows every update entity');
+assert.equal(B.triggers_update, undefined, 'no "all": it follows the update entities it reads');
 const js = (s) => s.trim().replace(/^\[\[\[/, '').replace(/\]\]\]$/, '');
 const evalTpl = (s, variables, st, h = hass) => new Function('window', 'states', 'hass', 'variables', 'user', js(s))(w, st, h, variables, {});
 const name = (st, v = {}) => evalTpl(B.name, v, st);

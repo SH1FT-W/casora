@@ -36,7 +36,7 @@ const row = await page.evaluate(() => {
 const want = await page.evaluate(async (s) => {
   const I = window.__casoraPanelInternals;
   if (I && I.badgeOrderOf) return I.badgeOrderOf(s);
-  const D = ['security', 'climate', 'lights', 'people', 'energy', 'scenes', 'media'];
+  const D = ['security', 'climate', 'lights', 'people', 'energy', 'scenes', 'media', 'updates'];
   const o = (Array.isArray(s) ? s : []).filter((x) => D.includes(x)); D.forEach((x) => { if (!o.includes(x)) o.push(x); });
   return o;
 }, saved);
@@ -110,7 +110,7 @@ await check('Studio: Szenen steht in der Badge-Reihenfolge (Standard nach Energi
   && (!list.includes('energy') || list.indexOf('scenes') > list.indexOf('energy'))
   && (!list.includes('media') || list.indexOf('scenes') < list.indexOf('media')), list);
 // Ohne gespeichertes badge_order (oben entfernt): Standard, wie das Dashboard ihn zeichnet.
-const DEF = ['security', 'climate', 'lights', 'people', 'energy', 'scenes', 'media'];
+const DEF = ['security', 'climate', 'lights', 'people', 'energy', 'scenes', 'media', 'updates'];
 await check('Studio: Liste in Dashboard-Standardreihenfolge', JSON.stringify(list) === JSON.stringify(DEF.filter((id) => list.includes(id))), { list, DEF });
 
 // Szenen per Ziehgriff ganz nach oben.

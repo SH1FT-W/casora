@@ -4012,12 +4012,14 @@
     return p === 'hassio' ? 'ha' : p === 'marketplace' || p === 'hacs' ? 'mp' : 'dev';
   };
   // Updates that wait for the user: on and not installing right now, sorted. The Updates badge (#167) counts these
-  // and shows nothing at 0.
+  // and shows nothing at 0. The id is checked before the state is read: through button-card's state proxy every read
+  // subscribes the card, and reading all states made the badge watch the whole house.
   X.pending = function (states) {
     states = states || {};
     return Object.keys(states).filter(function (id) {
+      if (id.indexOf('update.') !== 0) return false;
       var e = states[id];
-      return id.indexOf('update.') === 0 && e && e.state === 'on' && !(e.attributes || {}).in_progress;
+      return !!e && e.state === 'on' && !(e.attributes || {}).in_progress;
     }).sort();
   };
   // ids (already sorted) → [{ key, label, ids }] in the order of X.KINDS, empty kinds left out; the order inside a kind

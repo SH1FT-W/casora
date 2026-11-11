@@ -37,7 +37,10 @@ for (const dark of [false, true]) {
     const st = b && b.shadowRoot && b.shadowRoot.querySelector('#state');
     const card = b && b.shadowRoot && b.shadowRoot.querySelector('ha-card');
     if (!st || !card) return null;
-    const rgba = (s) => { const m = /rgba?\(([\d.]+)[ ,]+([\d.]+)[ ,]+([\d.]+)(?:[ ,/]+([\d.]+))?/.exec(s || ''); return m ? [+m[1], +m[2], +m[3], m[4] == null ? 1 : +m[4]] : null; };
+    // color-mix() (the designs' tile tone) computes to color(srgb r g b / a) with channels 0..1.
+    const rgba = (s) => { const c = /color\(srgb ([\d.e-]+) ([\d.e-]+) ([\d.e-]+)(?: \/ ([\d.]+))?\)/.exec(s || '');
+      if (c) return [c[1] * 255, c[2] * 255, c[3] * 255, c[4] == null ? 1 : +c[4]];
+      const m = /rgba?\(([\d.]+)[ ,]+([\d.]+)[ ,]+([\d.]+)(?:[ ,/]+([\d.]+))?/.exec(s || ''); return m ? [+m[1], +m[2], +m[3], m[4] == null ? 1 : +m[4]] : null; };
     const over = (f, b2) => [0, 1, 2].map((i) => f[i] * f[3] + b2[i] * (1 - f[3]));
     const lin = (c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
     const L = (c) => 0.2126 * lin(c[0]) + 0.7152 * lin(c[1]) + 0.0722 * lin(c[2]);

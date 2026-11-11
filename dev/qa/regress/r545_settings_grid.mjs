@@ -64,7 +64,7 @@ for (const [tag, opts] of SIZES) {
   await studio(page, dash);
   const P = (src, a) => page.evaluate(([src, a]) => new Function('p', 'arg', 'return (async () => {' + src + '})()')(window.__panel(), a), [src, a]);
   const tiles = await P('return window.casoraSettingsMap.tiles.map((t) => t.id);');
-  await need(tag + ': acht Kacheln', tiles.length === 8, tiles);
+  await need(tag + ': neun Kacheln', tiles.length === 9, tiles);
   for (const t of tiles) {
     await P(`p._bOpen = true; await p._csShow('n-${t}');`);
     await page.waitForTimeout(1300);

@@ -206,7 +206,9 @@ for (const run of RUNS) {
     JSON.stringify(r1.logos) === JSON.stringify(['bild+img', 'blitz', 'bild+img', 'blitz', 'bild+img', 'blitz', 'blitz', 'blitz', 'bild+img', 'bild+img']), r1.logos);
   await check(run.tag + ': Logo und Blitz füllen ihr Feld genau', r1.fit.every((f) => f), r1.fit);
   await check(run.tag + ': Blitz mittig im Feld', r1.bolt.every((b) => Math.abs(b.dx) <= 1 && Math.abs(b.dy) <= 1), r1.bolt);
-  await check(run.tag + ': Zeile führt zur Karte', r1.go.length === 10 && r1.go.every((u) => /^https:\/\/www\.google\.com\/maps\/search\/\?api=1&query=-?\d/.test(u)), r1.go.slice(0, 2));
+  // The phone run is an iPhone: Apple Maps there, Google Maps elsewhere.
+  const mapRe = run.mobile ? /^https:\/\/maps\.apple\.com\/\?ll=-?\d[^&]*&q=./ : /^https:\/\/www\.google\.com\/maps\/search\/\?api=1&query=-?\d/;
+  await check(run.tag + ': Zeile führt zur Karte', r1.go.length === 10 && r1.go.every((u) => mapRe.test(u)), r1.go.slice(0, 2));
   await check(run.tag + ': Fußzeile mit Suchort, Stand und Quelle', r1.src.includes(W.home) && r1.src.includes('10 km') && r1.src.includes(W.data), r1.src);
   if (!run.mobile) await check(run.tag + ': zwei Spalten, Karte rechts neben der Empfehlung', r1.left && r1.map && r1.map.x > r1.left.x + r1.left.w - 2 && Math.abs(r1.map.y - r1.left.y) < 12, { left: r1.left, map: r1.map });
   else await check(run.tag + ': eine Spalte, Karte unter der Empfehlung', r1.left && r1.map && r1.map.y > r1.left.y + r1.left.h && Math.abs(r1.map.x - r1.left.x) < 12, { left: r1.left, map: r1.map });

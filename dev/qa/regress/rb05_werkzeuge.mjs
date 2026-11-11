@@ -16,14 +16,14 @@ const H = (fn, a) => page.evaluate(fn, a);
 const menu = () => H(() => window.__pierce('.combo-menu .combo-opt').filter((e) => e.getClientRects().length).map((e) => e.textContent.trim()));
 const close = () => H(() => window.__panel()._bClose());
 
-// Settings (since 03.11.2026 eight tiles): no "Dashboard" button any more, one "Einstellungen".
+// Settings (since 03.11.2026 eight tiles, nine with the screensaver): no "Dashboard" button any more, one "Einstellungen".
 const noDash = await H(() => !window.__panel().shadowRoot.querySelector('.btool[data-b=dash]'));
 await check('kein eigener Dashboard-Knopf mehr', noDash);
 await page.locator('.btool[data-b=home]').click();
 await page.waitForTimeout(1200);
 const topics = await H(() => [...window.__panel().shadowRoot.querySelectorAll('.cs-hubtile b')].map((b) => b.textContent.trim()));
-const EIGHT = ['Aussehen', 'Bedienen', 'Handy', 'Glocke & Meldungen', 'Haus & Geräte', 'Wetter, Strom & Tanken', 'KI', 'Updates & Einrichtung'];
-await check('Einstellungen: acht Kacheln', topics.length === 8 && EIGHT.every((x) => topics.includes(x)), topics);
+const NINE = ['Aussehen', 'Bedienen', 'Bildschirmschoner', 'Handy', 'Glocke & Meldungen', 'Haus & Geräte', 'Wetter, Strom & Tanken', 'KI', 'Updates & Einrichtung'];
+await check('Einstellungen: neun Kacheln', topics.length === 9 && NINE.every((x) => topics.includes(x)), topics);
 await page.locator('.cs-hubtile', { hasText: 'Wetter, Strom & Tanken' }).click();
 await page.waitForTimeout(1500);
 const wb = await H(() => [...window.__panel().shadowRoot.querySelectorAll('#pane .cn-block')].filter((b) => b.getClientRects().length)
