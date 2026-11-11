@@ -216,17 +216,23 @@
     return { temp: t == null || t === '' || isNaN(Number(t)) ? null : Math.round(Number(t)), text: String(text || ''),
       icon: '/casora_assets/weather/' + (WX[st.state] || 'cloudy-fill') + '.svg' };
   };
-  // The rooms of the dashboard with a photo: [{ name, url }] (the room photos people chose in the Studio).
-  S.rooms = function (cfg, hass, dark) {
+  // The rooms of the dashboard with a photo: [{ name, url, ref }] (the room photos people chose in the Studio).
+  // o.url: how a photo name becomes an address (the Studio has its own list; the dashboard casoraPhotoUrl).
+  // o.only: the photos picked in the Studio (casora_screensaver_photos, the day photo's name); none picked = all.
+  S.rooms = function (cfg, hass, dark, o) {
+    o = o || {};
     var out = [], seen = {};
+    var urlOf = typeof o.url === 'function' ? o.url : typeof window.casoraPhotoUrl === 'function' ? function (ref) { return window.casoraPhotoUrl(ref, hass); } : null;
+    var only = Array.isArray(o.only) && o.only.length ? o.only.map(String) : null;
+    if (!urlOf) return out;
     ((cfg && cfg.views) || []).forEach(function (v) {
       var vars = ((((v.cards || [])[0]) || {}).variables) || {};
+      if (!vars.image || (only && only.indexOf(String(vars.image)) < 0)) return;
       var ref = (dark && vars.image_night) || vars.image;
-      if (!ref || typeof window.casoraPhotoUrl !== 'function') return;
-      var url = window.casoraPhotoUrl(ref, hass);
+      var url = urlOf(ref, dark);
       if (!url || seen[url]) return;
       seen[url] = 1;
-      out.push({ name: String(v.title || vars.title || ''), url: url });
+      out.push({ name: String(v.title || vars.title || ''), url: url, ref: String(vars.image) });
     });
     return out;
   };
@@ -385,9 +391,9 @@
     + '.cs-sv .cs-time{font-weight:500;letter-spacing:-.045em;line-height:1;font-variant-numeric:tabular-nums;}'
     + '.cs-sv .cs-date{font-weight:600;letter-spacing:-.01em;color:rgba(255,255,255,.84);}'
     + '.cs-sv .cs-shade{position:absolute;inset:0;background:linear-gradient(0deg, rgba(10,8,6,.72) 0%, rgba(10,8,6,.24) 34%, rgba(10,8,6,0) 58%);}'
-    + '.cs-sv .cs-bar{position:absolute;left:' + u(72) + ';right:' + u(72) + ';bottom:' + u(62) + ';display:flex;justify-content:space-between;align-items:flex-end;gap:' + u(24) + ';}'
-    + '.cs-sv .cs-bar .cs-time{font-size:' + u(124) + ';margin-left:-' + u(5) + ';text-shadow:0 ' + u(6) + ' ' + u(30) + ' rgba(0,0,0,.35);}'
-    + '.cs-sv .cs-bar .cs-date{font-size:' + u(22) + ';margin-top:' + u(6) + ';}'
+    + '.cs-sv .sv-bar{position:absolute;left:' + u(72) + ';right:' + u(72) + ';bottom:' + u(62) + ';display:flex;justify-content:space-between;align-items:flex-end;gap:' + u(24) + ';}'
+    + '.cs-sv .sv-bar .cs-time{font-size:' + u(124) + ';margin-left:-' + u(5) + ';text-shadow:0 ' + u(6) + ' ' + u(30) + ' rgba(0,0,0,.35);}'
+    + '.cs-sv .sv-bar .cs-date{font-size:' + u(22) + ';margin-top:' + u(6) + ';}'
     + '.cs-sv .cs-name{text-align:right;font-size:' + u(19) + ';font-weight:600;color:rgba(255,255,255,.86);}'
     + '.cs-sv .cs-name b{display:block;font-size:' + u(30) + ';font-weight:700;color:#fff;letter-spacing:-.01em;}'
     + '.cs-sv .cs-photo{position:absolute;inset:-2%;background-size:cover;background-position:center;animation:cs-pan 60s ease-in-out infinite alternate;}'
@@ -414,8 +420,8 @@
     + '.cs-sv .cs-foot .cs-fw{display:flex;align-items:center;gap:' + u(12) + ';font-weight:700;}'
     + '.cs-sv .cs-foot img{width:' + u(40) + ';height:' + u(40) + ';}.cs-sv.cs-wort:not(.cs-dark) .cs-foot img{filter:brightness(0);}.cs-sv.cs-dark .cs-foot img{filter:brightness(0) invert(1);}'
     // Shared by the six data screensavers: a small clock top left, a line of text top right, quiet plates.
-    + '.cs-sv .cs-head{position:absolute;left:' + u(64) + ';right:' + u(64) + ';top:' + u(48) + ';display:flex;justify-content:space-between;align-items:flex-end;gap:' + u(24) + ';}'
-    + '.cs-sv .cs-head .cs-time{font-size:' + u(92) + ';margin-left:-' + u(4) + ';}.cs-sv .cs-head .cs-date{font-size:' + u(19) + ';margin-top:' + u(4) + ';color:rgba(246,239,230,.64);}'
+    + '.cs-sv .sv-head{position:absolute;left:' + u(64) + ';right:' + u(64) + ';top:' + u(48) + ';display:flex;justify-content:space-between;align-items:flex-end;gap:' + u(24) + ';}'
+    + '.cs-sv .sv-head .cs-time{font-size:' + u(92) + ';margin-left:-' + u(4) + ';}.cs-sv .sv-head .cs-date{font-size:' + u(19) + ';margin-top:' + u(4) + ';color:rgba(246,239,230,.64);}'
     + '.cs-sv .cs-sum{text-align:right;font-size:' + u(20) + ';font-weight:600;color:rgba(246,239,230,.64);min-width:0;}'
     + '.cs-sv .cs-sum b{display:block;font-size:' + u(30) + ';font-weight:700;color:#F6EFE6;letter-spacing:-.02em;}'
     + '.cs-sv .cs-cap{font-size:' + u(13) + ';font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(246,239,230,.64);}'
@@ -440,8 +446,8 @@
     + '.cs-sv .cs-ev{position:absolute;width:' + u(210) + ';margin-left:-' + u(105) + ';background:rgba(255,255,255,.07);border-radius:' + u(20) + ';padding:' + u(14) + ' ' + u(16) + ';}'
     + '.cs-sv .cs-ev.cs-up{bottom:calc(50% + ' + u(34) + ');}.cs-sv .cs-ev.cs-down{top:calc(50% + ' + u(52) + ');}.cs-sv .cs-ev.cs-past{opacity:.5;}.cs-sv .cs-ev.cs-next{background:color-mix(in srgb, #4E9E95 34%, #2a2622);}'
     + '.cs-sv .cs-ev b{display:block;font-size:' + u(17.5) + ';font-weight:700;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.cs-sv .cs-ev span{font-size:' + u(14.5) + ';font-weight:600;color:rgba(246,239,230,.64);font-variant-numeric:tabular-nums;}'
-    + '.cs-sv .cs-dot{position:absolute;top:50%;width:' + u(13) + ';height:' + u(13) + ';margin:-' + u(6.5) + ' 0 0 -' + u(6.5) + ';border-radius:50%;background:#F6EFE6;}.cs-sv .cs-dot.cs-past{opacity:.5;}'
-    + '.cs-sv .cs-empty{position:absolute;left:0;right:0;top:calc(50% + ' + u(70) + ');text-align:center;font-size:' + u(22) + ';font-weight:600;color:rgba(246,239,230,.64);}'
+    + '.cs-sv .sv-dot{position:absolute;top:50%;width:' + u(13) + ';height:' + u(13) + ';margin:-' + u(6.5) + ' 0 0 -' + u(6.5) + ';border-radius:50%;background:#F6EFE6;}.cs-sv .sv-dot.cs-past{opacity:.5;}'
+    + '.cs-sv .sv-empty{position:absolute;left:0;right:0;top:calc(50% + ' + u(70) + ');text-align:center;font-size:' + u(22) + ';font-weight:600;color:rgba(246,239,230,.64);}'
     + '.cs-sv.cs-woche{background:radial-gradient(110% 90% at 20% 0%, #26302F 0%, #171614 62%);}'
     + '.cs-sv .cs-cols{position:absolute;inset:0;display:grid;grid-template-columns:repeat(7, minmax(0, 1fr));gap:' + u(10) + ';}'
     + '.cs-sv .cs-col{background:rgba(255,255,255,.05);border-radius:' + u(24) + ';padding:' + u(16) + ' ' + u(12) + ' ' + u(14) + ';display:flex;flex-direction:column;min-width:0;overflow:hidden;}'
@@ -488,7 +494,7 @@
     + '.cs-sv .cs-it b{display:block;font-size:' + u(18) + ';font-weight:700;line-height:1.25;}.cs-sv .cs-it span{font-size:' + u(15) + ';font-weight:600;color:rgba(246,239,230,.64);}'
     // Narrow boxes (portrait tablet): the big time gives way.
     + '@container (aspect-ratio < 1){.cs-sv .cs-top{flex-direction:column;}.cs-sv .cs-wx{text-align:left;padding-top:0;}.cs-sv .cs-wx .cs-t{justify-content:flex-start;}'
-    + '.cs-sv .cs-top .cs-time{font-size:' + u(150) + ';}.cs-sv .cs-words{font-size:' + u(104) + ';}.cs-sv .cs-bar{flex-direction:column;align-items:flex-start;}.cs-sv .cs-name{text-align:left;}'
+    + '.cs-sv .cs-top .cs-time{font-size:' + u(150) + ';}.cs-sv .cs-words{font-size:' + u(104) + ';}.cs-sv .sv-bar{flex-direction:column;align-items:flex-start;}.cs-sv .cs-name{text-align:left;}'
     // Weather: the days go under the current weather. Week: seven rows instead of seven columns.
     + '.cs-sv .cs-wk{position:static;width:auto;margin-top:' + u(44) + ';}.cs-sv.cs-wetter .cs-body{display:flex;flex-direction:column;}.cs-sv .cs-wnow{order:-1;}'
     + '.cs-sv .cs-cols{grid-template-columns:minmax(0, 1fr);grid-auto-rows:minmax(0, 1fr);}'
@@ -503,7 +509,7 @@
 
   var bar = function (ctx, name, sub) {
     var wx = ctx.wx;
-    return '<div class="cs-shade"></div><div class="cs-bar"><div><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div>'
+    return '<div class="cs-shade"></div><div class="sv-bar"><div><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div>'
       + '<div class="cs-date">' + esc(dateText(ctx.now)) + (wx && wx.temp != null ? ' · ' + wx.temp + '° ' + esc(wx.text.toLowerCase()) : '') + '</div></div>'
       + (name ? '<div class="cs-name"><b data-no-i18n>' + esc(name) + '</b>' + esc(sub || '') + '</div>' : '') + '</div>';
   };
@@ -556,7 +562,7 @@
     },
   };
   var head = function (ctx, title, sub) {
-    return '<div class="cs-head"><div><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div>'
+    return '<div class="sv-head"><div><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div>'
       + (title ? '<div class="cs-sum"><b>' + esc(title) + '</b>' + esc(sub || '') + '</div>' : '') + '</div>';
   };
   var clockOf = function (ts) { return hm(ts); };
@@ -626,15 +632,15 @@
       // Above and below in turn; two on the same side keep their distance.
       var side = i % 2 ? 'down' : 'up';
       if (p - last[side] < 19) side = side === 'up' ? 'down' : 'up';
-      if (p - last[side] < 19) { out += '<div class="cs-dot' + (past ? ' cs-past' : '') + '" style="left:' + p.toFixed(1) + '%"></div>'; return; }
+      if (p - last[side] < 19) { out += '<div class="sv-dot' + (past ? ' cs-past' : '') + '" style="left:' + p.toFixed(1) + '%"></div>'; return; }
       last[side] = p;
       var left = Math.max(10, Math.min(90, p));
-      out += '<div class="cs-dot' + (past ? ' cs-past' : '') + '" style="left:' + p.toFixed(1) + '%"></div>'
+      out += '<div class="sv-dot' + (past ? ' cs-past' : '') + '" style="left:' + p.toFixed(1) + '%"></div>'
         + '<div class="cs-ev cs-' + side + (past ? ' cs-past' : '') + (e === next ? ' cs-next' : '') + '" style="left:' + left.toFixed(1) + '%"><b data-no-i18n>' + esc(e.title) + '</b><span>'
         + esc(clockOf(e.start) + (e.end ? ' – ' + clockOf(e.end) : '')) + '</span></div>';
     });
     if (now >= from) out += '<div class="cs-now" style="left:' + pos(now).toFixed(1) + '%"></div>';
-    if (!today.length) out += '<div class="cs-empty">' + esc(T('Heute keine Termine')) + '</div>';
+    if (!today.length) out += '<div class="sv-empty">' + esc(T('Heute keine Termine')) + '</div>';
     return out + '</div></div>';
   };
   // Seven days side by side: weather, appointments, waste. Today stands out.
@@ -749,7 +755,7 @@
     var need = function (list) { return !kind || list.indexOf(kind) > -1; };
     var cals = o.events === undefined && need(['linie', 'woche']) ? S.calendars(hass) : [];
     return { now: now, hass: hass, vars: vars, dark: dark, sun: o.sun !== undefined ? o.sun : S.sunTimes(hass, now),
-      wx: o.wx !== undefined ? o.wx : S.weather(hass, vars.weather_entity), rooms: o.rooms || S.rooms(o.config, hass, dark),
+      wx: o.wx !== undefined ? o.wx : S.weather(hass, vars.weather_entity), rooms: o.rooms || S.rooms(o.config, hass, dark, { url: o.photoUrl, only: vars.casora_screensaver_photos }),
       // Asked for only when the screensaver on show needs it.
       hourly: o.hourly !== undefined ? o.hourly : need(['wetter']) ? S.forecast(hass, vars.weather_entity, 'hourly') : [],
       daily: o.daily !== undefined ? o.daily : need(['wetter', 'woche']) ? S.forecast(hass, vars.weather_entity, 'daily') : [],
@@ -811,10 +817,10 @@
 
   // The settings of the dashboard: the first value found on a view's hero card.
   S.vars = function (cfg) {
-    var out = {}, keys = ['casora_screensaver', 'casora_screensaver_kind', 'casora_screensaver_calendar', 'weather_entity'];
+    var out = {}, keys = ['casora_screensaver', 'casora_screensaver_kind', 'casora_screensaver_calendar', 'casora_screensaver_photos', 'weather_entity'];
     ((cfg && cfg.views) || []).forEach(function (v) {
       var vars = ((((v.cards || [])[0]) || {}).variables) || {};
-      keys.forEach(function (k) { if ((out[k] == null || out[k] === '') && vars[k] != null && vars[k] !== '') out[k] = vars[k]; });
+      keys.forEach(function (k) { if ((out[k] == null || out[k] === '' || (Array.isArray(out[k]) && !out[k].length)) && vars[k] != null && vars[k] !== '') out[k] = vars[k]; });
     });
     return out;
   };

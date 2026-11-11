@@ -3079,7 +3079,10 @@
     "Tiles that are on in the colour of their device, a soft colour wash.": "Fliser som er på, i fargen til enheten, med en myk fargeovergang.",
     "Updates badge": "Oppdateringsmerke",
     "Shows only while updates are waiting, with their number by kind. A tap opens the list of updates.": "Vises bare mens oppdateringer venter, med antallet etter type. Et trykk åpner listen over oppdateringer.",
-    "None waiting": "Ingen venter"
+    "None waiting": "Ingen venter",
+    "Only the photos picked here.": "Bare bildene som er valgt her.",
+    "All room photos. Tap a photo to show only the ones you pick.": "Alle rombilder. Trykk på et bilde for å vise bare de du velger.",
+    "Screensaver photos": "Bilder for skjermspareren"
   },
   "patterns": [
     [

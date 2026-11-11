@@ -3079,7 +3079,10 @@
     "Tiles that are on in the colour of their device, a soft colour wash.": "Eingeschaltete Kacheln in der Farbe ihres Geräts, weicher Farbverlauf.",
     "Updates badge": "Update-Badge",
     "Shows only while updates are waiting, with their number by kind. A tap opens the list of updates.": "Erscheint nur, solange Updates warten, mit ihrer Anzahl nach Art. Ein Tippen öffnet die Liste der Updates.",
-    "None waiting": "Keine wartet"
+    "None waiting": "Keine wartet",
+    "Only the photos picked here.": "Nur die hier gewählten Fotos.",
+    "All room photos. Tap a photo to show only the ones you pick.": "Alle Raumfotos. Tippe auf ein Foto, um nur die gewählten zu zeigen.",
+    "Screensaver photos": "Fotos für den Bildschirmschoner"
   },
   "patterns": [
     [

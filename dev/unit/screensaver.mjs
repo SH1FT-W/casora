@@ -157,4 +157,27 @@ assert.ok(/Golden Hour/.test(S.html('musik', bare)) && /Arzttermin|Einkaufen/.te
 assert.equal(S.sample(ctx({ media, hourly, daily, events, energy: null })).media.title, 'Song "A"', 'real data wins over the example');
 
 assert.ok(read('custom_components/casora/scripts/casora-local.js').includes("'46-screensaver'"), 'module in MODULES');
+
+// Room photos (owner 11.11.2026). The Studio has no casoraPhotoUrl: it hands its own resolver (o.url), else the preview
+// had no photo and drew a landscape. Picked photos (casora_screensaver_photos, the day photo's name) narrow the list.
+const pcfg = { views: [['Bad', 'bad', 'bad-night'], ['Flur', 'flur'], ['Küche', 'kueche'], ['Leer']].map(([title, image, image_night]) =>
+  ({ title, cards: [{ variables: { image, image_night, casora_screensaver_photos: title === 'Flur' ? ['bad', 'kueche'] : undefined } }] })) };
+const J = (x) => JSON.parse(JSON.stringify(x));   // arrays from the vm context
+const url = (ref) => '/p/' + ref + '.jpg';
+assert.deepEqual(J(S.rooms(pcfg, null, false)), [], 'no resolver, no photos (the Studio before the fix)');
+assert.deepEqual(J(S.rooms(pcfg, null, false, { url }).map((r) => r.url)), ['/p/bad.jpg', '/p/flur.jpg', '/p/kueche.jpg']);
+assert.deepEqual(J(S.rooms(pcfg, null, true, { url }).map((r) => r.url)), ['/p/bad-night.jpg', '/p/flur.jpg', '/p/kueche.jpg'], 'dark: the night photo');
+assert.deepEqual(J(S.rooms(pcfg, null, false, { url, only: ['kueche', 'bad'] }).map((r) => r.name)), ['Bad', 'Küche'], 'only the picked ones');
+assert.equal(S.rooms(pcfg, null, false, { url, only: [] }).length, 3, 'none picked: all');
+assert.deepEqual(J(S.vars(pcfg).casora_screensaver_photos), ['bad', 'kueche'], 'the pick is a dashboard setting');
+const cx = S.context({ hass: { states: {} }, config: pcfg, vars: S.vars(pcfg), photoUrl: url, kind: 'fotos', now: new Date(2026, 10, 11, 12, 0) });
+assert.deepEqual(J(cx.rooms.map((r) => r.name)), ['Bad', 'Küche'], 'the context passes resolver and pick on');
+
+// The preview sits in the Studio's shadow root: no class of a screensaver may share a name with a Studio rule (the
+// time bar was „.cs-bar“, the Studio's save bar, and showed as a white box over the photo).
+const own = new Set();
+for (const m of read('custom_components/casora/scripts/local/46-screensaver.js').matchAll(/class="([^"]+)"/g)) m[1].split(/\s+/).forEach((c) => c && !/[^\w-]/.test(c) && own.add(c));
+const studio = ['casora-panel.js', 'casora-panel-settings.js', 'casora-panel-b.js', 'casora-panel-b-ux.js'].map((f) => read('custom_components/casora/panel/' + f)).join('\n');
+const clash = [...own].filter((c) => c !== 'cs-sv' && new RegExp('\\.' + c + '(?![\\w-])[^;(){}"\'=]*\\{').test(studio));
+assert.deepEqual(clash, [], 'saver classes also styled by the Studio');
 console.log('ok screensaver');

@@ -2556,6 +2556,9 @@ const SECTIONS = [
           linie: "Day line", woche: "Week", musik: "Music", energie: "Energy flow", ruhe: "House at rest" },
         when: (v) => v.casora_screensaver != null && v.casora_screensaver !== "",
         hint: "Sky follows the sun and the weather. Landscapes are drawn, nothing is loaded. Photos shows this dashboard's room photos." },
+      // The room photos „Photos“ shows (day photo names); none = all. Picked on the Screensaver page under its preview,
+      // never drawn as a field here; listed so a new room takes it over like the other dashboard settings.
+      { key: "casora_screensaver_photos", sub: "chrome", label: "Screensaver photos", type: "text", auto: true, scope: "dashboard", when: () => false },
       // Halten auf Kacheln (22-halten.js): leer = Schnellmenü. casora-core.js setzt daraus window._casoraHoldMode,
       // ans Handy geht es über casora_mobile_bg. Je Kachel überstimmbar (variables.hold_mode, Kachel-Inspektor).
       { key: "hold_mode", sub: "hold", label: "Hold on tiles", type: "select", auto: true, scope: "dashboard",

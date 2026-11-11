@@ -3079,7 +3079,10 @@
     "Tiles that are on in the colour of their device, a soft colour wash.": "Os mosaicos ligados na cor do seu dispositivo, com um gradiente suave.",
     "Updates badge": "Emblema de atualizações",
     "Shows only while updates are waiting, with their number by kind. A tap opens the list of updates.": "Só aparece enquanto houver atualizações à espera, com o número por tipo. Um toque abre a lista de atualizações.",
-    "None waiting": "Nenhuma à espera"
+    "None waiting": "Nenhuma à espera",
+    "Only the photos picked here.": "Só as fotos escolhidas aqui.",
+    "All room photos. Tap a photo to show only the ones you pick.": "Todas as fotos das divisões. Toque numa foto para mostrar só as que escolher.",
+    "Screensaver photos": "Fotos da proteção de ecrã"
   },
   "patterns": [
     [

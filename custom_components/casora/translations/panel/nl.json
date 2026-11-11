@@ -3079,7 +3079,10 @@
     "Tiles that are on in the colour of their device, a soft colour wash.": "Ingeschakelde tegels in de kleur van hun apparaat, een zacht kleurverloop.",
     "Updates badge": "Update-badge",
     "Shows only while updates are waiting, with their number by kind. A tap opens the list of updates.": "Verschijnt alleen zolang er updates wachten, met hun aantal per soort. Een tik opent de lijst met updates.",
-    "None waiting": "Geen wachtend"
+    "None waiting": "Geen wachtend",
+    "Only the photos picked here.": "Alleen de foto’s die hier gekozen zijn.",
+    "All room photos. Tap a photo to show only the ones you pick.": "Alle kamerfoto’s. Tik op een foto om alleen de gekozen foto’s te tonen.",
+    "Screensaver photos": "Foto’s voor de schermbeveiliging"
   },
   "patterns": [
     [

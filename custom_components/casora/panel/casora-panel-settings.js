@@ -80,7 +80,7 @@
     { id: "saver", label: "Screensaver", icon: "clock", tone: "set-saver",
       sub: "What a wall tablet shows when nobody touches it.",
       blocks: [
-        { k: "saver", sec: "General", sub: "chrome", keys: ["casora_screensaver", "casora_screensaver_kind"], saver: true,
+        { k: "saver", sec: "General", sub: "chrome", keys: ["casora_screensaver", "casora_screensaver_kind", "casora_screensaver_photos"], saver: true,
           title: "Screensaver", plain: "Pick a screensaver and after how long it starts. The picture shows what it looks like.",
           kw: "bildschirmschoner screensaver wandtablet tablet uhr wortuhr himmel landschaft fotos leerlauf idle ruhe" },
       ] },
@@ -1340,8 +1340,8 @@
         if (b.personal) box.appendChild(el("div", "fhead", t("On this dashboard")));
         else head.querySelector("b").appendChild(el("span", "rdetail cs-dash cn-only", t("Only this dashboard")));
         const card = this._csDashCard(b.sec);
-        if (card) { trimCard(this, card, b); box.appendChild(card); }
-        if (card && b.saver) this._csSaverPreview(box, card);
+        // The note is for a missing dashboard only (the screensaver's preview had made it show under every card).
+        if (card) { trimCard(this, card, b); box.appendChild(card); if (b.saver) this._csSaverPreview(box, card); }
         else box.appendChild(el("p", "cs-lede", t("Open a dashboard in the Studio to change this.")));
         if (b.personal && cs && cs.loaded && typeof this._casoraPersonalGroups === "function") this._casoraPersonalGroups(box, cs.S, b.personal, rerender);
         return;
@@ -1513,19 +1513,33 @@
       // The module reads a dashboard config: the Studio's rooms carry the same hero variables.
       const draft = () => {
         const rooms = this._state && this._state.compact && Array.isArray(this._state.compact.rooms) ? this._state.compact.rooms : null;
-        return rooms ? { views: rooms.map((r) => ({ title: r.title || "", cards: [{ variables: r.variables || {} }] })) } : null;
+        // The room's name as the dashboard shows it (Studio rooms carry name, not title: the photo said „badezimmer“).
+        const nameOf = (r) => (typeof this._roomShown === "function" ? this._roomShown(r) : r.name || r.title || "");
+        return rooms ? { views: rooms.map((r) => ({ title: nameOf(r), cards: [{ variables: r.variables || {} }] })) } : null;
       };
       const picked = () => String((typeof SV.vars === "function" ? SV.vars(draft()) : {}).casora_screensaver_kind || "");
       let show = picked() || SV.KINDS[0].id, last = picked();
+      // Room photos: the Studio does not run the dashboard's casoraPhotoUrl, so the photos showed none and the preview
+      // drew a landscape. The Studio's own photo list gives the address (shipped examples by their public path).
+      const photoUrl = (ref) => {
+        const name = String(ref || "").replace(/\.(jpe?g|png|webp)$/i, "");
+        const day = name.replace(/-night$/, "");
+        const hit = (this._imgs || []).find((i) => i.name === day);
+        const url = hit ? (/-night$/.test(name) ? hit.night || hit.day : hit.day || hit.night) : "";
+        if (url) return url;
+        if (/-demo(-night)?$/.test(name)) return "/casora_assets/rooms/" + encodeURIComponent(name) + ".jpg";
+        return typeof window.casoraPhotoUrl === "function" ? window.casoraPhotoUrl(ref, this._hass) : "";
+      };
       const live = SV.mount(stage, null, { kind: () => show, every: 30000, sample: true,
-        context: () => ({ config: draft(), vars: typeof SV.vars === "function" ? SV.vars(draft()) : {} }) });
+        context: () => ({ config: draft(), photoUrl, vars: typeof SV.vars === "function" ? SV.vars(draft()) : {} }) });
+      if (typeof this._images === "function") this._images().then(() => { if (stage.isConnected) { live.update(); photos(); } }, () => {});
       this._csSaverLive = live;
       const chips = el("div", "cs-saver-chips");
       chips.style.cssText = "display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 0;";
       const paint = () => {
         chips.textContent = "";
         SV.KINDS.forEach((k) => {
-          const c = btn(t(k.label), () => { show = k.id; live.update(); paint(); }, show !== k.id);
+          const c = btn(t(k.label), () => { show = k.id; live.update(); paint(); photos(); }, show !== k.id);
           c.classList.add("cs-saver-chip");
           c.dataset.kind = k.id;
           c.setAttribute("aria-pressed", show === k.id ? "true" : "false");
@@ -1534,13 +1548,58 @@
       };
       paint();
       wrap.appendChild(chips);
+      // Which room photos „Fotos“ shows: all of them, or the ones picked here (casora_screensaver_photos, the day
+      // photo's name, on every room like the other screensaver settings). A draft like every setting.
+      const pick = el("div", "cs-saver-photos");
+      pick.style.cssText = "margin:14px 0 0;";
+      wrap.appendChild(pick);
+      const photos = () => {
+        pick.textContent = "";
+        const rooms = (this._state && this._state.compact && this._state.compact.rooms) || [];
+        const seen = new Set(), list = [];
+        rooms.forEach((r) => { const ref = r.variables && r.variables.image; if (ref && !seen.has(String(ref))) { seen.add(String(ref)); list.push({ ref: String(ref), title: typeof this._roomShown === "function" ? this._roomShown(r) : r.name || "" }); } });
+        if (show !== "fotos" || !list.length) return;
+        const cur = (rooms.map((r) => (r.variables || {}).casora_screensaver_photos).find((v) => Array.isArray(v) && v.length) || []).map(String);
+        const on = (ref) => !cur.length || cur.includes(ref);
+        pick.appendChild(el("div", "fhead", t("Photos")));
+        pick.appendChild(el("p", "cs-lede", t(cur.length ? "Only the photos picked here." : "All room photos. Tap a photo to show only the ones you pick.")));
+        const grid = el("div", "cs-saver-grid");
+        grid.style.cssText = "display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px;margin:8px 0 0;";
+        list.forEach((p) => {
+          const b = el("button", "cs-saver-photo");
+          b.type = "button";
+          b.dataset.ref = p.ref;
+          b.setAttribute("aria-pressed", on(p.ref) ? "true" : "false");
+          const url = photoUrl(p.ref);
+          b.style.cssText = "position:relative;aspect-ratio:4 / 3;border-radius:14px;overflow:hidden;cursor:pointer;padding:0;font:inherit;"
+            + "border:2px solid " + (on(p.ref) ? "var(--cs-accent, #B5653A)" : "transparent") + ";opacity:" + (on(p.ref) ? "1" : "0.45") + ";"
+            + "background:#2a2a2a center / cover no-repeat" + (url ? " url(\"" + String(url).replace(/["\\]/g, "\\$&") + "\")" : "") + ";";
+          const cap = el("span", "", p.title);
+          cap.style.cssText = "position:absolute;left:0;right:0;bottom:0;padding:14px 8px 6px;font-size:12px;font-weight:600;color:#fff;text-align:left;"
+            + "background:linear-gradient(transparent, rgba(0,0,0,0.55));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;";
+          b.appendChild(cap);
+          b.onclick = () => {
+            // From „all“ the first tap picks that one photo; the last one switched off means all again.
+            let next = cur.length ? (cur.includes(p.ref) ? cur.filter((x) => x !== p.ref) : cur.concat([p.ref])) : [p.ref];
+            next = list.map((x) => x.ref).filter((x) => next.includes(x));
+            const all = rooms;
+            all.forEach((r) => { r.variables = r.variables || {}; if (next.length) r.variables.casora_screensaver_photos = next.slice(); else delete r.variables.casora_screensaver_photos; });
+            if (typeof this._mirrorToPair === "function") this._mirrorToPair("casora_screensaver_photos", next.length ? next.slice() : undefined, all);
+            if (typeof this._markDirty === "function") this._markDirty();
+            live.update(); photos();
+          };
+          grid.appendChild(b);
+        });
+        pick.appendChild(grid);
+      };
+      photos();
       // The kind of the draft changes: the preview follows it (looked at while the preview is on the page).
       const watch = setInterval(() => {
         if (!stage.isConnected) { clearInterval(watch); live.destroy(); return; }
         const p = picked();
         if (p === last) return;
         last = p;
-        if (p) { show = p; live.update(); paint(); }
+        if (p) { show = p; live.update(); paint(); photos(); }
       }, 700);
     };
     P._csFillNeu = function (host, page) {

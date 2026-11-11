@@ -57,6 +57,35 @@ for (const k of KINDS) {
   await check('Chip ' + k + ' zeichnet ' + k, s.kind === k && s.pressed === k && s.text.length > 3, s.kind + ' · ' + s.text.slice(0, 80));
   await pic('vorschau_' + k);
 }
+// Photos (owner 11.11.2026): the preview drew a landscape although the rooms have photos (the Studio does not run the
+// dashboard's casoraPhotoUrl); it takes the Studio's own photo list now. Under the preview the room photos to pick
+// from: none picked shows all, a tap shows only the picked ones (casora_screensaver_photos on every room, a draft).
+await P(`p.shadowRoot.querySelector('.cs-saver-chip[data-kind="fotos"]').click();`);
+await wait(2000);
+const fotos = () => P(`const r = p.shadowRoot, st = r.querySelector('.cs-saver-stage'), f = st && st.querySelector('.cs-photo');
+  return { kind: ((st && st.querySelector('.cs-sv')) || {}).dataset?.kind || '', bg: f ? f.style.backgroundImage : '',
+    tiles: [...r.querySelectorAll('.cs-saver-photo')].map((b) => ({ ref: b.dataset.ref, on: b.getAttribute('aria-pressed') === 'true', bg: b.style.backgroundImage })),
+    vars: [...new Set(p._state.compact.rooms.map((x) => JSON.stringify(x.variables.casora_screensaver_photos ?? null)))] };`);
+let f = await fotos();
+const nm = await P(`const st = p.shadowRoot.querySelector('.cs-saver-stage .cs-name'); return { shown: st ? st.textContent.trim() : '', rooms: p._state.compact.rooms.map((r) => p._roomShown(r)) };`);
+await check('Raumname wie im Dashboard, nicht der Pfad', nm.shown && nm.rooms.includes(nm.shown), JSON.stringify(nm).slice(0, 200));
+await check('Fotos zeigt ein Raumfoto, keine Landschaft', f.kind === 'fotos' && /url\(".+"\)/.test(f.bg), JSON.stringify(f).slice(0, 300));
+await check('Raumfotos zur Auswahl, ohne Auswahl alle an', f.tiles.length >= 2 && f.tiles.every((x) => x.on && /url\(".+"\)/.test(x.bg)), JSON.stringify(f.tiles).slice(0, 300));
+await pic('fotos_alle');
+const one = f.tiles[1];
+await P(`p.shadowRoot.querySelector('.cs-saver-photo[data-ref="' + arg + '"]').click();`, one.ref);
+await wait(900);
+f = await fotos();
+await check('ein Foto gewählt: nur dieses, in jedem Raum', f.tiles.filter((x) => x.on).map((x) => x.ref).join() === one.ref
+  && f.vars.length === 1 && f.vars[0] === JSON.stringify([one.ref]), JSON.stringify({ on: f.tiles.filter((x) => x.on).map((x) => x.ref), vars: f.vars }));
+await check('Vorschau zeigt das gewählte Foto', f.bg === one.bg, f.bg.slice(0, 120) + ' ≠ ' + one.bg.slice(0, 120));
+await pic('fotos_eines');
+await P(`p.shadowRoot.querySelector('.cs-saver-photo[data-ref="' + arg + '"]').click();`, one.ref);
+await wait(700);
+f = await fotos();
+await check('letztes abgewählt: wieder alle', f.tiles.every((x) => x.on) && f.vars.length === 1 && f.vars[0] === 'null', JSON.stringify(f.vars));
+// The note for a missing dashboard came under every setting of an open dashboard since the preview was added.
+await check('kein „Öffne ein Dashboard“ bei offenem Dashboard', !(await P(`return [...p.shadowRoot.querySelectorAll('.cs-lede')].some((x) => /Open a dashboard in the Studio|Öffne im Studio ein Dashboard/.test(x.textContent));`)));
 // The draft (the working copy of the dashboard) picks a kind: the preview follows it, nothing is saved by looking.
 await check('Auswahl erst mit Startzeit', !s.kindRow);
 await P(`for (const r of p._state.compact.rooms) { r.variables.casora_screensaver = '5'; r.variables.casora_screensaver_kind = 'woche'; }`);
