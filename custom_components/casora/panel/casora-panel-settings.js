@@ -1482,6 +1482,7 @@
     // Preview of the screensaver (scripts/local/46-screensaver.js draws it, the same code as on the tablet): it shows
     // the kind picked in the draft right away, nothing is saved by looking. Chips let one look at every kind; where the
     // house has nothing to show right now (nothing playing, no appointments), the preview shows an example.
+    let saverLoad = null;
     P._csSaverPreview = function (box, card) {
       const SV = window._casoraSaver;
       const wrap = el("div", "cs-saver");
@@ -1493,16 +1494,31 @@
       if (!SV || typeof SV.mount !== "function") {
         stage.appendChild(el("p", "cs-lede", t("The preview appears once the dashboard's scripts have loaded.")));
         stage.firstChild.style.cssText = "position:absolute;inset:0;display:grid;place-items:center;color:#fff;margin:0;padding:16px;text-align:center;";
+        // The Studio does not load the dashboard's modules: fetch what the screensavers need (their texts, the
+        // energy and waste helpers, the module itself) once, then draw the preview in place of this note.
+        if (!saverLoad) {
+          const imp = window.casoraImportScript || ((p) => import("/casora_scripts/" + p));
+          const quiet = (p) => imp(p).catch(() => {});
+          saverLoad = Promise.all([window.casoraTr ? null : quiet("casora-i18n.js"), window.casoraEnergyPrefs ? null : quiet("local/00-finder.js")])
+            .then(() => imp("local/46-screensaver.js"));
+        }
+        saverLoad.then(() => {
+          if (!wrap.isConnected || !window._casoraSaver) return;
+          wrap.remove();
+          this._csSaverPreview(box, card);
+        }, () => { saverLoad = null; });
         return;
       }
-      const picked = () => {
-        const sel = card.querySelector('[data-key="casora_screensaver_kind"] select');
-        return sel ? sel.value : "";
+      // The kind picked in the draft (the working copy of the dashboard, not yet saved).
+      // The module reads a dashboard config: the Studio's rooms carry the same hero variables.
+      const draft = () => {
+        const rooms = this._state && this._state.compact && Array.isArray(this._state.compact.rooms) ? this._state.compact.rooms : null;
+        return rooms ? { views: rooms.map((r) => ({ title: r.title || "", cards: [{ variables: r.variables || {} }] })) } : null;
       };
-      let show = picked() || SV.KINDS[0].id;
-      const cfg = this._state && this._state.config ? this._state.config : null;
+      const picked = () => String((typeof SV.vars === "function" ? SV.vars(draft()) : {}).casora_screensaver_kind || "");
+      let show = picked() || SV.KINDS[0].id, last = picked();
       const live = SV.mount(stage, null, { kind: () => show, every: 30000, sample: true,
-        context: () => ({ config: cfg, vars: typeof SV.vars === "function" ? SV.vars(cfg) : {} }) });
+        context: () => ({ config: draft(), vars: typeof SV.vars === "function" ? SV.vars(draft()) : {} }) });
       this._csSaverLive = live;
       const chips = el("div", "cs-saver-chips");
       chips.style.cssText = "display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 0;";
@@ -1518,8 +1534,14 @@
       };
       paint();
       wrap.appendChild(chips);
-      // The select of the draft changes: the preview follows it.
-      card.addEventListener("change", () => { const p = picked(); if (p && p !== show) { show = p; live.update(); paint(); } });
+      // The kind of the draft changes: the preview follows it (looked at while the preview is on the page).
+      const watch = setInterval(() => {
+        if (!stage.isConnected) { clearInterval(watch); live.destroy(); return; }
+        const p = picked();
+        if (p === last) return;
+        last = p;
+        if (p) { show = p; live.update(); paint(); }
+      }, 700);
     };
     P._csFillNeu = function (host, page) {
       if (page.tile) {

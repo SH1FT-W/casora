@@ -284,6 +284,9 @@
           });
         });
         out.sort(function (x, y) { return x.start - y.start; });
+        // The same appointment in several calendars (a family calendar and one's own) counts once.
+        var seen = {};
+        out = out.filter(function (e) { var k = e.start + '|' + e.title; if (seen[k]) return false; seen[k] = 1; return true; });
         DATA.ev[key] = out;
         changed();
       });
@@ -448,7 +451,7 @@
     + '.cs-sv .cs-cw img{width:' + u(30) + ';height:' + u(30) + ';filter:brightness(0) invert(1);}.cs-sv .cs-cw span{color:rgba(246,239,230,.64);font-weight:600;}'
     + '.cs-sv .cs-li{margin-top:' + u(16) + ';display:flex;flex-direction:column;gap:' + u(8) + ';}'
     + '.cs-sv .cs-e{border-radius:' + u(14) + ';padding:' + u(9) + ' ' + u(10) + ';background:rgba(255,255,255,.07);border-left:' + u(4) + ' solid var(--cs-c, #8a857d);}'
-    + '.cs-sv .cs-e b{font-size:' + u(14.5) + ';font-weight:700;line-height:1.2;overflow:hidden;overflow-wrap:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}.cs-sv .cs-e span{font-size:' + u(13) + ';font-weight:600;color:rgba(246,239,230,.64);font-variant-numeric:tabular-nums;}'
+    + '.cs-sv .cs-e b{font-size:' + u(14.5) + ';font-weight:700;line-height:1.2;overflow:hidden;overflow-wrap:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}.cs-sv .cs-e span{display:block;font-size:' + u(13) + ';font-weight:600;color:rgba(246,239,230,.64);font-variant-numeric:tabular-nums;}'
     + '.cs-sv .cs-none{margin-top:' + u(16) + ';font-size:' + u(14) + ';font-weight:600;color:rgba(246,239,230,.34);}'
     + '.cs-sv.cs-musik{background:linear-gradient(135deg, #3A2F45 0%, #2D2540 50%, #162036 100%);}'
     + '.cs-sv .cs-blur{position:absolute;inset:-12%;background-size:cover;background-position:center;filter:blur(' + u(60) + ') saturate(1.3) brightness(.55);}'
