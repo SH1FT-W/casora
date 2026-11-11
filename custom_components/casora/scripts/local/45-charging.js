@@ -4,7 +4,7 @@
 // not needed) with the battery scale, the chargers per speed class as columns, and three tiles (nearest, fastest,
 // free); right a dot map of the radius, a switch Nächste / Schnellste / Kostenlos and the list. Every charger wears the
 // colour of its speed class: up to 11 kW blue, up to 49 kW teal, from 50 kW yellow, from 150 kW orange. A row or tile
-// opens the place in the map app. Source line „Daten: Open Charge Map, CC BY 4.0“.
+// opens the place in the map app (Apple Maps on iOS, else Google Maps). Source line „Daten: Open Charge Map, CC BY 4.0“.
 // Data: websocket casora/charging/list, asked when the page opens (Casora keeps the answer for half an hour). Without
 // a key (casora/charging/ready) there is no row. No live availability: Open Charge Map has none.
 //   window._casoraCharge.item(p, states)  → the row for the car popup, or null
@@ -70,8 +70,16 @@
     if (s.free) bits.push('kostenlos');
     return bits.join(' · ');
   };
+  // The place in the map app of the device: Apple Maps on iPhone and iPad (also in the HA app, where the iPad calls
+  // itself a Mac), Google Maps everywhere else.
+  X.ios = function () {
+    var n = window.navigator || {}, ua = n.userAgent || '';
+    return /iPhone|iPad|iPod/i.test(ua) || (n.platform === 'MacIntel' && n.maxTouchPoints > 1) || /Home ?Assistant\/[^)]*\biOS\b/i.test(ua);
+  };
   X.mapUrl = function (s) {
-    return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(s.lat + ',' + s.lng);
+    var at = s.lat + ',' + s.lng;
+    if (X.ios()) return 'https://maps.apple.com/?ll=' + encodeURIComponent(at) + '&q=' + encodeURIComponent(s.n || s.op || at);
+    return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(at);
   };
 
   // ── Row in the car popup ─────────────────────────────────────────────────
