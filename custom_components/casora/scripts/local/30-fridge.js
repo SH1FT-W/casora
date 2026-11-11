@@ -311,7 +311,7 @@
       var temps = UI.v3 && UI.v3() && UI.stage && F.stageZone(C, S) ? '' : F.temps(s, false);
       if (s.alarms.length) return UI.line(s.alarms[0].text, [s.alarms[0].where, temps], { tone: 'bad' });
       if (s.doorsOpen.length) return UI.line(doorText(s), [doorWhere(s), s.doorsOpen[0].since, temps], { tone: 'warn' });
-      var rest = s.modesOn.length ? s.modesOn.slice() : ['Alles in Ordnung'];
+      var rest = s.modesOn.length ? s.modesOn.slice() : [F.temps(s, false) ? 'Alles in Ordnung' : 'An'];
       if (!temps) return UI.line(rest[0], rest.slice(1));
       return UI.line(temps, rest);
     }

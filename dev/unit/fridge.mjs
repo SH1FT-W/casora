@@ -87,6 +87,11 @@ window._casoraUI = {
   settingsRow: (id) => ({ icon: 'mdi:tune-variant', label: 'Weitere Einstellungen', entity: id }),
 };
 assert.equal(K.sec('hero', C, states, hass()), '<line >7 °C · −18 °C|Alles in Ordnung</line>');
+const noTemps = { ...states };
+for (const id of ['sensor.combi_obere_zone', 'sensor.combi_untere_zone', 'number.combi_sollwert_obere_zone', 'number.combi_sollwert_untere_zone']) {
+  noTemps[id] = { ...states[id], state: 'on' };
+}
+assert.equal(K.sec('hero', C, noTemps, hass()), '<line >An|</line>', 'no-temperature popup word matches tile');
 const zones = K.sec('zones', C, states, hass());
 assert.ok(zones.includes('<group Temperaturen>Obere Zone=7 °C(Sollwert 5 °C);Untere Zone=−18 °C(Sollwert −18 °C)</group>'), zones);
 assert.ok(zones.includes('<seg Obere Zone · Sollwert 5 °C>3°>{"value":3};4°>{"value":4};*5°>{"value":5};6°>{"value":6};7°>{"value":7}</seg>'), zones);
