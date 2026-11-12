@@ -5451,8 +5451,10 @@
    the word, „Fertig gegen 14:30 Uhr“ under it. Same state words as the tile's popup before (template casora_appliance). */
 (function () {
   var DISH = { run: ['Läuft', true], pause: ['Pausiert', true], actionrequired: ['Eingriff nötig', true], finished: ['Fertig', false],
-    error: ['Fehler', false], aborting: ['Stoppt …', true], delayedstart: ['Startet später', true], ready: ['Bereit', false], inactive: ['Inaktiv', false] };
-  var GEN = { off: ['Aus', false], idle: ['Inaktiv', false], starting: ['Startet', true], running: ['Läuft', true], paused: ['Pausiert', false],
+    error: ['Fehler', false], aborting: ['Stoppt …', true], delayedstart: ['Startet später', true], ready: ['Bereit', false],
+    inactive: ['Inaktiv', false], idle: ['Inaktiv', false], off: ['Aus', false] };
+  var GEN = { off: ['Aus', false], idle: ['Inaktiv', false], inactive: ['Inaktiv', false], ready: ['Bereit', false],
+    starting: ['Startet', true], running: ['Läuft', true], paused: ['Pausiert', false],
     user_paused: ['Pausiert', false], ending: ['Endet', true], finished: ['Fertig', false], anti_wrinkle: ['Knitterschutz', true],
     delay_wait: ['Startet später', false], interrupted: ['Unterbrochen', false], force_stopped: ['Gestoppt', false], rinse: ['Spülen', true],
     clean: ['Reinigung', true], unknown: ['Unbekannt', false] };
