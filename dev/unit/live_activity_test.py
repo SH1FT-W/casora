@@ -309,7 +309,7 @@ check("HA-Sprache → Index", [lang_of(c) for c in la.LANGS] == list(range(len(l
       and lang_of("es-ES") == 2 and lang_of("pt-BR") == la.LANGS.index("pt") and lang_of("sv") == lang_of("") == la.EN)
 # Same word in German or English and the new language on purpose (product names, loanwords, real Dutch words).
 SAME_OK = {"Attention", "Auto 45–65°", "Eco 50°", "Homing", "Manual", "Mix", "Pause", "Pause (G-code)", "Reinigen",
-           "Reinigt", "Sensitive", "Test", "Hygiene", "Intensiv 70°", "Sensitiv", "{a} m²", "{a} m² in {m} min", ""}
+           "Reinigt", "Sensitive", "Test", "Hygiene", "Inaktiv", "Intensiv 70°", "Sensitiv", "{a} m²", "{a} m² in {m} min", ""}
 DE_WORDS = {v[0] for t in tables.values() for v in t.values() if v[0] and v[0] not in SAME_OK}
 EN_WORDS = {v[1] for t in tables.values() for v in t.values() if v[1] and v[1] not in SAME_OK and len(v[1]) > 3}
 for code in ("fr", "it", "nl", "pl", "pt", "nb"):

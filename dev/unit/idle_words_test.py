@@ -15,9 +15,9 @@ class IdleWordsTest(unittest.TestCase):
                      and isinstance(node.value, ast.Dict)
                      and any(isinstance(key, ast.Constant) and key.value == "idle" and isinstance(value, ast.Tuple)
                              for key, value in zip(node.value.keys, node.value.values)))
-        expected = ("Inaktiv", "Inactive", "Inactivo", "Inactif", "Inattivo", "Inactief", "Nieakt.", "Inativo")
+        expected = ("Inaktiv", "Inactive", "Inactivo", "Inactif", "Inattivo", "Inactief", "Nieakt.", "Inativo", "Inaktiv")
         self.assertEqual(words["idle"], expected)
-        for index, lang in enumerate(("de", "en", "es", "fr", "it", "nl", "pl", "pt")):
+        for index, lang in enumerate(("de", "en", "es", "fr", "it", "nl", "pl", "pt", "nb")):
             with self.subTest(language=lang):
                 for store in ("translations/dashboard/phrases", "scripts/i18n"):
                     path = ROOT / "custom_components/casora" / store / f"{lang}.json"
