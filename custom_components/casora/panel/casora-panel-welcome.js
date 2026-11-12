@@ -2,7 +2,7 @@
 // (like the „Was ist neu“ screen after an iOS update). Shows once per
 // version and browser in the Studio.
 //
-// On every release: fill WHATS_NEW with the news (2-4 entries), bump the version
+// On every release: fill WHATS_NEW with the news (2-4 entries, a picture where it helps), bump the version
 // in manifest.json, extend the CHANGELOG. The version comes from the
 // loader URL (?v=<version>.<stamp>) that the integration writes on startup.
 (() => {
@@ -27,9 +27,13 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "Einstellungen an der Kachel", n0: "Reiter in der Seitenleiste, Zahnrad im Popup.",
-      n1t: "Neue Kachel: Aufgaben", n1: "Alle To-do-Listen in einer Kachel, mit Filter und Fälligkeit.",
-      n2t: "Termine anlegen", n2: "Direkt im Kalender-Popup, mit Ort und Beschreibung.",
+      n0t: "Bildschirmschoner", n0: "Zehn Schoner für Wand-Tablets, unter Einstellungen › Bildschirmschoner.",
+      n1t: "Vier neue Designs", n1: "Salbei, Marine, Dämmerung und Farbe, hell und dunkel.",
+      n2t: "Ladesäulen in der Nähe", n2: "Im Auto-Popup, mit Empfehlung, Karte und Liste.",
+      n3t: "Neue Kachel: Wärmepumpe", n3: "Programm, Warmwasser und Verdichter auf einen Blick.",
+      n4t: "Norwegisch", n4: "Casora spricht jetzt Norwegisch (Bokmål), als neunte Sprache.",
+      n5t: "Landkarte", n5: "Personen und Zonen direkt auf der Kachel, groß im Popup.",
+      nh: "Das große November-Update",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -39,9 +43,13 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "Settings at the tile", n0: "Tabs in the side panel, a gear in the popup.",
-      n1t: "New tile: Tasks", n1: "All your to-do lists on one tile, with filters and due dates.",
-      n2t: "Add events", n2: "Right in the calendar popup, with location and description.",
+      n0t: "Screensavers", n0: "Ten screensavers for wall tablets, under Settings › Screensaver.",
+      n1t: "Four new designs", n1: "Sage, sand with navy, grey lilac and tiles in their device's colour.",
+      n2t: "Chargers nearby", n2: "In the car popup, with a recommendation, a map and a list.",
+      n3t: "New tile: Heat pump", n3: "Program, hot water and compressor at a glance.",
+      n4t: "Norwegian", n4: "Casora now speaks Norwegian (Bokmål), its ninth language.",
+      n5t: "Map card", n5: "People and zones right on the tile, large in the popup.",
+      nh: "The big November update",
     },
     // Spanish: same keys as en (dev/unit/welcome_es.mjs); a missing key falls back to English.
     es: {
@@ -52,9 +60,13 @@
       w1t: "Habitación por habitación", w1: "Diseña tu panel con los dispositivos que ya tienes en Home Assistant.",
       w2t: "Asistente de dispositivos", w2: "Casora propone las tarjetas adecuadas para cada habitación y las añade por ti.",
       w3t: "Escritorio, tableta y móvil", w3: "Un panel que se adapta a cada pantalla, con su propio diseño para el móvil.",
-      n0t: "Ajustes en la tarjeta", n0: "Pestañas en el panel lateral, engranaje en el popup.",
-      n1t: "Nuevo mosaico: Tareas", n1: "Todas tus listas en un mosaico, con filtros y fechas.",
-      n2t: "Añadir eventos", n2: "En el popup del calendario, con lugar y descripción.",
+      n0t: "Salvapantallas", n0: "Diez salvapantallas para tabletas de pared, en Ajustes › Salvapantallas.",
+      n1t: "Cuatro diseños nuevos", n1: "Salvia, arena con azul marino, lila grisáceo y mosaicos del color de su dispositivo.",
+      n2t: "Cargadores cercanos", n2: "En el popup del coche, con recomendación, mapa y lista.",
+      n3t: "Nuevo mosaico: Bomba de calor", n3: "Programa, agua caliente y compresor de un vistazo.",
+      n4t: "Noruego", n4: "Casora ya habla noruego (bokmål), su noveno idioma.",
+      n5t: "Tarjeta de mapa", n5: "Personas y zonas en el mosaico, en grande en el popup.",
+      nh: "La gran actualización de noviembre",
     },
     fr: {
       welcomeTitle: "Bienvenue dans Casora",
@@ -67,9 +79,13 @@
       w2: "Casora propose les tuiles adaptées à chaque pièce et les ajoute pour toi.",
       w3t: "Ordinateur, tablette et téléphone",
       w3: "Un tableau de bord qui s'adapte à chaque écran, avec sa propre mise en page téléphone.",
-      n0t: "Réglages sur la tuile", n0: "Onglets dans le panneau, roue dentée dans le popup.",
-      n1t: "Nouvelle tuile : Tâches", n1: "Toutes tes listes sur une tuile, avec filtres et échéances.",
-      n2t: "Ajouter des événements", n2: "Dans le popup du calendrier, avec lieu et description.",
+      n0t: "Économiseurs d'écran", n0: "Dix économiseurs pour tablettes murales, dans Réglages › Économiseur d'écran.",
+      n1t: "Quatre nouveaux designs", n1: "Sauge, sable et marine, lilas gris et tuiles à la couleur de leur appareil.",
+      n2t: "Bornes de recharge proches", n2: "Dans le popup de la voiture, avec conseil, carte et liste.",
+      n3t: "Nouvelle tuile : Pompe à chaleur", n3: "Programme, eau chaude et compresseur en un coup d'œil.",
+      n4t: "Norvégien", n4: "Casora parle désormais norvégien (bokmål), sa neuvième langue.",
+      n5t: "Carte géographique", n5: "Personnes et zones sur la tuile, en grand dans le popup.",
+      nh: "La grande mise à jour de novembre",
     },
     it: {
       welcomeTitle: "Ti diamo il benvenuto in Casora",
@@ -82,9 +98,13 @@
       w2: "Casora propone le schede adatte per ogni stanza e le aggiunge per te.",
       w3t: "Desktop, tablet e telefono",
       w3: "Una dashboard che si adatta a ogni schermo, con un layout dedicato per il telefono.",
-      n0t: "Impostazioni sulla scheda", n0: "Schede nel pannello, ingranaggio nel popup.",
-      n1t: "Nuova tessera: Attività", n1: "Tutti gli elenchi in una tessera, con filtri e scadenze.",
-      n2t: "Aggiungi eventi", n2: "Nel popup del calendario, con luogo e descrizione.",
+      n0t: "Salvaschermi", n0: "Dieci salvaschermi per tablet a parete, in Impostazioni › Salvaschermo.",
+      n1t: "Quattro nuovi design", n1: "Salvia, sabbia e blu navy, lilla grigio e tessere del colore del loro dispositivo.",
+      n2t: "Colonnine vicine", n2: "Nel popup dell'auto, con consiglio, mappa ed elenco.",
+      n3t: "Nuova tessera: Pompa di calore", n3: "Programma, acqua calda e compressore a colpo d'occhio.",
+      n4t: "Norvegese", n4: "Casora ora parla norvegese (bokmål), la sua nona lingua.",
+      n5t: "Mappa", n5: "Persone e zone sulla tessera, in grande nel popup.",
+      nh: "Il grande aggiornamento di novembre",
     },
     nb: {
       welcomeTitle: "Velkommen til Casora",
@@ -97,9 +117,13 @@
       w2: "Casora foreslår passende fliser for hvert rom og legger dem inn.",
       w3t: "Skrivebord, nettbrett og mobil",
       w3: "Ett dashbord som tilpasser seg hver skjerm, med egen mobilvisning.",
-      n0t: "Innstillinger ved flisen", n0: "Faner i sidepanelet, tannhjul i popupen.",
-      n1t: "Ny flis: Oppgaver", n1: "Alle gjøremålslister i én flis, med filter og frist.",
-      n2t: "Legg til avtaler", n2: "Rett i kalender-popupen, med sted og beskrivelse.",
+      n0t: "Skjermsparere", n0: "Ti skjermsparere for nettbrett på veggen, under Innstillinger › Skjermsparer.",
+      n1t: "Fire nye design", n1: "Salvie, sand med marineblått, grålilla og fliser i fargen til enheten.",
+      n2t: "Ladestasjoner i nærheten", n2: "I bil-popupen, med anbefaling, kart og liste.",
+      n3t: "Ny flis: Varmepumpe", n3: "Program, varmtvann og kompressor med ett blikk.",
+      n4t: "Norsk", n4: "Casora snakker nå norsk (bokmål), som niende språk.",
+      n5t: "Kart", n5: "Personer og soner rett på flisen, stort i popupen.",
+      nh: "Den store novemberoppdateringen",
     },
     nl: {
       welcomeTitle: "Welkom bij Casora",
@@ -112,9 +136,13 @@
       w2: "Casora stelt voor elke kamer passende tegels voor en bouwt ze in.",
       w3t: "Desktop, tablet en telefoon",
       w3: "Eén dashboard dat zich aan elk scherm aanpast, met een eigen telefoonweergave.",
-      n0t: "Instellingen bij de tegel", n0: "Tabbladen in het zijpaneel, tandwiel in de popup.",
-      n1t: "Nieuwe tegel: Taken", n1: "Al je takenlijsten op één tegel, met filters en vervaldatums.",
-      n2t: "Afspraken toevoegen", n2: "Direct in de agenda-popup, met locatie en beschrijving.",
+      n0t: "Schermbeveiligers", n0: "Tien schermbeveiligers voor wandtablets, onder Instellingen › Schermbeveiliging.",
+      n1t: "Vier nieuwe designs", n1: "Salie, zand met marineblauw, grijslila en tegels in de kleur van hun apparaat.",
+      n2t: "Laadpalen in de buurt", n2: "In de auto-popup, met advies, kaart en lijst.",
+      n3t: "Nieuwe tegel: Warmtepomp", n3: "Programma, warm water en compressor in één oogopslag.",
+      n4t: "Noors", n4: "Casora spreekt nu Noors (Bokmål), als negende taal.",
+      n5t: "Kaart", n5: "Personen en zones direct op de tegel, groot in de popup.",
+      nh: "De grote novemberupdate",
     },
     pl: {
       welcomeTitle: "Witaj w Casora",
@@ -127,9 +155,13 @@
       w2: "Casora proponuje pasujące kafelki dla każdego pokoju i dodaje je za ciebie.",
       w3t: "Komputer, tablet i telefon",
       w3: "Jeden pulpit, który dopasowuje się do każdego ekranu, z własnym układem na telefon.",
-      n0t: "Ustawienia przy kafelku", n0: "Zakładki w panelu, koło zębate w oknie.",
-      n1t: "Nowy kafelek: Zadania", n1: "Wszystkie listy na jednym kafelku, z filtrami i terminami.",
-      n2t: "Dodawaj wydarzenia", n2: "W oknie kalendarza, z miejscem i opisem.",
+      n0t: "Wygaszacze ekranu", n0: "Dziesięć wygaszaczy dla tabletów na ścianie, w Ustawienia › Wygaszacz ekranu.",
+      n1t: "Cztery nowe motywy", n1: "Szałwia, piasek z granatem, szary liliowy i kafelki w kolorze urządzenia.",
+      n2t: "Ładowarki w pobliżu", n2: "W oknie samochodu, z zaleceniem, mapą i listą.",
+      n3t: "Nowy kafelek: Pompa ciepła", n3: "Program, ciepła woda i sprężarka w jednym miejscu.",
+      n4t: "Norweski", n4: "Casora mówi teraz po norwesku (bokmål), to dziewiąty język.",
+      n5t: "Mapa", n5: "Osoby i strefy na kafelku, w dużym oknie po dotknięciu.",
+      nh: "Wielka listopadowa aktualizacja",
     },
     pt: {
       welcomeTitle: "Bem-vindo ao Casora",
@@ -142,9 +174,13 @@
       w2: "O Casora propõe os cartões certos para cada divisão e adiciona-os por ti.",
       w3t: "Computador, tablet e telemóvel",
       w3: "Um painel que se adapta a cada ecrã, com layout próprio para o telemóvel.",
-      n0t: "Definições no mosaico", n0: "Separadores no painel, roda dentada no popup.",
-      n1t: "Novo mosaico: Tarefas", n1: "Todas as listas num mosaico, com filtros e prazos.",
-      n2t: "Adicionar eventos", n2: "No popup do calendário, com local e descrição.",
+      n0t: "Proteções de ecrã", n0: "Dez proteções de ecrã para tablets de parede, em Definições › Proteção de ecrã.",
+      n1t: "Quatro novos designs", n1: "Salva, areia com azul-marinho, lilás acinzentado e mosaicos na cor do dispositivo.",
+      n2t: "Carregadores próximos", n2: "No popup do carro, com recomendação, mapa e lista.",
+      n3t: "Novo mosaico: Bomba de calor", n3: "Programa, água quente e compressor num relance.",
+      n4t: "Norueguês", n4: "O Casora já fala norueguês (bokmål), a sua nona língua.",
+      n5t: "Mapa", n5: "Pessoas e zonas no mosaico, em grande no popup.",
+      nh: "A grande atualização de novembro",
     },
   };
   // Texts for a language: its own, English for anything it does not have (yet).
@@ -158,11 +194,18 @@
   ];
 
   /** After an update: the news of this version - replace on every release. */
+  // An optional fourth value is a picture under the text (a file in assets/news, served under /casora_assets/news).
   const WHATS_NEW = [
-    ["mdi:cog-outline", "n0t", "n0"],
-    ["mdi:format-list-checks", "n1t", "n1"],
-    ["mdi:calendar-plus", "n2t", "n2"],
+    ["mdi:tablet-dashboard", "n0t", "n0", "screensavers.jpg"],
+    ["mdi:palette-outline", "n1t", "n1", "designs.jpg"],
+    ["mdi:ev-station", "n2t", "n2"],
+    ["mdi:heat-pump-outline", "n3t", "n3"],
+    ["mdi:translate", "n4t", "n4"],
+    ["mdi:map-marker-radius-outline", "n5t", "n5"],
   ];
+  // A big release may set its own headline (a TEXT key); the version then stands small under it. null: "New in Casora x".
+  const WHATS_NEW_HEAD = "nh";
+  const NEWS_IMG = "/casora_assets/news/";
 
   // Decide on load - before the Studio writes its own casora.* keys.
   const startMode = (() => {
@@ -199,6 +242,9 @@
     .cw-sheet ul{list-style:none;margin:6px 0;padding:0;display:grid;gap:18px;width:100%}
     .cw-sheet li{display:grid;grid-template-columns:40px 1fr;gap:14px;align-items:start;line-height:1.4;color:var(--casora-studio-ink-2, rgba(255,255,255,.62));font-size:15px}
     .cw-sheet li b{color:var(--casora-studio-ink, #fff);font-weight:600}
+    .cw-ver{margin-top:-12px;font-size:14px;font-weight:600;letter-spacing:.02em;color:var(--casora-studio-ink-2, rgba(255,255,255,.62))}
+    .light .cw-ver{color:var(--casora-studio-ink-2, #6e6e73)}
+    .cw-pic{display:block;width:100%;height:auto;margin-top:10px;border-radius:12px}
     .cw-sheet li ha-icon{--mdc-icon-size:30px;color:var(--casora-studio-accent, #00C3D0);margin-top:2px}
     .cw-go{width:100%;height:52px;border:0;border-radius:26px;background:var(--casora-studio-done, linear-gradient(to bottom,#2fd6e0,#00a8b4));
       color:var(--casora-studio-on-done, #fff);font:inherit;font-size:17px;font-weight:600;cursor:pointer}
@@ -214,6 +260,7 @@
     @keyframes cw-up{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}
     @media (prefers-reduced-motion: reduce){.cw-scrim,.cw-sheet{animation:none}}`;
 
+  const newsTitle = (L) => (WHATS_NEW_HEAD && L[WHATS_NEW_HEAD]) || L.whatsNewTitle.replace("{version}", VERSION);
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
 
   function show(mode, lang) {
@@ -227,8 +274,8 @@
     const light = !!(themes && themes.darkMode === false);
     root.innerHTML = `<style>${CSS}</style><div class="cw-scrim${light ? " light" : ""}" role="dialog" aria-modal="true" aria-labelledby="cw-t">
       <div class="cw-sheet"><div class="cw-mark">${MARK}</div>
-      <h2 id="cw-t">${esc(mode === "welcome" ? L.welcomeTitle : L.whatsNewTitle.replace("{version}", VERSION))}</h2>
-      <ul>${list.map(([icon, t, x]) => `<li><ha-icon icon="${icon}"></ha-icon><span><b>${esc(L[t])}</b><br>${esc(L[x])}</span></li>`).join("")}</ul>
+      <h2 id="cw-t">${esc(mode === "welcome" ? L.welcomeTitle : newsTitle(L))}</h2>${mode !== "welcome" && WHATS_NEW_HEAD ? `<div class="cw-ver">Casora ${esc(VERSION)}</div>` : ""}
+      <ul>${list.map(([icon, t, x, img]) => `<li><ha-icon icon="${icon}"></ha-icon><span><b>${esc(L[t])}</b><br>${esc(L[x])}${img ? `<img class="cw-pic" src="${NEWS_IMG}${esc(img)}?v=${esc(VERSION)}" alt="" loading="lazy">` : ""}</span></li>`).join("")}</ul>
       <button class="cw-go">${esc(L.continue)}</button>
       ${mode === "welcome" ? "" : `<a class="cw-all" href="${CHANGELOG_URL.replace(/\.md$/, String(lang || "").toLowerCase().split(/[-_]/)[0] === "de" ? ".de.md" : ".md")}" target="_blank" rel="noreferrer">${esc(L.all)}</a>`}
       </div></div>`;
@@ -243,7 +290,7 @@
   // For the updates page: the same news as plain text („Neu in …“).
   window.casoraWhatsNew = (lang) => {
     const L = texts(lang);
-    return { version: VERSION, title: L.whatsNewTitle.replace("{version}", VERSION),
+    return { version: VERSION, title: WHATS_NEW_HEAD ? newsTitle(L) + " · Casora " + VERSION : newsTitle(L),
       items: WHATS_NEW.map(([, t, x]) => [L[t], L[x]]) };
   };
 

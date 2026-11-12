@@ -4,6 +4,52 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.11.26 – 13.11.2026
+
+The big November update: screensavers for wall tablets, four new designs, chargers near your electric car, a heat pump tile, Norwegian as the ninth language, a map card, and many fixes from your reports.
+
+### New
+- **Screensavers for wall tablets (#171):** after a time without a touch, a wall tablet shows a screensaver instead of the dashboard, and a touch brings the dashboard back. There are ten: Sky, Landscapes, Photos (your room photos), Word clock, Weather, Day line, Week (your calendars and waste pickups), Music, Energy flow and House at rest. "One after the other" changes them every few minutes. Set it up in the Studio under Settings › Screensaver: when it starts (off by default), which one it shows (tap its chip under the preview) and, for Photos, which room photos. Screensavers only start on tablets, never on a phone or a computer.
+
+  ![The ten screensavers on a wall tablet](https://raw.githubusercontent.com/SH1FT-W/casora/main/docs/images/news-26.11.26-screensavers.webp)
+
+- **Four new designs:** Casora Salbei (sage green), Casora Marine (sand with navy, night blue in the dark), Casora Dämmerung (grey lilac with coral) and Casora Farbe (tiles that are on are filled with the colour of their device). Pick them in the Studio under Settings › Look & feel › Design.
+
+  ![Casora Salbei, Marine, Dämmerung and Farbe, light and dark](https://raw.githubusercontent.com/SH1FT-W/casora/main/docs/images/news-26.11.26-designs.webp)
+
+- **Chargers nearby (#168):** the popup of every car with a charge level sensor, plug in hybrids included, gets a row "Chargers". It opens a page with a recommendation from the battery level, the chargers around you by speed, the nearest, fastest and free one, a small map and the list. A tap opens the charger in Apple Maps on iPhone and iPad, in Google Maps elsewhere. Enter a free Open Charge Map key in the Studio under Settings › Weather, power & fuel › Chargers nearby; without a key nothing changes and Casora asks nobody. Data: Open Charge Map (CC BY 4.0), without live availability.
+- **Heat pump tile (#132):** the heating's target and whether the pump is working on the tile, for example "Soll 19° · Läuft". The popup has a dial for the target with the programs around it, hot water with its target and a one time charge, the history of the supply temperature and a section for compressor, pumps and frost protection. Only the climate entity is required.
+- **Norwegian (Bokmål):** dashboard, Studio, the integration's texts, live activities and push messages. Corrections are very welcome.
+- **Map card (#159):** a Community card with the map right on the tile; a tap opens it large. Persons, zones, geo location sources, history and zoom are set in the Studio.
+- **Slats for blinds (#173):** blinds that tilt their slats get a row "Slats" in their popup (Close, 25 %, 50 %, 75 %, Open), for one blind and for several. Thanks to @Westerloer.
+- **Updates badge (#167):** an optional badge on Home that only appears while updates wait, counts them by kind and opens the list. Studio › Home › Badges. Thanks to @Birdy2019.
+- **Date under the clock (#179):** Studio › Time › "Show date" adds the weekday and date in small type under the time. Thanks to @Birdy2019.
+- **Next event and waste pickup under the greeting (#157):** switch it on under the Home room's Appearance.
+- **Several motion sensors per room (#150):** up to four per room; the navigation dot is on while any of them is.
+- **Remove a detected player (#151):** the Now Playing list under Home & Devices can take a player out on every dashboard and bring it back.
+
+### Changed
+- **Clock without Time & Date (#172):** Home Assistant no longer adds Time & Date on new installs. On "Automatic" the top bar clock now shows the device's own time, in Home Assistant's time zone when your profile uses server time. Thanks to @ejetzass.
+- **Add event (#146):** the button in the calendar popup sits above the day's events.
+- **Velair (#170):** "Trend on tile" is offered for the Velair tile too.
+- **Swipe between rooms (#186):** the setting moved from Studio › Controls › Phone to Studio › Controls › Screen, since it works on phones and tablets alike. Thanks to @Birdy2019.
+
+### Fixed
+- **Blinds count (#177):** a cover within "counts as closed up to" counted as open in "X of Y open"; tile, popup head, dial and phone overview now agree. Thanks to @Birdy2019.
+- **Chart popup with several sensors (#178):** the number showed the first sensor's value with another sensor picked. Thanks to @stalakerob.
+- **Universal tile on the phone (#158):** a second tile of the same kind on the same device, or without a device, reached the phone layout again, each with its own content.
+- **Notifications on the phone (#156):** kinds you turned off in the Studio stay off in the phone's bell too.
+- **Sidebar (#154):** live previews in the Studio could leave Home Assistant's sidebar hidden. Casora no longer touches it; if yours is hidden, turn it back on once.
+- **Studio › Updates (#153):** "Install" right after a release could fail with "No update available".
+- **Security badge (#152):** removing a device no longer leaves a gap in the numbering.
+- **LG ThinQ washer and dryer (#162):** progress is worked out from the total and remaining time.
+- **Velair (#170):** the next change names the block that really changes something, and thermostats in a Velair 1.9 room group show their group's schedule.
+- **Greeting (#157):** hidden calendars, such as the Workday sensor's, no longer appear as the next appointment.
+- **Weather card (#169):** fog was "Nebel" in every language. Thanks to @ejetzass for the fix.
+- **Translations (#175):** the waste tile and the notification centre had German leftovers. Thanks to @daxy01.
+- **Vacuum in error (#185):** its notification "[name] braucht Aufmerksamkeit" stayed German in every other language. Thanks to @DarkWing982.
+- **Phone start page in dark mode:** it no longer downloads the day photo it never shows.
+
 ## 26.11.25 – 08.11.2026
 
 Settings where you need them, a new Tasks tile, and new events right from the calendar.

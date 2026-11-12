@@ -24,7 +24,7 @@ for (const [k, v] of Object.entries(TEXT.es)) {
 assert.ok(TEXT.es.whatsNewTitle.includes('{version}'), 'es title keeps {version}');
 
 // Every WHATS_NEW / WELCOME key is in TEXT.es.
-const listKeys = [...src.matchAll(/\["mdi:[^"]+", "(\w+)", "(\w+)"\]/g)].flatMap((m) => [m[1], m[2]]);
+const listKeys = [...src.matchAll(/\["mdi:[^"]+", "(\w+)", "(\w+)"(?:, "[^"]+")?\]/g)].flatMap((m) => [m[1], m[2]]);
 assert.ok(listKeys.length >= 6, 'WELCOME and WHATS_NEW entries found');
 for (const k of listKeys) assert.ok(TEXT.es[k], 'TEXT.es.' + k + ' for the list entry');
 
@@ -36,7 +36,9 @@ const run = new Function('window', 'document', 'localStorage', 'setTimeout',
 run(win, { querySelector: () => null, addEventListener() {}, removeEventListener() {} }, storage, () => 0);
 assert.equal(typeof win.casoraWhatsNew, 'function', 'casoraWhatsNew defined');
 const es = win.casoraWhatsNew('es');
-assert.equal(es.title, 'Novedades de Casora 26.10.99');
+// A release with its own headline (WHATS_NEW_HEAD) puts the version behind it, else "Novedades de Casora x".
+const head = (src.match(/const WHATS_NEW_HEAD = "(\w+)";/) || [])[1];
+assert.equal(es.title, head ? TEXT.es[head] + ' · Casora 26.10.99' : 'Novedades de Casora 26.10.99');
 assert.deepEqual(win.casoraWhatsNew('es-ES').items, es.items, 'es-ES uses Spanish');
 const en = win.casoraWhatsNew('en');
 assert.equal(es.items.length, en.items.length);

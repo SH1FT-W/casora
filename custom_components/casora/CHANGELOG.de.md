@@ -4,6 +4,52 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.11.26 – 13.11.2026
+
+Das große November-Update: Bildschirmschoner für Wand-Tablets, vier neue Designs, Ladesäulen in der Nähe deines E-Autos, eine Wärmepumpen-Kachel, Norwegisch als neunte Sprache, eine Landkarte und viele Fixes aus euren Meldungen.
+
+### Neu
+- **Bildschirmschoner für Wand-Tablets (#171):** Nach einer Weile ohne Berührung zeigt ein Wand-Tablet einen Schoner statt des Dashboards, eine Berührung holt das Dashboard zurück. Es gibt zehn: Himmel, Landschaften, Fotos (deine Raumfotos), Wortuhr, Wetter, Tageslinie, Woche (deine Kalender und Abfuhrtermine), Musik, Energiefluss und Hausruhe. „Abwechselnd“ wechselt sie alle paar Minuten. Einrichten im Studio unter Einstellungen › Bildschirmschoner: wann er startet (ab Werk aus), welcher kommt (Chip unter der Vorschau antippen) und bei Fotos, welche Raumfotos. Schoner starten nur auf Tablets, nie am Handy oder Computer.
+
+  ![Die zehn Bildschirmschoner auf einem Wand-Tablet](https://raw.githubusercontent.com/SH1FT-W/casora/main/docs/images/news-26.11.26-screensavers.webp)
+
+- **Vier neue Designs:** Casora Salbei (Salbeigrün), Casora Marine (Sand mit Marineblau, im Dunkeln Nachtblau), Casora Dämmerung (Graulila mit Koralle) und Casora Farbe (eingeschaltete Kacheln in der Farbe ihres Geräts). Auswahl im Studio unter Einstellungen › Aussehen › Design.
+
+  ![Casora Salbei, Marine, Dämmerung und Farbe, hell und dunkel](https://raw.githubusercontent.com/SH1FT-W/casora/main/docs/images/news-26.11.26-designs.webp)
+
+- **Ladesäulen in der Nähe (#168):** Das Popup jedes Autos mit Ladestand-Sensor, Plug-in-Hybride eingeschlossen, bekommt eine Zeile „Ladesäulen“. Sie öffnet eine Seite mit einer Empfehlung aus dem Akkustand, den Säulen in der Umgebung nach Leistung, der nächsten, schnellsten und kostenlosen, einer kleinen Karte und der Liste. Ein Tipp öffnet die Säule in Apple Karten auf iPhone und iPad, sonst in Google Maps. Dafür einen kostenlosen Open-Charge-Map-Schlüssel im Studio unter Einstellungen › Wetter, Strom & Tanken › Ladesäulen in der Nähe eintragen; ohne Schlüssel ändert sich nichts und Casora fragt niemanden. Daten: Open Charge Map (CC BY 4.0), ohne Live-Belegung.
+- **Wärmepumpen-Kachel (#132):** Soll der Heizung und ob die Pumpe arbeitet, etwa „Soll 19° · Läuft“. Das Popup hat ein Stellrad für das Soll mit den Programmen drumherum, Warmwasser mit Soll und Einmal-Ladung, den Verlauf der Vorlauftemperatur und einen Abschnitt für Verdichter, Pumpen und Frostschutz. Nötig ist nur die Klima-Entität.
+- **Norwegisch (Bokmål):** Dashboard, Studio, die Texte der Integration, Live-Aktivitäten und Push-Nachrichten. Korrekturen sind sehr willkommen.
+- **Karten-Kachel (#159):** eine Community-Karte mit der Karte direkt auf der Kachel; ein Tipp öffnet sie groß. Personen, Zonen, Geo-Quellen, Verlauf und Zoom stellt man im Studio ein.
+- **Lamellen für Jalousien (#173):** Jalousien, die ihre Lamellen kippen, bekommen im Popup eine Zeile „Lamellen“ in fünf Stufen von zu bis offen, für eine und für mehrere. Danke an @Westerloer.
+- **Update-Badge (#167):** ein optionales Badge auf Zuhause, das nur erscheint, solange Updates warten, sie nach Art zählt und die Liste öffnet. Studio › Zuhause › Badges. Danke an @Birdy2019.
+- **Datum unter der Uhr (#179):** Studio › Uhrzeit › „Datum anzeigen“ setzt Wochentag und Datum klein unter die Uhrzeit. Danke an @Birdy2019.
+- **Nächster Termin und Abfuhr unter der Begrüßung (#157):** einschalten unter Darstellung des Raums Zuhause.
+- **Mehrere Bewegungsmelder pro Raum (#150):** bis zu vier; der Punkt in der Navigation leuchtet, solange einer an ist.
+- **Erkannten Player entfernen (#151):** Die Liste „Aktuelle Wiedergabe“ unter Haus & Geräte nimmt einen Player aus allen Dashboards und holt ihn auch zurück.
+
+### Geändert
+- **Uhr ohne „Uhrzeit & Datum“ (#172):** Home Assistant legt die Integration bei Neuinstallationen nicht mehr an. Auf „Automatisch“ zeigt die Uhr oben jetzt die Zeit des Geräts, in der Zeitzone von Home Assistant, wenn dein Profil Serverzeit nutzt. Danke an @ejetzass.
+- **Termin hinzufügen (#146):** Der Knopf im Kalender-Popup steht über den Terminen des Tages.
+- **Velair (#170):** „Verlauf auf der Kachel“ gibt es jetzt auch für die Velair-Kachel.
+- **Zwischen Räumen wischen (#186):** Die Einstellung steht jetzt unter Studio › Bedienung › Bildschirm statt unter Handy, weil sie für Handy und Tablet gilt. Danke an @Birdy2019.
+
+### Behoben
+- **Zählung der Rollläden (#177):** Ein Rollladen innerhalb „gilt als geschlossen bis“ zählte bei „X von Y offen“ als offen; Kachel, Popup-Kopf, Stellrad und Handy-Übersicht stimmen jetzt überein. Danke an @Birdy2019.
+- **Diagramm-Popup mit mehreren Sensoren (#178):** Die Zahl zeigte den Wert des ersten Sensors, obwohl ein anderer gewählt war. Danke an @stalakerob.
+- **Universal-Kachel am Handy (#158):** Eine zweite Kachel derselben Art am selben Gerät oder ohne Gerät kommt wieder im Handy-Layout an, jede mit eigenem Inhalt.
+- **Benachrichtigungen am Handy (#156):** Arten, die du im Studio ausgeschaltet hast, bleiben auch in der Handy-Glocke aus.
+- **Seitenleiste (#154):** Live-Vorschauen im Studio konnten die Seitenleiste von Home Assistant dauerhaft ausblenden. Casora fasst sie nicht mehr an; ist deine noch aus, einmal wieder einschalten.
+- **Studio › Updates (#153):** „Installieren“ direkt nach einem Release scheiterte manchmal mit „Kein Update verfügbar“.
+- **Sicherheits-Badge (#152):** Ein entferntes Gerät hinterlässt keine Lücke mehr in der Nummerierung.
+- **LG-ThinQ-Waschmaschine und -Trockner (#162):** Der Fortschritt wird aus Gesamt- und Restzeit berechnet.
+- **Velair (#170):** Die nächste Änderung nennt den Block, der wirklich etwas ändert, und Thermostate in einer Raumgruppe von Velair 1.9 zeigen den Plan ihrer Gruppe.
+- **Begrüßung (#157):** Ausgeblendete Kalender, etwa der des Arbeitstag-Sensors, erscheinen nicht mehr als nächster Termin.
+- **Wetter-Kachel (#169):** Nebel hieß in jeder Sprache „Nebel“. Danke an @ejetzass für den Fix.
+- **Übersetzungen (#175):** Abfall-Kachel und Benachrichtigungen hatten deutsche Reste. Danke an @daxy01.
+- **Saugroboter mit Fehler (#185):** Die Meldung „[Name] braucht Aufmerksamkeit“ blieb in jeder anderen Sprache deutsch. Danke an @DarkWing982.
+- **Handy-Startseite im Dunkelmodus:** Sie lädt nicht mehr das Tagesfoto, das sie nie zeigt.
+
 ## 26.11.25 – 08.11.2026
 
 Einstellungen dort, wo du sie brauchst, eine neue Aufgaben-Kachel und neue Termine direkt aus dem Kalender.
