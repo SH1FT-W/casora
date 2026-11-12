@@ -1,7 +1,7 @@
 // #179: weekday and date in small type under the top bar clock (Studio › Time › Show date, off by default).
 // Both clock paths (sensor.time and the device clock without it), the room passing the switch on, the Studio field
 // and its preview.   node dev/unit/uhr_mit_datum.mjs
-// @deckt: dashboards/casora/button_card_templates.json#casora_time,casora_room, custom_components/casora/scripts/casora-core.js#casoraClockDate,casoraClockLines,casoraClockHtml, custom_components/casora/panel/casora-panel.js#show_date
+// @deckt: dashboards/casora/button_card_templates.json#casora_time,casora_room, custom_components/casora/scripts/casora-core.js#casoraClockDate,casoraClockLinesHtml,casoraClockHtml, custom_components/casora/panel/casora-panel.js#show_date
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -24,7 +24,7 @@ window.casoraLocale = () => 'en-US';
 assert.equal(window.casoraClockDate(hassRoot, at), 'Thursday, November 12', 'the dashboard\'s language');
 window.casoraLocale = () => 'de-DE';
 
-const two = window.casoraClockLines('22:54', 'Donnerstag, 12. November');
+const two = window.casoraClockLinesHtml('22:54', 'Donnerstag, 12. November');
 assert.match(two, /<span>22:54<\/span><span style="[^"]*font-size:0\.6em[^"]*text-transform:none[^"]*">Donnerstag, 12\. November<\/span>/,
   'time, then the date small and not in capitals');
 
@@ -32,7 +32,7 @@ assert.match(two, /<span>22:54<\/span><span style="[^"]*font-size:0\.6em[^"]*tex
 assert.match(window.casoraClockHtml(false, ''), /^<casora-clock data-h12="" data-suffix="">\d\d:\d\d<\/casora-clock>$/, 'off: as before');
 const on = window.casoraClockHtml(false, '', true);
 assert.match(on, /^<casora-clock data-h12="" data-suffix="" data-date="1"><span class="casora-clock-date"/, 'on: marked, two lines');
-assert.match(core, /if \(this\.dataset\.date === '1'\)[\s\S]{0,300}casoraClockLines/, 'the ticking element keeps the date line');
+assert.match(core, /if \(this\.dataset\.date === '1'\)[\s\S]{0,300}casoraClockLinesHtml/, 'the ticking element keeps the date line');
 
 // The tile.
 const T = JSON.parse(read('dashboards/casora/button_card_templates.json'));

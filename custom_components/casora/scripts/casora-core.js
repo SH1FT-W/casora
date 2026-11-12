@@ -2950,16 +2950,16 @@ window.casoraMenuGlass = {
       }
     };
     // Both parts already escaped.
-    window.casoraClockLines = function (timeHtml, dateHtml) {
+    window.casoraClockLinesHtml = function (timeHtml, dateHtml) {
       return '<span class="casora-clock-date" style="display:inline-grid;justify-items:start;row-gap:3px;line-height:1;">'
         + '<span>' + timeHtml + '</span><span style="font-size:0.6em;font-weight:600;letter-spacing:0.2px;text-transform:none;opacity:0.6;">'
         + dateHtml + '</span></span>';
     };
     window.casoraClockHtml = function (use12, suffix, withDate) {
       const esc = window.casoraEsc || ((x) => String(x == null ? '' : x).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
-      const t = esc(window.casoraClockText(rootHass(), use12));
+      const timeHtml = esc(window.casoraClockText(rootHass(), use12));
       return '<casora-clock data-h12="' + (use12 ? '1' : '') + '" data-suffix="' + esc(suffix || '') + '"' + (withDate ? ' data-date="1"' : '') + '>'
-        + (withDate ? window.casoraClockLines(t, esc(window.casoraClockDate(rootHass()))) : t) + '</casora-clock>';
+        + (withDate ? window.casoraClockLinesHtml(timeHtml, esc(window.casoraClockDate(rootHass()))) : timeHtml) + '</casora-clock>';
     };
     const rootHass = () => { try { const ha = document.querySelector('home-assistant'); return (ha && ha.hass) || null; } catch (e) { return null; } };
     if (!customElements.get('casora-clock')) {
@@ -2973,7 +2973,7 @@ window.casoraMenuGlass = {
           const line = (sx ? t + ' ' + sx : t).toUpperCase();
           if (this.dataset.date === '1') {
             const esc = window.casoraEsc || ((x) => String(x == null ? '' : x).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
-            this.innerHTML = window.casoraClockLines(esc(line), esc(window.casoraClockDate(rootHass())));
+            this.innerHTML = window.casoraClockLinesHtml(esc(line), esc(window.casoraClockDate(rootHass())));
           } else this.textContent = line;
           this._t = setTimeout(() => this._tick(), 60050 - (Date.now() % 60000));
         }
