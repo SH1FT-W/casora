@@ -143,13 +143,17 @@
     shape = shape || M.autoShape(kind);
     if (shape === 'heat') {
       // One sensor at a time (several: casora-chart's switch); hourly statistics, counters as consumption per hour.
-      return { type: 'custom:casora-chart', kind: 'heat', span: span, readout: 'hero', plate: true,
+      var hc = { type: 'custom:casora-chart', kind: 'heat', span: span, readout: 'hero', plate: true,
         source: kind === 'total' ? 'change' : 'stats',
         series: series.map(function (s) { return { entity: s.entity, name: noEval(s.name), color: s.color }; }) };
+      // With the switch the chart hands over the picked sensor only: the popup's number (bound to the first) reads it (#178).
+      if (series.length > 1) hc.read_as = series[0].entity;
+      return hc;
     }
     var cfg = { type: 'custom:casora-chart', kind: shape === 'bar' ? 'bar' : 'line', span: span, height: 190, readout: 'hero', plate: true,
       series: series.map(function (s) { return { entity: s.entity, name: noEval(s.name), color: s.color }; }) };
     if (series.length > 1 && M.sameUnit(series)) cfg.switch = false;
+    else if (series.length > 1) cfg.read_as = series[0].entity;
     if (shape === 'bar') {
       cfg.period = PERIOD[span] || 'day';
       cfg.source = kind === 'total' ? 'change' : span === '24h' ? 'history' : 'stats';
