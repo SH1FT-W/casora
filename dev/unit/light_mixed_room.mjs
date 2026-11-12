@@ -88,10 +88,30 @@ assert.ok(!r.seg.some((s) => ['Warm', 'Neutral', 'Kalt'].includes(s.l)), 'a lit 
 states['light.bulb'].state = 'off';
 r = render(['light.spots', 'light.bulb']);
 assert.deepEqual(r.seg[0].tg, ['light.spots'], 'when every lamp is off, only the two-tone lamp is turned on');
-stages.length = 0;
-S.render({ gid: 'light.all', init: -1, rooms: [{ name: 'Office', lights: ['light.spots', 'light.bulb'] }] }, 'body', states, hass, null);
-assert.deepEqual(stages[0].seg[0].svc.target.entity_id, ['light.spots'], 'the v3 house tone reaches two-tone lamps when all are off');
-assert.equal(stages[0].svc, null, 'the house brightness stage stays off');
+// The house popup (v3, onlyOn) never switches the house on: no white-tone row while every lamp is off.
+const toneLabels = ['Warm', 'Neutral', 'Kalt'];
+const houseStage = (ids) => {
+  stages.length = 0; calls.length = 0;
+  S.render({ gid: 'light.all', init: -1, rooms: [{ name: 'Office', lights: ids }] }, 'body', states, hass, null);
+  return stages[0];
+};
+let h = houseStage(['light.spots', 'light.bulb']);
+assert.ok(!(h.seg || []).some((s) => toneLabels.includes(s.label)), 'the v3 house has no white-tone row while all lamps are off');
+assert.ok(!(h.seg || []).some((s) => s.svc && s.svc.service === 'turn_on'), 'the v3 house offers no tone call while all lamps are off');
+assert.equal(h.svc, null, 'the house brightness stage stays off');
+// House, one two-tone lamp lit: the tone reaches only the lit lamps that accept it.
+states['light.spots'].state = 'on';
+states['light.strip'].state = 'off';
+h = houseStage(['light.spots', 'light.strip', 'light.bulb']);
+assert.deepEqual(h.seg.slice(0, 3).map((s) => s.label), toneLabels, 'house: white-tone row with a lit lamp');
+assert.deepEqual(h.seg[0].svc.target.entity_id, ['light.spots'], 'house tone targets only the lit lamp, no off lamp');
+// House, only the colour-only lamp lit: the row shows, its target is exactly that lamp.
+states['light.spots'].state = 'off';
+states['light.bulb'].state = 'on';
+h = houseStage(['light.spots', 'light.strip', 'light.bulb']);
+assert.deepEqual(h.seg.slice(0, 3).map((s) => s.label), toneLabels, 'house: white-tone row for a lit colour-only lamp');
+assert.deepEqual(h.seg[0].svc.target.entity_id, ['light.bulb'], 'house tone targets the lit colour-only lamp, no two-tone lamp');
+states['light.strip'].state = 'on';
 states['light.bulb'].state = 'on';
 
 // Older popup path: an on colour-only lamp is targeted instead of off two-tone lamps.
@@ -104,7 +124,7 @@ states['light.plain'].state = 'on';
 assert.equal(legacyTone(renderLegacy(['light.spots', 'light.plain'])), null, 'legacy path hides white tone for a lit plain lamp');
 states['light.plain'].state = 'off';
 states['light.bulb'].state = 'off';
-assert.deepEqual(legacyTone(renderLegacy(['light.spots', 'light.bulb'])).ids, ['light.spots'], 'legacy all-off tone targets two-tone lamps only');
+assert.deepEqual(legacyTone(renderLegacy(['light.spots', 'light.bulb'])).ids, ['light.spots'], 'legacy has no onlyOn: all-off tone still targets two-tone lamps only (unchanged)');
 states['light.spots'].state = 'on';
 states['light.bulb'].state = 'on';
 const spotsAttrs = states['light.spots'].attributes;
