@@ -3082,7 +3082,9 @@
     "None waiting": "Brak oczekujących",
     "Only the photos picked here.": "Tylko zdjęcia wybrane tutaj.",
     "All room photos. Tap a photo to show only the ones you pick.": "Wszystkie zdjęcia pomieszczeń. Dotknij zdjęcia, aby pokazać tylko wybrane.",
-    "Screensaver photos": "Zdjęcia wygaszacza ekranu"
+    "Screensaver photos": "Zdjęcia wygaszacza ekranu",
+    "Show date": "Pokaż datę",
+    "Weekday and date in small type under the time.": "Dzień tygodnia i data małą czcionką pod godziną."
   },
   "patterns": [
     [

@@ -2664,6 +2664,9 @@ const SECTIONS = [
       // until 26.10 it stood under the 12-hour switch at the bottom).
       { key: "show_time", label: "Show clock", type: "bool", boolDefault: true, always: true, ord: -1,
         hint: "For desktop and tablet – the phone layout has no clock." },
+      // #179: weekday and date in small type under the time.
+      { key: "show_date", label: "Show date", type: "bool", boolDefault: false, always: true,
+        hint: "Weekday and date in small type under the time." },
       // Always visible: without an entry the clock takes sensor.time, and that should show.
       { ...E("time_entity", "Time sensor", ["sensor"]), always: true, placeholder: "Automatic" },
       { key: "use_12h", label: "12-hour clock", type: "bool", boolDefault: LOCALE_12H, always: true },
@@ -10301,6 +10304,7 @@ class CasoraPanel extends HTMLElement {
           font-size:var(--nav); color:rgba(255,255,255,0.92); padding:0;
         }
         .mini-time { flex:0 0 auto; font-weight:530; }
+        .mini-date { display:block; margin-top:2px; font-size:0.6em; font-weight:600; opacity:0.6; line-height:1; }
         .mini-tabs { flex:1 1 auto; display:flex; gap:13px; justify-content:center; overflow:hidden; }
         /* Too many rooms for the bar: the tabs sit in their own strip that scrolls
            sideways (touch, trackpad, wheel) like the dashboard's nav, start-aligned so
@@ -27036,6 +27040,13 @@ class CasoraPanel extends HTMLElement {
     const extra = String(V.time_suffix || "").trim();
     q(".mini-time").textContent = hh + ":" + String(d.getMinutes()).padStart(2, "0")
       + suffix + (extra ? " " + extra : "");
+    // #179: the date under the time, as on the dashboard.
+    if (V.show_date === true) {
+      const dl = document.createElement("span");
+      dl.className = "mini-date";
+      dl.textContent = d.toLocaleDateString(this._hass?.locale?.language || "de", { weekday: "long", day: "numeric", month: "long" });
+      q(".mini-time").appendChild(dl);
+    }
     q(".mini-time").style.visibility = V.show_time === false ? "hidden" : "";
     const tabs = q(".mini-tabs");
     const strip = document.createElement("span");

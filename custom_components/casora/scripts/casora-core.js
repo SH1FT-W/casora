@@ -2938,9 +2938,28 @@ window.casoraMenuGlass = {
       if (!use12) return String(h).padStart(2, '0') + ':' + mm;
       return ((h % 12) || 12) + ':' + mm + ' ' + (h >= 12 ? 'PM' : 'AM');
     };
-    window.casoraClockHtml = function (use12, suffix) {
+    /* #179: weekday and date under the time („Donnerstag, 12. November“), in the dashboard's language and, like the
+       time, in Home Assistant's zone when the profile says "server". Small and muted, so the clock keeps its width. */
+    window.casoraClockDate = function (hass, now) {
+      const d = now || new Date();
+      const tz = hass && hass.locale && hass.locale.time_zone === 'server' && hass.config && hass.config.time_zone;
+      const loc = window.casoraLocale ? window.casoraLocale() : 'de-DE';
+      const o = { weekday: 'long', day: 'numeric', month: 'long' };
+      try { return new Intl.DateTimeFormat(loc, tz ? Object.assign({ timeZone: tz }, o) : o).format(d); } catch (e) {
+        return new Intl.DateTimeFormat(loc, o).format(d);
+      }
+    };
+    // Both parts already escaped.
+    window.casoraClockLines = function (timeHtml, dateHtml) {
+      return '<span class="casora-clock-date" style="display:inline-grid;justify-items:start;row-gap:3px;line-height:1;">'
+        + '<span>' + timeHtml + '</span><span style="font-size:0.6em;font-weight:600;letter-spacing:0.2px;text-transform:none;opacity:0.6;">'
+        + dateHtml + '</span></span>';
+    };
+    window.casoraClockHtml = function (use12, suffix, withDate) {
       const esc = window.casoraEsc || ((x) => String(x == null ? '' : x).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
-      return '<casora-clock data-h12="' + (use12 ? '1' : '') + '" data-suffix="' + esc(suffix || '') + '">' + esc(window.casoraClockText(rootHass(), use12)) + '</casora-clock>';
+      const t = esc(window.casoraClockText(rootHass(), use12));
+      return '<casora-clock data-h12="' + (use12 ? '1' : '') + '" data-suffix="' + esc(suffix || '') + '"' + (withDate ? ' data-date="1"' : '') + '>'
+        + (withDate ? window.casoraClockLines(t, esc(window.casoraClockDate(rootHass()))) : t) + '</casora-clock>';
     };
     const rootHass = () => { try { const ha = document.querySelector('home-assistant'); return (ha && ha.hass) || null; } catch (e) { return null; } };
     if (!customElements.get('casora-clock')) {
@@ -2951,7 +2970,11 @@ window.casoraMenuGlass = {
           clearTimeout(this._t);
           const sx = this.dataset.suffix;
           const t = window.casoraClockText(rootHass(), this.dataset.h12 === '1');
-          this.textContent = (sx ? t + ' ' + sx : t).toUpperCase();
+          const line = (sx ? t + ' ' + sx : t).toUpperCase();
+          if (this.dataset.date === '1') {
+            const esc = window.casoraEsc || ((x) => String(x == null ? '' : x).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
+            this.innerHTML = window.casoraClockLines(esc(line), esc(window.casoraClockDate(rootHass())));
+          } else this.textContent = line;
           this._t = setTimeout(() => this._tick(), 60050 - (Date.now() % 60000));
         }
       });

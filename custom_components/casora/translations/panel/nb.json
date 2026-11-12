@@ -3082,7 +3082,9 @@
     "None waiting": "Ingen venter",
     "Only the photos picked here.": "Bare bildene som er valgt her.",
     "All room photos. Tap a photo to show only the ones you pick.": "Alle rombilder. Trykk på et bilde for å vise bare de du velger.",
-    "Screensaver photos": "Bilder for skjermspareren"
+    "Screensaver photos": "Bilder for skjermspareren",
+    "Show date": "Vis dato",
+    "Weekday and date in small type under the time.": "Ukedag og dato med liten skrift under klokkeslettet."
   },
   "patterns": [
     [
