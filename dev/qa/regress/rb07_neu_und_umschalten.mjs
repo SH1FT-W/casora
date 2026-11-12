@@ -20,10 +20,13 @@ await o.context.addInitScript(() => {
 });
 await studio(o.page, dash.url);
 const H = (fn, a) => o.page.evaluate(fn, a);
-const pop = await o.page.waitForFunction(() => { const h = window.__pierce('#cw-t')[0]; return h && h.getClientRects().length ? h.textContent.trim() : null; },
+// A release with its own headline („Das große November-Update“) names the version in the line under it (.cw-ver).
+const pop = await o.page.waitForFunction(() => { const h = window.__pierce('#cw-t')[0]; if (!h || !h.getClientRects().length) return null;
+  const v = h.nextElementSibling && h.nextElementSibling.classList.contains('cw-ver') ? ' ' + h.nextElementSibling.textContent.trim() : '';
+  return h.textContent.trim() + v; },
   null, { timeout: 20000 }).then((h) => h.jsonValue()).catch(() => null);
 await check('„Neu in Casora“ erscheint nach dem Update', !!pop, pop);
-await check('Titel nennt die volle Version ' + version, !!pop && pop.includes(version) && !new RegExp(version.replace(/[.]/g, '\\.') + '\\.').test(pop), pop);
+await check('Kopf nennt die volle Version ' + version, !!pop && pop.includes(version) && !new RegExp(version.replace(/[.]/g, '\\.') + '\\.').test(pop), pop);
 const items = await H(() => window.casoraWhatsNew && window.casoraWhatsNew('de'));
 // Nicht vom Inhalt des Release-Eintrags abhängen (wechselt mit jedem Release): nur gleiche Version
 // und mindestens eine Neuerung mit Titel und Text.
