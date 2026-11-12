@@ -209,6 +209,47 @@
       } catch (e) { /* schon weg */ }
     });
   };
+  // Compare the draw's output, not a second set of time boundaries. The timer owns
+  // only a weak reference; draw callbacks live on the card, never in the interval.
+  KL.timeCheck = function (el, draw, value, needed, mirrored) {
+    if (!el) return;
+    if (!needed) {
+      if (el._klTime) clearInterval(el._klTime.tick);
+      el._klTime = null;
+      return;
+    }
+    if (el._klTime) { el._klTime.draw = draw; el._klTime.value = value; return; }
+    var ref = window.WeakRef ? new WeakRef(el) : { deref: function () { return el; } };
+    var tick = setInterval(function () {
+      var card = ref.deref();
+      if (!card || !card.isConnected || !card._klTime) {
+        clearInterval(tick);
+        if (card) card._klTime = null;
+        return;
+      }
+      if (document.visibilityState !== 'visible') return;
+      // The popup hides the hero's source card and mirrors its line into the
+      // visible header. Check that surface, not the deliberately hidden source.
+      var surface = card;
+      if (card._klTime.mirrored) {
+        while (surface && surface.tagName !== 'CASORA-POPUP') surface = surface.parentNode || surface.host;
+        surface = surface && surface.hasAttribute('open') && surface.shadowRoot.querySelector('.header-status');
+      }
+      if (!surface || !surface.getClientRects().length) return;
+      var current = card._klTime, next;
+      try { next = current.draw(card); }
+      catch (e) {
+        clearInterval(tick); card._klTime = null;
+        throw e; // Surface the bug once, not on every tick; a later render can retry.
+      }
+      var changed = next.value !== current.value;
+      // Only the real draw confirms the output. A failed kick must not consume
+      // the change, including the tile's final transition back to camera text.
+      if (!next.needed && !changed) { clearInterval(tick); card._klTime = null; }
+      if (changed) kickAll([card]);
+    }, 10000);
+    el._klTime = { tick: tick, draw: draw, value: value, mirrored: mirrored };
+  };
   // Neu fragen nur, wenn sich der Klingelknopf (visitor) ändert, sonst höchstens alle 15 Min. – Erkennungen
   // kommen live über „seen“ dazu (jede Personen-Erkennung fragte vorher den ganzen Verlauf neu); danach neu zeichnen.
   KL.history = function (hass, c, el) {
@@ -303,7 +344,16 @@
     var c = KL.find(hass, id);
     // Die Kachel fragt den Verlauf selbst (Klingeln vor dem Laden der Seite), Ergebnis zeichnet sie neu.
     KL.history(hass, c, el || null);
-    return KL.status(c, states || (hass && hass.states) || {});
+    var s = KL.status(c, states || (hass && hass.states) || {});
+    if (el) {
+      var draw = function (card) {
+        var h = card._hass || hassNow();
+        var st = KL.status(c, (h && h.states) || {});
+        return { value: JSON.stringify([KL.tileText(st, null, (card.offsetWidth || 999) < 240), KL.hot(st)]), needed: !!st.ring };
+      };
+      KL.timeCheck(el, draw, JSON.stringify([KL.tileText(s, null, (el.offsetWidth || 999) < 240), KL.hot(s)]), !!s.ring);
+    }
+    return s;
   };
 
   // ── Zeitangaben ───────────────────────────────────────────────────────────
@@ -485,6 +535,16 @@
   };
 
   KL.sec = function (part, c, states, hass, el) {
+    var out = KL.drawSec(part, c, states, hass, el);
+    if (el && (part === 'hero' || part === 'hist' || part === 'histall')) {
+      KL.timeCheck(el, function (card) {
+        var h = card._hass || hassNow();
+        return { value: KL.drawSec(part, c, (h && h.states) || {}, h, null, true), needed: true };
+      }, out, true, part === 'hero');
+    }
+    return out;
+  };
+  KL.drawSec = function (part, c, states, hass, el, cached) {
     var UI = window._casoraUI;
     if (!UI || !c) return '';
     var S = states || {}, now = Date.now();
@@ -541,7 +601,7 @@
     }
     if (part === 'hist' || part === 'histall') {
       if (el) { els[c.cam] = (els[c.cam] || []).filter(function (w) { return w.isConnected; }); if (els[c.cam].indexOf(el) < 0) els[c.cam].push(el); }
-      var got = KL.history(hass, c, el);
+      var got = cached ? (hc[c.cam] || {}).list : KL.history(hass, c, el);
       var job = hc[c.cam] || {};
       var list = KL.events(c, now);
       var head = 'Verlauf';
