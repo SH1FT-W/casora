@@ -4870,9 +4870,11 @@
     return out;
   };
   // Lit lamps that support tone take it; fall back to two-tone lamps only when all are off.
-  var whiteTargets = function (ids, states) {
+  // onlyOn (the house popup never switches lamps on): no targets while no lamp is lit.
+  var whiteTargets = function (ids, states, onlyOn) {
     var lit = ids.filter(function (id) { return states[id] && states[id].state === 'on'; });
     if (lit.length) return lit.filter(function (id) { return hasCt(states[id]) || hasCol(states[id]); });
+    if (onlyOn) return [];
     return ids.every(function (id) { return states[id] && states[id].state === 'off'; })
       ? ids.filter(function (id) { return hasCt(states[id]); }) : [];
   };
@@ -4896,7 +4898,7 @@
     var v = s.on ? (s.pct != null ? s.pct : 100) : plainOn ? 100 : 0;
     var target = lit.length ? lit : (onlyOn ? [] : dim);
     var ct = ids.filter(function (id) { return hasCt(states[id]); });
-    var ctT = whiteTargets(ids, states);
+    var ctT = whiteTargets(ids, states, onlyOn);
     var seg = null, curLbl = '';
     // Colour lamps (hs/rgb/rgbw/rgbww/xy; an HA group lists its members' modes): „Farbe“ in the segment opens the colour
     // wheel page (33-color-wheel.js) for the ones that are on, else all (owner, 01.11.2026: no colour in the v3 popup).
