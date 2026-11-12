@@ -5285,6 +5285,10 @@
     [
       "^(.+) aktiv$",
       "{1} actief"
+    ],
+    [
+      "^(.+) braucht Aufmerksamkeit$",
+      "{1} heeft aandacht nodig"
     ]
   ]
 }

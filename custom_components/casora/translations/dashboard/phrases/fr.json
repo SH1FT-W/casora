@@ -5285,6 +5285,10 @@
     [
       "^(.+) aktiv$",
       "{1} actif"
+    ],
+    [
+      "^(.+) braucht Aufmerksamkeit$",
+      "{1} à vérifier"
     ]
   ]
 }

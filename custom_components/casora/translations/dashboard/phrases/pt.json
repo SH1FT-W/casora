@@ -5285,6 +5285,10 @@
     [
       "^(.+) aktiv$",
       "{1} ativo"
+    ],
+    [
+      "^(.+) braucht Aufmerksamkeit$",
+      "{1} requer atenção"
     ]
   ]
 }
