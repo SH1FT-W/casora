@@ -126,6 +126,11 @@ check("md: Anführungszeichen escapet", "&quot;quote&quot; &#x27;apos&#x27;" in 
 nested = rn.render_markdown("1. eins\n2. zwei\n   - unter\n   - unter2\n3. drei\n\nAbsatz")
 check("md: nummeriert + verschachtelt",
       nested == "<ol><li>eins</li><li>zwei<ul><li>unter</li><li>unter2</li></ul></li><li>drei</li></ol><p>Absatz</p>", nested)
+pic = rn.render_markdown("- **Schoner:** zehn Stück.\n\n  ![Die zehn Schoner](https://raw.githubusercontent.com/x/y/main/a.webp)\n\n![böse](javascript:alert(1))")
+check("md: Bild wird Link aufs Bild, ohne „!“",
+      '<a href="https://raw.githubusercontent.com/x/y/main/a.webp" target="_blank" rel="noopener noreferrer">Die zehn Schoner</a>' in pic
+      and "!<a" not in pic and "<img" not in pic, pic)
+check("md: Bild mit javascript bleibt Text", "javascript:alert(1)" in pic and 'href="javascript' not in pic, pic)
 check("md: Platzhalterzeichen im Text harmlos", "\x00" not in rn.render_markdown("a \x000\x00 b `c`"))
 
 # ── Kurzfassung ─────────────────────────────────────────────────────────────

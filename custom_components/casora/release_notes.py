@@ -300,7 +300,9 @@ def _inline(text: str) -> str:
                      + _emph(html.escape(label, quote=True)) + "</a>")
         return f"\x01{len(links) - 1}\x01"
 
-    text = re.sub(r"\[([^\]\n]+)\]\(([^)\s]+)\)", keep_link, text.replace("\x01", ""))
+    # A picture (![alt](url)) becomes a link to it: the Studio's notes take no images (safeNotes in casora-panel-updates.js).
+    text = re.sub(r"!(?=\[[^\]\n]+\]\(https?://)", "", text.replace("\x01", ""))
+    text = re.sub(r"\[([^\]\n]+)\]\(([^)\s]+)\)", keep_link, text)
     text = _emph(html.escape(text, quote=True))
     text = re.sub(r"\x01(\d+)\x01", lambda m: links[int(m.group(1))], text)
     return re.sub(r"\x00(\d+)\x00", lambda m: codes[int(m.group(1))], text)
