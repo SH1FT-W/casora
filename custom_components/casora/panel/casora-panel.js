@@ -2543,6 +2543,13 @@ const SECTIONS = [
         optionLabels: { "": "Off", "1": "After 1 minute", "2": "After 2 minutes",
           "5": "After 5 minutes", "10": "After 10 minutes" },
         hint: "Tablets only. Brings one back to Home after a while without use." },
+      // Issue 114: swipe left/right on Home or an open room for the next/previous page (scripts/local/40-swipe-rooms.js),
+      // on every touch device (owner, 03.11.2026: one setting). Under Screen, not Phone (issue 186: read as phone only).
+      // The tablet reads swipe_rooms from the room views (casora-core.js, window._casoraSwipeRooms), the phone's bottom
+      // bar card gets it on save (markPhoneManaged). Never with a mouse (owner, 12.11.2026).
+      { key: "swipe_rooms", sub: "chrome", label: "Swipe between rooms", type: "bool",
+        boolDefault: false, auto: true, scope: "dashboard",
+        hint: "On a phone or tablet, swipe left or right on Home or an open room to get to the next or previous room, in the order of the room menu." },
       // Screensaver for wall tablets (scripts/local/46-screensaver.js). Off until a dashboard turns it on; the kind
       // "" shows one after the other. Drawn on the Studio's Screensaver page with a preview (casora-panel-settings.js).
       { key: "casora_screensaver", sub: "chrome", label: "Start the screensaver", type: "select", auto: true, scope: "dashboard",
@@ -2615,12 +2622,6 @@ const SECTIONS = [
       { key: "show_search", sub: "phone", label: "Show search", type: "bool",
         boolDefault: true, auto: true, scope: "dashboard",
         hint: "Pull down at the top of the phone's Home to show a search field: rooms, devices and scenes. On a computer, Cmd+K or Ctrl+K opens the same search." },
-      // Issue 114: swipe left/right on Home or an open room for the next/previous page (scripts/local/40-swipe-rooms.js),
-      // on every touch device (owner, 03.11.2026: one setting). The tablet reads swipe_rooms from the room views
-      // (casora-core.js, window._casoraSwipeRooms), the phone's bottom bar card gets it on save (markPhoneManaged).
-      { key: "swipe_rooms", sub: "phone", label: "Swipe between rooms", type: "bool",
-        boolDefault: false, auto: true, scope: "dashboard",
-        hint: "On a phone or tablet, swipe left or right on Home or an open room to get to the next or previous room, in the order of the room menu." },
       { key: "room_groups", sub: "phone", label: "Group rooms by category on the phone", type: "bool",
         boolDefault: false, auto: true, scope: "dashboard",
         hint: "Like Apple's Home app: Light, Climate, Security … each with a small heading. Off shows all devices under one heading." },

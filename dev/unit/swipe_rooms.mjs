@@ -71,10 +71,10 @@ assert.equal(S.inHead([inShadow('name', card(['casora_light']))]), false, 'a til
 assert.equal(S.inHead([card(['casora_light']), { nodeType: 1, localName: 'casora-smart-row' }]), false, 'a tile row is no head');
 assert.equal(S.inHead([]), false);
 
-// Studio: ONE dashboard field under Controls › Phone for every touch device (owner, 03.11.2026), off by default; the
+// Studio: ONE dashboard field under Controls › Screen for every touch device (owner, 03.11.2026), off by default; the
 // phone's bar card gets swipe_rooms on save; no separate tablet option any more.
 const panel = fs.readFileSync(new URL('../../custom_components/casora/panel/casora-panel.js', import.meta.url), 'utf8');
-assert.match(panel, /key: "swipe_rooms", sub: "phone", label: "Swipe between rooms", type: "bool",\s*boolDefault: false, auto: true, scope: "dashboard"/);
+assert.match(panel, /key: "swipe_rooms", sub: "chrome", label: "Swipe between rooms", type: "bool",\s*boolDefault: false, auto: true, scope: "dashboard"/);
 assert.doesNotMatch(panel, /key: "swipe_rooms_tablet"/, 'no separate tablet option');
 assert.match(panel, /home\.variables\.swipe_rooms === true\) c\.swipe_rooms = true;\s*else delete c\.swipe_rooms;/);
 // Tablets and iPads read the same swipe_rooms from the desktop dashboard; a saved swipe_rooms_tablet is ignored.

@@ -2,7 +2,7 @@
 // @parallel: ui
 // @deckt: custom_components/casora/scripts/local/40-swipe-rooms.js custom_components/casora/scripts/casora-core.js#_casoraSwipeRooms
 // Issue 114 (03.11.2026): swipe left/right on Home or an open room for the next/previous page, in the room menu's order,
-// as ONE option for every touch device (Studio › Controls › Phone: "Swipe between rooms", off by default; owner
+// as ONE option for every touch device (Studio › Controls › Screen: "Swipe between rooms", off by default; owner
 // 03.11.2026: no separate tablet option, touch detected by capability, never by user agent).
 // Phone 393 with real touch input (CDP), settings only in the browser:
 //  1. off (default): a horizontal swipe on an open room changes nothing
