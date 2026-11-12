@@ -32,7 +32,7 @@ The big November update: screensavers for wall tablets, four new designs, charge
 - **Clock without Time & Date (#172):** Home Assistant no longer adds Time & Date on new installs. On "Automatic" the top bar clock now shows the device's own time, in Home Assistant's time zone when your profile uses server time. Thanks to @ejetzass.
 - **Add event (#146):** the button in the calendar popup sits above the day's events.
 - **Velair (#170):** "Trend on tile" is offered for the Velair tile too.
-- **Swipe between rooms (#186):** the setting moved from Studio › Controls › Phone to Studio › Controls › Screen, since it works on phones and tablets alike. Thanks to @Birdy2019.
+- **Swipe between rooms (#186):** the setting moved from the Phone settings to Studio › Settings › Tapping & tablet, since it works on phones and tablets alike. Thanks to @Birdy2019.
 
 ### Fixed
 - **Blinds count (#177):** a cover within "counts as closed up to" counted as open in "X of Y open"; tile, popup head, dial and phone overview now agree. Thanks to @Birdy2019.

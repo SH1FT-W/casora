@@ -67,6 +67,10 @@
         { k: "hold", sec: "General", sub: "hold", title: "Hold and sort tiles",
           plain: "What happens when you hold a tile, and when busy tiles move to the front.",
           kw: "halten gedrückt halten schnellmenü popup sortieren reihenfolge hold sort" },
+        // #186: phone and tablet alike, so here and not under Phone (the field moved to the part chrome).
+        { k: "swipe", sec: "General", sub: "chrome", keys: ["swipe_rooms"], title: "Swipe between rooms",
+          plain: "On a phone or tablet, swipe left or right on Home or an open room to get to the next or previous room, in the order of the room menu.",
+          kw: "wischen swipe räume wechseln blättern tablet handy nächster raum" },
         { k: "screen", sec: "General", sub: "chrome", keys: ["casora_idle_home"], title: "Wall tablet",
           plain: "Go back to Home after a while without use.",
           kw: "tablet inaktivität zurück zuhause idle kiosk wand" },

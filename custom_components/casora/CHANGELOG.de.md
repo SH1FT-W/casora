@@ -32,7 +32,7 @@ Das große November-Update: Bildschirmschoner für Wand-Tablets, vier neue Desig
 - **Uhr ohne „Uhrzeit & Datum“ (#172):** Home Assistant legt die Integration bei Neuinstallationen nicht mehr an. Auf „Automatisch“ zeigt die Uhr oben jetzt die Zeit des Geräts, in der Zeitzone von Home Assistant, wenn dein Profil Serverzeit nutzt. Danke an @ejetzass.
 - **Termin hinzufügen (#146):** Der Knopf im Kalender-Popup steht über den Terminen des Tages.
 - **Velair (#170):** „Verlauf auf der Kachel“ gibt es jetzt auch für die Velair-Kachel.
-- **Zwischen Räumen wischen (#186):** Die Einstellung steht jetzt unter Studio › Bedienung › Bildschirm statt unter Handy, weil sie für Handy und Tablet gilt. Danke an @Birdy2019.
+- **Zwischen Räumen wischen (#186):** Die Einstellung steht jetzt unter Studio › Einstellungen › Bedienen statt unter Handy, weil sie für Handy und Tablet gilt. Danke an @Birdy2019.
 
 ### Behoben
 - **Zählung der Rollläden (#177):** Ein Rollladen innerhalb „gilt als geschlossen bis“ zählte bei „X von Y offen“ als offen; Kachel, Popup-Kopf, Stellrad und Handy-Übersicht stimmen jetzt überein. Danke an @Birdy2019.
