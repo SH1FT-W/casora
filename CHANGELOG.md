@@ -17,7 +17,7 @@ More screensavers, consumption per device, calmer notifications and tiles that o
 
   ![Consumption per device, this week](https://raw.githubusercontent.com/SH1FT-W/casora/main/docs/images/news-26.11.27-energy.webp)
 
-- **Notifications:** repeats from the same source fold into one card with a count; a tap opens the stack, clearing clears it. A triggered alarm stays on top while it is going. New in the Studio: hide your own arrivals and departures, and "Cleared for all users", which shares what is cleared between everyone (your earlier clears come along).
+- **Notifications:** repeats from the same source fold into one card with a count; a tap opens the stack as a timeline (time, a coloured dot, the state), clearing clears it. A triggered alarm stays on top while it is going. New in the Studio: hide your own arrivals and departures, and "Cleared for all users", which shares what is cleared between everyone (your earlier clears come along).
 - **View only:** each tile's "When tapped" offers Normal, Ask first and View only. A view only tile opens its popup but switches nothing. Existing "Ask before switching" settings carry over.
 - **Motion sensors:** "Last seen 11 h ago" instead of "Clear" on the tile, badge and popup ("11 h ago" on narrow phone tiles).
 - **Play together:** the media popup of a speaker that can be grouped lists the other speakers of its system; a tap adds or removes one.
@@ -29,6 +29,7 @@ More screensavers, consumption per device, calmer notifications and tiles that o
 
 ### Fixed
 - **Empty row on the phone:** an empty Favourites row no longer flashes in and pushes the page down on every state change.
+- **Next appointment under the greeting (#189):** only calendars picked under Settings › Home & devices › Calendars count, as on the calendar tile; the screensavers' calendars follow that pick too when they have none of their own. Thanks to @stalakerob.
 - **Translations (#175):** the updates popup's AI verdicts ("KI: Unkritisch") and summaries stayed German. Thanks to @daxy01.
 - **Solar tip:** a device with "tumble" in its name no longer counts as a dryer.
 

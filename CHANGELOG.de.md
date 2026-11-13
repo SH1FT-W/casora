@@ -17,7 +17,7 @@ Mehr Bildschirmschoner, Verbrauch je Gerät, ruhigere Mitteilungen und Kacheln, 
 
   ![Verbrauch je Gerät, diese Woche](https://raw.githubusercontent.com/SH1FT-W/casora/main/docs/images/news-26.11.27-energy.webp)
 
-- **Mitteilungen:** Wiederholungen derselben Quelle sind eine Karte mit Zähler; ein Tipp klappt den Stapel auf, Löschen löscht ihn. Ein ausgelöster Alarm bleibt oben, solange er läuft. Neu im Studio: eigenes Kommen und Gehen ausblenden und „Gelöscht für alle Benutzer“, das Gelöschte für alle teilt (deine bisherigen Löschungen kommen mit).
+- **Mitteilungen:** Wiederholungen derselben Quelle sind eine Karte mit Zähler; ein Tipp klappt den Stapel als Zeitleiste auf (Uhrzeit, farbiger Punkt, Zustand), Löschen löscht ihn. Ein ausgelöster Alarm bleibt oben, solange er läuft. Neu im Studio: eigenes Kommen und Gehen ausblenden und „Gelöscht für alle Benutzer“, das Gelöschte für alle teilt (deine bisherigen Löschungen kommen mit).
 - **Nur ansehen:** Das „Tippverhalten“ jeder Kachel bietet Normal, Vorher fragen und Nur ansehen. Eine Kachel mit „Nur ansehen“ öffnet ihr Popup, schaltet aber nichts. Bisherige Einstellungen „Vor dem Schalten fragen“ bleiben erhalten.
 - **Bewegungsmelder:** „Zuletzt vor 11 Std.“ statt „Frei“ auf Kachel, Badge und Popup (auf schmalen Handy-Kacheln „vor 11 Std.“).
 - **Zusammen abspielen:** Das Medien-Popup eines gruppierbaren Lautsprechers listet die anderen Lautsprecher seines Systems; ein Tipp nimmt einen dazu oder heraus.
@@ -29,6 +29,7 @@ Mehr Bildschirmschoner, Verbrauch je Gerät, ruhigere Mitteilungen und Kacheln, 
 
 ### Behoben
 - **Leere Reihe am Handy:** Eine leere Favoriten-Reihe blitzt nicht mehr bei jeder Zustandsänderung auf und schiebt die Seite nicht mehr nach unten.
+- **Nächster Termin unter der Begrüßung (#189):** Es zählen nur die Kalender, die unter Einstellungen › Haus & Geräte › Kalender gewählt sind, wie auf der Kalender-Kachel; auch die Bildschirmschoner nehmen diese Auswahl, wenn sie keine eigene haben. Danke an @stalakerob.
 - **Übersetzungen (#175):** Im Updates-Popup blieben KI-Urteile („KI: Unkritisch“) und Zusammenfassungen deutsch. Danke an @daxy01.
 - **Solar-Tipp:** Ein Gerät mit „tumble“ im Namen gilt nicht mehr als Trockner.
 
