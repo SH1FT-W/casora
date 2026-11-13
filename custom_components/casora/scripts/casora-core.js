@@ -10471,6 +10471,12 @@ window.casoraMenuGlass = {
     return '<div style="' + esc(tile) + '"><ha-icon icon="' + esc(name) + '" style="' + esc(glyph) + '"></ha-icon></div>';
   }
 
+  // The colour icon(name, t) fills its circle with – for a dot that has to match a list's icons (bell timeline).
+  function iconFill(name, t) {
+    var literal = (typeof t === 'string' && /^(var\(|#|rgb|hsl)/.test(t)) ? t : null;
+    var fill = tone(t) || literal || hueFor(name);
+    return soft() ? softHue(fill) : fill;
+  }
   function icon(name, t) {
     if (!name) return '';
     if (t === 'mono' && String(name).indexOf(':') !== -1) return monoIcon(name);
@@ -14403,7 +14409,7 @@ window.casoraMenuGlass = {
       + '>' + tiles + '</div></div>';
   }
 
-  window._casoraUI = { line: softLine, hero: hero, headline: headline, group: group, popupNames: popupNames, legend: legend, note: note, kiCard: kiCard, shelf: shelf, mediaRow: mediaRow, segments: segments, slider: slider, icon: icon, esc: esc, prime: prime, plantWater: plantWater, soft: soft, label: softLabel, tokens: T, v: 149 };
+  window._casoraUI = { line: softLine, hero: hero, headline: headline, group: group, popupNames: popupNames, legend: legend, note: note, kiCard: kiCard, shelf: shelf, mediaRow: mediaRow, segments: segments, slider: slider, icon: icon, iconFill: iconFill, esc: esc, prime: prime, plantWater: plantWater, soft: soft, label: softLabel, tokens: T, v: 149 };
   window._casoraUI.more = more;
   Object.assign(window._casoraUI, { section: section, row: row, settingsRow: settingsRow, settings: settings, actions: actions,
     empty: empty, width: width, switchHtml: switchHtml, page: page, SEC_ORDER: SEC_ORDER, WIDTH: WIDTH,
@@ -16240,17 +16246,100 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       });
     return _rows;
   }
-  // The rows as the bell lists them: an open stack followed by its older messages (kid: true).
-  function unfold(list) {
+  // The rows as the bell lists them (an open stack's older messages are its timeline, not rows of the list).
+  function unfold(list) { return (list || []).slice(); }
+
+  // An open stack as a timeline (owner 13.11.2026, like the lock and person popups): time | dot in the message's colour
+  // with a line to the next | what happened. Same source: only what differs („Entriegelt“), else the whole text. A
+  // day line („Gestern“, weekday) above the first entry of an earlier day; the relative time under the newest few.
+  var TL_REL = 3;
+  function hmOf(ms) {
+    var h = hassOf(), f = h && h.locale && h.locale.time_format;
+    var use12 = f === '12' ? true : f === '24' ? false : (function () {
+      try { return !!new Intl.DateTimeFormat(window.casoraLocale ? window.casoraLocale() : undefined, { hour: 'numeric' }).resolvedOptions().hour12; } catch (e) { return false; }
+    })();
+    if (typeof window.casoraClockText === 'function') return window.casoraClockText(h, use12, new Date(ms));
+    var d = new Date(ms);
+    return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  }
+  function dayStartOf(ms) { var d = new Date(ms); d.setHours(0, 0, 0, 0); return d.getTime(); }
+  // The text of one entry: the part after what all labels of the stack share (the device's name), first letter up.
+  function tlTexts(head) {
+    var ms = (head && head.members) || [];
+    var labels = ms.map(function (m) { return String(m.label || ''); });
+    var words = labels.map(function (l) { return l.split(' '); });
+    var distinct = labels.filter(function (l, i) { return labels.indexOf(l) === i; });
+    var cut = 0;
+    if (distinct.length > 1) {
+      var k = words[0].length;
+      words.forEach(function (w) { var i = 0; while (i < k && i < w.length && w[i] === words[0][i]) i++; k = i; });
+      cut = k;
+    } else if (ms[0] && ms[0].entity) {
+      var h = hassOf(), nm = String(nameOf(h && h.states && h.states[ms[0].entity]) || '').trim();
+      if (nm && labels[0].indexOf(nm + ' ') === 0) cut = nm.split(' ').length;
+    }
+    var sameSource = ms.every(function (m) { return m.entity && m.entity === ms[0].entity; });
+    var de = /^de\b/i.test(window.casoraLocale ? window.casoraLocale() : 'de');
+    var tr = window.casoraTr || function (x) { return x; };
+    return labels.map(function (l, i) {
+      if (!sameSource || !cut) return l;
+      var rest = words[i].slice(cut).join(' ');
+      if (!rest) return l;
+      rest = rest.charAt(0).toUpperCase() + rest.slice(1);
+      // Only a word the dashboard can translate; else the whole text, which it can.
+      return de || tr(rest) !== rest ? rest : l;
+    });
+  }
+  function tlEntries(head, now) {
+    now = now || Date.now();
+    var texts = tlTexts(head), today = dayStartOf(now), ms = (head.members || []);
     var out = [];
-    (list || []).forEach(function (r) {
-      out.push(r);
-      if (r.count > 1 && _openStacks[r.stackKey]) {
-        r.members.slice(1).forEach(function (m) { out.push(Object.assign({}, m, { kid: true, stackKey: r.stackKey })); });
-      }
+    ms.forEach(function (m, i) {
+      if (!i) return;
+      var d = dayStartOf(m.when), prev = ms[i - 1];
+      var dayLine = d !== today && dayStartOf(prev.when) !== d;
+      var dd = Math.round((today - d) / 86400000);
+      out.push({ m: m, text: texts[i], time: hmOf(m.when),
+        day: dayLine ? (dd === 1 ? 'Gestern' : new Date(m.when).toLocaleDateString(window.casoraLocale ? window.casoraLocale() : 'de-DE', { weekday: 'long' })) : '',
+        rel: i <= TL_REL && now - m.when < 864e5 ? ago(m.when) : '' });
     });
     return out;
   }
+  function tlHtml(head, dotOf) {
+    var es = tlEntries(head);
+    return '<div class="casora-ntl">' + es.map(function (e, i) {
+      var tapHtml = e.m.opens ? ' data-casora-open="' + esc0(e.m.opens) + '"' : (e.m.entity ? ' data-casora-mi="' + esc0(e.m.entity) + '"' : '');
+      return (e.day ? '<div class="casora-ntl-day">' + esc0(e.day) + '</div>' : '')
+        + '<div class="casora-ntl-e' + (tapHtml ? ' tap' : '') + '"' + tapHtml + ' data-tl="' + Number(i) + '" role="button" tabindex="0">'
+        + '<div class="casora-ntl-h" data-no-i18n>' + esc0(e.time) + '</div>'
+        + '<div class="casora-ntl-d">' + (i < es.length - 1 && !es[i + 1].day ? '<i class="ln"></i>' : '')
+        + '<i class="dot" style="background:' + esc0(dotOf(e.m)) + '"></i></div>'
+        + '<div class="casora-ntl-x"><div style="color:var(--casora-popup-tiles-text-primary, var(--primary-text-color))">' + esc0(e.text) + '</div>'
+        + (e.rel ? '<small style="color:var(--casora-popup-tiles-text-secondary, var(--secondary-text-color))">' + esc0(e.rel) + '</small>' : '') + '</div></div>';
+    }).join('') + '</div>';
+  }
+  var TL_CSS = '.casora-ntl{margin:-2px 0 2px;padding:6px 6px 6px 4px;border-radius:var(--casora-notify-tl-radius, 18px);'
+    + 'background:var(--casora-soft-row-fill, rgba(140,115,90,0.07));font-family:var(--primary-font-family, system-ui);}'
+    + '.casora-ntl-e{display:grid;grid-template-columns:minmax(52px,max-content) 22px minmax(0,1fr);align-items:start;column-gap:6px;'
+    +   'min-height:44px;padding:6px 6px 4px;border-radius:12px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background-color .15s ease;}'
+    + '.casora-ntl-e:active{background:var(--casora-menu-hover, rgba(140,115,90,0.10));}'
+    + '@media (hover:hover){.casora-ntl-e:hover{background:var(--casora-menu-hover, rgba(140,115,90,0.08));}}'
+    + '.casora-ntl-e:focus-visible{outline:2px solid currentColor;outline-offset:-2px;}'
+    + '.casora-ntl-h{font-size:13px;font-weight:600;text-align:right;padding-top:1px;white-space:nowrap;font-variant-numeric:tabular-nums;'
+    +   'color:var(--casora-popup-tiles-text-secondary, var(--secondary-text-color));}'
+    + '.casora-ntl-d{position:relative;align-self:stretch;}'
+    + '.casora-ntl-d .dot{position:absolute;left:5px;top:4px;width:12px;height:12px;border-radius:50%;'
+    +   'box-shadow:0 0 0 3px var(--casora-notify-tl-gap, transparent);}'
+    + '.casora-ntl-d .ln{position:absolute;left:10px;top:18px;bottom:-12px;width:2px;border-radius:2px;'
+    +   'background:var(--casora-soft-icon-off, rgba(140,115,90,0.22));}'
+    + '.casora-ntl-x{min-width:0;font-size:15px;font-weight:600;line-height:1.3;}'
+    + '.casora-ntl-x>div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
+    + '.casora-ntl-x small{display:block;font-size:13px;font-weight:500;margin-top:1px;}'
+    + '.casora-ntl-day{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:8px 6px 2px 12px;'
+    +   'color:var(--casora-popup-tiles-text-secondary, var(--secondary-text-color));}'
+    + '@media (prefers-reduced-motion:reduce){.casora-ntl-e{transition:none;}}';
+  // Timelines of the open stacks, made with the list (sections) and put under their stack (paint).
+  var _tlMade = {};
 
   // Vorlauf vor dem Zeitfenster nur für den Vorzustand (1.0.5): der erste Logbuch-Eintrag im
   // Fenster hatte sonst keinen, „cleaning → docked“ um die Fenstergrenze ging verloren.
@@ -16606,6 +16695,14 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       };
     };
 
+    // The dot of a timeline entry: the colour its icon would have as a row.
+    var dotOf = function (m) {
+      var t = toRow(m).iconTone;
+      return UI.iconFill ? UI.iconFill(m.icon, t) : (/^(var\(|#|rgb|hsl|color-mix)/.test(String(t)) ? t : 'var(--casora-color-teal, #00C3D0)');
+    };
+    _tlMade = {};
+    _rows.forEach(function (r) { if (r.count > 1 && _openStacks[r.stackKey]) _tlMade[r.stackKey] = tlHtml(r, dotOf); });
+
     var opts = { labelInside: true };
     // „Neu“ and „Früher“ share one cut of the names (UI.popupNames): an entry that ages into „Früher“ keeps its name.
     var nm = UI.popupNames ? UI.popupNames(unfold(g.fresh).concat(unfold(g.old)).map(toRow)) : function (x) { return x; };
@@ -16621,8 +16718,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       + 'background:var(--casora-icon-circle-bg, rgba(140,115,90,0.14));color:var(--casora-popup-tiles-text-primary, var(--primary-text-color));}'
       + '.casora-nst-chev{margin-left:10px;color:var(--casora-popup-tiles-text-primary, var(--primary-text-color));transition:transform .2s ease;}'
       + '.casora-nst-chev.open{transform:rotate(180deg);}'
-      + '.hui-row.casora-nkid{margin-left:var(--casora-notify-kid-inset, 22px);}'
-      + '@media (prefers-reduced-motion:reduce){.casora-nst-chev{transition:none;}}</style>';
+      + '@media (prefers-reduced-motion:reduce){.casora-nst-chev{transition:none;}}' + TL_CSS + '</style>';
     if (fresh.length) out += UI.group(fresh.map(toRow).map(nm).map(chev), old.length ? 'Neu' : null, null, opts);
     // Weich: „Früher“ klebte ohne Abstand an der letzten neuen Zeile – Abschnitte brauchen Luft davor.
     if (old.length && fresh.length && toned) out += '<div style="height:16px"></div>';
@@ -16637,12 +16733,22 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     var els = root.querySelectorAll('.hui-row');
     for (var i = 0; i < els.length && i < list.length; i++) {
       els[i]._casoraRow = list[i];
-      if (list[i].kid) els[i].classList.add('casora-nkid');
-      if (!list[i].kid && list[i].count > 1) {
-        // A stack opens and closes on tap; its messages open their device.
+      if (list[i].count > 1) {
+        // A stack opens and closes on tap; its older messages stand under it as a timeline, each opens its device.
         els[i].removeAttribute('data-casora-mi');
         els[i].dataset.casoraOpen = 'casora:stack';
         els[i].setAttribute('aria-expanded', _openStacks[list[i].stackKey] ? 'true' : 'false');
+        var tlMarkupHtml = _tlMade[list[i].stackKey];
+        if (tlMarkupHtml && !(els[i].nextElementSibling && els[i].nextElementSibling.classList.contains('casora-ntl'))) {
+          els[i].insertAdjacentHTML('afterend', tlMarkupHtml);
+          var box = els[i].nextElementSibling, ms = list[i].members.slice(1);
+          box.querySelectorAll('.casora-ntl-e').forEach(function (e) { e._casoraRow = ms[Number(e.getAttribute('data-tl'))]; });
+          // Keyboard: Enter/Space open the entry like a tap.
+          box.addEventListener('keydown', function (ev) {
+            var e = ev.target && ev.target.closest && ev.target.closest('.casora-ntl-e');
+            if (e && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); e.click(); }
+          });
+        }
         continue;
       }
       if (!list[i].opens) continue;
@@ -17528,6 +17634,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     // Tests and the list as drawn: open or close a stack, the rows with open stacks unfolded.
     stack: function (key, open) { _openStacks[key] = open !== false; },
     get shown() { var g = ordered(); return unfold(g.fresh).concat(unfold(g.old)); },
+    // The timeline of an open stack as data (tests): [{ text, time, day, rel, m }].
+    timeline: function (key) { var r = _rows.filter(function (x) { return x.stackKey === key; })[0]; return r ? tlEntries(r) : []; },
   };
 
   function boot() {
