@@ -14,10 +14,23 @@ import http from 'node:http';
 import crypto from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { timeScale } from '../qa/bereit_scale.mjs';
 
 const BEREIT = fileURLToPath(new URL('../qa/bereit.mjs', import.meta.url));
 let fails = 0;
+// The child runs bereit.mjs at this time scale; the stand-in HA's delays are scaled the same way (S).
+const SCALE = 0.01;
+const S = (ms) => ms * SCALE;
 const check = (name, ok, info) => { console.log((ok ? 'ok   ' : 'FAIL ') + name + (ok ? '' : '  ' + JSON.stringify(info))); if (!ok) fails++; };
+
+// The time scale helper bereit.mjs uses (no real-time run): 1 by default, the factor when set, 1 for values
+// that would turn the waits into nonsense.
+{
+  check('time scale is 1 without CASORA_BEREIT_SCALE', timeScale({}) === 1);
+  check('time scale reads CASORA_BEREIT_SCALE', timeScale({ CASORA_BEREIT_SCALE: String(SCALE) }) === SCALE);
+  const bad = ['0', '-1', 'abc', '', 'Infinity'];
+  check('time scale: 0, negative, not a number, infinite fall back to 1', bad.every((v) => timeScale({ CASORA_BEREIT_SCALE: v }) === 1), bad);
+}
 
 // Minimal WebSocket server frames (text only; client frames are masked).
 const frame = (s) => {
@@ -45,7 +58,7 @@ function readFrames(buf) {
 // mockDoneAfter: ms after the first casora_mock/history request until it says "done" (undefined: no such command).
 function fakeHA(recordAfter, mockDoneAfter) {
   const delays = [].concat(recordAfter);
-  const log = { posted: null, deleted: false, historyCalls: 0, probes: [], mockAsked: null, mockDoneAt: null };
+  const log = { posted: null, deleted: false, deletedAt: null, historyCalls: 0, probes: [], mockAsked: null, mockDoneAt: null };
   const json = (res, code, body) => { res.writeHead(code, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(body)); };
   const srv = http.createServer((req, res) => {
     let body = '';
@@ -61,7 +74,7 @@ function fakeHA(recordAfter, mockDoneAfter) {
           log.probes.push({ state: JSON.parse(body).state, at: Date.now(), after: delays[Math.min(log.probes.length, delays.length - 1)] });
           return json(res, 200, {});
         }
-        if (req.method === 'DELETE') { log.deleted = true; return json(res, 200, {}); }
+        if (req.method === 'DELETE') { log.deleted = true; log.deletedAt = Date.now(); return json(res, 200, {}); }
       }
       if (u.pathname.startsWith('/api/history/period/')) {
         log.historyCalls++;
@@ -104,8 +117,8 @@ function fakeHA(recordAfter, mockDoneAfter) {
 function bereit(url, args) {
   return new Promise((resolve) => {
     const t0 = Date.now();
-    const p = spawn(process.execPath, [BEREIT, '--max', '20', '--quiet', '1', ...args],
-      { env: { ...process.env, CASORA_URL: url, CASORA_USER: 'qa', CASORA_PASS: 'qa' } });
+    const p = spawn(process.execPath, [BEREIT, '--max', '2000', '--quiet', '1', ...args],
+      { env: { ...process.env, CASORA_URL: url, CASORA_USER: 'qa', CASORA_PASS: 'qa', CASORA_BEREIT_SCALE: String(SCALE) } });
     let out = '';
     p.stdout.on('data', (d) => { out += d; });
     p.stderr.on('data', (d) => { out += d; });
@@ -115,29 +128,31 @@ function bereit(url, args) {
 
 // 1. The recorder catches up 4 s after the probe state: bereit waits for it.
 {
-  const h = await fakeHA(4000);
-  const r = await bereit(h.url, ['--recorder', '30']);
+  const h = await fakeHA(S(4000));
+  const r = await bereit(h.url, ['--recorder', '300']);
   check('--recorder: ready (exit 0)', r.code === 0, r);
   check('--recorder: a probe state went in', !!h.log.posted, h.log);
-  check('--recorder: waits until the history has the probe state', h.log.posted && r.ms >= 4000 && /Recorder: hält mit nach/.test(r.out), r);
+  // The child removes the probe state only after the history has it: the stand-in's own clock, no Node start-up.
+  check('--recorder: waits until the history has the probe state', h.log.probes.length > 0
+    && h.log.deletedAt - h.log.probes[0].at >= S(4000) && /Recorder: hält mit nach/.test(r.out), r);
   check('--recorder: the probe state is removed again', h.log.deleted, h.log);
   h.srv.close();
 }
 // 2. The first probe comes back after 12 s (behind a queue), the second one at once: bereit waits for the second.
 {
-  const h = await fakeHA([12000, 1000]);
-  const r = await bereit(h.url, ['--recorder', '60']);
+  const h = await fakeHA([S(12000), S(1000)]);
+  const r = await bereit(h.url, ['--recorder', '300']);
   check('slow probe, then a fast one: two probes, waits for the fast one', r.code === 0 && h.log.probes.length === 2
-    && r.ms >= 13000 && /Recorder: hält mit .*2 Proben/.test(r.out), { r, probes: h.log.probes.length });
+    && h.log.deletedAt - h.log.probes[0].at >= S(13000) && /Recorder: hält mit .*2 Proben/.test(r.out), { r, probes: h.log.probes.length });
   check('slow probe, then a fast one: the probe state is removed', h.log.deleted, h.log.deleted);
   h.srv.close();
 }
 // 3. The test house writes its demo history for 5 s; probes would come back at once: bereit waits for the test house
 //    first, the probe goes in only after it.
 {
-  const h = await fakeHA(500, 5000);
-  const r = await bereit(h.url, ['--recorder', '60']);
-  check('test house pending: waits until its history is written', r.code === 0 && r.ms >= 5000
+  const h = await fakeHA(S(500), S(5000));
+  const r = await bereit(h.url, ['--recorder', '300']);
+  check('test house pending: waits until its history is written', r.code === 0 && h.log.deletedAt - h.log.mockAsked >= S(5000)
     && /Testhaus-Verlauf done/.test(r.out) && /Recorder: hält mit/.test(r.out), r);
   check('test house pending: the probe goes in only after it', h.log.mockDoneAt && h.log.probes.length
     && h.log.probes[0].at >= h.log.mockDoneAt, { probes: h.log.probes, doneAt: h.log.mockDoneAt });
@@ -153,7 +168,7 @@ function bereit(url, args) {
 }
 // 5. Without --recorder: no probe state, no history request.
 {
-  const h = await fakeHA(4000, 0);
+  const h = await fakeHA(S(4000), 0);
   const r = await bereit(h.url, []);
   check('without --recorder: ready, no probe state, no history request', r.code === 0 && !h.log.posted && h.log.historyCalls === 0
     && !/Recorder/.test(r.out) && h.log.mockAsked === null, { r, log: h.log });
