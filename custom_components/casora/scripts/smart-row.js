@@ -337,6 +337,7 @@ class CasoraSmartRow extends HTMLElement {
     if (!this._onVisChange) {
       this._onVisChange = (ev) => {
         const el = ev.composedPath ? ev.composedPath()[0] : ev.target;
+        if (el === this) return;  // our own notice is for the outer row
         const i = this._cards.indexOf(el);
         if (i >= 0) this._reported.add(i);
         this._updateWrapperVisibility();
@@ -967,7 +968,12 @@ class CasoraSmartRow extends HTMLElement {
         if (this._heldClosed(i)) return;
         showWrapper(wrapper, !snap && (was === true || (firstCall && filterChanged)));
       });
-      this.style.display = '';
+      // Only bring a collapsed row back when something in it is visible. Showing it unconditionally made a row
+      // with nothing to show (empty favorites) flash in on every state change until the sweep below hid it again
+      // 500 ms later, pushing everything under it down (the outer row's grid gap) each time.
+      const anyShown = this._emptyHintShown() || this._wrappers.some((w) =>
+        w.style.display !== 'none' || this._animShowing.has(w));
+      if (anyShown) this.style.display = '';
     };
 
     show(true);
@@ -1005,7 +1011,13 @@ class CasoraSmartRow extends HTMLElement {
           if (wrapper.style.display !== 'none' || this._animShowing.has(wrapper)) anyVisible = true;
         }
       });
-      this.style.display = anyVisible ? '' : 'none';
+      const next = anyVisible ? '' : 'none';
+      if (this.style.display !== next) {
+        this.style.display = next;
+        // Tell an outer row (phone home) that this one collapsed or came back: it re-checked its wrappers only on
+        // the next state change, so an empty row kept its grid gap until then and everything below jumped later.
+        this.dispatchEvent(new Event('card-visibility-changed', { bubbles: true, composed: true }));
+      }
     }, 500);
   }
 

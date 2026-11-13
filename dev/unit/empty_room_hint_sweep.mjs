@@ -13,7 +13,7 @@ const sandbox = {
   window: win,
   document: { body: null, addEventListener() {}, documentElement: { style: { setProperty() {} } }, createElement: () => ({ style: {} }) },
   customElements: { define: (n, c) => { RowClass = c; }, get: () => null, whenDefined: () => new Promise(() => {}) },
-  HTMLElement: class {},
+  HTMLElement: class { dispatchEvent() { return true; } },
   getComputedStyle: (el) => ({ display: el._display || 'block', columnGap: '8px', overflowX: 'auto' }),
   requestAnimationFrame: () => 0, cancelAnimationFrame() {},
   setTimeout: (fn, ms) => { timers.push({ fn, ms }); return timers.length; }, clearTimeout() {},
