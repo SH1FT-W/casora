@@ -33,7 +33,7 @@ from custom_components.casora import update as casora_update  # noqa: E402
 HACS_DEVICES: set = set()
 # HACS keys a repository's device by its GitHub id (update.hacs_knows reads the registries).
 casora_update.dr = SimpleNamespace(async_get=lambda h: SimpleNamespace(
-    devices={i: SimpleNamespace(identifiers={i}) for i in HACS_DEVICES}))
+    devices=[SimpleNamespace(identifiers={i}) for i in HACS_DEVICES]))
 casora_update.er = SimpleNamespace(async_get=lambda h: SimpleNamespace(async_get_entity_id=lambda *a: None))
 
 fails = []
