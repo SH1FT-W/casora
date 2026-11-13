@@ -278,6 +278,7 @@ async def async_room_badges(hass, mobile_url: str, admin: bool = True) -> dict:
 def confirm_of(cfg: dict) -> dict:
     ids: list = []
     names: dict = {}
+    views: list = []
     seen = [0]
 
     def add(x, nm):
@@ -297,7 +298,13 @@ def confirm_of(cfg: dict) -> dict:
                 walk(x, d + 1)
             return
         v = o.get("variables")
-        if isinstance(v, dict) and v.get("confirm_toggle") is True:
+        # Hemma round #12: "View only" tiles (view_only wins over confirm_toggle, casoraTapMode).
+        if isinstance(v, dict) and v.get("view_only") is True:
+            for x in [o.get("entity"), v.get("cover_entity")] + (v.get("covers") if isinstance(v.get("covers"), list) else []) \
+                    + (v.get("locks") if isinstance(v.get("locks"), list) else []):
+                if isinstance(x, str) and x and "[[[" not in x and x not in views:
+                    views.append(x)
+        elif isinstance(v, dict) and v.get("confirm_toggle") is True:
             n = o.get("name")
             nm = n.strip() if isinstance(n, str) and n.strip() and "[[[" not in n else ""
             add(o.get("entity"), nm)
@@ -316,7 +323,7 @@ def confirm_of(cfg: dict) -> dict:
                 walk(x, d + 1)
 
     walk(cfg.get("views"), 0)
-    return {"ids": ids, "names": names}
+    return {"ids": ids, "names": names, "views": views}
 
 
 def scenes_of(cfg: dict) -> dict:

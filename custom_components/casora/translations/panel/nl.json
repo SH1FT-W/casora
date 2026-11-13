@@ -3084,7 +3084,18 @@
     "All room photos. Tap a photo to show only the ones you pick.": "Alle kamerfoto’s. Tik op een foto om alleen de gekozen foto’s te tonen.",
     "Screensaver photos": "Foto’s voor de schermbeveiliging",
     "Show date": "Datum tonen",
-    "Weekday and date in small type under the time.": "Weekdag en datum klein onder de tijd."
+    "Weekday and date in small type under the time.": "Weekdag en datum klein onder de tijd.",
+    "Hide my own arrivals and departures": "Mijn eigen komen en gaan verbergen",
+    "For people linked to a Home Assistant user: you see the others come and go, not yourself.": "Voor personen gekoppeld aan een Home Assistant-gebruiker: je ziet wie er komt en gaat, behalve jezelf.",
+    "Removed for all users": "Verwijderd voor alle gebruikers",
+    "A message removed from the bell is gone for everyone. Off: only on your own devices.": "Een melding die je uit de bel verwijdert, is voor iedereen weg. Uit: alleen op je eigen apparaten.",
+    "When tapped": "Bij tikken",
+    "Ask first": "Eerst vragen",
+    "View only": "Alleen bekijken",
+    "Only shows: neither the icon nor the popup switches anything. For devices others should only look at.": "Toont alleen: pictogram en pop-up schakelen niets. Voor apparaten die alleen bekeken mogen worden.",
+    "The tile only shows": "De tegel toont alleen",
+    "view only": "alleen bekijken",
+    "It only shows, nothing switches.": "Ze toont alleen, er wordt niets geschakeld."
   },
   "patterns": [
     [

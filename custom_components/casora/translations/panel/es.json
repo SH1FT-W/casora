@@ -3084,7 +3084,18 @@
     "All room photos. Tap a photo to show only the ones you pick.": "Todas las fotos de las habitaciones. Toca una foto para mostrar solo las que elijas.",
     "Screensaver photos": "Fotos del salvapantallas",
     "Show date": "Mostrar fecha",
-    "Weekday and date in small type under the time.": "Día de la semana y fecha en letra pequeña bajo la hora."
+    "Weekday and date in small type under the time.": "Día de la semana y fecha en letra pequeña bajo la hora.",
+    "Hide my own arrivals and departures": "Ocultar mis propias llegadas y salidas",
+    "For people linked to a Home Assistant user: you see the others come and go, not yourself.": "Para personas vinculadas a un usuario de Home Assistant: ves llegar y salir a los demás, no a ti.",
+    "Removed for all users": "Eliminado para todos los usuarios",
+    "A message removed from the bell is gone for everyone. Off: only on your own devices.": "Un aviso eliminado de la campana desaparece para todos. Desactivado: solo en tus propios dispositivos.",
+    "When tapped": "Al tocar",
+    "Ask first": "Preguntar antes",
+    "View only": "Solo ver",
+    "Only shows: neither the icon nor the popup switches anything. For devices others should only look at.": "Solo muestra: ni el icono ni el popup activan nada. Para dispositivos que otros solo deben ver.",
+    "The tile only shows": "El mosaico solo muestra",
+    "view only": "solo ver",
+    "It only shows, nothing switches.": "Solo muestra, no se activa nada."
   },
   "patterns": [
     [

@@ -1088,7 +1088,8 @@
       const parts = [];
       parts.push(ids.length ? (names.length ? fill(tr("Only {names}"), { names: names.join(", ") }) : tr("Only some people")) : tr("Everyone"));
       parts.push(surf === "phone" ? tr("phone only") : surf === "desktop" ? tr("desktop only") : tr("everywhere"));
-      if (V.confirm_toggle === true) parts.push(tr("asks first"));
+      if (V.view_only === true) parts.push(tr("view only"));
+      else if (V.confirm_toggle === true) parts.push(tr("asks first"));
       if (shell && shell.type === "conditional") parts.push(tr("with a condition"));
       return parts.join(" \u00b7 ");
     };
@@ -1181,7 +1182,8 @@
       const who = ids.length ? fill(tr("Visible only to {names}"), { names: names.join(", ") || tr("some people") }) : tr("Everyone sees this tile");
       const where = surf === "phone" ? tr("on the phone only") : surf === "desktop" ? tr("on the desktop only") : tr("on desktop and phone");
       let out = who + " – " + where + ".";
-      if (V.confirm_toggle === true) out += " " + tr("The dashboard asks before switching.");
+      if (V.view_only === true) out += " " + tr("It only shows, nothing switches.");
+      else if (V.confirm_toggle === true) out += " " + tr("The dashboard asks before switching.");
       if (shell && shell.type === "conditional") out += " " + tr("It only shows when its condition is met.");
       return out;
     };
@@ -1246,7 +1248,7 @@
         const inner = (t.type === "conditional" && t.card) || t;
         const V = inner.variables || {}, SV = t.variables || {};
         const ids = usersOf(t);
-        const lim = !!(ids.length || SV.surfaces || V.surfaces || V.confirm_toggle === true || t.type === "conditional");
+        const lim = !!(ids.length || SV.surfaces || V.surfaces || V.confirm_toggle === true || V.view_only === true || t.type === "conditional");
         el.classList.toggle("uxlim", lim && !el.classList.contains("bghost"));
         if (lim && !el.dataset.uxtip) { el.dataset.uxtip = "1"; el.title = this._uxVisSentence(t); }
         el.classList.toggle("uxashide", !!as && ids.length > 0 && ids.indexOf(as) < 0);

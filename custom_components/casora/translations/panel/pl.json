@@ -3084,7 +3084,18 @@
     "All room photos. Tap a photo to show only the ones you pick.": "Wszystkie zdjęcia pomieszczeń. Dotknij zdjęcia, aby pokazać tylko wybrane.",
     "Screensaver photos": "Zdjęcia wygaszacza ekranu",
     "Show date": "Pokaż datę",
-    "Weekday and date in small type under the time.": "Dzień tygodnia i data małą czcionką pod godziną."
+    "Weekday and date in small type under the time.": "Dzień tygodnia i data małą czcionką pod godziną.",
+    "Hide my own arrivals and departures": "Ukryj moje własne przyjścia i wyjścia",
+    "For people linked to a Home Assistant user: you see the others come and go, not yourself.": "Dla osób powiązanych z użytkownikiem Home Assistant: widzisz, jak przychodzą i wychodzą inni, a nie ty.",
+    "Removed for all users": "Usunięte dla wszystkich użytkowników",
+    "A message removed from the bell is gone for everyone. Off: only on your own devices.": "Komunikat usunięty z dzwonka znika dla wszystkich. Wyłączone: tylko na twoich własnych urządzeniach.",
+    "When tapped": "Po dotknięciu",
+    "Ask first": "Najpierw zapytaj",
+    "View only": "Tylko podgląd",
+    "Only shows: neither the icon nor the popup switches anything. For devices others should only look at.": "Tylko pokazuje: ani ikona, ani popup niczego nie przełączają. Dla urządzeń, które inni mają tylko oglądać.",
+    "The tile only shows": "Kafelek tylko pokazuje",
+    "view only": "tylko podgląd",
+    "It only shows, nothing switches.": "Tylko pokazuje, nic się nie przełącza."
   },
   "patterns": [
     [

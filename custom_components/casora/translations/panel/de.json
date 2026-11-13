@@ -3084,7 +3084,18 @@
     "All room photos. Tap a photo to show only the ones you pick.": "Alle Raumfotos. Tippe auf ein Foto, um nur die gewählten zu zeigen.",
     "Screensaver photos": "Fotos für den Bildschirmschoner",
     "Show date": "Datum anzeigen",
-    "Weekday and date in small type under the time.": "Wochentag und Datum klein unter der Uhrzeit."
+    "Weekday and date in small type under the time.": "Wochentag und Datum klein unter der Uhrzeit.",
+    "Hide my own arrivals and departures": "Eigenes Kommen und Gehen ausblenden",
+    "For people linked to a Home Assistant user: you see the others come and go, not yourself.": "Für Personen mit Home-Assistant-Benutzer: Du siehst die anderen kommen und gehen, nicht dich selbst.",
+    "Removed for all users": "Gelöscht für alle Benutzer",
+    "A message removed from the bell is gone for everyone. Off: only on your own devices.": "Eine aus der Glocke entfernte Meldung ist für alle weg. Aus: nur auf deinen eigenen Geräten.",
+    "When tapped": "Tippverhalten",
+    "Ask first": "Vorher fragen",
+    "View only": "Nur ansehen",
+    "Only shows: neither the icon nor the popup switches anything. For devices others should only look at.": "Zeigt nur an: Weder das Symbol noch das Popup schalten etwas. Für Geräte, die andere nur ansehen sollen.",
+    "The tile only shows": "Die Kachel zeigt nur an",
+    "view only": "nur ansehen",
+    "It only shows, nothing switches.": "Sie zeigt nur an, nichts wird geschaltet."
   },
   "patterns": [
     [

@@ -21,12 +21,15 @@ cfg = {
         {"type": "conditional", "card": {"entity": "switch.pumpe", "variables": {"confirm_toggle": True}}},
         {"entity": "cover.alle", "name": "Jalousien", "variables": {"confirm_toggle": True, "covers": ["cover.b", "cover.a"]}},
         {"entity": "light.decke", "variables": {}},
+        # Hemma round #12: "View only" wins over an old confirm_toggle; listed as views, not as a question.
+        {"entity": "switch.ofen", "variables": {"view_only": True, "confirm_toggle": True}},
         {"entity": "[[[ return 'x' ]]]", "variables": {"confirm_toggle": True}},
     ]}],
 }
 got = pb.confirm_of(cfg)
 assert got["ids"] == ["lock.haustuer", "switch.pumpe", "cover.alle", "cover.b", "cover.a"], got
 assert got["names"] == {"lock.haustuer": "Haustür", "cover.alle": "Jalousien", "cover.a,cover.b": "Jalousien"}, got
+assert got["views"] == ["switch.ofen"], got
 assert pb.scenes_of(cfg) == {"scenes": ["scene.a"], "scene_exclude": None, "scene_order": ["scene.a"]}
 # #156: the bell's switches of the desktop dashboard, nothing else of the room.
 desk = {"views": [{"cards": [{"type": "custom:button-card", "template": "casora_room", "name": "Home",

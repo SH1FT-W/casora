@@ -3084,7 +3084,18 @@
     "All room photos. Tap a photo to show only the ones you pick.": "Alle rombilder. Trykk på et bilde for å vise bare de du velger.",
     "Screensaver photos": "Bilder for skjermspareren",
     "Show date": "Vis dato",
-    "Weekday and date in small type under the time.": "Ukedag og dato med liten skrift under klokkeslettet."
+    "Weekday and date in small type under the time.": "Ukedag og dato med liten skrift under klokkeslettet.",
+    "Hide my own arrivals and departures": "Skjul mine egne ankomster og avreiser",
+    "For people linked to a Home Assistant user: you see the others come and go, not yourself.": "For personer knyttet til en Home Assistant-bruker: du ser de andre komme og gå, ikke deg selv.",
+    "Removed for all users": "Fjernet for alle brukere",
+    "A message removed from the bell is gone for everyone. Off: only on your own devices.": "En melding som fjernes fra klokken, forsvinner for alle. Av: bare på dine egne enheter.",
+    "When tapped": "Ved trykk",
+    "Ask first": "Spør først",
+    "View only": "Bare se",
+    "Only shows: neither the icon nor the popup switches anything. For devices others should only look at.": "Viser bare: verken symbolet eller popupen slår noe av eller på. For enheter andre bare skal se på.",
+    "The tile only shows": "Flisen viser bare",
+    "view only": "bare se",
+    "It only shows, nothing switches.": "Den viser bare, ingenting slås av eller på."
   },
   "patterns": [
     [
