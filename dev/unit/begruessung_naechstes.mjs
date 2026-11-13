@@ -1,5 +1,5 @@
 // #157: the line under the Home greeting: off by default, next calendar event and next waste pickup.   node dev/unit/begruessung_naechstes.mjs
-// @deckt: custom_components/casora/scripts/local/00-finder.js#casoraHomeNext
+// @deckt: custom_components/casora/scripts/local/00-finder.js#casoraHomeNext dashboards/casora/button_card_templates.json#casora_room,casora_mobile_weather custom_components/casora/panel/casora-panel.js
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -42,4 +42,38 @@ assert.equal(picked([{ entity: 'calendar.familie', name: 'Familie' }])(both), 'M
 assert.equal(picked([{ entity: 'calendar.familie' }, { entity: 'calendar.arbeit', tile: false }])(both), 'Morgen 15:00 Zahnarzt', 'a calendar picked only for the popup (tile: false) is no appointment either');
 assert.equal(picked([])(both), 'Heute 11:00 Meeting', 'an empty pick means all calendars');
 assert.equal(picked(['calendar.arbeit'])(both), 'Heute 11:00 Meeting', 'a pick given as plain ids works too');
-console.log('ok – line under the greeting');
+// #189: the line also stands under the room name (title „Room name“), still only when switched on; with the switch off
+// the room name stays in button-card's #name exactly as before. Template code run with a stand-in window.
+const T = JSON.parse(fs.readFileSync(new URL('../../dashboards/casora/button_card_templates.json', import.meta.url), 'utf8'));
+const body = (x) => x.trim().replace(/^\[\[\[/, '').replace(/\]\]\]$/, '');
+const run = (code, self, vars, greet) => {
+  const w = { casoraEsc: null, casoraGreeting: () => greet || null, casoraRoomName: (n, v) => ({ text: n || 'Home', literal: v.name_literal === true }),
+    casoraHomeNext: (h, v) => (v.casora_greeting_next === true ? 'Morgen 15:00 Zahnarzt' : '') };
+  return new Function('window', 'hass', 'variables', 'states', body(code)).call(self, w, {}, vars, {});
+};
+const R = T.casora_room, room = { _config: { name: 'Wohnzimmer' }, shadowRoot: null };
+const nField = (vars, greet) => run(R.custom_fields.n, room, vars, greet);
+const shown = (list, vars, greet) => run(list.find((o) => 'display' in o).display, room, vars, greet);
+assert.equal(nField({}), '', 'room name, switch off: the field stays empty');
+assert.equal(shown(R.styles.name, {}), 'block', 'room name, switch off: #name shows as before');
+assert.equal(shown(R.styles.custom_fields.n, {}), 'none', 'room name, switch off: the field is hidden');
+const withLine = nField(on);
+assert.match(withLine, /^<span>Wohnzimmer<\/span><div data-no-i18n[^>]*>Morgen 15:00 Zahnarzt<\/div>$/, 'room name, switch on: name and line');
+assert.equal(shown(R.styles.name, on), 'none', 'room name, switch on: the field stands in for #name');
+assert.equal(shown(R.styles.custom_fields.n, on), 'block', 'room name, switch on: the field shows');
+assert.match(nField({ ...on, name_literal: true }), /^<span data-no-i18n>Wohnzimmer<\/span>/, 'a literal name is not translated');
+assert.match(nField(on, 'Guten Tag'), /^<span data-no-i18n>Guten Tag<\/span><div data-no-i18n[^>]*>Morgen 15:00 Zahnarzt<\/div>$/, 'greeting: unchanged');
+assert.equal(nField({}, 'Guten Tag'), '<span data-no-i18n>Guten Tag</span>', 'greeting without the line: unchanged');
+const M = T.casora_mobile_weather;
+const mName = (vars, greet) => run(M.name, { shadowRoot: null }, vars, greet);
+assert.equal(mName({ home_name: 'Haus' }), '<span data-no-i18n>Haus</span>', 'phone, switch off: an own title as before');
+assert.equal(mName({}), 'Home', 'phone, switch off: the default title as before');
+assert.match(mName({ home_name: 'Haus', ...on }), /^<span data-no-i18n>Haus<\/span><div data-no-i18n[^>]*>Morgen 15:00 Zahnarzt<\/div>$/, 'phone, switch on: own title and line');
+assert.match(mName(on), /^<span>Home<\/span><div data-no-i18n[^>]*>Morgen 15:00 Zahnarzt<\/div>$/, 'phone, switch on: default title and line');
+assert.match(mName(on, 'Guten Tag'), /^<span data-no-i18n>Guten Tag<\/span><div/, 'phone greeting: unchanged');
+// The Studio shows the switch with either title and hands it to the phone dashboard only when switched on.
+const P = fs.readFileSync(new URL('../../custom_components/casora/panel/casora-panel.js', import.meta.url), 'utf8');
+const fld = P.slice(P.indexOf('key: "casora_greeting_next"'), P.indexOf('key: "__phone_name"'));
+assert.ok(fld && !/when:/.test(fld) && /boolDefault: false/.test(fld), 'the switch: no condition, off by default');
+assert.ok(P.includes('if (hv.casora_greeting_next === true) c.variables.casora_greeting_next = true;'), 'phone twin: the switch only when on, with any title');
+console.log('ok – line under the title');

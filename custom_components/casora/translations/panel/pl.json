@@ -2352,7 +2352,7 @@
     "Set to Automatic": "Ustaw na Automatycznie",
     "Title": "Tytuł",
     "Next event and waste collection": "Następne wydarzenie i odbiór odpadów",
-    "Shows the next calendar event and the next waste collection in a line under the greeting.": "Pokazuje następne wydarzenie z kalendarza i następny odbiór odpadów w wierszu pod powitaniem.",
+    "Shows the next calendar event and the next waste collection in a line under the title.": "Pokazuje następne wydarzenie z kalendarza i następny odbiór odpadów w wierszu pod tytułem.",
     "Greeting by time of day": "Powitanie według pory dnia",
     "Greeting with who is home": "Powitanie z imionami obecnych",
     "Greeting the signed-in user": "Powitanie zalogowanego użytkownika",

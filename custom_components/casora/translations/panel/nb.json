@@ -2353,7 +2353,7 @@
     "Set to Automatic": "Sett til Automatisk",
     "Title": "Tittel",
     "Next event and waste collection": "Neste avtale og avfallshenting",
-    "Shows the next calendar event and the next waste collection in a line under the greeting.": "Viser neste kalenderavtale og neste avfallshenting på en linje under hilsenen.",
+    "Shows the next calendar event and the next waste collection in a line under the title.": "Viser neste kalenderavtale og neste avfallshenting på en linje under tittelen.",
     "Greeting by time of day": "Hilsen etter tid på dagen",
     "Greeting with who is home": "Hilsen med hvem som er hjemme",
     "Greeting the signed-in user": "Hilsen til innlogget bruker",

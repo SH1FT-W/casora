@@ -2353,7 +2353,7 @@
     "Set to Automatic": "Poner en Automático",
     "Title": "Título",
     "Next event and waste collection": "Próximo evento y recogida de basura",
-    "Shows the next calendar event and the next waste collection in a line under the greeting.": "Muestra el próximo evento del calendario y la próxima recogida de basura en una línea bajo el saludo.",
+    "Shows the next calendar event and the next waste collection in a line under the title.": "Muestra el próximo evento del calendario y la próxima recogida de basura en una línea bajo el título.",
     "Greeting by time of day": "Saludo según la hora del día",
     "Greeting with who is home": "Saludo con quién está en casa",
     "Greeting the signed-in user": "Saludo al usuario conectado",

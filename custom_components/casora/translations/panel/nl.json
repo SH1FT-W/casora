@@ -2352,7 +2352,7 @@
     "Set to Automatic": "Op Automatisch zetten",
     "Title": "Titel",
     "Next event and waste collection": "Volgende afspraak en afvalophaling",
-    "Shows the next calendar event and the next waste collection in a line under the greeting.": "Toont de volgende agenda-afspraak en de volgende afvalophaling op een regel onder de begroeting.",
+    "Shows the next calendar event and the next waste collection in a line under the title.": "Toont de volgende agenda-afspraak en de volgende afvalophaling op een regel onder de titel.",
     "Greeting by time of day": "Begroeting naar tijd van de dag",
     "Greeting with who is home": "Begroeting met wie thuis is",
     "Greeting the signed-in user": "Begroeting van de ingelogde gebruiker",
