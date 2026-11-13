@@ -60,7 +60,8 @@ def vacuum_map(fixture: dict) -> None:
 def compose(fixture: dict, now: datetime, stress: dict | None = None, hacs: dict | None = None) -> dict:
     """Fixture plus the made-up devices, in the order async_setup_entry always used."""
     from . import (aquarium, befeuchter, co, coffee, dishwasher, ebike, energie, frigate, fussball, game_account, haustier,
-                   halten, hubs, klingel, fridge, medien, kettle, live, maeher, oven, shopping, testlimousine, testserver, testwagen, tumble, velair, waesche, wetter)
+                   halten, hubs, klingel, fridge, medien, kettle, live, maeher, mixed_lights, oven, shopping,
+                   testlimousine, testserver, testwagen, tumble, velair, waesche, wetter)
     if stress:
         merge(fixture, stress)
     # Demo house (dev/demo/demo_fixture.py sets "_demo"): without the German test devices (washers A/B with
@@ -120,6 +121,7 @@ def compose(fixture: dict, now: datetime, stress: dict | None = None, hacs: dict
         # Lamps behind a Hue-like bridge and a Zigbee coordinator, a two-channel dimmer, see hubs.py.
         merge(fixture, hubs.extra(now), "Hub-Lampen Garage/Garten")
         hubs.join_house_group(fixture)
+        merge(fixture, mixed_lights.extra(), "Testmischraum")
         # A made-up air conditioner planned by a Velair-like scheduler (community card #32), see velair.py.
         merge(fixture, velair.extra(now), "Testklimaanlage + Velair")
         # Two made-up kettles, BLE-like (only shows) and one with target and keep warm (community card #87), see kettle.py.
