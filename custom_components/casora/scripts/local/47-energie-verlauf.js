@@ -86,6 +86,34 @@
     return out;
   };
 
+  // The house's consumption from the same settings (owner, 13.11.2026): the energy dashboard's sources – grid import
+  // minus export, plus solar, plus battery discharge minus charge (HA's signs, as casoraEnergyHouse adds the powers,
+  // 00-finder.js). Meters read like the energy coach (ki.py energy_context): the grid's own meters or its legacy
+  // flow_from/flow_to lists. Only when it is whole: a grid import meter, and every solar and battery source with its
+  // meters (one missing would leave the house short). Else null – the page sums the devices as before.
+  EV.house = function (p) {
+    var plus = [], minus = [], grid = false, whole = true;
+    var add = function (list, id) { if (typeof id === 'string' && id && list.indexOf(id) < 0) list.push(id); };
+    ((p && p.energy_sources) || []).forEach(function (s) {
+      if (!s) return;
+      if (s.type === 'grid') {
+        var from = [s.stat_energy_from].concat((Array.isArray(s.flow_from) ? s.flow_from : []).map(function (f) { return f && f.stat_energy_from; }));
+        var to = [s.stat_energy_to].concat((Array.isArray(s.flow_to) ? s.flow_to : []).map(function (f) { return f && f.stat_energy_to; }));
+        from.forEach(function (id) { if (typeof id === 'string' && id) { grid = true; add(plus, id); } });
+        to.forEach(function (id) { add(minus, id); });
+      } else if (s.type === 'solar') {
+        if (typeof s.stat_energy_from === 'string' && s.stat_energy_from) add(plus, s.stat_energy_from); else whole = false;
+      } else if (s.type === 'battery') {
+        if (typeof s.stat_energy_from === 'string' && s.stat_energy_from && typeof s.stat_energy_to === 'string' && s.stat_energy_to) {
+          add(plus, s.stat_energy_from); add(minus, s.stat_energy_to);
+        } else whole = false;
+      }
+    });
+    return grid && whole ? { plus: plus, minus: minus } : null;
+  };
+  var UNTRACKED = '__untracked';
+  EV.UNTRACKED = UNTRACKED;
+
   // ── Buckets ───────────────────────────────────────────────────────────────
   // firstDay: 0 = Sunday … 6 = Saturday (HA's locale.first_weekday as a number), default Monday.
   var DAYS = { sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 };
@@ -133,7 +161,7 @@
   // rows: the answer of recorder/statistics_during_period (id → [{ start, change }]). A negative change (a meter
   // reset HA did not catch) is no consumption. A device included in another counts only once: the parent keeps
   // its own value minus its children's (never below 0), so the stacked total is the top devices' total.
-  EV.aggregate = function (rows, devs, plan) {
+  EV.aggregate = function (rows, devs, plan, house) {
     var n = plan.starts.length, raw = {};
     var list = (devs || []).map(function (dv) {
       var vals = []; for (var i = 0; i < n; i++) vals.push(null);
@@ -166,7 +194,35 @@
     });
     var total = null;
     totals.forEach(function (v) { if (v != null) total = (total || 0) + v; });
-    return { devs: list, totals: totals, total: total, has: has, plan: plan };
+    // The house per bucket (only where its import meter has a row) and what the devices leave of it: „Nicht erfasst“.
+    // A bucket where the devices read more than the house (meters a moment apart) leaves 0, never below.
+    var hv = null, unt = null;
+    if (house && house.plus && house.plus.length) {
+      var sumOf = function (ids, i) {
+        var s2 = null;
+        ids.forEach(function (id) {
+          (((rows || {})[id]) || []).forEach(function (p) {
+            var v = Number(p && p.change);
+            if (p && p.change != null && isFinite(v) && indexOf(plan, tOf(p)) === i) s2 = (s2 || 0) + Math.max(0, v);
+          });
+        });
+        return s2;
+      };
+      hv = []; unt = [];
+      for (var j = 0; j < n; j++) {
+        var pl = sumOf(house.plus, j), mi = sumOf(house.minus, j) || 0;
+        var hj = pl == null ? null : Math.max(0, pl - mi);
+        hv.push(hj);
+        unt.push(hj == null ? null : Math.max(0, hj - (totals[j] || 0)));
+      }
+    }
+    var sumV = function (a) { var s3 = null; (a || []).forEach(function (v) { if (v != null) s3 = (s3 || 0) + v; }); return s3; };
+    var out = { devs: list, totals: totals, total: total, has: has, plan: plan, house: null, untracked: null };
+    if (hv && sumV(hv) != null) {
+      out.house = { vals: hv, sum: sumV(hv) };
+      out.untracked = { id: UNTRACKED, name: 'Nicht erfasst', vals: unt, sum: sumV(unt) };
+    }
+    return out;
   };
   // Devices by their sum, largest first; without a value last (keeping the settings' order).
   EV.sorted = function (devs) {
@@ -225,8 +281,10 @@
     var devs = EV.devices(hass);
     if (!devs.length) return null;
     var plan = EV.plan(range, Date.now(), EV.firstDay(hass));
+    var house = EV.house(window.casoraEnergyPrefs ? window.casoraEnergyPrefs(hass) : null);
     var ids = devs.map(function (x) { return x.id; });
-    var ck = plan.range + '|' + plan.starts[0] + '|' + ids.join(',') + '|' + devs.map(function (x) { return x.parent || ''; }).join(',');
+    var all = ids.concat(house ? house.plus.concat(house.minus).filter(function (id) { return ids.indexOf(id) < 0; }) : []);
+    var ck = (house ? house.plus.join(',') + '-' + house.minus.join(',') + '|' : '') + plan.range + '|' + plan.starts[0] + '|' + ids.join(',') + '|' + devs.map(function (x) { return x.parent || ''; }).join(',');
     var key = Math.floor(Date.now() / 300000), hit = cache[ck];
     if (hit && (hit.key === key || hit.busy)) {
       if (el && hit.busy && hit.wait.indexOf(el) < 0) hit.wait.push(el);
@@ -234,8 +292,8 @@
     }
     var cell = cache[ck] = { key: key, busy: true, data: hit ? hit.data : null, wait: el ? [el] : [] };
     hass.callWS({ type: 'recorder/statistics_during_period', start_time: new Date(plan.starts[0]).toISOString(),
-      end_time: new Date(plan.end).toISOString(), statistic_ids: ids, period: plan.per, types: ['change'], units: { energy: 'kWh' } })
-      .then(function (r) { cell.data = EV.aggregate(r || {}, devs, EV.plan(range, Date.now(), EV.firstDay(hass))); },
+      end_time: new Date(plan.end).toISOString(), statistic_ids: all, period: plan.per, types: ['change'], units: { energy: 'kWh' } })
+      .then(function (r) { cell.data = EV.aggregate(r || {}, devs, EV.plan(range, Date.now(), EV.firstDay(hass)), house); },
         // A hiccup keeps what is on screen; only without anything the error shows.
         function () { if (!cell.data) cell.data = { error: true, devs: [], totals: [], total: null, has: false, plan: plan }; })
       .then(function () {
@@ -251,7 +309,8 @@
   EV.prefetch = function (hass) { try { EV.load(hass, EV.range()); } catch (e) { /* only a head start */ } };
 
   // ── Choice (range, highlighted device) for the session ──────────────────────
-  var choice = { range: 'day', focus: null }, parts = [];
+  // Owner, 13.11.2026: the page opens on the week (early in the morning the day is nearly empty).
+  var choice = { range: 'week', focus: null }, parts = [];
   EV.range = function () { return choice.range; };
   EV.focus = function () { return choice.focus; };
   var remember = function (el) {
@@ -307,22 +366,31 @@
 
   // ── What the page shows (pure, for the tests) ───────────────────────────────
   // { total, avg, chart: { series, avg }, rows: [{ id, name, sum, pct, color, selected }], focus } for an aggregate.
+  // With the house: its total big, „Nicht erfasst“ as the last series (grey) and the last row; the devices then get three
+  // series, so the chart keeps four at most (richtlinien §7.1).
   EV.view = function (agg, focus) {
-    var S = EV.series(agg, 4), devs = EV.sorted(agg.devs);
+    var U = agg.untracked && agg.untracked.sum != null ? agg.untracked : null;
+    var S = EV.series(agg, U ? 3 : 4), devs = EV.sorted(agg.devs);
+    if (U) {
+      S.ofId[U.id] = S.series.length;
+      S.series.push({ name: U.name, color: 'untracked', ids: [U.id], vals: U.vals.slice(), sum: U.sum });
+      devs = devs.concat([U]);
+    }
     var withSum = devs.filter(function (x) { return x.sum != null; });
     var pcts = EV.shares(withSum.map(function (x) { return x.sum; }));
     var pctOf = {};
     withSum.forEach(function (x, i) { pctOf[x.id] = pcts[i]; });
     var f = focus && devs.filter(function (x) { return x.id === focus && x.sum != null; })[0] || null;
     var colorOf = function (id) { var i = S.ofId[id]; var s = i != null ? S.series[i] : null; return s && s.color !== 'other' ? s.color : 'other'; };
+    var whole = U ? agg.house.sum : agg.total;
     var series = f ? [{ name: f.name, color: colorOf(f.id), vals: f.vals.slice(), sum: f.sum }] : S.series;
     return {
       focus: f ? f.id : null,
-      total: f ? f.sum : agg.total,
-      avg: EV.average(f ? f.vals : agg.totals, agg.plan),
+      total: f ? f.sum : whole,
+      avg: EV.average(f ? f.vals : U ? agg.house.vals : agg.totals, agg.plan),
       series: series,
       rows: devs.map(function (x) {
-        return { id: x.id, name: x.name, sum: x.sum, pct: x.sum != null ? pctOf[x.id] : null, raw: x.sum != null && agg.total > 0 ? x.sum / agg.total : null,
+        return { id: x.id, name: x.name, sum: x.sum, pct: x.sum != null ? pctOf[x.id] : null, raw: x.sum != null && whole > 0 ? x.sum / whole : null, untracked: x.id === UNTRACKED,
           color: colorOf(x.id), selected: !!f && f.id === x.id };
       }),
     };
@@ -379,7 +447,9 @@
           stack: { per: plan.per, starts: plan.starts, cur: plan.cur, unit: 'kWh', decimals: plan.per === 'hour' ? 2 : 1, avg: V.avg,
             read: READ, label: 'Verbrauch je Gerät',
             series: V.series.map(function (s) {
-              return { name: s.name, color: s.color === 'other' ? OTHER : s.color, opacity: s.color === 'other' ? 0.55 : null, vals: s.vals };
+              var grey = s.color === 'other' || s.color === 'untracked';
+              // „Sonstige“ grey, „Nicht erfasst“ paler still: the two never read alike.
+              return { name: s.name, color: grey ? OTHER : s.color, opacity: s.color === 'other' ? 0.55 : s.color === 'untracked' ? 0.24 : null, vals: s.vals };
             }) } };
         if (window._hpStageChart) window._hpStageChart(el, CHART);
       }
@@ -402,7 +472,7 @@
       V.rows.forEach(function (r) { if (r.raw > maxRaw) maxRaw = r.raw; });
       var rows = V.rows.map(function (r) {
         var tone = r.sum == null ? OTHER_ROW : colVar(r.color);
-        return { id: r.id, icon: 'plug', iconTone: tone, label: r.name, tappable: r.sum != null, noChev: true, selected: r.selected,
+        return { id: r.id, icon: r.untracked ? 'mdi:help-circle-outline' : 'plug', iconTone: tone, label: r.name, tappable: r.sum != null, noChev: true, selected: r.selected,
           sub: r.sum == null ? 'Noch keine Werte' : (r.pct === 0 && r.sum > 0 ? '< 1' : r.pct) + ' %',
           value: r.sum == null ? '—' : fmtS(r.sum),
           bar: r.raw != null && maxRaw > 0 ? r.raw / maxRaw : null, barTone: tone };
@@ -415,7 +485,8 @@
         });
       };
       // The first twelve, the rest behind „Alle n anzeigen“ (richtlinien §6). UI.group/UI.label escape their texts.
-      var top = [UI.label(head + ' · ' + rows.length), mark(rows.slice(0, LIST_MAX))];
+      var nDev = rows.filter(function (r) { return r.id !== UNTRACKED; }).length;
+      var top = [UI.label(head + ' · ' + nDev), mark(rows.slice(0, LIST_MAX))];
       if (rows.length > LIST_MAX) {
         top.push('<div style="margin-top:var(--casora-space-2, 8px);">');
         top.push(UI.more('energy-history', mark(rows.slice(LIST_MAX)), { label: 'Alle ' + rows.length + ' anzeigen', less: 'Weniger anzeigen', keep: true }));
@@ -448,7 +519,9 @@
     var card = EV.build();
     if (!card) return;
     var prev = window.casoraPopup.current;
-    window.casoraPopup.sub({ title: 'Verbrauch je Gerät', content: card, popup_styles: prev && prev.popup_styles,
+    // Label: „Energie“ in the dashboard's language, not the tile's own name of the page before (an English „Energy“
+    // stood over the German title, 13.11.2026).
+    window.casoraPopup.sub({ title: 'Verbrauch je Gerät', eyebrow: T('Energie'), content: card, popup_styles: prev && prev.popup_styles,
       style: '--popup-min-width: min(552px, calc(100vw - 16px)); --popup-max-width: min(552px, calc(100vw - 16px));' });
   };
 })();

@@ -2955,7 +2955,8 @@
     "Verbrauch je Gerät": "Consumo per dispositivo",
     "Sonstige": "Altri",
     "pro Stunde": "all'ora",
-    "pro Tag": "al giorno"
+    "pro Tag": "al giorno",
+    "Nicht erfasst": "Non misurato"
   },
   "patterns": [
     [

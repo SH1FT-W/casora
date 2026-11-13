@@ -879,7 +879,7 @@
     var TITLE = { home: 'Haus', solar: 'Solar', grid: 'Netz', battery: 'Akku' };
     // Two columns (stage, list): as wide as the energy popup, its sheet styles kept.
     var prev = window.casoraPopup.current;
-    if (card) window.casoraPopup.sub({ title: TITLE[focus] || 'Energie', content: card, popup_styles: prev && prev.popup_styles,
+    if (card) window.casoraPopup.sub({ title: TITLE[focus] || 'Energie', eyebrow: T('Energie'), content: card, popup_styles: prev && prev.popup_styles,
       style: card && card._casoraNarrow ? '--popup-min-width: min(552px, calc(100vw - 16px)); --popup-max-width: min(552px, calc(100vw - 16px));'
         : '--popup-min-width: min(900px, calc(100vw - 16px)); --popup-max-width: min(900px, calc(100vw - 16px));' });
   };

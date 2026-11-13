@@ -310,6 +310,12 @@ DEVICE_PROFILES = [
     (r"^sensor\.p1s_steckdose_energy$", "3D Printer", {"base": 0.002, "blocks": [[9, 16, 0.12, [1, 3]]]}),
 ]
 
+# The house's grid import (energy settings, grid source): base load plus what the devices draw plus a margin, so the
+# page's „Nicht erfasst“ (house minus devices) has something to show.
+GRID_PROFILE = (r"^sensor\.iometer_\d+_gesamtbezug$", {"base": 0.32, "blocks": [
+    [6, 9, 0.3, None], [17, 23, 0.5, None], [10, 12, 0.7, [0, 2, 5]], [13, 15, 1.1, [0, 5]], [20, 22, 0.55, None],
+    [9, 16, 0.15, [1, 3]], [20, 23, 0.25, [4, 5, 6]]]})
+
 
 def demo_profiles(d):
     """Hourly use per household device for the mock's statistics (fixture key _stats_profile)."""
@@ -318,6 +324,8 @@ def demo_profiles(d):
         for rx, _name, p in DEVICE_PROFILES:
             if re.match(rx, e["entity_id"]) and e["entity_id"] not in prof:
                 prof[e["entity_id"]] = p
+        if re.match(GRID_PROFILE[0], e["entity_id"]) and e["entity_id"] not in prof:
+            prof[e["entity_id"]] = GRID_PROFILE[1]
     d["_stats_profile"] = prof
 
 
@@ -334,8 +342,12 @@ def demo_energy(cfg, fx):
         if hit:
             seen.add(hit[0])
             devs.append({"stat_consumption": hit[0], "name": name})
+    grid = sorted(x for x in ids if re.match(GRID_PROFILE[0], x))
+    sources = [{"type": "grid", "stat_energy_from": grid[0], "stat_energy_to": None, "stat_cost": None,
+                "stat_compensation": None, "entity_energy_price": None, "number_energy_price": None,
+                "entity_energy_price_export": None, "number_energy_price_export": None, "cost_adjustment_day": 0.0}] if grid else []
     data = {"version": 1, "minor_version": 3, "key": "energy",
-            "data": {"energy_sources": [], "device_consumption": devs, "device_consumption_water": []}}
+            "data": {"energy_sources": sources, "device_consumption": devs, "device_consumption_water": []}}
     os.makedirs(os.path.dirname(p), exist_ok=True)
     json.dump(data, open(p, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
     print("Energie-Einstellungen:", len(devs), "Geräte")

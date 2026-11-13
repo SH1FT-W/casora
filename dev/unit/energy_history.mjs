@@ -1,4 +1,4 @@
-// @deckt: custom_components/casora/scripts/local/47-energie-verlauf.js#devices,plan,aggregate,sorted,series,shares,average,view,load,fmt,sec custom_components/casora/scripts/casora-chart.js#_stack
+// @deckt: custom_components/casora/scripts/local/47-energie-verlauf.js#devices,house,plan,aggregate,sorted,series,shares,average,view,load,fmt,sec custom_components/casora/scripts/casora-chart.js#_stack
 // Consumption per device (energy popup › „Verbrauch je Gerät“): buckets of today / this week / this month, sums per
 // device from HA's long-term statistics (included_in_stat counted once), top devices + „Sonstige“ (at most four
 // series), shares adding up to 100, the average over whole buckets, highlighting one device, one cached request for
@@ -13,6 +13,8 @@ const src = read('custom_components/casora/scripts/local/47-energie-verlauf.js')
 new Function(src)();
 const EV = window._casoraEnergyHistory;
 const H = 36e5;
+
+assert.equal(EV.range(), 'week', 'the page opens on the week (owner, 13.11.2026)');
 
 // ── Buckets ──────────────────────────────────────────────────────────────
 const now = new Date(2026, 10, 13, 14, 30).getTime(); // Friday 13 Nov 2026, 14:30
@@ -91,8 +93,44 @@ assert.equal(ag.total, 3.5 + 1.5 + 1.5 + 3.5);
 assert.equal(ag.has, true);
 assert.equal(EV.aggregate({}, D, day).has, false);
 
-// ── Top N and „Sonstige“ ─────────────────────────────────────────────────
 const mk = (sums) => ({ devs: sums.map((s, i) => ({ id: 'd' + i, name: 'D' + i, sum: s, vals: [s, null] })), totals: [], plan: day });
+
+// ── The house and „Nicht erfasst“ (owner, 13.11.2026) ─────────────────────
+assert.deepEqual(EV.house({ energy_sources: [
+  { type: 'grid', stat_energy_from: 'g_in', stat_energy_to: 'g_out' },
+  { type: 'solar', stat_energy_from: 'pv' },
+  { type: 'battery', stat_energy_from: 'bat_out', stat_energy_to: 'bat_in' },
+  { type: 'gas', stat_energy_from: 'gas' }] }), { plus: ['g_in', 'pv', 'bat_out'], minus: ['g_out', 'bat_in'] },
+  'grid in − out + solar + battery out − in (HA\'s signs), gas is no electricity');
+assert.deepEqual(EV.house({ energy_sources: [{ type: 'grid', flow_from: [{ stat_energy_from: 't1' }, { stat_energy_from: 't2' }], flow_to: [{ stat_energy_to: 'x' }] }] }),
+  { plus: ['t1', 't2'], minus: ['x'] }, 'legacy grid format with two tariffs');
+assert.equal(EV.house({ energy_sources: [{ type: 'solar', stat_energy_from: 'pv' }] }), null, 'no grid import: no house');
+assert.equal(EV.house({ energy_sources: [{ type: 'grid', stat_energy_from: 'g' }, { type: 'battery', stat_energy_from: 'b' }] }), null,
+  'a battery without its charge meter: the house would be short');
+assert.equal(EV.house(null), null);
+{
+  const hRows = { a: [{ start: at(0), change: 1 }, { start: at(1), change: 2 }], g_in: [{ start: at(0), change: 2 }, { start: at(1), change: 1 }],
+    g_out: [{ start: at(1), change: 0.5 }], pv: [{ start: at(1), change: 1 }] };
+  const hA = EV.aggregate(hRows, [{ id: 'a', name: 'A' }], day, { plus: ['g_in', 'pv'], minus: ['g_out'] });
+  assert.deepEqual(hA.house.vals.slice(0, 3), [2, 1.5, null], 'house per hour: 2; 1 − 0,5 + 1; no import row: none');
+  assert.deepEqual(hA.untracked.vals.slice(0, 2), [1, 0], 'untracked = house − devices, never below 0');
+  assert.equal(hA.untracked.sum, 1);
+  const hV = EV.view(hA, null);
+  assert.equal(hV.total, 3.5, 'the big number is the house');
+  assert.equal(hV.series[hV.series.length - 1].name, 'Nicht erfasst');
+  assert.equal(hV.series[hV.series.length - 1].color, 'untracked');
+  const ur = hV.rows[hV.rows.length - 1];
+  assert.equal(ur.id, EV.UNTRACKED, '„Nicht erfasst“ is the last row');
+  assert.equal(hV.rows.reduce((s2, r) => s2 + (r.pct || 0), 0), 100, 'shares of the house add up to 100');
+  assert.equal(EV.view(hA, EV.UNTRACKED).total, 1, 'it can be highlighted like a device');
+  assert.equal(EV.aggregate(hRows, [{ id: 'a', name: 'A' }], day, null).house, null, 'without the house as before');
+  // More devices: three device series + „Nicht erfasst“, never five.
+  const many = { devs: mk([5, 4, 3, 2, 1]).devs, totals: [], plan: day, house: { vals: [20, null], sum: 20 },
+    untracked: { id: EV.UNTRACKED, name: 'Nicht erfasst', vals: [5, null], sum: 5 } };
+  assert.deepEqual(EV.view(many, null).series.map((x) => x.name), ['D0', 'D1', 'Sonstige', 'Nicht erfasst']);
+}
+
+// ── Top N and „Sonstige“ ─────────────────────────────────────────────────
 let S = EV.series(mk([1, 5, 3]), 4);
 assert.deepEqual(S.series.map((s) => s.name), ['D1', 'D2', 'D0'], 'up to four: every device, largest first');
 assert.deepEqual(S.series.map((s) => s.color), ['c1', 'c2', 'c3']);
@@ -169,6 +207,11 @@ assert.equal(calls.length, 1, 'cached');
 EV.load(h2, 'month');
 assert.equal(calls.length, 2);
 assert.equal(calls[1].period, 'day');
+// With the house in the settings its meters ride in the same request.
+window.casoraEnergyPrefs = () => ({ energy_sources: [{ type: 'grid', stat_energy_from: 'sensor.grid_in', stat_energy_to: 'sensor.grid_out' }],
+  device_consumption: [{ stat_consumption: 'sensor.washer_energy' }] });
+EV.load(h2, 'week');
+assert.deepEqual(calls[2].statistic_ids, ['sensor.washer_energy', 'sensor.grid_in', 'sensor.grid_out'], 'one request: devices and house');
 
 // ── Entry row: only with devices that have statistics ────────────────────
 window._casoraUI = { group: (rows, label) => label + ':' + rows.map((r) => r.label + '|' + r.sub + '|' + r.page).join(',') };
@@ -188,4 +231,5 @@ assert.ok(/_casoraEnergyHistory\.sec\("entry"/.test(mehr) && /right: \['use', 't
 const chart = read('custom_components/casora/scripts/casora-chart.js');
 assert.ok(/c\.kind === 'stack'\) return this\._stack\(box, W\)/.test(chart), 'casora-chart draws stacks');
 assert.ok(!/#[0-9A-Fa-f]{6}/.test(src.replace(/var\(--[^)]*\)/g, '')), 'colours only from theme variables');
+assert.ok(/eyebrow: T\('Energie'\)/.test(src) && /eyebrow: T\('Energie'\)/.test(mehr), 'energy pages carry „Energie“ in the language, not the tile name');
 console.log('energy_history: ok');

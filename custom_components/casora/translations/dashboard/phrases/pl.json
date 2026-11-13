@@ -2955,7 +2955,8 @@
     "Verbrauch je Gerät": "Zużycie według urządzeń",
     "Sonstige": "Pozostałe",
     "pro Stunde": "na godzinę",
-    "pro Tag": "dziennie"
+    "pro Tag": "dziennie",
+    "Nicht erfasst": "Niezmierzone"
   },
   "patterns": [
     [

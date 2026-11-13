@@ -2937,7 +2937,8 @@
     "Verbrauch je Gerät": "Consumption per device",
     "Sonstige": "Other",
     "pro Stunde": "per hour",
-    "pro Tag": "per day"
+    "pro Tag": "per day",
+    "Nicht erfasst": "Untracked"
   },
   "patterns": [
     [

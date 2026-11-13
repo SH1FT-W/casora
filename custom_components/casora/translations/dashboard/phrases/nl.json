@@ -2955,7 +2955,8 @@
     "Verbrauch je Gerät": "Verbruik per apparaat",
     "Sonstige": "Overige",
     "pro Stunde": "per uur",
-    "pro Tag": "per dag"
+    "pro Tag": "per dag",
+    "Nicht erfasst": "Niet gemeten"
   },
   "patterns": [
     [

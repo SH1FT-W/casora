@@ -2948,7 +2948,8 @@
     "Verbrauch je Gerät": "Forbruk per enhet",
     "Sonstige": "Andre",
     "pro Stunde": "per time",
-    "pro Tag": "per dag"
+    "pro Tag": "per dag",
+    "Nicht erfasst": "Ikke målt"
   },
   "patterns": [
     [
