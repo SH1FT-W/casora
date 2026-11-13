@@ -130,6 +130,16 @@ const media = { title: 'Song "A"', artist: 'Band', where: 'Wohnzimmer', cover: '
 h = S.html('musik', ctx({ media }));
 assert.ok(/data-kind="musik"/.test(h) && /Song &quot;A&quot;/.test(h) && /width:25\.0%/.test(h) && /0:50/.test(h) && /3:20/.test(h), 'music: title, progress');
 assert.ok(/data-kind="himmel"/.test(S.html('musik', ctx({ media: null }))), 'nothing playing: the sky');
+// Image addresses from media/camera attributes stay inside their CSS url("…"): a quote must not end the string
+// (escaped HTML is decoded in the attribute, so &quot; alone would let "); position:fixed … through).
+const evil = 'https://x/a.jpg?authSig=1&"); position:fixed; inset:0; background-image:url("https://evil/b.png';
+const styles = (html) => [...html.matchAll(/style="([^"]*)"/g)].map((m) => m[1].replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&'));
+const outside = (html) => styles(html).map((st) => st.replace(/url\("(?:[^"\\]|\\.)*"\)/g, 'url()')).join(' ');
+for (const [kind, o] of [['musik', { media: { ...media, cover: evil } }], ['fotos', { rooms: [{ name: 'K', url: evil }] }],
+  ['kameras', { cams: [{ id: 'camera.a', name: 'A', url: evil }] }]]) {
+  const out = outside(S.html(kind, ctx(o)));
+  assert.ok(!/position:fixed|evil/.test(out), kind + ': image address stays inside url(): ' + out);
+}
 h = S.html('energie', ctx({ energy: { solar: 3200, grid: -1200, battery: -500, soc: 64, hasSolar: true, hasBattery: true, house: 1500 } }));
 assert.ok(/3,2 kW|3\.2 kW/.test(h) && /ins Netz/.test(h) && /Akku lädt/.test(h) && /64 %/.test(h) && /100 %/.test(h), 'energy: sun, feed-in, battery, all own power');
 h = S.html('energie', ctx({ energy: { solar: null, grid: 800, battery: null, soc: null, hasSolar: false, hasBattery: false, house: 800 } }));

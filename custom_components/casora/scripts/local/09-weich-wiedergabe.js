@@ -29,6 +29,8 @@
   var getHass = function () { var h = document.querySelector('home-assistant'); return h && h.hass; };
   var T = function (de) { return window.casoraTr ? window.casoraTr(de) : de; };
   var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  // Inside a CSS url("…"): quote, backslash and line breaks as CSS escapes (an address never has them).
+  var cssUrl = function (u) { return String(u == null ? '' : u).replace(/["\\\n\r\f]/g, function (c) { return '\\' + c.charCodeAt(0).toString(16) + ' '; }); };
   var P = {
     // Abgerundet im Stil der Apple-Mediensteuerung (eigene Pfade).
     play: 'M7,6.7Q7,4.5 8.91,5.6L18.09,10.9Q20,12 18.09,13.1L8.91,18.4Q7,19.5 7,17.3Z',
@@ -531,7 +533,7 @@
       var cls = 'r tn' + (big ? ' st' : '');
       var col = artU ? tintOf(artU) : '';
       if (!col) cls += ' nc';
-      var art = artU ? ' style="background-image:url(&quot;' + esc(artU) + '&quot;)"' : '';
+      var art = artU ? ' style="background-image:url(&quot;' + esc(cssUrl(artU)) + '&quot;)"' : '';
       var cover = '<div class="cv"' + art + '>' + (artU ? '' : svg(kind === 'player' ? P.note : P.game, 24)) + '</div>';
       var ks = big ? 22 : 20;
       var ctl = (prev ? btn('k', 'prev', P.prev, ks, T('Vorheriger Titel')) : '')
