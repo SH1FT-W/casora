@@ -575,7 +575,7 @@
     // Verlust gegenüber dem gespeicherten Jetzt (nicht dem ungespeicherten Entwurf).
     P._cvLossOf = function (thenState) {
       const base = this._mBase && this._mBase.s ? { compact: this._mBase.s[0] } : (this._state ? { compact: this._state.compact } : null);
-      return lossLines(thenState, base, { roomName: (r) => (this._roomLabel ? this._roomLabel(r) : r.name) });
+      return lossLines(thenState, base, { roomName: (r) => (this._roomLabel ? this._roomLabel(r) : r.name), hass: this._hass });
     };
     P._cvLossBox = function (lines) {
       const box = document.createElement("div");
