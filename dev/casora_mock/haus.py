@@ -87,6 +87,8 @@ def compose(fixture: dict, now: datetime, stress: dict | None = None, hacs: dict
     merge(fixture, frigate.extra(now), "Frigate-Testhof")
     # A made-up Reolink doorbell with presses in the history (community card), see klingel.py.
     merge(fixture, klingel.extra(now), "Testklingel")
+    from . import ring_probe
+    merge(fixture, ring_probe.extra(now), "Testring")
     # Made-up coffee machines (Home Connect core/local, De'Longhi BT, power curve, a named plug) and a grinder, see coffee.py.
     merge(fixture, coffee.extra(now), "Testbarista/Morgenbohne/Bohnenwerk/Kaffeeinsel/Espressobar")
     # A made-up pet with a Tractive-like tracker (community card #25), see haustier.py.
