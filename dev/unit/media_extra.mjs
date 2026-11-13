@@ -170,6 +170,8 @@ assert.ok(r24.includes('>06:00<') && !/ [AP]M/.test(r24), '24 h: 06:00');
 const r12 = C.render({ list: ev }, 'camera.garten', { ...ch, locale: { time_format: '12' } }, now);
 assert.ok(r12.includes('>6:00 AM<') && r12.includes('>12:00 AM<') && !r12.includes('>06:00<'), '12 h axis: ' + (r12.match(/<span style="left:[^>]*>[^<]*/g) || []).join(' | '));
 assert.ok(/class="ctl-t">\d{1,2}:\d\d [AP]M · /.test(r12), '12 h readout');
+assert.ok(C.render({ list: ev }, 'camera.garten', { ...ch, locale: { time_format: 'language', language: 'de' } }, now).includes('>06:00<'), 'German HA user: 24 h');
+assert.ok(C.render({ list: ev }, 'camera.garten', { ...ch, locale: { time_format: 'language', language: 'en' } }, now).includes('>6:00 AM<'), 'English HA user: 12 h');
 
 // ── Test house: the media popup and the camera popup have something to show ────────────────────────────
 const snap = JSON.parse(execFileSync('python3', [new URL('../casora_mock/haus.py', import.meta.url).pathname, '--public'], { encoding: 'utf8' }));

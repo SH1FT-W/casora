@@ -171,12 +171,13 @@
   C.dayStart = function (now) { var d = new Date(now || Date.now()); d.setHours(0, 0, 0, 0); return d.getTime(); };
   var WORD = { motion: 'Bewegung', person: 'Person erkannt', ring: 'Hat geklingelt' };
   C.word = function (kind) { return WORD[kind] || WORD.motion; };
-  // 12 or 24 hours as the HA user has it (profile, else the language), like the bell's timeline and the top bar.
+  // 12 or 24 hours as the HA user has it (profile, else the HA user's language), like the dashboard clock (#191).
   var use12 = function (hass) {
     var f = hass && hass.locale && hass.locale.time_format;
     if (f === '12') return true;
     if (f === '24') return false;
-    try { return !!new Intl.DateTimeFormat(window.casoraLocale ? window.casoraLocale() : undefined, { hour: 'numeric' }).resolvedOptions().hour12; } catch (e) { return false; }
+    var lang = (hass && hass.locale && hass.locale.language) || (hass && hass.language) || (window.casoraLocale ? window.casoraLocale() : undefined);
+    try { return !!new Intl.DateTimeFormat(lang, { hour: 'numeric' }).resolvedOptions().hour12; } catch (e) { return false; }
   };
   var clock = function (ms, hass) {
     var d = new Date(ms), h = d.getHours(), mm = String(d.getMinutes()).padStart(2, '0');
