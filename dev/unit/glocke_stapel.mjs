@@ -118,6 +118,7 @@ await check('timeline: a day line above the first entry of an earlier day, the 1
 });
 assert.ok(!/hui-chev/.test(mod.slice(mod.indexOf('function tlHtml'), mod.indexOf('var TL_CSS'))), 'timeline entries have no arrow');
 assert.ok(/\.casora-ntl-e:active\{/.test(mod), 'press feedback on an entry');
+assert.ok(/\.casora-ntl-e\{[^}]*min-height:36px;box-sizing:border-box;padding:4px 6px;/.test(mod.replace(/'\s*\/\/[^\n]*\n\s*\+\s*'/g, '').replace(/'\s*\+\s*'/g, '')), 'compact rows (owner 13.11.2026): 36 px, the tap area not smaller');
 
 await check('removing the card removes the whole stack (and only it)', async () => {
   const states = { ...lockStates, [BELL]: { entity_id: BELL, state: 'off', last_changed: iso(NOW - 5 * MIN), attributes: { friendly_name: 'Klingel Ding' } } };

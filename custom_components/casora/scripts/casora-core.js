@@ -16318,10 +16318,11 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         + (e.rel ? '<small style="color:var(--casora-popup-tiles-text-secondary, var(--secondary-text-color))">' + esc0(e.rel) + '</small>' : '') + '</div></div>';
     }).join('') + '</div>';
   }
-  var TL_CSS = '.casora-ntl{margin:-2px 0 2px;padding:6px 6px 6px 4px;border-radius:var(--casora-notify-tl-radius, 18px);'
+  var TL_CSS = '.casora-ntl{margin:-2px 0 2px;padding:4px 6px 4px 4px;border-radius:var(--casora-notify-tl-radius, 18px);'
     + 'background:var(--casora-soft-row-fill, rgba(140,115,90,0.07));font-family:var(--primary-font-family, system-ui);}'
     + '.casora-ntl-e{display:grid;grid-template-columns:minmax(52px,max-content) 22px minmax(0,1fr);align-items:start;column-gap:6px;'
-    +   'min-height:44px;padding:6px 6px 4px;border-radius:12px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background-color .15s ease;}'
+    // Compact (owner 13.11.2026): an entry without a second line is 36 px, the tap area of each row stays that high.
+    +   'min-height:36px;box-sizing:border-box;padding:4px 6px;border-radius:12px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background-color .15s ease;}'
     + '.casora-ntl-e:active{background:var(--casora-menu-hover, rgba(140,115,90,0.10));}'
     + '@media (hover:hover){.casora-ntl-e:hover{background:var(--casora-menu-hover, rgba(140,115,90,0.08));}}'
     + '.casora-ntl-e:focus-visible{outline:2px solid currentColor;outline-offset:-2px;}'
@@ -16330,7 +16331,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     + '.casora-ntl-d{position:relative;align-self:stretch;}'
     + '.casora-ntl-d .dot{position:absolute;left:5px;top:4px;width:12px;height:12px;border-radius:50%;'
     +   'box-shadow:0 0 0 3px var(--casora-notify-tl-gap, transparent);}'
-    + '.casora-ntl-d .ln{position:absolute;left:10px;top:18px;bottom:-12px;width:2px;border-radius:2px;'
+    // The line runs from under this dot to the next one (padding below + above + the dot's offset): unbroken.
+    + '.casora-ntl-d .ln{position:absolute;left:10px;top:16px;bottom:-12px;width:2px;border-radius:2px;'
     +   'background:var(--casora-soft-icon-off, rgba(140,115,90,0.22));}'
     + '.casora-ntl-x{min-width:0;font-size:15px;font-weight:600;line-height:1.3;}'
     + '.casora-ntl-x>div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
