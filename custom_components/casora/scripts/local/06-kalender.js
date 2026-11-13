@@ -66,7 +66,7 @@
   K.next = function (states, variables) {
     var best = null, now = new Date();
     var ha = document.querySelector('home-assistant');
-    var key = K.load(ha && ha.hass, variables);
+    var cache = load(ha && ha.hass, variables);
     var priority = function (ev) {
       if (!ev.allDay && ev.start >= now && day0(ev.start).getTime() === day0(now).getTime()) return 0;
       if (ev.allDay && ev.start <= now && ev.end > now) return 1;
@@ -78,17 +78,19 @@
         if (!K.allowsTitle(ev.name) || isNaN(ev.start) || ev.end <= now) return;
         if (!best || priority(ev) < priority(best) || (priority(ev) === priority(best) && ev.start < best.start)) best = ev;
       };
-      if (key && K.key === key && K.ev !== null && !(K.failed || {})[c.entity]) {
-        K.ev.forEach(function (ev) {
+      var authoritative = cache && cache.key === cache.requestedKey && cache.ev !== null && !(cache.failed || {})[c.entity];
+      if (authoritative) {
+        cache.ev.forEach(function (ev) {
           if (ev.cal !== c.entity) return;
           consider(Object.assign({}, ev, { cal: c, on: ev.start <= now && ev.end > now }));
         });
-        return;
       }
       var s = states[c.entity], a = s && s.attributes;
       if (!a || !a.message || !a.start_time || !K.allowsTitle(a.message)) return;
       var st = new Date(String(a.start_time).replace(' ', 'T')), en = new Date(String(a.end_time || a.start_time).replace(' ', 'T'));
       if (isNaN(st)) return;
+      // The API is authoritative only within its fetched interval, not for distant next events.
+      if (authoritative && st < cache.end && en > cache.start) return;
       var ev = { name: a.message, start: st, end: en, allDay: !!a.all_day, on: s.state === 'on', cal: c };
       consider(ev);
     });
@@ -127,13 +129,7 @@
   var midnight = function () {
     var n = new Date(), m = new Date(n.getFullYear(), n.getMonth(), n.getDate() + 1, 0, 0, 5);
     setTimeout(function () {
-      var out = [];
-      var ha = document.querySelector('home-assistant');
-      find(ha && ha.shadowRoot, 'button-card', out);
-      out.forEach(function (el) {
-        var c = el._config;
-        if (c && typeof c.state_display === 'string' && c.state_display.indexOf('_casoraCalendar') !== -1 && window.casoraKick) window.casoraKick(el);
-      });
+      kickTiles();
       midnight();
     }, m - n);
   };
@@ -142,7 +138,14 @@
   /* Termine laden: sichtbarer Monat (6 Wochen) plus 31 Tage ab heute. */
   var weekStart = function (d) { var x = day0(d); return addD(x, -((x.getDay() + 6) % 7)); };
   var gridStart = function (m) { var f = new Date(m.getFullYear(), m.getMonth(), 1); return addD(f, -((f.getDay() + 6) % 7)); };
-  K.load = function (hass, variables, force) {
+  // One slot per calendar configuration, with a five-minute TTL and at most 32 slots.
+  // State changes replace a slot's data; an older completion cannot replace its newer request.
+  var caches = new Map(), popupCache = null;
+  var showCache = function (cache) {
+    K.ev = cache.key === cache.requestedKey ? cache.ev : null;
+    K.key = cache.key; K.ts = cache.ts; K.failed = cache.failed; K.err = cache.err; K.busy = cache.busy;
+  };
+  var load = function (hass, variables, force, popup) {
     if (!K.month) K.month = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
     var today = day0(new Date()), gs = gridStart(K.month), ws = weekStart(today);
     var s = gs < ws ? gs : ws, e0 = addD(gs, 42), e1 = addD(today, 32), e = e0 > e1 ? e0 : e1;
@@ -151,13 +154,28 @@
       return c.entity + ':' + (state ? JSON.stringify([state.state, state.last_updated, state.attributes]) : '');
     }).join(',');
     if (!hass || !hass.callApi) return;
-    if (K.busy) {
-      K.pending = K.loadingKey !== key ? [hass, variables, force] : null;
-      return key;
+    var id = JSON.stringify(cals.map(function (c) { return c.entity; }));
+    var cache = caches.get(id);
+    if (!cache) {
+      if (caches.size >= 32) {
+        var oldest = Array.from(caches.keys()).find(function (k) { var c = caches.get(k); return !c.busy && c !== popupCache; });
+        if (oldest === undefined) return;
+        caches.delete(oldest);
+      }
+      cache = { ev: null, key: '', ts: 0, busy: false };
     }
-    if (!force && K.key === key && Date.now() - K.ts < 300000) return key;
-    K.busy = true;
-    K.loadingKey = key;
+    caches.delete(id); caches.set(id, cache);
+    cache.requestedKey = key;
+    if (popup || !popupCache) popupCache = cache;
+    if (popupCache === cache) showCache(cache);
+    if (cache.busy) {
+      cache.pending = cache.loadingKey !== key ? [hass, variables, force] : null;
+      return cache;
+    }
+    if (!force && cache.key === key && Date.now() - cache.ts < 300000) return cache;
+    cache.busy = true;
+    cache.loadingKey = key;
+    if (popupCache === cache) showCache(cache);
     var failed = {};
     var q = '?start=' + encodeURIComponent(s.toISOString()) + '&end=' + encodeURIComponent(e.toISOString());
     Promise.all(cals.map(function (c) {
@@ -171,16 +189,22 @@
         });
       }).catch(function () { failed[c.entity] = true; return []; });
     })).then(function (lists) {
-      K.ev = [].concat.apply([], lists).sort(function (a, b) { return (a.start - b.start) || (b.allDay - a.allDay); });
-      K.key = key; K.ts = Date.now(); K.failed = failed; K.err = Object.keys(failed).length > 0;
-    }).catch(function () { K.err = true; })
+      cache.ev = [].concat.apply([], lists).sort(function (a, b) { return (a.start - b.start) || (b.allDay - a.allDay); });
+      cache.key = key; cache.ts = Date.now(); cache.failed = failed; cache.err = Object.keys(failed).length > 0;
+      cache.start = s; cache.end = e;
+    }).catch(function () { cache.err = true; })
       .then(function () {
-        K.busy = false;
-        var pending = K.pending; K.pending = null;
-        if (pending) K.load.apply(null, pending);
+        cache.busy = false;
+        var pending = cache.pending; cache.pending = null;
+        if (pending) load.apply(null, pending);
+        if (popupCache === cache) showCache(cache);
         K.repaint();
       });
-    return key;
+    return cache;
+  };
+  K.load = function (hass, variables, force) {
+    var cache = load(hass, variables, force, true);
+    return cache && cache.requestedKey;
   };
   /* Termine eines Tages (mehrtägige ganztägige auf jedem Tag). */
   var onDay = function (d) {
@@ -195,13 +219,17 @@
     root.querySelectorAll('*').forEach(function (n) { if (n.shadowRoot) find(n.shadowRoot, sel, out); });
     return out;
   };
-  K.repaint = function () {
+  var kickTiles = function () {
     var ha = document.querySelector('home-assistant');
-    if (ha && ha.hass) K.w.hass = ha.hass;
     find(ha && ha.shadowRoot, 'button-card').forEach(function (el) {
       var c = el._config;
       if (c && typeof c.state_display === 'string' && c.state_display.indexOf('_casoraCalendar') !== -1 && window.casoraKick) window.casoraKick(el);
     });
+  };
+  K.repaint = function () {
+    var ha = document.querySelector('home-assistant');
+    if (ha && ha.hass) K.w.hass = ha.hass;
+    kickTiles();
     ['month', 'week', 'day', 'up', 'hero', 'head', 'wmonth', 'wday', 'wtoday', 'wpick'].forEach(function (k) {
       find(ha && ha.shadowRoot, '.hcal-' + k).forEach(function (n) { n.innerHTML = (window.casoraTr || function (x) { return x; })(K.html(k, K._vars)); });
     });
