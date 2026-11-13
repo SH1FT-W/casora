@@ -171,9 +171,17 @@
   C.dayStart = function (now) { var d = new Date(now || Date.now()); d.setHours(0, 0, 0, 0); return d.getTime(); };
   var WORD = { motion: 'Bewegung', person: 'Person erkannt', ring: 'Hat geklingelt' };
   C.word = function (kind) { return WORD[kind] || WORD.motion; };
-  var clock = function (ms) {
-    var d = new Date(ms);
-    return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  // 12 or 24 hours as the HA user has it (profile, else the language), like the bell's timeline and the top bar.
+  var use12 = function (hass) {
+    var f = hass && hass.locale && hass.locale.time_format;
+    if (f === '12') return true;
+    if (f === '24') return false;
+    try { return !!new Intl.DateTimeFormat(window.casoraLocale ? window.casoraLocale() : undefined, { hour: 'numeric' }).resolvedOptions().hour12; } catch (e) { return false; }
+  };
+  var clock = function (ms, hass) {
+    var d = new Date(ms), h = d.getHours(), mm = String(d.getMinutes()).padStart(2, '0');
+    if (use12(hass)) return ((h % 12) || 12) + ':' + mm + ' ' + (h >= 12 ? 'PM' : 'AM');
+    return String(h).padStart(2, '0') + ':' + mm;
   };
   C.ago = function (ms, now) {
     var m = Math.max(0, Math.floor(((now || Date.now()) - ms) / 60000));
@@ -241,7 +249,7 @@
       return '<i class="ctl-m ' + esc(e.kind) + '" data-at="' + Number(e.at) + '" data-k="' + esc(e.kind) + '" style="left:' + pct(e.at).toFixed(2) + '%"></i>';
     }).join('');
     var ticksHtml = [0, 6, 12, 18].map(function (h) { return start + h * 3600000; }).filter(function (t) { return t < now - span * 0.12; })
-      .map(function (t) { return '<span style="left:' + pct(t).toFixed(2) + '%">' + esc(clock(t)) + '</span>'; }).join('')
+      .map(function (t) { return '<span style="left:' + pct(t).toFixed(2) + '%">' + esc(clock(t, hass)) + '</span>'; }).join('')
       + '<span style="left:100%">' + esc(T('Jetzt')) + '</span>';
     var top = list[0];
     var sum = T(C.head(list.length));
@@ -252,7 +260,7 @@
       + '<div class="ctl-track"></div>' + marksHtml + '</div>'
       + '<div class="ctl-ax">' + ticksHtml + '</div>'
       + '<div class="ctl-r" aria-live="polite"><span class="ctl-w">' + esc(T(C.word(top.kind))) + '</span>'
-      +   '<span class="ctl-t">' + esc(clock(top.at) + ' · ' + T(C.ago(top.at, now))) + '</span>'
+      +   '<span class="ctl-t">' + esc(clock(top.at, hass) + ' · ' + T(C.ago(top.at, now))) + '</span>'
       +   (media ? '<span class="ctl-go">' + esc(T('Aufnahmen')) + ' ↗</span>' : '') + '</div>'
       + '</div>';
   };
@@ -275,7 +283,8 @@
     var r = plate.querySelector('.ctl-r');
     if (r) {
       r.querySelector('.ctl-w').textContent = T(C.word(hit.el.getAttribute('data-k')));
-      r.querySelector('.ctl-t').textContent = clock(at) + ' · ' + T(C.ago(at));
+      var ha = document.querySelector('home-assistant');
+      r.querySelector('.ctl-t').textContent = clock(at, ha && ha.hass) + ' · ' + T(C.ago(at));
     }
     var media = plate.getAttribute('data-media');
     if (media) {

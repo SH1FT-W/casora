@@ -164,6 +164,12 @@ assert.equal((out.match(/class="ctl-m /g) || []).length, 3);
 assert.ok(out.includes('Person erkannt') && out.includes('Aufnahmen'));
 assert.ok(!C.render({ list: ev }, 'camera.flur', ch, now).includes('Aufnahmen'));
 assert.ok(C.render({ list: null }, 'camera.garten', ch, now).includes('aria-busy'), 'loading: plate at full height');
+// Clock as the HA user has it (12 or 24 hours, like the bell's timeline and the top bar): axis and readout.
+const r24 = C.render({ list: ev }, 'camera.garten', { ...ch, locale: { time_format: '24' } }, now);
+assert.ok(r24.includes('>06:00<') && !/ [AP]M/.test(r24), '24 h: 06:00');
+const r12 = C.render({ list: ev }, 'camera.garten', { ...ch, locale: { time_format: '12' } }, now);
+assert.ok(r12.includes('>6:00 AM<') && r12.includes('>12:00 AM<') && !r12.includes('>06:00<'), '12 h axis: ' + (r12.match(/<span style="left:[^>]*>[^<]*/g) || []).join(' | '));
+assert.ok(/class="ctl-t">\d{1,2}:\d\d [AP]M · /.test(r12), '12 h readout');
 
 // ── Test house: the media popup and the camera popup have something to show ────────────────────────────
 const snap = JSON.parse(execFileSync('python3', [new URL('../casora_mock/haus.py', import.meta.url).pathname, '--public'], { encoding: 'utf8' }));
