@@ -6863,7 +6863,6 @@ window.casoraMenuGlass = {
       border-radius: 50%; cursor: pointer; background: var(--casora-soft-control-fill, rgba(140, 115, 90, 0.10)); color: var(--casora-soft-close-ink, var(--secondary-text-color)); -webkit-tap-highlight-color: rgba(0, 0, 0, 0); }
     .header-gear[hidden] { display: none; }
     .header-gear svg { width: 18px; height: 18px; fill: currentColor; }
-    .header-gear:focus-visible { outline: 2px solid var(--primary-color, currentColor); outline-offset: 2px; }
     :host([soft][data-casora-pv="v3"]) .header-gear { width: 40px; height: 40px; }
     .header-back {
       appearance: none; -webkit-appearance: none; border: 0; margin: 0 8px 0 0; padding: 0;
@@ -6886,8 +6885,10 @@ window.casoraMenuGlass = {
       fill: currentColor;
     }
     /* HA's ha-icon-button: a currentColor disc at opacity 0 that comes up to
-       0.1 on hover. Never visible at rest, so it never shows on a phone. */
-    .header-close::after {
+       0.1 on hover. Never visible at rest, so it never shows on a phone.
+       One rule for every round head button: X, gear and ‹ (13.11.2026). */
+    .header-close, .header-gear, .header-back { position: relative; isolation: isolate; }
+    .header-close::after, .header-gear::after, .header-back::after {
       content: "";
       position: absolute;
       inset: 0;
@@ -6896,17 +6897,12 @@ window.casoraMenuGlass = {
       opacity: 0;
       pointer-events: none;
       z-index: -1;
+      transition: opacity 0.16s ease;
     }
     @media (hover: hover) {
-      .header-close:hover:not([disabled])::after { opacity: 0.1; }
-      .header-back:hover::after { opacity: 0.1; }
-    }
-    /* ‹ zurück: dieselbe Scheibe beim Darüberfahren wie das X. */
-    .header-back { isolation: isolate; }
-    .header-back::after {
-      content: ""; position: absolute; inset: 0; border-radius: 50%;
-      background-color: currentColor; opacity: 0; pointer-events: none; z-index: -1;
-      transition: opacity 0.16s ease;
+      .header-close:hover:not([disabled])::after,
+      .header-gear:hover:not([disabled])::after,
+      .header-back:hover:not([disabled])::after { opacity: 0.1; }
     }
 
     .content {
