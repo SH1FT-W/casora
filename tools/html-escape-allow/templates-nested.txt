@@ -4,7 +4,7 @@
 # HA allows [a-z0-9_.] only); ids from the dashboard config are escaped where they go into markup.
 # casora_media, casora_now_playing_chip, casora_now_playing_primary (same popup body)
 dashboards/casora/button_card_templates.json#casora_media | re:^(?:\(color \|\| 'currentColor'\)|size|ic\(n\))$ | mask(): colour, size and icon URL the code passes (T tokens, numbers, fixed icon names) | 5
-dashboards/casora/button_card_templates.json#casora_media | re:^mask\( | mask(): fixed icon names, sizes and colours | 4
+dashboards/casora/button_card_templates.json#casora_media | re:^mask\( | mask(): fixed icon names or the config's devIcon (only [A-Za-z0-9_-]), sizes and colours | 4
 dashboards/casora/button_card_templates.json#casora_media | re:^svc\( | svc() = esc(JSON.stringify(service call)) | 6
 dashboards/casora/button_card_templates.json#casora_media | re:^(?:dur|pct|kf|anim|\(Date\.parse\(a\.media_position_updated_at \|\| ''\) \|\| 0\)|mmss\((?:pos|dur)\)|\(muted \? 0 : v\)|\(muted \? 'Stumm' : v \+ ' %'\))$ | numbers: parseFloat()/toFixed()/Math.round(), mm:ss of numbers, keyframe name from toFixed() | 11
 dashboards/casora/button_card_templates.json#casora_media | re:^(?:npData|seekA)$ | attributes built from esc()'d values and numbers | 3
@@ -14,7 +14,7 @@ dashboards/casora/button_card_templates.json#casora_media | window._casoraMediaS
 dashboards/casora/button_card_templates.json#casora_media | return out | popup body built from the escaped parts above | 1
 dashboards/casora/button_card_templates.json#casora_media | re:^(?:gArt|gAv)$ | casoraSafeUrl() or esc() one line above | 2
 dashboards/casora/button_card_templates.json#casora_now_playing_chip | re:^(?:\(color \|\| 'currentColor'\)|size|ic\(n\))$ | mask(): colour, size and icon URL the code passes (T tokens, numbers, fixed icon names) | 5
-dashboards/casora/button_card_templates.json#casora_now_playing_chip | re:^mask\( | mask(): fixed icon names, sizes and colours | 4
+dashboards/casora/button_card_templates.json#casora_now_playing_chip | re:^mask\( | mask(): fixed icon names or the config's devIcon (only [A-Za-z0-9_-]), sizes and colours | 4
 dashboards/casora/button_card_templates.json#casora_now_playing_chip | re:^svc\( | svc() = esc(JSON.stringify(service call)) | 6
 dashboards/casora/button_card_templates.json#casora_now_playing_chip | re:^(?:dur|pct|kf|anim|\(Date\.parse\(a\.media_position_updated_at \|\| ''\) \|\| 0\)|mmss\((?:pos|dur)\)|\(muted \? 0 : v\)|\(muted \? 'Stumm' : v \+ ' %'\))$ | numbers: parseFloat()/toFixed()/Math.round(), mm:ss of numbers, keyframe name from toFixed() | 11
 dashboards/casora/button_card_templates.json#casora_now_playing_chip | re:^(?:npData|seekA)$ | attributes built from esc()'d values and numbers | 3
@@ -23,7 +23,7 @@ dashboards/casora/button_card_templates.json#casora_now_playing_chip | re:^(?:g|
 dashboards/casora/button_card_templates.json#casora_now_playing_chip | window._casoraMediaSoft.css(pic) | CSS of 07-weich-spezial.js (escapes the cover URL) | 1
 dashboards/casora/button_card_templates.json#casora_now_playing_chip | return out | popup body built from the escaped parts above | 1
 dashboards/casora/button_card_templates.json#casora_now_playing_primary | re:^(?:\(color \|\| 'currentColor'\)|size|ic\(n\))$ | mask(): colour, size and icon URL the code passes (T tokens, numbers, fixed icon names) | 5
-dashboards/casora/button_card_templates.json#casora_now_playing_primary | re:^mask\( | mask(): fixed icon names, sizes and colours | 4
+dashboards/casora/button_card_templates.json#casora_now_playing_primary | re:^mask\( | mask(): fixed icon names or the config's devIcon (only [A-Za-z0-9_-]), sizes and colours | 4
 dashboards/casora/button_card_templates.json#casora_now_playing_primary | re:^svc\( | svc() = esc(JSON.stringify(service call)) | 6
 dashboards/casora/button_card_templates.json#casora_now_playing_primary | re:^(?:dur|pct|kf|anim|\(Date\.parse\(a\.media_position_updated_at \|\| ''\) \|\| 0\)|mmss\((?:pos|dur)\)|\(muted \? 0 : v\)|\(muted \? 'Stumm' : v \+ ' %'\))$ | numbers: parseFloat()/toFixed()/Math.round(), mm:ss of numbers, keyframe name from toFixed() | 11
 dashboards/casora/button_card_templates.json#casora_now_playing_primary | re:^(?:npData|seekA)$ | attributes built from esc()'d values and numbers | 3
