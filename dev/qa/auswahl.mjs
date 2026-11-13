@@ -131,7 +131,7 @@ function partsOf(f) {
   const all = jsUnits(src);
   const p = placed(src, hunks(diff), all);
   if (p.unplaced.length) return null;
-  if (!p.parts.length) return { names: new Set(), parts: [], own: new Set() };
+  if (!p.parts.length) return { names: new Set(), weak: new Set(), parts: [], own: new Set() };
   const names = reach(src, p.parts, all);
   if (!names) return null;
   return { names, weak: names.weak || new Set(), parts: p.parts, own: new Set(p.parts.map((u) => u.name)) };
