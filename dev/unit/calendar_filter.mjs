@@ -1,4 +1,5 @@
 // Calendar filter: one title predicate shared by Home, the greeting and screensavers.
+// @deckt: custom_components/casora/scripts/local/00-finder.js#casoraHomeNext,custom_components/casora/scripts/local/46-screensaver.js#S.context,custom_components/casora/scripts/local/06-kalender.js#K.allowsTitle,K.next
 import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
@@ -40,6 +41,19 @@ states['calendar.mock_meeting'].attributes.end_time = '2026-11-14 10:00:00';
 assert.equal(calendar.tile(states, variables), 'Heute · Naam vrij', 'the running all-day event wins when no timed event remains today');
 settings = { calendar_filter: 'Naam vrij' };
 assert.equal(calendar.tile(states, variables), 'Morgen 09:00 · Overleg', 'without a visible event today the tile shows the next event');
+// Order: running timed event, then next timed event today, then running all-day event.
+{
+  const order = {
+    'calendar.mock_day': states['calendar.mock_day'],
+    'calendar.mock_later': { state: 'off', attributes: { message: 'Overleg', start_time: '2026-11-13 14:00:00', end_time: '2026-11-13 15:00:00', all_day: false } },
+    'calendar.mock_now': { state: 'on', attributes: { message: 'Tandarts', start_time: '2026-11-13 09:30:00', end_time: '2026-11-13 10:30:00', all_day: false } },
+  };
+  const orderVars = { calendars: Object.keys(order).map(entity => ({ entity })) };
+  assert.ok(calendar.tile(order, orderVars).includes('Tandarts'), 'a running timed event comes before the next timed event today');
+  order['calendar.mock_now'].attributes.end_time = '2026-11-13 09:45:00';
+  order['calendar.mock_now'].state = 'off';
+  assert.equal(calendar.tile(order, orderVars), 'Heute 14:00 · Overleg', 'with no timed event running, the next timed event today comes before the all-day event');
+}
 console.log('ok Agenda tile selection and Calendar filter');
 
 // Public tile seam: HA exposes only the current all-day event in entity attributes.

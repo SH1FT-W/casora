@@ -1,5 +1,5 @@
 // Public Agenda/cache seam: redraws of independent tile configurations must settle.
-// @deckt: custom_components/casora/scripts/local/06-kalender.js#K.next,load,K.load,K.repaint
+// @deckt: custom_components/casora/scripts/local/06-kalender.js#K.next,loadCache,stamp,K.load,K.repaint
 import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
