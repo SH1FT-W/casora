@@ -21,7 +21,7 @@
 //   window._casoraSaver.kindAt(kind, now, pool) → the kind on show
 //   window._casoraSaver.canStart() / start()   → start by hand (the dashboard's ⋯ menu), only where one may start
 // Studio settings beside the three above: casora_screensaver_mix (kinds that alternate, none = all),
-// casora_screensaver_cameras / _calendars (none = all), casora_screensaver_tint (the playing cover's colour as a wash).
+// casora_screensaver_cameras (none = automatic: the real cameras) / _calendars (none = all), casora_screensaver_tint (the playing cover's colour as a wash).
 (function () {
   if (window._casoraSaver) return;
   var S = window._casoraSaver = {};
@@ -398,20 +398,49 @@
     });
   };
   // ── Cameras ──────────────────────────────────────────────────────────────
-  // The cameras that count: visible, not unavailable; only = the ones picked in the Studio (casora_screensaver_cameras),
-  // none picked (or none of them left) = all. [{ id, name, url, stream }] (url: Home Assistant's still picture).
-  S.cameras = function (hass, only) {
+  // The cameras that count: visible, not unavailable, with a picture. only = the ones picked in the Studio
+  // (casora_screensaver_cameras), kept as picked (a printer camera too). None picked (or none of them left) =
+  // „Automatic“: the cameras with a real picture, without robot vacuum maps, 3D printer cameras and diagnostic
+  // cameras (owner 13.11.2026), by the Cameras tile's rule (casoraDevice.notSurveillance in 00-finder.js, printers
+  // included as in every automatic list). [{ id, name, url, stream }] (url: Home Assistant's still picture).
+  var camOk = function (hass, id) {
+    var st = ((hass && hass.states) || {})[id], e = ((hass && hass.entities) || {})[id];
+    return id.indexOf('camera.') === 0 && !!st && st.state !== 'unavailable' && !(e && (e.hidden || e.disabled_by)) && !!(st.attributes || {}).entity_picture;
+  };
+  // Why „Automatic“ leaves a camera out: 'printer', 'map' (a map or a robot vacuum's camera), '' = it takes part.
+  var camWhy = function (hass, id) {
+    var CD = window.casoraDevice;
+    if (!(CD && CD.notSurveillance && CD.notSurveillance(hass, id, true))) return '';
+    return CD.isPrinter && CD.isPrinter(hass, id) && !CD.notSurveillance(hass, id, false) ? 'printer' : 'map';
+  };
+  var camName = function (hass, id) { return String((((hass && hass.states) || {})[id].attributes || {}).friendly_name || id.slice(7)); };
+  // Every camera the Studio offers (not a diagnostic one): [{ id, name, auto, why }], auto = „Automatic“ takes it.
+  S.cameraChoices = function (hass) {
     var S0 = (hass && hass.states) || {}, R = (hass && hass.entities) || {};
-    var ok = function (id) {
-      var st = S0[id], e = R[id];
-      return id.indexOf('camera.') === 0 && st && st.state !== 'unavailable' && !(e && (e.hidden || e.disabled_by)) && !!(st.attributes || {}).entity_picture;
-    };
-    var ids = Array.isArray(only) && only.length ? only.map(String).filter(ok) : [];
-    if (!ids.length) ids = Object.keys(S0).filter(ok).sort();
+    return Object.keys(S0).filter(function (id) { return camOk(hass, id) && !(R[id] && R[id].entity_category); }).sort().map(function (id) {
+      var why = camWhy(hass, id);
+      return { id: id, name: camName(hass, id), auto: !why, why: why };
+    });
+  };
+  S.cameras = function (hass, only) {
+    var S0 = (hass && hass.states) || {};
+    var ids = Array.isArray(only) && only.length ? only.map(String).filter(function (id) { return camOk(hass, id); }) : [];
+    if (!ids.length) ids = S.cameraChoices(hass).filter(function (c) { return c.auto; }).map(function (c) { return c.id; });
     return ids.slice(0, 12).map(function (id) {
       var a = S0[id].attributes || {};
-      return { id: id, name: String(a.friendly_name || id.slice(7)), url: String(a.entity_picture), stream: !!((Number(a.supported_features) || 0) & 2) };
+      return { id: id, name: camName(hass, id), url: String(a.entity_picture), stream: !!((Number(a.supported_features) || 0) & 2) };
     });
+  };
+  // One tap in a Studio list (what alternates, cameras, calendars): none picked = automatic (auto, the ids
+  // „Automatic“ takes; null = all). From automatic the tap starts from what automatic takes; the result in list order;
+  // back to exactly that (or nothing left) = automatic again.
+  S.pickNext = function (cur, ids, auto, id) {
+    var base = Array.isArray(auto) ? ids.filter(function (x) { return auto.indexOf(x) > -1; }) : ids.slice();
+    var from = cur && cur.length ? cur : base;
+    var next = from.indexOf(id) > -1 ? from.filter(function (x) { return x !== id; }) : from.concat([id]);
+    next = ids.filter(function (x) { return next.indexOf(x) > -1; });
+    var same = next.length === base.length && next.every(function (x) { return base.indexOf(x) > -1; });
+    return same ? [] : next;
   };
   // A fresh still picture every few seconds without a blank moment: the next one loads in the background and only
   // takes the place of the last one once it is there (a repaint follows).

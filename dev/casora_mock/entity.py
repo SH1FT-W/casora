@@ -567,6 +567,8 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
             self._frigate = bool(mock.entities[eid].get("frigate") or mock.entities[eid].get("hof"))
             # Reolink test doorbell (klingel.py): view in front of the door, with a person while one is detected.
             self._klingel = bool(mock.entities[eid].get("klingel"))
+            # A map camera (halten.py, camera.testkehrer_karte): the vacuum map picture.
+            self._karte = bool(mock.entities[eid].get("karte"))
             if self._frigate or self._klingel:
                 self.content_type = "image/jpeg"
 
@@ -586,6 +588,8 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
                 img = await self.hass.async_add_executor_job(bell, stimmung(self.hass), who, stamp)
                 if img:
                     return img
+            if self._karte:
+                return MAP_PNG
             return PLACEHOLDER_PNG
 
         async def handle_async_mjpeg_stream(self, request):
