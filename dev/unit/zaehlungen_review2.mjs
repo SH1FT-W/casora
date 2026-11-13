@@ -46,8 +46,9 @@ const T = JSON.parse(read('dashboards/casora/button_card_templates.json'));
   assert.equal(window.casoraSecuritySummary(sec({ locks: 2, lockJammed: 1, lockDead: 1 }), { summary: 'detailed' }).text,
     '2 Schlösser offen · Schloss klemmt · Schloss offline');
   const h = window.casoraSecuritySummary(sec({ locks: 1, windows: 2, doors: 1, camDead: 1 }), { summary: 'short' }).html;
-  assert.ok(/class="cs-sum-lead"[^>]*>4 offen</.test(h), 'short: „4 offen“ in front of the icons');
-  assert.ok(/class="cs-sum-lead"[^>]*>2 offline</.test(window.casoraSecuritySummary(sec({ camDead: 1, lockDead: 1, problem: true }), {}).html));
+  // Short: the most important finding leads in words (owner, 13.11.2026; before: „4 offen“ in front of the icons).
+  assert.ok(/class="cs-sum-item cs-sum-lead"[^>]*>Tür offen</.test(h), 'short: „Tür offen“ in front of the icons');
+  assert.ok(/class="cs-sum-item cs-sum-lead"[^>]*>Schloss offline</.test(window.casoraSecuritySummary(sec({ camDead: 1, lockDead: 1, problem: true }), {}).html));
   // One finding alone in words (security badge rework, 07.11.2026).
   assert.deepEqual(window.casoraSecuritySummary(sec({ camDead: 1, problem: true }), {}), { text: 'Kamera offline', html: null });
   console.log('ok locks');
