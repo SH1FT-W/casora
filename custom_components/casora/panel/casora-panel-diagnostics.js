@@ -31,7 +31,7 @@
   const KNOWN_PLATFORMS = [
     "casora", "casora_mock", "pulse", "tractive", "frigate", "reolink", "waste_collection_schedule", "teamtracker",
     "tankerkoenig", "roborock", "powercalc", "mobile_app", "group", "min_max",
-    "home_connect", "home_connect_alt", "homeconnect_ws", "miele", "smartthings", "lg_thinq", "ha_washdata", "whirlpool",
+    "home_connect", "home_connect_alt", "homeconnect_ws", "miele", "smartthings", "lg_thinq", "ha_washdata", "tumble", "whirlpool",
     "hon", "electrolux_status", "electrolux", "smartthinq_sensors", "candy", "haier",
     "delonghi_primadonna", "delonghi_coffee", "delonghi_coffeelink", "jura", "melitta_barista", "lamarzocco",
     "bambu_lab", "dwd_weather_warnings", "nina", "husqvarna_automower", "gardena_bluetooth",

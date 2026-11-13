@@ -1170,7 +1170,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   };
   // Readable integration name: HA's own title if loaded, else a few known spellings, else the domain in
   // words ("home_connect" → "Home Connect").
-  const INTEGRATION_TITLES = { ha_washdata: "WashData", washdata: "WashData", homeconnect_ws: "Home Connect Local",
+  const INTEGRATION_TITLES = { ha_washdata: "WashData", washdata: "WashData", tumble: "Tumble", homeconnect_ws: "Home Connect Local",
     home_connect_alt: "Home Connect Alt", mqtt: "MQTT", zha: "ZHA", esphome: "ESPHome", smartthings: "SmartThings",
     lg_thinq: "LG ThinQ", smartthinq_sensors: "SmartThinQ", hon: "hOn", bambu_lab: "Bambu Lab", octoprint: "OctoPrint",
     xiaomi_miot: "Xiaomi Miot", tplink: "TP-Link", tuya: "Tuya", shelly: "Shelly" };

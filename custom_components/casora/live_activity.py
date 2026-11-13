@@ -134,6 +134,8 @@ STATE_PHASE = {
     "off": "off", "idle": "off", "starting": "run", "running": "run", "paused": "pause", "user_paused": "pause",
     "ending": "run", "finished": "done", "anti_wrinkle": "done", "delay_wait": "delay", "interrupted": "error",
     "force_stopped": "off", "rinse": "run", "clean": "done",
+    # Tumble: finished and anti_crease (dryer) = laundry still inside until "emptied" (then off)
+    "anti_crease": "done",
     # Home Connect (also dishwashers)
     "inactive": "off", "ready": "off", "delayedstart": "delay", "run": "run", "pause": "pause", "actionrequired": "attn",
     "error": "error", "aborting": "off",
@@ -559,6 +561,9 @@ def _snap_appliance(found: Found, g, now: datetime, lang: int) -> Snap:
     if end and end > now.timestamp() + 30:
         s.end_ts = end
     el = _seconds(g("elapsed"))
+    started = _timestamp(g("elapsed")) if el is None else None
+    if started is not None and started <= now.timestamp():
+        el = now.timestamp() - started  # start time instead of a duration (Tumble cycle_start)
     if el is not None and el >= 0:
         s.start_ts = int(now.timestamp() - el)
     if s.pct is None and el is None and s.end_ts:
@@ -572,7 +577,7 @@ def _snap_appliance(found: Found, g, now: datetime, lang: int) -> Snap:
     pct_t = _pct_text(s.pct, lang) if s.pct is not None else None
     if ph == "done":
         s.pct = 100
-        s.extra = T["knitterschutz"][lang] if raw in ("anti_wrinkle", "wrinkle_care") else None
+        s.extra = T["knitterschutz"][lang] if raw in ("anti_wrinkle", "wrinkle_care", "anti_crease") else None
         s.critical = T["fertig"][lang]
         s.message = _join(T["fertig"][lang], T["waesche_raus"][lang] if laundry else T["geschirr_raus"][lang], s.extra)
     elif ph == "pause":

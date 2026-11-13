@@ -285,7 +285,11 @@ class CasoraMock:
 
     def on_button(self, eid: str) -> None:
         for target, state in self.fixture.get("_buttons", {}).get(eid, {}).items():
-            self.set(target, state)
+            # A dict sets attributes too: {"state": …, "attrs": {…}} (Tumble's care sensors: due → false).
+            if isinstance(state, dict):
+                self.set(target, state.get("state"), **(state.get("attrs") or {}))
+            else:
+                self.set(target, state)
         p = self.printer
         if not p:
             return
@@ -518,9 +522,36 @@ class CasoraMock:
                 "source": "recorder", "statistic_id": eid, "unit_class": unit_class(unit), "unit_of_measurement": unit,
             }, rows)
             n += 1
+        # Counters that rise in steps (an appliance's cycles and their energy, "_stats_events": eid → [[hours ago,
+        # amount], …]): sums with those steps instead of the house-sized energy curve below.
+        events = self.fixture.get("_stats_events") or {}
+        for eid, steps in events.items():
+            st = self.store.get(eid)
+            if not st:
+                continue
+            unit = st[1].get("unit_of_measurement")
+            at = {end - int(ago) * 3600: float(v) for ago, v in steps}
+            hours = list(hours_of(eid))
+            use = [at.get(h, 0.0) for h in hours]
+            total = sum(use)
+            try:
+                start_v = max(0.0, float(st[0]) - total)
+            except (TypeError, ValueError):
+                start_v = 0.0
+            acc, rows = 0.0, []
+            for h, u in zip(hours, use):
+                acc += u
+                rows.append({"start": utc(h), "state": start_v + acc, "sum": acc - total})
+            async_import_statistics(self.hass, {
+                "has_mean": False, "mean_type": StatisticMeanType.NONE, "has_sum": True, "name": None,
+                "source": "recorder", "statistic_id": eid, "unit_class": unit_class(unit), "unit_of_measurement": unit,
+            }, rows)
+            n += 1
         for eid, (state, attrs) in self.store.items():
             if not eid.startswith("sensor.") or attrs.get("device_class") != "energy" \
                     or attrs.get("state_class") not in ("total_increasing", "total"):
+                continue
+            if eid in events:
                 continue
             try:
                 now_v = float(state)

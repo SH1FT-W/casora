@@ -245,6 +245,23 @@ check("Trockner ohne Restzeit/Startzeit: kein chronometer", "chronometer" not in
 st("sensor.t_state", "anti_wrinkle")
 check("Trockner Knitterschutz = Fertig", la.snapshot(dr, S.get, NOW, 0).message == "Fertig · Wäsche rausnehmen · Knitterschutz läuft")
 
+# Tumble (plug-based washer/dryer): off | running | finished | anti_crease; the start time instead of a run time,
+# no programme, phase or remaining time.
+tf = {"state": "sensor.tu_state", "elapsed": "sensor.tu_start", "count": "sensor.tu_count", "unload": "button.tu_unload"}
+tu = Found("d-tu", "dryer", "tumble", "ungetestet", tf)
+st("sensor.tu_state", "running"); st("sensor.tu_start", (NOW - timedelta(minutes=48)).isoformat(), device_class="timestamp")
+s = la.snapshot(tu, S.get, NOW, 0)
+d = la.build_payload(s, "dryer", "T", "t", "/", True)["data"]
+check("Tumble läuft: seit Start (chronometer), kein Programm/Prozent", s.phase == "run" and s.start_ts == int(NOW.timestamp()) - 48 * 60
+      and s.program is None and s.pct is None and s.message == "Läuft" and d["chronometer"] is True, (s, d))
+st("sensor.tu_state", "finished"); st("sensor.tu_start", "unknown", device_class="timestamp")
+s = la.snapshot(tu, S.get, NOW, 0)
+check("Tumble fertig (Wäsche noch drin) = done", s.phase == "done" and s.message == "Fertig · Wäsche rausnehmen", s)
+st("sensor.tu_state", "anti_crease")
+check("Tumble Knitterschutz = fertig mit Zusatz", la.snapshot(tu, S.get, NOW, 0).message == "Fertig · Wäsche rausnehmen · Knitterschutz läuft")
+st("sensor.tu_state", "off")
+check("Tumble ausgeräumt = off", la.snapshot(tu, S.get, NOW, 0).phase == "off")
+
 # Miele (untested): states and phase per documentation
 mi = Found("d-mi", "washer", "miele", "ungetestet", {"state": "sensor.m_state", "program": "sensor.m_prog", "phase": "sensor.m_phase", "remaining": "sensor.m_rem"})
 st("sensor.m_state", "in_use"); st("sensor.m_prog", "Cottons"); st("sensor.m_phase", "spin"); st("sensor.m_rem", "12", unit_of_measurement="min")

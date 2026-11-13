@@ -1636,6 +1636,19 @@
   var DRYER_MAINT = { filter_clean: 1, lint_filter: 1, condenser_clean: 1, other: 1 };
   /* Own maintenance tasks (WashData 0.5.8): ID starts with custom_ */
   var isCustom = function (k) { return /^custom_/.test(String(k || '')); };
+  /* Tumble: "finished" and the dryer's "anti_crease" mean the laundry is still inside until „Ausgeräumt“ (its unload
+     button); only for Tumble's status sensor (other sources' "finished" is just done). */
+  var TUMBLE_STATE = { finished: ['Fertig', 'good', false, 'clean'], anti_crease: ['Knitterschutz', 'good', false, 'clean'] };
+  /* Source of a state entity through the shared finder, cached per registry snapshot (tiles ask often). */
+  var SRC = { reg: null, map: {} };
+  var srcOf = function (id) {
+    var h = HASS(), LF = window.casoraLaundryFind;
+    if (!h || !LF || !id) return null;
+    if (SRC.reg !== h.entities) SRC = { reg: h.entities, map: {} };
+    if (!(id in SRC.map)) SRC.map[id] = LF.forEntity(h, id) || null;
+    return SRC.map[id];
+  };
+  var isTumble = function (id) { var c = srcOf(id); return !!(c && c.source === 'tumble'); };
   /* Stall in the middle of a cycle (WashData 0.5.8: paused + cycle_anomaly stalled, e.g. imbalance) */
   var STALLED = ['Angehalten', 'warn', true, 'pause'];
   var DIM = 'rgba(255,255,255,0.18)';
@@ -1728,6 +1741,7 @@
     }
     if (st && /^switch\./.test(id) && raw !== 'unavailable') return raw === 'on' ? STATE.on : STATE.off;
     if (raw === 'paused' && a.cycle_anomaly === 'stalled') return STALLED;
+    if (TUMBLE_STATE[raw] && isTumble(id)) return TUMBLE_STATE[raw];
     if (STATE[raw]) return STATE[raw];
     var h = HASS(), txt = raw;
     try { if (st && h && typeof h.formatEntityState === 'function') txt = h.formatEntityState(st); } catch (x) { /* raw */ }
@@ -1778,6 +1792,9 @@
          Home Connect's i-Dos refill events, Miele's TwinDos levels. */
       maintdue: F.maintdue || null, profiles: F.profiles || [], idos1: F.idos1 || null, idos2: F.idos2 || null,
       twin1: F.twin1 || null, twin2: F.twin2 || null,
+      /* Tumble: care tasks [task, sensor, button], the last cycle's sensors, its own energy total (only the cycles). */
+      tcare: F.tcare || [], lastEnd: F.lastEnd || null, lastDur: F.lastDur || null, lastKwh: F.lastKwh || null,
+      tenergy: src && src.source === 'tumble' ? F.energy || null : null,
       plug: plug,
       power: (plug && onDev(plug, null, 'sensor', 'W')) || plugF.power || F.power || null,
       volt: plug ? (onDev(plug, null, 'sensor', 'V') || plugF.voltage || null) : null,
@@ -1789,7 +1806,8 @@
   L.watch = function (c) {
     return [c.st, c.program, c.phase, c.remaining, c.progress, c.elapsed, c.total, c.count, c.running, c.select,
       c.pause, c.resume, c.force, c.stop, c.unload, c.door, c.suggest, c.plug, c.power, c.volt, c.amp, c.energy, c.lock,
-      c.maintdue, c.idos1, c.idos2, c.twin1, c.twin2].concat(c.profiles || [])
+      c.maintdue, c.idos1, c.idos2, c.twin1, c.twin2, c.lastEnd, c.lastDur, c.lastKwh, c.tenergy].concat(c.profiles || [])
+      .concat((c.tcare || []).map(function (x) { return x[1]; }))
       .filter(Boolean);
   };
 
@@ -1848,6 +1866,15 @@
           .then(function (r) { d[p] = r && r.change != null ? r.change : null; }).catch(function () {}));
       });
     }
+    /* Tumble keeps no cycle list for others: its counters are total_increasing sensors, so the recorder's long-term
+       statistics give this month's cycles and energy. */
+    if (c.source === 'tumble') {
+      [['tCycles', c.count], ['tKwh', c.tenergy]].forEach(function (x) {
+        if (!x[1]) return;
+        jobs.push(hass.callWS({ type: 'recorder/statistic_during_period', statistic_id: x[1], calendar: { period: 'month' }, types: ['change'] })
+          .then(function (r) { d[x[0]] = r && r.change != null ? r.change : null; }).catch(function () {}));
+      });
+    }
     if (c.entry) {
       jobs.push(hass.callWS({ type: 'ha_washdata/get_device_cycles', entry_id: c.entry, limit: 50 })
         .then(function (r) { d.cycles = (r && r.cycles) || []; d.total = r && r.total; }).catch(function () {}));
@@ -1894,7 +1921,7 @@
     } else if (Date.now() - (L._t || 0) < 700) return;
     var p = (ev.composedPath && ev.composedPath()) || [ev.target];
     var b = null;
-    for (var i = 0; i < p.length; i++) { if (p[i] && p[i].dataset && p[i].dataset.hwMaint) { b = p[i]; break; } }
+    for (var i = 0; i < p.length; i++) { if (p[i] && p[i].dataset && (p[i].dataset.hwMaint || p[i].dataset.hwPress)) { b = p[i]; break; } }
     if (!b) return;
     ev.stopPropagation(); if (ev.cancelable) ev.preventDefault();
     window._casoraSuppressDismiss = Date.now() + 600;
@@ -1906,10 +1933,17 @@
       return;
     }
     clearTimeout(b._hwT);
-    var parts = b.dataset.hwMaint.split('|');
     var hass = HASS();
     if (!hass) return;
     b.textContent = '…';
+    if (b.dataset.hwPress) {
+      /* Tumble: its own „done“ button counts the task from now (the sensor and the due flag follow by themselves). */
+      var pr = b.dataset.hwPress.split('|');
+      hass.callService('button', 'press', { entity_id: pr[0] })
+        .catch(function (e) { console.error('casora laundry maintenance', e); b.textContent = 'Fehler'; });
+      return;
+    }
+    var parts = b.dataset.hwMaint.split('|');
     hass.callWS({ type: 'ha_washdata/add_maintenance_event', entry_id: parts[0], event_type: parts[1] })
       .then(function () {
         var c = L._cfg[parts[2]];
@@ -2003,13 +2037,34 @@
     });
     return out;
   };
+  /* Tumble's care tasks: per task the sensor „cycles since“ (attributes every_cycles, every_days, last_done, due) and
+     its button „done“ (tb). Days only when it was done once (Tumble does not publish when counting began). */
+  var tumbleRows = function (c, states) {
+    var status = [], due = [];
+    (c.tcare || []).forEach(function (x) {
+      var st = x[1] && states[x[1]];
+      var n = st ? parseFloat(st.state) : NaN;
+      if (!st || isNaN(n) || !MAINT[x[0]]) return;
+      var a = st.attributes || {};
+      var done = a.last_done ? Date.parse(a.last_done) : NaN;
+      status.push({ id: x[0], cycles_interval: a.every_cycles, days_interval: a.every_days, cycles_since: n,
+        days_since: isNaN(done) ? null : Math.max(0, (Date.now() - done) / 86400000) });
+      if (a.due === true) due.push(x[0]);
+    });
+    var btns = {};
+    (c.tcare || []).forEach(function (x) { btns[x[0]] = x[2]; });
+    return status.length ? maintRows({ due: due, status: status }, c.dryer).map(function (r) {
+      return Object.assign({ tb: ok(states, btns[r.id]) ? btns[r.id] : null }, r);
+    }) : [];
+  };
+  L._tumbleRows = tumbleRows;
   /* All care rows of the device: WashData's tasks (from the log, else the due sensor; wd = can be marked done) and the
      maker's; due ones first, then the nearest. */
   L.careRows = function (c, states, d) {
     d = d || {};
     var wd = (d.maint ? maintRows(d.maint, c.dryer) : dueSensorRows(states, c.maintdue, c.dryer))
       .map(function (r) { return Object.assign({ wd: true }, r); });
-    var all = wd.concat(makerCare(c, states));
+    var all = wd.concat(tumbleRows(c, states), makerCare(c, states));
     var due = all.filter(function (r) { return r.due; });
     var rest = all.filter(function (r) { return !r.due; }).sort(function (a, b) { return (b.bar || 0) - (a.bar || 0); });
     return due.concat(rest);
@@ -2198,6 +2253,18 @@
     }
 
     /* Last cycle (just finished): program, duration, power and cost. */
+    if (kind === 'last' && c.source === 'tumble') {
+      /* Tumble: end, duration and energy of the last cycle from its sensors (no programme). */
+      if (active) return '';
+      var tEnd = c.lastEnd && states[c.lastEnd] ? Date.parse(states[c.lastEnd].state) : NaN;
+      var tDur = num(states, c.lastDur), tKwh = num(states, c.lastKwh);
+      if (isNaN(tEnd) && tDur == null) return '';
+      var rowsTL = [{ icon: mIcon, iconTone: DIM, label: 'Fertig',
+        sub: isNaN(tEnd) ? null : day(new Date(tEnd)) + ', ' + clock(new Date(tEnd)) + ' Uhr', value: tDur != null ? dur(tDur) : null }];
+      if (tKwh != null && tKwh > 0) rowsTL.push({ icon: 'mdi:lightning-bolt-outline', iconTone: DIM, label: 'Verbrauch',
+        sub: c.price != null ? eur(tKwh * c.price) : null, value: kwh(tKwh) });
+      return UI.group(rowsTL, 'Letzter Durchgang');
+    }
     if (kind === 'last') {
       if (active || (s[3] !== 'clean' && s[3] !== 'done')) return '';
       var lc = realCycles(d)[0];
@@ -2373,7 +2440,7 @@
       }
       L._cfg[c.st] = c;
       var listK = kind === 'care_all' ? cr : cr.filter(function (r) { return r.due; });
-      var doneK = function (r) { return !!(r.wd && r.due && c.entry); };
+      var doneK = function (r) { return !!(r.due && ((r.wd && c.entry) || r.tb)); };
       var rowsK = listK.map(function (r) {
         return { icon: r.icon, iconTone: r.due ? 'warn' : DIM, label: r.label, sub: r.sub,
           bar: r.bar != null ? r.bar : null, barTone: r.due ? 'warn' : 'good',
@@ -2389,12 +2456,34 @@
       }
       var htmlK = UI.group(rowsK, 'Pflege');
       listK.forEach(function (r) {
-        if (doneK(r)) htmlK = htmlK.replace('HWMAINT' + r.id + 'X', '<span class="hw-done" data-hw-maint="' + esc(c.entry + '|' + r.id + '|' + c.st) + '">Erledigt</span>');
+        if (doneK(r)) htmlK = htmlK.replace('HWMAINT' + r.id + 'X', '<span class="hw-done" '
+          + (r.tb ? 'data-hw-press="' + esc(r.tb + '|' + c.st) : 'data-hw-maint="' + esc(c.entry + '|' + r.id + '|' + c.st)) + '">Erledigt</span>');
       });
       return L.wrap(htmlK);
     }
 
     /* Popup v3 „Statistik“: cycles in total, this month, Ø per cycle, energy in total. */
+    if (kind === 'stats3' && c.source === 'tumble') {
+      /* Tumble: its counters (cycles, energy of all cycles) and their change this month from the recorder statistics.
+         No average duration: Tumble publishes only the last one. */
+      var rowsT3 = [];
+      var nT3 = num(states, c.count), eT = num(states, c.tenergy);
+      if (nT3 != null) rowsT3.push({ icon: 'mdi:counter', iconTone: 'accent', label: 'Durchgänge insgesamt', value: String(Math.round(nT3)) });
+      if (d.tCycles != null || d.tKwh != null) {
+        var nM = d.tCycles != null ? Math.max(0, Math.round(d.tCycles)) : null;
+        var eMT = d.tKwh != null && d.tKwh > 0 ? [kwh(d.tKwh), c.price != null ? eur(d.tKwh * c.price) : null].filter(Boolean) : [];
+        rowsT3.push({ icon: 'mdi:calendar-month-outline', iconTone: 'accent', label: 'Dieser Monat',
+          sub: nM != null ? eMT.join(' · ') || null : eMT[1] || null,
+          value: nM != null ? (nM === 1 ? '1 Durchgang' : nM + ' Durchgänge') : eMT[0] || null });
+      }
+      if (nT3 > 0 && eT != null && eT > 0) {
+        var eA = eT / nT3;
+        rowsT3.push({ icon: 'mdi:timer-sand', iconTone: 'accent', label: 'Ø pro Durchgang', sub: c.price != null ? eur(eA * c.price) : null, value: kwh(eA) });
+        rowsT3.push({ icon: 'mdi:lightning-bolt-outline', iconTone: 'accent', label: 'Verbrauch insgesamt',
+          sub: c.price != null ? eur(eT * c.price) : null, value: kwh(eT) });
+      }
+      return rowsT3.length ? UI.group(rowsT3, 'Statistik') : '';
+    }
     if (kind === 'stats3') {
       var cy3 = realCycles(d), rows3 = [];
       var cnt3 = num(states, c.count);
@@ -2495,6 +2584,13 @@
     var st = (V && V.appliance_state) || (entity && entity.entity_id);
     var dryer = !!(V && V.device_type === 'dryer');
     var list = ((states[st] && states[st].attributes) || {}).maintenance_due;
+    var tu = !Array.isArray(list) && isTumble(st) ? srcOf(st) : null;
+    if (tu) {
+      /* Tumble: its „Maintenance due“ binary sensor lists the due task keys (attribute tasks). */
+      var md = tu.f.maintdue && states[tu.f.maintdue];
+      list = md && md.state === 'on' && Array.isArray((md.attributes || {}).tasks) ? md.attributes.tasks : [];
+      dryer = dryer || tu.role === 'dryer';
+    }
     if (!Array.isArray(list)) return [];
     var ml = (L.data[st] || {}).maint || {};
     var own = function (k) {
@@ -2627,11 +2723,16 @@
            programmes, statistics, detection. */
         ['care', 'stats3', 'det'].forEach(function (k) { add(k, tpl(k, true)); f2[k] = fields[k]; });
         left = [];
-        if (!WD) right = ['run', 'act', 'dev', 'care', 'stats3', 'abort'];
+        if (c.source === 'tumble') {
+          /* Tumble (owner's plug integration): laundry waiting, the cycle, the last cycle, care, statistics. */
+          add('last', tpl('last', true)); f2.last = fields.last;
+          right = run0 ? ['run', 'care', 'stats3'] : ['unload', 'last', 'care', 'stats3'];
+        }
+        else if (!WD) right = ['run', 'act', 'dev', 'care', 'stats3', 'abort'];
         else if (run0) right = ['unload', 'run', 'act', 'det', 'care', 'cycles', 'progs', 'abort'];
         else right = ['unload', 'act', 'care', 'cycles', 'progs', 'stats3', 'det'];
       }
-      else if (!WD) { left = ['run', 'act', 'dev', 'abort']; right = ['more']; }
+      else if (!WD) { left = (c.source === 'tumble' ? ['unload'] : []).concat(['run', 'act', 'dev', 'abort']); right = ['more']; }
       else if (run0) { left = ['unload', 'run', 'pick', 'act', 'cycles', 'abort']; right = ['progs', 'maint', 'more']; }
       else { left = ['unload', 'act', 'cycles']; right = ['progs', 'maint', 'more']; }
       return HH.layout({ entity: c.st, watch: watch, fields: f2, top: v3L ? ['hero'] : ['hero', 'pbar'], stage: v3L ? 'stage' : null,

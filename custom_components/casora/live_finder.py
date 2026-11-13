@@ -193,6 +193,23 @@ def _washdata_role(states, ents, model):
     return "dryer" if re.search(r"tumble-dryer|dryer", icon) else "washer"
 
 
+# Tumble's maintenance tasks per appliance type (as TUMBLE_CARE in 00-finder.js).
+TUMBLE_CARE = {"washer": ["descale", "filter_clean", "drum_clean"], "dryer": ["lint_filter", "condenser_clean"]}
+
+
+def _tumble_role(states, ents, model):
+    """Tumble: the device model it sets ("washer"/"dryer" as whole words), else its care keys – never its name."""
+    m = str(model or "").lower()
+    if re.search(r"(^|\s)dryer(\s|$)", m):
+        return "dryer"
+    if re.search(r"(^|\s)washer(\s|$)", m):
+        return "washer"
+    for role in ("washer", "dryer"):
+        if any(_has(ents, "maint_" + t, "sensor") for t in TUMBLE_CARE[role]):
+            return role
+    return None
+
+
 def _whirlpool_role(states, ents, model):
     if _has(ents, "washer_state"):
         return "washer"
@@ -259,6 +276,14 @@ SOURCES: list[dict[str, Any]] = [
                 "pause": k("pause_cycle", "button"), "resume": k("resume_cycle", "button"), "force": k("force_end_cycle", "button"),
                 "unload": k("mark_unloaded", "button"), "suggest": k("suggestions"),
                 "maintdue": k("maintenance_due", "binary_sensor")}},
+    # Tumble (washer/dryer through a smart plug): no remaining time, programme or phase (see 00-finder.js).
+    {"id": "tumble", "grade": GRADE_UNTESTED, "platforms": ["tumble"], "need": ["status", "unload"],
+     "any": ["cycle_count", "last_duration", "cycle_start", "running"],
+     "role": _tumble_role,
+     "fields": {"state": k("status"), "elapsed": k("cycle_start"), "count": k("cycle_count"), "energy": k("total_energy"),
+                "running": k("running", "binary_sensor"), "unload": k("unload", "button"),
+                "maintdue": k("maintenance_due", "binary_sensor"),
+                "lastEnd": k("last_end"), "lastDur": k("last_duration"), "lastKwh": k("last_energy")}},
     {"id": "whirlpool", "grade": GRADE_UNTESTED, "platforms": ["whirlpool"], "need": ["end_time"], "any": ["washer_state", "dryer_state"],
      "role": _whirlpool_role,
      "fields": {"state": k(["washer_state", "dryer_state"]), "remaining": k("end_time")}},

@@ -2472,6 +2472,19 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     return /dishcare[._]dishwasher/.test(o) ? 'dishwasher' : null;
   };
 
+  // Tumble's maintenance tasks per appliance type (maintenance.py DEFAULT_TASKS); the sensor key is maint_<task>,
+  // the button maint_<task>_done. Python mirror: live_finder.TUMBLE_CARE.
+  var TUMBLE_CARE = { washer: ['descale', 'filter_clean', 'drum_clean'], dryer: ['lint_filter', 'condenser_clean'] };
+  // Tumble's appliance type: the device model it sets ("washer"/"dryer" as whole words), else its care keys.
+  var tumbleRole = function (list, mdl) {
+    var m = String(mdl || '').toLowerCase();
+    if (/(^|\s)dryer(\s|$)/.test(m)) return 'dryer';
+    if (/(^|\s)washer(\s|$)/.test(m)) return 'washer';
+    var hasTask = function (role) { return TUMBLE_CARE[role].some(function (t) { return has(list, 'maint_' + t, 'sensor'); }); };
+    if (hasTask('washer')) return 'washer';
+    return hasTask('dryer') ? 'dryer' : null;
+  };
+
   // need: every key required, any: one of them – only when the platform does not match (test house).
   // role(hass, list, devId) → 'washer' | 'dryer' | 'dishwasher' | null (null = none of them, e.g. an oven).
   // dish: the dishwasher card's fields; a spec may name a device class (dc) for entities without a key.
@@ -2601,6 +2614,19 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
         unload: k('mark_unloaded', 'button'), suggest: k('suggestions'),
         // 0.5.9: on while a maintenance task is due, attributes due_task_ids / due_tasks (binary_sensor.py).
         maintdue: bk('maintenance_due') } },
+    /* Tumble (SH1FT-W/tumble, platform tumble): follows a washer or dryer through its smart plug. The appliance type
+       is Tumble's own setting, stored as the device model ("washer" / "dryer", entity.py DeviceInfo); without it the
+       maintenance keys tell (washer: descale/filter/drum, dryer: lint filter/condenser). Only those structured
+       values decide: the integration's name "tumble" must never make a washer a dryer. Status off | running |
+       finished | anti_crease; finished and anti_crease mean the laundry is still inside until „unload“ is pressed.
+       No remaining time, programme or phase. Care: per task a sensor maint_<task> (cycles since, attributes
+       every_cycles/every_days/last_done/due) and a button maint_<task>_done (TUMBLE_CARE below). */
+    { id: 'tumble', rank: 1, platforms: ['tumble'], need: ['status', 'unload'],
+      any: ['cycle_count', 'last_duration', 'cycle_start', 'running'],
+      role: function (hass, list, devId) { return tumbleRole(list, model(hass, devId)); },
+      fields: { state: k('status'), elapsed: k('cycle_start'), count: k('cycle_count'), energy: k('total_energy'),
+        running: k('running', 'binary_sensor'), unload: k('unload', 'button'), maintdue: bk('maintenance_due'),
+        lastEnd: k('last_end'), lastDur: k('last_duration'), lastKwh: k('last_energy') } },
     { id: 'whirlpool', rank: 0, platforms: ['whirlpool'], need: ['end_time'], any: ['washer_state', 'dryer_state'],
       role: function (hass, list) {
         if (has(list, 'washer_state')) return 'washer';
@@ -2711,6 +2737,12 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
       if (src.id === 'washdata') {
         f.profiles = lst.filter(function (e) { return e.key === 'profile_cycle_count' && e.domain === 'sensor'; })
           .map(function (e) { return e.entity_id; });
+      }
+      if (src.id === 'tumble') {
+        // Care: [task, sensor (cycles since), button (done)] of every task the device has.
+        f.tcare = [].concat(TUMBLE_CARE.washer, TUMBLE_CARE.dryer).map(function (t) {
+          return [t, pick(lst, k('maint_' + t)), pick(lst, k('maint_' + t + '_done', 'button'))];
+        }).filter(function (x) { return x[1]; });
       }
       var d = devs(hass)[devId] || {};
       return { device: devId, source: src.id, rank: src.rank, role: role, how: how, state: f.state, f: f,
@@ -2843,7 +2875,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
   dish.field = function (hass, anchor, name) { return dish(hass, anchor).f[name] || null; };
 
   window.casoraLaundryFind = { classify: classify, forEntity: forEntity, all: all, plugs: plugs, sources: SOURCES,
-    dish: dish, dishNames: DISH_NAMES, dishwashers: dishwashers };
+    dish: dish, dishNames: DISH_NAMES, dishwashers: dishwashers, tumbleCare: TUMBLE_CARE };
 })();
 
 // ── Fridge and freezer: where the values come from (24.10.2026) ───────────────────

@@ -809,17 +809,31 @@ window._hpMultiTap = function (ev, kind) {
     ['spülen', /geschirr|dishwash/i, /run|pause|delayed|wash|dry/],
     ['trocknen', /trockner|dryer|tumble/i, /run|start|pause|anti|dry/],
   ];
-  var cache = { n: -1, ids: null };
+  var cache = { n: -1, reg: null, ids: null };
   function devices(states) {
     var keys = Object.keys(states);
-    if (cache.n === keys.length && cache.ids) return cache.ids;
+    var ha = document.querySelector('home-assistant'), hass = ha && ha.hass;
+    var reg = (hass && hass.entities) || null;
+    if (cache.n === keys.length && cache.reg === reg && cache.ids) return cache.ids;
     var ids = KIND.map(function () { return []; });
+    // Appliances the shared finder knows (casoraLaundryFind: platform + translation_key) count by their role; the
+    // entity-id words below only for the rest. A Tumble washer named „Tumble …“ is no dryer.
+    var LF = window.casoraLaundryFind, known = {};
+    if (LF && reg && hass.devices) {
+      try {
+        LF.all(hass).concat(LF.all(hass, 'dishwasher')).forEach(function (c) {
+          known[c.device] = 1;
+          ids[c.role === 'dryer' ? 2 : c.role === 'dishwasher' ? 1 : 0].push(c.state);
+        });
+      } catch (e) { /* the words alone */ }
+    }
     keys.forEach(function (id) {
       if (id.indexOf('sensor.') !== 0) return;
+      if (reg && reg[id] && known[reg[id].device_id]) return;
       if (!/(zustand|status|state|betriebszustand|operation|program_phase|phase)$/i.test(id)) return;
       KIND.forEach(function (k, i) { if (k[1].test(id)) ids[i].push(id); });
     });
-    cache = { n: keys.length, ids: ids };
+    cache = { n: keys.length, reg: reg, ids: ids };
     return ids;
   }
   O.tip = function (entity, states) {
