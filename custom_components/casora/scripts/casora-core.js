@@ -17304,6 +17304,25 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   }, 0);
 })();
 
+// Wall tablet or not, for the screensaver and "Return to Home when idle": touch only (hover none, coarse pointer),
+// a window at least 600 wide (as before), and a screen whose short side is 480 px or more. The last part keeps a
+// phone held sideways out (iPhone 852×393, short side ≤ 440 on every phone); small tablets start at about 533.
+(function () {
+  if (window.casoraWallTabletOf) return;
+  // m: { vw: window width, sw/sh: screen in CSS px, touch }
+  window.casoraWallTabletOf = function (m) {
+    var vw = +m.vw || 0, sw = +m.sw || vw, sh = +m.sh || 0;
+    var shortSide = sh ? Math.min(sw, sh) : sw;
+    return !!m.touch && vw >= 600 && shortSide >= 480;
+  };
+  window.casoraIsWallTablet = function () {
+    var s = window.screen || {};
+    var touch = false;
+    try { touch = !!(window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches); } catch (e) {}
+    return window.casoraWallTabletOf({ vw: window.innerWidth, sw: s.width, sh: s.height, touch: touch });
+  };
+})();
+
 // Return to Home after a spell without input, for wall tablets. Off unless a
 // dashboard asks for it in Casora Studio under General > Dashboard.
 (function () {
@@ -17312,10 +17331,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
 
   var POLL_MS = 10000;
   var OFF = /[?&]casora_idle=0/.test(location.search);
-  // The tablet navbar's own test, so one dashboard reads the same under either.
-  var TABLET = window.matchMedia
-    ? window.matchMedia('(hover: none) and (pointer: coarse) and (min-width: 600px)')
-    : null;
+  // Wall tablets only, never a phone held sideways (casoraIsWallTablet above).
+  var isTablet = function () { return !!(window.casoraIsWallTablet && window.casoraIsWallTablet()); };
 
   var last = Date.now();
   function bump() { last = Date.now(); }
@@ -17381,7 +17398,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   function norm(p) { return String(p || '').replace(/\/+$/, '') || '/'; }
 
   function check() {
-    if (OFF || !TABLET || !TABLET.matches) return bump();
+    if (OFF || !isTablet()) return bump();
     var cfg = config();
     if (!cfg) return bump();
     var mins = minutes(cfg);
