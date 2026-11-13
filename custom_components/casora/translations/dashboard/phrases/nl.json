@@ -2951,7 +2951,9 @@
     "ins Netz": "naar het net",
     "Akku gibt ab": "Accu ontlaadt",
     "Arzttermin": "Dokter",
-    "Lamellenstellung": "Lamellen"
+    "Lamellenstellung": "Lamellen",
+    "Breaking": "Breaking change",
+    "● KI-Fehler": "● AI-fout"
   },
   "patterns": [
     [
@@ -4307,6 +4309,34 @@
       "Nieuw: {1} · AI: niet gecontroleerd"
     ],
     [
+      "^Neu: (.+) · KI: Unkritisch$",
+      "Nieuw: {1} · AI: onkritisch"
+    ],
+    [
+      "^Neu: (.+) · KI: Handeln$",
+      "Nieuw: {1} · AI: handelen"
+    ],
+    [
+      "^Neu: (.+) · KI: Breaking$",
+      "Nieuw: {1} · AI: breaking change"
+    ],
+    [
+      "^Neu: (.+) · KI: Breaking Change$",
+      "Nieuw: {1} · AI: breaking change"
+    ],
+    [
+      "^Neu: (.+) · KI: Braucht Aufmerksamkeit$",
+      "Nieuw: {1} · AI: heeft aandacht nodig"
+    ],
+    [
+      "^Neu: (.+) · KI: KI-Fehler$",
+      "Nieuw: {1} · AI: fout"
+    ],
+    [
+      "^Neu: (.+) · KI: (.+)$",
+      "Nieuw: {1} · AI: {2}"
+    ],
+    [
       "^Neu: (.+) · KI: Unklar$",
       "Nieuw: {1} · AI: onduidelijk"
     ],
@@ -5289,6 +5319,18 @@
     [
       "^(.+) braucht Aufmerksamkeit$",
       "{1} heeft aandacht nodig"
+    ],
+    [
+      "^KI: 1 Breaking Change$",
+      "AI: 1 breaking change"
+    ],
+    [
+      "^KI: (\\d+) Breaking Changes$",
+      "AI: {1} breaking changes"
+    ],
+    [
+      "^KI: (\\d+) von (\\d+) geprüft$",
+      "AI: {1} van {2} gecontroleerd"
     ]
   ]
 }

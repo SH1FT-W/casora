@@ -2951,7 +2951,9 @@
     "ins Netz": "in rete",
     "Akku gibt ab": "La batteria si scarica",
     "Arzttermin": "Medico",
-    "Lamellenstellung": "Lamelle"
+    "Lamellenstellung": "Lamelle",
+    "Breaking": "Cambiamento importante",
+    "● KI-Fehler": "● Errore IA"
   },
   "patterns": [
     [
@@ -4307,6 +4309,34 @@
       "Nuovo: {1} · IA: non verificato"
     ],
     [
+      "^Neu: (.+) · KI: Unkritisch$",
+      "Nuovo: {1} · IA: non critico"
+    ],
+    [
+      "^Neu: (.+) · KI: Handeln$",
+      "Nuovo: {1} · IA: agire"
+    ],
+    [
+      "^Neu: (.+) · KI: Breaking$",
+      "Nuovo: {1} · IA: cambiamento importante"
+    ],
+    [
+      "^Neu: (.+) · KI: Breaking Change$",
+      "Nuovo: {1} · IA: cambiamento importante"
+    ],
+    [
+      "^Neu: (.+) · KI: Braucht Aufmerksamkeit$",
+      "Nuovo: {1} · IA: da controllare"
+    ],
+    [
+      "^Neu: (.+) · KI: KI-Fehler$",
+      "Nuovo: {1} · IA: errore"
+    ],
+    [
+      "^Neu: (.+) · KI: (.+)$",
+      "Nuovo: {1} · IA: {2}"
+    ],
+    [
       "^Neu: (.+) · KI: Unklar$",
       "Nuovo: {1} · IA: incerto"
     ],
@@ -5289,6 +5319,18 @@
     [
       "^(.+) braucht Aufmerksamkeit$",
       "{1} richiede attenzione"
+    ],
+    [
+      "^KI: 1 Breaking Change$",
+      "IA: 1 cambiamento importante"
+    ],
+    [
+      "^KI: (\\d+) Breaking Changes$",
+      "IA: {1} cambiamenti importanti"
+    ],
+    [
+      "^KI: (\\d+) von (\\d+) geprüft$",
+      "IA: {1} di {2} verificati"
     ]
   ]
 }

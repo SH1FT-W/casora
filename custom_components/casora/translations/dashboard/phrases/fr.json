@@ -2951,7 +2951,9 @@
     "ins Netz": "vers le réseau",
     "Akku gibt ab": "La batterie se décharge",
     "Arzttermin": "Médecin",
-    "Lamellenstellung": "Lames"
+    "Lamellenstellung": "Lames",
+    "Breaking": "Changement majeur",
+    "● KI-Fehler": "● Erreur IA"
   },
   "patterns": [
     [
@@ -4307,6 +4309,34 @@
       "Nouveau : {1} · IA : non vérifié"
     ],
     [
+      "^Neu: (.+) · KI: Unkritisch$",
+      "Nouveau : {1} · IA : sans risque"
+    ],
+    [
+      "^Neu: (.+) · KI: Handeln$",
+      "Nouveau : {1} · IA : agir"
+    ],
+    [
+      "^Neu: (.+) · KI: Breaking$",
+      "Nouveau : {1} · IA : changement majeur"
+    ],
+    [
+      "^Neu: (.+) · KI: Breaking Change$",
+      "Nouveau : {1} · IA : changement majeur"
+    ],
+    [
+      "^Neu: (.+) · KI: Braucht Aufmerksamkeit$",
+      "Nouveau : {1} · IA : à vérifier"
+    ],
+    [
+      "^Neu: (.+) · KI: KI-Fehler$",
+      "Nouveau : {1} · IA : erreur"
+    ],
+    [
+      "^Neu: (.+) · KI: (.+)$",
+      "Nouveau : {1} · IA : {2}"
+    ],
+    [
       "^Neu: (.+) · KI: Unklar$",
       "Nouveau : {1} · IA : incertain"
     ],
@@ -5289,6 +5319,18 @@
     [
       "^(.+) braucht Aufmerksamkeit$",
       "{1} à vérifier"
+    ],
+    [
+      "^KI: 1 Breaking Change$",
+      "IA : 1 changement majeur"
+    ],
+    [
+      "^KI: (\\d+) Breaking Changes$",
+      "IA : {1} changements majeurs"
+    ],
+    [
+      "^KI: (\\d+) von (\\d+) geprüft$",
+      "IA : {1} sur {2} vérifiées"
     ]
   ]
 }

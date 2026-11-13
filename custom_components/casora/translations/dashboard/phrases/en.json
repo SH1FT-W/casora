@@ -2933,7 +2933,9 @@
     "ins Netz": "to the grid",
     "Akku gibt ab": "Battery discharging",
     "Arzttermin": "Doctor",
-    "Lamellenstellung": "Slats"
+    "Lamellenstellung": "Slats",
+    "Breaking": "Breaking change",
+    "● KI-Fehler": "● AI error"
   },
   "patterns": [
     [
@@ -4289,6 +4291,34 @@
       "New: {1} · AI: not checked"
     ],
     [
+      "^Neu: (.+) · KI: Unkritisch$",
+      "New: {1} · AI: uncritical"
+    ],
+    [
+      "^Neu: (.+) · KI: Handeln$",
+      "New: {1} · AI: act"
+    ],
+    [
+      "^Neu: (.+) · KI: Breaking$",
+      "New: {1} · AI: breaking change"
+    ],
+    [
+      "^Neu: (.+) · KI: Breaking Change$",
+      "New: {1} · AI: breaking change"
+    ],
+    [
+      "^Neu: (.+) · KI: Braucht Aufmerksamkeit$",
+      "New: {1} · AI: needs attention"
+    ],
+    [
+      "^Neu: (.+) · KI: KI-Fehler$",
+      "New: {1} · AI: error"
+    ],
+    [
+      "^Neu: (.+) · KI: (.+)$",
+      "New: {1} · AI: {2}"
+    ],
+    [
       "^Neu: (.+) · KI: Unklar$",
       "New: {1} · AI: unclear"
     ],
@@ -5271,6 +5301,18 @@
     [
       "^(.+) braucht Aufmerksamkeit$",
       "{1} needs attention"
+    ],
+    [
+      "^KI: 1 Breaking Change$",
+      "AI: 1 breaking change"
+    ],
+    [
+      "^KI: (\\d+) Breaking Changes$",
+      "AI: {1} breaking changes"
+    ],
+    [
+      "^KI: (\\d+) von (\\d+) geprüft$",
+      "AI: {1} of {2} checked"
     ]
   ]
 }

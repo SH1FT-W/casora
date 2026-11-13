@@ -2944,7 +2944,9 @@
     "ins Netz": "til nettet",
     "Akku gibt ab": "Batteriet lades ut",
     "Arzttermin": "Lege",
-    "Lamellenstellung": "Lameller"
+    "Lamellenstellung": "Lameller",
+    "Breaking": "Brytende endring",
+    "● KI-Fehler": "● KI-feil"
   },
   "patterns": [
     [
@@ -4300,6 +4302,34 @@
       "Ny: {1} · KI: ikke sjekket"
     ],
     [
+      "^Neu: (.+) · KI: Unkritisch$",
+      "Ny: {1} · KI: ukritisk"
+    ],
+    [
+      "^Neu: (.+) · KI: Handeln$",
+      "Ny: {1} · KI: ta grep"
+    ],
+    [
+      "^Neu: (.+) · KI: Breaking$",
+      "Ny: {1} · KI: brytende endring"
+    ],
+    [
+      "^Neu: (.+) · KI: Breaking Change$",
+      "Ny: {1} · KI: brytende endring"
+    ],
+    [
+      "^Neu: (.+) · KI: Braucht Aufmerksamkeit$",
+      "Ny: {1} · KI: krever oppmerksomhet"
+    ],
+    [
+      "^Neu: (.+) · KI: KI-Fehler$",
+      "Ny: {1} · KI: feil"
+    ],
+    [
+      "^Neu: (.+) · KI: (.+)$",
+      "Ny: {1} · KI: {2}"
+    ],
+    [
       "^Neu: (.+) · KI: Unklar$",
       "Ny: {1} · KI: uklart"
     ],
@@ -5282,6 +5312,18 @@
     [
       "^(.+) braucht Aufmerksamkeit$",
       "{1} trenger oppmerksomhet"
+    ],
+    [
+      "^KI: 1 Breaking Change$",
+      "KI: 1 brytende endring"
+    ],
+    [
+      "^KI: (\\d+) Breaking Changes$",
+      "KI: {1} brytende endringer"
+    ],
+    [
+      "^KI: (\\d+) von (\\d+) geprüft$",
+      "KI: {1} av {2} sjekket"
     ]
   ]
 }
