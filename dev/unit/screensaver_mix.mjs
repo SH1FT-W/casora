@@ -1,7 +1,7 @@
-// @deckt: custom_components/casora/scripts/local/46-screensaver.js#kindAt,pool,selected,has,cameras,monthGrid,dominant,lightRooms,lightsOn,lightState,html,context,vars
+// @deckt: custom_components/casora/scripts/local/46-screensaver.js#kindAt,pool,selected,has,cameras,monthGrid,dominant,html,context,vars
 // Screensavers (46-screensaver.js), the Hemma comparison of 13.11.2026: which kinds alternate („mix“, picked in the
 // Studio, none picked = all), kinds without data are skipped in the alternation (music only while something plays),
-// the two new kinds (cameras, month calendar), the light button and the cover colour.
+// the two new kinds (cameras, month calendar) and the cover colour.
 //   node dev/unit/screensaver_mix.mjs
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -99,32 +99,14 @@ assert.deepEqual(J(S.calendars(hc, ['calendar.gone'])), ['calendar.a', 'calendar
 assert.deepEqual(J(S.calendars(hc, [])), ['calendar.a', 'calendar.b', 'calendar.c']);
 assert.deepEqual(J(S.context({ hass: hc, now, kind: 'kalender', vars: { casora_screensaver_calendars: ['calendar.b'] }, events: [] }).cals), ['calendar.b']);
 
-// Light: the button only when the Studio turned it on, only on the calm ones, only with lights in the house.
-const lit = { states: { 'light.a': { state: 'on', attributes: { brightness: 128, rgb_color: [255, 180, 90] } }, 'light.b': { state: 'off', attributes: {} },
-  'light.g': { state: 'on', attributes: { entity_id: ['light.a', 'light.b'], brightness: 128 } } } };
-const lv = { casora_screensaver_light: true };
-assert.equal(S.context({ hass: lit, now, kind: 'ruhe', vars: {} }).light, null, 'off by default');
-assert.deepEqual(J(S.context({ hass: lit, now, kind: 'ruhe', vars: lv }).light), { on: 1 }, 'on: the count of lights that are on (a group of counted members once)');
-assert.equal(S.context({ hass: lit, now, kind: 'woche', vars: lv }).light, null, 'not on the busy ones');
-assert.equal(S.context({ hass: { states: {} }, now, kind: 'wort', vars: lv }).light, null, 'no lights: no button');
-for (const k of S.LIGHT_KINDS) {
-  h = S.html(k, S.context({ hass: lit, now, kind: k, vars: lv, sun: { rise, set }, bell: [], people: [] }));
-  assert.ok(/data-sv-act="light"/.test(h) && /cs-lon/.test(h) && /1 an/.test(h), 'light button on ' + k);
+// No light control in the screensaver (owner, 13.11.2026: removed again): no button, even with the old setting.
+const lit = { states: { 'light.a': { state: 'on', attributes: { brightness: 128 } } } };
+for (const k of ['ruhe', 'wort', 'himmel']) {
+  h = S.html(k, S.context({ hass: lit, now, kind: k, vars: { casora_screensaver_light: true }, sun: { rise, set }, bell: [], people: [] }));
+  assert.ok(!/data-sv-act="light"|cs-lb/.test(h), 'no light button on ' + k);
 }
-assert.ok(!/data-sv-act="light"/.test(S.html('ruhe', S.context({ hass: lit, now, kind: 'ruhe', vars: {}, bell: [], people: [] }))));
-assert.deepEqual(J(S.lightsOn(lit)), ['light.a'], 'all that are on: the group only through its member');
-assert.deepEqual(J(S.lightState(lit, ['light.a', 'light.b'])), { on: 1, pct: 50, color: 'rgb(255,180,90)' });
-assert.deepEqual(J(S.lightState(lit, ['light.b'])), { on: 0, pct: 0, color: '#FFD58A' });
-// The rooms' lights from the Studio: the light group, else the single lights; rooms without light are left out.
-const rcfg = { views: [{ title: 'Wohnen', cards: [{ variables: { light_group_entity: 'light.g', light_entity_1: 'light.a' } }] },
-  { title: 'Bad', cards: [{ variables: { light_entity_1: 'light.a', light_entity_2: 'light.b' } }] },
-  { title: 'Flur', cards: [{ variables: {} }] }, { title: 'Doppelt', cards: [{ variables: { light_group_entity: 'light.g' } }] }] };
-assert.deepEqual(J(S.lightRooms(rcfg)), [{ name: 'Wohnen', ids: ['light.g'] }, { name: 'Bad', ids: ['light.a', 'light.b'] }]);
-// The name as the room menu shows it: the view's title is often only its path.
-const ncfg = { views: [{ path: 'living-room', title: 'living-room', cards: [{ type: 'x', variables: { light_group_entity: 'light.g' }, routes: [{ url: '/d/living-room', label: 'Living Room' }] }] },
-  { path: 'office', cards: [{ variables: { light_entity_1: 'light.a' } }] }] };
-assert.deepEqual(J(S.lightRooms(ncfg).map((r) => r.name)), ['Living Room', 'office']);
-assert.equal(J(S.lightState({ states: { 'light.w': { state: 'on', attributes: { brightness: 255, rgb_color: [255, 255, 255] } } } }, ['light.w'])).color, '#FFD58A', 'white shows warm white');
+assert.equal(S.lightRooms, undefined, 'no light helpers left');
+assert.ok(!/casora_screensaver_light|openLight|lightbulb/.test(read('custom_components/casora/scripts/local/46-screensaver.js')), 'no light code left');
 
 // Cover colour: off by default; on, the calm coloured ones take a wash of the playing cover, never the pictures.
 const px = (rgb, n) => Array.from({ length: n }, () => [...rgb, 255]).flat();
@@ -148,8 +130,6 @@ assert.equal(S.sample(ctx({ vars: { casora_screensaver_tint: true }, media: null
 assert.equal(S.sample(ctx({ vars: {}, media: null })).tint, null);
 
 // The new settings are dashboard settings like the others.
-const vcfg = { views: [{ cards: [{ variables: { casora_screensaver_mix: ['wort'], casora_screensaver_cameras: ['camera.a'], casora_screensaver_calendars: ['calendar.a'], casora_screensaver_light: true, casora_screensaver_tint: false } }] }] };
-assert.deepEqual(J(S.vars(vcfg)), { casora_screensaver_mix: ['wort'], casora_screensaver_cameras: ['camera.a'], casora_screensaver_calendars: ['calendar.a'], casora_screensaver_light: true, casora_screensaver_tint: false });
-// The light's text: dark on a warm white, light on a deep blue.
-assert.deepEqual([S.inkOn('#FFD58A'), S.inkOn('rgb(30,40,160)'), S.inkOn('rgb(255,180,90)')], ['#2A2520', '#F6EFE6', '#2A2520']);
+const vcfg = { views: [{ cards: [{ variables: { casora_screensaver_mix: ['wort'], casora_screensaver_cameras: ['camera.a'], casora_screensaver_calendars: ['calendar.a'], casora_screensaver_tint: false } }] }] };
+assert.deepEqual(J(S.vars(vcfg)), { casora_screensaver_mix: ['wort'], casora_screensaver_cameras: ['camera.a'], casora_screensaver_calendars: ['calendar.a'], casora_screensaver_tint: false });
 console.log('ok screensaver_mix');

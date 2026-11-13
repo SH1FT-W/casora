@@ -21,8 +21,7 @@
 //   window._casoraSaver.kindAt(kind, now, pool) → the kind on show
 //   window._casoraSaver.canStart() / start()   → start by hand (the dashboard's ⋯ menu), only where one may start
 // Studio settings beside the three above: casora_screensaver_mix (kinds that alternate, none = all),
-// casora_screensaver_cameras / _calendars (none = all), casora_screensaver_light (light button on the calm ones),
-// casora_screensaver_tint (the playing cover's colour as a wash).
+// casora_screensaver_cameras / _calendars (none = all), casora_screensaver_tint (the playing cover's colour as a wash).
 (function () {
   if (window._casoraSaver) return;
   var S = window._casoraSaver = {};
@@ -467,65 +466,6 @@
     return null;
   };
 
-  // ── Light ────────────────────────────────────────────────────────────────
-  // The rooms' names as the room menu shows them (its routes: url → label); a view's title is often its path.
-  S.viewNames = function (cfg) {
-    var out = {};
-    var walk = function (o, d) {
-      if (!o || typeof o !== 'object' || d > 12) return;
-      if (Array.isArray(o.routes)) o.routes.forEach(function (r) {
-        var seg = r && typeof r.url === 'string' ? r.url.split('?')[0].split('/').filter(Boolean).pop() : '';
-        if (seg && r.label && !out[seg]) out[seg] = String(r.label);
-      });
-      Object.keys(o).forEach(function (k) { if (o[k] && typeof o[k] === 'object') walk(o[k], d + 1); });
-    };
-    walk(cfg, 0);
-    return out;
-  };
-  // Lights of the dashboard's rooms, from the Studio: the room's light group, else its single lights. [{ name, ids }]
-  S.lightRooms = function (cfg) {
-    var out = [], seen = {}, names = S.viewNames(cfg);
-    ((cfg && cfg.views) || []).forEach(function (v) {
-      var vars = ((((v.cards || [])[0]) || {}).variables) || {}, ids = [];
-      if (vars.light_group_entity) ids = [String(vars.light_group_entity)];
-      else for (var i = 1; i <= 10; i++) if (vars['light_entity_' + i]) ids.push(String(vars['light_entity_' + i]));
-      ids = ids.filter(function (id) { return id.indexOf('light.') === 0; });
-      var key = ids.join(',');
-      if (!ids.length || seen[key]) return;
-      seen[key] = 1;
-      out.push({ name: String(names[v.path] || v.title || vars.title || v.path || ''), ids: ids });
-    });
-    return out;
-  };
-  // Every light that is on (not hidden; groups only where none of their members counts by itself).
-  S.lightsOn = function (hass) {
-    var S0 = (hass && hass.states) || {}, R = (hass && hass.entities) || {};
-    var on = Object.keys(S0).filter(function (id) { return id.indexOf('light.') === 0 && S0[id].state === 'on' && !(R[id] && (R[id].hidden || R[id].disabled_by)); });
-    return on.filter(function (id) {
-      var m = (S0[id].attributes || {}).entity_id;
-      return !(Array.isArray(m) && m.some(function (x) { return on.indexOf(x) > -1; }));
-    });
-  };
-  // What a set of lights shows: { on, pct (mean brightness of those on), color }.
-  S.lightState = function (hass, ids) {
-    var S0 = (hass && hass.states) || {}, on = 0, sum = 0, color = null;
-    ids.forEach(function (id) {
-      var st = S0[id];
-      if (!st || st.state !== 'on') return;
-      var a = st.attributes || {}, b = Number(a.brightness);
-      on++; sum += isFinite(b) ? b / 255 * 100 : 100;
-      // A white light shows warm white (pure white would glare over the whole screen at night).
-      if (!color && Array.isArray(a.rgb_color) && a.rgb_color.length === 3 && Math.min.apply(null, a.rgb_color) < 225) color = 'rgb(' + a.rgb_color.join(',') + ')';
-    });
-    return { on: on, pct: on ? Math.max(1, Math.round(sum / on)) : 0, color: color || '#FFD58A' };
-  };
-
-  // Text on a light's colour: dark on light colours, light on dark ones.
-  S.inkOn = function (color) {
-    var m = String(color || '').match(/\d+/g), c = m && m.length >= 3 ? m.slice(0, 3).map(Number) : String(color).charAt(0) === '#' ? hex(String(color)) : [255, 213, 138];
-    var l = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255;
-    return l > 0.55 ? '#2A2520' : '#F6EFE6';
-  };
   // ── What alternates ──────────────────────────────────────────────────────
   var truthy = function (v) { return v === true || v === 'true' || v === 1 || v === '1'; };
   S.on = truthy;
@@ -713,16 +653,6 @@
     // The cover's colour as a soft wash from the top left (over the ground, under the content).
     + '.cs-sv .cs-tint{position:absolute;inset:0;pointer-events:none;background:radial-gradient(130% 110% at 12% 0%, var(--cs-t) 0%, transparent 72%);opacity:.42;transition:opacity 2s ease;}'
     + '.cs-sv.cs-wort:not(.cs-dark) .cs-tint, .cs-sv.cs-kalender:not(.cs-dark) .cs-tint{opacity:.2;}'
-    // The light button: a pill with a round icon, pressed it gives way a little.
-    + '.cs-sv .cs-lb{display:inline-flex;align-items:center;gap:' + u(12) + ';border:0;font:inherit;color:inherit;cursor:pointer;text-align:left;'
-    +   'padding:' + u(8) + ' ' + u(22) + ' ' + u(8) + ' ' + u(8) + ';min-height:' + u(60) + ';border-radius:999px;background:rgba(255,255,255,.12);transition:transform .16s ease, background .2s ease;-webkit-tap-highlight-color:transparent;}'
-    + '.cs-sv .cs-lb:active{transform:scale(var(--casora-press-scale, .97));background:rgba(255,255,255,.2);}'
-    + '.cs-sv .cs-lb i{display:grid;place-items:center;width:' + u(44) + ';height:' + u(44) + ';border-radius:50%;background:rgba(255,255,255,.14);--mdc-icon-size:' + u(24) + ';flex:none;}'
-    + '.cs-sv .cs-lb ha-icon{display:flex;}.cs-sv .cs-lb.cs-lon i{background:#FFD58A;color:#2A2520;}'
-    + '.cs-sv .cs-lb span{font-size:' + u(18) + ';font-weight:700;line-height:1.15;}.cs-sv .cs-lb em{display:block;font-style:normal;font-size:' + u(14) + ';font-weight:600;opacity:.64;}'
-    + '.cs-sv.cs-wort:not(.cs-dark) .cs-lb{background:rgba(42,37,32,.07);}.cs-sv.cs-wort:not(.cs-dark) .cs-lb i{background:rgba(42,37,32,.08);}.cs-sv.cs-wort:not(.cs-dark) .cs-lb.cs-lon i{background:#FFD58A;}'
-    + '.cs-sv .cs-wx .cs-lb{margin-top:' + u(18) + ';}.cs-sv .cs-left .cs-lb{margin-top:' + u(28) + ';align-self:flex-start;}'
-    + '.cs-sv .cs-lbw{position:absolute;right:' + u(64) + ';top:' + u(56) + ';}'
     // Narrow boxes (portrait tablet): the big time gives way.
     + '@container (aspect-ratio < 1){.cs-sv .cs-top{flex-direction:column;}.cs-sv .cs-wx{text-align:left;padding-top:0;}.cs-sv .cs-wx .cs-t{justify-content:flex-start;}'
     + '.cs-sv .cs-top .cs-time{font-size:' + u(150) + ';}.cs-sv .cs-words{font-size:' + u(104) + ';}.cs-sv .sv-bar{flex-direction:column;align-items:flex-start;}.cs-sv .cs-name{text-align:left;}'
@@ -764,7 +694,7 @@
         : T('Noch {m} Min. Tageslicht'.replace('{m}', left));
       return '<div class="cs-bg" style="background:linear-gradient(180deg, ' + sky[0] + ' 0%, ' + sky[1] + ' 36%, ' + sky[2] + ' 74%, ' + sky[3] + ' 100%)"></div><div class="cs-in">'
         + '<div class="cs-top"><div><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div>'
-        + (wx || ctx.light ? '<div class="cs-wx">' + (wx ? '<div class="cs-t"><img src="' + esc(wx.icon) + '" alt="">' + (wx.temp != null ? wx.temp + '°' : '') + '</div><p>' + esc(wx.text) + '</p>' : '') + lightHtml(ctx) + '</div>' : '') + '</div>'
+        + (wx ? '<div class="cs-wx"><div class="cs-t"><img src="' + esc(wx.icon) + '" alt="">' + (wx.temp != null ? wx.temp + '°' : '') + '</div><p>' + esc(wx.text) + '</p></div>' : '') + '</div>'
         + (sun ? '<div class="cs-arc"><svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true">'
           + '<defs><radialGradient id="cs-glow"><stop offset="0" stop-color="#FFE9BF" stop-opacity=".95"/><stop offset=".32" stop-color="#FFD9A0" stop-opacity=".5"/><stop offset="1" stop-color="#FFD9A0" stop-opacity="0"/></radialGradient></defs>'
           + '<line x1="0" y1="' + H + '" x2="' + W + '" y2="' + H + '" stroke="rgba(255,255,255,.5)" stroke-width="2" vector-effect="non-scaling-stroke"/>'
@@ -793,8 +723,7 @@
       var wx = ctx.wx, lines = S.words(langOf(), ctx.now.getHours(), ctx.now.getMinutes());
       return '<div class="cs-in"><div class="cs-words" data-no-i18n>' + lines.map(function (l) { return '<span' + (l.acc ? ' class="cs-acc"' : '') + '>' + esc(l.t) + '</span>'; }).join('') + '</div>'
         + '<div class="cs-foot"><div><b>' + esc(timeText(ctx.now, ctx.hass)) + '</b> · ' + esc(dateText(ctx.now)) + '</div>'
-        + (wx && wx.temp != null ? '<div class="cs-fw"><img src="' + esc(wx.icon) + '" alt="">' + wx.temp + '°</div>' : '') + '</div>'
-        + (ctx.light ? '<div class="cs-lbw">' + lightHtml(ctx) + '</div>' : '') + '</div>';
+        + (wx && wx.temp != null ? '<div class="cs-fw"><img src="' + esc(wx.icon) + '" alt="">' + wx.temp + '°</div>' : '') + '</div></div>';
     },
   };
   var head = function (ctx, title, sub) {
@@ -963,7 +892,7 @@
       + '<div class="cs-say">' + esc(say) + '<small>' + esc(small) + '</small></div>'
       + (people.length ? '<div class="cs-ppl">' + people.map(function (p) {
         return '<div class="cs-p' + (p.home ? '' : ' cs-away') + '"><i data-no-i18n>' + esc(p.name.charAt(0).toUpperCase()) + '</i><span data-no-i18n>' + esc(p.name) + '</span></div>';
-      }).join('') + '</div>' : '') + lightHtml(ctx) + '</div>'
+      }).join('') + '</div>' : '') + '</div>'
       + (rows.length ? '<div class="cs-right">' + rows.map(function (r) {
         return '<div class="cs-it" style="--cs-c:' + TONE_C[r.tone] + '"><i></i><div><b>' + esc(r.label) + '</b>' + (r.sub ? '<span data-no-i18n>' + esc(r.sub) + '</span>' : '') + '</div></div>';
       }).join('') + '</div>' : '') + '</div>';
@@ -1019,15 +948,6 @@
     }
     return html + '</div></div>';
   };
-  // The light button of the calm screensavers (only when the Studio turned it on): opens the light over the whole screen.
-  var LIGHT_KINDS = ['ruhe', 'wort', 'himmel'];
-  S.LIGHT_KINDS = LIGHT_KINDS;
-  var lightHtml = function (ctx) {
-    var L = ctx.light;
-    if (!L) return '';
-    return '<button type="button" class="cs-lb' + (L.on ? ' cs-lon' : '') + '" data-sv-act="light"><i><ha-icon icon="mdi:' + (L.on ? 'lightbulb-on' : 'lightbulb-outline') + '"></ha-icon></i>'
-      + '<span>' + esc(T('Licht')) + '<em>' + esc(L.on ? T('{n} an'.replace('{n}', L.on)) : T('Alles aus')) + '</em></span></button>';
-  };
   // A soft wash in the colour of the playing cover over the screensavers that have a coloured ground (Studio switch).
   var TINT_KINDS = ['wort', 'wetter', 'linie', 'woche', 'energie', 'ruhe', 'kalender'];
   S.TINT_KINDS = TINT_KINDS;
@@ -1063,13 +983,8 @@
     var grid = kind === 'kalender' ? S.monthGrid(now, hass) : null;
     var events = o.events !== undefined ? o.events : !cals.length ? [] : grid ? S.events(hass, cals, grid.weeks * 7, grid.start) : S.events(hass, cals, 8);
     var media = o.media !== undefined ? o.media : need(['musik']) || (S.on(vars.casora_screensaver_tint) && TINT_KINDS.indexOf(kind) > -1) ? S.playing(hass) : null;
-    var light = null;
-    if (o.light !== undefined) light = o.light;
-    else if (S.on(vars.casora_screensaver_light) && LIGHT_KINDS.indexOf(kind) > -1 && Object.keys((hass && hass.states) || {}).some(function (id) { return id.indexOf('light.') === 0; })) {
-      light = { on: S.lightsOn(hass).length };
-    }
     var cams = o.cams !== undefined ? o.cams : need(['kameras']) ? S.cameras(hass, vars.casora_screensaver_cameras).map(function (c) { c.shot = S.shot(c, now); return c; }) : [];
-    return { now: now, hass: hass, vars: vars, dark: dark, sun: o.sun !== undefined ? o.sun : S.sunTimes(hass, now), cals: o.cals || cals, cams: cams, light: light,
+    return { now: now, hass: hass, vars: vars, dark: dark, sun: o.sun !== undefined ? o.sun : S.sunTimes(hass, now), cals: o.cals || cals, cams: cams,
       tint: o.tint !== undefined ? o.tint : S.on(vars.casora_screensaver_tint) && media && media.cover ? S.coverColor(media.cover) : null,
       wx: o.wx !== undefined ? o.wx : S.weather(hass, vars.weather_entity), rooms: o.rooms || S.rooms(o.config, hass, dark, { url: o.photoUrl, only: vars.casora_screensaver_photos }),
       // Asked for only when the screensaver on show needs it.
@@ -1160,7 +1075,7 @@
   // The settings of the dashboard: the first value found on a view's hero card.
   S.vars = function (cfg) {
     var out = {}, keys = ['casora_screensaver', 'casora_screensaver_kind', 'casora_screensaver_calendar', 'casora_screensaver_photos', 'casora_screensaver_mix',
-      'casora_screensaver_cameras', 'casora_screensaver_calendars', 'casora_screensaver_light', 'casora_screensaver_tint', 'weather_entity'];
+      'casora_screensaver_cameras', 'casora_screensaver_calendars', 'casora_screensaver_tint', 'weather_entity'];
     ((cfg && cfg.views) || []).forEach(function (v) {
       var vars = ((((v.cards || [])[0]) || {}).variables) || {};
       keys.forEach(function (k) { if ((out[k] == null || out[k] === '' || (Array.isArray(out[k]) && !out[k].length)) && vars[k] != null && vars[k] !== '') out[k] = vars[k]; });
@@ -1174,7 +1089,8 @@
   var FORCE = /[?&]casora_saver=1/.test(location.search), OFF = /[?&]casora_saver=0/.test(location.search);
   // The tablet navbar's own test, as „Return to Home when idle“ uses it.
   var TABLET = window.matchMedia ? window.matchMedia('(hover: none) and (pointer: coarse) and (min-width: 600px)') : null;
-  var lastAct = Date.now(), layer = null, live = null, rootEl = null, lookedAt = 0;
+  // byHand: started from the ⋯ menu; it stays without a start time until a touch.
+  var lastAct = Date.now(), layer = null, live = null, rootEl = null, lookedAt = 0, byHand = false;
   var bump = function () { lastAct = Date.now(); };
   ['pointerdown', 'touchstart', 'keydown', 'wheel', 'scroll'].forEach(function (t) { window.addEventListener(t, bump, { capture: true, passive: true }); });
   window.addEventListener('location-changed', bump, true);
@@ -1202,33 +1118,17 @@
     if (live) { live.destroy(); live = null; }
     layer.remove();
     layer = null;
+    byHand = false;
     bump();
   };
   S.hide = hide;
   var haptic = function (k) { if (typeof window.casoraHaptic === 'function') window.casoraHaptic(k); };
-  // Over the screensaver: the live picture of a camera, or the light. One at a time; it closes with a tap (camera) or
-  // after ten seconds without a touch (light).
+  // Over the screensaver: the live picture of a camera; a tap closes it.
   var LCSS = '.cs-sv-over{position:absolute;inset:0;z-index:2;color:#F6EFE6;font-family:var(--primary-font-family, var(--ha-font-family, system-ui, sans-serif));-webkit-user-select:none;user-select:none;}'
     + '.cs-sv-over *{box-sizing:border-box;}'
     + '.cs-sv-cam{background:#000;display:grid;place-items:center;cursor:pointer;}'
     + '.cs-sv-cam > *{width:100%;height:100%;object-fit:contain;display:block;}.cs-sv-cam ha-camera-stream{--video-max-height:100vh;}'
-    + '.cs-sv-cam .cs-sv-cn{position:absolute;left:24px;top:20px;width:auto;height:auto;font-size:17px;font-weight:700;padding:8px 16px;border-radius:999px;background:rgba(0,0,0,.45);}'
-    + '.cs-sv-light{background:#141210;overflow:hidden;touch-action:none;cursor:ns-resize;}'
-    + '.cs-sv-light .cs-sv-fill{position:absolute;left:0;right:0;bottom:0;background:var(--cs-lc);transition:height .12s ease, background .4s ease;}'
-    + '.cs-sv-light .cs-sv-top{position:absolute;left:24px;right:24px;top:22px;display:flex;align-items:center;gap:10px;}'
-    + '.cs-sv-light .cs-sv-rooms{flex:1;min-width:0;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;}'
-    + '.cs-sv-light .cs-sv-rooms::-webkit-scrollbar{display:none;}'
-    + '.cs-sv-light button{flex:none;border:0;font:inherit;cursor:pointer;color:inherit;-webkit-tap-highlight-color:transparent;transition:transform .16s ease, background .2s ease;}'
-    + '.cs-sv-light button:active{transform:scale(var(--casora-press-scale, .97));}'
-    + '.cs-sv-light .cs-sv-room{min-height:44px;padding:0 18px;border-radius:999px;background:rgba(20,18,16,.38);font-size:16px;font-weight:600;white-space:nowrap;}'
-    + '.cs-sv-light .cs-sv-room[aria-pressed="true"]{background:#F6EFE6;color:#2A2520;}'
-    + '.cs-sv-light .cs-sv-x{width:44px;height:44px;border-radius:50%;background:rgba(20,18,16,.38);display:grid;place-items:center;--mdc-icon-size:22px;}'
-    + '.cs-sv-light .cs-sv-mid{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;pointer-events:none;}'
-    // The same text a second time in the ink for the light's colour, cut to the filled part: legible on both sides.
-    + '.cs-sv-light .cs-sv-clip{position:absolute;inset:0;pointer-events:none;clip-path:inset(calc(100% - var(--cs-h, 0%)) 0 0 0);transition:clip-path .12s ease;color:var(--cs-ink, #2A2520);}'
-    + '.cs-sv-light .cs-sv-pct{font-size:min(22vmin, 180px);font-weight:500;letter-spacing:-.05em;line-height:1;font-variant-numeric:tabular-nums;}'
-    + '.cs-sv-light .cs-sv-name{font-size:22px;font-weight:700;margin-top:10px;}.cs-sv-light .cs-sv-say{font-size:16px;font-weight:600;opacity:.7;margin-top:6px;}'
-    ;
+    + '.cs-sv-cam .cs-sv-cn{position:absolute;left:24px;top:20px;width:auto;height:auto;font-size:17px;font-weight:700;padding:8px 16px;border-radius:999px;background:rgba(0,0,0,.45);}';
   var openCam = function (id) {
     var hass = hassOf(), st = hass && hass.states && hass.states[id];
     if (!st || !layer) return;
@@ -1262,104 +1162,6 @@
     layer.appendChild(box);
     haptic('light');
   };
-  // The light: the whole screen is the dimmer in the light's colour. Drag up or down dims, a tap switches On/Off. Which
-  // lights: the room picked at the top (the room's light group from the Studio), or all that are on.
-  var lightPick = null, lastOn = [];
-  var openLight = function (cfg) {
-    var hass0 = hassOf();
-    if (!hass0 || !layer) return;
-    var rooms = S.lightRooms(cfg);
-    var box = document.createElement('div');
-    box.className = 'cs-sv-over cs-sv-light';
-    box.setAttribute('data-sv-act', 'light-panel');
-    var midHtml = '<div class="cs-sv-mid"><div class="cs-sv-pct"></div><div class="cs-sv-name" data-no-i18n></div><div class="cs-sv-say"></div></div>';
-    box.innerHTML = '<div class="cs-sv-fill"></div>' + midHtml + '<div class="cs-sv-clip">' + midHtml + '</div>'
-      + '<div class="cs-sv-top"><div class="cs-sv-rooms"></div><button type="button" class="cs-sv-x" aria-label="' + esc(T('Schließen')) + '"><ha-icon icon="mdi:close"></ha-icon></button></div>';
-    var fill = box.querySelector('.cs-sv-fill');
-    var text = function (sel, v) { box.querySelectorAll(sel).forEach(function (x) { x.textContent = v; }); };
-    var bar = box.querySelector('.cs-sv-rooms');
-    // „all“ = every light that is on (and, once switched off here, those again).
-    if (!lightPick || (lightPick !== 'all' && !rooms.some(function (r) { return r.name === lightPick; }))) lightPick = S.lightsOn(hass0).length || !rooms.length ? 'all' : rooms[0].name;
-    var targets = function () {
-      if (lightPick === 'all') { var on = S.lightsOn(hassOf()); return on.length ? on : lastOn; }
-      var r = rooms.filter(function (x) { return x.name === lightPick; })[0];
-      return r ? r.ids : [];
-    };
-    var drag = null, shown = null, idle = 0;
-    var paint = function (pct, on) {
-      var st = S.lightState(hassOf(), targets());
-      if (pct == null) pct = st.pct;
-      if (on == null) on = st.on > 0;
-      shown = pct;
-      var h = (on ? Math.max(4, pct) : 0) + '%';
-      box.style.setProperty('--cs-lc', on ? st.color : '#3A3530');
-      box.style.setProperty('--cs-h', h);
-      box.style.setProperty('--cs-ink', S.inkOn(st.color));
-      fill.style.height = h;
-      text('.cs-sv-pct', on ? pct + ' %' : T('Aus'));
-      text('.cs-sv-name', lightPick === 'all' ? T('Alle, die an sind') : lightPick);
-      text('.cs-sv-say', !targets().length ? T('Kein Licht an') : T('Ziehen zum Dimmen, Tippen für An/Aus'));
-    };
-    var chips = function () {
-      bar.textContent = '';
-      [{ id: 'all', label: T('Alle, die an sind') }].concat(rooms.map(function (r) { return { id: r.name, label: r.name, raw: true }; })).forEach(function (o) {
-        var b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'cs-sv-room';
-        b.textContent = o.label;
-        if (o.raw) b.setAttribute('data-no-i18n', '');
-        b.setAttribute('aria-pressed', lightPick === o.id ? 'true' : 'false');
-        b.addEventListener('click', function (ev) { ev.stopPropagation(); lightPick = o.id; haptic('selection'); chips(); paint(); poke(); });
-        bar.appendChild(b);
-      });
-    };
-    var call = function (svc, data) {
-      var ids = targets(), h = hassOf();
-      if (!ids.length || !h) return;
-      if (svc === 'turn_off') lastOn = ids.slice();
-      h.callService('light', svc, Object.assign({ entity_id: ids }, data || {}));
-    };
-    var close = function () { clearTimeout(idle); clearInterval(tick); box.remove(); if (layer && layer._close === close) layer._close = null; };
-    var poke = function () { clearTimeout(idle); idle = setTimeout(close, 10000); };
-    var sent = 0;
-    box.addEventListener('pointerdown', function (ev) {
-      poke();
-      if (ev.target.closest && ev.target.closest('button')) return;
-      var st = S.lightState(hassOf(), targets());
-      drag = { y: ev.clientY, from: st.on ? st.pct : 0, moved: false, id: ev.pointerId, step: Math.round((st.on ? st.pct : 0) / 10) };
-      try { box.setPointerCapture(ev.pointerId); } catch (e) { /* older browsers */ }
-    });
-    box.addEventListener('pointermove', function (ev) {
-      if (!drag || ev.pointerId !== drag.id) return;
-      var dy = drag.y - ev.clientY;
-      if (!drag.moved && Math.abs(dy) < 8) return;
-      drag.moved = true;
-      poke();
-      var pct = Math.max(1, Math.min(100, Math.round(drag.from + dy / Math.max(200, box.clientHeight) * 130)));
-      paint(pct, true);
-      if (Math.round(pct / 10) !== drag.step) { drag.step = Math.round(pct / 10); haptic('selection'); }
-      if (Date.now() - sent > 300) { sent = Date.now(); call('turn_on', { brightness_pct: pct }); }
-    });
-    var up = function (ev) {
-      if (!drag || ev.pointerId !== drag.id) return;
-      var d = drag;
-      drag = null;
-      if (d.moved) { call('turn_on', { brightness_pct: shown }); haptic('light'); return; }
-      if (ev.type === 'pointercancel') return;
-      var st = S.lightState(hassOf(), targets());
-      haptic('medium');
-      if (st.on) { call('turn_off'); paint(st.pct, false); } else { call('turn_on'); paint(st.pct || 100, true); }
-    };
-    box.addEventListener('pointerup', up);
-    box.addEventListener('pointercancel', up);
-    box.querySelector('.cs-sv-x').addEventListener('click', function (ev) { ev.stopPropagation(); haptic('light'); close(); });
-    // The state as Home Assistant reports it back (not while a finger is on the screen).
-    var tick = setInterval(function () { if (!drag) paint(); }, 1000);
-    chips(); paint(); poke();
-    layer._close = close;
-    layer.appendChild(box);
-    haptic('light');
-  };
   var show = function (cfg) {
     if (layer) return;
     if (!document.getElementById('cs-sv-over-css')) {
@@ -1374,8 +1176,8 @@
     var stage = document.createElement('div');
     stage.style.cssText = 'position:absolute;inset:0;';
     layer.appendChild(stage);
-    // A touch only wakes the dashboard: it must not reach a tile underneath. A camera, the light button and what
-    // they open are the exception: they keep the screensaver.
+    // A touch only wakes the dashboard: it must not reach a tile underneath. A camera and its live picture are the
+    // exception: they keep the screensaver.
     var wake = function (ev) {
       var t = ev.composedPath ? ev.composedPath()[0] : ev.target;
       var act = t && t.closest ? t.closest('[data-sv-act]') : null;
@@ -1385,7 +1187,6 @@
         if (ev.type !== 'click') return;
         var what = act.getAttribute('data-sv-act');
         if (what === 'cam') openCam(act.getAttribute('data-cam'));
-        else if (what === 'light') openLight(config() || cfg);
         return;
       }
       ev.preventDefault(); ev.stopPropagation(); hide();
@@ -1398,20 +1199,18 @@
   };
   S.show = show;
   S.shown = function () { return !!layer; };
-  // Started by hand from the dashboard's ⋯ menu: only where a screensaver may start by itself (a tablet, the
-  // dashboard has one turned on).
+  // Started by hand from the dashboard's ⋯ menu: on a tablet, also without a start time (owner, 13.11.2026).
   S.canStart = function () {
     if (OFF || layer) return false;
-    var cfg = config();
-    return !!(cfg && S.minutes(S.vars(cfg).casora_screensaver) && (FORCE || (TABLET && TABLET.matches)));
+    return !!(config() && (FORCE || (TABLET && TABLET.matches)));
   };
-  S.start = function () { var cfg = config(); if (cfg && S.canStart()) show(cfg); };
+  S.start = function () { var cfg = config(); if (cfg && S.canStart()) { show(cfg); byHand = !!layer; } };
   setInterval(function () {
     if (OFF) return;
     var cfg = config();
     if (!cfg) { if (layer) hide(); return; }
     var mins = S.minutes(S.vars(cfg).casora_screensaver);
-    if (!mins || (!FORCE && !(TABLET && TABLET.matches))) { if (layer) hide(); bump(); return; }
+    if ((!mins && !byHand) || (!FORCE && !(TABLET && TABLET.matches))) { if (layer) hide(); bump(); return; }
     // Never over an open popup: someone is reading it.
     if (window.casoraPopup && window.casoraPopup.surface) { if (layer) hide(); bump(); return; }
     if (!layer && Date.now() - lastAct >= mins * 60000) show(cfg);

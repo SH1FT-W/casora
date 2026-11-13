@@ -84,10 +84,10 @@
     { id: "saver", label: "Screensaver", icon: "clock", tone: "set-saver",
       sub: "What a wall tablet shows when nobody touches it.",
       blocks: [
-        { k: "saver", sec: "General", sub: "chrome", keys: ["casora_screensaver", "casora_screensaver_kind", "casora_screensaver_light", "casora_screensaver_tint", "casora_screensaver_photos",
+        { k: "saver", sec: "General", sub: "chrome", keys: ["casora_screensaver", "casora_screensaver_kind", "casora_screensaver_tint", "casora_screensaver_photos",
           "casora_screensaver_mix", "casora_screensaver_cameras", "casora_screensaver_calendars"], saver: true,
           title: "Screensaver", plain: "Pick a screensaver and after how long it starts. The picture shows what it looks like.",
-          kw: "bildschirmschoner screensaver wandtablet tablet uhr wortuhr himmel landschaft fotos leerlauf idle ruhe kameras kalender abwechslung licht coverfarbe cameras calendar light" },
+          kw: "bildschirmschoner screensaver wandtablet tablet uhr wortuhr himmel landschaft fotos leerlauf idle ruhe kameras kalender abwechslung coverfarbe cameras calendar" },
       ] },
     { id: "phone", label: "Phone", icon: "iphone", tone: "set-live",
       sub: "The dashboard on the phone, and progress on the lock screen.",

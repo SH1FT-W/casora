@@ -2571,10 +2571,6 @@ const SECTIONS = [
       { key: "casora_screensaver_mix", sub: "chrome", label: "Screensavers that alternate", type: "text", auto: true, scope: "dashboard", when: () => false },
       { key: "casora_screensaver_cameras", sub: "chrome", label: "Screensaver cameras", type: "text", auto: true, scope: "dashboard", when: () => false },
       { key: "casora_screensaver_calendars", sub: "chrome", label: "Screensaver calendars", type: "text", auto: true, scope: "dashboard", when: () => false },
-      // A light button on the calm screensavers (house at rest, word clock, sky): the whole screen becomes the dimmer.
-      { key: "casora_screensaver_light", sub: "chrome", label: "Light from the screensaver", type: "bool", boolDefault: false, auto: true, scope: "dashboard",
-        when: (v) => v.casora_screensaver != null && v.casora_screensaver !== "",
-        hint: "A light button on House at rest, Word clock and Sky. The whole screen becomes the dimmer: drag to dim, tap for On/Off, pick a room at the top." },
       // While music plays, the screensavers with a coloured ground take a soft wash in the cover's colour.
       { key: "casora_screensaver_tint", sub: "chrome", label: "Cover colour", type: "bool", boolDefault: false, auto: true, scope: "dashboard",
         when: (v) => v.casora_screensaver != null && v.casora_screensaver !== "",
