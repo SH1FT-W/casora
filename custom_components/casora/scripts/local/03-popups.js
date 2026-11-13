@@ -4889,12 +4889,12 @@
   };
   // Lit lamps that support tone take it; fall back to two-tone lamps only when all are off.
   // onlyOn (the house popup never switches lamps on): no targets while no lamp is lit.
+  // Unreachable or missing lamps are left out, so one of them does not hide the row (maintainer, 13.11.2026).
   var whiteTargets = function (ids, states, onlyOn) {
     var lit = ids.filter(function (id) { return states[id] && states[id].state === 'on'; });
     if (lit.length) return lit.filter(function (id) { return hasCt(states[id]) || hasCol(states[id]); });
     if (onlyOn) return [];
-    return ids.every(function (id) { return states[id] && states[id].state === 'off'; })
-      ? ids.filter(function (id) { return hasCt(states[id]); }) : [];
+    return ids.filter(function (id) { return states[id] && states[id].state === 'off' && hasCt(states[id]); });
   };
   // A shared none entry ends a running effect on the tone targets where possible.
   var ctData = function (k, targets, states) {

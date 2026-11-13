@@ -88,6 +88,17 @@ assert.ok(!r.seg.some((s) => ['Warm', 'Neutral', 'Kalt'].includes(s.l)), 'a lit 
 states['light.bulb'].state = 'off';
 r = render(['light.spots', 'light.bulb']);
 assert.deepEqual(r.seg[0].tg, ['light.spots'], 'when every lamp is off, only the two-tone lamp is turned on');
+// Maintainer (13.11.2026): an unreachable lamp counts as off and is left out; the row stays (as before #183).
+const stripState = states['light.strip'].state;
+states['light.strip'].state = 'unavailable';
+r = render(['light.spots', 'light.strip']);
+assert.deepEqual(r.seg.slice(0, 3).map((s) => s.l), ['Warm', 'Neutral', 'Kalt'], 'all off, one lamp unavailable: the white-tone row stays');
+assert.deepEqual(r.seg[0].tg, ['light.spots'], 'all off, one lamp unavailable: the reachable two-tone lamp only');
+delete states['light.strip'];
+r = render(['light.spots', 'light.strip']);
+assert.deepEqual(r.seg[0].tg, ['light.spots'], 'all off, one lamp missing: the reachable two-tone lamp only');
+lamp('light.strip', ['color_temp', 'rgb'], { color_mode: 'color_temp', color_temp_kelvin: 2650 });
+states['light.strip'].state = stripState;
 // The house popup (v3, onlyOn) never switches the house on: no white-tone row while every lamp is off.
 const toneLabels = ['Warm', 'Neutral', 'Kalt'];
 const houseStage = (ids) => {
