@@ -84,6 +84,20 @@ assert.equal(S.kindAt('quatsch', new Date()), 'himmel', 'unknown kind: the first
 assert.ok(S.KINDS.map((k) => k.id).includes(S.kindAt('mix', new Date())));
 let h = S.html('himmel', ctx());
 assert.ok(/16:42/.test(h) && /11°/.test(h) && /cs-sun/.test(h) && /07:22/.test(h) && /17:05/.test(h) && /Noch 23 Min\. Tageslicht/.test(h), 'sky: time, weather, sun on its path, rise and set');
+// The big clock as the dashboard's clock (#191): the HA user's time format, else the dashboard language.
+const clockOf = (time_format, lang) => {
+  win.casoraLocale = () => lang;
+  const out = S.html('himmel', S.context({ hass: { ...hass, locale: { time_format } }, now: new Date('2026-11-10T16:42:00'), sun: null, rooms: [] }));
+  delete win.casoraLocale;
+  return (out.match(/class="cs-time">([^<]*)</) || [])[1];
+};
+assert.equal(clockOf('language', 'en-US'), '4:42', 'English, no own format: 12 hours like the top bar');
+assert.equal(clockOf('system', 'en-US'), '4:42', 'format "system": the language decides');
+assert.equal(clockOf('language', 'de-DE'), '16:42');
+assert.equal(clockOf('24', 'en-US'), '16:42', 'own 24-hour format wins');
+assert.equal(clockOf('12', 'de-DE'), '4:42', 'own 12-hour format wins');
+assert.ok(/class="cs-time">4:42</.test(S.html('himmel', S.context({ hass: { ...hass, locale: { time_format: 'language', language: 'en' } }, now: new Date('2026-11-10T16:42:00'), sun: null, rooms: [] }))),
+  'the HA user language first, as the dashboard clock (use_12h in the templates)');
 h = S.html('himmel', ctx({ now: new Date('2026-11-10T22:00:00') }));
 assert.ok(!/cs-sun/.test(h) && /Nacht/.test(h), 'sky at night: no sun');
 h = S.html('himmel', ctx({ sun: null, wx: null }));
