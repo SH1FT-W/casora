@@ -2,7 +2,7 @@
 // Template casora_calendar (['casora_entity','casora_popup_calendar']) only calls
 // window._casoraCalendar.tile()/popup()/sec(). Calendars come from
 // variables.calendars ([{ entity, name, color, tile }]), else window.casoraCalendars (Studio pick or all that count).
-// Tile: next event from the calendar states (no fetch). Popup
+// Tile and popup share the fetched event cache; states cover loading/errors. Popup
 // (info style): hero with today's date, left the month with dots and the
 // calendar legend (tap = show/hide), right the chosen day and
 // „Demnächst“. Events via REST calendars/…, kept for 5 min.
@@ -62,9 +62,11 @@
     });
   };
 
-  /* Nächster Termin aus den Kalender-Zuständen (message/start_time/all_day). */
+  // HA states expose only one event per calendar; use the shared API cache when ready.
   K.next = function (states, variables) {
     var best = null, now = new Date();
+    var ha = document.querySelector('home-assistant');
+    var key = K.load(ha && ha.hass, variables);
     var priority = function (ev) {
       if (!ev.allDay && ev.start >= now && day0(ev.start).getTime() === day0(now).getTime()) return 0;
       if (ev.allDay && ev.start <= now && ev.end > now) return 1;
@@ -72,13 +74,23 @@
     };
     K.cals(variables).forEach(function (c) {
       if (c.tile === false) return;
+      var consider = function (ev) {
+        if (!K.allowsTitle(ev.name) || isNaN(ev.start) || ev.end <= now) return;
+        if (!best || priority(ev) < priority(best) || (priority(ev) === priority(best) && ev.start < best.start)) best = ev;
+      };
+      if (key && K.key === key && K.ev !== null && !(K.failed || {})[c.entity]) {
+        K.ev.forEach(function (ev) {
+          if (ev.cal !== c.entity) return;
+          consider(Object.assign({}, ev, { cal: c, on: ev.start <= now && ev.end > now }));
+        });
+        return;
+      }
       var s = states[c.entity], a = s && s.attributes;
       if (!a || !a.message || !a.start_time || !K.allowsTitle(a.message)) return;
       var st = new Date(String(a.start_time).replace(' ', 'T')), en = new Date(String(a.end_time || a.start_time).replace(' ', 'T'));
       if (isNaN(st)) return;
       var ev = { name: a.message, start: st, end: en, allDay: !!a.all_day, on: s.state === 'on', cal: c };
-      if (!ev.on && en < now) return;
-      if (!best || priority(ev) < priority(best) || (priority(ev) === priority(best) && st < best.start)) best = ev;
+      consider(ev);
     });
     return best;
   };
@@ -134,10 +146,19 @@
     if (!K.month) K.month = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
     var today = day0(new Date()), gs = gridStart(K.month), ws = weekStart(today);
     var s = gs < ws ? gs : ws, e0 = addD(gs, 42), e1 = addD(today, 32), e = e0 > e1 ? e0 : e1;
-    var cals = K.cals(variables), key = ymd(s) + '|' + ymd(e) + '|' + cals.map(function (c) { return c.entity; }).join(',');
-    if (K.busy || !hass || !hass.callApi) return;
-    if (!force && K.key === key && Date.now() - K.ts < 300000) return;
+    var cals = K.cals(variables), key = ymd(s) + '|' + ymd(e) + '|' + cals.map(function (c) {
+      var state = hass && hass.states && hass.states[c.entity];
+      return c.entity + ':' + (state ? JSON.stringify([state.state, state.last_updated, state.attributes]) : '');
+    }).join(',');
+    if (!hass || !hass.callApi) return;
+    if (K.busy) {
+      K.pending = K.loadingKey !== key ? [hass, variables, force] : null;
+      return key;
+    }
+    if (!force && K.key === key && Date.now() - K.ts < 300000) return key;
     K.busy = true;
+    K.loadingKey = key;
+    var failed = {};
     var q = '?start=' + encodeURIComponent(s.toISOString()) + '&end=' + encodeURIComponent(e.toISOString());
     Promise.all(cals.map(function (c) {
       return hass.callApi('GET', 'calendars/' + c.entity + q).then(function (r) {
@@ -148,12 +169,18 @@
           if (all && en <= st) en = addD(st, 1);
           return { name: ev.summary || '', loc: ev.location || '', start: st, end: en, allDay: all, cal: c.entity };
         });
-      }).catch(function () { return []; });
+      }).catch(function () { failed[c.entity] = true; return []; });
     })).then(function (lists) {
       K.ev = [].concat.apply([], lists).sort(function (a, b) { return (a.start - b.start) || (b.allDay - a.allDay); });
-      K.key = key; K.ts = Date.now(); K.err = false;
+      K.key = key; K.ts = Date.now(); K.failed = failed; K.err = Object.keys(failed).length > 0;
     }).catch(function () { K.err = true; })
-      .then(function () { K.busy = false; K.repaint(); });
+      .then(function () {
+        K.busy = false;
+        var pending = K.pending; K.pending = null;
+        if (pending) K.load.apply(null, pending);
+        K.repaint();
+      });
+    return key;
   };
   /* Termine eines Tages (mehrtägige ganztägige auf jedem Tag). */
   var onDay = function (d) {
@@ -171,6 +198,10 @@
   K.repaint = function () {
     var ha = document.querySelector('home-assistant');
     if (ha && ha.hass) K.w.hass = ha.hass;
+    find(ha && ha.shadowRoot, 'button-card').forEach(function (el) {
+      var c = el._config;
+      if (c && typeof c.state_display === 'string' && c.state_display.indexOf('_casoraCalendar') !== -1 && window.casoraKick) window.casoraKick(el);
+    });
     ['month', 'week', 'day', 'up', 'hero', 'head', 'wmonth', 'wday', 'wtoday', 'wpick'].forEach(function (k) {
       find(ha && ha.shadowRoot, '.hcal-' + k).forEach(function (n) { n.innerHTML = (window.casoraTr || function (x) { return x; })(K.html(k, K._vars)); });
     });
