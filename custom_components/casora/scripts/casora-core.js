@@ -101,6 +101,20 @@
     wrap('_buildName', function (cfg, cs) { return (cs && cs.name) || cfg.name; });
     wrap('_buildLabel', function (cfg, cs) { return (cs && cs.label) || cfg.label; });
     wrap('_buildStateString', null);
+    // button-card bumps _updateTimerMS on every reconnect, which redraws the whole card although nothing changed.
+    // Rows, overlays and sorting move tiles around the DOM, so a load drew each tile about twice (≈40 % of all
+    // draws on the desktop). A Casora card without update_timer skips that draw when it was drawn in the last 30 s;
+    // a change of hass or config redraws as before (it arrives in the same batch).
+    var should = P.shouldUpdate;
+    if (typeof should === 'function') {
+      P.shouldUpdate = function (ch) {
+        if (ch && ch.size === 1 && ch.has('_updateTimerMS') && this.hasUpdated && this._config && !this._config.update_timer
+          && Date.now() - (this.__casoraDrawnAt || 0) < 30000 && casoraCard(this._config)) return false;
+        var go = should.call(this, ch);
+        if (go) this.__casoraDrawnAt = Date.now();
+        return go;
+      };
+    }
   });
 })();
 
