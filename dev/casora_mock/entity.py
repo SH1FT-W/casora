@@ -151,6 +151,7 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
     from homeassistant.components.device_tracker import SourceType, TrackerEntity
     from homeassistant.components.event import EventEntity
     from homeassistant.components.sensor import SensorEntity
+    from homeassistant.components.text import TextEntity
     from homeassistant.components.time import TimeEntity
     from homeassistant.components.update import UpdateEntity
 
@@ -789,6 +790,15 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
     class MDate(MockEntity, DateEntity):
         pass
 
+    # Free text (Tumble's note on a cycle): the store's state is the value, setting it writes it back.
+    class MText(MockEntity, TextEntity):
+        @property
+        def native_value(self) -> str | None:
+            return None if self.s in ("unknown", "unavailable") else self.s
+
+        async def async_set_value(self, value: str) -> None:
+            self.put(value)
+
     # Every tracker of the test house is TrackerEntity (category and attributes are the same for scanners);
     # source_type from the store, like the GPS tracker of Tractive.
     class MTracker(MockEntity, TrackerEntity):
@@ -830,14 +840,14 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
         "update": MUpdate,
         # display only, no services
         "sensor": MSensor, "binary_sensor": MBinarySensor, "device_tracker": MTracker,
-        "event": MEvent, "time": MTime, "date": MDate,
+        "event": MEvent, "time": MTime, "date": MDate, "text": MText,
     }
 
 
 PLATFORMS = [
     "light", "switch", "siren", "remote", "fan", "cover", "lock", "climate", "media_player",
     "vacuum", "lawn_mower", "humidifier", "button", "select", "number", "alarm_control_panel", "scene", "camera", "todo", "image",
-    "calendar", "weather", "sensor", "binary_sensor", "device_tracker", "update", "event", "time", "date",
+    "calendar", "weather", "sensor", "binary_sensor", "device_tracker", "update", "event", "time", "date", "text",
 ]
 
 

@@ -1793,7 +1793,7 @@
       maintdue: F.maintdue || null, profiles: F.profiles || [], idos1: F.idos1 || null, idos2: F.idos2 || null,
       twin1: F.twin1 || null, twin2: F.twin2 || null,
       /* Tumble: care tasks [task, sensor, button], the last cycle's sensors, its own energy total (only the cycles). */
-      tcare: F.tcare || [], lastEnd: F.lastEnd || null, lastDur: F.lastDur || null, lastKwh: F.lastKwh || null,
+      tcare: F.tcare || [], lastEnd: F.lastEnd || null, lastDur: F.lastDur || null, lastKwh: F.lastKwh || null, note: F.note || null,
       tenergy: src && src.source === 'tumble' ? F.energy || null : null,
       plug: plug,
       power: (plug && onDev(plug, null, 'sensor', 'W')) || plugF.power || F.power || null,
@@ -1806,7 +1806,7 @@
   L.watch = function (c) {
     return [c.st, c.program, c.phase, c.remaining, c.progress, c.elapsed, c.total, c.count, c.running, c.select,
       c.pause, c.resume, c.force, c.stop, c.unload, c.door, c.suggest, c.plug, c.power, c.volt, c.amp, c.energy, c.lock,
-      c.maintdue, c.idos1, c.idos2, c.twin1, c.twin2, c.lastEnd, c.lastDur, c.lastKwh, c.tenergy].concat(c.profiles || [])
+      c.maintdue, c.idos1, c.idos2, c.twin1, c.twin2, c.lastEnd, c.lastDur, c.lastKwh, c.tenergy, c.note].concat(c.profiles || [])
       .concat((c.tcare || []).map(function (x) { return x[1]; }))
       .filter(Boolean);
   };
@@ -2189,7 +2189,10 @@
       var phn = phaseOf(c, states);
       var endTxt = remM != null ? 'Fertig gegen ' + clock(new Date(Date.now() + remM * 60000)) + ' Uhr' : null;
       if (pct == null && remM != null) rows.push({ icon: 'mdi:timer-sand', iconTone: 'accent', label: 'Restzeit', sub: endTxt, value: dur(remM) });
-      if (!SF) rows.push({ icon: mIcon, iconTone: 'accent', label: 'Programm',
+      /* Tumble: the user's note on the cycle is its programme line (only when there is one, in every layout). */
+      var noteR = c.source === 'tumble' ? str(states, c.note) : null;
+      if (noteR) rows.push({ icon: mIcon, iconTone: 'accent', label: 'Programm', value: noteR });
+      else if (!SF) rows.push({ icon: mIcon, iconTone: 'accent', label: 'Programm',
         value: pr || (c.source === 'washdata' ? 'Wird erkannt …' : '—') });
       if (phn && !SF) rows.push({ icon: c.dryer ? 'mdi:weather-windy' : 'mdi:water-sync', iconTone: 'accent', label: 'Phase', value: phn });
       if (el != null) rows.push({ icon: 'mdi:timer-outline', iconTone: 'accent', label: 'Läuft seit',
@@ -2259,8 +2262,10 @@
       var tEnd = c.lastEnd && states[c.lastEnd] ? Date.parse(states[c.lastEnd].state) : NaN;
       var tDur = num(states, c.lastDur), tKwh = num(states, c.lastKwh);
       if (isNaN(tEnd) && tDur == null) return '';
-      var rowsTL = [{ icon: mIcon, iconTone: DIM, label: 'Fertig',
-        sub: isNaN(tEnd) ? null : day(new Date(tEnd)) + ', ' + clock(new Date(tEnd)) + ' Uhr', value: tDur != null ? dur(tDur) : null }];
+      /* The note of the cycle just done, as long as Tumble keeps it (30 min after the end). */
+      var noteL = str(states, c.note);
+      var rowsTL = (noteL ? [{ icon: 'mdi:tshirt-crew-outline', iconTone: DIM, label: 'Programm', value: noteL }] : []).concat([{ icon: mIcon, iconTone: DIM, label: 'Fertig',
+        sub: isNaN(tEnd) ? null : day(new Date(tEnd)) + ', ' + clock(new Date(tEnd)) + ' Uhr', value: tDur != null ? dur(tDur) : null }]);
       if (tKwh != null && tKwh > 0) rowsTL.push({ icon: 'mdi:lightning-bolt-outline', iconTone: DIM, label: 'Verbrauch',
         sub: c.price != null ? eur(tKwh * c.price) : null, value: kwh(tKwh) });
       return UI.group(rowsTL, 'Letzter Durchgang');

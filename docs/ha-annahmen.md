@@ -205,7 +205,7 @@ Sensoren `status` (enum `off`/`running`/`finished`/`anti_crease`; `finished` und
 zum Knopf `unload`), `cycle_start`, `last_end` (Zeitstempel), `last_duration` (min), `last_energy`, `total_energy`
 (kWh), `cycle_count` (beide `total_increasing`, daraus die Monatszahlen per Recorder-Statistik), je Pflegeaufgabe
 `maint_<task>` (Läufe seit, Attribute `every_cycles`, `every_days`, `last_done`, `due`) mit Knopf `maint_<task>_done`;
-Binärsensoren `running`, `maintenance_due` (Attribut `tasks`). Aufgaben: Waschmaschine `descale`, `filter_clean`,
+Binärsensoren `running`, `maintenance_due` (Attribut `tasks`). Text `note` (Notiz zum Lauf, z. B. das Programm: der laufende oder nächste, 30 Min. nach dem Ende noch der letzte; Casora zeigt sie als Programmzeile, leer = keine Zeile). Aufgaben: Waschmaschine `descale`, `filter_clean`,
 `drum_clean`, Trockner `lint_filter`, `condenser_clean`. Die Geräteart steht im Geräte-Modell (`washer`/`dryer`),
 sonst entscheiden die Pflege-Schlüssel; nie der Name (die Integration heißt „tumble“, ein Trockner-Wort). Keine
 Restzeit, kein Programm, keine Phase. Ändern sich Tumbles Schlüssel, die Erkennung nachziehen: `00-finder.js`
