@@ -24,6 +24,8 @@
 // 01.11.2026 (owner): the car's tank/battery level stands in the dial only (ring + fact, orange at 15 % and below), the
 // printer's percent only as the ring, its text „Fertig um HH:MM Uhr“ (r446).
 import { open, casoraDashboards, dashboard, cards, fakeStates, check, need, finish } from './lib.mjs';
+// Since 26.11.27 the test house also has a Tumble washer and dryer (no remaining time, no WashData entry); this
+// test is about the other laundry sources and skips their tiles (entities sensor.tumble_…).
 
 const all = await casoraDashboards();
 const has = (d, t) => JSON.stringify(d.config).includes('"' + t + '"');
@@ -35,7 +37,7 @@ const TPL = { dish: 'casora_geschirrspueler', wash: 'casora_waschmaschine', dry:
 
 // Entitäten der Kachel über die Module auflösen (keine festen IDs), dann „läuft“ nur im Browser unterschieben.
 const runningPatch = (pg, tpl) => pg.evaluate((t) => {
-  const b = window.__pierce('button-card').find((x) => [].concat((x._config || {}).template || []).includes(t) && x.getBoundingClientRect().width > 20);
+  const b = window.__pierce('button-card').find((x) => [].concat((x._config || {}).template || []).includes(t) && x.getBoundingClientRect().width > 20 && !/^sensor\.tumble_/.test(String((x._config || {}).entity || '')));
   if (!b) return null;
   const h = document.querySelector('home-assistant').hass;
   const cfg = b._config || {};
@@ -64,9 +66,10 @@ const runningPatch = (pg, tpl) => pg.evaluate((t) => {
 }, tpl);
 
 const findTile = async (pg, tpl) => {
-  await pg.evaluate((t) => { const b = window.__pierce('button-card').find((x) => [].concat((x._config || {}).template || []).includes(t)); b && b.scrollIntoView({ block: 'center' }); }, tpl);
+  await pg.evaluate((t) => { const b = window.__pierce('button-card').find((x) => [].concat((x._config || {}).template || []).includes(t) && !/^sensor\.tumble_/.test(String((x._config || {}).entity || ''))); b && b.scrollIntoView({ block: 'center' }); }, tpl);
   await pg.waitForTimeout(400);
-  return (await cards(pg, tpl))[0] || null;
+  const skip = await pg.evaluate(() => window.__pierce('button-card').map((b, i) => (/^sensor\.tumble_/.test(String((b._config || {}).entity || '')) ? i : -1)).filter((i) => i >= 0));
+  return (await cards(pg, tpl)).filter((c) => !skip.includes(c.i))[0] || null;
 };
 const offen = (pg) => pg.evaluate(() => !!(window.casoraPopup && window.casoraPopup.surface)).catch(() => false);
 const openPopup = async (pg, tpl, mobile) => {

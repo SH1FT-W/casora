@@ -14,6 +14,8 @@
 // idle: „Bereit“, nicht aktiv, keine Fortschrittsleiste. 0.5.7-Antwort ohne status: Zeilen wie bisher.
 // Die WashData-Antworten werden im Browser untergeschoben (Verbindung abgefangen), Zustände per fakeStates.
 import { open, casoraDashboards, dashboard, cards, fakeStates, check, need, finish } from './lib.mjs';
+// Since 26.11.27 the test house also has a Tumble washer and dryer (no remaining time, no WashData entry); this
+// test is about the other laundry sources and skips their tiles (entities sensor.tumble_…).
 
 const all = await casoraDashboards();
 const has = (d, t) => JSON.stringify(d.config).includes('"' + t + '"');
@@ -73,7 +75,7 @@ const intercept = () => page.evaluate((LOGS) => {
 
 // Kachel-Konfiguration auflösen (Zustand, Eintrag) – keine festen IDs.
 const resolve = (tpl) => page.evaluate((t) => {
-  const b = window.__pierce('button-card').find((x) => [].concat((x._config || {}).template || []).includes(t) && x.getBoundingClientRect().width > 20);
+  const b = window.__pierce('button-card').find((x) => [].concat((x._config || {}).template || []).includes(t) && x.getBoundingClientRect().width > 20 && !/^sensor\.tumble_/.test(String((x._config || {}).entity || '')));
   if (!b) return null;
   const h = document.querySelector('home-assistant').hass;
   const cfg = b._config || {};
@@ -82,7 +84,7 @@ const resolve = (tpl) => page.evaluate((t) => {
 }, tpl);
 // Platteninhalt als Text (alle Pflege-Zeilen, unabhängig von „Mehr“).
 const innerText = (tpl, kind) => page.evaluate(({ t, kind }) => {
-  const b = window.__pierce('button-card').find((x) => [].concat((x._config || {}).template || []).includes(t) && x.getBoundingClientRect().width > 20);
+  const b = window.__pierce('button-card').find((x) => [].concat((x._config || {}).template || []).includes(t) && x.getBoundingClientRect().width > 20 && !/^sensor\.tumble_/.test(String((x._config || {}).entity || '')));
   const h = document.querySelector('home-assistant').hass;
   const cfg = b._config || {};
   const c = window._casoraLaundry.resolve(cfg.entity ? h.states[cfg.entity] : null, cfg.variables || {}, h.states, h);
@@ -91,7 +93,7 @@ const innerText = (tpl, kind) => page.evaluate(({ t, kind }) => {
   return [...d.querySelectorAll('.hui-row')].map((r) => r.textContent.replace(/\s+/g, ' ').trim());
 }, { t: tpl, kind });
 const tileInfo = (tpl) => page.evaluate((t) => {
-  const b = window.__pierce('button-card').find((x) => [].concat((x._config || {}).template || []).includes(t) && x.getBoundingClientRect().width > 20);
+  const b = window.__pierce('button-card').find((x) => [].concat((x._config || {}).template || []).includes(t) && x.getBoundingClientRect().width > 20 && !/^sensor\.tumble_/.test(String((x._config || {}).entity || '')));
   const h = document.querySelector('home-assistant').hass;
   const cfg = b._config || {};
   const ent = cfg.entity ? h.states[cfg.entity] : null;
@@ -102,9 +104,10 @@ const tileInfo = (tpl) => page.evaluate((t) => {
 
 const offen = () => page.evaluate(() => !!(window.casoraPopup && window.casoraPopup.surface)).catch(() => false);
 const findTile = async (tpl) => {
-  await page.evaluate((t) => { const b = window.__pierce('button-card').find((x) => [].concat((x._config || {}).template || []).includes(t)); b && b.scrollIntoView({ block: 'center' }); }, tpl);
+  await page.evaluate((t) => { const b = window.__pierce('button-card').find((x) => [].concat((x._config || {}).template || []).includes(t) && !/^sensor\.tumble_/.test(String((x._config || {}).entity || ''))); b && b.scrollIntoView({ block: 'center' }); }, tpl);
   await page.waitForTimeout(400);
-  return (await cards(page, tpl))[0] || null;
+  const skip = await page.evaluate(() => window.__pierce('button-card').map((b, i) => (/^sensor\.tumble_/.test(String((b._config || {}).entity || '')) ? i : -1)).filter((i) => i >= 0));
+  return (await cards(page, tpl)).filter((c) => !skip.includes(c.i))[0] || null;
 };
 const openPopup = async (tpl) => {
   let t = await findTile(tpl);
