@@ -16,13 +16,13 @@ from custom_components.casora import settings, share
 
 
 class CalendarSettingsTest(unittest.IsolatedAsyncioTestCase):
-    def test_dashboard_export_import_preserves_calendar_filter(self):
+    def test_dashboard_export_leaves_calendar_filter_out(self):
         data = share.build_export(
             title="Mock home", url_path="casora-mock", config={"views": []}, mobile_url=None, mobile=None,
-            settings={"calendar_filter": "Naam vrij, verlof"}, photos={},
+            settings={"calendar_filter": "Naam vrij, verlof", "calendars": [{"entity": "calendar.mock_day"}]}, photos={},
             version="26.11.26", exported="2026-11-13T10:00:00Z",
         )
-        self.assertEqual(share.read_file(data)["settings"], {"calendar_filter": "Naam vrij, verlof"})
+        self.assertEqual(share.read_file(data)["settings"], {"calendars": [{"entity": "calendar.mock_day"}]})
 
     async def test_saved_filter_survives_readback_and_can_be_cleared(self):
         data = {}
