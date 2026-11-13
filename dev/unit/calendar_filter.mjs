@@ -42,6 +42,67 @@ settings = { calendar_filter: 'Naam vrij' };
 assert.equal(calendar.tile(states, variables), 'Morgen 09:00 · Overleg', 'without a visible event today the tile shows the next event');
 console.log('ok Agenda tile selection and Calendar filter');
 
+// Public tile seam: HA exposes only the current all-day event in entity attributes.
+const localStates = { 'calendar.mock_local': states['calendar.mock_day'] };
+const localVariables = { calendars: [{ entity: 'calendar.mock_local' }] };
+let calls = 0, updates = 0;
+let response = [
+  { summary: 'Naam vrij', start: { date: '2026-11-13' }, end: { date: '2026-11-14' } },
+  { summary: 'Overleg', start: { dateTime: '2026-11-13T14:00:00' }, end: { dateTime: '2026-11-13T15:00:00' } },
+  { summary: 'Tandarts', start: { dateTime: '2026-11-14T09:00:00' }, end: { dateTime: '2026-11-14T10:00:00' } },
+];
+const card = { _config: { state_display: 'window._casoraCalendar.tile(states, variables)' } };
+const ha = { hass: { states: localStates, callApi: async () => { calls++; return response; } },
+  shadowRoot: { querySelectorAll: selector => selector === 'button-card' ? [card] : [] } };
+context.document.querySelector = () => ha;
+window.casoraKick = () => { updates++; };
+const settle = () => new Promise(resolve => setImmediate(resolve));
+settings = {};
+calendar.tile(localStates, localVariables);
+await settle();
+assert.equal(calendar.tile(localStates, localVariables), 'Heute 14:00 · Overleg', 'Agenda fetches all candidates in one calendar without opening its popup');
+assert.ok(updates > 0, 'loaded events redraw the Agenda tile without a popup');
+settings = { calendar_filter: 'Naam vrij' };
+assert.equal(calendar.tile(localStates, localVariables), 'Heute 14:00 · Overleg', 'hiding the all-day title still finds the timed event in the same calendar');
+settings = { calendar_filter: 'Overleg' };
+assert.equal(calendar.tile(localStates, localVariables), 'Heute · Naam vrij', 'filtering the timed event leaves the current all-day event');
+settings = { calendar_filter: 'Overleg, Naam vrij' };
+assert.equal(calendar.tile(localStates, localVariables), 'Morgen 09:00 · Tandarts', 'filtered same-calendar events never win');
+assert.equal(calls, 1, 'filter changes reuse the popup event cache');
+assert.ok(calendar.html('day', localVariables).includes('Naam vrij'), 'the shared cache keeps filtered titles for the popup');
+response = [];
+localStates['calendar.mock_local'] = { ...localStates['calendar.mock_local'], last_updated: '2026-11-13T10:01:00' };
+ha.hass.states = localStates;
+calendar.tile(localStates, localVariables);
+await settle();
+assert.equal(calendar.tile(localStates, localVariables), 'Keine Termine', 'a fresh empty API result does not resurrect entity attributes');
+assert.equal(calls, 2, 'calendar state changes refresh the shared event cache');
+settings = {};
+ha.hass.callApi = async () => { calls++; throw new Error('Calendar unavailable'); };
+localStates['calendar.mock_local'] = { ...localStates['calendar.mock_local'], last_updated: '2026-11-13T10:02:00' };
+assert.equal(calendar.tile(localStates, localVariables), 'Heute · Naam vrij', 'loading a changed calendar uses its current state, not stale cached events');
+await settle();
+assert.equal(calendar.tile(localStates, localVariables), 'Heute · Naam vrij', 'an API error falls back to the entity instead of claiming the calendar is empty');
+assert.equal(calls, 3, 'an API error does not start a fetch loop');
+let finish;
+ha.hass.callApi = () => { calls++; return new Promise(resolve => { finish = resolve; }); };
+localStates['calendar.mock_local'] = { ...localStates['calendar.mock_local'], last_updated: '2026-11-13T10:03:00' };
+calendar.tile(localStates, localVariables);
+calendar.tile(localStates, localVariables);
+assert.equal(calls, 4, 'repeated tile renders share the in-flight calendar request');
+localStates['calendar.mock_local'] = { ...localStates['calendar.mock_local'], last_updated: '2026-11-13T10:04:00' };
+calendar.tile(localStates, localVariables);
+finish([{ summary: 'Old event', start: { dateTime: '2026-11-13T14:00:00' }, end: { dateTime: '2026-11-13T15:00:00' } }]);
+await settle();
+assert.equal(calls, 5, 'a change during loading queues a fresh request on the same cache');
+assert.equal(calendar.tile(localStates, localVariables), 'Heute · Naam vrij', 'a response for an older state cannot win while its replacement loads');
+finish([]);
+await settle();
+assert.equal(calendar.tile(localStates, localVariables), 'Keine Termine', 'the latest response replaces the superseded candidates');
+context.document.querySelector = () => null;
+console.log('ok same-calendar Agenda candidates without a popup');
+settings = { calendar_filter: 'Naam vrij' };
+
 const finder = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/00-finder.js', import.meta.url), 'utf8');
 vm.runInContext(finder.slice(finder.indexOf('// casora-home-next:start'), finder.indexOf('// casora-home-next:end')), context);
 assert.equal(window.casoraHomeNext({ states }, { casora_greeting_next: true }, new ClockDate()), 'Morgen 09:00 Overleg', 'the greeting excludes the same filtered title');
