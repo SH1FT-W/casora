@@ -1,6 +1,8 @@
 {
   "_comment": "Vertaling van het Casora-paneel. Sleutel = originele Engelse tekst in het paneel. Nieuwe taal: maak het bestand <code>.json aan en voer dan tools/build-panel-i18n.py uit.",
   "exact": {
+    "Hide when the title contains": "Verbergen als de titel bevat",
+    "Separate entries with commas; an entry may have several words. The calendar popup still shows them.": "Scheid items met een komma; een item mag uit meerdere woorden bestaan. De agenda-pop-up toont ze nog wel.",
     "Copy diagnostics…": "Diagnose kopiëren…",
     "Diagnostics": "Diagnose",
     "Paste it into your GitHub issue. It contains only counts, versions and integrations – no names of devices, rooms or people, no addresses.": "Plak het in je GitHub-issue. Het bevat alleen aantallen, versies en integraties – geen namen van apparaten, kamers of personen, geen adressen.",

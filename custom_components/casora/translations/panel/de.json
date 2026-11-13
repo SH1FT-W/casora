@@ -1,6 +1,8 @@
 {
   "_comment": "Casora-Panel-Übersetzung. Schlüssel = englischer Originaltext im Panel. Neue Sprache: Datei <code>.json anlegen, dann tools/build-panel-i18n.py.",
   "exact": {
+    "Hide when the title contains": "Ausblenden, wenn der Titel enthält",
+    "Separate entries with commas; an entry may have several words. The calendar popup still shows them.": "Einträge mit Komma trennen; ein Eintrag darf mehrere Wörter haben. Das Kalender-Popup zeigt sie weiter.",
     "Copy diagnostics…": "Diagnose kopieren …",
     "Diagnostics": "Diagnose",
     "Paste it into your GitHub issue. It contains only counts, versions and integrations – no names of devices, rooms or people, no addresses.": "Füg sie in dein GitHub-Issue ein. Sie enthält nur Zahlen, Versionen und Integrationen – keine Namen von Geräten, Räumen oder Personen, keine Adressen.",

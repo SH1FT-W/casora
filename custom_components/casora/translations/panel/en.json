@@ -1,6 +1,8 @@
 {
   "_comment": "Casora-Panel-Übersetzung. Schlüssel = englischer Originaltext im Panel. Neue Sprache: Datei <code>.json anlegen, dann tools/build-panel-i18n.py.",
   "exact": {
+    "Hide when the title contains": "Hide when the title contains",
+    "Separate entries with commas; an entry may have several words. The calendar popup still shows them.": "Separate entries with commas; an entry may have several words. The calendar popup still shows them.",
     "Casora": "Casora",
     "Welcome to Casora": "Welcome to Casora",
     "Leave Casora?": "Leave Casora?",
