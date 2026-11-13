@@ -45,7 +45,8 @@ const res = await page.evaluate(() => {
   if (!lbl) return { label: false };
   // Zeilen unter der Überschrift in derselben Spalte, bis zur nächsten Überschrift.
   const L = lbl.getBoundingClientRect();
-  const next = window.__pierce('*').filter((e) => e !== lbl && e.children.length === 0 && /^[A-ZÄÖÜ ]{4,}$/.test((e.textContent || '').trim())
+  // Next section heading: upper case as shown (CSS text-transform, e.g. „Verlauf“ since 26.11.27), so innerText.
+  const next = window.__pierce('*').filter((e) => e !== lbl && e.children.length === 0 && /^[A-ZÄÖÜ ]{4,}$/.test((e.innerText || e.textContent || '').trim())
     && Math.abs(e.getBoundingClientRect().left - L.left) < 30 && e.getBoundingClientRect().top > L.bottom).map((e) => e.getBoundingClientRect().top);
   const stop = next.length ? Math.min(...next) : Infinity;
   const rows = window.__pierce('.hui-row').filter((r) => { const q = r.getBoundingClientRect();
