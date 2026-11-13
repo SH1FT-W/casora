@@ -32,6 +32,7 @@ globalThis.setInterval = () => 0;
 window.casoraSecurityIcon = () => 'door-open';
 window.casoraWatchRestarts = () => {};
 window.casoraNeedsRestart = () => false;
+window.casoraClockText = (h, use12, d) => use12 ? ((d.getHours() % 12) || 12) + ':' + String(d.getMinutes()).padStart(2, '0') + ' ' + (d.getHours() >= 12 ? 'PM' : 'AM') : String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
 window.CASORA_NOTIFY_EXTENSIONS = [];
 
 const iso = (ms) => new Date(ms).toISOString();
@@ -86,15 +87,38 @@ await check('repeats of one source: one card with a count, no cut at 3', async (
   assert.equal(lock[0].label, 'Haustür verriegelt');
 });
 
-await check('a tap opens the stack: its older messages follow, marked as kids', async () => {
+await check('an open stack is a timeline under its card (owner 13.11.2026), not rows of the list', async () => {
   const n = load({ logbook: lockLog, states: lockStates });
   const rows = await n.refresh();
-  assert.equal(n.shown.length, rows.length, 'closed: only the cards');
   n.stack(rows[0].stackKey, true);
-  const shown = n.shown;
-  assert.equal(shown.length, rows.length + 9);
-  assert.ok(shown.slice(1, 10).every((r) => r.kid && r.stackKey === rows[0].stackKey));
+  assert.equal(n.shown.length, rows.length, 'the list keeps only the cards');
+  const tl = n.timeline(rows[0].stackKey);
+  assert.equal(tl.length, 9, 'every older message once');
+  // Same source: only what differs, first letter up (verriegelt / entriegelt alternate).
+  assert.deepEqual(tl.slice(0, 2).map((e) => e.text), ['Entriegelt', 'Verriegelt']);
+  hass.locale = { time_format: '24' };
+  assert.match(n.timeline(rows[0].stackKey)[0].time, /^\d{2}:\d{2}$/, '24-hour time when HA says so');
+  assert.ok(tl[0].rel && tl[2].rel && !tl[3].rel, 'relative time only under the newest three');
+  assert.ok(tl.every((e) => e.m.entity === LOCK), 'each entry opens its device');
 });
+
+await check('timeline: a day line above the first entry of an earlier day, the 12-hour time of HA', async () => {
+  const y = new Date(NOW); y.setDate(y.getDate() - 1); y.setHours(21, 0, 0, 0);
+  const log = lockLog.concat([ev(LOCK, 'unlocked', y.getTime()), ev(LOCK, 'locked', y.getTime() + 60e3)]);
+  const n = load({ logbook: log, states: lockStates });
+  const rows = await n.refresh();
+  const tl = n.timeline(rows.find((r) => r.entity === LOCK).stackKey);
+  const days = tl.filter((e) => e.day);
+  assert.equal(days.length, 1, 'one day line');
+  assert.equal(days[0].day, 'Gestern');
+  assert.equal(tl.indexOf(days[0]), tl.findIndex((e) => e.m.when < NOW - (NOW - new Date(NOW).setHours(0, 0, 0, 0))), 'above the first entry of yesterday');
+  // 12-hour profile: HA's time format.
+  hass.locale = { time_format: '12' };
+  assert.match(n.timeline(rows.find((r) => r.entity === LOCK).stackKey)[0].time, /^\d{1,2}:\d{2} (AM|PM)$/);
+});
+assert.ok(!/hui-chev/.test(mod.slice(mod.indexOf('function tlHtml'), mod.indexOf('var TL_CSS'))), 'timeline entries have no arrow');
+assert.ok(/\.casora-ntl-e:active\{/.test(mod), 'press feedback on an entry');
+assert.ok(/\.casora-ntl-e\{[^}]*min-height:36px;box-sizing:border-box;padding:4px 6px;/.test(mod.replace(/'\s*\/\/[^\n]*\n\s*\+\s*'/g, '').replace(/'\s*\+\s*'/g, '')), 'compact rows (owner 13.11.2026): 36 px, the tap area not smaller');
 
 await check('removing the card removes the whole stack (and only it)', async () => {
   const states = { ...lockStates, [BELL]: { entity_id: BELL, state: 'off', last_changed: iso(NOW - 5 * MIN), attributes: { friendly_name: 'Klingel Ding' } } };
