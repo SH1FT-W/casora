@@ -112,11 +112,11 @@ assert.equal(EV.house(null), null);
   const hRows = { a: [{ start: at(0), change: 1 }, { start: at(1), change: 2 }], g_in: [{ start: at(0), change: 2 }, { start: at(1), change: 1 }],
     g_out: [{ start: at(1), change: 0.5 }], pv: [{ start: at(1), change: 1 }] };
   const hA = EV.aggregate(hRows, [{ id: 'a', name: 'A' }], day, { plus: ['g_in', 'pv'], minus: ['g_out'] });
-  assert.deepEqual(hA.house.vals.slice(0, 3), [2, 1.5, null], 'house per hour: 2; 1 − 0,5 + 1; no import row: none');
-  assert.deepEqual(hA.untracked.vals.slice(0, 2), [1, 0], 'untracked = house − devices, never below 0');
+  assert.deepEqual(hA.house.vals.slice(0, 3), [2, 2, null], 'house per hour: 2; 1 − 0,5 + 1 = 1,5 but the device read 2; no row: none');
+  assert.deepEqual(hA.untracked.vals.slice(0, 2), [1, 0], 'untracked = house − devices');
   assert.equal(hA.untracked.sum, 1);
   const hV = EV.view(hA, null);
-  assert.equal(hV.total, 3.5, 'the big number is the house');
+  assert.equal(hV.total, 4, 'the big number is the house, never below the devices');
   assert.equal(hV.series[hV.series.length - 1].name, 'Nicht erfasst');
   assert.equal(hV.series[hV.series.length - 1].color, 'untracked');
   const ur = hV.rows[hV.rows.length - 1];
@@ -128,6 +128,26 @@ assert.equal(EV.house(null), null);
   const many = { devs: mk([5, 4, 3, 2, 1]).devs, totals: [], plan: day, house: { vals: [20, null], sum: 20 },
     untracked: { id: EV.UNTRACKED, name: 'Nicht erfasst', vals: [5, null], sum: 5 } };
   assert.deepEqual(EV.view(many, null).series.map((x) => x.name), ['D0', 'D1', 'Sonstige', 'Nicht erfasst']);
+}
+// Devices reading more than the house meter (owner, 13.11.2026): per bucket the house is the larger of its meter and the
+// devices' sum, so the big number, the Ø line and the shares never fall below the devices.
+{
+  const gRows = { a: [{ start: at(0), change: 3 }, { start: at(1), change: 1 }, { start: at(2), change: 0.5 }],
+    b: [{ start: at(0), change: 1 }], g_in: [{ start: at(0), change: 2 }, { start: at(1), change: 2 }] };
+  const gA = EV.aggregate(gRows, [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], day, { plus: ['g_in'], minus: [] });
+  assert.deepEqual(gA.house.vals.slice(0, 4), [4, 2, 0.5, null], 'house = max(meter, devices); no meter row: the devices');
+  assert.deepEqual(gA.untracked.vals.slice(0, 4), [0, 1, 0, null], 'untracked = house − devices');
+  assert.equal(gA.house.sum, 6.5);
+  const gV = EV.view(gA, null);
+  assert.equal(gV.total, 6.5, 'the big number never below the devices');
+  assert.ok(gV.total >= gA.total, 'house ≥ Σ devices');
+  assert.equal(gV.avg, EV.average(gA.house.vals, day));
+  assert.ok(gV.avg <= Math.max(...gA.house.vals.filter((v) => v != null)), 'Ø not below every bar');
+  const byId = Object.fromEntries(gV.rows.map((r) => [r.id, r]));
+  assert.equal(byId.a.pct + byId.b.pct + byId[EV.UNTRACKED].pct, 100);
+  assert.ok(byId.a.raw <= 1 && byId.a.raw === 4.5 / 6.5, 'shares of the larger house');
+  // Without any house meter row: as before (no house, no „Nicht erfasst“).
+  assert.equal(EV.aggregate({ a: gRows.a }, [{ id: 'a', name: 'A' }], day, { plus: ['g_in'], minus: [] }).house, null);
 }
 
 // ── Top N and „Sonstige“ ─────────────────────────────────────────────────
@@ -230,6 +250,8 @@ const mehr = read('custom_components/casora/scripts/local/05-weich-mehr.js');
 assert.ok(/_casoraEnergyHistory\.sec\("entry"/.test(mehr) && /right: \['use', 'top', 'hist'\]/.test(mehr), 'row in the house energy popup');
 const chart = read('custom_components/casora/scripts/casora-chart.js');
 assert.ok(/c\.kind === 'stack'\) return this\._stack\(box, W\)/.test(chart), 'casora-chart draws stacks');
+// „Nicht erfasst“'s legend dot as a ring (owner, 13.11.2026): visible on a dark popup too, still the palest.
+assert.ok(/dot: s\.color === 'untracked' \? 'ring'/.test(src) && /x\.dot === 'ring' \? 'background:var\(--cgrid\);box-shadow:inset/.test(chart), 'untracked legend dot is a ring');
 assert.ok(!/#[0-9A-Fa-f]{6}/.test(src.replace(/var\(--[^)]*\)/g, '')), 'colours only from theme variables');
 assert.ok(/eyebrow: T\('Energie'\)/.test(src) && /eyebrow: T\('Energie'\)/.test(mehr), 'energy pages carry „Energie“ in the language, not the tile name');
 console.log('energy_history: ok');

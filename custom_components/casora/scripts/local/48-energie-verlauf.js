@@ -194,9 +194,11 @@
     });
     var total = null;
     totals.forEach(function (v) { if (v != null) total = (total || 0) + v; });
-    // The house per bucket (only where its import meter has a row) and what the devices leave of it: „Nicht erfasst“.
-    // A bucket where the devices read more than the house (meters a moment apart) leaves 0, never below.
-    var hv = null, unt = null;
+    // The house per bucket and what the devices leave of it: „Nicht erfasst“. Per bucket the house is the larger of its
+    // meters and the devices' sum (owner, 13.11.2026): devices reading more than the house (meters a moment apart, a
+    // device behind its own meter) raise it, so the big number, the Ø line and the shares never fall below the devices.
+    // Only when the house meters have a row at all; else no house, as without its meters.
+    var hv = null, unt = null, metered = false;
     if (house && house.plus && house.plus.length) {
       var sumOf = function (ids, i) {
         var s2 = null;
@@ -212,13 +214,15 @@
       for (var j = 0; j < n; j++) {
         var pl = sumOf(house.plus, j), mi = sumOf(house.minus, j) || 0;
         var hj = pl == null ? null : Math.max(0, pl - mi);
+        if (hj != null) metered = true;
+        if (totals[j] != null) hj = Math.max(hj || 0, totals[j]);
         hv.push(hj);
-        unt.push(hj == null ? null : Math.max(0, hj - (totals[j] || 0)));
+        unt.push(hj == null ? null : hj - (totals[j] || 0));
       }
     }
     var sumV = function (a) { var s3 = null; (a || []).forEach(function (v) { if (v != null) s3 = (s3 || 0) + v; }); return s3; };
     var out = { devs: list, totals: totals, total: total, has: has, plan: plan, house: null, untracked: null };
-    if (hv && sumV(hv) != null) {
+    if (metered) {
       out.house = { vals: hv, sum: sumV(hv) };
       out.untracked = { id: UNTRACKED, name: 'Nicht erfasst', vals: unt, sum: sumV(unt) };
     }
@@ -448,8 +452,10 @@
             read: READ, label: 'Verbrauch je Gerät',
             series: V.series.map(function (s) {
               var grey = s.color === 'other' || s.color === 'untracked';
-              // „Sonstige“ grey, „Nicht erfasst“ paler still: the two never read alike.
-              return { name: s.name, color: grey ? OTHER : s.color, opacity: s.color === 'other' ? 0.55 : s.color === 'untracked' ? 0.24 : null, vals: s.vals };
+              // „Sonstige“ grey, „Nicht erfasst“ paler still: the two never read alike. „Nicht erfasst“'s legend dot is a
+              // ring around the grid's pale grey: at 24 % its dot all but vanished on a dark popup (owner, 13.11.2026).
+              return { name: s.name, color: grey ? OTHER : s.color, opacity: s.color === 'other' ? 0.55 : s.color === 'untracked' ? 0.24 : null,
+                dot: s.color === 'untracked' ? 'ring' : null, vals: s.vals };
             }) } };
         if (window._hpStageChart) window._hpStageChart(el, CHART);
       }

@@ -13,7 +13,7 @@
 //   Fixed columns without a history (e.g. fuel "typical day"): kind: 'bar', points: [{ t, v, color, tick }],
 //     unit, decimals, focus: 'min' (default reading = lowest value, "Cheapest, 19:00").
 //   Stacked bars from buckets the caller has summed (energy per device, 48-energie-verlauf.js): kind: 'stack',
-//     stack: { per: 'hour'|'day', starts, cur, unit, decimals, avg, label, read, series: [{ name, color, opacity, vals }] }.
+//     stack: { per: 'hour'|'day', starts, cur, unit, decimals, avg, label, read, series: [{ name, color, opacity, dot, vals }] } (dot 'ring': legend dot as a ring).
 // casora-esc:begin – canonical HTML escaping, the same block in every file that loads on its own
 // (checked by dev/unit/html_escape.mjs). Every value that goes into an HTML string goes through one of these:
 //   casoraEsc(v)      text and quoted attribute values: & < > " ' as entities
@@ -889,7 +889,10 @@
       if (c.legend !== false && list.length) {
         var lg = document.createElement('div'); lg.className = 'lg'; lg.style.flexWrap = 'wrap'; lg.style.rowGap = '4px';
         lg.innerHTML = list.map(function (x) {
-          return '<span><i style="background:' + window.casoraEsc(C.color(x.color)) + (x.opacity != null ? ';opacity:' + window.casoraEsc(x.opacity) : '') + '"></i>'
+          // dot 'ring': the colour as a ring around the grid's pale grey, for a series too pale for a dot of its own.
+          var dot = x.dot === 'ring' ? 'background:var(--cgrid);box-shadow:inset 0 0 0 1.5px ' + C.color(x.color)
+            : 'background:' + C.color(x.color) + (x.opacity != null ? ';opacity:' + x.opacity : '');
+          return '<span><i style="' + window.casoraEsc(dot) + '"></i>'
             + window.casoraEsc(C.tr(x.name || '')) + '<b class="lv"></b></span>';
         }).join('');
         box.insertBefore(lg, svg);
