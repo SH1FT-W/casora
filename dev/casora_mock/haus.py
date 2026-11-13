@@ -122,6 +122,7 @@ def compose(fixture: dict, now: datetime, stress: dict | None = None, hacs: dict
         merge(fixture, hubs.extra(now), "Hub-Lampen Garage/Garten")
         hubs.join_house_group(fixture)
         merge(fixture, mixed_lights.extra(), "Testmischraum")
+        mixed_lights.join_house_group(fixture)
         # A made-up air conditioner planned by a Velair-like scheduler (community card #32), see velair.py.
         merge(fixture, velair.extra(now), "Testklimaanlage + Velair")
         # Two made-up kettles, BLE-like (only shows) and one with target and keep warm (community card #87), see kettle.py.
