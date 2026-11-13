@@ -41,7 +41,10 @@ globalThis.addEventListener = () => {};
 globalThis.dispatchEvent = () => true;
 globalThis.setInterval = () => 0;
 window.casoraSecurityIcon = () => 'window-open';
+const realTimeout = globalThis.setTimeout;
+globalThis.setTimeout = () => 0;
 new Function(mod)();
+globalThis.setTimeout = realTimeout;
 
 const N = window._casoraNotify;
 const unreadIds = (rows) => rows.filter((r) => r.when > Number(store.casora_notify_read_v1)).map((r) => r.id).sort();

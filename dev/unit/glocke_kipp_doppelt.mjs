@@ -60,7 +60,10 @@ window.casoraSecurityIcon = () => 'door-open';
 delete window._casoraBootErrorGuard;
 delete window._casoraLocalLoaded;
 
+const realTimeout = globalThis.setTimeout;
+globalThis.setTimeout = () => 0;
 new Function(mod)();
+globalThis.setTimeout = realTimeout;
 const opens = () => window._casoraNotify.rows.filter((r) => /^casora:open:/.test(r.id)).map((r) => r.label);
 const settle = () => new Promise((r) => setTimeout(r, 20));
 

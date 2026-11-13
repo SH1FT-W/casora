@@ -71,6 +71,7 @@ function load(r, sensors = {}) {
   }
   hass = { states, callWS, entities, devices: {}, areas: {} };
   delete window._casoraNotify;
+    globalThis.setTimeout = () => 0;
   new Function(mod)();
   return window._casoraNotify;
 }

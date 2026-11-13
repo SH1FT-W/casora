@@ -33,6 +33,7 @@ globalThis.addEventListener = () => {};
 globalThis.dispatchEvent = () => true;
 globalThis.setInterval = () => 0;
 window.casoraSecurityIcon = () => 'window-open';
+globalThis.setTimeout = () => 0;
 new Function(mod)();
 
 const rows = await window._casoraNotify.refresh();

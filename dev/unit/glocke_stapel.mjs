@@ -63,7 +63,10 @@ function load({ logbook, states, uid = 'u-anna', cfg = {} }) {
   delete window._casoraNotify;
   delete window.CASORA_NOTIFY_HIDE_OWN;
   delete window.CASORA_NOTIFY_SHARED_HIDDEN;
+  const realTimeout = globalThis.setTimeout;
+  globalThis.setTimeout = () => 0;
   new Function(mod)();
+  globalThis.setTimeout = realTimeout;
   window._casoraNotify.configureFrom(cfg);
   return window._casoraNotify;
 }
@@ -129,7 +132,10 @@ await check('removing the card removes the whole stack (and only it)', async () 
   // Remove via the swipe path (hideRows is not exported; the row carries its members).
   const mod2 = mod.replace('    open: open,', '    open: open, _hide: hideRows,');
   delete window._casoraNotify;
+  const realTimeout = globalThis.setTimeout;
+  globalThis.setTimeout = () => 0;
   new Function(mod2)();
+  globalThis.setTimeout = realTimeout;
   const n2 = window._casoraNotify;
   const rows2 = await n2.refresh();
   n2._hide([rows2.find((r) => r.entity === LOCK)]);
@@ -209,7 +215,10 @@ await check('removed messages: shared list with the switch, pushed changes apply
   sent = [];
   const mod2 = mod.replace('    open: open,', '    open: open, _hideAll: hideAll,');
   delete window._casoraNotify;
+  const realTimeout = globalThis.setTimeout;
+  globalThis.setTimeout = () => 0;
   new Function(mod2)();
+  globalThis.setTimeout = realTimeout;
   window._casoraNotify.configureFrom({ notification_hidden_shared: true });
   await window._casoraNotify.refresh();
   window._casoraNotify._hideAll();
