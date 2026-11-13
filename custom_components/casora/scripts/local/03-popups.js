@@ -4887,6 +4887,21 @@
     });
     return out;
   };
+  // Lit lamps that support tone take it; fall back to two-tone lamps only when all are off.
+  // onlyOn (the house popup never switches lamps on): no targets while no lamp is lit.
+  // Unreachable or missing lamps are left out, so one of them does not hide the row (maintainer, 13.11.2026).
+  var whiteTargets = function (ids, states, onlyOn) {
+    var lit = ids.filter(function (id) { return states[id] && states[id].state === 'on'; });
+    if (lit.length) return lit.filter(function (id) { return hasCt(states[id]) || hasCol(states[id]); });
+    if (onlyOn) return [];
+    return ids.filter(function (id) { return states[id] && states[id].state === 'off' && hasCt(states[id]); });
+  };
+  // A shared none entry ends a running effect on the tone targets where possible.
+  var ctData = function (k, targets, states) {
+    var data = { color_temp_kelvin: k }, effect = S.fxEnd(targets, states);
+    if (effect) data.effect = effect;
+    return data;
+  };
   // Stage S1: brightness of the dimmable lamps (the ones that are on, else all), light colour as the segment.
   // moons: the room's scenes as moons around the dial (a function: its UI.quick call is collected).
   var v3Stage = function (ids, states, onlyOn, moons) {
@@ -4901,7 +4916,7 @@
     var v = s.on ? (s.pct != null ? s.pct : 100) : plainOn ? 100 : 0;
     var target = lit.length ? lit : (onlyOn ? [] : dim);
     var ct = ids.filter(function (id) { return hasCt(states[id]); });
-    var ctOn = ct.filter(function (id) { return states[id].state === 'on'; });
+    var ctT = whiteTargets(ids, states, onlyOn);
     var seg = null, curLbl = '';
     // Colour lamps (hs/rgb/rgbw/rgbww/xy; an HA group lists its members' modes): „Farbe“ in the segment opens the colour
     // wheel page (33-color-wheel.js) for the ones that are on, else all (owner, 01.11.2026: no colour in the v3 popup).
@@ -4912,19 +4927,15 @@
     // white in colour mode („white“), a colour („col“) or a running effect („fx“), and its colour for the ring.
     var tones = S.lampTones(ids, states, pr);
     var same = tones.length && tones.every(function (t) { return t.kind === tones[0].kind; }) ? tones[0].kind : null;
-    // A white tone also ends running effects: the lamp's none entry along (S.fxEnd), and colour-only lamps take the tone
-    // too (HA emulates color_temp_kelvin as a colour on them, docs/ha-annahmen.md).
-    var ctData = function (k, tg) { var d = { color_temp_kelvin: k }, e = S.fxEnd(tg, states); if (e) d.effect = e; return d; };
-    if (ct.length && (!onlyOn || ctOn.length)) {
-      var colOnly = colOn.filter(function (id) { return !hasCt(states[id]); });
-      var ctT = ctOn.length ? ctOn.concat(colOnly) : ct;
+    // Colour-only lamps take the tone too (HA emulates color_temp_kelvin as a colour on them, docs/ha-annahmen.md).
+    if (ct.length && ctT.length) {
       if (same && same.indexOf('ct') === 0) {
         var k0 = tones[0].k;
         curLbl = tr(pr[Number(same.slice(2))].l) + ' ' + Math.round(k0 / 50) * 50 + ' K';
       }
       seg = pr.map(function (p, i) {
         return { label: tr(p.l), active: same === 'ct' + i,
-          svc: { domain: 'light', service: 'turn_on', data: ctData(p.k, ctT), target: { entity_id: ctT } } };
+          svc: { domain: 'light', service: 'turn_on', data: ctData(p.k, ctT, states), target: { entity_id: ctT } } };
       });
     }
     if (col.length && (!onlyOn || colOn.length)) {
@@ -5133,7 +5144,8 @@
         + '<i style="width:' + esc(v) + '%"></i>' + barText(v) + '</div>';
     }
     var ct = ids.filter(function (id) { return hasCt(states[id]); });
-    if (ct.length) {
+    var ctT = whiteTargets(ids, states);
+    if (ct.length && ctT.length) {
       var ctOn = ct.filter(function (id) { return states[id].state === 'on'; });
       var cur = null;
       ctOn.some(function (id) {
@@ -5147,7 +5159,7 @@
       left += '<div class="lps-lbl' + (left ? ' lps-gap' : '') + '">' + esc(tr('Lichtfarbe')) + '</div><div class="lps-seg">'
         + pr.map(function (p, i) {
           return '<div class="lps-sg' + (i === best ? ' on' : '') + '" role="button" data-lps-tap="'
-            + attr({ a: 'ct', ids: ctOn.length ? ctOn : ct, k: p.k }) + '">'
+            + attr({ a: 'ct', ids: ctT, k: p.k }) + '">'
             + '<i class="lps-dot" style="background:' + esc(p.d === 'cold' ? 'var(--casora-soft-dot-cold, var(--casora-lps-dot-cold))' : 'var(--casora-lps-dot-' + p.d + ')') + '"></i>' + esc(tr(p.l)) + '</div>';
         }).join('') + '</div>';
     }
@@ -5423,7 +5435,7 @@
     } else if (d.a === 'ct') {
       var sg = el.parentNode && el.parentNode.querySelectorAll('.lps-sg');
       if (sg) sg.forEach(function (x) { x.classList.toggle('on', x === el); });
-      h.callService('light', 'turn_on', { color_temp_kelvin: d.k }, { entity_id: d.ids });
+      h.callService('light', 'turn_on', ctData(d.k, d.ids, h.states), { entity_id: d.ids });
     } else if (d.a === 'room') {
       /* Popup v3 (richtlinien §4.4): a room of the house is a sub page in the same popup – ‹ back to the rooms,
          label = the room, title = „Beleuchtung“ (owner, 03.11.2026). Without v3 the room chips stay and the room is a
