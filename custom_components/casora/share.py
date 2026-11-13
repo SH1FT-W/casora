@@ -50,7 +50,7 @@ KIND = "casora-dashboard"
 EXTENSION = ".casora"
 # Casora settings that describe the home shown on the dashboard. Not: notify (push recipients and
 # place names), umzug/basis/welcome/community (state of this Studio, not of the dashboard).
-SHARE_SECTIONS = ("waste", "calendars", "calendar_filter", "scenes", "contacts", "security", "media", "night_entity", "ebike")
+SHARE_SECTIONS = ("waste", "calendars", "scenes", "contacts", "security", "media", "night_entity", "ebike")
 TEMPLATES = "button_card_templates"
 STAGE_TTL = 30 * 60
 # Limits for a file read on import (a ZIP can unpack to much more than it weighs).
