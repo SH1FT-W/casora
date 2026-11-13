@@ -56,6 +56,7 @@ const tumble = (id, model, kind, status, platform = 'tumble') => {
   ent('sensor.' + p + '_total', id, platform, 'total_energy', '150', { device_class: 'energy', unit_of_measurement: 'kWh', state_class: 'total_increasing' }, 'diagnostic');
   ent('binary_sensor.' + p + '_run', id, platform, 'running', status === 'running' ? 'on' : 'off', { device_class: 'running' });
   ent('button.' + p + '_unload', id, platform, 'unload', 'unknown');
+  ent('text.' + p + '_note', id, platform, 'note', 'unknown');
   const tasks = kind === 'dryer' ? [['lint_filter', 11, 10], ['condenser_clean', 9, 30]] : [['descale', 31, 30], ['filter_clean', 12, 50], ['drum_clean', 64, 100]];
   const due = tasks.filter((t) => t[1] >= t[2]).map((t) => t[0]);
   ent('binary_sensor.' + p + '_due', id, platform, 'maintenance_due', due.length ? 'on' : 'off', { device_class: 'problem', tasks: due });
@@ -151,6 +152,22 @@ assert.equal(L.inner('last', cw, S), '', 'while running no last cycle');
 g = groups(L.inner('run', cw, S));
 assert.ok(g[0].rows.some((r) => r.label === 'Läuft seit' && r.value === '48 Min.'), 'running since from cycle_start');
 assert.ok(!g[0].rows.some((r) => r.label === 'Restzeit' || r.label === 'Fortschritt'), 'no remaining time or progress');
+
+// 4b. Tumble's note (text, key note) is the programme line while running and for the last cycle, only when not empty.
+assert.equal(cw.note, 'text.tumble_trockner_w_note');
+assert.ok(L.watch(cw).includes('text.tumble_trockner_w_note'), 'watch the note');
+window._casoraHH = { on: () => true };
+assert.ok(!groups(L.inner('run', cw, S))[0].rows.some((r) => r.label === 'Programm'), 'no note: no programme row (v3)');
+delete window._casoraHH;
+S['text.tumble_trockner_w_note'].state = 'Baumwolle 40';
+assert.deepEqual(groups(L.inner('run', cw, S))[0].rows.filter((r) => r.label === 'Programm').map((r) => r.value), ['Baumwolle 40']);
+window._casoraHH = { on: () => true };
+assert.deepEqual(groups(L.inner('run', cw, S))[0].rows.filter((r) => r.label === 'Programm').map((r) => r.value), ['Baumwolle 40'], 'also in the soft/v3 layout');
+delete window._casoraHH;
+S['text.tumble_trockner_t_note'].state = 'Schranktrocken';
+assert.deepEqual(groups(L.inner('last', ct, S))[0].rows.map((r) => [r.label, r.value]), [['Programm', 'Schranktrocken'], ['Fertig', '1 Std. 58 Min.'], ['Verbrauch', '0,84 kWh']]);
+S['text.tumble_trockner_t_note'].state = '';
+assert.equal(groups(L.inner('last', ct, S))[0].rows[0].label, 'Fertig', 'empty note: no programme row');
 
 // 5. Solar tip: a Tumble washer whose ids say "tumble" and "trockner" counts as a washer, not as a dryer.
 for (const id of ['t', 'k', 'm', 'wd']) delete hass.devices[id];

@@ -5,11 +5,11 @@ maintenance.py); the appliance type is the device model ("washer"/"dryer", entit
 names start with "Tumble" on purpose: Casora must take the dryer role from the model, never from the word
 "tumble" in a name or id (scripts/local/00-finder.js casoraLaundryFind, live_finder.py).
 
-* "Tumble Waschmaschine": running for 48 minutes, descaling due (31 of 30 cycles).
+* "Tumble Waschmaschine": running for 48 minutes, note "Baumwolle 40", descaling due (31 of 30 cycles).
 * "Tumble Trockner": finished, laundry still inside, lint filter due.
 
 Buttons act like Tumble: "Ausgeräumt" turns the status off, a care button counts the task from now.
-The text entity "note" is left out (the mock has no text platform; Casora does not read it).
+The text entity "note" holds the user's note on the cycle; Casora shows it as the programme line.
 """
 from __future__ import annotations
 
@@ -39,7 +39,8 @@ def _e(eid, state, key, device, name, attrs=None, dc=None, unit=None, category=N
 
 
 def _appliance(now: datetime, kind: str, dev: str, slug: str, title: str, status: str, count: int, total_kwh: float,
-               last: tuple[float, int, float], since: dict[str, int], running_min: int | None) -> tuple[list, dict]:
+               last: tuple[float, int, float], since: dict[str, int], running_min: int | None,
+               note: str | None = None) -> tuple[list, dict]:
     """Entities and button effects of one appliance. last = (hours ago it ended, minutes, kWh)."""
     p = f"tumble_{slug}"
     ago_h, minutes, kwh = last
@@ -62,6 +63,7 @@ def _appliance(now: datetime, kind: str, dev: str, slug: str, title: str, status
            {"tasks": due}, dc="problem"),
         _e(f"button.{p}_ausgeraumt", "unknown", "unload", dev, f"{title} Ausgeräumt"),
         _e(f"event.{p}_durchlauf", "unknown", "cycle", dev, f"{title} Durchlauf", {"event_types": EVENTS}),
+        _e(f"text.{p}_notiz", note or "", "note", dev, f"{title} Notiz", {"min": 0, "max": 120, "mode": "text"}),
     ]
     buttons = {f"button.{p}_ausgeraumt": {f"sensor.{p}_status": "off"}}
     for task, s, sname, bname, every in TASKS[kind]:
@@ -80,7 +82,7 @@ def _appliance(now: datetime, kind: str, dev: str, slug: str, title: str, status
 def extra(now: datetime) -> dict:
     w, t = "mock_tumble_waschmaschine", "mock_tumble_trockner"
     ew, bw = _appliance(now, "washer", w, "waschmaschine", "Tumble Waschmaschine", "running", 214, 131.6,
-                        (26, 118, 0.84), {"descale": 31, "filter_clean": 12, "drum_clean": 64}, 48)
+                        (26, 118, 0.84), {"descale": 31, "filter_clean": 12, "drum_clean": 64}, 48, "Baumwolle 40")
     et, bt = _appliance(now, "dryer", t, "trockner", "Tumble Trockner", "finished", 96, 148.3,
                         (0.4, 132, 1.62), {"lint_filter": 11, "condenser_clean": 9}, None)
     # This month: cycles and their energy as steps of the counters (recorder statistics, see __init__.py).

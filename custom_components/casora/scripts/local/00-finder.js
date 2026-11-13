@@ -2626,7 +2626,9 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
       role: function (hass, list, devId) { return tumbleRole(list, model(hass, devId)); },
       fields: { state: k('status'), elapsed: k('cycle_start'), count: k('cycle_count'), energy: k('total_energy'),
         running: k('running', 'binary_sensor'), unload: k('unload', 'button'), maintdue: bk('maintenance_due'),
-        lastEnd: k('last_end'), lastDur: k('last_duration'), lastKwh: k('last_energy') } },
+        lastEnd: k('last_end'), lastDur: k('last_duration'), lastKwh: k('last_energy'),
+        // The user's note on the cycle (text, e.g. the programme): the running or next one, the last one for 30 min.
+        note: k('note', 'text') } },
     { id: 'whirlpool', rank: 0, platforms: ['whirlpool'], need: ['end_time'], any: ['washer_state', 'dryer_state'],
       role: function (hass, list) {
         if (has(list, 'washer_state')) return 'washer';
