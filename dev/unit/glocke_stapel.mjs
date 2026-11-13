@@ -40,6 +40,7 @@ const LOCK = 'lock.haustuer', BELL = 'binary_sensor.klingel_ding', ALARM = 'alar
 const ME = 'person.anna', YOU = 'person.ben';
 
 let sent = [];
+let ownHidden = null;
 let pushShared = null;
 function load({ logbook, states, uid = 'u-anna', cfg = {} }) {
   sent = [];
@@ -50,7 +51,7 @@ function load({ logbook, states, uid = 'u-anna', cfg = {} }) {
     entities: {}, devices: {}, areas: {},
     callWS: (msg) => Promise.resolve(msg.type === 'logbook/get_events' ? logbook : null),
     connection: {
-      sendMessagePromise: (m) => { sent.push(m); return Promise.resolve(m.type === 'frontend/get_user_data' ? { value: null } : null); },
+      sendMessagePromise: (m) => { sent.push(m); return Promise.resolve(m.type === 'frontend/get_user_data' ? { value: ownHidden } : null); },
       subscribeMessage: (cb, m) => {
         sent.push(m);
         if (m.type === 'casora/notify_hidden/subscribe') { pushShared = cb; cb({ all: 0, rows: {} }); }
@@ -172,7 +173,7 @@ await check('removed messages: shared list with the switch, pushed changes apply
   const n = load({ logbook: lockLog, states: lockStates, cfg: { notification_hidden_shared: true } });
   let rows = await n.refresh();
   assert.ok(sent.some((m) => m.type === 'casora/notify_hidden/subscribe'));
-  assert.ok(!sent.some((m) => m.type === 'frontend/get_user_data'), 'not the per-user list');
+  assert.ok(!sent.some((m) => m.type === 'frontend/set_user_data'), 'never writes the per-user list (it is only read once to take it over)');
   assert.ok(rows.some((r) => r.entity === LOCK));
   // Another user removed the stack: the list arrives, the card is gone here too.
   const card = rows.find((r) => r.entity === LOCK);
@@ -189,6 +190,19 @@ await check('removed messages: shared list with the switch, pushed changes apply
   await window._casoraNotify.refresh();
   window._casoraNotify._hideAll();
   assert.ok(sent.some((m) => m.type === 'casora/notify_hidden/set' && m.all > 0), 'shared set');
+});
+
+await check('switching on „Removed for all users“ takes over what this user removed before', async () => {
+  store = {};
+  ownHidden = { all: NOW - 3 * 3600e3, rows: { 'lock.haustuer@123': NOW - 60e3 } };
+  const n = load({ logbook: lockLog, states: lockStates, cfg: { notification_hidden_shared: true } });
+  await n.refresh();
+  await new Promise((r) => setTimeout(r, 0));
+  const set = sent.filter((m) => m.type === 'casora/notify_hidden/set').pop();
+  assert.ok(set, 'the merged list is written to the shared one');
+  assert.equal(set.all, NOW - 3 * 3600e3);
+  assert.equal(set.rows['lock.haustuer@123'], NOW - 60e3);
+  ownHidden = null;
 });
 
 Date.now = realNow;

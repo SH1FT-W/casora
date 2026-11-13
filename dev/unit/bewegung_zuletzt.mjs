@@ -1,7 +1,7 @@
 // Hemma round #10: a motion sensor with nothing detected says since when („Zuletzt vor 11 Std.“), with the bell's
 // relative time, on the tile, the security badges and the phone chip. Detected stays „Erkannt“.
 //   node dev/unit/bewegung_zuletzt.mjs
-// @deckt: custom_components/casora/scripts/casora-core.js#casoraMotionLast,casoraMotionWord,casoraMotionHtml,casoraAgo dashboards/casora/button_card_templates.json#casora_motion,casora_badge_security,casora_badge_contact_group,casora_mobile_sensor_chips
+// @deckt: custom_components/casora/scripts/local/18-ziele.js custom_components/casora/scripts/casora-core.js#casoraMotionLast,casoraMotionWord,casoraMotionHtml,casoraAgo dashboards/casora/button_card_templates.json#casora_motion,casora_badge_security,casora_badge_contact_group,casora_mobile_sensor_chips
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -48,13 +48,17 @@ assert.equal(window.casoraMotionWord(last({ ...two, [M2]: { state: 'on', last_ch
 const html = window.casoraMotionHtml(last(st));
 assert.match(html, /^<casora-ago data-since="\d+" data-pre="Zuletzt">Zuletzt vor 11 Std\.<\/casora-ago>$/);
 assert.equal(window.casoraMotionHtml(last({ [M]: { state: 'on' } })), 'Erkannt', 'detected: plain text');
+// Phone (owner 13.11.2026): the chip only „vor 11 Std.“, a tile both forms – casora-statefit shows the short one when narrow.
+assert.match(window.casoraMotionHtml(last(st), 'Frei', { short: true }), /^<casora-ago data-since="\d+">vor 11 Std\.<\/casora-ago>$/);
+const fit = window.casoraMotionHtml(last(st), 'Frei', { fit: true });
+assert.match(fit, /^<casora-statefit [^>]+><span class="sf-f"><casora-ago [^>]*data-pre="Zuletzt">Zuletzt vor 11 Std\.<\/casora-ago><\/span><span class="sf-s"[^>]*><span[^>]*><casora-ago data-since="\d+">vor 11 Std\.<\/casora-ago>/);
 
 // Templates.
 const tpl = JSON.parse(fs.readFileSync(new URL('dashboards/casora/button_card_templates.json', root), 'utf8'));
 const run = (t, ctx) => new Function(...Object.keys(ctx), t.trim().replace(/^\[\[\[/, '').replace(/\]\]\]$/, ''))(...Object.values(ctx));
 const tile = tpl.casora_motion.state_display;
 const ctx = (states, variables, entity) => ({ states, variables, entity, hass: { states }, window });
-assert.match(run(tile, ctx(st, { sensor_1: M }, st[M])), /Zuletzt vor 11 Std\./, 'tile: since when');
+assert.match(run(tile, ctx(st, { sensor_1: M }, st[M])), /casora-statefit[\s\S]*Zuletzt vor 11 Std\.[\s\S]*>vor 11 Std\./, 'tile: since when, short form for narrow tiles');
 assert.equal(run(tile, ctx({ [M]: { state: 'on' } }, { sensor_1: M }, null)), 'Erkannt', 'tile: detected');
 assert.match(run(tile, ctx(st, {}, { entity_id: M, ...st[M] })), /Zuletzt vor 11 Std\./, 'tile without sensor list: its entity');
 assert.ok(!/triggers_update/.test(JSON.stringify(tpl.casora_motion)), 'no re-render storm: no triggers_update on the tile');
@@ -71,7 +75,13 @@ for (const k of ['casora_badge_security', 'casora_badge_contact_group']) {
 const chip = tpl.casora_mobile_sensor_chips.custom_fields.rooms_row.card.cards.find((c) => c.icon === 'mdi:motion-sensor');
 window.casoraMotionOf = (o, S) => ({ ids: [M], entity: M, state: S[M].state });
 const cst = { 'input_select.casora_mobile_filter': { state: 'flur' }, ...st };
-assert.match(run(chip.name, ctx(cst, { room_chips: { flur: { motion_entity: M } } }, null)), /Zuletzt vor 11 Std\./, 'phone chip: since when');
+const chipOut = run(chip.name, ctx(cst, { room_chips: { flur: { motion_entity: M } } }, null));
+assert.match(chipOut, /vor 11 Std\./, 'phone chip: since when');
+assert.ok(!/Zuletzt/.test(chipOut), 'phone chip: short, without „Zuletzt“');
+
+// Popup stage (owner 13.11.2026): the same words as the head, no entity name part („Occupancy“) and no „Seit“ beside it.
+const ziele = fs.readFileSync(new URL('custom_components/casora/scripts/local/18-ziele.js', root), 'utf8');
+assert.ok(/text: moWord \|\| Z\.nowWord\(hass, id\)/.test(ziele) && /facts: moWord \? \[\] :/.test(ziele), 'motion stage speaks like the head');
 
 Date.now = realNow;
 console.log('ok – motion says since when');

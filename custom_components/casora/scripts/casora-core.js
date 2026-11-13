@@ -14978,6 +14978,25 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   var SHARED_UID = 'casora:shared';
   function sharedHidden() { return window.CASORA_NOTIFY_SHARED_HIDDEN === true; }
   var _hidLoaded = false, _hidUnsub = null;
+  // The user's own list (HA user data) into the shared one: the later „until“ of each message wins.
+  function mergeOwn(hass) {
+    if (!hass || !hass.connection || typeof hass.connection.sendMessagePromise !== 'function') return;
+    Promise.resolve(hass.connection.sendMessagePromise({ type: 'frontend/get_user_data', key: HID_KEY })).then(function (r) {
+      var v = r && r.value;
+      if (!v || typeof v !== 'object' || _hid.uid !== SHARED_UID) return;
+      var next = mergeHidden(_hid, v);
+      if (next.all === _hid.all && JSON.stringify(next.rows) === JSON.stringify(_hid.rows)) return;
+      _hid = { all: next.all, rows: next.rows, uid: SHARED_UID };
+      saveHidden();
+      rebuild();
+      announce();
+    }, function () { /* without it, the shared list as it is */ });
+  }
+  function mergeHidden(a, b) {
+    var rows = Object.assign({}, (a && a.rows) || {});
+    Object.keys((b && b.rows) || {}).forEach(function (k) { var t = +b.rows[k]; if (isFinite(t) && !(rows[k] >= t)) rows[k] = t; });
+    return { all: Math.max(+(a && a.all) || 0, +(b && b.all) || 0), rows: rows };
+  }
   function loadHidden(hass) {
     var mode = sharedHidden() ? 'shared' : 'user';
     if (_hidLoaded === mode || !hass || !hass.connection || typeof hass.connection.sendMessagePromise !== 'function') return;
@@ -14986,12 +15005,15 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     if (mode === 'shared') {
       if (typeof hass.connection.subscribeMessage !== 'function') { _hidLoaded = false; return; }
       if (_hid.uid !== SHARED_UID) _hid = { all: 0, rows: {}, uid: SHARED_UID };
+      var first = true;
       Promise.resolve(hass.connection.subscribeMessage(function (v) {
         if (!v || typeof v !== 'object' || _hidLoaded !== 'shared') return;
         _hid = { all: +v.all || 0, rows: (v.rows && typeof v.rows === 'object') ? v.rows : {}, uid: SHARED_UID };
         try { localStorage.setItem(HID_KEY, JSON.stringify(_hid)); } catch (e) { /* nur geteilt */ }
         rebuild();
         announce();
+        // Switched on (owner 13.11.2026): what this user removed so far joins the shared list (once per page).
+        if (first) { first = false; mergeOwn(hass); }
       }, { type: 'casora/notify_hidden/subscribe' })).then(function (unsub) {
         if (_hidLoaded === 'shared') _hidUnsub = unsub; else if (typeof unsub === 'function') unsub();
       }, function () { if (_hidLoaded === 'shared') _hidLoaded = false; });
@@ -18028,11 +18050,21 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   };
   // The same as HTML for a tile, badge or popup head: the relative time in a casora-ago that swaps only its text
   // every minute – no re-render of the card (no triggers_update).
-  window.casoraMotionHtml = function (m, idle) {
+  // opts.short: only „vor 6 Min.“ (the phone's chip); opts.fit: „Zuletzt vor 6 Min.“ where it fits, else „vor 6 Min.“
+  // (a narrow tile on the phone, owner 13.11.2026) – casora-statefit picks, both forms tick.
+  window.casoraMotionHtml = function (m, idle, opts) {
     var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
     var t = window.casoraMotionWord(m, idle);
     if (!m || m.on || !m.known || m.since == null || typeof window.casoraAgo !== 'function') return esc(t);
-    return '<casora-ago data-since="' + Math.round(m.since) + '" data-pre="Zuletzt">' + esc(t) + '</casora-ago>';
+    var bare = window.casoraAgo(m.since);
+    var fullHtml = '<casora-ago data-since="' + Math.round(m.since) + '" data-pre="Zuletzt">' + esc(t) + '</casora-ago>';
+    var shortHtml = '<casora-ago data-since="' + Math.round(m.since) + '">' + esc(bare) + '</casora-ago>';
+    if (opts && opts.short) return shortHtml;
+    if (!(opts && opts.fit)) return fullHtml;
+    return '<casora-statefit data-casora-clip style="display:inline-block;vertical-align:top;max-width:calc(100cqi - '
+      + 'var(--casora-tile-state-inset, 0px));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'
+      + '<span class="sf-f">' + fullHtml + '</span><span class="sf-s" style="display:none;max-width:100%">'
+      + '<span style="min-width:0;overflow:hidden;text-overflow:ellipsis">' + shortHtml + '</span></span></casora-statefit>';
   };
   // <casora-ago data-since="ms" data-pre="Zuletzt">: keeps its relative time current on its own (text only, once a minute,
   // in the reader's language through casoraTr – the page's i18n would translate a German swap again).
@@ -18046,7 +18078,12 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         if (!isFinite(ms) || typeof window.casoraAgo !== 'function') return;
         var de = (this.dataset.pre ? this.dataset.pre + ' ' : '') + window.casoraAgo(ms);
         var t = typeof window.casoraTr === 'function' ? window.casoraTr(de) : de;
-        if (this.textContent !== t) this.textContent = t;
+        if (this.textContent !== t) {
+          this.textContent = t;
+          // A longer text („vor 10 Min.“) may no longer fit: the short form decides again.
+          var fit = this.closest && this.closest('casora-statefit');
+          if (fit && typeof fit._fit === 'function') fit._fit();
+        }
         var self = this;
         this._t = setTimeout(function () { self._tick(); }, 60000 - ((Date.now() - ms) % 60000) + 200);
       }

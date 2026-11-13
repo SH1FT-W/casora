@@ -33,7 +33,7 @@ await need('Cover-Kachel', cov);
 await H((c) => { const p = window.__panel(); p._room = c.i; p._renderTabs(); p._renderForm(); p._bOpen = true;
   const t = p._state.compact.rooms[c.i].tiles.find((x) => p._tileKey(x) === c.key); p._select({ group: 'tiles', key: c.key, label: t.name || '' }); }, cov);
 await page.waitForTimeout(1200);
-// „Sichtbarkeit & Rückfrage“ aufklappen und den Schalter echt anklicken
+// „Sichtbarkeit & Rückfrage“ aufklappen und „Vorher fragen“ echt auswählen
 const sw = await H(() => { const r = window.__panel().shadowRoot; const row = r.querySelector('#pane #band-tiles .tile.sel .row.mask');
   if (!row) return null; const f = row.closest('.adv'); if (f && !f.classList.contains('open')) f.querySelector('.advsum').click(); return true; });
 await check('Cover-Kachel bietet „Vor dem Schalten fragen“ an', !!sw);
@@ -41,10 +41,14 @@ if (sw) {
   // Opening the fold animates and then smooth-scrolls it into view (_openAdv/_revealAdv). A click at coordinates
   // measured while that runs lands on the hint below the switch. Playwright's click waits until the switch stands
   // still and is really what the pointer hits.
-  await page.locator('#pane .tile.sel .row.mask [role=switch]').click();
+  // Hemma round #12: one choice „Tippverhalten“ (Normal / Vorher fragen / Nur ansehen) instead of the switch.
+  await page.locator('#pane .tile.sel .row.mask .combo > input').click();
+  await page.waitForTimeout(500);
+  // The menu takes the pointer itself (not a synthetic click): Playwright clicks the visible option.
+  await page.locator('.combo-menu .combo-opt', { hasText: /Vorher fragen|Ask first/ }).filter({ visible: true }).first().click();
   await page.waitForTimeout(600);
   const on = await H((c) => { const p = window.__panel(); const t = p._state.compact.rooms[c.i].tiles.find((x) => p._tileKey(x) === c.key); return (t.variables || {}).confirm_toggle === true; }, cov);
-  await check('Schalter setzt die Rückfrage', on);
+  await check('„Vorher fragen“ setzt die Rückfrage (confirm_toggle)', on);
   // Popup der Vorschau: „Auf“ (data-casora-svc) ohne Bestätigen fährt nicht
   await H(() => { const p = window.__panel(); p._cpDismissed = null; const t = p._cpTarget(); if (t) p._cpOpen(t); });
   // Unter Last baut sich das Vorschau-Popup langsamer auf: bis zu 10 s auf den „Auf“-Knopf warten
