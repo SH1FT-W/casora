@@ -216,7 +216,7 @@
       if (!f || !f.label) continue;
       const head = tr(sec.title || sec.label) + ": " + tr(f.label);
       if (f.type === "bool") {
-        let on = v === undefined || v === null || v === "" ? f.boolDefault !== false : v === true || v === "true" || v === 1;
+        let on = v === undefined || v === null || v === "" ? (W.__casoraPanelInternals.fieldDefault(f, ctx && ctx.hass) !== false) : v === true || v === "true" || v === 1;
         if (f.invert) on = !on;
         return head + " " + tr(on ? "On" : "Off").toLowerCase();
       }

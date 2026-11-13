@@ -63,7 +63,8 @@ function clock12(hass) {
       { hour: "numeric" }).resolvedOptions().hour12 === true;
   } catch (e) { return false; }
 }
-const LOCALE_12H = clock12(null);
+// A bool field's default: a plain value, or a function of hass (the 12-hour clock needs the HA user).
+const fieldDefault = (f, hass) => (typeof f.boolDefault === "function" ? !!f.boolDefault(hass) : f.boolDefault);
 
 const REQUIREMENTS = [
   { kind: "integration", id: "uix", label: "UI eXtension", required: true,
@@ -2670,7 +2671,7 @@ const SECTIONS = [
         hint: "Weekday and date in small type under the time." },
       // Always visible: without an entry the clock takes sensor.time, and that should show.
       { ...E("time_entity", "Time sensor", ["sensor"]), always: true, placeholder: "Automatic" },
-      { key: "use_12h", label: "12-hour clock", type: "bool", boolDefault: LOCALE_12H, always: true },
+      { key: "use_12h", label: "12-hour clock", type: "bool", boolDefault: clock12, always: true },
       { ...T("time_suffix", "Suffix"),
         auto: true, advanced: true, noAdd: true },
     ],
@@ -19504,7 +19505,7 @@ class CasoraPanel extends HTMLElement {
         if (f.type === "bool") {
           // invert: the switch shows the opposite of the stored value.
           const flip = (v) => (f.invert && v !== undefined && v !== "" && v !== null ? !v : v);
-          row.appendChild(this._boolSwitch(flip(cur), f.invert ? !f.boolDefault : f.boolDefault, (v) => {
+          row.appendChild(this._boolSwitch(flip(cur), f.invert ? !fieldDefault(f, this._hass) : fieldDefault(f, this._hass), (v) => {
             setVar(f.key, flip(v), f);
             filled(f);
           }, f.label));
@@ -30211,7 +30212,7 @@ function previewHasError(doc) {
 window.__casoraPanelInternals = {
   blankRoom, roomPhoto, slug, translit, expandConfig, expandAny, extractAny, retargetRoutes, mobileFromRooms,
   applyScenePick, confirmEntities, confirmNames, entityUsers, wrapCustomCard, hostCard, FINGERPRINT_KEY, fingerprintOf, refreshTemplates, templatePrint, TILE_TYPES, USER_TILE_TYPES,
-  findType, tileTypeAny, newTile, previewHasError, isPetTracker, petName, isStatSensor, isPlantEntity, listCategory, TILE_MAIN_FIND, tileMissingEntity, tileEntityGone, iconUrl, studioIcon, roomGlyph, roomIconSrc, titleCase, clone, FLOW_TINT, isMobileConfig, applyKiosk,
+  fieldDefault, findType, tileTypeAny, newTile, previewHasError, isPetTracker, petName, isStatSensor, isPlantEntity, listCategory, TILE_MAIN_FIND, tileMissingEntity, tileEntityGone, iconUrl, studioIcon, roomGlyph, roomIconSrc, titleCase, clone, FLOW_TINT, isMobileConfig, applyKiosk,
   applyMotion, markPhoneManaged, applyFirstRun, CASORA_THEMES, ensureCustomFontCss, sceneBadgeOn, dropNavScenes,
   parseCardText, cardToText,
   isDefaultHomeName, homeRoomWord, shotLang, isHomeRoom, roomLabel, storedRoomName, HOME_ROOM_NAME, markAutoHome, isDefaultHome, setHomeName, badgeOrderOf, BADGE_ORDER_IDS,
