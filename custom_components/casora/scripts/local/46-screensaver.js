@@ -507,8 +507,15 @@
   var dayName = function (ts, short) { return new Intl.DateTimeFormat(loc(), { weekday: short ? 'short' : 'long' }).format(new Date(ts)); };
   var sameDay = function (a, b) { var x = new Date(a), y = new Date(b); return x.getFullYear() === y.getFullYear() && x.getMonth() === y.getMonth() && x.getDate() === y.getDate(); };
 
+  // 12 hours like the dashboard's clock (#191): the HA user's time format, else the dashboard language.
+  var use12 = function (hass) {
+    var f = hass && hass.locale && hass.locale.time_format;
+    if (f === '12') return true;
+    if (f === '24') return false;
+    try { return !!new Intl.DateTimeFormat((hass && hass.locale && hass.locale.language) || (hass && hass.language) || loc(), { hour: 'numeric' }).resolvedOptions().hour12; } catch (e) { return false; }
+  };
   var timeText = function (now, hass) {
-    var h12 = hass && hass.locale && hass.locale.time_format === '12';
+    var h12 = use12(hass);
     var h = now.getHours();
     if (h12) h = ((h + 11) % 12) + 1;
     return (h12 ? String(h) : String(h).padStart(2, '0')) + ':' + String(now.getMinutes()).padStart(2, '0');

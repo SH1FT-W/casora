@@ -261,7 +261,7 @@ async def t_py18():
 
     real = update.dr, update.er
     update.dr = SimpleNamespace(async_get=lambda h: SimpleNamespace(
-        devices={i: SimpleNamespace(identifiers={i}) for i in devs}))
+        devices=[SimpleNamespace(identifiers={i}) for i in devs]))
     update.er = SimpleNamespace(async_get=lambda h: SimpleNamespace(async_get_entity_id=lambda *a: None))
 
     async def job(fn, *a):

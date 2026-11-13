@@ -112,7 +112,10 @@ def store_of(hass: HomeAssistant, repo_id: str) -> str | None:
             found = store
             break
     if found is None:
-        devices = list(dr.async_get(hass).devices.values())
+        # Iterated, not used as a mapping (deprecated since HA 2026.10, gone in 2027.9); older HA iterates ids.
+        dreg = dr.async_get(hass)
+        devices = [dreg.async_get(d) if isinstance(d, str) else d for d in dreg.devices]
+        devices = [d for d in devices if d is not None]
         for store in STORE_DOMAINS:
             ident = (store, repo_id)
             if any(ident in d.identifiers for d in devices):
