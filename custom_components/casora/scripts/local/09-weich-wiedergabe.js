@@ -130,6 +130,9 @@
     + '.tn .cv,.l.d.tn .cv{width:52px;height:52px;border-radius:14px;box-shadow:0 6px 14px -8px rgba(0,0,0,.45)}'
     + '.tn .t{font-size:15px;font-weight:650}'
     + '.tn .s{font-size:12.5px;margin-top:1px}'
+    // Tablet (13.11.2026, r60): small print at least 13 px; same tablet query as theme.yaml.
+    + '@media (min-width:768px) and (max-width:1600px) and (min-height:501px) and (hover:none) and (pointer:coarse){'
+    + '.l.tn .r:not(.st) .s{font-size:13px}}'
     + '.tn .b{margin-top:8px;background:color-mix(in srgb,var(--cnp-ink) 16%,transparent)}'
     + '.tn .b i{background:var(--cnp-ink)}'
     + '.ct{display:flex;align-items:center;gap:2px;flex:none}'

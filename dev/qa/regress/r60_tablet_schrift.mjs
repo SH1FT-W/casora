@@ -5,7 +5,10 @@
 // Erwartet (iPad 1024×768 quer mit Seitenleiste und 768×1024 hochkant, hell): kein Text im
 // Dashboard unter 13 px auf der Startseite und dem ersten Raum, und keine der vergrößerten Zeilen
 // (13/14 px: Zustände, Wetter) mit „…“ gekürzt. Lange Kachelnamen (15 px) kürzt Casora wie bisher.
-import { open, casoraDashboard, dashboard, check, need, finish } from './lib.mjs';
+// 13.11.2026: the Now Playing tile's subtitle was 12.5 px and cut; hidden since the mock speakers play only in the
+// demo house. So the test plays two grouped speakers itself and opens the media row under the badges, as a tap on
+// the media badge does (only in this browser, nothing reaches HA or the parallel tests).
+import { open, casoraDashboard, dashboard, fakeStates, check, need, finish } from './lib.mjs';
 
 const dash = await casoraDashboard();
 await need('Casora-Dashboard', dash);
@@ -15,6 +18,19 @@ for (const [w, h] of [[1024, 768], [768, 1024]]) {
   const { page } = await open({ width: w, height: h, dark: false, theme: 'Casora', touch: true, userAgent: IPAD });
   for (const v of views) {
     await dashboard(page, dash.url + '/' + v, 3);
+    if (v === views[0]) {
+      const song = { state: 'playing', attributes: { media_content_type: 'music', media_title: 'Morgenlicht',
+        media_artist: 'Testensemble', media_album_name: 'Ruhige Räume', media_duration: 214, media_position: 61,
+        media_position_updated_at: new Date().toISOString() } };
+      await fakeStates(page, { 'media_player.testlautsprecher_wohnzimmer': song, 'media_player.testlautsprecher_kueche': song,
+        'input_select.casora_expanded_row': { state: 'media' } }, { sticky: true });
+      await page.waitForTimeout(2500);
+      const shown = await page.evaluate(() => window.__pierce('*').some((e) => {
+        let n = e; while (n && n.localName !== 'hui-view') n = n.parentElement || (n.parentNode && n.parentNode.host);
+        return n && getComputedStyle(e).visibility === 'visible' && [...e.childNodes].some((c) => c.nodeType === 3 && c.textContent.includes('Morgenlicht')) && e.getBoundingClientRect().width > 0;
+      }));
+      await need(`${w}×${h}: Startseite zeigt den spielenden Testlautsprecher`, shown);
+    }
     const r = await page.evaluate(() => {
       const small = [], cut = [];
       (function walk(root) {
