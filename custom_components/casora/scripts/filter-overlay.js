@@ -695,6 +695,31 @@
       inner.style.setProperty('width', `${Math.ceil(ext)}px`, 'important');
     }
   }
+  // Dashboard header and row widths for every overlay that was built (or retries) in this frame, in one pass
+  // (Tempo 2, 13.11.2026): first all overlays look up their elements (reads), then the header, then each
+  // container's rows once. The phone has several overlays on one container; each used to do all of it right
+  // away on its own, so the same rows were measured once per overlay, a forced layout each time.
+  const _dashExtrasQ = new Set();
+  let _dashExtrasRaf = 0;
+  function _dashExtrasFrame() {
+    _dashExtrasRaf = 0;
+    const list = Array.from(_dashExtrasQ);
+    _dashExtrasQ.clear();
+    if (_activeOverlay) return;
+    for (const inst of list) { try { inst._discoverElements(); } catch (_) {} }
+    const containers = new Set();
+    for (const inst of list) {
+      if (!_dashHeader?.grad?.isConnected && inst._headerEl) _ensureDashboardHeader(inst);
+      if (inst._container) containers.add(inst._container);
+    }
+    // Give the sub-badge rows real scrollWidth as soon as they render.
+    containers.forEach((c) => _fixRowWidths(c));
+  }
+  function _dashExtrasSoon(inst) {
+    _dashExtrasQ.add(inst);
+    if (!_dashExtrasRaf) _dashExtrasRaf = requestAnimationFrame(_dashExtrasFrame);
+  }
+
   function _fixRowWidths(root) {
     const walk = (node, depth) => {
       if (depth > 12 || !(node instanceof Element)) return;
@@ -1543,12 +1568,7 @@
 
       const tryDashExtras = (n) => {
         const headerDone = !!_dashHeader?.grad?.isConnected;
-        if (!_activeOverlay) {
-          this._discoverElements();
-          if (!headerDone && this._headerEl) _ensureDashboardHeader(this);
-          // Give the sub-badge rows real scrollWidth as soon as they render.
-          _fixRowWidths(this._container);
-        }
+        _dashExtrasSoon(this);
         if (n < 20 && !headerDone) setTimeout(() => tryDashExtras(n + 1), 500);
       };
       tryDashExtras(0);
