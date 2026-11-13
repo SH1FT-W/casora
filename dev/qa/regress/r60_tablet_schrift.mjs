@@ -5,6 +5,7 @@
 // Erwartet (iPad 1024×768 quer mit Seitenleiste und 768×1024 hochkant, hell): kein Text im
 // Dashboard unter 13 px auf der Startseite und dem ersten Raum, und keine der vergrößerten Zeilen
 // (13/14 px: Zustände, Wetter) mit „…“ gekürzt. Lange Kachelnamen (15 px) kürzt Casora wie bisher.
+// Exception (13.11.2026): the song sub-line of the Now Playing row may be cut (still at least 13 px).
 // 13.11.2026: the Now Playing tile's subtitle was 12.5 px and cut; hidden since the mock speakers play only in the
 // demo house. So the test plays two grouped speakers itself and opens the media row under the badges, as a tap on
 // the media badge does (only in this browser, nothing reaches HA or the parallel tests).
@@ -47,7 +48,11 @@ for (const [w, h] of [[1024, 768], [768, 1024]]) {
           if (cs.visibility === 'hidden' || cs.opacity === '0') return;
           const fs = parseFloat(cs.fontSize);
           if (fs < 12.95) small.push(own.slice(0, 20) + ' ' + fs.toFixed(1));
-          if (fs < 14.5 && cs.textOverflow === 'ellipsis' && e.scrollWidth > e.clientWidth + 1) cut.push(own.slice(0, 24) + ' ' + fs.toFixed(1) + ' ' + String(e.id || e.className || e.localName).slice(0, 20));
+          // 13.11.2026, Maintainer: song sub-line may truncate. Only the Now Playing row's subtitle
+          // ("artist · speaker", .tn .s in 09-weich-wiedergabe.js, not the stage) may end in "…"; its 13 px floor stays.
+          const rh = e.getRootNode().host;
+          const songSub = !!(rh && rh.classList.contains('cnp-host') && e.matches('.r.tn:not(.st) .m > .s'));
+          if (fs < 14.5 && !songSub && cs.textOverflow === 'ellipsis' && e.scrollWidth > e.clientWidth + 1) cut.push(own.slice(0, 24) + ' ' + fs.toFixed(1) + ' ' + String(e.id || e.className || e.localName).slice(0, 20));
         });
       })(document);
       return { soft: !!(window._casoraSoft && window._casoraSoft(true)), small, cut };
