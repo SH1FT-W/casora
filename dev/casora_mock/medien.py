@@ -1,8 +1,8 @@
 """Made-up media devices and a garden camera for the media and camera popups (grouping, timeline).
 
 - Testfernseher: a TV without grouping (its media popup stays as before).
-- Four test speakers with MediaPlayerEntityFeature.GROUPING and group_members (living room plays, the kitchen
-  joined it), so media_player.join / media_player.unjoin work in the test house (entity.py MMedia).
+- Four test speakers with MediaPlayerEntityFeature.GROUPING and group_members (the kitchen joined the living room;
+  both play only in the demo house), so media_player.join / media_player.unjoin work in the test house (entity.py MMedia).
 - Testgarten: a camera with a motion sensor, a person sensor (occupancy) and a doorbell event on the same device,
   with today's movements and one ring in the history (timeline of the general camera popup).
 
@@ -66,7 +66,9 @@ def extra(now: datetime, demo: bool = False) -> dict:
     leader, joined = SPEAKERS[0][0], SPEAKERS[1][0]
     for key, name, de, en in SPEAKERS:
         group = [f"media_player.{leader}", f"media_player.{joined}"] if key in (leader, joined) else [f"media_player.{key}"]
-        playing = key in (leader, joined)
+        # Only the demo house plays (screenshots): in the test houses nothing new may play, since many gate tests
+        # measure the home page and the Now Playing list with their own players (26.11.27 gate: 14 red).
+        playing = demo and key in (leader, joined)
         a = {"device_class": "speaker", "supported_features": SPEAKER_FEATURES, "volume_level": 0.3 if playing else 0.2,
              "is_volume_muted": False, "group_members": group}
         if playing:
