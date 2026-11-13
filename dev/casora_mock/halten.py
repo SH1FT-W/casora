@@ -168,6 +168,9 @@ def extra(now: datetime) -> dict:
         # Kameras
         _e("camera.testkamera", "idle", "testkamera", "Testkamera", {"supported_features": 0}),
         _e("camera.testkamera_garten", "idle", "testkamera_garten", "Testkamera Garten", {"supported_features": 0}),
+        # A robot vacuum map as a camera without a device (Map Extractor-like, only its id says map): no surveillance
+        # camera, the screensaver's "Automatic" leaves it out (owner 13.11.2026). No area, so no room counts change.
+        {**_e("camera.testkehrer_karte", "idle", None, "Testkehrer Karte", {"supported_features": 0}), "karte": True},
         # Steckdose mit Leistung
         _e("switch.teststeckdose", "on", "teststeckdose", "Teststeckdose", dc="outlet"),
         _e("sensor.teststeckdose_leistung", "35.2", "teststeckdose", "Teststeckdose Leistung",
