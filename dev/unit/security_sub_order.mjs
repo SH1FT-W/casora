@@ -85,8 +85,9 @@ assert.equal(sum(sec, { summary: 'detailed', order: ['cameras', 'locks', 'window
   'Kamera offline · Schloss offen · Schloss offline · Fenster offen · Alarm aus · 2 Türen offen');
 const short = sum(sec, { summary: 'short', order: ['windows', 'doors'] }).html;
 const icons = [...short.matchAll(/mask:url\('\/i\/([\w-]+)\.svg'\)/g)].map((m) => m[1]).filter((x, i, a) => a.indexOf(x) === i);
-assert.deepEqual(icons, ['window-open', 'door-open', 'lock-open', 'lock', 'camera']);
-assert.ok(/^<span class="cs-sum"[^>]*><span class="cs-sum-lead"/.test(short), 'the lead word stays first');
+// The most important finding stands in words in front (casoraSecLead): of the open ones the first in the list's order.
+assert.deepEqual(icons, ['door-open', 'lock-open', 'lock', 'camera']);
+assert.ok(/^<span class="cs-sum"[^>]*><span class="cs-sum-item cs-sum-lead"[^>]*>Fenster offen</.test(short), 'the lead word stays first');
 
 // ── Studio: kinds the badge has, list rows ───────────────────────────────────
 const src = read('custom_components/casora/panel/casora-panel.js');

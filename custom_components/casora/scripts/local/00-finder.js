@@ -1855,6 +1855,23 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     })();
   }
 
+  // ── Most important finding of the security sub-line (owner, 13.11.2026) ─────────
+  // Rank as everywhere in the badge: a jammed lock first (casoraSecurityLevel: always „alarm“; a triggered alarm says
+  // „Alarm!“ alone before this is asked), then what is open (alarm off, doors, windows, gates, locks, blinds), then
+  // what is tilted, then what is offline (the old lead word: „N offen“, else tilted, else offline). Within one rank
+  // the line's own order decides (the usual one or the Studio's security_sub_order). L = the list of
+  // casoraSecuritySummary ([word, icon, number, offline?, key, kind]); returns the index of the lead, -1 if empty.
+  var SEC_LEAD_RANK = { jammed: 0, open: 1, tilted: 2, offline: 3 };
+  window.casoraSecLead = function (L) {
+    var best = -1, r = 99;
+    (L || []).forEach(function (x, i) {
+      var k = SEC_LEAD_RANK[x && x[5]];
+      if (k === undefined) k = 4;
+      if (k < r) { r = k; best = i; }
+    });
+    return best;
+  };
+
   // ── Sub-line of the security group badge (Soft/Fog, 06.10.2026) ─────────
   // sec = count from casora_badge_security_group (triggered, disarmed, locks, doors, gates,
   // windows, windowsTilted, doorsTilted, covers, lockDead, camDead, insecure, problem).
@@ -1873,21 +1890,21 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
       var al = String(o.alarmState || '').toLowerCase();
       return { text: ALARM_MODE[al] ? 'Aktiv · ' + ALARM_MODE[al] : 'Alles sicher', html: null };
     }
-    // [word, icon, number, offline?, key]; words with a number are in phrases/en.json.
+    // [word, icon, number, offline?, key, kind]; kind ranks the lead (casoraSecLead); words with a number are in phrases/en.json.
     var L = [];
-    if (S.disarmed) L.push(['Alarm aus', null, 0, false, 'alarm']);
-    if (S.doors) L.push([n(S.doors, 'Tür offen', 'Türen offen'), 'door-open', S.doors, false, 'doors']);
-    if (S.windows) L.push([n(S.windows, 'Fenster offen', 'Fenster offen'), 'window-open', S.windows, false, 'windows']);
-    if (S.windowsTilted) L.push([n(S.windowsTilted, 'Fenster gekippt', 'Fenster gekippt'), 'window-tilt', S.windowsTilted, false, 'windows']);
-    if (S.doorsTilted) L.push([n(S.doorsTilted, 'Tür gekippt', 'Türen gekippt'), 'window-tilt', S.doorsTilted, false, 'doors']);
-    if (S.gates) L.push([n(S.gates, 'Tor offen', 'Tore offen'), 'garage', S.gates, false, 'gates']);
-    if (S.locks) L.push([n(S.locks, 'Schloss offen', 'Schlösser offen'), 'lock-open', S.locks, false, 'locks']);
-    if (S.lockJammed) L.push([S.lockJammed === 1 ? 'Schloss klemmt' : S.lockJammed + ' Schlösser klemmen', 'lock-unlocking', S.lockJammed, false, 'locks']);
+    if (S.disarmed) L.push(['Alarm aus', null, 0, false, 'alarm', 'open']);
+    if (S.doors) L.push([n(S.doors, 'Tür offen', 'Türen offen'), 'door-open', S.doors, false, 'doors', 'open']);
+    if (S.windows) L.push([n(S.windows, 'Fenster offen', 'Fenster offen'), 'window-open', S.windows, false, 'windows', 'open']);
+    if (S.windowsTilted) L.push([n(S.windowsTilted, 'Fenster gekippt', 'Fenster gekippt'), 'window-tilt', S.windowsTilted, false, 'windows', 'tilted']);
+    if (S.doorsTilted) L.push([n(S.doorsTilted, 'Tür gekippt', 'Türen gekippt'), 'window-tilt', S.doorsTilted, false, 'doors', 'tilted']);
+    if (S.gates) L.push([n(S.gates, 'Tor offen', 'Tore offen'), 'garage', S.gates, false, 'gates', 'open']);
+    if (S.locks) L.push([n(S.locks, 'Schloss offen', 'Schlösser offen'), 'lock-open', S.locks, false, 'locks', 'open']);
+    if (S.lockJammed) L.push([S.lockJammed === 1 ? 'Schloss klemmt' : S.lockJammed + ' Schlösser klemmen', 'lock-unlocking', S.lockJammed, false, 'locks', 'jammed']);
     // Selected covers open in the evening/night (#76, 34-security-covers.js), Home only.
-    if (S.covers) L.push([n(S.covers, 'Jalousie offen', 'Jalousien offen'), 'cover_open', S.covers, false, 'covers']);
-    if (S.lockDead) L.push([n(S.lockDead, 'Schloss offline', 'Schlösser offline'), 'lock', S.lockDead, true, 'locks']);
-    if (S.camDead) L.push([n(S.camDead, 'Kamera offline', 'Kameras offline'), 'camera', S.camDead, true, 'cameras']);
-    // Own order from the Studio (security_sub_order): by kind, the lead word stays first.
+    if (S.covers) L.push([n(S.covers, 'Jalousie offen', 'Jalousien offen'), 'cover_open', S.covers, false, 'covers', 'open']);
+    if (S.lockDead) L.push([n(S.lockDead, 'Schloss offline', 'Schlösser offline'), 'lock', S.lockDead, true, 'locks', 'offline']);
+    if (S.camDead) L.push([n(S.camDead, 'Kamera offline', 'Kameras offline'), 'camera', S.camDead, true, 'cameras', 'offline']);
+    // Own order from the Studio (security_sub_order): by kind; the lead (most important finding) still goes first.
     if (o.order && window.casoraSecSub) L = window.casoraSecSub.sort(L, o.order, function (x) { return x[4]; });
     var text = L.map(function (x) { return x[0]; }).join(' · ');
     if (o.summary === 'detailed') return { text: text, html: null };
@@ -1900,8 +1917,11 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     var tr = function (t) { return typeof window.casoraTr === 'function' ? window.casoraTr(t) : t; };
     var escAttr = function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
     var url = function (k) { return typeof window.casoraIconUrl === 'function' ? window.casoraIconUrl(k) : '/casora_assets/icons/' + k + '.svg'; };
-    var items = L.map(function (x) {
-      if (!x[1]) return '<span class="cs-sum-item">' + escAttr(x[0]) + '</span>';
+    // Several findings: the most important one in words, the rest as icons with a number (owner, 13.11.2026 – a
+    // count like „4 offen“ in front of four icons said nothing about what matters most). Lead = window.casoraSecLead.
+    var li = window.casoraSecLead(L);
+    var items = L.map(function (x, i) {
+      if (i === li || !x[1]) return '<span class="cs-sum-item' + (i === li ? ' cs-sum-lead' : '') + '" style="white-space:nowrap">' + escAttr(x[0]) + '</span>';
       var lab = tr(x[0]), u = url(x[1]);
       return '<span class="cs-sum-item" role="img" aria-label="' + escAttr(lab) + '" title="' + escAttr(lab) + '"'
         + ' style="display:inline-flex;align-items:center;gap:3px;white-space:nowrap">'
@@ -1910,15 +1930,10 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
         + (x[3] ? '<span style="position:absolute;left:-12%;top:50%;width:124%;height:1.6px;margin-top:-0.8px;border-radius:1px;background:currentColor;transform:rotate(-45deg)"></span>' : '')
         + '</span><span aria-hidden="true" style="font-variant-numeric:tabular-nums;font-weight:700">' + x[2] + '</span></span>';
     });
+    // The lead goes first, the rest keep their order (the usual one or the Studio's).
+    if (li > 0) items.unshift(items.splice(li, 1)[0]);
     // Height = line height of the badge sub-line (.badge-sub line-height 1.2): with 1.25em the
     // security badge was 0.6 px taller than every other badge (polish 1.3, d-kacheln).
-    /* Icons alone said nothing to a newcomer (review 2, E31: „🔓1 ▢2 ▯1 ⌀1“): a short word leads – what is open,
-       else tilted, else offline. */
-    var sumOf = function (keys) { return keys.reduce(function (a, k) { return a + (Number(S[k]) || 0); }, 0); };
-    var nOpen = sumOf(['doors', 'gates', 'locks', 'windows', 'covers']), nTilt = sumOf(['windowsTilted', 'doorsTilted']);
-    var nJam = sumOf(['lockJammed']), nDead = sumOf(['lockDead', 'camDead']);
-    var lead = nOpen ? nOpen + ' offen' : nJam ? (nJam === 1 ? '1 klemmt' : nJam + ' klemmen') : nTilt ? nTilt + ' gekippt' : nDead ? nDead + ' offline' : '';
-    if (lead) items.unshift('<span class="cs-sum-lead" aria-hidden="true" style="white-space:nowrap">' + escAttr(lead) + '</span>');
     return { text: text, html: '<span class="cs-sum" style="display:inline-flex;align-items:center;gap:9px;height:1.2em;line-height:1;vertical-align:top">' + items.join('') + '</span>' };
   };
 
