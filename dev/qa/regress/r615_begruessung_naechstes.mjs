@@ -15,6 +15,14 @@ const stamp = `${start.getFullYear()}-${p2(start.getMonth() + 1)}-${p2(start.get
 const rest = (method, body) => fetch(BASE + '/api/states/' + CAL, { method, headers: { Authorization: 'Bearer ' + TK, 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
 await rest('POST', { state: 'off', attributes: { friendly_name: 'QA', message: 'QA Zahnarzt', start_time: stamp, end_time: stamp, all_day: false } });
 const c = await ws();
+// #189: a pick of calendars in the Studio (Home & devices › Calendars) limits the line to those; the test house has
+// one, so the test calendar joins it for the run and the pick is restored afterwards.
+const set0 = (await c.cmd({ type: 'casora/settings/get' })).settings || {};
+const cals0 = Array.isArray(set0.calendars) ? set0.calendars : [];
+if (cals0.length && !cals0.some((x) => (typeof x === 'string' ? x : x && x.entity) === CAL)) {
+  await c.cmd({ type: 'casora/settings/set', settings: { ...set0, calendars: [...cals0, { entity: CAL, name: 'QA' }] } });
+  atFinish(async () => { const c3 = await ws(); await c3.cmd({ type: 'casora/settings/set', settings: set0 }); c3.close(); });
+}
 const [desk0, phone0] = [await c.cmd({ type: 'lovelace/config', url_path: d.url }), await c.cmd({ type: 'lovelace/config', url_path: d.phone.url })];
 c.close();
 atFinish(async () => { const c2 = await ws(); await c2.cmd({ type: 'lovelace/config/save', url_path: d.url, config: desk0 }); await c2.cmd({ type: 'lovelace/config/save', url_path: d.phone.url, config: phone0 }); c2.close(); await rest('DELETE'); });
