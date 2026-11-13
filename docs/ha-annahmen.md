@@ -199,6 +199,21 @@ Nicht im Kern-Paket prüfbar (HACS), Casora liest `platform`/`translation_key`:
 Schlüssel je Quelle in `25-coffee.js` `SOURCES`, Stand Quellcode 24.10.2026, Test `dev/unit/coffee_sources.mjs`),
 Auto-Integrationen.
 
+Tumble (`tumble`, eigene Integration des Maintainers, Waschmaschine/Trockner über die Leistung der Steckdose): Casora
+liest nur `platform` + `translation_key` und das Geräte-Modell. Schlüssel (Stand Tumble 26.11.1, 13.11.2026):
+Sensoren `status` (enum `off`/`running`/`finished`/`anti_crease`; `finished` und `anti_crease` = Wäsche noch drin bis
+zum Knopf `unload`), `cycle_start`, `last_end` (Zeitstempel), `last_duration` (min), `last_energy`, `total_energy`
+(kWh), `cycle_count` (beide `total_increasing`, daraus die Monatszahlen per Recorder-Statistik), je Pflegeaufgabe
+`maint_<task>` (Läufe seit, Attribute `every_cycles`, `every_days`, `last_done`, `due`) mit Knopf `maint_<task>_done`;
+Binärsensoren `running`, `maintenance_due` (Attribut `tasks`). Aufgaben: Waschmaschine `descale`, `filter_clean`,
+`drum_clean`, Trockner `lint_filter`, `condenser_clean`. Die Geräteart steht im Geräte-Modell (`washer`/`dryer`),
+sonst entscheiden die Pflege-Schlüssel; nie der Name (die Integration heißt „tumble“, ein Trockner-Wort). Keine
+Restzeit, kein Programm, keine Phase. Ändern sich Tumbles Schlüssel, die Erkennung nachziehen: `00-finder.js`
+`casoraLaundryFind` (`SOURCES` `tumble`, `TUMBLE_CARE`, `tumbleRole`), `live_finder.py` (`SOURCES`, `TUMBLE_CARE`,
+`_tumble_role`), `02-devices.js` `_casoraLaundry` (`TUMBLE_STATE`, `tumbleRows`). Tests `dev/unit/tumble_laundry.mjs`,
+`dev/unit/live_finder_test.py`, `dev/unit/live_activity_test.py`, `dev/unit/setup_overview_test.py`,
+`dev/unit/waesche_quelle.mjs`; Testhaus `dev/casora_mock/tumble.py`.
+
 Waste Collection Schedule (`waste_collection_schedule`): Zustand bzw. `daysTo` = Tage bis zur Abholung, Abholtermine als
 Attribute `{Datum: Art}` (oder `{Art: Datum}`). Der Countdown kann am Abholtag schon weiterzählen oder veralten; Kachel,
 Popup-Kopf und Tonnen-Liste nehmen deshalb das nächste Datum ab heute, den Countdown nur ohne Datum (`00-finder.js`

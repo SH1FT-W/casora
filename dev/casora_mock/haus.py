@@ -39,6 +39,7 @@ def merge(fixture: dict, extra: dict, label: str = "Stresshaus aktiv") -> None:
     fixture.setdefault("_history_extra", {}).update(extra.get("_history", {}))
     # Days of long-term statistics per entity (default 30; e.g. 400 for the chart card's year range).
     fixture.setdefault("_stats_days", {}).update(extra.get("_stats_days", {}))
+    fixture.setdefault("_stats_events", {}).update(extra.get("_stats_events", {}))
     _LOGGER.warning("Casora Mock: %s (+%s Entitäten)", label, len(extra.get("entities", [])))
 
 
@@ -59,7 +60,7 @@ def vacuum_map(fixture: dict) -> None:
 def compose(fixture: dict, now: datetime, stress: dict | None = None, hacs: dict | None = None) -> dict:
     """Fixture plus the made-up devices, in the order async_setup_entry always used."""
     from . import (aquarium, befeuchter, co, coffee, dishwasher, ebike, energie, frigate, fussball, game_account, haustier,
-                   halten, hubs, klingel, fridge, kettle, live, maeher, oven, shopping, testlimousine, testserver, testwagen, velair, waesche, wetter)
+                   halten, hubs, klingel, fridge, kettle, live, maeher, oven, shopping, testlimousine, testserver, testwagen, tumble, velair, waesche, wetter)
     if stress:
         merge(fixture, stress)
     # Demo house (dev/demo/demo_fixture.py sets "_demo"): without the German test devices (washers A/B with
@@ -68,6 +69,8 @@ def compose(fixture: dict, now: datetime, stress: dict | None = None, hacs: dict
     # Two neutral washers (WashData-like and Home-Connect-like), see waesche.py.
     if not demo:
         merge(fixture, waesche.extra(now), "Waschmaschinen A/B")
+    # A Tumble washer and dryer (plug-based, platform tumble), also in the demo house, see tumble.py.
+    merge(fixture, tumble.extra(now), "Tumble-Waschmaschine/Trockner")
     # A made-up team tracker sensor (football tile), see fussball.py.
     merge(fixture, fussball.extra(now), "Team-Tracker-Sensor")
     # Two made-up aquariums (HeliaLux- and Fluval/Chihiros-like lamp, dosing pump), see aquarium.py.

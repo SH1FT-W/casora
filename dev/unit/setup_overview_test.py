@@ -94,6 +94,12 @@ check("3D printer", sug("Drucker", [E("sensor.p_status", "print_status"), E("cam
       == ("casora_3d_printer", "sensor.p_status"))
 washer = [E("sensor.wm_state", "washer_state", "ha_washdata"), E("sensor.wm_power")]
 check("washer through live_finder (WashData)", sug("Waschmaschine", washer) == ("casora_washer", "sensor.wm_state"), sug("Waschmaschine", washer))
+# Tumble: the tile follows Tumble's appliance type (device model), not the word "tumble" in the name.
+tum = [E("sensor.tumble_status", "status", "tumble"), E("button.tumble_unload", "unload", "tumble"),
+       E("binary_sensor.tumble_run", "running", "tumble"), E("sensor.tumble_count", "cycle_count", "tumble")]
+check("Tumble washer: washer tile", sug("Tumble Trockner", tum, "washer ") == ("casora_washer", "sensor.tumble_status"),
+      sug("Tumble Trockner", tum, "washer "))
+check("Tumble dryer: dryer tile", sug("Tumble", tum, "dryer ") == ("casora_dryer", "sensor.tumble_status"))
 dish = [E("sensor.gs_op", "operation_state", "home_connect"), E("select.gs_prog", "selected_program", "home_connect",
         options=["dishcare_dishwasher_program_eco_50"]), E("sensor.gs_rem", "program_finish_time", "home_connect")]
 check("dishwasher (Home Connect)", sug("Geschirrspüler", dish) == ("casora_dishwasher", "sensor.gs_op"), sug("Geschirrspüler", dish))

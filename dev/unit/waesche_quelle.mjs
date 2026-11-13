@@ -15,7 +15,7 @@ new Function(src('panel/casora-panel-assist.js'))();
 const LF = window.casoraLaundryFind;
 assert.ok(LF, 'casoraLaundryFind fehlt');
 
-const hass = { entities: {}, devices: {}, states: {}, areas: { keller: { name: 'Keller' }, bad: { name: 'Bad' }, dach: { name: 'Dach' } } };
+const hass = { entities: {}, devices: {}, states: {}, areas: { keller: { name: 'Keller' }, bad: { name: 'Bad' }, dach: { name: 'Dach' }, wk: { name: 'Waschküche' } } };
 // Names misleading on purpose: detection must never use them.
 function dev(id, area, extra = {}) { hass.devices[id] = { id, name: 'Gerät ' + id, area_id: area, config_entries: ['entry_' + id], ...extra }; }
 function ent(eid, device_id, platform, key, state = 'x', attributes = {}, category = null) {
@@ -76,6 +76,11 @@ dev('plug', 'dach');
 ent('switch.l1', 'plug', 'shelly', null, 'on', { device_class: 'outlet' });
 ent('sensor.l2', 'plug', 'shelly', null, '1830', { device_class: 'power', unit_of_measurement: 'W' });
 ent('sensor.l3', 'plug', 'powercalc', null, '2', { device_class: 'power', unit_of_measurement: 'W' });
+// Waschküche: Tumble washer (device model "washer"; its name says "Tumble Trockner" on purpose).
+dev('tu', 'wk', { model: 'washer', name: 'Tumble Trockner' });
+ent('sensor.n1', 'tu', 'tumble', 'status', 'off', { device_class: 'enum' });
+ent('button.n2', 'tu', 'tumble', 'unload', 'unknown');
+ent('sensor.n3', 'tu', 'tumble', 'cycle_count', '12');
 
 const cl = (id) => LF.classify(hass, id);
 assert.deepEqual([cl('hc').source, cl('hc').rank, cl('hc').role, cl('hc').state], ['home_connect', 0, 'washer', 'sensor.a1']);
@@ -121,6 +126,9 @@ assert.deepEqual(kellerWasher.map((x) => x.entity), ['sensor.a1'], JSON.stringif
 assert.ok(sug.some((x) => x.type === 'casora_dryer' && x.entity === 'sensor.c1'), 'WashData-Trockner vorgeschlagen');
 assert.ok(sug.some((x) => x.type === 'casora_dryer' && x.entity === 'sensor.g1'), 'Miele-Trockner vorgeschlagen');
 assert.ok(!sug.some((x) => x.entity === 'sensor.d1'), 'WashData-Geschirrspüler nicht als Waschmaschine');
+const sugT = window.casoraAssist.suggest(hass, [{ name: 'Waschküche', tiles: [] }], types);
+assert.ok(sugT.some((x) => x.type === 'casora_washer' && x.entity === 'sensor.n1'), 'Tumble-Waschmaschine vorgeschlagen: ' + JSON.stringify(sugT));
+assert.ok(!sugT.some((x) => x.entity === 'sensor.n1' && x.type === 'casora_dryer'), 'Tumble-Waschmaschine nicht als Trockner');
 
 // Tile/popup (02-devices.js): manufacturer states independent of language, source in the popup.
 window._casoraUI = null;

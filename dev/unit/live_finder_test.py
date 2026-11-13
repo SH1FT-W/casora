@@ -249,6 +249,35 @@ plug = [E("switch.plug", None, "shelly"), E("sensor.plug_power", None, "shelly")
 check("Smart plug is no live device", lf.classify("d12", plug, S.get) is None)
 check("Device without states is nothing", lf.classify("d13", [lf.Ent("sensor.gone", "washer_state", "ha_washdata")], S.get) is None)
 
+# Tumble: role from its device model ("washer"/"dryer"), else its care keys – never from the word "tumble".
+def tumble_ents(p, platform, tasks):
+    out = [E(f"sensor.{p}_status", "status", platform), E(f"sensor.{p}_start", "cycle_start", platform),
+           E(f"sensor.{p}_count", "cycle_count", platform), E(f"sensor.{p}_total", "total_energy", platform),
+           E(f"binary_sensor.{p}_run", "running", platform), E(f"button.{p}_unload", "unload", platform),
+           E(f"binary_sensor.{p}_due", "maintenance_due", platform)]
+    for t in tasks:
+        out += [E(f"sensor.{p}_m_{t}", f"maint_{t}", platform), E(f"button.{p}_m_{t}_done", f"maint_{t}_done", platform)]
+    return out
+
+
+tw = tumble_ents("tumble_trockner_w", "tumble", lf.TUMBLE_CARE["washer"])
+f = lf.classify("tu1", tw, S.get, "washer ")
+check("Tumble washer (ids say tumble/trockner): washer", f and f.kind == "washer" and f.source == "tumble", f)
+snap("tu1", tw, "washer ")
+check("Tumble fields", f and f.fields["state"] == "sensor.tumble_trockner_w_status" and f.fields["unload"] == "button.tumble_trockner_w_unload"
+      and f.fields["elapsed"] == "sensor.tumble_trockner_w_start" and f.fields["maintdue"] == "binary_sensor.tumble_trockner_w_due", f and f.fields)
+td = tumble_ents("tumble_t", "tumble", lf.TUMBLE_CARE["dryer"])
+check("Tumble dryer by model", lf.classify("tu2", td, S.get, "dryer ").kind == "dryer")
+snap("tu2", td, "dryer ")
+check("Tumble dryer by care keys (no model)", lf.classify("tu3", td, S.get, "").kind == "dryer")
+snap("tu3", td, "")
+tm = tumble_ents("tumble_m", "casora_mock", lf.TUMBLE_CARE["washer"])
+f = lf.classify("tu4", tm, S.get, "washer ")
+check("Tumble by keys (test house)", f and f.source == "tumble" and f.how == "keys" and f.kind == "washer", f)
+snap("tu4", tm, "washer ")
+check("Tumble without type or care: none", lf.classify("tu5", tumble_ents("tumble_x", "tumble", []), S.get, "Tumble") is None)
+
+
 # ── 2) Parity with the JS finder ────────────────────────────────────────
 JS = r"""
 const fs = require('fs');
