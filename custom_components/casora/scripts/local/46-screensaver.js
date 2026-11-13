@@ -1021,7 +1021,9 @@
     var cals = need(['linie', 'woche', 'kalender']) ? S.calendars(hass, vars.casora_screensaver_calendars) : [];
     // The month calendar asks for its whole grid, the others for the coming eight days.
     var grid = kind === 'kalender' ? S.monthGrid(now, hass) : null;
-    var events = o.events !== undefined ? o.events : !cals.length ? [] : grid ? S.events(hass, cals, grid.weeks * 7, grid.start) : S.events(hass, cals, 8);
+    var events = (o.events !== undefined ? o.events : !cals.length ? [] : grid ? S.events(hass, cals, grid.weeks * 7, grid.start) : S.events(hass, cals, 8)).filter(function (e) {
+      return !window._casoraCalendar || window._casoraCalendar.allowsTitle(e.title);
+    });
     var media = o.media !== undefined ? o.media : need(['musik']) || (S.on(vars.casora_screensaver_tint) && TINT_KINDS.indexOf(kind) > -1) ? S.playing(hass) : null;
     var cams = o.cams !== undefined ? o.cams : need(['kameras']) ? S.cameras(hass, vars.casora_screensaver_cameras).map(function (c) { c.shot = S.shot(c, now); return c; }) : [];
     return { now: now, hass: hass, vars: vars, dark: dark, sun: o.sun !== undefined ? o.sun : S.sunTimes(hass, now), cals: o.cals || cals, cams: cams,

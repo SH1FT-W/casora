@@ -1,6 +1,8 @@
 {
   "_comment": "Tradução do painel do Casora. Chave = texto original em inglês do painel. Nova língua: cria o ficheiro <código>.json e depois executa tools/build-panel-i18n.py.",
   "exact": {
+    "Hide when the title contains": "Ocultar quando o título contém",
+    "Separate entries with commas; an entry may have several words. The calendar popup still shows them.": "Separa as entradas por vírgulas; uma entrada pode ter várias palavras. O popup do calendário continua a mostrá-las.",
     "Copy diagnostics…": "Copiar diagnóstico…",
     "Diagnostics": "Diagnóstico",
     "Paste it into your GitHub issue. It contains only counts, versions and integrations – no names of devices, rooms or people, no addresses.": "Cola-o na tua issue do GitHub. Contém apenas contagens, versões e integrações – nenhum nome de dispositivos, divisões ou pessoas, nenhuma morada.",
