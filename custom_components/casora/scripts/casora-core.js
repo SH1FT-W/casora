@@ -8659,6 +8659,16 @@ window.casoraMenuGlass = {
       // A lamp's popup: its dial already says „An“/„Aus“ and the brightness, and the lamp is marked in its room's list
       // – no second state word under the name (owner, 01.11.2026).
       if (String(cur.entity_id || '').indexOf('light.') === 0) return;
+      // A motion or presence sensor with nothing detected: since when, as its tile says („Zuletzt vor 11 Std.“, Hemma round #10).
+      var dcl0 = String((cur.attributes || {}).device_class || '');
+      if (String(cur.entity_id || '').indexOf('binary_sensor.') === 0 && /^(motion|occupancy|presence)$/.test(dcl0) && window.casoraMotionLast) {
+        var mo0 = window.casoraMotionLast([cur.entity_id], h && h.states, h);
+        if (mo0.known && !mo0.on && mo0.since != null) {
+          this._headerStatus.innerHTML = '<b>' + window.casoraMotionHtml(mo0) + '</b>';
+          this._headerStatus.hidden = false;
+          return;
+        }
+      }
       // The word as in the word list (window.casoraStateWord, also the search rows); null = says since when instead.
       var txt = window.casoraStateWord(h, cur);
       if (txt === '') return;
@@ -15146,6 +15156,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     if (h < 24 || d < 1) return 'vor ' + h + ' Std.';
     return d === 1 ? 'gestern' : 'vor ' + d + ' Tagen';
   }
+  // The bell's relative time is the one relative time of the tiles too (motion „Zuletzt vor 11 Std.“, casora-ago).
+  window.casoraAgo = ago;
 
 
   var ALARM_WORD = {
@@ -17750,6 +17762,56 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     var on = ids.filter(function (id) { return st(id) === 'on'; })[0];
     return { ids: ids, entity: on || ids[0] || null, state: on ? 'on' : ids.some(function (id) { return st(id) === 'off'; }) ? 'off' : 'unavailable' };
   };
+
+  // Motion (Hemma round #10): while nothing is detected, the time since the last detection („Zuletzt vor 11 Std.“)
+  // instead of „Frei“. The time is when the newest sensor went back to off (casoraSinceMs: not HA's start – then
+  // nothing is known and the caller's word stays). ids: the sensors, states: hass.states.
+  window.casoraMotionLast = function (ids, states, hass) {
+    var S = states || {}, on = false, known = false, last = null;
+    (ids || []).forEach(function (id) {
+      var x = S[id];
+      if (!x) return;
+      if (x.state === 'on') on = true;
+      if (x.state === 'on' || x.state === 'off') known = true;
+      if (x.state !== 'off') return;
+      var t = typeof window.casoraSinceMs === 'function' ? window.casoraSinceMs(x, hass) : Date.parse(x.last_changed || '');
+      if (t != null && isFinite(t) && (last == null || t > last)) last = t;
+    });
+    return { on: on, known: known, since: on ? null : last };
+  };
+  // The word: „Erkannt“, „Zuletzt vor 11 Std.“, else idle (the caller's word, „Frei“) or „Nicht verfügbar“.
+  window.casoraMotionWord = function (m, idle) {
+    if (!m || !m.known) return 'Nicht verfügbar';
+    if (m.on) return 'Erkannt';
+    if (m.since == null || typeof window.casoraAgo !== 'function') return idle || 'Frei';
+    return 'Zuletzt ' + window.casoraAgo(m.since);
+  };
+  // The same as HTML for a tile, badge or popup head: the relative time in a casora-ago that swaps only its text
+  // every minute – no re-render of the card (no triggers_update).
+  window.casoraMotionHtml = function (m, idle) {
+    var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+    var t = window.casoraMotionWord(m, idle);
+    if (!m || m.on || !m.known || m.since == null || typeof window.casoraAgo !== 'function') return esc(t);
+    return '<casora-ago data-since="' + Math.round(m.since) + '" data-pre="Zuletzt">' + esc(t) + '</casora-ago>';
+  };
+  // <casora-ago data-since="ms" data-pre="Zuletzt">: keeps its relative time current on its own (text only, once a minute,
+  // in the reader's language through casoraTr – the page's i18n would translate a German swap again).
+  if (typeof customElements !== 'undefined' && !customElements.get('casora-ago')) {
+    customElements.define('casora-ago', class extends HTMLElement {
+      connectedCallback() { this._tick(); }
+      disconnectedCallback() { clearTimeout(this._t); }
+      _tick() {
+        clearTimeout(this._t);
+        var ms = Number(this.dataset.since);
+        if (!isFinite(ms) || typeof window.casoraAgo !== 'function') return;
+        var de = (this.dataset.pre ? this.dataset.pre + ' ' : '') + window.casoraAgo(ms);
+        var t = typeof window.casoraTr === 'function' ? window.casoraTr(de) : de;
+        if (this.textContent !== t) this.textContent = t;
+        var self = this;
+        this._t = setTimeout(function () { self._tick(); }, 60000 - ((Date.now() - ms) % 60000) + 200);
+      }
+    });
+  }
 
   // desk: Variablen des Desktop-Raums (oder null), chip: room_chips[<raum>], name: Raumname.
   function merge(desk, chip, name) {
