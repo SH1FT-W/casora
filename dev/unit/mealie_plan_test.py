@@ -191,6 +191,30 @@ async def main():
     check("image: malformed id refused", r2.status == 404)
     check("view needs login", view.requires_auth is True)
 
+    # Image view passes on only raster images, marked nosniff: an SVG or HTML answer from the Mealie host
+    # would otherwise be served from HA's own origin (script in an SVG opened directly).
+    class FakeResp:
+        def __init__(self, ctype):
+            self.status, self.headers = 200, {"Content-Type": ctype}
+            self.content = SimpleNamespace(read=self._read)
+
+        async def _read(self, n):
+            return b"<svg/>"
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *a):
+            return False
+
+    plan_hass = hass
+    for ctype, want in (("image/svg+xml", 404), ("text/html", 404), ("image/webp", 200), ("image/jpeg; q=1", 200)):
+        M.async_get_clientsession = lambda h, verify_ssl=True, c=ctype: SimpleNamespace(get=lambda *a, **k: FakeResp(c))
+        r = await view.get(SimpleNamespace(app={"hass": plan_hass}, query={"v": "1"}), RID_A)
+        check(f"image: {ctype} -> {want}", r.status == want, r.status)
+        if want == 200:
+            check(f"image: {ctype} nosniff", r.headers.get("X-Content-Type-Options") == "nosniff", dict(r.headers))
+
 
 asyncio.run(main())
 print("ok mealie_plan" if not fails else f"{fails} FEHLER")

@@ -26,6 +26,8 @@
   if (window._casoraSaver) return;
   var S = window._casoraSaver = {};
   var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  // Inside a CSS url("…"): quote, backslash and line breaks as CSS escapes (an address never has them).
+  var cssUrl = function (u) { return String(u == null ? '' : u).replace(/["\\\n\r\f]/g, function (c) { return '\\' + c.charCodeAt(0).toString(16) + ' '; }); };
   var T = function (t) { return typeof window.casoraTr === 'function' ? window.casoraTr(t) : t; };
   var hassOf = function () { var ha = document.querySelector('home-assistant'); return (ha && ha.hass) || null; };
   var loc = function () { return window.casoraLocale ? window.casoraLocale() : 'de-DE'; };
@@ -726,7 +728,7 @@
       var rooms = ctx.rooms || [];
       if (!rooms.length) return DRAW.land(ctx);
       var r = rooms[Math.floor(+ctx.now / 120000) % rooms.length];
-      return '<div class="cs-photo" style="background-image:url(&quot;' + esc(r.url) + '&quot;)"></div><div class="cs-in">' + bar(ctx, r.name, '') + '</div>';
+      return '<div class="cs-photo" style="background-image:url(&quot;' + esc(cssUrl(r.url)) + '&quot;)"></div><div class="cs-in">' + bar(ctx, r.name, '') + '</div>';
     },
     wort: function (ctx) {
       var wx = ctx.wx, lines = S.words(langOf(), ctx.now.getHours(), ctx.now.getMinutes());
@@ -851,7 +853,7 @@
     var m = ctx.media;
     if (!m) return DRAW.himmel(ctx);
     var pct = m.dur && m.pos != null ? Math.max(0, Math.min(100, m.pos / m.dur * 100)) : null;
-    var pic = m.cover ? 'background-image:url(&quot;' + esc(m.cover) + '&quot;)' : '';
+    var pic = m.cover ? 'background-image:url(&quot;' + esc(cssUrl(m.cover)) + '&quot;)' : '';
     return (m.cover ? '<div class="cs-blur" style="' + pic + '"></div>' : '') + '<div class="cs-in"><div class="cs-cover" style="' + pic + '"></div>'
       + '<div class="cs-corner"><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div>'
       + '<div class="cs-meta"><div class="cs-cap" data-no-i18n>' + esc(m.where) + '</div><h2 data-no-i18n>' + esc(m.title) + '</h2>' + (m.artist ? '<h3 data-no-i18n>' + esc(m.artist) + '</h3>' : '')
@@ -916,7 +918,7 @@
     return '<div class="cs-in">' + head(ctx, T('Kameras'), T('Tippen für das Livebild')) + '<div class="cs-body"><div class="cs-cams" style="' + esc(grid) + '">'
       + cams.map(function (c) {
         var pic = c.shot || c.url;
-        return '<button type="button" class="cs-cam" data-sv-act="cam" data-cam="' + esc(c.id) + '"><i class="cs-camic"><ha-icon icon="mdi:cctv"></ha-icon></i><span class="cs-shot"' + (pic ? ' style="background-image:url(&quot;' + esc(pic) + '&quot;)"' : '') + '></span>'
+        return '<button type="button" class="cs-cam" data-sv-act="cam" data-cam="' + esc(c.id) + '"><i class="cs-camic"><ha-icon icon="mdi:cctv"></ha-icon></i><span class="cs-shot"' + (pic ? ' style="background-image:url(&quot;' + esc(cssUrl(pic)) + '&quot;)"' : '') + '></span>'
           + '<b data-no-i18n>' + esc(c.name) + '</b></button>';
       }).join('') + '</div></div></div>';
   };

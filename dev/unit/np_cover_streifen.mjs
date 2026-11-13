@@ -56,6 +56,14 @@ assert.ok(/^tn st/.test(r[0]) && !/class="vo"/.test(r[0]), 'Fernseher: Bühne oh
 assert.ok(!/class="tm"/.test(r[0]), 'ohne Dauer keine Zeiten');
 assert.ok(/class="s">Fernseher · Wohnzimmer</.test(r[0]), 'Raum über das Gerät: ' + r[0].slice(0, 600));
 
+// Cover address from media attributes stays inside its CSS url("…") (a signed URL is passed on unchanged).
+{
+  const evil = 'https://x/a.jpg?authSig=1&"); position:fixed; inset:0; background-image:url("https://evil/b.png';
+  const st = [...draw([{ ...box, art: evil }], {}).matchAll(/style="([^"]*)"/g)].map((m) => m[1].replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&'));
+  const out = st.map((x) => x.replace(/url\("(?:[^"\\]|\\.)*"\)/g, 'url()')).join(' ');
+  assert.ok(!/position:fixed|evil/.test(out), 'cover address stays inside url(): ' + out);
+}
+
 // Farbe und Uhr
 const hsl = (c) => c.match(/\d+/g).map(Number);
 let [, s, l] = hsl(NP.clampColor(255, 255, 0));

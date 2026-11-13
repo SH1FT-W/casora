@@ -50,6 +50,8 @@ MAX_INGREDIENTS = 80
 MAX_STEPS = 40
 MAX_IMAGE = 4 * 1024 * 1024
 RECIPE_ID = re.compile(r"^[0-9a-fA-F-]{32,36}$")
+# Only raster images are passed on (never SVG/HTML from the Mealie host under HA's origin).
+IMAGE_TYPES = frozenset(("image/webp", "image/jpeg", "image/png", "image/gif", "image/avif"))
 _CACHE = "mealie_plan"
 
 
@@ -299,8 +301,8 @@ class CasoraMealieImageView(HomeAssistantView):
         try:
             async with session.get(f"{host}/api/media/recipes/{recipe_id}/images/min-original.webp",
                                    timeout=10, allow_redirects=False) as resp:
-                ctype = resp.headers.get("Content-Type", "")
-                if resp.status != 200 or not ctype.startswith("image/"):
+                ctype = resp.headers.get("Content-Type", "").split(";")[0].strip().lower()
+                if resp.status != 200 or ctype not in IMAGE_TYPES:
                     return web.Response(status=404, text="not found")
                 body = await resp.content.read(MAX_IMAGE + 1)
         except (ClientError, TimeoutError) as err:
@@ -309,8 +311,9 @@ class CasoraMealieImageView(HomeAssistantView):
         if len(body) > MAX_IMAGE:
             return web.Response(status=404, text="too large")
         # ?v= is Mealie's image key: it changes with a new image, so a day in the private cache is safe.
-        return web.Response(body=body, content_type=ctype.split(";")[0], headers={
-            "Cache-Control": "private, max-age=86400" if "v" in request.query else "private, no-cache"})
+        return web.Response(body=body, content_type=ctype, headers={
+            "Cache-Control": "private, max-age=86400" if "v" in request.query else "private, no-cache",
+            "X-Content-Type-Options": "nosniff"})
 
 
 @callback
