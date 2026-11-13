@@ -112,9 +112,10 @@ def static_checks() -> None:
 
 
 HACS_DEVICES: set = set()
-# HACS keys the repository's device by its GitHub id; the registries are HA's public API.
+# HACS keys the repository's device by its GitHub id; the registries are HA's public API. Iterating `devices`
+# yields the entries (HA 2026.10+; using it as a mapping is deprecated).
 update.dr = SimpleNamespace(async_get=lambda h: SimpleNamespace(
-    devices={i: SimpleNamespace(identifiers={i}) for i in HACS_DEVICES}))
+    devices=[SimpleNamespace(identifiers={i}) for i in HACS_DEVICES]))
 update.er = SimpleNamespace(async_get=lambda h: SimpleNamespace(
     async_get_entity_id=lambda *a: None, async_remove=lambda eid: None, entities={}))
 

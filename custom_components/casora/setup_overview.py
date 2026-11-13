@@ -219,8 +219,12 @@ async def async_setup_overview(hass: HomeAssistant) -> dict[str, Any]:
 
     unassigned: list[dict] = []
     without_tile: list[dict] = []
-    for d in dr.async_get(hass).devices.values():
-        if d.disabled_by or d.entry_type is not None:
+    dreg = dr.async_get(hass)
+    # Iterated, not used as a mapping (deprecated since HA 2026.10, gone in 2027.9); older HA iterates ids.
+    for d in dreg.devices:
+        if isinstance(d, str):
+            d = dreg.async_get(d)
+        if d is None or d.disabled_by or d.entry_type is not None:
             continue
         regs = by_dev.get(d.id, [])
         ents, hidden, visible = device_entities(hass, regs)

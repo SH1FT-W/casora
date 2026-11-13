@@ -231,7 +231,7 @@ async def main():
         devices, entities = set(), {}
         real_reg = update.dr, update.er
         update.dr = SimpleNamespace(async_get=lambda h: SimpleNamespace(
-            devices={i: SimpleNamespace(identifiers={i}) for i in devices}))
+            devices=[SimpleNamespace(identifiers={i}) for i in devices]))
         update.er = SimpleNamespace(async_get=lambda h: SimpleNamespace(
             async_get_entity_id=lambda dom, plat, uid: entities.get((dom, plat, uid)),
             async_remove=lambda eid: None, entities={}))
