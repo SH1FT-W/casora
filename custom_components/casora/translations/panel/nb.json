@@ -3084,7 +3084,26 @@
     "All room photos. Tap a photo to show only the ones you pick.": "Alle rombilder. Trykk på et bilde for å vise bare de du velger.",
     "Screensaver photos": "Bilder for skjermspareren",
     "Show date": "Vis dato",
-    "Weekday and date in small type under the time.": "Ukedag og dato med liten skrift under klokkeslettet."
+    "Weekday and date in small type under the time.": "Ukedag og dato med liten skrift under klokkeslettet.",
+    "Take turns": "Bytter på",
+    "Only with room photos": "Bare med rombilder",
+    "Only with a weather source": "Bare med en værkilde",
+    "Only while something is playing": "Bare når noe spilles",
+    "Only with energy set up": "Bare når energi er satt opp",
+    "Only with cameras": "Bare med kameraer",
+    "All of them take turns, five minutes each. Tap one to leave it out. One with nothing to show right now is skipped.": "Alle bytter på, fem minutter hver. Trykk på en for å utelate den. En som ikke har noe å vise akkurat nå, hoppes over.",
+    "Only the ones picked here take turns, five minutes each. One with nothing to show right now is skipped.": "Bare de som er valgt her, bytter på, fem minutter hver. En som ikke har noe å vise akkurat nå, hoppes over.",
+    "All cameras. Tap one to leave it out. On the tablet a tap on a camera shows its live picture.": "Alle kameraer. Trykk på et for å utelate det. På nettbrettet viser et trykk på et kamera livebildet.",
+    "Only the cameras picked here.": "Bare kameraene som er valgt her.",
+    "No camera found. The preview shows an example.": "Fant ingen kameraer. Forhåndsvisningen viser et eksempel.",
+    "Appointments of all calendars. Tap one to leave it out.": "Avtaler fra alle kalendere. Trykk på en for å utelate den.",
+    "Only the appointments of the calendars picked here.": "Bare avtalene fra kalenderne som er valgt her.",
+    "No calendar found. The preview shows an example.": "Fant ingen kalendere. Forhåndsvisningen viser et eksempel.",
+    "Screensavers that alternate": "Skjermsparere som bytter på",
+    "Screensaver cameras": "Kameraer for skjermspareren",
+    "Screensaver calendars": "Kalendere for skjermspareren",
+    "Cover colour": "Coverfarge",
+    "While music plays, the calm screensavers take on a soft tint in the main colour of the cover.": "Når det spilles musikk, får de rolige skjermsparerne et mykt skjær i hovedfargen fra coveret."
   },
   "patterns": [
     [

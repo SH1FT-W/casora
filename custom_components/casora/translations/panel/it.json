@@ -3084,7 +3084,26 @@
     "All room photos. Tap a photo to show only the ones you pick.": "Tutte le foto delle stanze. Tocca una foto per mostrare solo quelle che scegli.",
     "Screensaver photos": "Foto del salvaschermo",
     "Show date": "Mostra data",
-    "Weekday and date in small type under the time.": "Giorno della settimana e data in piccolo sotto l’ora."
+    "Weekday and date in small type under the time.": "Giorno della settimana e data in piccolo sotto l’ora.",
+    "Take turns": "Si alternano",
+    "Only with room photos": "Solo con foto delle stanze",
+    "Only with a weather source": "Solo con una fonte meteo",
+    "Only while something is playing": "Solo mentre qualcosa è in riproduzione",
+    "Only with energy set up": "Solo con l’energia configurata",
+    "Only with cameras": "Solo con telecamere",
+    "All of them take turns, five minutes each. Tap one to leave it out. One with nothing to show right now is skipped.": "Si alternano tutti, cinque minuti ciascuno. Toccane uno per escluderlo. Se uno ora non ha nulla da mostrare, viene saltato.",
+    "Only the ones picked here take turns, five minutes each. One with nothing to show right now is skipped.": "Si alternano solo quelli scelti qui, cinque minuti ciascuno. Se uno ora non ha nulla da mostrare, viene saltato.",
+    "All cameras. Tap one to leave it out. On the tablet a tap on a camera shows its live picture.": "Tutte le telecamere. Toccane una per escluderla. Sul tablet, toccare una telecamera mostra l’immagine dal vivo.",
+    "Only the cameras picked here.": "Solo le telecamere scelte qui.",
+    "No camera found. The preview shows an example.": "Nessuna telecamera trovata. L’anteprima mostra un esempio.",
+    "Appointments of all calendars. Tap one to leave it out.": "Appuntamenti di tutti i calendari. Toccane uno per escluderlo.",
+    "Only the appointments of the calendars picked here.": "Solo gli appuntamenti dei calendari scelti qui.",
+    "No calendar found. The preview shows an example.": "Nessun calendario trovato. L’anteprima mostra un esempio.",
+    "Screensavers that alternate": "Salvaschermi che si alternano",
+    "Screensaver cameras": "Telecamere del salvaschermo",
+    "Screensaver calendars": "Calendari del salvaschermo",
+    "Cover colour": "Colore della copertina",
+    "While music plays, the calm screensavers take on a soft tint in the main colour of the cover.": "Mentre suona la musica, i salvaschermi tranquilli prendono una tinta morbida del colore principale della copertina."
   },
   "patterns": [
     [

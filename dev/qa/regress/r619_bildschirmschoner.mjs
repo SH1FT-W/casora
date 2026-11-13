@@ -3,7 +3,7 @@
 // @deckt: custom_components/casora/scripts/local/46-screensaver.js#_casoraSaver custom_components/casora/panel/casora-panel-settings.js#_csSaverPreview
 // Screensavers for wall tablets (46-screensaver.js) and their Studio page:
 //   - the settings start has a tile "Screensaver"; its page shows a preview drawn by the dashboard's own code, a chip
-//     for each of the ten screensavers, and the select offers them all;
+//     for each of the twelve screensavers, and the select offers them all;
 //   - every chip draws its screensaver (an example where the house has nothing to show), the preview follows the
 //     select of the draft, nothing is saved by looking;
 //   - on the dashboard it starts after the time set (here one minute; ?casora_saver=1 lets a desktop browser count as a
@@ -12,7 +12,7 @@
 import { ws } from '../ws.mjs';
 import { open, usePage, studio, studioDashboard, dashboard, check, need, finish, atFinish, shot, BASE } from './lib.mjs';
 
-const KINDS = ['himmel', 'land', 'fotos', 'wort', 'wetter', 'linie', 'woche', 'musik', 'energie', 'ruhe'];
+const KINDS = ['himmel', 'land', 'fotos', 'wort', 'wetter', 'linie', 'woche', 'musik', 'energie', 'ruhe', 'kameras', 'kalender'];
 const dash = await studioDashboard();
 await need('Dashboard fürs Studio', dash);
 const c = await ws();
@@ -27,7 +27,7 @@ const errors = [];
 page.on('pageerror', (e) => errors.push(String(e).slice(0, 200)));
 // The dashboard first: its scripts draw the preview.
 await dashboard(page, dash);
-await check('Modul auf dem Dashboard geladen', await page.evaluate(() => !!(window._casoraSaver && window._casoraSaver.KINDS.length === 10)));
+await check('Modul auf dem Dashboard geladen', await page.evaluate(() => !!(window._casoraSaver && window._casoraSaver.KINDS.length === 12)));
 await studio(page, dash);
 const P = (src, a) => page.evaluate(([src, a]) => new Function('p', 'arg', 'return (async () => {' + src + '})()')(window.__panel(), a), [src, a]);
 const wait = (ms) => page.waitForTimeout(ms);

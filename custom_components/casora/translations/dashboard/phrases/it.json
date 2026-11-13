@@ -2953,7 +2953,9 @@
     "Arzttermin": "Medico",
     "Lamellenstellung": "Lamelle",
     "Breaking": "Cambiamento importante",
-    "● KI-Fehler": "● Errore IA"
+    "● KI-Fehler": "● Errore IA",
+    "Tippen für das Livebild": "Tocca per l’immagine dal vivo",
+    "Bildschirmschoner starten": "Avvia salvaschermo"
   },
   "patterns": [
     [

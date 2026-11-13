@@ -3084,7 +3084,26 @@
     "All room photos. Tap a photo to show only the ones you pick.": "Toutes les photos des pièces. Touche une photo pour n’afficher que celles que tu choisis.",
     "Screensaver photos": "Photos de l’économiseur d’écran",
     "Show date": "Afficher la date",
-    "Weekday and date in small type under the time.": "Jour de la semaine et date en petit sous l’heure."
+    "Weekday and date in small type under the time.": "Jour de la semaine et date en petit sous l’heure.",
+    "Take turns": "En alternance",
+    "Only with room photos": "Seulement avec des photos de pièces",
+    "Only with a weather source": "Seulement avec une source météo",
+    "Only while something is playing": "Seulement quand quelque chose joue",
+    "Only with energy set up": "Seulement avec l’énergie configurée",
+    "Only with cameras": "Seulement avec des caméras",
+    "All of them take turns, five minutes each. Tap one to leave it out. One with nothing to show right now is skipped.": "Tous alternent, cinq minutes chacun. Touche-en un pour l’enlever. Celui qui n’a rien à montrer pour l’instant est sauté.",
+    "Only the ones picked here take turns, five minutes each. One with nothing to show right now is skipped.": "Seuls ceux choisis ici alternent, cinq minutes chacun. Celui qui n’a rien à montrer pour l’instant est sauté.",
+    "All cameras. Tap one to leave it out. On the tablet a tap on a camera shows its live picture.": "Toutes les caméras. Touches-en une pour l’enlever. Sur la tablette, toucher une caméra affiche son image en direct.",
+    "Only the cameras picked here.": "Seulement les caméras choisies ici.",
+    "No camera found. The preview shows an example.": "Aucune caméra trouvée. L’aperçu montre un exemple.",
+    "Appointments of all calendars. Tap one to leave it out.": "Événements de tous les calendriers. Touches-en un pour l’enlever.",
+    "Only the appointments of the calendars picked here.": "Seulement les événements des calendriers choisis ici.",
+    "No calendar found. The preview shows an example.": "Aucun calendrier trouvé. L’aperçu montre un exemple.",
+    "Screensavers that alternate": "Économiseurs d’écran en alternance",
+    "Screensaver cameras": "Caméras de l’économiseur d’écran",
+    "Screensaver calendars": "Calendriers de l’économiseur d’écran",
+    "Cover colour": "Couleur de la pochette",
+    "While music plays, the calm screensavers take on a soft tint in the main colour of the cover.": "Quand de la musique joue, les économiseurs d’écran calmes prennent une teinte douce de la couleur principale de la pochette."
   },
   "patterns": [
     [

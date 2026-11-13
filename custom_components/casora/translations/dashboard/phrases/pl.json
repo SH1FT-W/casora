@@ -2953,7 +2953,9 @@
     "Arzttermin": "Lekarz",
     "Lamellenstellung": "Lamele",
     "Breaking": "Istotna zmiana",
-    "● KI-Fehler": "● Błąd AI"
+    "● KI-Fehler": "● Błąd AI",
+    "Tippen für das Livebild": "Dotknij, aby zobaczyć obraz na żywo",
+    "Bildschirmschoner starten": "Uruchom wygaszacz ekranu"
   },
   "patterns": [
     [

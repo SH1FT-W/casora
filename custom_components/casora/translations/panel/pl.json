@@ -3084,7 +3084,26 @@
     "All room photos. Tap a photo to show only the ones you pick.": "Wszystkie zdjęcia pomieszczeń. Dotknij zdjęcia, aby pokazać tylko wybrane.",
     "Screensaver photos": "Zdjęcia wygaszacza ekranu",
     "Show date": "Pokaż datę",
-    "Weekday and date in small type under the time.": "Dzień tygodnia i data małą czcionką pod godziną."
+    "Weekday and date in small type under the time.": "Dzień tygodnia i data małą czcionką pod godziną.",
+    "Take turns": "Na zmianę",
+    "Only with room photos": "Tylko ze zdjęciami pomieszczeń",
+    "Only with a weather source": "Tylko ze źródłem pogody",
+    "Only while something is playing": "Tylko gdy coś jest odtwarzane",
+    "Only with energy set up": "Tylko ze skonfigurowaną energią",
+    "Only with cameras": "Tylko z kamerami",
+    "All of them take turns, five minutes each. Tap one to leave it out. One with nothing to show right now is skipped.": "Wszystkie zmieniają się co pięć minut. Dotknij jednego, aby go pominąć. Ten, który nie ma teraz nic do pokazania, jest pomijany.",
+    "Only the ones picked here take turns, five minutes each. One with nothing to show right now is skipped.": "Zmieniają się tylko wybrane tutaj, co pięć minut. Ten, który nie ma teraz nic do pokazania, jest pomijany.",
+    "All cameras. Tap one to leave it out. On the tablet a tap on a camera shows its live picture.": "Wszystkie kamery. Dotknij jednej, aby ją pominąć. Na tablecie dotknięcie kamery pokazuje obraz na żywo.",
+    "Only the cameras picked here.": "Tylko kamery wybrane tutaj.",
+    "No camera found. The preview shows an example.": "Nie znaleziono kamery. Podgląd pokazuje przykład.",
+    "Appointments of all calendars. Tap one to leave it out.": "Wydarzenia ze wszystkich kalendarzy. Dotknij jednego, aby go pominąć.",
+    "Only the appointments of the calendars picked here.": "Tylko wydarzenia z kalendarzy wybranych tutaj.",
+    "No calendar found. The preview shows an example.": "Nie znaleziono kalendarza. Podgląd pokazuje przykład.",
+    "Screensavers that alternate": "Wygaszacze ekranu na zmianę",
+    "Screensaver cameras": "Kamery wygaszacza ekranu",
+    "Screensaver calendars": "Kalendarze wygaszacza ekranu",
+    "Cover colour": "Kolor okładki",
+    "While music plays, the calm screensavers take on a soft tint in the main colour of the cover.": "Gdy gra muzyka, spokojne wygaszacze ekranu przyjmują delikatny odcień głównego koloru okładki."
   },
   "patterns": [
     [

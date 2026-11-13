@@ -2558,14 +2558,23 @@ const SECTIONS = [
           "10": "After 10 minutes", "15": "After 15 minutes", "30": "After 30 minutes" },
         hint: "Tablets only. After this time without a touch the screensaver covers the dashboard. A touch brings it back." },
       { key: "casora_screensaver_kind", sub: "chrome", label: "Screensaver", type: "select", auto: true, scope: "dashboard",
-        options: ["", "himmel", "land", "fotos", "wort", "wetter", "linie", "woche", "musik", "energie", "ruhe"],
+        options: ["", "himmel", "land", "fotos", "wort", "wetter", "linie", "woche", "musik", "energie", "ruhe", "kameras", "kalender"],
         optionLabels: { "": "One after the other", himmel: "Sky", land: "Landscapes", fotos: "Photos", wort: "Word clock", wetter: "Weather",
-          linie: "Day line", woche: "Week", musik: "Music", energie: "Energy flow", ruhe: "House at rest" },
+          linie: "Day line", woche: "Week", musik: "Music", energie: "Energy flow", ruhe: "House at rest", kameras: "Cameras", kalender: "Calendar" },
         when: (v) => v.casora_screensaver != null && v.casora_screensaver !== "",
         hint: "Sky follows the sun and the weather. Landscapes are drawn, nothing is loaded. Photos shows this dashboard's room photos." },
       // The room photos „Photos“ shows (day photo names); none = all. Picked on the Screensaver page under its preview,
       // never drawn as a field here; listed so a new room takes it over like the other dashboard settings.
       { key: "casora_screensaver_photos", sub: "chrome", label: "Screensaver photos", type: "text", auto: true, scope: "dashboard", when: () => false },
+      // Which kinds take turns (none = all), which cameras and calendars the screensavers show (none = all): picked on the
+      // Screensaver page under its preview like the photos, never drawn as a field.
+      { key: "casora_screensaver_mix", sub: "chrome", label: "Screensavers that alternate", type: "text", auto: true, scope: "dashboard", when: () => false },
+      { key: "casora_screensaver_cameras", sub: "chrome", label: "Screensaver cameras", type: "text", auto: true, scope: "dashboard", when: () => false },
+      { key: "casora_screensaver_calendars", sub: "chrome", label: "Screensaver calendars", type: "text", auto: true, scope: "dashboard", when: () => false },
+      // While music plays, the screensavers with a coloured ground take a soft wash in the cover's colour.
+      { key: "casora_screensaver_tint", sub: "chrome", label: "Cover colour", type: "bool", boolDefault: false, auto: true, scope: "dashboard",
+        when: (v) => v.casora_screensaver != null && v.casora_screensaver !== "",
+        hint: "While music plays, the calm screensavers take on a soft tint in the main colour of the cover." },
       // Halten auf Kacheln (22-halten.js): leer = Schnellmenü. casora-core.js setzt daraus window._casoraHoldMode,
       // ans Handy geht es über casora_mobile_bg. Je Kachel überstimmbar (variables.hold_mode, Kachel-Inspektor).
       { key: "hold_mode", sub: "hold", label: "Hold on tiles", type: "select", auto: true, scope: "dashboard",

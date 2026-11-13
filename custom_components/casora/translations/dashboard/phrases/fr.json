@@ -2953,7 +2953,9 @@
     "Arzttermin": "Médecin",
     "Lamellenstellung": "Lames",
     "Breaking": "Changement majeur",
-    "● KI-Fehler": "● Erreur IA"
+    "● KI-Fehler": "● Erreur IA",
+    "Tippen für das Livebild": "Touche pour l’image en direct",
+    "Bildschirmschoner starten": "Lancer l’économiseur d’écran"
   },
   "patterns": [
     [

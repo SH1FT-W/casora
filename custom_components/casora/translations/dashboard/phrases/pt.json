@@ -2953,7 +2953,9 @@
     "Arzttermin": "Médico",
     "Lamellenstellung": "Lâminas",
     "Breaking": "Alteração importante",
-    "● KI-Fehler": "● Erro de IA"
+    "● KI-Fehler": "● Erro de IA",
+    "Tippen für das Livebild": "Toque para ver a imagem em direto",
+    "Bildschirmschoner starten": "Iniciar proteção de ecrã"
   },
   "patterns": [
     [

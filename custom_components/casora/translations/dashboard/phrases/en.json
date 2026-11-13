@@ -2935,7 +2935,9 @@
     "Arzttermin": "Doctor",
     "Lamellenstellung": "Slats",
     "Breaking": "Breaking change",
-    "● KI-Fehler": "● AI error"
+    "● KI-Fehler": "● AI error",
+    "Tippen für das Livebild": "Tap for the live picture",
+    "Bildschirmschoner starten": "Start screensaver"
   },
   "patterns": [
     [

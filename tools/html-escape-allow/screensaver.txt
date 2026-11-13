@@ -12,5 +12,5 @@ custom_components/casora/scripts/local/46-screensaver.js | re:^\(?wx(?: && wx)?\
 custom_components/casora/scripts/local/46-screensaver.js | re:^(?:base|x|y|new|pct\(X\(i(?:Hi|Lo)\)\))$ | number: position computed by the code (new Date(day).getDate() is the day of the month) | 9
 custom_components/casora/scripts/local/46-screensaver.js | re:^(?:color|TONES\[\(i \+ j\) % TONES\.length\]|TONE_C\[r\.tone\])$ | colour from the fixed tables of the module | 5
 custom_components/casora/scripts/local/46-screensaver.js | re:^(?:cls|side|GLYPH\[glyph\])$ | fixed class name or glyph of the module | 4
-custom_components/casora/scripts/local/46-screensaver.js | re:^(?:pic|out|week|rain|curve|cols|bar|items\.join\(\'\'\)|head\(ctx.*\)|node\(.*\)|flow\(.*\))$ | markup built by the module itself: numbers and fixed values, every text through esc() | 19
+custom_components/casora/scripts/local/46-screensaver.js | re:^(?:pic|out|week|rain|curve|cols|bar|items\.join\(\'\'\)|head\(ctx.*\)|node\(.*\)|flow\(.*\))$ | markup built by the module itself: numbers and fixed values, every text through esc() | 20
 custom_components/casora/scripts/local/46-screensaver.js | re:^mmss\(m\.(?:pos|dur)\)$ | minutes:seconds built from a number | 2
