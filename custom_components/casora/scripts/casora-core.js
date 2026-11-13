@@ -10060,10 +10060,12 @@ window.casoraMenuGlass = {
   // Das Theme schaltet die Gestaltung um: --casora-popup-layout: soft (theme_weich.yaml).
   // Ohne den Wert liefern alle Bausteine exakt das bisherige HTML. Gelesen wird höchstens
   // alle 400 ms (ein Render baut viele Bausteine kurz hintereinander).
-  var softAt = 0, softOn = false;
+  // Each read forces a style recalc (costly while the page builds). Theme changes land on <html> and the observer
+  // below re-reads at once, so the timed re-read is only a fallback.
+  var softAt = 0, softOn = false, SOFT_TTL = typeof MutationObserver === 'function' ? 5000 : 400;
   function soft(fresh) {
     var now = Date.now();
-    if (fresh || now - softAt > 400) {
+    if (fresh || now - softAt > SOFT_TTL) {
       softAt = now;
       try {
         softOn = getComputedStyle(document.documentElement)
