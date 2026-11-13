@@ -5,7 +5,13 @@ import { open, casoraDashboard, dashboard, fakeStates, check, need, finish } fro
 const dash = await casoraDashboard();
 const { page } = await open({ width: 393, height: 852, mobile: true, theme: 'Casora', dark: false });
 await dashboard(page, dash.phone.url);
-const mp = await page.evaluate(() => Object.keys(document.querySelector('home-assistant').hass.states).filter((id) => id.startsWith('media_player.'))[0]);
+// A player the phone's Now Playing card lists (it takes up to 8; since 26.11.27 the test speakers push the house's
+// first player out of that list), else the house's first.
+const mp = await page.evaluate(() => {
+  const b = window.__pierce('button-card').find((x) => [].concat((x._config || {}).template || []).includes('casora_mobile_now_playing'));
+  const v = (b && b._config.variables) || {};
+  return v.media_player_1 || Object.keys(document.querySelector('home-assistant').hass.states).filter((id) => id.startsWith('media_player.'))[0];
+});
 await fakeStates(page, { [mp]: { state: 'playing', attributes: { media_title: 'Testlied', media_artist: 'Band', friendly_name: 'Wohnzimmer' } } }, { sticky: true });
 await page.waitForTimeout(4000);
 const m = await page.evaluate(() => {
