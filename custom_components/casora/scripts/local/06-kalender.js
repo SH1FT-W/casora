@@ -138,7 +138,7 @@
   /* Termine laden: sichtbarer Monat (6 Wochen) plus 31 Tage ab heute. */
   var weekStart = function (d) { var x = day0(d); return addD(x, -((x.getDay() + 6) % 7)); };
   var gridStart = function (m) { var f = new Date(m.getFullYear(), m.getMonth(), 1); return addD(f, -((f.getDay() + 6) % 7)); };
-  // One slot per calendar configuration, with a five-minute TTL and at most 32 slots.
+  // One slot per calendar configuration, with a five-minute TTL; expire inactive slots.
   // State changes replace a slot's data; an older completion cannot replace its newer request.
   var caches = new Map(), popupCache = null;
   var showCache = function (cache) {
@@ -157,14 +157,13 @@
     var id = JSON.stringify(cals.map(function (c) { return c.entity; }));
     var cache = caches.get(id);
     if (!cache) {
-      if (caches.size >= 32) {
-        var oldest = Array.from(caches.keys()).find(function (k) { var c = caches.get(k); return !c.busy && c !== popupCache; });
-        if (oldest === undefined) return;
-        caches.delete(oldest);
-      }
+      caches.forEach(function (c, k) {
+        if (!c.busy && c !== popupCache && Date.now() - c.used >= 300000) caches.delete(k);
+      });
       cache = { ev: null, key: '', ts: 0, busy: false };
+      caches.set(id, cache);
     }
-    caches.delete(id); caches.set(id, cache);
+    cache.used = Date.now();
     cache.requestedKey = key;
     if (popup || !popupCache) popupCache = cache;
     if (popupCache === cache) showCache(cache);
@@ -220,10 +219,14 @@
     return out;
   };
   var kickTiles = function () {
+    var wants = function (el) {
+      var c = el._config;
+      return c && typeof c.state_display === 'string' && c.state_display.indexOf('_casoraCalendar') !== -1;
+    };
+    if (typeof window.casoraKickAll === 'function') { window.casoraKickAll('calendar', wants); return; }
     var ha = document.querySelector('home-assistant');
     find(ha && ha.shadowRoot, 'button-card').forEach(function (el) {
-      var c = el._config;
-      if (c && typeof c.state_display === 'string' && c.state_display.indexOf('_casoraCalendar') !== -1 && window.casoraKick) window.casoraKick(el);
+      if (wants(el) && window.casoraKick) window.casoraKick(el);
     });
   };
   K.repaint = function () {
