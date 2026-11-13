@@ -25562,12 +25562,24 @@ class CasoraPanel extends HTMLElement {
     if ((this._state || {}).surface === "mobile") return this._state;
     const p = this._pair;
     if (!p || p.safe === false) return null;
+    // #149: keeping the phone half in step follows the last edit, it is not a step of its own. Recorded
+    // separately, Ctrl+Z landed on the half-synced state, the next phone preview synced it again and
+    // undo never got past it (split carousel stayed split). Fold it into the current history entry -
+    // only when nothing else is pending, so an edit not yet recorded keeps its own step.
+    const fold = this._shadow && this._lastPrint !== undefined && this._print() === this._lastPrint;
     syncPairRooms(p);
     syncHomeShared(p);
     syncPairTiles(p);
     syncScenesMobile(p, this._scenesMode() !== "off");
     syncCamerasMobile(p, this._hass);
     syncRoomChips(p);
+    if (fold) {
+      const now = this._print();
+      if (now !== this._lastPrint) {
+        this._lastPrint = now;
+        this._shadow = this._snap();
+      }
+    }
     return p.mobile;
   }
 
