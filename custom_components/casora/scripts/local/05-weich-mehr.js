@@ -636,8 +636,14 @@
       // r90 01.11.2026): the rows open the reading's own page like every other reading row.
       if (f.use) f3.use = fs && typeof f.use === 'string' ? f.use.replace(/data-hp-metric="/g, 'data-casora-mi="') : f.use;
       if (f.top) f3.top = f.top;
-      return layout({ fields: f3, top: ['hero'], stage: 'stage', quick: 'quick', left: [], right: ['use', 'top'], moveLeft: [],
-        narrowOrder: ['stage', 'quick', 'top', 'use'] });
+      // The house: „Verbrauch je Gerät ›“ (47-energie-verlauf.js) when HA's energy settings list individual devices.
+      var EVh = house && window._casoraEnergyHistory;
+      if (EVh && EVh.devices(ctx.hass).length) {
+        EVh.prefetch(ctx.hass);
+        f3.hist = { card: secCard([], 'return window._casoraEnergyHistory ? window._casoraEnergyHistory.sec("entry", null, states, hass, this) : "";', states) };
+      }
+      return layout({ fields: f3, top: ['hero'], stage: 'stage', quick: 'quick', left: [], right: ['use', 'top', 'hist'], moveLeft: [],
+        narrowOrder: ['stage', 'quick', 'top', 'use', 'hist'] });
     }
     return layout({ fields: f, top: ['hero', 'metric'], left: wide ? ['flow'] : ['top'],
       right: wide ? ['use', 'top', 'more'] : ['use', 'more'], moveLeft: ['top'],

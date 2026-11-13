@@ -2933,7 +2933,11 @@
     "ins Netz": "to the grid",
     "Akku gibt ab": "Battery discharging",
     "Arzttermin": "Doctor",
-    "Lamellenstellung": "Slats"
+    "Lamellenstellung": "Slats",
+    "Verbrauch je Gerät": "Consumption per device",
+    "Sonstige": "Other",
+    "pro Stunde": "per hour",
+    "pro Tag": "per day"
   },
   "patterns": [
     [
@@ -5271,6 +5275,10 @@
     [
       "^(.+) braucht Aufmerksamkeit$",
       "{1} needs attention"
+    ],
+    [
+      "^Geräte · (\\d+)$",
+      "Devices · {1}"
     ]
   ]
 }

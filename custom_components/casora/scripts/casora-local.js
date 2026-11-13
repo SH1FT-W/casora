@@ -256,6 +256,7 @@ const MODULES = [
   '44-landkarte',
   '45-charging',
   '46-screensaver',
+  '47-energie-verlauf',
 ];
 
 const START_MODULES = MODULES.slice(0, 5);

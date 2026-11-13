@@ -2951,7 +2951,11 @@
     "ins Netz": "para a rede",
     "Akku gibt ab": "A bateria descarrega",
     "Arzttermin": "Médico",
-    "Lamellenstellung": "Lâminas"
+    "Lamellenstellung": "Lâminas",
+    "Verbrauch je Gerät": "Consumo por dispositivo",
+    "Sonstige": "Outros",
+    "pro Stunde": "por hora",
+    "pro Tag": "por dia"
   },
   "patterns": [
     [
@@ -5289,6 +5293,10 @@
     [
       "^(.+) braucht Aufmerksamkeit$",
       "{1} requer atenção"
+    ],
+    [
+      "^Geräte · (\\d+)$",
+      "Dispositivos · {1}"
     ]
   ]
 }

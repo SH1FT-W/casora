@@ -531,9 +531,19 @@ class CasoraMock:
             rnd = random.Random(eid)
             hours = hours_of(eid)
             use = []
+            # Demo household devices (demo_fixture.py DEVICE_PROFILES): their own day and week shape instead of the
+            # common one – consumption per device then looks like a home.
+            prof = (self.fixture.get("_stats_profile") or {}).get(eid)
             for h in hours:
                 at = datetime.fromtimestamp(h)
                 hour = at.hour
+                if prof:
+                    v = prof.get("base", 0.0)
+                    for b0, b1, kwh, days in prof.get("blocks", []):
+                        if b0 <= hour < b1 and (days is None or at.weekday() in days):
+                            v += kwh * (0.8 + 0.4 * rnd.random())
+                    use.append(v * scale)
+                    continue
                 base = 0.12 + 0.35 * math.exp(-((hour - 19.5) / 2.2) ** 2) + 0.25 * math.exp(-((hour - 7.5) / 1.2) ** 2)
                 # Jahresgang: Januar ~ +30 %, Juli ~ −30 % – Monatsbalken sehen nach Verbrauch aus.
                 season = 1 + 0.3 * math.cos(2 * math.pi * (at.timetuple().tm_yday - 15) / 365)

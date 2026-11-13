@@ -294,9 +294,57 @@ ENERGY_TILE = {
 }
 
 
+# Household devices for "consumption per device" (energy popup): an id pattern of the device's energy meter, the name in
+# HA's energy settings and its hourly use (base kWh per hour, blocks [from hour, to hour, kWh per hour, weekdays
+# Mon = 0 or None]). The mock writes 30 days of statistics in this shape (casora_mock _import_statistics), the demo's
+# energy settings list them as individual devices (demo_energy).
+DEVICE_PROFILES = [
+    (r"^sensor\.waschmaschine_energie(_\d+)?$", "Washer", {"base": 0.002, "blocks": [[10, 12, 0.55, [0, 2, 5]]]}),
+    (r"^sensor\.trockner_energie$", "Dryer", {"base": 0.002, "blocks": [[13, 15, 0.9, [0, 5]]]}),
+    (r"^sensor\.geschirrspuler_energy$", "Dishwasher", {"base": 0.002, "blocks": [[20, 22, 0.45, None]]}),
+    (r"^sensor\.55_neo_qled_energy$", "TV", {"base": 0.001, "blocks": [[19, 23, 0.11, None], [9, 11, 0.09, [5, 6]]]}),
+    (r"^sensor\.meerwasseraquarium_energy$", "Reef Tank", {"base": 0.045, "blocks": [[10, 20, 0.06, None]]}),
+    (r"^sensor\.schildkrotenaquarium_warmelampe_energy$", "Turtle Heat Lamp", {"base": 0.0, "blocks": [[8, 20, 0.075, None]]}),
+    (r"^sensor\.playstation_5_energy$", "PlayStation 5", {"base": 0.001, "blocks": [[20, 23, 0.2, [4, 5, 6]]]}),
+    (r"^sensor\.espressobar_energie$", "Espresso Machine", {"base": 0.003, "blocks": [[7, 9, 0.25, None], [15, 16, 0.2, None]]}),
+    (r"^sensor\.p1s_steckdose_energy$", "3D Printer", {"base": 0.002, "blocks": [[9, 16, 0.12, [1, 3]]]}),
+]
+
+
+def demo_profiles(d):
+    """Hourly use per household device for the mock's statistics (fixture key _stats_profile)."""
+    prof = {}
+    for e in d["entities"]:
+        for rx, _name, p in DEVICE_PROFILES:
+            if re.match(rx, e["entity_id"]) and e["entity_id"] not in prof:
+                prof[e["entity_id"]] = p
+    d["_stats_profile"] = prof
+
+
+def demo_energy(cfg, fx):
+    """HA's energy settings of the demo: the household devices as individual devices (.storage/energy, written
+    before HA starts; an existing file stays)."""
+    p = os.path.join(cfg, ".storage", "energy")
+    if os.path.exists(p):
+        return
+    ids = {e["entity_id"] for e in fx["entities"]}
+    devs, seen = [], set()
+    for rx, name, _p in DEVICE_PROFILES:
+        hit = sorted(x for x in ids if re.match(rx, x) and x not in seen)
+        if hit:
+            seen.add(hit[0])
+            devs.append({"stat_consumption": hit[0], "name": name})
+    data = {"version": 1, "minor_version": 3, "key": "energy",
+            "data": {"energy_sources": [], "device_consumption": devs, "device_consumption_water": []}}
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    json.dump(data, open(p, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
+    print("Energie-Einstellungen:", len(devs), "Geräte")
+
+
 def demo_dashboards(cfg):
     """Trägt die Solar-Variablen in die Energie-Kacheln der Demo-Dashboards ein (.storage)."""
     fx = json.load(open(os.path.join(cfg, "custom_components", "casora_mock", "fixture.json"), encoding="utf-8"))
+    demo_energy(cfg, fx)
     devs = {x["key"]: x.get("name") for x in fx["devices"]}
     var = {}
     for role, m in ENERGY_TILE.items():
@@ -487,6 +535,10 @@ def main():
         text = text.replace(a, b)
     # Fahrgestellnummern (17 Zeichen, ohne I/O/Q) – z. B. in Dateinamen von Auto-Integrationen.
     text = re.sub(r"(?<![A-Za-z0-9])[A-HJ-NPR-Z0-9]{17}(?![A-Za-z0-9])", "WVWZZZ00000000000", text)
+    # Profiles by the final ids (after the replacements above).
+    d2 = json.loads(text)
+    demo_profiles(d2)
+    text = json.dumps(d2, ensure_ascii=False)
     if not PAIRS:
         print("Achtung: dev/demo/privat.json fehlt – persönliche Wörter bleiben stehen!", file=sys.stderr)
     open(dst, "w", encoding="utf-8").write(text)

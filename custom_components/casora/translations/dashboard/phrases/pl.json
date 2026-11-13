@@ -2951,7 +2951,11 @@
     "ins Netz": "do sieci",
     "Akku gibt ab": "Akumulator oddaje energię",
     "Arzttermin": "Lekarz",
-    "Lamellenstellung": "Lamele"
+    "Lamellenstellung": "Lamele",
+    "Verbrauch je Gerät": "Zużycie według urządzeń",
+    "Sonstige": "Pozostałe",
+    "pro Stunde": "na godzinę",
+    "pro Tag": "dziennie"
   },
   "patterns": [
     [
@@ -5289,6 +5293,10 @@
     [
       "^(.+) braucht Aufmerksamkeit$",
       "{1} wymaga uwagi"
+    ],
+    [
+      "^Geräte · (\\d+)$",
+      "Urządzenia · {1}"
     ]
   ]
 }

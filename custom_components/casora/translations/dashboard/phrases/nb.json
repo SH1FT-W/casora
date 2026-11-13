@@ -2944,7 +2944,11 @@
     "ins Netz": "til nettet",
     "Akku gibt ab": "Batteriet lades ut",
     "Arzttermin": "Lege",
-    "Lamellenstellung": "Lameller"
+    "Lamellenstellung": "Lameller",
+    "Verbrauch je Gerät": "Forbruk per enhet",
+    "Sonstige": "Andre",
+    "pro Stunde": "per time",
+    "pro Tag": "per dag"
   },
   "patterns": [
     [
@@ -5282,6 +5286,10 @@
     [
       "^(.+) braucht Aufmerksamkeit$",
       "{1} trenger oppmerksomhet"
+    ],
+    [
+      "^Geräte · (\\d+)$",
+      "Enheter · {1}"
     ]
   ]
 }

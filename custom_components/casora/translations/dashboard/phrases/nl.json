@@ -2951,7 +2951,11 @@
     "ins Netz": "naar het net",
     "Akku gibt ab": "Accu ontlaadt",
     "Arzttermin": "Dokter",
-    "Lamellenstellung": "Lamellen"
+    "Lamellenstellung": "Lamellen",
+    "Verbrauch je Gerät": "Verbruik per apparaat",
+    "Sonstige": "Overige",
+    "pro Stunde": "per uur",
+    "pro Tag": "per dag"
   },
   "patterns": [
     [
@@ -5289,6 +5293,10 @@
     [
       "^(.+) braucht Aufmerksamkeit$",
       "{1} heeft aandacht nodig"
+    ],
+    [
+      "^Geräte · (\\d+)$",
+      "Apparaten · {1}"
     ]
   ]
 }

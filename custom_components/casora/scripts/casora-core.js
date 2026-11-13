@@ -10665,7 +10665,7 @@ window.casoraMenuGlass = {
         });
       }
       if (r.bar != null) {
-        var bt = tone(r.barTone) || T.ink2;
+        var bt = tone(r.barTone) || (/^var\(--casora-/.test(String(r.barTone || '')) ? r.barTone : null) || T.ink2;
         var pct = Math.max(0, Math.min(1, r.bar)) * 100;
         var live = r.liveAttr && r.entity
           ? ' data-casora-live="bar" data-casora-ent="' + esc(r.entity)
@@ -10966,7 +10966,7 @@ window.casoraMenuGlass = {
         });
       }
       if (r.bar != null) {
-        var bt = tone(r.barTone) || T.ink2;
+        var bt = tone(r.barTone) || (/^var\(--casora-/.test(String(r.barTone || '')) ? r.barTone : null) || T.ink2;
         var pct = Math.max(0, Math.min(1, r.bar)) * 100;
         var live = r.liveAttr && r.entity
           ? ' data-casora-live="bar" data-casora-ent="' + esc(r.entity)
