@@ -3103,7 +3103,18 @@
     "Screensaver cameras": "Camera’s voor de schermbeveiliging",
     "Screensaver calendars": "Agenda’s voor de schermbeveiliging",
     "Cover colour": "Hoeskleur",
-    "While music plays, the calm screensavers take on a soft tint in the main colour of the cover.": "Als er muziek speelt, krijgen de rustige schermbeveiligingen een zachte tint in de hoofdkleur van de hoes."
+    "While music plays, the calm screensavers take on a soft tint in the main colour of the cover.": "Als er muziek speelt, krijgen de rustige schermbeveiligingen een zachte tint in de hoofdkleur van de hoes.",
+    "Hide my own arrivals and departures": "Mijn eigen komen en gaan verbergen",
+    "For people linked to a Home Assistant user: you see the others come and go, not yourself.": "Voor personen gekoppeld aan een Home Assistant-gebruiker: je ziet wie er komt en gaat, behalve jezelf.",
+    "Removed for all users": "Verwijderd voor alle gebruikers",
+    "A message removed from the bell is gone for everyone. Off: only on your own devices.": "Een melding die je uit de bel verwijdert, is voor iedereen weg. Uit: alleen op je eigen apparaten.",
+    "When tapped": "Bij tikken",
+    "Ask first": "Eerst vragen",
+    "View only": "Alleen bekijken",
+    "Only shows: neither the icon nor the popup switches anything. For devices others should only look at.": "Toont alleen: pictogram en pop-up schakelen niets. Voor apparaten die alleen bekeken mogen worden.",
+    "The tile only shows": "De tegel toont alleen",
+    "view only": "alleen bekijken",
+    "It only shows, nothing switches.": "Ze toont alleen, er wordt niets geschakeld."
   },
   "patterns": [
     [

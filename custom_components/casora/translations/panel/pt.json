@@ -3103,7 +3103,18 @@
     "Screensaver cameras": "Câmaras da proteção de ecrã",
     "Screensaver calendars": "Calendários da proteção de ecrã",
     "Cover colour": "Cor da capa",
-    "While music plays, the calm screensavers take on a soft tint in the main colour of the cover.": "Enquanto toca música, as proteções de ecrã calmas ganham um tom suave da cor principal da capa."
+    "While music plays, the calm screensavers take on a soft tint in the main colour of the cover.": "Enquanto toca música, as proteções de ecrã calmas ganham um tom suave da cor principal da capa.",
+    "Hide my own arrivals and departures": "Ocultar as minhas próprias chegadas e saídas",
+    "For people linked to a Home Assistant user: you see the others come and go, not yourself.": "Para pessoas ligadas a um utilizador do Home Assistant: vês os outros a chegar e a sair, não a ti.",
+    "Removed for all users": "Removido para todos os utilizadores",
+    "A message removed from the bell is gone for everyone. Off: only on your own devices.": "Um aviso removido do sino desaparece para todos. Desligado: só nos teus próprios dispositivos.",
+    "When tapped": "Ao tocar",
+    "Ask first": "Perguntar antes",
+    "View only": "Só ver",
+    "Only shows: neither the icon nor the popup switches anything. For devices others should only look at.": "Só mostra: nem o ícone nem o popup ligam ou desligam nada. Para dispositivos que os outros só devem ver.",
+    "The tile only shows": "O mosaico só mostra",
+    "view only": "só ver",
+    "It only shows, nothing switches.": "Só mostra, nada é ligado ou desligado."
   },
   "patterns": [
     [

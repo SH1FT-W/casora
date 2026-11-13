@@ -378,6 +378,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     from .charging import async_setup_charging
 
     await async_setup_charging(hass)
+    # Bell: messages removed for all users, when a dashboard shares the list (notify_hidden.py).
+    from .notify_hidden import async_setup_notify_hidden
+
+    await async_setup_notify_hidden(hass)
     # Live-Aktivitäten auf dem Handy (live_activity.py): Geräte wie die Kacheln finden, Store statt Optionen.
     from .live_activity import async_setup_live
 
@@ -483,6 +487,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if tk:
         tk.stop()
     hass.data.get(DOMAIN, {}).pop("charging", None)
+    hass.data.get(DOMAIN, {}).pop("notify_hidden", None)
     live = hass.data.get(DOMAIN, {}).pop("live", None)
     if live:
         live.stop()

@@ -465,7 +465,18 @@
       words: "ausblenden verstecken sichtbar wer sieht kind gast hide who sees visibility" },
   ];
 
-  W.__casoraStudioMehr = { qrMatrix, qrSvg, changeLines, changeItems, revertLine, searchRank, fold, HELP_TOPICS };
+  // Hemma round #12, tap behaviour of a tile: "" (Normal), "ask" (Ask before switching = confirm_toggle, as saved
+  // until now), "view" (View only = view_only). One writer for both keys; an old confirm_toggle reads as "ask".
+  const tapModeOf = (vars) => (vars && vars.view_only === true ? "view" : vars && vars.confirm_toggle === true ? "ask" : "");
+  const setTapMode = (tile, mode) => {
+    const v = tile.variables || (tile.variables = {});
+    delete v.view_only; delete v.confirm_toggle;
+    if (mode === "ask") v.confirm_toggle = true;
+    if (mode === "view") v.view_only = true;
+    if (!Object.keys(v).length) delete tile.variables;
+    return tile;
+  };
+  W.__casoraStudioMehr = { qrMatrix, qrSvg, changeLines, changeItems, revertLine, searchRank, fold, HELP_TOPICS, tapModeOf, setTapMode };
   if (typeof customElements === "undefined" || !W.document) return;
 
   // Menu icons (line drawings like the panel's MENU_ICONS).
@@ -1741,15 +1752,38 @@
           const ty = I().tileTypeAny ? I().tileTypeAny(inner) : null;
           const tf = ty && (ty.fields || []).find((f) => f.key === "show_toggle");
           if (tf || switchesSomething(inner)) {
+            // Since the user test every switching path of the tile asks, the popup too (casora-core.js).
+            const moves = /^(cover|valve)\./.test(String(inner.entity || inner.variables && inner.variables.cover_entity || ""));
+            // Scripts, scenes and buttons run rather than switch (#86, #90).
+            const runs = /^(script|scene|button|input_button)\./.test(String(inner.entity || ""));
             const r = document.createElement("div");
             r.className = "row mask";
             const l = document.createElement("label");
-            l.textContent = tr("Ask before switching");
+            // Hemma round #12: one choice instead of the switch "Ask before switching" – Normal, Ask first, View only.
+            l.textContent = tr("When tapped");
             l.setAttribute("data-no-i18n", "");
             const V = inner.variables || {};
-            const sw = this._boolSwitch(V.confirm_toggle === true, false, (v) => {
-              if (v) { inner.variables = inner.variables || {}; inner.variables.confirm_toggle = true; }
-              else if (inner.variables) { delete inner.variables.confirm_toggle; if (!Object.keys(inner.variables).length) delete inner.variables; }
+            const TAP_LABELS = { "": "Normal", ask: "Ask first", view: "View only" };
+            const hintFor = (mode) => mode === "view"
+              ? tr("Only shows: neither the icon nor the popup switches anything. For devices others should only look at.")
+              : runs
+              ? tr("A calm question before this runs – on the tile and in its popup. For the front door, the gate or everything off.")
+              : moves
+              ? tr("A calm question before this opens or closes – on the tile and in its popup. For the garage door, the gate or the blinds.")
+              : tr("A calm question before this device turns on or off – on the tile and in its popup. For the oven, the garage or the pump.");
+            const c = this._combo(tapModeOf(V), ["", "ask", "view"], "", (mode) => {
+              setTapMode(inner, mode);
+              h.textContent = hintFor(mode);
+              const v = mode === "ask";
+              if (mode === "view") {
+                const twin = box.querySelector('.sw[data-field="confirm_toggle"]');
+                if (twin && twin._set) twin._set(false);
+                if (try_) try_.hidden = true;
+                this._bQuiet = true;
+                try { this._markDirty(); } finally { this._bQuiet = false; }
+                if (this._bToast) this._bToast(tr("The tile only shows"), { save: true, sub: tr("Not saved yet – “Save now” or Done saves it.") });
+                return;
+              }
               // "With confirmation" under "Tap runs it" is the same setting (#86): show the same state there.
               const twin = box.querySelector('.sw[data-field="confirm_toggle"]');
               if (twin && twin._set) twin._set(v === true);
@@ -1767,19 +1801,11 @@
                   action: { label: tr("Try it"), run: () => { this._cpDismissed = null; const t = this._cpTarget(); if (t) this._cpOpen(t); } } }
                   : v && canAsk() ? { ms: 15000, save: true, sub: tr("Not saved yet – “Save now” or Done saves it."), action: { label: tr("Try it"), run: askNow } }
                   : { save: true, sub: tr("Not saved yet – “Save now” or Done saves it.") });
-            }, tr("Ask before switching"));
-            r.append(l, sw);
+            }, { fixed: true, labels: TAP_LABELS });
+            r.append(l, c.wrap);
             const h = document.createElement("div");
             h.className = "hint";
-            // Since the user test every switching path of the tile asks, the popup too (casora-core.js).
-            const moves = /^(cover|valve)\./.test(String(inner.entity || inner.variables && inner.variables.cover_entity || ""));
-            // Scripts, scenes and buttons run rather than switch (#86, #90).
-            const runs = /^(script|scene|button|input_button)\./.test(String(inner.entity || ""));
-            h.textContent = runs
-              ? tr("A calm question before this runs – on the tile and in its popup. For the front door, the gate or everything off.")
-              : moves
-              ? tr("A calm question before this opens or closes – on the tile and in its popup. For the garage door, the gate or the blinds.")
-              : tr("A calm question before this device turns on or off – on the tile and in its popup. For the oven, the garage or the pump.");
+            h.textContent = hintFor(tapModeOf(V));
             h.setAttribute("data-no-i18n", "");
             // Permanent way to try it out (not only in the toast): opens the preview's popup.
             const canTry = () => !isPhone(this) && typeof this._cpOpen === "function" && typeof this._cpTarget === "function" && !!this._cpTarget();
@@ -1801,7 +1827,7 @@
             try_.className = "mval ghost mtry";
             try_.setAttribute("data-no-i18n", "");
             try_.textContent = tr(canTry() ? "Try it in the popup" : "Try the question");
-            try_.hidden = !(V.confirm_toggle === true && (canTry() || canAsk()));
+            try_.hidden = !(tapModeOf(V) === "ask" && (canTry() || canAsk()));
             try_.onclick = () => {
               if (canTry()) { this._cpDismissed = null; const t = this._cpTarget(); if (t) this._cpOpen(t); return; }
               if (canAsk()) askNow();

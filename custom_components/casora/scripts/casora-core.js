@@ -334,7 +334,7 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
   // ohne Rückfrage. Darum zählen zusätzlich die Kacheln mit confirm_toggle im offenen Dashboard und
   // in seinem Partner (Desktop ↔ „-mobile“), ohne neu speichern. dev/unit/rueckfrage_handy.mjs
   var fromCfg = function (cfg) {
-    var ids = [], names = {}, n = 0;
+    var ids = [], names = {}, n = 0, views = [];
     var add = function (x, nm) {
       if (typeof x !== 'string' || !x || x.indexOf('[[[') >= 0) return;
       if (ids.indexOf(x) < 0) ids.push(x);
@@ -345,7 +345,12 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
       n++;
       if (Array.isArray(o)) { for (var i = 0; i < o.length; i++) walk(o[i], d + 1); return; }
       var v = o.variables;
-      if (v && typeof v === 'object' && v.confirm_toggle === true) {
+      // Hemma round #12: tiles set to „View only“ (view_only wins over confirm_toggle, casoraTapMode).
+      if (v && typeof v === 'object' && v.view_only === true) {
+        [o.entity, v.cover_entity].concat(Array.isArray(v.covers) ? v.covers : [], Array.isArray(v.locks) ? v.locks : []).forEach(function (x) {
+          if (typeof x === 'string' && x && x.indexOf('[[[') < 0 && views.indexOf(x) < 0) views.push(x);
+        });
+      } else if (v && typeof v === 'object' && v.confirm_toggle === true) {
         var nm = typeof o.name === 'string' && o.name.trim() && o.name.indexOf('[[[') < 0 ? o.name.trim() : '';
         add(o.entity, nm); add(v.cover_entity, nm);
         // Sammelkacheln (Jalousien, Schlösser): jedes Mitglied, alle zusammen unter dem Kachelnamen.
@@ -356,9 +361,9 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
       }
       for (var key in o) if (key !== 'button_card_templates' && Object.prototype.hasOwnProperty.call(o, key)) walk(o[key], d + 1);
     })(cfg && cfg.views, 0);
-    return { ids: ids, names: names };
+    return { ids: ids, names: names, views: views };
   };
-  var EMPTY = { ids: [], names: {} };
+  var EMPTY = { ids: [], names: {}, views: [] };
   var here = { cfg: null, got: EMPTY };
   var pair = { url: null, at: 0, got: EMPTY, p: null };
   var dashUrl = function () {
@@ -426,7 +431,7 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
     // Höchstens 2 s warten – ein hängender Abruf darf keinen Knopf blockieren.
     var late = new Promise(function (r) { setTimeout(function () { r(null); }, 2000); });
     pair.p = Promise.race([window._casoraPartnerInfo(h.hass, other), late]).then(function (info) {
-      return info && info.confirm ? { ids: info.confirm.ids || [], names: info.confirm.names || {} } : EMPTY;
+      return info && info.confirm ? { ids: info.confirm.ids || [], names: info.confirm.names || {}, views: info.confirm.views || [] } : EMPTY;
     }, function () { return EMPTY; }).then(function (got) {
       if (pair.url === other) { pair.got = got; pair.at = Date.now(); pair.p = null; }
     });
@@ -438,7 +443,19 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
     if (cfg !== here.cfg) { here.cfg = cfg; here.got = cfg ? fromCfg(cfg) : EMPTY; }
     if (!cfg) return EMPTY;
     loadPair();
-    return { ids: here.got.ids.concat(pair.got.ids), names: Object.assign({}, pair.got.names, here.got.names) };
+    return { ids: here.got.ids.concat(pair.got.ids), names: Object.assign({}, pair.got.names, here.got.names),
+      views: (here.got.views || []).concat(pair.got.views || []) };
+  };
+  // Hemma round #12, tap behaviour per tile: 'view' (View only: nothing switches, the popup only shows), 'ask'
+  // (Ask before switching, the old confirm_toggle – kept as it is, so saved tiles need no migration), 'normal'.
+  window.casoraTapMode = function (vars) {
+    var v = vars && typeof vars === 'object' ? vars : {};
+    return v.view_only === true ? 'view' : v.confirm_toggle === true ? 'ask' : 'normal';
+  };
+  // A tile config (or a device of a View only tile in this dashboard or its partner) that only shows.
+  window.casoraViewOnly = function (x) {
+    if (x && typeof x === 'object') return window.casoraTapMode(x.variables) === 'view';
+    return typeof x === 'string' && !!x && dashConfirm().views.indexOf(x) !== -1;
   };
   // Alle Rückfrage-Entitäten und Kachelnamen: Raumvariablen (Studio-Vorschau, Desktop) + Dashboards.
   var confirmIds = function () {
@@ -460,6 +477,22 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
   var warm = function () { setTimeout(function () { try { dashConfirm(); } catch (e) { /* später */ } }, 1500); };
   if (window.addEventListener) window.addEventListener('location-changed', warm);
   warm();
+  var viewOwner = function (ev, act, d) {
+    var path = ev.composedPath ? ev.composedPath() : [];
+    for (var i = 0; i < path.length && i < 40; i++) {
+      var c = path[i] && path[i]._config;
+      if (c && c.variables && typeof c.variables === 'object') return window.casoraTapMode(c.variables) === 'view' ? c : null;
+    }
+    var cfg = (d && d.config) || {};
+    if (window.casoraTapMode(cfg.variables) === 'view') return cfg;
+    var id = entityOf(act, cfg);
+    return id && cfg.entity === id && window.casoraViewOnly(id) ? cfg : null;
+  };
+  var viewHint = function () {
+    if (window.casoraHaptic) window.casoraHaptic('light');
+    if (window.casoraNotice) window.casoraNotice({ message: T('Nur ansehen – hier wird nichts geschaltet'), duration: 3000 }, { overPopup: true });
+  };
+  window.casoraViewOnlyHint = viewHint;
   var asksFirst = function (ev) {
     var path = ev.composedPath ? ev.composedPath() : [];
     for (var i = 0; i < path.length && i < 40; i++) {
@@ -700,6 +733,18 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
     var d = ev.detail || {};
     var act = switching(d);
     if (!act) return;
+    // View only (Hemma round #12): the tile switches nothing. The icon opens what a tap on the tile opens (its
+    // popup); a tile whose tap switches too only says why nothing happens.
+    var vo = viewOwner(ev, act, d);
+    if (vo) {
+      ev.stopImmediatePropagation();
+      var src = (ev.composedPath && ev.composedPath()[0]) || ev.target;
+      if (src && !switching({ config: vo, action: 'tap' }) && vo.tap_action && vo.tap_action.action !== 'none' && !d.__casoraViewTap) {
+        var asTap = new CustomEvent('hass-action', { detail: { config: vo, action: 'tap', __casoraViewTap: true }, bubbles: true, composed: true });
+        src.dispatchEvent(asTap);
+      } else viewHint();
+      return;
+    }
     var svc = String(act.perform_action || act.service || '');
     var always = LOCK_ASK.test(svc);
     var owner = asksFirst(ev);
@@ -722,7 +767,41 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
   window.casoraAskFirstTry = function (id, name) {
     return ask(word({ action: 'toggle', target: { entity_id: id } }, { entity: id, name: name || '' }));
   };
-  window.__casoraAskFirstParts = { switching: switching, word: word };
+  window.__casoraAskFirstParts = { switching: switching, word: word, fromCfg: fromCfg, viewOwner: viewOwner };
+
+  // View only in the popup (Hemma round #12): while a View only tile's popup is open, a tap on anything that would
+  // switch does nothing (says why once). Rows that only open (a device, a sub page, a link, a chart) and the
+  // head's ‹, ✕ and gear still work. Window capture: before the popup's own handlers on the document.
+  var VIEW_OK = ['data-casora-mi', 'data-casora-page', 'data-casora-go', 'data-casora-open', 'data-casora-esc', 'href'];
+  var VIEW_CTL = ['data-casora-svc', 'data-casora-cf', 'data-casora-arm', 'data-casora-slider', 'data-casora-act'];
+  var VIEW_OK_CLS = /(^|\s)(header-close|header-back|header-gear|grab|scrim)(\s|$)/;
+  var viewGuard = function (e) {
+    var pop = window.casoraPopup && window.casoraPopup.element;
+    if (!pop || !pop.hasAttribute('view-only') || !pop.hasAttribute('open')) return;
+    if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
+    var path = (e.composedPath && e.composedPath()) || [];
+    var at = path.indexOf(pop);
+    if (at < 0) return;
+    // From the tapped element outwards: a control first (switch in a row) blocks, an opening row first lets it through;
+    // anything else in the content blocks too (default: nothing switches).
+    var inside = false, ctl = false, ok = false;
+    for (var i = 0; i < at; i++) {
+      var n = path[i];
+      if (!n || n.nodeType !== 1) continue;
+      var tag = String(n.tagName).toLowerCase();
+      if (!ctl && !ok) {
+        if (VIEW_CTL.some(function (a) { return n.hasAttribute(a); }) || /^(switch|slider|spinbutton|checkbox|radio)$/.test(n.getAttribute('role') || '')
+          || /^(input|select|textarea|ha-switch|ha-slider)$/.test(tag)) ctl = true;
+        else if (VIEW_OK.some(function (a) { return n.hasAttribute(a); }) || VIEW_OK_CLS.test(String(n.className || '')) || tag === 'casora-chart') ok = true;
+      }
+      if (n.classList && (n.classList.contains('content') || n.classList.contains('header-switch'))) inside = true;
+    }
+    if (!inside || (ok && !ctl)) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if (e.type === 'click' || e.type === 'keydown') viewHint();
+  };
+  ['pointerdown', 'mousedown', 'pointerup', 'click', 'keydown'].forEach(function (t) { window.addEventListener(t, viewGuard, true); });
 
   // ── Alarm scharf schalten: Rückfrage, wenn etwas offen ist (07.10.2026) ──────────────
   // Sind Fenster/Türen offen oder ist ein Schloss entriegelt, fragt Casora vor dem Scharfschalten
@@ -8413,6 +8492,7 @@ window.casoraMenuGlass = {
       this._paintSoft(true);
       this._headFallback();
       this._headerActions.textContent = '';
+      this._viewOnlySync();
       // A sub page without a width of its own keeps the width of the page it came from (§2: 552 or 900 – sub pages
       // dropped to the frame's 580 and the popup jumped, review 2 DD-14).
       var dynCss = this._dynamicCss(cfg);
@@ -8659,6 +8739,16 @@ window.casoraMenuGlass = {
       // A lamp's popup: its dial already says „An“/„Aus“ and the brightness, and the lamp is marked in its room's list
       // – no second state word under the name (owner, 01.11.2026).
       if (String(cur.entity_id || '').indexOf('light.') === 0) return;
+      // A motion or presence sensor with nothing detected: since when, as its tile says („Zuletzt vor 11 Std.“, Hemma round #10).
+      var dcl0 = String((cur.attributes || {}).device_class || '');
+      if (String(cur.entity_id || '').indexOf('binary_sensor.') === 0 && /^(motion|occupancy|presence)$/.test(dcl0) && window.casoraMotionLast) {
+        var mo0 = window.casoraMotionLast([cur.entity_id], h && h.states, h);
+        if (mo0.known && !mo0.on && mo0.since != null) {
+          this._headerStatus.innerHTML = '<b>' + window.casoraMotionHtml(mo0) + '</b>';
+          this._headerStatus.hidden = false;
+          return;
+        }
+      }
       // The word as in the word list (window.casoraStateWord, also the search rows); null = says since when instead.
       var txt = window.casoraStateWord(h, cur);
       if (txt === '') return;
@@ -9013,9 +9103,32 @@ window.casoraMenuGlass = {
     }
 
     // ── Kopfzeile A: Hauptschalter ────────────────────────────────────────
+    // Hemma round #12: the popup of a View only tile only shows – a calm pill „Nur ansehen“ in the head, no main
+    // switch, and taps on its controls do nothing (viewGuard above). Sub pages keep it (their ring source is the tile).
+    _viewOnlySync() {
+      var c = this._ringSrc && this._ringSrc._config;
+      var on = !!(c && window.casoraViewOnly && (window.casoraViewOnly(c) || (typeof c.entity === 'string' && window.casoraViewOnly(c.entity))));
+      this.toggleAttribute('view-only', on);
+      if (!on) return;
+      var tr = window.casoraTr || function (x) { return x; };
+      var pill = document.createElement('span');
+      pill.className = 'casora-view-only';
+      pill.setAttribute('role', 'note');
+      pill.innerHTML = '<style>.casora-view-only{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px 0 10px;'
+        + 'border-radius:999px;box-sizing:border-box;white-space:nowrap;font:600 13px/1 var(--casora-font, var(--primary-font-family, system-ui));'
+        + 'letter-spacing:-0.01em;background:var(--casora-icon-circle-bg, rgba(140,115,90,0.12));'
+        + 'color:var(--casora-popup-tiles-text-secondary, var(--secondary-text-color));}'
+        + '.casora-view-only svg{width:16px;height:16px;flex:none;fill:currentColor;}</style>'
+        + '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9M12,4.5C17,4.5 21.27,7.61 23,12C21.27,16.39 17,19.5 12,19.5C7,19.5 2.73,16.39 1,12C2.73,7.61 7,4.5 12,4.5M3.18,12C4.83,15.36 8.24,17.5 12,17.5C15.76,17.5 19.17,15.36 20.82,12C19.17,8.64 15.76,6.5 12,6.5C8.24,6.5 4.83,8.64 3.18,12Z"/></svg>'
+        + '<span></span>';
+      pill.querySelector('span').textContent = tr('Nur ansehen');
+      this._headerActions.appendChild(pill);
+      this._syncHeadSwitch();
+    }
     _syncHeadSwitch(h) {
       var b = this._headerSwitch;
       if (!b) return;
+      if (this.hasAttribute('view-only')) { b.hidden = true; this._hsIds = null; return; }
       var hass = h || (this._bridge && this._bridge.hass) || (document.querySelector('home-assistant') || {}).hass;
       var ids = this.hasAttribute('soft') && hass ? headSwitchIds(this, hass) : null;
       this._hsIds = ids;
@@ -14724,9 +14837,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
 
   var HOURS = 24;
   var MAX_ROWS = 40;
+  // The same text from another source within this time joins its stack (was: dropped as a duplicate).
   var DEDUPE_MS = 5 * 60 * 1000;
-  // One flapping device must not be able to fill the panel on its own.
-  var PER_ENTITY_MAX = 3;
   var POLL_MS = 60000;
   // A battery has to read low for this long before it counts; devices glitch.
   var BATTERY_HOLD_MIN = 30;
@@ -14861,25 +14973,67 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     var hl = JSON.parse(localStorage.getItem(HID_KEY) || 'null');
     if (hl && typeof hl === 'object') _hid = { all: +hl.all || 0, rows: hl.rows || {}, uid: hl.uid || null };
   } catch (e) { /* leer */ }
-  var _hidLoaded = false;
+  // Hemma round #11d, Studio „Removed for all users“ (notification_hidden_shared): one list for everyone, kept by
+  // the integration (casora/notify_hidden, notify_hidden.py) and pushed to every bell. Off (default): per HA user as before.
+  var SHARED_UID = 'casora:shared';
+  function sharedHidden() { return window.CASORA_NOTIFY_SHARED_HIDDEN === true; }
+  var _hidLoaded = false, _hidUnsub = null;
+  // The user's own list (HA user data) into the shared one: the later „until“ of each message wins.
+  function mergeOwn(hass) {
+    if (!hass || !hass.connection || typeof hass.connection.sendMessagePromise !== 'function') return;
+    Promise.resolve(hass.connection.sendMessagePromise({ type: 'frontend/get_user_data', key: HID_KEY })).then(function (r) {
+      var v = r && r.value;
+      if (!v || typeof v !== 'object' || _hid.uid !== SHARED_UID) return;
+      var next = mergeHidden(_hid, v);
+      if (next.all === _hid.all && JSON.stringify(next.rows) === JSON.stringify(_hid.rows)) return;
+      _hid = { all: next.all, rows: next.rows, uid: SHARED_UID };
+      saveHidden();
+      rebuild();
+      announce();
+    }, function () { /* without it, the shared list as it is */ });
+  }
+  function mergeHidden(a, b) {
+    var rows = Object.assign({}, (a && a.rows) || {});
+    Object.keys((b && b.rows) || {}).forEach(function (k) { var t = +b.rows[k]; if (isFinite(t) && !(rows[k] >= t)) rows[k] = t; });
+    return { all: Math.max(+(a && a.all) || 0, +(b && b.all) || 0), rows: rows };
+  }
   function loadHidden(hass) {
-    if (_hidLoaded || !hass || !hass.connection || typeof hass.connection.sendMessagePromise !== 'function') return;
-    _hidLoaded = true;
+    var mode = sharedHidden() ? 'shared' : 'user';
+    if (_hidLoaded === mode || !hass || !hass.connection || typeof hass.connection.sendMessagePromise !== 'function') return;
+    if (_hidUnsub) { try { _hidUnsub(); } catch (e) { /* gone */ } _hidUnsub = null; }
+    _hidLoaded = mode;
+    if (mode === 'shared') {
+      if (typeof hass.connection.subscribeMessage !== 'function') { _hidLoaded = false; return; }
+      if (_hid.uid !== SHARED_UID) _hid = { all: 0, rows: {}, uid: SHARED_UID };
+      var first = true;
+      Promise.resolve(hass.connection.subscribeMessage(function (v) {
+        if (!v || typeof v !== 'object' || _hidLoaded !== 'shared') return;
+        _hid = { all: +v.all || 0, rows: (v.rows && typeof v.rows === 'object') ? v.rows : {}, uid: SHARED_UID };
+        try { localStorage.setItem(HID_KEY, JSON.stringify(_hid)); } catch (e) { /* nur geteilt */ }
+        rebuild();
+        announce();
+        // Switched on (owner 13.11.2026): what this user removed so far joins the shared list (once per page).
+        if (first) { first = false; mergeOwn(hass); }
+      }, { type: 'casora/notify_hidden/subscribe' })).then(function (unsub) {
+        if (_hidLoaded === 'shared') _hidUnsub = unsub; else if (typeof unsub === 'function') unsub();
+      }, function () { if (_hidLoaded === 'shared') _hidLoaded = false; });
+      return;
+    }
     // The local copy belongs to one HA user: on a shared tablet the next user must not inherit what
     // the previous one removed (Prüfung 2 fam-23: a child's "Remove all" also emptied the parents' bell).
     var uid = (hass.user && hass.user.id) || null;
-    if (uid && _hid.uid && _hid.uid !== uid) {
+    if (_hid.uid === SHARED_UID || (uid && _hid.uid && _hid.uid !== uid)) {
       _hid = { all: 0, rows: {}, uid: uid };
     }
     _hid.uid = uid;
     hass.connection.sendMessagePromise({ type: 'frontend/get_user_data', key: HID_KEY }).then(function (r) {
       var v = r && r.value;
-      if (!v || typeof v !== 'object') return;
+      if (!v || typeof v !== 'object' || _hidLoaded !== 'user') return;
       _hid = { all: Math.max(+v.all || 0, _hid.all), rows: Object.assign({}, v.rows || {}, _hid.rows), uid: uid };
       try { localStorage.setItem(HID_KEY, JSON.stringify(_hid)); } catch (e) { /* nur geteilt */ }
-      _rows = _rows.filter(function (x) { return !isHidden(x); });
+      rebuild();
       announce();
-    }, function () { _hidLoaded = false; });
+    }, function () { if (_hidLoaded === 'user') _hidLoaded = false; });
   }
   // Home Assistant notifications (#70): what scripts and automations create with persistent_notification.create,
   // live from HA. Swiping one away dismisses it in HA as well; "Remove all" only clears the bell (it can be undone).
@@ -15004,12 +15158,17 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     try { localStorage.setItem(HID_KEY, JSON.stringify(_hid)); } catch (e) { /* nur geteilt */ }
     var h = hassOf();
     if (h && h.connection && typeof h.connection.sendMessagePromise === 'function') {
-      h.connection.sendMessagePromise({ type: 'frontend/set_user_data', key: HID_KEY, value: { all: _hid.all, rows: _hid.rows } }).catch(function () { /* lokal bleibt */ });
+      var msg = _hid.uid === SHARED_UID ? { type: 'casora/notify_hidden/set', all: _hid.all, rows: _hid.rows }
+        : { type: 'frontend/set_user_data', key: HID_KEY, value: { all: _hid.all, rows: _hid.rows } };
+      h.connection.sendMessagePromise(msg).catch(function () { /* lokal bleibt */ });
     }
   }
   function hideRows(list) {
     var h0 = hassOf();
-    (list || []).forEach(function (r) {
+    // A stack goes as a whole (Hemma round #11a): every message in it.
+    var all = [];
+    (list || []).forEach(function (r) { if (r) all = all.concat(r.members && r.members.length ? r.members : [r]); });
+    all.forEach(function (r) {
       if (!r) return;
       _hid.rows[rowKey(r)] = r.when;
       // An HA notification is gone for everyone once dismissed: only admins do that, everyone else
@@ -15017,15 +15176,15 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       if (r.pn && isAdmin(h0) && h0.callService) h0.callService('persistent_notification', 'dismiss', { notification_id: r.pn }).catch(function () { /* stays hidden here */ });
     });
     saveHidden();
-    _rows = _rows.filter(function (x) { return !isHidden(x); });
+    rebuild();
     announce();
   }
   // „Alle entfernen“ lässt sich 10 s lang zurücknehmen (14.10.2026: Glocke war versehentlich leer).
   function hideAll() {
-    var prevHid = { all: _hid.all, rows: Object.assign({}, _hid.rows) }, prevRows = _rows.slice();
-    _hid = { all: Math.max(Date.now(), _rows.reduce(function (m, r) { return Math.max(m, r.when || 0); }, 0)), rows: {} };
+    var prevHid = { all: _hid.all, rows: Object.assign({}, _hid.rows), uid: _hid.uid };
+    _hid = { all: Math.max(Date.now(), _rows.reduce(function (m, r) { return Math.max(m, r.when || 0); }, 0)), rows: {}, uid: _hid.uid };
     saveHidden();
-    _rows = [];
+    rebuild();
     announce();
     var h = ha();
     if (!h) return;
@@ -15035,7 +15194,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       action: { text: T('Rückgängig'), action: function () {
         _hid = prevHid;
         saveHidden();
-        _rows = prevRows.filter(function (x) { return !isHidden(x); });
+        rebuild();
         announce();
       } } };
     h.dispatchEvent(nev);
@@ -15146,6 +15305,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     if (h < 24 || d < 1) return 'vor ' + h + ' Std.';
     return d === 1 ? 'gestern' : 'vor ' + d + ' Tagen';
   }
+  // The bell's relative time is the one relative time of the tiles too (motion „Zuletzt vor 11 Std.“, casora-ago).
+  window.casoraAgo = ago;
 
 
   var ALARM_WORD = {
@@ -15419,6 +15580,14 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     return out;
   }
 
+  // The person of the HA user reading the bell, when the dashboard hides one's own comings and goings.
+  function ownPerson(st) {
+    if (window.CASORA_NOTIFY_HIDE_OWN !== true) return false;
+    var me = hassOf(), uid = me && me.user && me.user.id;
+    var pid = st && st.attributes && st.attributes.user_id;
+    return !!(uid && pid && pid === uid);
+  }
+
   // entry: a logbook row. prev: that entity's previous state in the window.
   function describe(entry, st, prev) {
     // undefined means "not mine", so the built-in rules still run. null means
@@ -15448,6 +15617,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     }
 
     if (id.indexOf('person.') === 0) {
+      // Hemma round #11c, Studio „Hide my own arrivals and departures“: not the reader's own person.
+      if (ownPerson(st)) return null;
       var AWAY = 'var(--casora-color-blue, #0A84FF)';
       var pic = st && st.attributes && st.attributes.entity_picture;
       var who = {
@@ -15746,6 +15917,28 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       });
     }
 
+    // Hemma round #11b: a triggered alarm stays at the top like smoke or water (rank 1), as long as it lasts.
+    if (on('alarm')) {
+      ids.forEach(function (id) {
+        if (id.indexOf('alarm_control_panel.') !== 0 || S[id].state !== 'triggered') return;
+        var st = S[id];
+        var d = describe({ entity_id: id, state: 'triggered' }, st, undefined) || {};
+        rows.push({
+          id: 'casora:alarm:' + id,
+          when: Date.parse(st.last_changed || '') || Date.now(),
+          label: d.label || 'Alarm ausgelöst',
+          sub: nameOf(st),
+          icon: d.icon || 'shield_alarm',
+          tone: 'bad',
+          sec: true,
+          entity: id,
+          rank: 1,
+          pinned: true,
+          seen: [id + '|triggered'],
+        });
+      });
+    }
+
     var OPEN_OPENS = ['casora_badge_contact_group', 'casora_popup_contacts'];
     var openMins = Number(window.CASORA_NOTIFY_OPEN_MINUTES);
     if (!isFinite(openMins)) openMins = 10;
@@ -16002,6 +16195,62 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
 
   var _rows = [];
   var _busy = null;
+  // What the last build found (standing rows, events newest first); rebuild() makes _rows from it, so removing a
+  // message or a stack needs no new logbook query.
+  var _src = { live: [], events: [] };
+  // Stacks the reader opened (key → true), while the page lives.
+  var _openStacks = {};
+
+  // Hemma round #11a: repeats of one source are one card with a count instead of three rows and a cut. The key is the
+  // entity; the same text from another source within DEDUPE_MS joins that stack (two sensors of one doorbell).
+  // events: newest first. Returns the cards: the newest message, members (all, newest first), count, stackKey.
+  function stackUp(events) {
+    var heads = [], byKey = {};
+    (events || []).forEach(function (e) {
+      if (!e) return;
+      var k = e.entity ? 'e:' + e.entity : 'l:' + e.label;
+      var h = byKey[k];
+      if (!h) {
+        h = heads.filter(function (x) {
+          return x.label === e.label && x.members.some(function (m) { return Math.abs(m.when - e.when) < DEDUPE_MS; });
+        })[0];
+        if (h) byKey[k] = h;
+      }
+      if (!h) {
+        h = Object.assign({}, e, { members: [], stackKey: k });
+        heads.push(h);
+        byKey[k] = h;
+      }
+      h.members.push(e);
+      h.count = h.members.length;
+    });
+    return heads;
+  }
+
+  function rebuild() {
+    var EXN = excludes();
+    var ok = function (r) { return !!r && !(r.entity && EXN[r.entity]) && !isHidden(r); };
+    var live = (_src.live || []).filter(ok);
+    var cards = stackUp((_src.events || []).filter(ok));
+    var room = Math.max(0, MAX_ROWS - live.length);
+    _rows = live.concat(cards.slice(0, room))
+      .sort(function (a, b) {
+        return ((b.rank || 0) - (a.rank || 0)) || (b.when - a.when)
+          || (String(a.id) < String(b.id) ? -1 : String(a.id) > String(b.id) ? 1 : 0);
+      });
+    return _rows;
+  }
+  // The rows as the bell lists them: an open stack followed by its older messages (kid: true).
+  function unfold(list) {
+    var out = [];
+    (list || []).forEach(function (r) {
+      out.push(r);
+      if (r.count > 1 && _openStacks[r.stackKey]) {
+        r.members.slice(1).forEach(function (m) { out.push(Object.assign({}, m, { kid: true, stackKey: r.stackKey })); });
+      }
+    });
+    return out;
+  }
 
   // Vorlauf vor dem Zeitfenster nur für den Vorzustand (1.0.5): der erste Logbuch-Eintrag im
   // Fenster hatte sonst keinen, „cleaning → docked“ um die Fenstergrenze ging verloren.
@@ -16166,34 +16415,20 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       });
 
       var kept = [];
-      var perEntity = {};
       var onlyOnce = {};
+      // A pinned alarm says it already: its logbook „triggered“ is not a second row.
+      var pinned = live.filter(function (r) { return r && r.pinned; });
       events.forEach(function (e) {
+        if (pinned.some(function (p) { return p.entity === e.entity && p.label === e.label && e.when >= p.when - 60000; })) return;
         if (e.once) {
           if (onlyOnce[e.once]) return;
           onlyOnce[e.once] = 1;
-          kept.push(e);
-          return;
         }
-        var n = (perEntity[e.entity] || 0);
-        if (n >= PER_ENTITY_MAX) return;
-        var dupe = kept.some(function (k) {
-          return k.label === e.label && Math.abs(k.when - e.when) < DEDUPE_MS;
-        });
-        if (dupe) return;
-        perEntity[e.entity] = n + 1;
         kept.push(e);
       });
 
-      var room = Math.max(0, MAX_ROWS - live.length);
-      var EXN = excludes();
-      _rows = live.concat(kept.slice(0, room))
-        .filter(function (r) { return !(r && r.entity && EXN[r.entity]); })
-        .filter(function (r) { return !isHidden(r); })
-        .sort(function (a, b) {
-          return ((b.rank || 0) - (a.rank || 0)) || (b.when - a.when)
-            || (String(a.id) < String(b.id) ? -1 : String(a.id) > String(b.id) ? 1 : 0);
-        });
+      _src = { live: live, events: kept };
+      rebuild();
       _busy = null;
       announce();
       return _rows;
@@ -16303,6 +16538,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     if (cfg.battery_hold !== undefined) window.CASORA_NOTIFY_BATTERY_HOLD = cfg.battery_hold;
     if (cfg.open_minutes !== undefined) window.CASORA_NOTIFY_OPEN_MINUTES = cfg.open_minutes;
     if (cfg.co2 !== undefined) window.CASORA_NOTIFY_CO2 = cfg.co2;
+    if (cfg.hide_own !== undefined) window.CASORA_NOTIFY_HIDE_OWN = cfg.hide_own === true;
+    if (cfg.shared_hidden !== undefined) window.CASORA_NOTIFY_SHARED_HIDDEN = cfg.shared_hidden === true;
     if (cfg.read_entity !== undefined) {
       window.CASORA_NOTIFY_READ_ENTITY = cfg.read_entity || null;
     }
@@ -16348,6 +16585,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       return 'var(--casora-tone-' + t + ')';
     };
     var toRow = function (r) {
+      var many = !r.kid && r.count > 1, open = many && !!_openStacks[r.stackKey];
       return {
         icon: r.icon,
         iconTone: window._casoraNotifyTone ? window._casoraNotifyTone(toneOf(r)) : toneOf(r),
@@ -16360,28 +16598,53 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         entity: r.entity || null,
         image: r.image,
         imageFit: r.imageFit,
-        tappable: !!(r.entity || r.opens),
+        tappable: !!(r.entity || r.opens || many),
+        // A stack: how many, and a chevron that points down (closed) or up (open). Tapping opens it.
+        endHtml: many ? '<span class="casora-nst-n">' + Number(r.count) + '</span>' : null,
+        noChev: many,
+        stackOpen: open,
       };
     };
 
     var opts = { labelInside: true };
     // „Neu“ and „Früher“ share one cut of the names (UI.popupNames): an entry that ages into „Früher“ keeps its name.
-    var nm = UI.popupNames ? UI.popupNames(g.fresh.concat(g.old).map(toRow)) : function (x) { return x; };
+    var nm = UI.popupNames ? UI.popupNames(unfold(g.fresh).concat(unfold(g.old)).map(toRow)) : function (x) { return x; };
     var out = '';
-    if (g.fresh.length) out += UI.group(g.fresh.map(toRow).map(nm), g.old.length ? 'Neu' : null, null, opts);
+    var fresh = unfold(g.fresh), old = unfold(g.old);
+    var chev = function (x) {
+      return x.endHtml ? Object.assign({}, x, { endHtml: x.endHtml + '<svg class="hui-chev casora-nst-chev' + (x.stackOpen ? ' open' : '') + '" width="12" height="7" viewBox="0 0 12 7" aria-hidden="true">'
+        + '<path d="M1 1L6 6L11 1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' }) : x;
+    };
+    // Count and the kids' inset: calm, the count as a small pill like the other counts of Casora.
+    out += '<style>.casora-nst-n{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;'
+      + 'padding:0 7px;box-sizing:border-box;border-radius:999px;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;'
+      + 'background:var(--casora-icon-circle-bg, rgba(140,115,90,0.14));color:var(--casora-popup-tiles-text-primary, var(--primary-text-color));}'
+      + '.casora-nst-chev{margin-left:10px;color:var(--casora-popup-tiles-text-primary, var(--primary-text-color));transition:transform .2s ease;}'
+      + '.casora-nst-chev.open{transform:rotate(180deg);}'
+      + '.hui-row.casora-nkid{margin-left:var(--casora-notify-kid-inset, 22px);}'
+      + '@media (prefers-reduced-motion:reduce){.casora-nst-chev{transition:none;}}</style>';
+    if (fresh.length) out += UI.group(fresh.map(toRow).map(nm).map(chev), old.length ? 'Neu' : null, null, opts);
     // Weich: „Früher“ klebte ohne Abstand an der letzten neuen Zeile – Abschnitte brauchen Luft davor.
-    if (g.old.length && g.fresh.length && toned) out += '<div style="height:16px"></div>';
-    if (g.old.length) out += UI.group(g.old.map(toRow).map(nm), g.fresh.length ? 'Früher' : null, null, opts);
+    if (old.length && fresh.length && toned) out += '<div style="height:16px"></div>';
+    if (old.length) out += UI.group(old.map(toRow).map(nm).map(chev), fresh.length ? 'Früher' : null, null, opts);
     return out;
   }
 
   function paint(root) {
     if (!root) return;
     var g = ordered();
-    var list = g.fresh.concat(g.old);
+    var list = unfold(g.fresh).concat(unfold(g.old));
     var els = root.querySelectorAll('.hui-row');
     for (var i = 0; i < els.length && i < list.length; i++) {
       els[i]._casoraRow = list[i];
+      if (list[i].kid) els[i].classList.add('casora-nkid');
+      if (!list[i].kid && list[i].count > 1) {
+        // A stack opens and closes on tap; its messages open their device.
+        els[i].removeAttribute('data-casora-mi');
+        els[i].dataset.casoraOpen = 'casora:stack';
+        els[i].setAttribute('aria-expanded', _openStacks[list[i].stackKey] ? 'true' : 'false');
+        continue;
+      }
       if (!list[i].opens) continue;
       els[i].removeAttribute('data-casora-mi');
       els[i].dataset.casoraOpen = list[i].opens;
@@ -16711,6 +16974,11 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
           e.stopPropagation();
           var row = n._casoraRow;
           window.casoraHaptic('light');
+          if (n.dataset.casoraOpen === 'casora:stack') {
+            if (row && row.stackKey) _openStacks[row.stackKey] = !_openStacks[row.stackKey];
+            if (typeof root._casoraRedraw === 'function') root._casoraRedraw();
+            return;
+          }
           if (close) close();
           if (n.dataset.casoraOpen === 'casora:pn') { if (row && row.pn) showPn(row.pn); return; }
           openTarget(n.dataset.casoraOpen, row && row.entity);
@@ -17121,6 +17389,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       if (upward) menu.style.top = Math.round(mr.bottom - menu.offsetHeight) + 'px';
     };
     swipeRows(body, redraw);
+    body._casoraRedraw = redraw;
 
     var w = menu.offsetWidth;
     menu.style.top = GLASS.dropTop(r, 10) + 'px';
@@ -17219,6 +17488,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       battery_hold: num(V.notification_battery_hold_minutes),
       open_minutes: num(V.notification_open_minutes),
       co2: num(V.notification_co2_ppm),
+      hide_own: V.notification_hide_own === true,
+      shared_hidden: V.notification_hidden_shared === true,
       read_entity: V.notification_read_entity || null,
     });
   }
@@ -17254,6 +17525,9 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     markAll: seal,
     get count() { return unread(); },
     get rows() { return _rows.slice(); },
+    // Tests and the list as drawn: open or close a stack, the rows with open stacks unfolded.
+    stack: function (key, open) { _openStacks[key] = open !== false; },
+    get shown() { var g = ordered(); return unfold(g.fresh).concat(unfold(g.old)); },
   };
 
   function boot() {
@@ -17767,6 +18041,71 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     var on = ids.filter(function (id) { return st(id) === 'on'; })[0];
     return { ids: ids, entity: on || ids[0] || null, state: on ? 'on' : ids.some(function (id) { return st(id) === 'off'; }) ? 'off' : 'unavailable' };
   };
+
+  // Motion (Hemma round #10): while nothing is detected, the time since the last detection („Zuletzt vor 11 Std.“)
+  // instead of „Frei“. The time is when the newest sensor went back to off (casoraSinceMs: not HA's start – then
+  // nothing is known and the caller's word stays). ids: the sensors, states: hass.states.
+  window.casoraMotionLast = function (ids, states, hass) {
+    var S = states || {}, on = false, known = false, last = null;
+    (ids || []).forEach(function (id) {
+      var x = S[id];
+      if (!x) return;
+      if (x.state === 'on') on = true;
+      if (x.state === 'on' || x.state === 'off') known = true;
+      if (x.state !== 'off') return;
+      var t = typeof window.casoraSinceMs === 'function' ? window.casoraSinceMs(x, hass) : Date.parse(x.last_changed || '');
+      if (t != null && isFinite(t) && (last == null || t > last)) last = t;
+    });
+    return { on: on, known: known, since: on ? null : last };
+  };
+  // The word: „Erkannt“, „Zuletzt vor 11 Std.“, else idle (the caller's word, „Frei“) or „Nicht verfügbar“.
+  window.casoraMotionWord = function (m, idle) {
+    if (!m || !m.known) return 'Nicht verfügbar';
+    if (m.on) return 'Erkannt';
+    if (m.since == null || typeof window.casoraAgo !== 'function') return idle || 'Frei';
+    return 'Zuletzt ' + window.casoraAgo(m.since);
+  };
+  // The same as HTML for a tile, badge or popup head: the relative time in a casora-ago that swaps only its text
+  // every minute – no re-render of the card (no triggers_update).
+  // opts.short: only „vor 6 Min.“ (the phone's chip); opts.fit: „Zuletzt vor 6 Min.“ where it fits, else „vor 6 Min.“
+  // (a narrow tile on the phone, owner 13.11.2026) – casora-statefit picks, both forms tick.
+  window.casoraMotionHtml = function (m, idle, opts) {
+    var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+    var t = window.casoraMotionWord(m, idle);
+    if (!m || m.on || !m.known || m.since == null || typeof window.casoraAgo !== 'function') return esc(t);
+    var bare = window.casoraAgo(m.since);
+    var fullHtml = '<casora-ago data-since="' + Math.round(m.since) + '" data-pre="Zuletzt">' + esc(t) + '</casora-ago>';
+    var shortHtml = '<casora-ago data-since="' + Math.round(m.since) + '">' + esc(bare) + '</casora-ago>';
+    if (opts && opts.short) return shortHtml;
+    if (!(opts && opts.fit)) return fullHtml;
+    return '<casora-statefit data-casora-clip style="display:inline-block;vertical-align:top;max-width:calc(100cqi - '
+      + 'var(--casora-tile-state-inset, 0px));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'
+      + '<span class="sf-f">' + fullHtml + '</span><span class="sf-s" style="display:none;max-width:100%">'
+      + '<span style="min-width:0;overflow:hidden;text-overflow:ellipsis">' + shortHtml + '</span></span></casora-statefit>';
+  };
+  // <casora-ago data-since="ms" data-pre="Zuletzt">: keeps its relative time current on its own (text only, once a minute,
+  // in the reader's language through casoraTr – the page's i18n would translate a German swap again).
+  if (typeof customElements !== 'undefined' && typeof HTMLElement !== 'undefined' && !customElements.get('casora-ago')) {
+    customElements.define('casora-ago', class extends HTMLElement {
+      connectedCallback() { this._tick(); }
+      disconnectedCallback() { clearTimeout(this._t); }
+      _tick() {
+        clearTimeout(this._t);
+        var ms = Number(this.dataset.since);
+        if (!isFinite(ms) || typeof window.casoraAgo !== 'function') return;
+        var de = (this.dataset.pre ? this.dataset.pre + ' ' : '') + window.casoraAgo(ms);
+        var t = typeof window.casoraTr === 'function' ? window.casoraTr(de) : de;
+        if (this.textContent !== t) {
+          this.textContent = t;
+          // A longer text („vor 10 Min.“) may no longer fit: the short form decides again.
+          var fit = this.closest && this.closest('casora-statefit');
+          if (fit && typeof fit._fit === 'function') fit._fit();
+        }
+        var self = this;
+        this._t = setTimeout(function () { self._tick(); }, 60000 - ((Date.now() - ms) % 60000) + 200);
+      }
+    });
+  }
 
   // desk: Variablen des Desktop-Raums (oder null), chip: room_chips[<raum>], name: Raumname.
   function merge(desk, chip, name) {

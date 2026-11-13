@@ -384,6 +384,8 @@
     if (!st || TOGGLE.indexOf(id.split('.')[0]) < 0) return false;
     // "Ask before switching" (confirm_toggle): the popup asks, so no switch in the row.
     if (Array.isArray(window.__casoraConfirmIds) && window.__casoraConfirmIds.indexOf(id) >= 0) return false;
+    // "View only" (Hemma round #12): a device of such a tile is not switched from the search either.
+    if (typeof window.casoraViewOnly === 'function' && window.casoraViewOnly(id)) return false;
     if (Array.isArray((st.attributes || {}).entity_id) && id.indexOf('light.') !== 0 && id.indexOf('switch.') !== 0) return false;
     return true;
   };

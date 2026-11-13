@@ -100,6 +100,7 @@ const mods = {
   'custom_components/casora/scripts/local/08-weich-kompakt.js': 'updates, first rows and the rest',
 };
 for (const [p, what] of Object.entries(mods)) assert.ok(/UI\.popupNames/.test(rd(p)), what);
-assert.ok(/UI\.popupNames\(g\.fresh\.concat\(g\.old\)/.test(core),
+// Hemma round #11a: open stacks unfold into the same lists, the names still cut once across both.
+assert.ok(/UI\.popupNames\(unfold\(g\.fresh\)\.concat\(unfold\(g\.old\)\)/.test(core),
   'notifications: „Neu“ and „Früher“ share the names');
 console.log('popup_names_once: ok');

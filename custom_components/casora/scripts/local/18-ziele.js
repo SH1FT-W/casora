@@ -697,9 +697,16 @@
         var alarm = bin && st.state === 'on' && /^(smoke|gas|moisture|problem|safety|carbon_monoxide|heat|tamper)$/.test((st.attributes || {}).device_class || '');
         // Pulse: the ring in the state's traffic light (handbook §4.8 ring (c), r520) – it stayed green for every state.
         var pulseTone = reg(hass, id).platform === 'pulse' ? (PULSE_TONE[st.state] || 'off') : null;
+        // Motion and presence (Hemma round #10, owner 13.11.2026): the same words as the tile and the head – „Erkannt“ or
+        // „Zuletzt vor 12 Min.“ – and no entity name part („Occupancy“) or „Seit“ beside it.
+        var moDc = bin && /^(motion|occupancy|presence)$/.test(String((st.attributes || {}).device_class || '')) && window.casoraMotionLast;
+        var mo = moDc ? window.casoraMotionLast([id], hass.states, hass) : null;
+        // Nothing known since HA's start: the head's word (HA's own, as _headFallback), not a second one.
+        var moIdle = (window.casoraStateWord && window.casoraStateWord(hass, st)) || Z.nowWord(hass, id);
+        var moWord = mo && mo.known ? window.casoraMotionWord(mo, moIdle) : null;
         return UI.stage('status', { tone: pulseTone || (bad(st.state) ? 'warn' : alarm ? 'bad' : duo && !Z.isActive(st.state) ? 'off' : 'good'),
-          icon: Z.iconOf(st), text: Z.nowWord(hass, id), state: st.state === 'unavailable' ? 'na' : null,
-          facts: [(Z._kind || {})[id] ? { label: (Z._kind || {})[id], value: '' } : null].concat(isFinite(since) ? [{ label: T('Seit'), value: when(since, now) }] : []).filter(Boolean),
+          icon: Z.iconOf(st), text: moWord || Z.nowWord(hass, id), state: st.state === 'unavailable' ? 'na' : null,
+          facts: moWord ? [] : [(Z._kind || {})[id] ? { label: (Z._kind || {})[id], value: '' } : null].concat(isFinite(since) ? [{ label: T('Seit'), value: when(since, now) }] : []).filter(Boolean),
           extra: out.replace(UI.line(Z.nowWord(hass, id), rest, { tone: bad(st.state) ? 'warn' : null }), '').replace('<div style="margin-top:14px;">', '<div>') });
       }
       return out;

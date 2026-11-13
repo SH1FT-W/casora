@@ -3103,7 +3103,18 @@
     "Screensaver cameras": "Telecamere del salvaschermo",
     "Screensaver calendars": "Calendari del salvaschermo",
     "Cover colour": "Colore della copertina",
-    "While music plays, the calm screensavers take on a soft tint in the main colour of the cover.": "Mentre suona la musica, i salvaschermi tranquilli prendono una tinta morbida del colore principale della copertina."
+    "While music plays, the calm screensavers take on a soft tint in the main colour of the cover.": "Mentre suona la musica, i salvaschermi tranquilli prendono una tinta morbida del colore principale della copertina.",
+    "Hide my own arrivals and departures": "Nascondi i miei arrivi e le mie partenze",
+    "For people linked to a Home Assistant user: you see the others come and go, not yourself.": "Per le persone collegate a un utente di Home Assistant: vedi arrivare e uscire gli altri, non te stesso.",
+    "Removed for all users": "Eliminato per tutti gli utenti",
+    "A message removed from the bell is gone for everyone. Off: only on your own devices.": "Un messaggio rimosso dalla campanella sparisce per tutti. Disattivato: solo sui tuoi dispositivi.",
+    "When tapped": "Al tocco",
+    "Ask first": "Chiedi prima",
+    "View only": "Solo visualizzazione",
+    "Only shows: neither the icon nor the popup switches anything. For devices others should only look at.": "Mostra soltanto: né l’icona né il popup azionano qualcosa. Per dispositivi che gli altri devono solo vedere.",
+    "The tile only shows": "Il riquadro mostra soltanto",
+    "view only": "solo visualizzazione",
+    "It only shows, nothing switches.": "Mostra soltanto, non si aziona nulla."
   },
   "patterns": [
     [
