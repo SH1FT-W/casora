@@ -2951,9 +2951,29 @@
     "ins Netz": "in rete",
     "Akku gibt ab": "La batteria si scarica",
     "Arzttermin": "Medico",
-    "Lamellenstellung": "Lamelle"
+    "Lamellenstellung": "Lamelle",
+    "Fernbedienung": "Telecomando",
+    "Steuerkreuz": "Croce direzionale",
+    "Nach oben": "Su",
+    "Nach unten": "Giù",
+    "Nach links": "Sinistra",
+    "Nach rechts": "Destra",
+    "OK": "OK",
+    "Wiedergabe/Pause": "Riproduci/Pausa",
+    "Zusammen abspielen": "Riproduci insieme",
+    "Person erkannt": "Persona rilevata",
+    "Heute keine Bewegung": "Nessun movimento oggi",
+    "Heute · 1 Ereignis": "Oggi · 1 evento"
   },
   "patterns": [
+    [
+      "^Heute · (\\d+) Ereignisse$",
+      "Oggi · {1} eventi"
+    ],
+    [
+      "^Zusammen abspielen · (\\d+) Lautsprecher$",
+      "Riproduci insieme · {1} altoparlanti"
+    ],
     [
       "^Teilweise geschlossen · Ø (\\d+) %$",
       "Parzialmente chiuso · Ø {1}%"

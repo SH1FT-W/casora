@@ -2951,9 +2951,29 @@
     "ins Netz": "a la red",
     "Akku gibt ab": "La batería se descarga",
     "Arzttermin": "Médico",
-    "Lamellenstellung": "Lamas"
+    "Lamellenstellung": "Lamas",
+    "Fernbedienung": "Mando a distancia",
+    "Steuerkreuz": "Cruceta",
+    "Nach oben": "Arriba",
+    "Nach unten": "Abajo",
+    "Nach links": "Izquierda",
+    "Nach rechts": "Derecha",
+    "OK": "OK",
+    "Wiedergabe/Pause": "Reproducir/Pausa",
+    "Zusammen abspielen": "Reproducir juntos",
+    "Person erkannt": "Persona detectada",
+    "Heute keine Bewegung": "Hoy sin movimiento",
+    "Heute · 1 Ereignis": "Hoy · 1 evento"
   },
   "patterns": [
+    [
+      "^Heute · (\\d+) Ereignisse$",
+      "Hoy · {1} eventos"
+    ],
+    [
+      "^Zusammen abspielen · (\\d+) Lautsprecher$",
+      "Reproducir juntos · {1} altavoces"
+    ],
     [
       "^Teilweise geschlossen · Ø (\\d+) %$",
       "Parcialmente cerrado · Ø {1} %"

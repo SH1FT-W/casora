@@ -2951,9 +2951,29 @@
     "ins Netz": "naar het net",
     "Akku gibt ab": "Accu ontlaadt",
     "Arzttermin": "Dokter",
-    "Lamellenstellung": "Lamellen"
+    "Lamellenstellung": "Lamellen",
+    "Fernbedienung": "Afstandsbediening",
+    "Steuerkreuz": "Richtingtoetsen",
+    "Nach oben": "Omhoog",
+    "Nach unten": "Omlaag",
+    "Nach links": "Links",
+    "Nach rechts": "Rechts",
+    "OK": "OK",
+    "Wiedergabe/Pause": "Afspelen/Pauze",
+    "Zusammen abspielen": "Samen afspelen",
+    "Person erkannt": "Persoon gedetecteerd",
+    "Heute keine Bewegung": "Vandaag geen beweging",
+    "Heute · 1 Ereignis": "Vandaag · 1 gebeurtenis"
   },
   "patterns": [
+    [
+      "^Heute · (\\d+) Ereignisse$",
+      "Vandaag · {1} gebeurtenissen"
+    ],
+    [
+      "^Zusammen abspielen · (\\d+) Lautsprecher$",
+      "Samen afspelen · {1} speakers"
+    ],
     [
       "^Teilweise geschlossen · Ø (\\d+) %$",
       "Deels gesloten · Ø {1}%"

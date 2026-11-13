@@ -2951,9 +2951,29 @@
     "ins Netz": "do sieci",
     "Akku gibt ab": "Akumulator oddaje energię",
     "Arzttermin": "Lekarz",
-    "Lamellenstellung": "Lamele"
+    "Lamellenstellung": "Lamele",
+    "Fernbedienung": "Pilot",
+    "Steuerkreuz": "Przyciski kierunkowe",
+    "Nach oben": "W górę",
+    "Nach unten": "W dół",
+    "Nach links": "W lewo",
+    "Nach rechts": "W prawo",
+    "OK": "OK",
+    "Wiedergabe/Pause": "Odtwarzaj/Pauza",
+    "Zusammen abspielen": "Odtwarzaj razem",
+    "Person erkannt": "Wykryto osobę",
+    "Heute keine Bewegung": "Dziś bez ruchu",
+    "Heute · 1 Ereignis": "Dziś · 1 zdarzenie"
   },
   "patterns": [
+    [
+      "^Heute · (\\d+) Ereignisse$",
+      "Dziś · zdarzenia: {1}"
+    ],
+    [
+      "^Zusammen abspielen · (\\d+) Lautsprecher$",
+      "Odtwarzaj razem · głośniki: {1}"
+    ],
     [
       "^Teilweise geschlossen · Ø (\\d+) %$",
       "Częściowo zamknięte · Ø {1}%"

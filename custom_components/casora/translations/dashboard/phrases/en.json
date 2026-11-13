@@ -2933,9 +2933,30 @@
     "ins Netz": "to the grid",
     "Akku gibt ab": "Battery discharging",
     "Arzttermin": "Doctor",
-    "Lamellenstellung": "Slats"
+    "Lamellenstellung": "Slats",
+    "Fernbedienung": "Remote",
+    "Steuerkreuz": "Direction pad",
+    "Nach oben": "Up",
+    "Nach unten": "Down",
+    "Nach links": "Left",
+    "Nach rechts": "Right",
+    "OK": "OK",
+    "Home": "Home",
+    "Wiedergabe/Pause": "Play/Pause",
+    "Zusammen abspielen": "Play together",
+    "Person erkannt": "Person detected",
+    "Heute keine Bewegung": "No motion today",
+    "Heute · 1 Ereignis": "Today · 1 event"
   },
   "patterns": [
+    [
+      "^Heute · (\\d+) Ereignisse$",
+      "Today · {1} events"
+    ],
+    [
+      "^Zusammen abspielen · (\\d+) Lautsprecher$",
+      "Play together · {1} speakers"
+    ],
     [
       "^Teilweise geschlossen · Ø (\\d+) %$",
       "Partly closed · Ø {1}%"

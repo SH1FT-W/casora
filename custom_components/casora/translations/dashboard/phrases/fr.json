@@ -2951,9 +2951,29 @@
     "ins Netz": "vers le réseau",
     "Akku gibt ab": "La batterie se décharge",
     "Arzttermin": "Médecin",
-    "Lamellenstellung": "Lames"
+    "Lamellenstellung": "Lames",
+    "Fernbedienung": "Télécommande",
+    "Steuerkreuz": "Pavé directionnel",
+    "Nach oben": "Haut",
+    "Nach unten": "Bas",
+    "Nach links": "Gauche",
+    "Nach rechts": "Droite",
+    "OK": "OK",
+    "Wiedergabe/Pause": "Lecture/Pause",
+    "Zusammen abspielen": "Lire ensemble",
+    "Person erkannt": "Personne détectée",
+    "Heute keine Bewegung": "Aucun mouvement aujourd'hui",
+    "Heute · 1 Ereignis": "Aujourd'hui · 1 événement"
   },
   "patterns": [
+    [
+      "^Heute · (\\d+) Ereignisse$",
+      "Aujourd'hui · {1} événements"
+    ],
+    [
+      "^Zusammen abspielen · (\\d+) Lautsprecher$",
+      "Lire ensemble · {1} enceintes"
+    ],
     [
       "^Teilweise geschlossen · Ø (\\d+) %$",
       "Partiellement fermé · Ø {1} %"

@@ -2944,9 +2944,29 @@
     "ins Netz": "til nettet",
     "Akku gibt ab": "Batteriet lades ut",
     "Arzttermin": "Lege",
-    "Lamellenstellung": "Lameller"
+    "Lamellenstellung": "Lameller",
+    "Fernbedienung": "Fjernkontroll",
+    "Steuerkreuz": "Retningsknapper",
+    "Nach oben": "Opp",
+    "Nach unten": "Ned",
+    "Nach links": "Venstre",
+    "Nach rechts": "Høyre",
+    "OK": "OK",
+    "Wiedergabe/Pause": "Spill av/Pause",
+    "Zusammen abspielen": "Spill sammen",
+    "Person erkannt": "Person oppdaget",
+    "Heute keine Bewegung": "Ingen bevegelse i dag",
+    "Heute · 1 Ereignis": "I dag · 1 hendelse"
   },
   "patterns": [
+    [
+      "^Heute · (\\d+) Ereignisse$",
+      "I dag · {1} hendelser"
+    ],
+    [
+      "^Zusammen abspielen · (\\d+) Lautsprecher$",
+      "Spill sammen · {1} høyttalere"
+    ],
     [
       "^Teilweise geschlossen · Ø (\\d+) %$",
       "Delvis lukket · Ø {1}%"

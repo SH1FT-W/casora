@@ -59,7 +59,7 @@ def vacuum_map(fixture: dict) -> None:
 def compose(fixture: dict, now: datetime, stress: dict | None = None, hacs: dict | None = None) -> dict:
     """Fixture plus the made-up devices, in the order async_setup_entry always used."""
     from . import (aquarium, befeuchter, co, coffee, dishwasher, ebike, energie, frigate, fussball, game_account, haustier,
-                   halten, hubs, klingel, fridge, kettle, live, maeher, oven, shopping, testlimousine, testserver, testwagen, velair, waesche, wetter)
+                   halten, hubs, klingel, fridge, medien, kettle, live, maeher, oven, shopping, testlimousine, testserver, testwagen, velair, waesche, wetter)
     if stress:
         merge(fixture, stress)
     # Demo house (dev/demo/demo_fixture.py sets "_demo"): without the German test devices (washers A/B with
@@ -87,6 +87,8 @@ def compose(fixture: dict, now: datetime, stress: dict | None = None, hacs: dict
     merge(fixture, frigate.extra(now), "Frigate-Testhof")
     # A made-up Reolink doorbell with presses in the history (community card), see klingel.py.
     merge(fixture, klingel.extra(now), "Testklingel")
+    # A made-up TV with remote, groupable speakers and a garden camera with motion (media/camera popups), see medien.py.
+    merge(fixture, medien.extra(now, demo), "Testfernseher/Testlautsprecher/Testgarten")
     # Made-up coffee machines (Home Connect core/local, De'Longhi BT, power curve, a named plug) and a grinder, see coffee.py.
     merge(fixture, coffee.extra(now), "Testbarista/Morgenbohne/Bohnenwerk/Kaffeeinsel/Espressobar")
     # A made-up pet with a Tractive-like tracker (community card #25), see haustier.py.
