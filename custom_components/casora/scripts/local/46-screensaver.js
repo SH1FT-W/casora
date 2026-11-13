@@ -832,8 +832,8 @@
   if (!window.document || window.document.nodeType !== 9 || S._booted) return;
   S._booted = true;
   var FORCE = /[?&]casora_saver=1/.test(location.search), OFF = /[?&]casora_saver=0/.test(location.search);
-  // The tablet navbar's own test, as „Return to Home when idle“ uses it.
-  var TABLET = window.matchMedia ? window.matchMedia('(hover: none) and (pointer: coarse) and (min-width: 600px)') : null;
+  // Wall tablets only, never a phone held sideways: the same test as „Return to Home when idle“ (casora-core.js).
+  var isTablet = function () { return !!(window.casoraIsWallTablet && window.casoraIsWallTablet()); };
   var lastAct = Date.now(), layer = null, live = null, rootEl = null, lookedAt = 0;
   var bump = function () { lastAct = Date.now(); };
   ['pointerdown', 'touchstart', 'keydown', 'wheel', 'scroll'].forEach(function (t) { window.addEventListener(t, bump, { capture: true, passive: true }); });
@@ -883,7 +883,7 @@
     var cfg = config();
     if (!cfg) { if (layer) hide(); return; }
     var mins = S.minutes(S.vars(cfg).casora_screensaver);
-    if (!mins || (!FORCE && !(TABLET && TABLET.matches))) { if (layer) hide(); bump(); return; }
+    if (!mins || (!FORCE && !isTablet())) { if (layer) hide(); bump(); return; }
     // Never over an open popup: someone is reading it.
     if (window.casoraPopup && window.casoraPopup.surface) { if (layer) hide(); bump(); return; }
     if (!layer && Date.now() - lastAct >= mins * 60000) show(cfg);

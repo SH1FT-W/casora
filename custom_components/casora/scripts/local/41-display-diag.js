@@ -71,7 +71,8 @@
   //   phone_land   casora-core LANDSCAPE_MQ: phone turned sideways
   //   wide_hero    layout-offsets isDesktopOrTablet(): the hero (title, weather, badges) is fitted above the tiles
   //   touch_tablet templates' tablet rules (768–1400 wide, at least 501 high, coarse pointer or no hover)
-  //   tablet_nav   the tablet navbar's / idle-return test (hover none, coarse pointer, at least 600 wide)
+  //   tablet_nav   the tablet navbar's test (hover none, coarse pointer, at least 600 wide); screensaver and idle
+  //                return also need a screen short side of 480 px or more (casoraIsWallTablet)
   //   short_h      popup sheets for short landscape screens (min-width 601, max-height 900 / 720)
   D.QUERIES = [
     ['phone', '(max-width: 767px), (max-height: 500px)'],
