@@ -251,6 +251,10 @@ async function session({ label, url, safari, device, overlay }) {
   const L = (s) => s.x + s.w * 0.85, R = (s) => s.x + s.w * 0.15, M = (s) => s.y + s.h * 0.6;
   // Ein Fall: Geste ausführen, vorher/nachher messen, Erwartung prüfen.
   const fall = async (name, gesture, expect) => {
+    // Let the previous gesture finish first: after a row drag the swipe card lets the row glide on
+    // (startGlide, per frame). With few frames per second under load (13.11.2026 in the evening, Chromium
+    // Desktop) that glide was still running into the next case and moved the row by ~10 px.
+    await stable(page, () => { const s = window.__swState(); return [s.idx, s.page, s.vscroll, s.row]; }, null, { max: 5000, quiet: 300, step: 100 });
     const a = await st();
     const prevented = await gesture(a);
     const b = await st();
