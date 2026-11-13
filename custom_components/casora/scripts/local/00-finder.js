@@ -1550,8 +1550,17 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     var W = null;
     try { W = window.casoraDevice && window.casoraDevice.waste ? window.casoraDevice.waste(hass, {}) : null; } catch (e) { W = null; }
     var best = null, R = hass.entities || {};
+    // The calendars picked in the Studio (Settings › Home & devices › Calendars) count, as on the calendar tile (#189);
+    // one shown only in the popup (tile: false) is no appointment. Without a pick, all calendars.
+    var own = null;
+    try { own = window.casoraSettings ? window.casoraSettings().calendars : null; } catch (e) { own = null; }
+    var picked = null;
+    if (Array.isArray(own) && own.length) {
+      picked = {};
+      own.forEach(function (c) { var id = typeof c === 'string' ? c : c && c.tile !== false && c.entity; if (id) picked[id] = 1; });
+    }
     Object.keys(S).forEach(function (id) {
-      if (id.indexOf('calendar.') !== 0 || (W && W.calendar === id)) return;
+      if (id.indexOf('calendar.') !== 0 || (W && W.calendar === id) || (picked && !picked[id])) return;
       // A calendar hidden or disabled in Home Assistant is not shown (reported in #157: the Workday sensor's calendar,
       // hidden with its device); the Workday integration's calendar („Workday Sensor“ every working day) is no appointment.
       var e = R[id];

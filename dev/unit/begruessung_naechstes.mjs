@@ -34,4 +34,12 @@ assert.equal(reg({ 'calendar.workday_sensor': { hidden: true, platform: 'workday
 assert.equal(reg({ 'calendar.familie': { disabled_by: 'user', platform: 'google' } })({ 'calendar.familie': two['calendar.familie'] }), '', 'a disabled calendar is left out');
 assert.equal(reg({ 'calendar.workday_sensor': { platform: 'workday' }, 'calendar.familie': { platform: 'google' } })(two), 'Morgen 15:00 Zahnarzt', 'the Workday calendar is no appointment');
 assert.equal(reg({})(two).includes('Zahnarzt') || reg({})(two).includes('Workday'), true, 'calendars without a registry entry (YAML) still count');
+// #189: calendars picked in the Studio (Settings › Home & devices › Calendars) are the ones that count, as on the
+// calendar tile; a calendar left out there no longer stands under the greeting. Without a pick, all of them (above).
+const picked = (list) => (S) => { window.casoraDevice = { waste: () => ({ bins: [] }) }; window.casoraSettings = () => ({ calendars: list }); try { return window.casoraHomeNext({ states: S, entities: {}, locale: { language: 'de' } }, on, now); } finally { delete window.casoraSettings; } };
+const both = { 'calendar.arbeit': cal('Meeting', '2026-11-09 11:00:00'), 'calendar.familie': cal('Zahnarzt', '2026-11-10 15:00:00') };
+assert.equal(picked([{ entity: 'calendar.familie', name: 'Familie' }])(both), 'Morgen 15:00 Zahnarzt', 'a calendar not picked in the Studio is left out');
+assert.equal(picked([{ entity: 'calendar.familie' }, { entity: 'calendar.arbeit', tile: false }])(both), 'Morgen 15:00 Zahnarzt', 'a calendar picked only for the popup (tile: false) is no appointment either');
+assert.equal(picked([])(both), 'Heute 11:00 Meeting', 'an empty pick means all calendars');
+assert.equal(picked(['calendar.arbeit'])(both), 'Heute 11:00 Meeting', 'a pick given as plain ids works too');
 console.log('ok – line under the greeting');
