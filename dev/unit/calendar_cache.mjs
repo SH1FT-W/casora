@@ -91,3 +91,37 @@ finishes[1]([]);
 await settle();
 assert.ok(calendar.html('day', configs[1]).includes('Meeting B'), 'an old popup completion stays isolated from the current popup');
 console.log('ok queued stale completions preserve the selected popup');
+
+// Every completion redraws all visible tiles, including configurations beyond the old slot cap.
+{
+  const manyStates = {};
+  const manyCards = Array.from({ length: 33 }, (_, i) => ({
+    variables: { calendars: [{ entity: 'calendar.mock_' + i }] },
+    _config: { state_display: 'window._casoraCalendar.next(states, variables)' },
+  }));
+  let requests = 0, renders = 0;
+  const manyHa = { hass: { states: manyStates, callApi: async () => {
+    requests++;
+    if (requests > 200) return new Promise(() => {}); // Bound a refetch/redraw feedback loop.
+    return [{ summary: 'Visible meeting', start: { dateTime: '2026-11-13T14:00:00' },
+      end: { dateTime: '2026-11-13T15:00:00' } }];
+  } }, shadowRoot: { querySelectorAll: selector => selector === 'button-card' ? manyCards : [] } };
+  const manyWindow = { casoraSettings: () => ({}), addEventListener() {}, casoraKick: card => {
+    renders++;
+    card.event = manyWindow._casoraCalendar.next(manyStates, card.variables);
+  } };
+  vm.runInNewContext(source, { window: manyWindow, document: { querySelector: () => manyHa },
+    Date: ClockDate, setTimeout: () => 0, console });
+  const renderAll = () => manyCards.forEach(card => { card.event = manyWindow._casoraCalendar.next(manyStates, card.variables); });
+  renderAll();
+  await settle();
+  assert.equal(requests, 33, '33 visible configurations settle with one fetch each');
+  assert.ok(manyCards.every(card => card.event?.name === 'Visible meeting'), 'every visible tile receives its completed result');
+  const settledRenders = renders;
+  renderAll();
+  renderAll();
+  await settle();
+  assert.equal(requests, 33, 'repeated redraws within the TTL never evict and refetch a visible configuration');
+  assert.equal(renders, settledRenders, 'settled configurations do not start another completion/redraw cycle');
+  console.log('ok 33 visible calendar configurations settle without eviction/refetch feedback');
+}
