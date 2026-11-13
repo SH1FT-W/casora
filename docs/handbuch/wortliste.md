@@ -48,6 +48,7 @@ Bis zur Wahl gilt der heutige Stand der Nachbarstellen, nicht die Empfehlung.
 | Standby | Standby | „Bereitschaft“ (1× im Luftreiniger) | Medien, Energie |
 | Nicht verfügbar | Unavailable | „Unavailable“ roh | HA-Zustand unavailable |
 | Offline | Offline | „Nicht verfügbar“ und „?“ an Unter-Badges | Kamera, Schloss (Gerät weg); Unter-Badges, deren Sensor unavailable/unknown ist: gedämpft, Symbol der Art, „Offline“ (Entscheidung 01.11.2026, Test `badge_offline.mjs`) |
+| Hat geklingelt / Bewegung erkannt / Ruhig | Someone rang / Motion detected / All quiet | „Klingel“ als Zustand (bleibt Popup-Titel) | Kamera-Hinweis auf Kachel und Badges |
 | Nicht erreichbar | Unreachable | – | Dienste/Integrationen (Abfall, Pulse) |
 | Unbekannt | Unknown | – | HA-Zustand unknown |
 | Zuhause / Unterwegs | Home / Away | „Daheim“, „Abwesend“ für Personen | Personen-Badge |

@@ -92,6 +92,8 @@ def compose(fixture: dict, now: datetime, stress: dict | None = None, hacs: dict
     merge(fixture, klingel.extra(now), "Testklingel")
     # A made-up TV with remote, groupable speakers and a garden camera with motion (media/camera popups), see medien.py.
     merge(fixture, medien.extra(now, demo), "Testfernseher/Testlautsprecher/Testgarten")
+    from . import ring_probe
+    merge(fixture, ring_probe.extra(now), "Testring")
     # Made-up coffee machines (Home Connect core/local, De'Longhi BT, power curve, a named plug) and a grinder, see coffee.py.
     merge(fixture, coffee.extra(now), "Testbarista/Morgenbohne/Bohnenwerk/Kaffeeinsel/Espressobar")
     # A made-up pet with a Tractive-like tracker (community card #25), see haustier.py.
