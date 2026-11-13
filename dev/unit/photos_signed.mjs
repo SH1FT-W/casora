@@ -4,6 +4,32 @@
 //   node dev/unit/photos_signed.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
+// Own small fake clock: setTimeout only collects the callbacks; advance(ms) runs the due ones in time order, so the
+// test does not sleep.
+// Date.now moves with it, so the code's own time checks see the same time.
+const realNow = Date.now;
+const realClear = globalThis.clearTimeout;
+const FAKE = Symbol('fake timer');
+let fakeNow = 0;
+const fakeQueue = [];
+globalThis.setTimeout = (fn, ms = 0, ...args) => {
+  const t = { fn, args, at: fakeNow + (Number(ms) || 0), dead: false, [FAKE]: true };
+  fakeQueue.push(t);
+  return t;
+};
+globalThis.clearTimeout = (t) => (t && t[FAKE] ? (t.dead = true) : realClear(t));
+Date.now = () => realNow() + fakeNow;
+const advance = async (ms) => {
+  const end = fakeNow + ms;
+  await new Promise((r) => setImmediate(r));
+  for (let due; (due = fakeQueue.filter((t) => !t.dead && t.at <= end).sort((a, b) => a.at - b.at)[0]); ) {
+    fakeQueue.splice(fakeQueue.indexOf(due), 1);
+    fakeNow = Math.max(fakeNow, due.at);
+    due.fn(...due.args);
+    await new Promise((r) => setImmediate(r));
+  }
+  fakeNow = end;
+};
 
 const read = (p) => fs.readFileSync(new URL('../../' + p, import.meta.url), 'utf8');
 const core = read('custom_components/casora/scripts/casora-core.js');
@@ -28,7 +54,7 @@ const hass = {
   connection: { addEventListener: (t, fn) => { listeners[t] = fn; } },
   callWS: (msg) => { calls++; assert.equal(msg.type, 'casora/photos'); return Promise.resolve({ photos: { ...photos }, shipped: ['default'], expires_in: 43200 }); },
 };
-const tick = () => new Promise((r) => setTimeout(r, 0));
+const tick = () => advance(0);
 
 const P = window.casoraPhotoUrl;
 const stem = window.casoraPhotoStem;
@@ -72,7 +98,7 @@ assert.equal(P('default'), '/casora_assets/rooms/default.jpg');
 assert.equal(calls, 1);
 
 // Unknown name (just uploaded elsewhere): one more request, then it is there.
-await new Promise((r) => setTimeout(r, 2100));
+await advance(2100);
 photos = { ...photos, neu: SIG('neu.jpg') };
 assert.equal(P('neu', hass), '', 'unknown name: no guessed address (was a 404)');
 await tick(); await tick();

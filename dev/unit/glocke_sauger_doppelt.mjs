@@ -75,6 +75,7 @@ function load(t) {
     callWS, entities: { [VAC]: { entity_id: VAC, device_id: 'd1' }, [END]: { entity_id: END, device_id: 'd1' } }, devices: {}, areas: {},
   };
   delete window._casoraNotify;
+    globalThis.setTimeout = () => 0;
   new Function(mod)();
   return window._casoraNotify;
 }

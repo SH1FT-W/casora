@@ -18,6 +18,9 @@ globalThis.window = globalThis;
 globalThis.casoraLocale = () => 'de-DE';
 globalThis.document = { querySelector: () => null, addEventListener: () => {} };
 const src = (p) => fs.readFileSync(new URL('../../custom_components/casora/scripts/local/' + p, import.meta.url), 'utf8');
+// Unref timers with a delay, so a timer the code starts (re-asks, warm-up) cannot keep the process alive after the last check.
+// Zero-delay timers stay ref'd: the test's own awaits use them.
+const realST = setTimeout; globalThis.setTimeout = (f, ms, ...a) => { const t = realST(f, ms, ...a); if (ms > 0) t.unref(); return t; };
 new Function(src('24-klingel.js'))();
 const KL = window._casoraKlingel;
 const n = (x) => (x == null ? x : String(x).replace(/\u00a0/g, ' '));

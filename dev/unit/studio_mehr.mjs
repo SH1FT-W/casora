@@ -120,6 +120,7 @@ const block = (start, end) => { const i = core.indexOf(start); return core.slice
 const w2 = { addEventListener: () => {} };
 const doc = { querySelector: () => ({ hass: { user: { id: 'me' }, states: { 'light.k': { state: 'on', attributes: { friendly_name: 'Küchenlicht' } },
   'cover.r': { state: 'closed', attributes: {} } } } }) };
+globalThis.setTimeout = () => 0;
 new Function('window', 'document', 'WeakSet', 'CustomEvent',
   block('(function () {\n  var hassUser', '})();\n') + block('(function () {\n  if (window.__casoraAskFirst)', '})();\n'))(w2, doc, WeakSet, class {});
 assert.equal(w2.casoraSeen({ casora_badge_users: { lights: ['other'] } }, 'lights', { id: 'me' }, true), false);
