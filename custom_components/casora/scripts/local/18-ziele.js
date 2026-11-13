@@ -701,7 +701,9 @@
         // „Zuletzt vor 12 Min.“ – and no entity name part („Occupancy“) or „Seit“ beside it.
         var moDc = bin && /^(motion|occupancy|presence)$/.test(String((st.attributes || {}).device_class || '')) && window.casoraMotionLast;
         var mo = moDc ? window.casoraMotionLast([id], hass.states, hass) : null;
-        var moWord = mo && mo.known ? window.casoraMotionWord(mo, Z.nowWord(hass, id)) : null;
+        // Nothing known since HA's start: the head's word (HA's own, as _headFallback), not a second one.
+        var moIdle = (window.casoraStateWord && window.casoraStateWord(hass, st)) || Z.nowWord(hass, id);
+        var moWord = mo && mo.known ? window.casoraMotionWord(mo, moIdle) : null;
         return UI.stage('status', { tone: pulseTone || (bad(st.state) ? 'warn' : alarm ? 'bad' : duo && !Z.isActive(st.state) ? 'off' : 'good'),
           icon: Z.iconOf(st), text: moWord || Z.nowWord(hass, id), state: st.state === 'unavailable' ? 'na' : null,
           facts: moWord ? [] : [(Z._kind || {})[id] ? { label: (Z._kind || {})[id], value: '' } : null].concat(isFinite(since) ? [{ label: T('Seit'), value: when(since, now) }] : []).filter(Boolean),
