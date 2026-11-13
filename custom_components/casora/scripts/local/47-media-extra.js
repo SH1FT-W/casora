@@ -1,11 +1,5 @@
-// ── Media popup extras and the camera timeline (13.11.2026) ─────────────────────────────────────────────
-// Three additions to existing popups, each only when the device can do it (otherwise nothing changes):
-//   window._casoraMediaRemote   TV remote in the media popup (casora_media): a remote.* on the player's device whose
-//                               platform has a known command table, or a player that navigates itself (LG webOS).
-//     .KEYS                     platform → command names; unknown platform → no remote
-//     .find(hass, playerId)     → { platform, remote, player, keys, via } | null
-//     .svc(spec, key, st)       → service call for one key (up, down, left, right, ok, back, home, play, volUp, volDown)
-//     .html(spec, hass)         → section „Fernbedienung“ (ring with OK, back, home; play and volume are the wheel's)
+// ── Media popup grouping and the camera timeline (13.11.2026) ─────────────────────────────────────────────
+// Two additions to existing popups, each only when the device can do it (otherwise nothing changes):
 //   window._casoraMediaGroup    speaker grouping in the media popup (MediaPlayerEntityFeature.GROUPING = 524288)
 //     .can(st)                  → whether a player groups
 //     .list(hass, playerId)     → [{ id, name, area, on }] other groupable players of the same integration
@@ -16,7 +10,7 @@
 //     .parse(raw, sources, start) → [{ kind, at, id }] newest first (history/history_during_period answer)
 //     .media(hass, camId)       → media browser path with the camera's recordings, or null
 //     .mount(img)               fills the placeholder before the <img> (asks the history sparingly)
-//   window._casoraMediaExtra.sec(entity, hass) → both media sections for the popup's right column
+//   window._casoraMediaExtra.sec(entity, hass) → the speaker section for the popup's right column
 //   window._casoraMediaExtraHtml / window._casoraCamTimelineHtml – the same for the card templates
 (function () {
   if (window._casoraMediaExtra && window._casoraMediaExtra.v === 1) return;
@@ -37,191 +31,7 @@
   };
   var bad = function (s) { return !s || s.state === 'unavailable' || s.state === 'unknown'; };
 
-  // ── Remote ──────────────────────────────────────────────────────────────────────────────────────────────
-  // Command names as each integration's remote.send_command takes them (read in HA 2026.11):
-  //   apple_tv          pyatv RemoteControl methods; volume through COMMAND_TO_ATTRIBUTE
-  //   androidtv_remote  Android key codes without KEYCODE_
-  //   androidtv         androidtv.constants.KEYS (ADB), no play/pause key there
-  //   samsungtv         Samsung key codes
-  //   roku              rokuecp VALID_REMOTE_KEYS
-  //   philips_js        JointSpace key names
-  //   webostv           no remote entity: the player takes webostv.button with aiowebostv's button names
-  var R = window._casoraMediaRemote = {};
-  R.KEYS = {
-    apple_tv: { up: 'up', down: 'down', left: 'left', right: 'right', ok: 'select', back: 'menu', home: 'home',
-      play: 'play_pause', volUp: 'volume_up', volDown: 'volume_down' },
-    androidtv_remote: { up: 'DPAD_UP', down: 'DPAD_DOWN', left: 'DPAD_LEFT', right: 'DPAD_RIGHT', ok: 'DPAD_CENTER',
-      back: 'BACK', home: 'HOME', play: 'MEDIA_PLAY_PAUSE', volUp: 'VOLUME_UP', volDown: 'VOLUME_DOWN' },
-    androidtv: { up: 'UP', down: 'DOWN', left: 'LEFT', right: 'RIGHT', ok: 'CENTER', back: 'BACK', home: 'HOME',
-      play: null, volUp: 'VOLUME_UP', volDown: 'VOLUME_DOWN' },
-    samsungtv: { up: 'KEY_UP', down: 'KEY_DOWN', left: 'KEY_LEFT', right: 'KEY_RIGHT', ok: 'KEY_ENTER', back: 'KEY_RETURN',
-      home: 'KEY_HOME', play: null, volUp: 'KEY_VOLUP', volDown: 'KEY_VOLDOWN' },
-    roku: { up: 'up', down: 'down', left: 'left', right: 'right', ok: 'select', back: 'back', home: 'home', play: 'play',
-      volUp: 'volume_up', volDown: 'volume_down' },
-    philips_js: { up: 'CursorUp', down: 'CursorDown', left: 'CursorLeft', right: 'CursorRight', ok: 'Confirm', back: 'Back',
-      home: 'Home', play: 'PlayPause', volUp: 'VolumeUp', volDown: 'VolumeDown' },
-    webostv: { player: true, up: 'UP', down: 'DOWN', left: 'LEFT', right: 'RIGHT', ok: 'ENTER', back: 'BACK', home: 'HOME',
-      play: null, volUp: 'VOLUMEUP', volDown: 'VOLUMEDOWN' },
-  };
-  // A device of these models has a remote entity but nothing to navigate (Apple's speakers in apple_tv).
-  var NO_SCREEN = /homepod/i;
-
-  R.find = function (hass, playerId) {
-    if (!hass || !playerId || String(playerId).indexOf('media_player.') !== 0) return null;
-    var pe = reg(hass, playerId);
-    var dev = pe.device_id && hass.devices ? hass.devices[pe.device_id] : null;
-    if (dev && NO_SCREEN.test(String(dev.model || ''))) return null;
-    var keys = R.KEYS[pe.platform];
-    if (keys && keys.player) return { platform: pe.platform, remote: null, player: playerId, keys: keys, via: 'player' };
-    var ents = hass.entities || {};
-    var cands = Object.keys(ents).filter(function (id) {
-      var e = ents[id];
-      return id.indexOf('remote.') === 0 && e && R.KEYS[e.platform] && !R.KEYS[e.platform].player;
-    });
-    // Same device first (structured), then a remote with the player's object id (name only as a fallback).
-    var hit = pe.device_id ? cands.filter(function (id) { return ents[id].device_id === pe.device_id; })[0] : null;
-    if (!hit) {
-      var obj = String(playerId).split('.')[1];
-      hit = cands.filter(function (id) { return id.split('.')[1] === obj && (!pe.platform || ents[id].platform === pe.platform || !pe.device_id); })[0];
-    }
-    if (!hit) return null;
-    var rDev = ents[hit].device_id && hass.devices ? hass.devices[ents[hit].device_id] : null;
-    if (rDev && NO_SCREEN.test(String(rDev.model || ''))) return null;
-    return { platform: ents[hit].platform, remote: hit, player: playerId, keys: R.KEYS[ents[hit].platform], via: 'remote' };
-  };
-
-  // One key → service. play and volume go to the player when it can (it knows its state), else to the remote.
-  R.svc = function (spec, key, st) {
-    if (!spec || !spec.keys) return null;
-    var f = Number((st && st.attributes && st.attributes.supported_features) || 0);
-    var p = { entity_id: spec.player };
-    if (key === 'play' && ((f & 1) || (f & 16384))) return { domain: 'media_player', service: 'media_play_pause', target: p };
-    if ((key === 'volUp' || key === 'volDown') && ((f & 1024) || (f & 4)))
-      return { domain: 'media_player', service: key === 'volUp' ? 'volume_up' : 'volume_down', target: p };
-    var cmd = spec.keys[key];
-    if (!cmd) return null;
-    if (spec.via === 'player') return { domain: 'webostv', service: 'button', data: { button: cmd }, target: p };
-    return { domain: 'remote', service: 'send_command', data: { command: cmd }, target: { entity_id: spec.remote } };
-  };
-
   var T = function (s) { return window.casoraTr ? window.casoraTr(s) : s; };
-  // Annulus sector of the ring (viewBox 220, centre 110): a0..a1 in degrees, 0 = right, clockwise.
-  var sector = function (a0, a1, R1, r0) {
-    var pt = function (r, a) { var t = a * Math.PI / 180; return (110 + r * Math.cos(t)).toFixed(2) + ' ' + (110 + r * Math.sin(t)).toFixed(2); };
-    return 'M' + pt(R1, a0) + 'A' + R1 + ' ' + R1 + ' 0 0 1 ' + pt(R1, a1) + 'L' + pt(r0, a1) + 'A' + r0 + ' ' + r0 + ' 0 0 0 ' + pt(r0, a0) + 'Z';
-  };
-  var CHEV = { up: 'M101 40l9-9 9 9', down: 'M101 180l9 9 9-9', left: 'M40 101l-9 9 9 9', right: 'M180 101l9 9-9 9' };
-  R.css = function () {
-    return '<style>'
-      + '.crc{font-family:var(--primary-font-family, system-ui);background:var(--casora-popup-row-fill, rgba(140,115,90,.07));'
-      +   'border-radius:var(--casora-popup-row-radius, 20px);padding:24px 16px 20px;display:flex;flex-direction:column;align-items:center;'
-      +   'justify-content:center;gap:18px;box-sizing:border-box;}'
-      + '.crc-ring{width:100%;max-width:264px;aspect-ratio:1/1;display:block;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}'
-      + '.crc-row{display:flex;justify-content:center;gap:56px;}'
-      + '.crc-k{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--casora-soft-sub, rgba(58,50,43,.6));}'
-      + '.crc-sec{fill:var(--casora-soft-control-fill, rgba(140,115,90,.12));cursor:pointer;transition:fill .16s ease;outline:none;}'
-      + '.crc-sec:active,.crc-sec.prs{fill:color-mix(in srgb, var(--casora-popup-accent, #B67A50) 30%, var(--casora-soft-control-fill, rgba(140,115,90,.12)));}'
-      + '.crc-sec:focus-visible{stroke:var(--casora-popup-accent, #B67A50);stroke-width:2;}'
-      + '.crc-chev{fill:none;stroke:var(--casora-soft-sub, rgba(58,50,43,.6));stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none;}'
-      + '.crc-ok{fill:var(--casora-soft-seg-on, var(--casora-lps-seg-on, #FFFDF9));cursor:pointer;transition:transform .12s ease;transform-origin:110px 110px;outline:none;'
-      +   'filter:drop-shadow(0 4px 10px rgba(0,0,0,.14));}'
-      + '.crc-ok.prs + .crc-okt,.crc-ok:active + .crc-okt{opacity:.8;}'
-      + '.crc-ok:active,.crc-ok.prs{transform:scale(.95);}'
-      + '.crc-ok:focus-visible{stroke:var(--casora-popup-accent, #B67A50);stroke-width:2;}'
-      + '.crc-okt{font-size:17px;font-weight:700;letter-spacing:.02em;fill:var(--casora-soft-seg-on-ink, #2E2721);pointer-events:none;}'
-      + '.crc-b{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;cursor:pointer;flex:none;'
-      +   'background:var(--casora-soft-control-fill, rgba(140,115,90,.12));color:var(--casora-popup-tiles-text-primary, #3A322B);'
-      +   'transition:transform .12s ease, background-color .16s ease;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;}'
-      + '.crc-b > *{pointer-events:none;}'
-      + '.crc-b:active,.crc-b.prs{transform:scale(var(--casora-press-scale, .94));background:color-mix(in srgb, var(--casora-popup-accent, #B67A50) 26%, var(--casora-soft-control-fill, rgba(140,115,90,.12)));}'
-      + '.crc.dis{opacity:.5;pointer-events:none;}'
-      + '@media (prefers-reduced-motion: reduce){.crc-b,.crc-ok,.crc-sec{transition:none;}}'
-      + '</style>';
-  };
-  var keyAttrHtml = function (svc, label) {
-    return ' data-casora-rc="' + esc(JSON.stringify(svc)) + '" role="button" tabindex="0" aria-label="' + esc(T(label)) + '"';
-  };
-  var btnHtml = function (svc, icon, label) {
-    return '<div class="crc-b"' + keyAttrHtml(svc, label) + ' title="' + esc(T(label)) + '"><ha-icon icon="' + esc(icon) + '" style="--mdc-icon-size:22px;"></ha-icon></div>';
-  };
-  var keyHtml = function (svc, icon, label) {
-    if (!svc) return '';
-    return '<div class="crc-k">' + btnHtml(svc, icon, label) + '<span>' + esc(T(label)) + '</span></div>';
-  };
-  R.html = function (spec, hass) {
-    if (!spec) return '';
-    var st = hass && hass.states ? hass.states[spec.player] : null;
-    var rs = spec.remote && hass && hass.states ? hass.states[spec.remote] : st;
-    var off = bad(rs);
-    var s = function (k) { return R.svc(spec, k, st); };
-    var dirs = [['up', -135, -45, 'Nach oben'], ['right', -45, 45, 'Nach rechts'], ['down', 45, 135, 'Nach unten'], ['left', 135, 225, 'Nach links']];
-    var ringSvg = '<svg class="crc-ring" viewBox="0 0 220 220" role="group" aria-label="' + esc(T('Steuerkreuz')) + '">'
-      + dirs.map(function (d) {
-        var v = s(d[0]);
-        return v ? '<path class="crc-sec" d="' + esc(sector(d[1] + 1.5, d[2] - 1.5, 108, 50)) + '"' + keyAttrHtml(v, d[3]) + '></path>' : '';
-      }).join('')
-      + dirs.map(function (d) { return '<path class="crc-chev" d="' + esc(CHEV[d[0]]) + '"></path>'; }).join('')
-      + (s('ok') ? '<circle class="crc-ok" cx="110" cy="110" r="44"' + keyAttrHtml(s('ok'), 'OK') + '></circle>'
-        + '<text class="crc-okt" x="110" y="116" text-anchor="middle">OK</text>' : '')
-      + '</svg>';
-    // Maintainer, 13.11.2026: play/pause and volume stay on the wheel only; the remote is the ring, back and home.
-    var bodyHtml = '<div class="crc' + (off ? ' dis' : '') + '"' + (off ? ' aria-disabled="true"' : '') + '>'
-      + ringSvg
-      + '<div class="crc-row">' + keyHtml(s('back'), 'mdi:arrow-u-left-top', 'Zurück') + keyHtml(s('home'), 'mdi:home-outline', 'Startseite') + '</div>'
-      + '</div>';
-    var UI = window._casoraUI;
-    return R.css() + (UI && UI.label ? UI.label('Fernbedienung') : '') + bodyHtml;
-  };
-
-  // Keys: own handler (casora-core's svc rows swallow taps within 400 ms – a remote is pressed quickly).
-  // Touch and the click it echoes count once; the first 600 ms after a popup opens do nothing (02-devices.js).
-  if (!window._casoraRcBound && typeof document !== 'undefined' && document.addEventListener) {
-    window._casoraRcBound = true;
-    var lastTouch = 0, tp = null;
-    var keyEl = function (ev) {
-      var path = (ev.composedPath && ev.composedPath()) || [ev.target];
-      for (var i = 0; i < path.length; i++) {
-        var t = path[i];
-        if (t && t.getAttribute && t.getAttribute('data-casora-rc')) return t;
-      }
-      return null;
-    };
-    var flash = function (el) {
-      try { el.classList.add('prs'); setTimeout(function () { el.classList.remove('prs'); }, 160); } catch (e) { /* gone */ }
-    };
-    var press = function (ev) {
-      var el = keyEl(ev);
-      if (!el) return;
-      ev.stopPropagation();
-      if (ev.cancelable) ev.preventDefault();
-      if (Date.now() - (window._casoraPopupOpenedAt || 0) < 600) return;
-      if (ev.type === 'touchend') {
-        if (tp && tp.moved) { tp = null; return; }
-        lastTouch = Date.now();
-      } else if (ev.type === 'click' && Date.now() - lastTouch < 700) return;
-      var spec;
-      try { spec = JSON.parse(el.getAttribute('data-casora-rc')); } catch (e) { return; }
-      var ha = document.querySelector('home-assistant');
-      if (!spec || !ha || !ha.hass) return;
-      if (window.casoraHaptic) window.casoraHaptic('light');
-      flash(el);
-      ha.hass.callService(spec.domain, spec.service, spec.data || {}, spec.target || undefined);
-    };
-    document.addEventListener('touchstart', function (ev) {
-      var t = ev.touches && ev.touches[0];
-      tp = t && keyEl(ev) ? { x: t.clientX, y: t.clientY, moved: false } : null;
-    }, { capture: true, passive: true });
-    document.addEventListener('touchmove', function (ev) {
-      var t = ev.touches && ev.touches[0];
-      if (tp && t && (Math.abs(t.clientX - tp.x) > 10 || Math.abs(t.clientY - tp.y) > 10)) tp.moved = true;
-    }, { capture: true, passive: true });
-    document.addEventListener('touchend', press, true);
-    document.addEventListener('click', press, true);
-    document.addEventListener('keydown', function (ev) {
-      if (ev.key !== 'Enter' && ev.key !== ' ') return;
-      if (keyEl(ev)) press(ev);
-    }, true);
-  }
 
   // ── Grouping ────────────────────────────────────────────────────────────────────────────────────────────
   var G = window._casoraMediaGroup = {};
@@ -269,22 +79,20 @@
     return UI.group(rows, n ? 'Zusammen abspielen · ' + (n + 1) + ' Lautsprecher' : 'Zusammen abspielen');
   };
 
-  // Both sections for the media popup (right column); '' when the player has neither.
+  // The speaker section for the media popup (right column); '' when the player does not group.
   X.ids = function (hass, playerId) {
-    var spec = R.find(hass, playerId);
     var out = [playerId];
-    if (spec && spec.remote) out.push(spec.remote);
     G.list(hass, playerId).forEach(function (r) { out.push(r.id); });
     return out;
   };
   X.sec = function (entity, hass) {
     var id = entity && entity.entity_id;
     if (!id || !hass) return '';
-    var parts = [R.html(R.find(hass, id), hass), G.html(hass, id)].filter(Boolean);
+    var parts = [G.html(hass, id)].filter(Boolean);
     // ha-card.disabled: the card has no tap action of its own; without this rule nothing inside could be tapped.
-    // Desktop, two columns (§2 symmetry, maintainer 13.11.2026): the card fills the row the wheel sets, and the last
-    // section grows into it – the remote's plate centres its ring, a speaker list keeps its rows at their usual height with room below (maintainer, 13.11.2026) – so
-    // the right column does not end far above the left one. One column (phone): everything at its own height.
+    // Desktop, two columns (§2 symmetry, maintainer 13.11.2026): the card fills the row the wheel sets and the list's
+    // plate grows into it, its rows at their usual height with room below, so the right column does not end far above
+    // the left one. One column (phone): everything at its own height.
     return parts.length ? '<style>ha-card.disabled{pointer-events:auto!important;}:host{height:100%;}#aspect-ratio{display:block!important;height:100%!important;}ha-card{height:100%!important;}#container{grid-template-rows:1fr!important;height:100%!important;}#body{align-self:stretch!important;height:100%!important;}'
       + '.mx{display:flex;flex-direction:column;gap:var(--casora-popup-sec-gap, 24px);height:100%;}'
       + '.mx > .mx-s:last-child{flex:1 1 auto;display:flex;flex-direction:column;}'
@@ -296,7 +104,7 @@
   };
   // Global markup builders for the templates (tools/html-escape-check.mjs counts window._casora…Html as markup).
   window._casoraMediaExtraHtml = function (entity, hass) { return X.sec(entity, hass); };
-  X.has = function (hass, id) { return !!(R.find(hass, id) || G.list(hass, id).length); };
+  X.has = function (hass, id) { return G.list(hass, id).length > 0; };
 
   // ── Camera timeline ─────────────────────────────────────────────────────────────────────────────────────
   var C = window._casoraCamTimeline = {};

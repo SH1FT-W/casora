@@ -1,9 +1,6 @@
-"""Made-up media devices and a garden camera for the media and camera popups (remote, grouping, timeline).
+"""Made-up media devices and a garden camera for the media and camera popups (grouping, timeline).
 
-- Testfernseher: an Android-TV-like television. The player is the test integration's own (play, pause, volume and
-  sources work), its remote is registered under the platform "androidtv_remote" (registry_platform, state written
-  directly) like a real Android TV Remote: same device, so the media popup shows the remote with DPAD_* commands.
-  remote.send_command reaches no object in the test house (nothing to steer); the popup's call is what counts.
+- Testfernseher: a TV without grouping (its media popup stays as before).
 - Four test speakers with MediaPlayerEntityFeature.GROUPING and group_members (living room plays, the kitchen
   joined it), so media_player.join / media_player.unjoin work in the test house (entity.py MMedia).
 - Testgarten: a camera with a motion sensor, a person sensor (occupancy) and a doorbell event on the same device,
@@ -65,8 +62,6 @@ def extra(now: datetime, demo: bool = False) -> dict:
             "media_content_type": "video", "media_title": "Abendlicht am Fjord", "media_series_title": "Testreihe Natur",
             "media_duration": 2640, "media_position": 780, "media_position_updated_at": now.isoformat(),
             "entity_picture": TV_ART}, room("Wohnzimmer", "Living Room")),
-        _e(f"remote.{TV}", "on", TV, "Testfernseher", {"supported_features": 0, "activity_list": None},
-           room("Wohnzimmer", "Living Room"), registry_platform="androidtv_remote", unique_id=f"{TV}_remote"),
     ]
     leader, joined = SPEAKERS[0][0], SPEAKERS[1][0]
     for key, name, de, en in SPEAKERS:

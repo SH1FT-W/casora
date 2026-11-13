@@ -1,7 +1,7 @@
-// @deckt: custom_components/casora/scripts/local/47-media-extra.js#_casoraMediaRemote,_casoraMediaGroup,_casoraCamTimeline,_casoraMediaExtra
-// Media popup extras and the camera timeline (47-media-extra.js): which players get a remote and with which command
-// names, which speakers can play together and how a row joins/unjoins, which sensors feed a camera's timeline and how
-// the history answer becomes today's events. Also checks the test house (dev/casora_mock/medien.py) shows all three.
+// @deckt: custom_components/casora/scripts/local/47-media-extra.js#_casoraMediaGroup,_casoraCamTimeline,_casoraMediaExtra
+// Media popup grouping and the camera timeline (47-media-extra.js): which speakers can play together and how a row
+// joins/unjoins, that a player without grouping keeps its popup, which sensors feed a camera's timeline and how the
+// history answer becomes today's events. Also checks the test house (dev/casora_mock/medien.py).
 //   node dev/unit/media_extra.mjs
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -16,84 +16,9 @@ const win = {};
 const box = { window: win, console, Date, Math, JSON, String, Number, Array, Object, isFinite, encodeURIComponent };
 vm.createContext(box);
 vm.runInContext(read('custom_components/casora/scripts/local/47-media-extra.js'), box);
-const R = win._casoraMediaRemote, G = win._casoraMediaGroup, C = win._casoraCamTimeline, X = win._casoraMediaExtra;
-assert.ok(R && G && C && X, 'module loads without a document');
+const G = win._casoraMediaGroup, C = win._casoraCamTimeline, X = win._casoraMediaExtra;
+assert.ok(G && C && X, 'module loads without a document');
 assert.ok(read('custom_components/casora/scripts/casora-local.js').includes("'47-media-extra'"), 'module in MODULES');
-
-// ── Platform table ─────────────────────────────────────────────────────────────────────────────────────
-const KEYS = ['up', 'down', 'left', 'right', 'ok', 'back', 'home', 'play', 'volUp', 'volDown'];
-for (const [p, k] of Object.entries(R.KEYS)) {
-  for (const key of KEYS) assert.ok(key in k, p + ' names ' + key);
-  for (const key of ['up', 'down', 'left', 'right', 'ok', 'back', 'home']) assert.ok(k[key], p + ' has a command for ' + key);
-}
-assert.equal(R.KEYS.apple_tv.ok, 'select');
-assert.equal(R.KEYS.apple_tv.back, 'menu');
-assert.equal(R.KEYS.androidtv_remote.up, 'DPAD_UP');
-assert.equal(R.KEYS.androidtv_remote.ok, 'DPAD_CENTER');
-assert.equal(R.KEYS.samsungtv.ok, 'KEY_ENTER');
-assert.equal(R.KEYS.webostv.ok, 'ENTER');
-assert.equal(R.KEYS.webostv.player, true, 'webOS steers through the player');
-
-const house = (extra = {}) => ({
-  states: {
-    'media_player.tv': { entity_id: 'media_player.tv', state: 'playing', attributes: { supported_features: 1 | 4 | 1024 | 16384 } },
-    'remote.tv': { entity_id: 'remote.tv', state: 'on', attributes: {} },
-    'media_player.box': { entity_id: 'media_player.box', state: 'idle', attributes: { supported_features: 0 } },
-    'remote.box_fernbedienung': { entity_id: 'remote.box_fernbedienung', state: 'on', attributes: {} },
-    'media_player.pod': { entity_id: 'media_player.pod', state: 'idle', attributes: {} },
-    'remote.pod': { entity_id: 'remote.pod', state: 'on', attributes: {} },
-    'media_player.lg': { entity_id: 'media_player.lg', state: 'on', attributes: {} },
-    'media_player.odd': { entity_id: 'media_player.odd', state: 'on', attributes: {} },
-    'remote.odd': { entity_id: 'remote.odd', state: 'on', attributes: {} },
-    ...(extra.states || {}),
-  },
-  entities: {
-    'media_player.tv': { platform: 'androidtv_remote', device_id: 'd1' },
-    'remote.tv': { platform: 'androidtv_remote', device_id: 'd1' },
-    'media_player.box': { platform: 'apple_tv', device_id: 'd2' },
-    // Different object id, same device: structured data wins over the name.
-    'remote.box_fernbedienung': { platform: 'apple_tv', device_id: 'd2' },
-    'media_player.pod': { platform: 'apple_tv', device_id: 'd3' },
-    'remote.pod': { platform: 'apple_tv', device_id: 'd3' },
-    'media_player.lg': { platform: 'webostv', device_id: 'd4' },
-    'media_player.odd': { platform: 'vizio', device_id: 'd5' },
-    'remote.odd': { platform: 'vizio', device_id: 'd5' },
-    ...(extra.entities || {}),
-  },
-  devices: { d1: { model: 'Chromecast' }, d2: { model: 'Apple TV 4K' }, d3: { model: 'HomePod mini' }, d4: {}, d5: {} },
-  areas: {},
-});
-let h = house();
-let sp = R.find(h, 'media_player.tv');
-assert.equal(sp.remote, 'remote.tv');
-assert.equal(sp.platform, 'androidtv_remote');
-assert.equal(R.find(h, 'media_player.box').remote, 'remote.box_fernbedienung', 'remote on the same device');
-assert.equal(R.find(h, 'media_player.pod'), null, 'speaker with a remote entity (HomePod) has nothing to navigate');
-assert.equal(R.find(h, 'media_player.odd'), null, 'unknown platform: no remote');
-assert.equal(R.find(h, 'media_player.lg').via, 'player', 'webOS: the player navigates itself');
-assert.equal(R.find(h, 'light.x'), null);
-assert.equal(R.find(null, 'media_player.tv'), null);
-// Without a device: a remote with the player's object id (fallback by name).
-h = house({ entities: { 'media_player.tv': { platform: 'androidtv_remote' }, 'remote.tv': { platform: 'androidtv_remote' } } });
-assert.equal(R.find(h, 'media_player.tv').remote, 'remote.tv');
-
-// Services: navigation over remote.send_command, play and volume through the player when it can.
-h = house();
-sp = R.find(h, 'media_player.tv');
-const st = h.states['media_player.tv'];
-deq(((R.svc(sp, 'up', st))),
-  { domain: 'remote', service: 'send_command', data: { command: 'DPAD_UP' }, target: { entity_id: 'remote.tv' } });
-deq(((R.svc(sp, 'play', st))),
-  { domain: 'media_player', service: 'media_play_pause', target: { entity_id: 'media_player.tv' } });
-assert.equal(R.svc(sp, 'volUp', st).service, 'volume_up');
-const box2 = R.find(h, 'media_player.box');
-assert.equal(R.svc(box2, 'play', h.states['media_player.box']).data.command, 'play_pause', 'player without PLAY/PAUSE: remote key');
-assert.equal(R.svc(box2, 'volDown', h.states['media_player.box']).data.command, 'volume_down');
-const lg = R.find(h, 'media_player.lg');
-deq(((R.svc(lg, 'back', h.states['media_player.lg']))),
-  { domain: 'webostv', service: 'button', data: { button: 'BACK' }, target: { entity_id: 'media_player.lg' } });
-const adb = { platform: 'androidtv', remote: 'remote.a', player: 'media_player.a', keys: R.KEYS.androidtv, via: 'remote' };
-assert.equal(R.svc(adb, 'play', { attributes: {} }), null, 'no play key and no player play: no button');
 
 // ── Grouping ───────────────────────────────────────────────────────────────────────────────────────────
 assert.equal(G.FLAG, 524288);
@@ -143,18 +68,15 @@ assert.equal(rows[1].selected, false);
 assert.equal(rows[1].iconTone, 'rgba(0,0,0,0)');
 assert.ok(rows.every((r) => r.noChev && r.svc));
 
-// Remote section: every key carries its service; the ring has four directions and OK, under it back and home.
-const html = R.html(R.find(house(), 'media_player.tv'), house());
-assert.equal((html.match(/class="crc-sec"/g) || []).length, 4);
-assert.ok(html.includes('class="crc-ok"'));
-assert.ok(html.includes('DPAD_CENTER') && html.includes('BACK') && html.includes('HOME'));
-assert.ok(/aria-label="Zurück"/.test(html) && /aria-label="Startseite"/.test(html));
-// Maintainer, 13.11.2026: play/pause and volume are the wheel's – the remote has none of them.
-assert.ok(!/media_play_pause|volume_up|volume_down|VOLUME_|MEDIA_PLAY_PAUSE|Lauter|Leiser/.test(html), 'no play or volume keys in the remote');
-assert.equal((html.match(/class="crc-b"/g) || []).length, 2, 'back and home only');
-assert.ok(!/class="crc dis"/.test(html), 'remote on: usable');
-const hOff = house({ states: { 'remote.tv': { entity_id: 'remote.tv', state: 'unavailable', attributes: {} } } });
-assert.ok(/class="crc dis"/.test(R.html(R.find(hOff, 'media_player.tv'), hOff)), 'remote unavailable: greyed out');
+// A player without grouping (a TV) gets no extra card: the popup stays as before.
+const tvh = { states: { 'media_player.tv': { entity_id: 'media_player.tv', state: 'playing', attributes: { supported_features: 1 | 4 | 16384, device_class: 'tv' } },
+  'remote.tv': { entity_id: 'remote.tv', state: 'on', attributes: {} } },
+  entities: { 'media_player.tv': { platform: 'androidtv_remote', device_id: 'd1' }, 'remote.tv': { platform: 'androidtv_remote', device_id: 'd1' } },
+  devices: { d1: {} }, areas: {} };
+assert.equal(X.has(tvh, 'media_player.tv'), false);
+assert.equal(X.sec({ entity_id: 'media_player.tv' }, tvh), '');
+deq(X.ids(tvh, 'media_player.tv'), ['media_player.tv']);
+assert.equal(win._casoraMediaRemote, undefined, 'no TV remote (maintainer, 13.11.2026)');
 
 // ── Camera timeline ────────────────────────────────────────────────────────────────────────────────────
 const ch = {
@@ -247,9 +169,7 @@ assert.ok(C.render({ list: null }, 'camera.garten', ch, now).includes('aria-busy
 const snap = JSON.parse(execFileSync('python3', [new URL('../casora_mock/haus.py', import.meta.url).pathname, '--public'], { encoding: 'utf8' }));
 const ent = Object.fromEntries(Object.entries(snap.entities).map(([id, e]) => [id, { ...e, device_id: e.device_id, area_id: e.area_id }]));
 const mh = { states: snap.states, entities: ent, devices: snap.devices, areas: snap.areas, config: { components: [] } };
-const tv = R.find(mh, 'media_player.testfernseher');
-assert.equal(tv && tv.remote, 'remote.testfernseher', 'test TV has its remote');
-assert.equal(tv.platform, 'androidtv_remote');
+assert.equal(X.has(mh, 'media_player.testfernseher'), false, 'test TV: no grouping, no extra card');
 const sl = G.list(mh, 'media_player.testlautsprecher_wohnzimmer');
 assert.ok(sl.length >= 3 && sl[0].id === 'media_player.testlautsprecher_kueche' && sl[0].on, 'test speakers group');
 deq(C.sources(mh, 'camera.testgarten').map((x) => x.kind).sort(), ['motion', 'person', 'ring']);
