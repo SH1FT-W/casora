@@ -2944,7 +2944,12 @@
     "ins Netz": "til nettet",
     "Akku gibt ab": "Batteriet lades ut",
     "Arzttermin": "Lege",
-    "Lamellenstellung": "Lameller"
+    "Lamellenstellung": "Lameller",
+    "Tippen für das Livebild": "Trykk for livebilde",
+    "Alle, die an sind": "Alle som er på",
+    "Kein Licht an": "Ingen lys på",
+    "Ziehen zum Dimmen, Tippen für An/Aus": "Dra for å dimme, trykk for På/Av",
+    "Bildschirmschoner starten": "Start skjermsparer"
   },
   "patterns": [
     [

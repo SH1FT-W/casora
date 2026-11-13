@@ -84,9 +84,10 @@
     { id: "saver", label: "Screensaver", icon: "clock", tone: "set-saver",
       sub: "What a wall tablet shows when nobody touches it.",
       blocks: [
-        { k: "saver", sec: "General", sub: "chrome", keys: ["casora_screensaver", "casora_screensaver_kind", "casora_screensaver_photos"], saver: true,
+        { k: "saver", sec: "General", sub: "chrome", keys: ["casora_screensaver", "casora_screensaver_kind", "casora_screensaver_light", "casora_screensaver_tint", "casora_screensaver_photos",
+          "casora_screensaver_mix", "casora_screensaver_cameras", "casora_screensaver_calendars"], saver: true,
           title: "Screensaver", plain: "Pick a screensaver and after how long it starts. The picture shows what it looks like.",
-          kw: "bildschirmschoner screensaver wandtablet tablet uhr wortuhr himmel landschaft fotos leerlauf idle ruhe" },
+          kw: "bildschirmschoner screensaver wandtablet tablet uhr wortuhr himmel landschaft fotos leerlauf idle ruhe kameras kalender abwechslung licht coverfarbe cameras calendar light" },
       ] },
     { id: "phone", label: "Phone", icon: "iphone", tone: "set-live",
       sub: "The dashboard on the phone, and progress on the lock screen.",
@@ -1538,7 +1539,7 @@
       };
       const live = SV.mount(stage, null, { kind: () => show, every: 30000, sample: true,
         context: () => ({ config: draft(), photoUrl, vars: typeof SV.vars === "function" ? SV.vars(draft()) : {} }) });
-      if (typeof this._images === "function") this._images().then(() => { if (stage.isConnected) { live.update(); photos(); } }, () => {});
+      if (typeof this._images === "function") this._images().then(() => { if (stage.isConnected) { live.update(); extra(); } }, () => {});
       this._csSaverLive = live;
       const chips = el("div", "cs-saver-chips");
       chips.style.cssText = "display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 0;";
@@ -1556,7 +1557,7 @@
             last = picked();
             // The select below shows the new choice: the page is drawn again (the preview follows the draft).
             if (typeof this._csRender === "function") { this._csRender(); return; }
-            live.update(); paint(); photos();
+            live.update(); paint(); extra();
           }, show !== k.id);
           c.classList.add("cs-saver-chip");
           c.dataset.kind = k.id;
@@ -1610,14 +1611,102 @@
         });
         pick.appendChild(grid);
       };
-      photos();
+      // What alternates (One after the other), which cameras and which calendars: a list in Casora's way of choosing,
+      // no ticks: a picked row is filled and its icon in colour, the others grey. None picked = all (the default); a
+      // tap leaves one out, the last one left out means all again. A draft like every setting.
+      const lists = el("div", "cs-saver-lists");
+      lists.style.cssText = "margin:14px 0 0;";
+      wrap.appendChild(lists);
+      const root = wrap.getRootNode && wrap.getRootNode();
+      if (root && root.appendChild && !root.querySelector("#cs-saver-list-css")) {
+        const st = document.createElement("style");
+        st.id = "cs-saver-list-css";
+        st.textContent = ".cs-saver-list{display:flex;flex-direction:column;gap:4px;margin:8px 0 0;padding:6px;border-radius:var(--r-group, var(--r-l));"
+          + "background:var(--casora-popup-row-fill, var(--wash-faint, rgba(127,127,127,.08)));}"
+          + ".cs-saver-row{display:flex;align-items:center;gap:12px;width:100%;min-height:48px;padding:6px 14px 6px 6px;border:0;margin:0;font:inherit;text-align:left;"
+          + "color:var(--ink-2, inherit);background:transparent;border-radius:var(--r-m);cursor:pointer;transition:background .18s ease, transform .16s ease;-webkit-tap-highlight-color:transparent;}"
+          + ".cs-saver-row:active{transform:scale(var(--casora-press-scale, .98));}"
+          + ".cs-saver-row[aria-pressed=\"true\"]{background:var(--casora-studio-sel-row, var(--chip, rgba(127,127,127,.14)));color:var(--ink, inherit);}"
+          + "@media (hover:hover){.cs-saver-row[aria-pressed=\"false\"]:hover{background:var(--wash-faint, rgba(127,127,127,.06));}}"
+          + ".cs-saver-ic{flex:none;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;--mdc-icon-size:20px;"
+          + "color:var(--ink-3, rgba(127,127,127,.8));background:var(--wash-faint, rgba(127,127,127,.1));transition:color .18s ease, background .18s ease;}"
+          + ".cs-saver-row[aria-pressed=\"true\"] .cs-saver-ic{color:var(--cs-tone);background:color-mix(in srgb, var(--cs-tone) 18%, transparent);}"
+          + ".cs-saver-tx{flex:1;min-width:0;display:flex;flex-direction:column;}"
+          + ".cs-saver-tx b{font-size:var(--t-callout, 15px);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}"
+          + ".cs-saver-tx span{font-size:var(--t-foot, 13px);color:var(--ink-3, rgba(127,127,127,.8));}";
+        root.appendChild(st);
+      }
+      const rooms0 = () => (this._state && this._state.compact && this._state.compact.rooms) || [];
+      const setVar = (key, next) => {
+        const all = rooms0();
+        all.forEach((r) => { r.variables = r.variables || {}; if (next.length) r.variables[key] = next.slice(); else delete r.variables[key]; });
+        if (typeof this._mirrorToPair === "function") this._mirrorToPair(key, next.length ? next.slice() : undefined, all);
+        if (typeof this._markDirty === "function") this._markDirty();
+      };
+      const pickList = (key, items, title, ledeAll, ledeSome, none) => {
+        lists.appendChild(el("div", "fhead", t(title)));
+        if (!items.length) { lists.appendChild(el("p", "cs-lede", t(none))); return; }
+        const ids = items.map((x) => x.id);
+        const cur = ((rooms0().map((r) => (r.variables || {})[key]).find((v) => Array.isArray(v) && v.length)) || []).map(String).filter((x) => ids.includes(x));
+        lists.appendChild(el("p", "cs-lede", t(cur.length ? ledeSome : ledeAll)));
+        const list = el("div", "cs-saver-list");
+        list.dataset.key = key;
+        items.forEach((it) => {
+          const on = !cur.length || cur.includes(it.id);
+          const row = el("button", "cs-saver-row");
+          row.type = "button";
+          row.dataset.id = it.id;
+          row.setAttribute("aria-pressed", on ? "true" : "false");
+          row.style.setProperty("--cs-tone", it.tone || "var(--accent)");
+          const ic = el("span", "cs-saver-ic");
+          const hi = document.createElement("ha-icon");
+          hi.setAttribute("icon", it.icon);
+          ic.appendChild(hi);
+          const tx = el("span", "cs-saver-tx");
+          const b = el("b", "", it.raw ? it.label : t(it.label));
+          if (it.raw) b.setAttribute("data-no-i18n", "");
+          tx.appendChild(b);
+          if (it.sub) tx.appendChild(el("span", "", t(it.sub)));
+          row.append(ic, tx);
+          row.onclick = () => {
+            let next = cur.length ? (cur.includes(it.id) ? cur.filter((x) => x !== it.id) : cur.concat([it.id])) : ids.filter((x) => x !== it.id);
+            next = ids.filter((x) => next.includes(x));
+            if (next.length === ids.length) next = [];
+            setVar(key, next);
+            live.update(); extra();
+          };
+          list.appendChild(row);
+        });
+        lists.appendChild(list);
+      };
+      const drawLists = () => {
+        lists.textContent = "";
+        const hass = this._hass;
+        if (show === "mix") {
+          pickList("casora_screensaver_mix", SV.KINDS.map((k) => ({ id: k.id, label: k.label, icon: k.icon, tone: k.tone, sub: k.needs })), "Take turns",
+            "All of them take turns, five minutes each. Tap one to leave it out. One with nothing to show right now is skipped.",
+            "Only the ones picked here take turns, five minutes each. One with nothing to show right now is skipped.", "");
+        } else if (show === "kameras" && typeof SV.cameras === "function") {
+          pickList("casora_screensaver_cameras", SV.cameras(hass).map((c) => ({ id: c.id, label: c.name, raw: true, icon: "mdi:cctv", tone: "#5B8FC9" })), "Cameras",
+            "All cameras. Tap one to leave it out. On the tablet a tap on a camera shows its live picture.", "Only the cameras picked here.",
+            "No camera found. The preview shows an example.");
+        } else if (["kalender", "linie", "woche"].includes(show) && typeof SV.calendars === "function") {
+          const S0 = (hass && hass.states) || {};
+          pickList("casora_screensaver_calendars", SV.calendars(hass).map((id) => ({ id, label: String(((S0[id] || {}).attributes || {}).friendly_name || id), raw: true,
+            icon: "mdi:calendar-blank-outline", tone: "#DE8A4E" })), "Calendars",
+            "Appointments of all calendars. Tap one to leave it out.", "Only the appointments of the calendars picked here.",
+            "No calendar found. The preview shows an example.");
+        }
+      };
+      const extra = () => { photos(); drawLists(); };
+      extra();
       // The kind of the draft changes: the preview follows it (looked at while the preview is on the page).
       const watch = setInterval(() => {
         if (!stage.isConnected) { clearInterval(watch); live.destroy(); return; }
         const p = picked();
         if (p === last) return;
         last = p;
-        show = p || "mix"; live.update(); paint(); photos();
+        show = p || "mix"; live.update(); paint(); extra();
       }, 700);
     };
     P._csFillNeu = function (host, page) {

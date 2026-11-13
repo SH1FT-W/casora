@@ -2933,7 +2933,12 @@
     "ins Netz": "to the grid",
     "Akku gibt ab": "Battery discharging",
     "Arzttermin": "Doctor",
-    "Lamellenstellung": "Slats"
+    "Lamellenstellung": "Slats",
+    "Tippen für das Livebild": "Tap for the live picture",
+    "Alle, die an sind": "All that are on",
+    "Kein Licht an": "No light on",
+    "Ziehen zum Dimmen, Tippen für An/Aus": "Drag to dim, tap for On/Off",
+    "Bildschirmschoner starten": "Start screensaver"
   },
   "patterns": [
     [

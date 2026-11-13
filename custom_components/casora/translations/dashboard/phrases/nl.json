@@ -2951,7 +2951,12 @@
     "ins Netz": "naar het net",
     "Akku gibt ab": "Accu ontlaadt",
     "Arzttermin": "Dokter",
-    "Lamellenstellung": "Lamellen"
+    "Lamellenstellung": "Lamellen",
+    "Tippen für das Livebild": "Tik voor het livebeeld",
+    "Alle, die an sind": "Alle die aan zijn",
+    "Kein Licht an": "Geen licht aan",
+    "Ziehen zum Dimmen, Tippen für An/Aus": "Sleep om te dimmen, tik voor Aan/Uit",
+    "Bildschirmschoner starten": "Schermbeveiliging starten"
   },
   "patterns": [
     [

@@ -2951,7 +2951,12 @@
     "ins Netz": "vers le réseau",
     "Akku gibt ab": "La batterie se décharge",
     "Arzttermin": "Médecin",
-    "Lamellenstellung": "Lames"
+    "Lamellenstellung": "Lames",
+    "Tippen für das Livebild": "Touche pour l’image en direct",
+    "Alle, die an sind": "Toutes celles allumées",
+    "Kein Licht an": "Aucune lumière allumée",
+    "Ziehen zum Dimmen, Tippen für An/Aus": "Glisse pour varier, touche pour Allumé/Éteint",
+    "Bildschirmschoner starten": "Lancer l’économiseur d’écran"
   },
   "patterns": [
     [

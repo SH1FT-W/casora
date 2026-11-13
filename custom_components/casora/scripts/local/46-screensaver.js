@@ -1,12 +1,13 @@
 // ── Screensavers for wall tablets ───────────────────────────────────────────────────────────────────────────────
 // After some minutes without a touch a tablet shows a screensaver over the dashboard; a touch brings the dashboard
 // back. Set per dashboard in the Studio (Settings › Screensaver): casora_screensaver (minutes, empty = off),
-// casora_screensaver_kind (which one, „mix“ = one after the other) and casora_screensaver_calendar. Like
+// casora_screensaver_kind (which one, „mix“ = one after the other) and the ones listed below. Like
 // casora_idle_home they ride in the hero card of each view.
-// Ten screensavers: sky, drawn landscapes, room photos, word clock, weather, day line, week, music, energy flow and
-// the house at rest. Every one is drawn from what the house knows (time, sun, weather and its forecast, calendars,
+// Twelve screensavers: sky, drawn landscapes, room photos, word clock, weather, day line, week, music, energy flow,
+// the house at rest, cameras and a month calendar. Every one is drawn from what the house knows (time, sun, weather and its forecast, calendars,
 // waste dates, the playing media player, the energy settings, the bell, the dashboard's room photos); nothing is
-// loaded from another server. One that has nothing to show (no music playing, energy not set up) shows the sky. The same drawing serves the Studio's preview (mount into any box): all sizes are
+// loaded from another server. One that has nothing to show (no music playing, energy not set up) shows the sky; in the
+// alternation („mix“, the kinds picked in casora_screensaver_mix) it is skipped instead. The same drawing serves the Studio's preview (mount into any box): all sizes are
 // container units, so it looks the same small and full screen. The content wanders a few pixels every minute, so
 // nothing burns in.
 //   window._casoraSaver.KINDS                  → [{ id, label, needs }]
@@ -15,7 +16,13 @@
 //   window._casoraSaver.sky(share)             → the sky's colours for that share (null = night)
 //   window._casoraSaver.landSvg(scene, w, h)   → one drawn landscape (window._casoraSaver.SCENES)
 //   window._casoraSaver.html(kind, ctx)        → the screensaver's markup
-//   window._casoraSaver.mount(host, kind, o)   → draws into host and keeps it current; returns { update, destroy }
+//   window._casoraSaver.mount(host, kind, o)   → draws into host and keeps it current; returns { update, destroy, kind }
+//   window._casoraSaver.pool(vars, has)        → the kinds that take turns in „mix“ (picked, with something to show)
+//   window._casoraSaver.kindAt(kind, now, pool) → the kind on show
+//   window._casoraSaver.canStart() / start()   → start by hand (the dashboard's ⋯ menu), only where one may start
+// Studio settings beside the three above: casora_screensaver_mix (kinds that alternate, none = all),
+// casora_screensaver_cameras / _calendars (none = all), casora_screensaver_light (light button on the calm ones),
+// casora_screensaver_tint (the playing cover's colour as a wash).
 (function () {
   if (window._casoraSaver) return;
   var S = window._casoraSaver = {};
@@ -26,11 +33,21 @@
   var langOf = function () { return String(loc()).slice(0, 2).toLowerCase(); };
 
   // label: the name in the Studio (its texts are English at the source, translations/panel).
+  // icon and tone: the row in the Studio's list of what alternates. needs: shown in the alternation only when the
+  // house has it right now (S.has), otherwise skipped.
   S.KINDS = [
-    { id: 'himmel', label: 'Sky' }, { id: 'land', label: 'Landscapes' }, { id: 'fotos', label: 'Photos' },
-    { id: 'wort', label: 'Word clock' }, { id: 'wetter', label: 'Weather' }, { id: 'linie', label: 'Day line' },
-    { id: 'woche', label: 'Week' }, { id: 'musik', label: 'Music' }, { id: 'energie', label: 'Energy flow' },
-    { id: 'ruhe', label: 'House at rest' },
+    { id: 'himmel', label: 'Sky', icon: 'mdi:weather-sunset', tone: '#E08A5C' },
+    { id: 'land', label: 'Landscapes', icon: 'mdi:image-filter-hdr', tone: '#6AAE78' },
+    { id: 'fotos', label: 'Photos', icon: 'mdi:image-multiple-outline', tone: '#5B8FC9', needs: 'Only with room photos' },
+    { id: 'wort', label: 'Word clock', icon: 'mdi:format-letter-case', tone: '#C8693F' },
+    { id: 'wetter', label: 'Weather', icon: 'mdi:weather-partly-cloudy', tone: '#5B8FC9', needs: 'Only with a weather source' },
+    { id: 'linie', label: 'Day line', icon: 'mdi:timeline-clock-outline', tone: '#4E9E95' },
+    { id: 'woche', label: 'Week', icon: 'mdi:calendar-week', tone: '#4E9E95' },
+    { id: 'musik', label: 'Music', icon: 'mdi:music-note', tone: '#A77BE0', needs: 'Only while something is playing' },
+    { id: 'energie', label: 'Energy flow', icon: 'mdi:lightning-bolt', tone: '#E8B04A', needs: 'Only with energy set up' },
+    { id: 'ruhe', label: 'House at rest', icon: 'mdi:sofa-outline', tone: '#4E9E95' },
+    { id: 'kameras', label: 'Cameras', icon: 'mdi:cctv', tone: '#5B8FC9', needs: 'Only with cameras' },
+    { id: 'kalender', label: 'Calendar', icon: 'mdi:calendar-month-outline', tone: '#DE8A4E' },
   ];
 
   // ── The time as people say it ────────────────────────────────────────────
@@ -258,35 +275,42 @@
     return DATA.fc[key] || [];
   };
   // The calendars that count: visible ones, not the Workday integration's (as under the greeting, #157).
+  // only: one calendar, or the ones picked in the Studio (casora_screensaver_calendars); none picked (or none of them
+  // left) = all that count.
   S.calendars = function (hass, only) {
     var R = (hass && hass.entities) || {}, S0 = (hass && hass.states) || {};
-    if (only && S0[only]) return [only];
+    if (typeof only === 'string' && only && S0[only]) return [only];
+    if (Array.isArray(only) && only.length) {
+      var mine = only.map(String).filter(function (id) { return id.indexOf('calendar.') === 0 && S0[id]; });
+      if (mine.length) return mine.slice(0, 8);
+    }
     return Object.keys(S0).filter(function (id) {
       var e = R[id];
       return id.indexOf('calendar.') === 0 && !(e && (e.hidden || e.disabled_by || e.platform === 'workday'));
     }).sort().slice(0, 8);
   };
   // Events of the coming days from Home Assistant's calendar API: [{ title, start, end, allDay }] sorted by start.
-  S.events = function (hass, ids, days) {
-    var key = ids.join(',') + '|' + days;
+  // from: the first day asked for (the month calendar starts with the week of the 1st); default today.
+  S.events = function (hass, ids, days, from) {
+    var a = from ? new Date(+from) : new Date(); a.setHours(0, 0, 0, 0);
+    var key = ids.join(',') + '|' + days + (from ? '|' + a.getTime() : '');
     if (!hass || !ids.length || typeof hass.callApi !== 'function') return DATA.ev[key] || [];
     if (!(DATA.at[key] && Date.now() - DATA.at[key] < 600000)) {
       DATA.at[key] = Date.now();
-      var a = new Date(); a.setHours(0, 0, 0, 0);
       var b = new Date(a.getTime() + days * 86400000);
       var q = '?start=' + encodeURIComponent(a.toISOString()) + '&end=' + encodeURIComponent(b.toISOString());
       Promise.all(ids.map(function (id) {
         return hass.callApi('GET', 'calendars/' + id + q).then(function (rows) { return rows || []; }, function () { return []; });
       })).then(function (lists) {
         var out = [];
-        lists.forEach(function (rows) {
+        lists.forEach(function (rows, li) {
           rows.forEach(function (ev) {
             var all = !(ev.start && ev.start.dateTime);
             var st = all ? (ev.start && ev.start.date ? ev.start.date + 'T00:00:00' : null) : ev.start.dateTime;
             var en = ev.end ? (all ? (ev.end.date ? ev.end.date + 'T00:00:00' : null) : ev.end.dateTime) : null;
             var t0 = Date.parse(st);
             if (isNaN(t0)) return;
-            out.push({ title: String(ev.summary || ''), start: t0, end: en ? Date.parse(en) : null, allDay: all });
+            out.push({ title: String(ev.summary || ''), start: t0, end: en ? Date.parse(en) : null, allDay: all, cal: ids[li] });
           });
         });
         out.sort(function (x, y) { return x.start - y.start; });
@@ -362,6 +386,170 @@
     return Object.keys(S0).filter(function (id) { return id.indexOf('person.') === 0 && !(R[id] && R[id].hidden); }).sort().slice(0, 5).map(function (id) {
       return { name: String((S0[id].attributes || {}).friendly_name || id.slice(7)), home: S0[id].state === 'home' };
     });
+  };
+  // ── Cameras ──────────────────────────────────────────────────────────────
+  // The cameras that count: visible, not unavailable; only = the ones picked in the Studio (casora_screensaver_cameras),
+  // none picked (or none of them left) = all. [{ id, name, url, stream }] (url: Home Assistant's still picture).
+  S.cameras = function (hass, only) {
+    var S0 = (hass && hass.states) || {}, R = (hass && hass.entities) || {};
+    var ok = function (id) {
+      var st = S0[id], e = R[id];
+      return id.indexOf('camera.') === 0 && st && st.state !== 'unavailable' && !(e && (e.hidden || e.disabled_by)) && !!(st.attributes || {}).entity_picture;
+    };
+    var ids = Array.isArray(only) && only.length ? only.map(String).filter(ok) : [];
+    if (!ids.length) ids = Object.keys(S0).filter(ok).sort();
+    return ids.slice(0, 12).map(function (id) {
+      var a = S0[id].attributes || {};
+      return { id: id, name: String(a.friendly_name || id.slice(7)), url: String(a.entity_picture), stream: !!((Number(a.supported_features) || 0) & 2) };
+    });
+  };
+  // A fresh still picture every few seconds without a blank moment: the next one loads in the background and only
+  // takes the place of the last one once it is there (a repaint follows).
+  var SHOT = {}, SHOT_NEXT = {};
+  S.shot = function (cam, now) {
+    var next = cam.url + (cam.url.indexOf('?') < 0 ? '?' : '&') + '_cs=' + Math.floor(+now / 8000);
+    if (SHOT_NEXT[cam.id] !== next && typeof Image === 'function') {
+      SHOT_NEXT[cam.id] = next;
+      var img = new Image();
+      img.onload = function () { if (SHOT_NEXT[cam.id] === next) { SHOT[cam.id] = next; changed(); } };
+      img.src = next;
+    }
+    return SHOT[cam.id] || cam.url;
+  };
+
+  // ── The cover's colour ───────────────────────────────────────────────────
+  // The main colour of a picture from its pixels (RGBA, as a canvas gives them): colourful, middle-bright pixels count
+  // most, grey and near black or white ones hardly. Brought to a calm brightness, so it tints without shouting.
+  S.dominant = function (px) {
+    var r = 0, g = 0, b = 0, w = 0, ar = 0, ag = 0, ab = 0, n = 0;
+    for (var i = 0; i + 3 < px.length; i += 4) {
+      if (px[i + 3] < 128) continue;
+      var R0 = px[i], G0 = px[i + 1], B0 = px[i + 2], mx = Math.max(R0, G0, B0), mn = Math.min(R0, G0, B0);
+      var l = (mx + mn) / 510, sat = mx === mn ? 0 : (mx - mn) / (255 - Math.abs(mx + mn - 255));
+      var k = sat * sat * (l > 0.12 && l < 0.92 ? 1 : 0.05);
+      r += R0 * k; g += G0 * k; b += B0 * k; w += k;
+      ar += R0; ag += G0; ab += B0; n++;
+    }
+    if (!n) return null;
+    var c = w > n * 0.02 ? [r / w, g / w, b / w] : [ar / n, ag / n, ab / n];
+    // HSL: lightness into 0.42…0.6, saturation at most 0.65.
+    var M = Math.max.apply(null, c) / 255, m = Math.min.apply(null, c) / 255, L = (M + m) / 2, d = M - m;
+    var H = 0, Sa = d === 0 ? 0 : d / (1 - Math.abs(2 * L - 1));
+    if (d) {
+      var R1 = c[0] / 255, G1 = c[1] / 255, B1 = c[2] / 255;
+      H = M === R1 ? ((G1 - B1) / d) % 6 : M === G1 ? (B1 - R1) / d + 2 : (R1 - G1) / d + 4;
+      H = (H * 60 + 360) % 360;
+    }
+    L = Math.max(0.42, Math.min(0.6, L)); Sa = Math.min(0.65, Sa);
+    var C = (1 - Math.abs(2 * L - 1)) * Sa, X = C * (1 - Math.abs((H / 60) % 2 - 1)), m2 = L - C / 2;
+    var rgb = H < 60 ? [C, X, 0] : H < 120 ? [X, C, 0] : H < 180 ? [0, C, X] : H < 240 ? [0, X, C] : H < 300 ? [X, 0, C] : [C, 0, X];
+    return rgb.map(function (v) { return Math.round((v + m2) * 255); });
+  };
+  var COVER = {};
+  // The cover's colour as 'rgb(…)', null until it has been read (a repaint follows) or when it cannot be read.
+  S.coverColor = function (url) {
+    if (!url) return null;
+    if (COVER[url] !== undefined) return COVER[url] === 0 ? null : COVER[url];
+    if (typeof Image !== 'function' || !window.document || !document.createElement) return null;
+    COVER[url] = 0;
+    var img = new Image();
+    img.onload = function () {
+      try {
+        var cv = document.createElement('canvas');
+        cv.width = 24; cv.height = 24;
+        var cx = cv.getContext('2d');
+        cx.drawImage(img, 0, 0, 24, 24);
+        var c = S.dominant(cx.getImageData(0, 0, 24, 24).data);
+        if (c) { COVER[url] = 'rgb(' + c.join(',') + ')'; changed(); }
+      } catch (e) { /* a picture from elsewhere that may not be read: no tint */ }
+    };
+    img.src = url;
+    return null;
+  };
+
+  // ── Light ────────────────────────────────────────────────────────────────
+  // The rooms' names as the room menu shows them (its routes: url → label); a view's title is often its path.
+  S.viewNames = function (cfg) {
+    var out = {};
+    var walk = function (o, d) {
+      if (!o || typeof o !== 'object' || d > 12) return;
+      if (Array.isArray(o.routes)) o.routes.forEach(function (r) {
+        var seg = r && typeof r.url === 'string' ? r.url.split('?')[0].split('/').filter(Boolean).pop() : '';
+        if (seg && r.label && !out[seg]) out[seg] = String(r.label);
+      });
+      Object.keys(o).forEach(function (k) { if (o[k] && typeof o[k] === 'object') walk(o[k], d + 1); });
+    };
+    walk(cfg, 0);
+    return out;
+  };
+  // Lights of the dashboard's rooms, from the Studio: the room's light group, else its single lights. [{ name, ids }]
+  S.lightRooms = function (cfg) {
+    var out = [], seen = {}, names = S.viewNames(cfg);
+    ((cfg && cfg.views) || []).forEach(function (v) {
+      var vars = ((((v.cards || [])[0]) || {}).variables) || {}, ids = [];
+      if (vars.light_group_entity) ids = [String(vars.light_group_entity)];
+      else for (var i = 1; i <= 10; i++) if (vars['light_entity_' + i]) ids.push(String(vars['light_entity_' + i]));
+      ids = ids.filter(function (id) { return id.indexOf('light.') === 0; });
+      var key = ids.join(',');
+      if (!ids.length || seen[key]) return;
+      seen[key] = 1;
+      out.push({ name: String(names[v.path] || v.title || vars.title || v.path || ''), ids: ids });
+    });
+    return out;
+  };
+  // Every light that is on (not hidden; groups only where none of their members counts by itself).
+  S.lightsOn = function (hass) {
+    var S0 = (hass && hass.states) || {}, R = (hass && hass.entities) || {};
+    var on = Object.keys(S0).filter(function (id) { return id.indexOf('light.') === 0 && S0[id].state === 'on' && !(R[id] && (R[id].hidden || R[id].disabled_by)); });
+    return on.filter(function (id) {
+      var m = (S0[id].attributes || {}).entity_id;
+      return !(Array.isArray(m) && m.some(function (x) { return on.indexOf(x) > -1; }));
+    });
+  };
+  // What a set of lights shows: { on, pct (mean brightness of those on), color }.
+  S.lightState = function (hass, ids) {
+    var S0 = (hass && hass.states) || {}, on = 0, sum = 0, color = null;
+    ids.forEach(function (id) {
+      var st = S0[id];
+      if (!st || st.state !== 'on') return;
+      var a = st.attributes || {}, b = Number(a.brightness);
+      on++; sum += isFinite(b) ? b / 255 * 100 : 100;
+      // A white light shows warm white (pure white would glare over the whole screen at night).
+      if (!color && Array.isArray(a.rgb_color) && a.rgb_color.length === 3 && Math.min.apply(null, a.rgb_color) < 225) color = 'rgb(' + a.rgb_color.join(',') + ')';
+    });
+    return { on: on, pct: on ? Math.max(1, Math.round(sum / on)) : 0, color: color || '#FFD58A' };
+  };
+
+  // Text on a light's colour: dark on light colours, light on dark ones.
+  S.inkOn = function (color) {
+    var m = String(color || '').match(/\d+/g), c = m && m.length >= 3 ? m.slice(0, 3).map(Number) : String(color).charAt(0) === '#' ? hex(String(color)) : [255, 213, 138];
+    var l = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255;
+    return l > 0.55 ? '#2A2520' : '#F6EFE6';
+  };
+  // ── What alternates ──────────────────────────────────────────────────────
+  var truthy = function (v) { return v === true || v === 'true' || v === 1 || v === '1'; };
+  S.on = truthy;
+  // The kinds picked in the Studio for „mix“ (casora_screensaver_mix); none picked = all (as before).
+  S.selected = function (vars) {
+    var ids = S.KINDS.map(function (k) { return k.id; }), pick = vars && vars.casora_screensaver_mix;
+    var mine = Array.isArray(pick) ? ids.filter(function (id) { return pick.indexOf(id) > -1; }) : [];
+    return mine.length ? mine : ids;
+  };
+  // Whether the house has something for this kind right now (c: { hass, vars, rooms }).
+  S.has = function (id, c) {
+    c = c || {};
+    var hass = c.hass, vars = c.vars || {};
+    if (id === 'wetter') return !!S.weather(hass, vars.weather_entity);
+    if (id === 'musik') return !!S.playing(hass);
+    if (id === 'energie') return !!S.energy(hass);
+    if (id === 'kameras') return S.cameras(hass, vars.casora_screensaver_cameras).length > 0;
+    if (id === 'fotos') return !!(c.rooms && c.rooms.length);
+    return true;
+  };
+  // The kinds that take turns: the picked ones the house has something for; never empty (then the sky).
+  S.pool = function (vars, has) {
+    var list = S.selected(vars).filter(function (id) { return !has || has(id); });
+    return list.length ? list : ['himmel'];
   };
   var kw = function (w) { var a = Math.abs(w); return a >= 1000 ? (a / 1000).toLocaleString(loc(), { maximumFractionDigits: 1 }) + ' kW' : Math.round(a) + ' W'; };
   var wxIcon = function (cond) { return '/casora_assets/weather/' + (WX[cond] || 'cloudy-fill') + '.svg'; };
@@ -492,6 +680,49 @@
     + '.cs-sv .cs-it{display:flex;align-items:center;gap:' + u(16) + ';background:rgba(255,255,255,.06);border-radius:' + u(22) + ';padding:' + u(15) + ' ' + u(18) + ';min-width:0;}'
     + '.cs-sv .cs-it i{width:' + u(14) + ';height:' + u(14) + ';border-radius:50%;flex:none;background:var(--cs-c);}'
     + '.cs-sv .cs-it b{display:block;font-size:' + u(18) + ';font-weight:700;line-height:1.25;}.cs-sv .cs-it span{font-size:' + u(15) + ';font-weight:600;color:rgba(246,239,230,.64);}'
+    // Cameras: one still picture per camera, the grid as large as the count needs.
+    + '.cs-sv.cs-kameras{background:radial-gradient(110% 90% at 30% 0%, #222A30 0%, #131618 64%);}'
+    + '.cs-sv .cs-cams{position:absolute;inset:0;display:grid;grid-template-columns:repeat(var(--cs-cols), minmax(0, 1fr));grid-template-rows:repeat(var(--cs-rows), minmax(0, 1fr));gap:' + u(14) + ';}'
+    + '.cs-sv .cs-cam{position:relative;display:block;min-width:0;min-height:0;border:0;padding:0;font:inherit;color:inherit;text-align:left;cursor:pointer;border-radius:' + u(24) + ';overflow:hidden;'
+    +   'background:linear-gradient(160deg, #2A3238, #1A1F23);transition:transform .16s ease;-webkit-tap-highlight-color:transparent;}'
+    + '.cs-sv .cs-cam:active{transform:scale(var(--casora-press-scale, .97));}'
+    + '.cs-sv .cs-shot{position:absolute;inset:0;background-size:cover;background-position:center;}'
+    // Until (or where) a camera gives no picture: its symbol, quiet in the middle.
+    + '.cs-sv .cs-camic{position:absolute;left:50%;top:50%;transform:translate(-50%, -60%);opacity:.28;--mdc-icon-size:' + u(44) + ';}.cs-sv .cs-camic ha-icon{display:flex;}'
+    + '.cs-sv .cs-cam b{position:absolute;left:0;right:0;bottom:0;padding:' + u(30) + ' ' + u(18) + ' ' + u(14) + ';font-size:' + u(17) + ';font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'
+    +   'background:linear-gradient(transparent, rgba(0,0,0,.55));}'
+    // Month calendar: paper by day, dark by night.
+    + '.cs-sv.cs-kalender{background:#F2EBE0;color:#2A2520;}.cs-sv.cs-kalender.cs-dark{background:#191613;color:#F3ECE2;}'
+    + '.cs-sv .cs-kh{position:absolute;left:' + u(64) + ';right:' + u(64) + ';top:' + u(46) + ';display:flex;justify-content:space-between;align-items:flex-end;gap:' + u(24) + ';}'
+    + '.cs-sv .cs-km{font-size:' + u(64) + ';font-weight:700;letter-spacing:-.035em;line-height:1;}.cs-sv .cs-ky{font-size:' + u(20) + ';font-weight:600;opacity:.55;margin-top:' + u(6) + ';font-variant-numeric:tabular-nums;}'
+    + '.cs-sv .cs-kc{text-align:right;}.cs-sv .cs-kc .cs-time{font-size:' + u(52) + ';}.cs-sv.cs-kalender .cs-date{color:inherit;opacity:.6;font-size:' + u(17) + ';margin-top:' + u(4) + ';}'
+    + '.cs-sv .cs-kg{position:absolute;left:' + u(64) + ';right:' + u(64) + ';top:' + u(150) + ';bottom:' + u(48) + ';display:grid;grid-template-columns:repeat(7, minmax(0, 1fr));'
+    +   'grid-template-rows:auto repeat(var(--cs-weeks), minmax(0, 1fr));gap:' + u(8) + ';}'
+    + '.cs-sv .cs-kw{font-size:' + u(13) + ';font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.5;padding:0 ' + u(12) + ' ' + u(2) + ';}'
+    + '.cs-sv .cs-kd{min-width:0;min-height:0;overflow:hidden;border-radius:' + u(18) + ';padding:' + u(10) + ' ' + u(12) + ';background:rgba(42,37,32,.045);display:flex;flex-direction:column;gap:' + u(6) + ';}'
+    + '.cs-sv.cs-dark .cs-kd{background:rgba(255,255,255,.045);}'
+    + '.cs-sv .cs-kd > b{display:grid;place-items:center;width:' + u(36) + ';height:' + u(36) + ';margin:-' + u(4) + ' 0 0 -' + u(6) + ';border-radius:50%;font-size:' + u(19) + ';font-weight:700;font-variant-numeric:tabular-nums;flex:none;}'
+    + '.cs-sv .cs-kd.cs-kout{background:none;}.cs-sv .cs-kd.cs-kout > b, .cs-sv .cs-kd.cs-kpast > b{opacity:.38;}.cs-sv .cs-kd.cs-kpast .cs-kl{opacity:.5;}'
+    + '.cs-sv .cs-kd.cs-ktoday{background:color-mix(in srgb, #C8693F 14%, transparent);}.cs-sv .cs-kd.cs-ktoday > b{background:#C8693F;color:#fff;}'
+    + '.cs-sv.cs-dark .cs-kd.cs-ktoday{background:color-mix(in srgb, #E08A5C 18%, transparent);}.cs-sv.cs-dark .cs-kd.cs-ktoday > b{background:#E08A5C;color:#191613;}'
+    + '.cs-sv .cs-kl{display:flex;flex-direction:column;gap:' + u(4) + ';min-width:0;}'
+    + '.cs-sv .cs-ke{display:flex;align-items:center;gap:' + u(6) + ';min-width:0;font-size:' + u(13.5) + ';font-weight:600;line-height:1.2;}'
+    + '.cs-sv .cs-ke i{flex:none;width:' + u(8) + ';height:' + u(8) + ';border-radius:50%;background:var(--cs-c);}'
+    + '.cs-sv .cs-ke em{font-style:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}'
+    + '.cs-sv .cs-kmore{font-size:' + u(12.5) + ';font-weight:700;opacity:.5;}'
+    // The cover's colour as a soft wash from the top left (over the ground, under the content).
+    + '.cs-sv .cs-tint{position:absolute;inset:0;pointer-events:none;background:radial-gradient(130% 110% at 12% 0%, var(--cs-t) 0%, transparent 72%);opacity:.42;transition:opacity 2s ease;}'
+    + '.cs-sv.cs-wort:not(.cs-dark) .cs-tint, .cs-sv.cs-kalender:not(.cs-dark) .cs-tint{opacity:.2;}'
+    // The light button: a pill with a round icon, pressed it gives way a little.
+    + '.cs-sv .cs-lb{display:inline-flex;align-items:center;gap:' + u(12) + ';border:0;font:inherit;color:inherit;cursor:pointer;text-align:left;'
+    +   'padding:' + u(8) + ' ' + u(22) + ' ' + u(8) + ' ' + u(8) + ';min-height:' + u(60) + ';border-radius:999px;background:rgba(255,255,255,.12);transition:transform .16s ease, background .2s ease;-webkit-tap-highlight-color:transparent;}'
+    + '.cs-sv .cs-lb:active{transform:scale(var(--casora-press-scale, .97));background:rgba(255,255,255,.2);}'
+    + '.cs-sv .cs-lb i{display:grid;place-items:center;width:' + u(44) + ';height:' + u(44) + ';border-radius:50%;background:rgba(255,255,255,.14);--mdc-icon-size:' + u(24) + ';flex:none;}'
+    + '.cs-sv .cs-lb ha-icon{display:flex;}.cs-sv .cs-lb.cs-lon i{background:#FFD58A;color:#2A2520;}'
+    + '.cs-sv .cs-lb span{font-size:' + u(18) + ';font-weight:700;line-height:1.15;}.cs-sv .cs-lb em{display:block;font-style:normal;font-size:' + u(14) + ';font-weight:600;opacity:.64;}'
+    + '.cs-sv.cs-wort:not(.cs-dark) .cs-lb{background:rgba(42,37,32,.07);}.cs-sv.cs-wort:not(.cs-dark) .cs-lb i{background:rgba(42,37,32,.08);}.cs-sv.cs-wort:not(.cs-dark) .cs-lb.cs-lon i{background:#FFD58A;}'
+    + '.cs-sv .cs-wx .cs-lb{margin-top:' + u(18) + ';}.cs-sv .cs-left .cs-lb{margin-top:' + u(28) + ';align-self:flex-start;}'
+    + '.cs-sv .cs-lbw{position:absolute;right:' + u(64) + ';top:' + u(56) + ';}'
     // Narrow boxes (portrait tablet): the big time gives way.
     + '@container (aspect-ratio < 1){.cs-sv .cs-top{flex-direction:column;}.cs-sv .cs-wx{text-align:left;padding-top:0;}.cs-sv .cs-wx .cs-t{justify-content:flex-start;}'
     + '.cs-sv .cs-top .cs-time{font-size:' + u(150) + ';}.cs-sv .cs-words{font-size:' + u(104) + ';}.cs-sv .sv-bar{flex-direction:column;align-items:flex-start;}.cs-sv .cs-name{text-align:left;}'
@@ -505,7 +736,11 @@
     + '.cs-sv .cs-ev{width:' + u(132) + ';margin-left:-' + u(66) + ';padding:' + u(10) + ' ' + u(12) + ';}.cs-sv .cs-ev b{font-size:' + u(15) + ';}.cs-sv .cs-ev span{font-size:' + u(13) + ';}'
     + '.cs-sv .cs-cover{left:50%;top:' + u(210) + ';margin:0 0 0 -' + u(220) + ';}.cs-sv .cs-meta{left:' + u(80) + ';top:' + u(710) + ';transform:none;}'
     + '.cs-sv .cs-left{position:static;width:auto;display:block;padding:' + u(170) + ' ' + u(80) + ' 0;}'
-    + '.cs-sv .cs-right{position:static;width:auto;padding:' + u(56) + ' ' + u(80) + ' 0;}}';
+    + '.cs-sv .cs-right{position:static;width:auto;padding:' + u(56) + ' ' + u(80) + ' 0;}'
+    // Cameras: fewer columns. Calendar: dots only, no titles.
+    + '.cs-sv .cs-cams{grid-template-columns:repeat(var(--cs-pcols), minmax(0, 1fr));grid-template-rows:repeat(var(--cs-prows), minmax(0, 1fr));}'
+    + '.cs-sv .cs-kh{flex-direction:column;align-items:flex-start;}.cs-sv .cs-kc{text-align:left;}.cs-sv .cs-kg{top:' + u(260) + ';}'
+    + '.cs-sv .cs-kl{flex-direction:row;flex-wrap:wrap;}.cs-sv .cs-ke em{display:none;}}';
 
   var bar = function (ctx, name, sub) {
     var wx = ctx.wx;
@@ -529,7 +764,7 @@
         : T('Noch {m} Min. Tageslicht'.replace('{m}', left));
       return '<div class="cs-bg" style="background:linear-gradient(180deg, ' + sky[0] + ' 0%, ' + sky[1] + ' 36%, ' + sky[2] + ' 74%, ' + sky[3] + ' 100%)"></div><div class="cs-in">'
         + '<div class="cs-top"><div><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div>'
-        + (wx ? '<div class="cs-wx"><div class="cs-t"><img src="' + esc(wx.icon) + '" alt="">' + (wx.temp != null ? wx.temp + '°' : '') + '</div><p>' + esc(wx.text) + '</p></div>' : '') + '</div>'
+        + (wx || ctx.light ? '<div class="cs-wx">' + (wx ? '<div class="cs-t"><img src="' + esc(wx.icon) + '" alt="">' + (wx.temp != null ? wx.temp + '°' : '') + '</div><p>' + esc(wx.text) + '</p>' : '') + lightHtml(ctx) + '</div>' : '') + '</div>'
         + (sun ? '<div class="cs-arc"><svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true">'
           + '<defs><radialGradient id="cs-glow"><stop offset="0" stop-color="#FFE9BF" stop-opacity=".95"/><stop offset=".32" stop-color="#FFD9A0" stop-opacity=".5"/><stop offset="1" stop-color="#FFD9A0" stop-opacity="0"/></radialGradient></defs>'
           + '<line x1="0" y1="' + H + '" x2="' + W + '" y2="' + H + '" stroke="rgba(255,255,255,.5)" stroke-width="2" vector-effect="non-scaling-stroke"/>'
@@ -558,7 +793,8 @@
       var wx = ctx.wx, lines = S.words(langOf(), ctx.now.getHours(), ctx.now.getMinutes());
       return '<div class="cs-in"><div class="cs-words" data-no-i18n>' + lines.map(function (l) { return '<span' + (l.acc ? ' class="cs-acc"' : '') + '>' + esc(l.t) + '</span>'; }).join('') + '</div>'
         + '<div class="cs-foot"><div><b>' + esc(timeText(ctx.now, ctx.hass)) + '</b> · ' + esc(dateText(ctx.now)) + '</div>'
-        + (wx && wx.temp != null ? '<div class="cs-fw"><img src="' + esc(wx.icon) + '" alt="">' + wx.temp + '°</div>' : '') + '</div></div>';
+        + (wx && wx.temp != null ? '<div class="cs-fw"><img src="' + esc(wx.icon) + '" alt="">' + wx.temp + '°</div>' : '') + '</div>'
+        + (ctx.light ? '<div class="cs-lbw">' + lightHtml(ctx) + '</div>' : '') + '</div>';
     },
   };
   var head = function (ctx, title, sub) {
@@ -727,11 +963,74 @@
       + '<div class="cs-say">' + esc(say) + '<small>' + esc(small) + '</small></div>'
       + (people.length ? '<div class="cs-ppl">' + people.map(function (p) {
         return '<div class="cs-p' + (p.home ? '' : ' cs-away') + '"><i data-no-i18n>' + esc(p.name.charAt(0).toUpperCase()) + '</i><span data-no-i18n>' + esc(p.name) + '</span></div>';
-      }).join('') + '</div>' : '') + '</div>'
+      }).join('') + '</div>' : '') + lightHtml(ctx) + '</div>'
       + (rows.length ? '<div class="cs-right">' + rows.map(function (r) {
         return '<div class="cs-it" style="--cs-c:' + TONE_C[r.tone] + '"><i></i><div><b>' + esc(r.label) + '</b>' + (r.sub ? '<span data-no-i18n>' + esc(r.sub) + '</span>' : '') + '</div></div>';
       }).join('') + '</div>' : '') + '</div>';
   };
+  // Every camera as a still picture, a fresh one every few seconds; the grid follows how many there are. A tap shows
+  // the live picture big (on the tablet, see show below).
+  DRAW.kameras = function (ctx) {
+    var cams = ctx.cams || [], n = cams.length;
+    if (!n) return DRAW.himmel(ctx);
+    var cols = n <= 1 ? 1 : n <= 4 ? 2 : n <= 9 ? 3 : 4, pcols = n <= 2 ? 1 : n <= 8 ? 2 : 3;
+    var grid = '--cs-cols:' + cols + ';--cs-rows:' + Math.ceil(n / cols) + ';--cs-pcols:' + pcols + ';--cs-prows:' + Math.ceil(n / pcols);
+    return '<div class="cs-in">' + head(ctx, T('Kameras'), T('Tippen für das Livebild')) + '<div class="cs-body"><div class="cs-cams" style="' + esc(grid) + '">'
+      + cams.map(function (c) {
+        var pic = c.shot || c.url;
+        return '<button type="button" class="cs-cam" data-sv-act="cam" data-cam="' + esc(c.id) + '"><i class="cs-camic"><ha-icon icon="mdi:cctv"></ha-icon></i><span class="cs-shot"' + (pic ? ' style="background-image:url(&quot;' + esc(pic) + '&quot;)"' : '') + '></span>'
+          + '<b data-no-i18n>' + esc(c.name) + '</b></button>';
+      }).join('') + '</div></div></div>';
+  };
+  // The month like a calendar on the wall: today marked, the appointments of the picked calendars in their colour.
+  var WEEKDAY = { monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 7 };
+  var firstDay = function (hass) {
+    var f = hass && hass.locale && hass.locale.first_weekday;
+    if (WEEKDAY[f]) return WEEKDAY[f];
+    try {
+      var L = new Intl.Locale(loc()), w = typeof L.getWeekInfo === 'function' ? L.getWeekInfo() : L.weekInfo;
+      if (w && w.firstDay) return w.firstDay;
+    } catch (e) { /* older browsers: Monday */ }
+    return 1;
+  };
+  // The days the month view shows: from the week of the 1st to the week of the last day. { start, weeks, month }
+  S.monthGrid = function (now, hass) {
+    var d = new Date(+now), first = new Date(d.getFullYear(), d.getMonth(), 1);
+    var off = (first.getDay() - firstDay(hass) % 7 + 7) % 7;
+    var len = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    return { start: new Date(d.getFullYear(), d.getMonth(), 1 - off), weeks: Math.ceil((off + len) / 7), month: d.getMonth() };
+  };
+  DRAW.kalender = function (ctx) {
+    var g = S.monthGrid(ctx.now, ctx.hass), ev = ctx.events || [], cals = ctx.cals || [];
+    var y = g.start.getFullYear(), m = g.start.getMonth(), d = g.start.getDate();
+    var tone = function (e) { var i = cals.indexOf(e.cal); return TONES[(i < 0 ? 0 : i) % TONES.length]; };
+    var month = new Intl.DateTimeFormat(loc(), { month: 'long' }).format(ctx.now);
+    var html = '<div class="cs-in"><div class="cs-kh"><div><div class="cs-km">' + esc(month.charAt(0).toUpperCase() + month.slice(1)) + '</div><div class="cs-ky">' + ctx.now.getFullYear() + '</div></div>'
+      + '<div class="cs-kc"><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div></div>'
+      + '<div class="cs-kg" style="--cs-weeks:' + Number(g.weeks) + '">';
+    for (var w = 0; w < 7; w++) html += '<div class="cs-kw">' + esc(dayName(+new Date(y, m, d + w), true)) + '</div>';
+    for (var i = 0; i < g.weeks * 7; i++) {
+      var day = new Date(y, m, d + i), a = +day, b = +new Date(y, m, d + i + 1);
+      var list = ev.filter(function (e) { return e.start < b && (e.end && e.end > e.start ? e.end : e.start + 1) > a; });
+      var cls = 'cs-kd' + (day.getMonth() !== g.month ? ' cs-kout' : '') + (sameDay(a, ctx.now) ? ' cs-ktoday' : b <= +ctx.now ? ' cs-kpast' : '');
+      html += '<div class="' + esc(cls) + '"><b>' + day.getDate() + '</b>' + (list.length ? '<div class="cs-kl">' + list.slice(0, 3).map(function (e) {
+        return '<span class="cs-ke" style="--cs-c:' + esc(tone(e)) + '"><i></i><em data-no-i18n>' + esc(e.title) + '</em></span>';
+      }).join('') + (list.length > 3 ? '<span class="cs-kmore">+' + (list.length - 3) + '</span>' : '') + '</div>' : '') + '</div>';
+    }
+    return html + '</div></div>';
+  };
+  // The light button of the calm screensavers (only when the Studio turned it on): opens the light over the whole screen.
+  var LIGHT_KINDS = ['ruhe', 'wort', 'himmel'];
+  S.LIGHT_KINDS = LIGHT_KINDS;
+  var lightHtml = function (ctx) {
+    var L = ctx.light;
+    if (!L) return '';
+    return '<button type="button" class="cs-lb' + (L.on ? ' cs-lon' : '') + '" data-sv-act="light"><i><ha-icon icon="mdi:' + (L.on ? 'lightbulb-on' : 'lightbulb-outline') + '"></ha-icon></i>'
+      + '<span>' + esc(T('Licht')) + '<em>' + esc(L.on ? T('{n} an'.replace('{n}', L.on)) : T('Alles aus')) + '</em></span></button>';
+  };
+  // A soft wash in the colour of the playing cover over the screensavers that have a coloured ground (Studio switch).
+  var TINT_KINDS = ['wort', 'wetter', 'linie', 'woche', 'energie', 'ruhe', 'kalender'];
+  S.TINT_KINDS = TINT_KINDS;
   // What a preview shows where the house has nothing to show right now (nothing playing, energy not set up, no
   // appointments, no forecast): an example, so every screensaver can be looked at before it is picked.
   S.sample = function (ctx) {
@@ -748,6 +1047,9 @@
       .map(function (e) { return { title: T(e[4]), start: at(e[0], e[1], e[2]), end: at(e[0], e[1], e[2]) + e[3] * 60000, allDay: false }; });
     if (!ctx.media) ctx.media = { title: 'Golden Hour', artist: 'Casora', where: T('Wohnzimmer'), cover: '', dur: 228, pos: 87 };
     if (!ctx.energy) ctx.energy = { solar: 3240, grid: -1180, battery: -640, soc: 72, hasSolar: true, hasBattery: true, house: 1420 };
+    if (!ctx.cams || !ctx.cams.length) ctx.cams = ['Eingang', 'Garten', 'Garage', 'Terrasse'].map(function (n, i) { return { id: 'camera.sample_' + i, name: T(n), url: '', stream: false }; });
+    // The cover colour switched on: the example's colour, as long as the real cover has given none.
+    if (!ctx.tint && S.on((ctx.vars || {}).casora_screensaver_tint)) ctx.tint = 'rgb(176,104,72)';
     return ctx;
   };
   S.context = function (o) {
@@ -756,30 +1058,50 @@
     var dark = !!(hass && hass.themes && hass.themes.darkMode);
     var kind = o.kind || '';
     var need = function (list) { return !kind || list.indexOf(kind) > -1; };
-    var cals = o.events === undefined && need(['linie', 'woche']) ? S.calendars(hass) : [];
-    return { now: now, hass: hass, vars: vars, dark: dark, sun: o.sun !== undefined ? o.sun : S.sunTimes(hass, now),
+    var cals = need(['linie', 'woche', 'kalender']) ? S.calendars(hass, vars.casora_screensaver_calendars) : [];
+    // The month calendar asks for its whole grid, the others for the coming eight days.
+    var grid = kind === 'kalender' ? S.monthGrid(now, hass) : null;
+    var events = o.events !== undefined ? o.events : !cals.length ? [] : grid ? S.events(hass, cals, grid.weeks * 7, grid.start) : S.events(hass, cals, 8);
+    var media = o.media !== undefined ? o.media : need(['musik']) || (S.on(vars.casora_screensaver_tint) && TINT_KINDS.indexOf(kind) > -1) ? S.playing(hass) : null;
+    var light = null;
+    if (o.light !== undefined) light = o.light;
+    else if (S.on(vars.casora_screensaver_light) && LIGHT_KINDS.indexOf(kind) > -1 && Object.keys((hass && hass.states) || {}).some(function (id) { return id.indexOf('light.') === 0; })) {
+      light = { on: S.lightsOn(hass).length };
+    }
+    var cams = o.cams !== undefined ? o.cams : need(['kameras']) ? S.cameras(hass, vars.casora_screensaver_cameras).map(function (c) { c.shot = S.shot(c, now); return c; }) : [];
+    return { now: now, hass: hass, vars: vars, dark: dark, sun: o.sun !== undefined ? o.sun : S.sunTimes(hass, now), cals: o.cals || cals, cams: cams, light: light,
+      tint: o.tint !== undefined ? o.tint : S.on(vars.casora_screensaver_tint) && media && media.cover ? S.coverColor(media.cover) : null,
       wx: o.wx !== undefined ? o.wx : S.weather(hass, vars.weather_entity), rooms: o.rooms || S.rooms(o.config, hass, dark, { url: o.photoUrl, only: vars.casora_screensaver_photos }),
       // Asked for only when the screensaver on show needs it.
       hourly: o.hourly !== undefined ? o.hourly : need(['wetter']) ? S.forecast(hass, vars.weather_entity, 'hourly') : [],
       daily: o.daily !== undefined ? o.daily : need(['wetter', 'woche']) ? S.forecast(hass, vars.weather_entity, 'daily') : [],
-      events: o.events !== undefined ? o.events : cals.length ? S.events(hass, cals, 8) : [],
+      events: events,
       bins: o.bins !== undefined ? o.bins : need(['woche']) ? S.waste(hass) : [],
-      media: o.media !== undefined ? o.media : need(['musik']) ? S.playing(hass) : null,
+      media: media,
       energy: o.energy !== undefined ? o.energy : need(['energie']) ? S.energy(hass) : null,
       bell: o.bell !== undefined ? o.bell : need(['ruhe']) ? S.bell() : [],
       people: o.people !== undefined ? o.people : need(['ruhe']) ? S.people(hass) : [] };
   };
-  // „mix“ shows one after the other, five minutes each.
-  S.kindAt = function (kind, now) {
+  // „mix“ shows one after the other, five minutes each: the kinds of pool (S.pool: picked and with something to
+  // show), all without a pool.
+  S.kindAt = function (kind, now, pool) {
     var ids = S.KINDS.map(function (k) { return k.id; });
-    if (kind === 'mix') return ids[Math.floor(+now / 300000) % ids.length];
+    if (kind === 'mix') {
+      var list = Array.isArray(pool) && pool.length ? pool : ids;
+      return list[Math.floor(+now / 300000) % list.length];
+    }
     return ids.indexOf(kind) === -1 ? ids[0] : kind;
   };
-  S.html = function (kind, ctx) {
-    var k = S.kindAt(kind, ctx.now);
-    // Nothing to show (no weather entity, nothing playing, energy not set up): the sky, with its own look.
-    if ((k === 'wetter' && !ctx.wx) || (k === 'musik' && !ctx.media) || (k === 'energie' && !ctx.energy)) k = 'himmel';
-    return '<div class="cs-sv cs-' + k + (ctx.dark ? ' cs-dark' : '') + '" data-kind="' + k + '">' + DRAW[k](ctx) + '</div>';
+  // Night by the sun (by the clock without sun.sun).
+  var isNight = function (ctx) { return ctx.sun ? S.dayShare(ctx.now, ctx.sun.rise, ctx.sun.set) == null : (ctx.now.getHours() < 7 || ctx.now.getHours() >= 20); };
+  S.html = function (kind, ctx, pool) {
+    var k = S.kindAt(kind, ctx.now, pool);
+    // Nothing to show (no weather entity, nothing playing, energy not set up, no camera): the sky, with its own look.
+    if ((k === 'wetter' && !ctx.wx) || (k === 'musik' && !ctx.media) || (k === 'energie' && !ctx.energy) || (k === 'kameras' && !(ctx.cams && ctx.cams.length))) k = 'himmel';
+    // The month calendar is light by day and dark by night (and with a dark theme).
+    var dark = ctx.dark || (k === 'kalender' && isNight(ctx));
+    var tintHtml = ctx.tint && ctx.media && TINT_KINDS.indexOf(k) > -1 ? '<div class="cs-tint" style="--cs-t:' + esc(ctx.tint) + '"></div>' : '';
+    return '<div class="cs-sv cs-' + k + (dark ? ' cs-dark' : '') + '" data-kind="' + k + '"' + (tintHtml ? ' data-tint="1"' : '') + '>' + tintHtml + DRAW[k](ctx) + '</div>';
   };
   S.mount = function (host, kind, o) {
     o = o || {};
@@ -797,17 +1119,32 @@
       s2.textContent = CSS;
       root.appendChild(s2);
     }
+    var api = { kind: '' };
     var update = function () {
       var want = typeof o.kind === 'function' ? o.kind() : kind;
       var base = (typeof o.context === 'function' ? o.context() : o.context) || {};
-      var ctx = S.context(Object.assign({}, base, { kind: S.kindAt(want, base.now || new Date()) }));
+      var now = base.now || new Date();
+      // The alternation: the kinds picked in the Studio; on the tablet only those the house has something for (the
+      // preview shows examples, so every picked one takes its turn there).
+      var pool = null;
+      if (want === 'mix') {
+        var vars = base.vars || {}, hass = base.hass || hassOf();
+        var rooms = null;
+        pool = S.pool(vars, o.sample ? null : function (id) {
+          if (id === 'fotos' && !rooms) rooms = S.rooms(base.config, hass, !!(hass && hass.themes && hass.themes.darkMode), { url: base.photoUrl, only: vars.casora_screensaver_photos });
+          return S.has(id, { hass: hass, vars: vars, rooms: rooms });
+        });
+      }
+      var k = S.kindAt(want, now, pool);
+      var ctx = S.context(Object.assign({}, base, { kind: k }));
       if (o.sample) ctx = S.sample(ctx);
-      var html = S.html(want, ctx);
+      var html = S.html(k, ctx);
+      api.kind = k;
       if (html !== last) { last = html; host.innerHTML = html; }
-      // Wander a few pixels so nothing burns in (not in a preview).
+      // Wander a few pixels so nothing burns in (not in a preview): one step every twenty seconds.
       if (o.drift) {
         var el = host.firstElementChild;
-        n++;
+        n = Math.floor(Date.now() / 20000);
         if (el) { el.style.setProperty('--cs-dx', (Math.sin(n / 3) * 10).toFixed(1) + 'px'); el.style.setProperty('--cs-dy', (Math.cos(n / 4) * 8).toFixed(1) + 'px'); }
       }
     };
@@ -815,12 +1152,15 @@
     timer = setInterval(update, o.every || 20000);
     // Data that arrives later (forecast, calendar) repaints at once.
     listeners.push(update);
-    return { update: update, destroy: function () { clearInterval(timer); listeners.splice(listeners.indexOf(update), 1); host.innerHTML = ''; } };
+    api.update = update;
+    api.destroy = function () { clearInterval(timer); listeners.splice(listeners.indexOf(update), 1); host.innerHTML = ''; };
+    return api;
   };
 
   // The settings of the dashboard: the first value found on a view's hero card.
   S.vars = function (cfg) {
-    var out = {}, keys = ['casora_screensaver', 'casora_screensaver_kind', 'casora_screensaver_calendar', 'casora_screensaver_photos', 'weather_entity'];
+    var out = {}, keys = ['casora_screensaver', 'casora_screensaver_kind', 'casora_screensaver_calendar', 'casora_screensaver_photos', 'casora_screensaver_mix',
+      'casora_screensaver_cameras', 'casora_screensaver_calendars', 'casora_screensaver_light', 'casora_screensaver_tint', 'weather_entity'];
     ((cfg && cfg.views) || []).forEach(function (v) {
       var vars = ((((v.cards || [])[0]) || {}).variables) || {};
       keys.forEach(function (k) { if ((out[k] == null || out[k] === '' || (Array.isArray(out[k]) && !out[k].length)) && vars[k] != null && vars[k] !== '') out[k] = vars[k]; });
@@ -858,26 +1198,214 @@
   };
   var hide = function () {
     if (!layer) return;
+    if (layer._close) layer._close();
     if (live) { live.destroy(); live = null; }
     layer.remove();
     layer = null;
     bump();
   };
   S.hide = hide;
+  var haptic = function (k) { if (typeof window.casoraHaptic === 'function') window.casoraHaptic(k); };
+  // Over the screensaver: the live picture of a camera, or the light. One at a time; it closes with a tap (camera) or
+  // after ten seconds without a touch (light).
+  var LCSS = '.cs-sv-over{position:absolute;inset:0;z-index:2;color:#F6EFE6;font-family:var(--primary-font-family, var(--ha-font-family, system-ui, sans-serif));-webkit-user-select:none;user-select:none;}'
+    + '.cs-sv-over *{box-sizing:border-box;}'
+    + '.cs-sv-cam{background:#000;display:grid;place-items:center;cursor:pointer;}'
+    + '.cs-sv-cam > *{width:100%;height:100%;object-fit:contain;display:block;}.cs-sv-cam ha-camera-stream{--video-max-height:100vh;}'
+    + '.cs-sv-cam .cs-sv-cn{position:absolute;left:24px;top:20px;width:auto;height:auto;font-size:17px;font-weight:700;padding:8px 16px;border-radius:999px;background:rgba(0,0,0,.45);}'
+    + '.cs-sv-light{background:#141210;overflow:hidden;touch-action:none;cursor:ns-resize;}'
+    + '.cs-sv-light .cs-sv-fill{position:absolute;left:0;right:0;bottom:0;background:var(--cs-lc);transition:height .12s ease, background .4s ease;}'
+    + '.cs-sv-light .cs-sv-top{position:absolute;left:24px;right:24px;top:22px;display:flex;align-items:center;gap:10px;}'
+    + '.cs-sv-light .cs-sv-rooms{flex:1;min-width:0;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;}'
+    + '.cs-sv-light .cs-sv-rooms::-webkit-scrollbar{display:none;}'
+    + '.cs-sv-light button{flex:none;border:0;font:inherit;cursor:pointer;color:inherit;-webkit-tap-highlight-color:transparent;transition:transform .16s ease, background .2s ease;}'
+    + '.cs-sv-light button:active{transform:scale(var(--casora-press-scale, .97));}'
+    + '.cs-sv-light .cs-sv-room{min-height:44px;padding:0 18px;border-radius:999px;background:rgba(20,18,16,.38);font-size:16px;font-weight:600;white-space:nowrap;}'
+    + '.cs-sv-light .cs-sv-room[aria-pressed="true"]{background:#F6EFE6;color:#2A2520;}'
+    + '.cs-sv-light .cs-sv-x{width:44px;height:44px;border-radius:50%;background:rgba(20,18,16,.38);display:grid;place-items:center;--mdc-icon-size:22px;}'
+    + '.cs-sv-light .cs-sv-mid{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;pointer-events:none;}'
+    // The same text a second time in the ink for the light's colour, cut to the filled part: legible on both sides.
+    + '.cs-sv-light .cs-sv-clip{position:absolute;inset:0;pointer-events:none;clip-path:inset(calc(100% - var(--cs-h, 0%)) 0 0 0);transition:clip-path .12s ease;color:var(--cs-ink, #2A2520);}'
+    + '.cs-sv-light .cs-sv-pct{font-size:min(22vmin, 180px);font-weight:500;letter-spacing:-.05em;line-height:1;font-variant-numeric:tabular-nums;}'
+    + '.cs-sv-light .cs-sv-name{font-size:22px;font-weight:700;margin-top:10px;}.cs-sv-light .cs-sv-say{font-size:16px;font-weight:600;opacity:.7;margin-top:6px;}'
+    ;
+  var openCam = function (id) {
+    var hass = hassOf(), st = hass && hass.states && hass.states[id];
+    if (!st || !layer) return;
+    var box = document.createElement('div');
+    box.className = 'cs-sv-over cs-sv-cam';
+    box.setAttribute('data-sv-act', 'close');
+    var stream = ((Number((st.attributes || {}).supported_features) || 0) & 2) && customElements.get('ha-camera-stream');
+    var timer = 0;
+    if (stream) {
+      // Home Assistant's own player, as everywhere in Casora (bell, cameras): muted, no controls.
+      var el = document.createElement('ha-camera-stream');
+      el.controls = false; el.muted = true; el.allowExoPlayer = false;
+      el.hass = hass; el.stateObj = st;
+      box.appendChild(el);
+    } else {
+      // No stream: the still picture, every two seconds a new one.
+      var img = document.createElement('img');
+      var pic = function () { var a = (hassOf() || hass).states[id]; var u0 = String((a && a.attributes.entity_picture) || ''); if (u0) img.src = u0 + (u0.indexOf('?') < 0 ? '?' : '&') + '_cs=' + Date.now(); };
+      pic(); timer = setInterval(pic, 2000);
+      img.alt = '';
+      box.appendChild(img);
+    }
+    var cn = document.createElement('div');
+    cn.className = 'cs-sv-cn';
+    cn.setAttribute('data-no-i18n', '');
+    cn.textContent = String((st.attributes || {}).friendly_name || id);
+    box.appendChild(cn);
+    box._close = function () { clearInterval(timer); box.remove(); if (layer && layer._close === box._close) layer._close = null; };
+    box.addEventListener('click', function () { haptic('light'); box._close(); });
+    layer._close = box._close;
+    layer.appendChild(box);
+    haptic('light');
+  };
+  // The light: the whole screen is the dimmer in the light's colour. Drag up or down dims, a tap switches On/Off. Which
+  // lights: the room picked at the top (the room's light group from the Studio), or all that are on.
+  var lightPick = null, lastOn = [];
+  var openLight = function (cfg) {
+    var hass0 = hassOf();
+    if (!hass0 || !layer) return;
+    var rooms = S.lightRooms(cfg);
+    var box = document.createElement('div');
+    box.className = 'cs-sv-over cs-sv-light';
+    box.setAttribute('data-sv-act', 'light-panel');
+    var midHtml = '<div class="cs-sv-mid"><div class="cs-sv-pct"></div><div class="cs-sv-name" data-no-i18n></div><div class="cs-sv-say"></div></div>';
+    box.innerHTML = '<div class="cs-sv-fill"></div>' + midHtml + '<div class="cs-sv-clip">' + midHtml + '</div>'
+      + '<div class="cs-sv-top"><div class="cs-sv-rooms"></div><button type="button" class="cs-sv-x" aria-label="' + esc(T('Schließen')) + '"><ha-icon icon="mdi:close"></ha-icon></button></div>';
+    var fill = box.querySelector('.cs-sv-fill');
+    var text = function (sel, v) { box.querySelectorAll(sel).forEach(function (x) { x.textContent = v; }); };
+    var bar = box.querySelector('.cs-sv-rooms');
+    // „all“ = every light that is on (and, once switched off here, those again).
+    if (!lightPick || (lightPick !== 'all' && !rooms.some(function (r) { return r.name === lightPick; }))) lightPick = S.lightsOn(hass0).length || !rooms.length ? 'all' : rooms[0].name;
+    var targets = function () {
+      if (lightPick === 'all') { var on = S.lightsOn(hassOf()); return on.length ? on : lastOn; }
+      var r = rooms.filter(function (x) { return x.name === lightPick; })[0];
+      return r ? r.ids : [];
+    };
+    var drag = null, shown = null, idle = 0;
+    var paint = function (pct, on) {
+      var st = S.lightState(hassOf(), targets());
+      if (pct == null) pct = st.pct;
+      if (on == null) on = st.on > 0;
+      shown = pct;
+      var h = (on ? Math.max(4, pct) : 0) + '%';
+      box.style.setProperty('--cs-lc', on ? st.color : '#3A3530');
+      box.style.setProperty('--cs-h', h);
+      box.style.setProperty('--cs-ink', S.inkOn(st.color));
+      fill.style.height = h;
+      text('.cs-sv-pct', on ? pct + ' %' : T('Aus'));
+      text('.cs-sv-name', lightPick === 'all' ? T('Alle, die an sind') : lightPick);
+      text('.cs-sv-say', !targets().length ? T('Kein Licht an') : T('Ziehen zum Dimmen, Tippen für An/Aus'));
+    };
+    var chips = function () {
+      bar.textContent = '';
+      [{ id: 'all', label: T('Alle, die an sind') }].concat(rooms.map(function (r) { return { id: r.name, label: r.name, raw: true }; })).forEach(function (o) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'cs-sv-room';
+        b.textContent = o.label;
+        if (o.raw) b.setAttribute('data-no-i18n', '');
+        b.setAttribute('aria-pressed', lightPick === o.id ? 'true' : 'false');
+        b.addEventListener('click', function (ev) { ev.stopPropagation(); lightPick = o.id; haptic('selection'); chips(); paint(); poke(); });
+        bar.appendChild(b);
+      });
+    };
+    var call = function (svc, data) {
+      var ids = targets(), h = hassOf();
+      if (!ids.length || !h) return;
+      if (svc === 'turn_off') lastOn = ids.slice();
+      h.callService('light', svc, Object.assign({ entity_id: ids }, data || {}));
+    };
+    var close = function () { clearTimeout(idle); clearInterval(tick); box.remove(); if (layer && layer._close === close) layer._close = null; };
+    var poke = function () { clearTimeout(idle); idle = setTimeout(close, 10000); };
+    var sent = 0;
+    box.addEventListener('pointerdown', function (ev) {
+      poke();
+      if (ev.target.closest && ev.target.closest('button')) return;
+      var st = S.lightState(hassOf(), targets());
+      drag = { y: ev.clientY, from: st.on ? st.pct : 0, moved: false, id: ev.pointerId, step: Math.round((st.on ? st.pct : 0) / 10) };
+      try { box.setPointerCapture(ev.pointerId); } catch (e) { /* older browsers */ }
+    });
+    box.addEventListener('pointermove', function (ev) {
+      if (!drag || ev.pointerId !== drag.id) return;
+      var dy = drag.y - ev.clientY;
+      if (!drag.moved && Math.abs(dy) < 8) return;
+      drag.moved = true;
+      poke();
+      var pct = Math.max(1, Math.min(100, Math.round(drag.from + dy / Math.max(200, box.clientHeight) * 130)));
+      paint(pct, true);
+      if (Math.round(pct / 10) !== drag.step) { drag.step = Math.round(pct / 10); haptic('selection'); }
+      if (Date.now() - sent > 300) { sent = Date.now(); call('turn_on', { brightness_pct: pct }); }
+    });
+    var up = function (ev) {
+      if (!drag || ev.pointerId !== drag.id) return;
+      var d = drag;
+      drag = null;
+      if (d.moved) { call('turn_on', { brightness_pct: shown }); haptic('light'); return; }
+      if (ev.type === 'pointercancel') return;
+      var st = S.lightState(hassOf(), targets());
+      haptic('medium');
+      if (st.on) { call('turn_off'); paint(st.pct, false); } else { call('turn_on'); paint(st.pct || 100, true); }
+    };
+    box.addEventListener('pointerup', up);
+    box.addEventListener('pointercancel', up);
+    box.querySelector('.cs-sv-x').addEventListener('click', function (ev) { ev.stopPropagation(); haptic('light'); close(); });
+    // The state as Home Assistant reports it back (not while a finger is on the screen).
+    var tick = setInterval(function () { if (!drag) paint(); }, 1000);
+    chips(); paint(); poke();
+    layer._close = close;
+    layer.appendChild(box);
+    haptic('light');
+  };
   var show = function (cfg) {
     if (layer) return;
+    if (!document.getElementById('cs-sv-over-css')) {
+      var st = document.createElement('style');
+      st.id = 'cs-sv-over-css';
+      st.textContent = LCSS;
+      document.head.appendChild(st);
+    }
     layer = document.createElement('div');
     layer.className = 'cs-sv-layer';
     layer.style.cssText = 'position:fixed;inset:0;z-index:2147483000;background:#101010;cursor:pointer;touch-action:none;';
-    // A touch only wakes the dashboard: it must not reach a tile underneath.
-    var wake = function (ev) { ev.preventDefault(); ev.stopPropagation(); hide(); };
+    var stage = document.createElement('div');
+    stage.style.cssText = 'position:absolute;inset:0;';
+    layer.appendChild(stage);
+    // A touch only wakes the dashboard: it must not reach a tile underneath. A camera, the light button and what
+    // they open are the exception: they keep the screensaver.
+    var wake = function (ev) {
+      var t = ev.composedPath ? ev.composedPath()[0] : ev.target;
+      var act = t && t.closest ? t.closest('[data-sv-act]') : null;
+      if (act) {
+        ev.stopPropagation();
+        if (ev.type === 'contextmenu') ev.preventDefault();
+        if (ev.type !== 'click') return;
+        var what = act.getAttribute('data-sv-act');
+        if (what === 'cam') openCam(act.getAttribute('data-cam'));
+        else if (what === 'light') openLight(config() || cfg);
+        return;
+      }
+      ev.preventDefault(); ev.stopPropagation(); hide();
+    };
     ['pointerdown', 'touchstart', 'click', 'contextmenu'].forEach(function (t) { layer.addEventListener(t, wake, { passive: false }); });
     document.body.appendChild(layer);
-    live = S.mount(layer, null, { drift: true, kind: function () { return S.vars(config() || cfg).casora_screensaver_kind || 'mix'; },
+    // Every five seconds: the cameras' pictures stay fresh (everything else only repaints when it changed).
+    live = S.mount(stage, null, { drift: true, every: 5000, kind: function () { return S.vars(config() || cfg).casora_screensaver_kind || 'mix'; },
       context: function () { var c = config() || cfg; return { config: c, vars: S.vars(c) }; } });
   };
   S.show = show;
   S.shown = function () { return !!layer; };
+  // Started by hand from the dashboard's ⋯ menu: only where a screensaver may start by itself (a tablet, the
+  // dashboard has one turned on).
+  S.canStart = function () {
+    if (OFF || layer) return false;
+    var cfg = config();
+    return !!(cfg && S.minutes(S.vars(cfg).casora_screensaver) && (FORCE || (TABLET && TABLET.matches)));
+  };
+  S.start = function () { var cfg = config(); if (cfg && S.canStart()) show(cfg); };
   setInterval(function () {
     if (OFF) return;
     var cfg = config();

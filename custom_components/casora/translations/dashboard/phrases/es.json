@@ -2951,7 +2951,12 @@
     "ins Netz": "a la red",
     "Akku gibt ab": "La batería se descarga",
     "Arzttermin": "Médico",
-    "Lamellenstellung": "Lamas"
+    "Lamellenstellung": "Lamas",
+    "Tippen für das Livebild": "Toca para ver la imagen en directo",
+    "Alle, die an sind": "Todas las encendidas",
+    "Kein Licht an": "Ninguna luz encendida",
+    "Ziehen zum Dimmen, Tippen für An/Aus": "Arrastra para regular, toca para Encendido/Apagado",
+    "Bildschirmschoner starten": "Iniciar salvapantallas"
   },
   "patterns": [
     [

@@ -2951,7 +2951,12 @@
     "ins Netz": "para a rede",
     "Akku gibt ab": "A bateria descarrega",
     "Arzttermin": "Médico",
-    "Lamellenstellung": "Lâminas"
+    "Lamellenstellung": "Lâminas",
+    "Tippen für das Livebild": "Toque para ver a imagem em direto",
+    "Alle, die an sind": "Todas as ligadas",
+    "Kein Licht an": "Nenhuma luz ligada",
+    "Ziehen zum Dimmen, Tippen für An/Aus": "Arraste para regular, toque para Ligado/Desligado",
+    "Bildschirmschoner starten": "Iniciar proteção de ecrã"
   },
   "patterns": [
     [
