@@ -5,7 +5,7 @@
 // Editor; „Bearbeitet · N Änderungen“ am Titel öffnet die Liste in Klartext; Rückgängig, dann ⌘⇧Z
 // stellt die Änderung wieder her; Raummenü „Raum ausblenden“ – in „Räume ordnen“ grau mit
 // „Einblenden“; Kachel-Editor zeigt „Wer sieht das?“ (Auswahl der HA-Benutzer) und bei Kacheln mit
-// An/Aus-Schalter „Vor dem Schalten fragen“; Titelmenü „Auf Handy öffnen …“ zeigt einen QR-Code ohne
+// An/Aus-Schalter die Auswahl „Tippverhalten“ (seit 26.11.27, vorher Schalter „Vor dem Schalten fragen“); Titelmenü „Auf Handy öffnen …“ zeigt einen QR-Code ohne
 // Zugangsdaten; die Zeitreise bietet Benennen/Anheften; die Mobil-Vorschau zeigt „Aktuelle Wiedergabe“
 // wie das Handy auch ohne den Desktop-Schalter (F-13). Es wird nichts gespeichert.
 import { open, studio, casoraDashboard, fakeStates, check, need, finish } from './lib.mjs';
@@ -62,7 +62,8 @@ const ask = await H(() => { const p = window.__panel(); const rs = p._state.comp
 await page.waitForTimeout(900);
 if (ask) {
   const row = await R('#pane .tile.sel .mask');
-  await check('Licht-Kachel: Schalter „Vor dem Schalten fragen“', /Vor dem Schalten fragen/.test(row || ''), row);
+  // Hemma round #12 (26.11.27): one choice „Tippverhalten“ (Normal / Vorher fragen / Nur ansehen) instead of the switch.
+  await check('Licht-Kachel: Auswahl „Tippverhalten“ (Rückfrage)', /Tippverhalten/.test(row || '') && (await H((q) => !!window.__panel().shadowRoot.querySelector(q), '#pane .tile.sel .mask .combo')), row);
 }
 
 // Änderungsliste am Titel, Wiederholen

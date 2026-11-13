@@ -84,16 +84,24 @@ if (at) await page.mouse.click(at[0], at[1]);
 await page.waitForTimeout(600);
 await check('Antippen blendet den Raum wieder ein', await H((i) => !(window.__panel()._state.compact.rooms[i].variables || {}).casora_hidden, ri));
 
-// 4) Rückfrage einschalten → Toast „Ausprobieren“ öffnet das Popup
+// 4) Rückfrage wählen („Vorher fragen“) → Toast „Ausprobieren“ öffnet das Popup
+// Hemma round #12 (26.11.27): one choice „Tippverhalten“ (Normal / Vorher fragen / Nur ansehen) instead of the switch.
 const sw = await H(async () => { const p = window.__panel(); const rs = p._state.compact.rooms;
   for (let i = 0; i < rs.length; i++) for (const t of rs[i].tiles || []) {
+    if ((t.variables || {}).confirm_toggle === true || (t.variables || {}).view_only === true) continue;
     p._room = i; p._renderTabs(); p._bOpen = true; p._select({ group: 'tiles', key: p._tileKey(t), label: '' });
     await new Promise((r) => setTimeout(r, 250));
-    const lab = [...p.shadowRoot.querySelectorAll('#pane .mgroup label')].find((l) => /Vor dem Schalten fragen/.test(l.textContent));
-    if (lab) { const s = lab.parentElement.querySelector('[role=switch], button, input'); if (s && s.getAttribute('aria-checked') !== 'true') { s.click(); return true; } }
+    const row = p.shadowRoot.querySelector('#pane .tile.sel .row.mask');
+    if (row && row.querySelector('.combo > input')) { const f = row.closest('.adv'); if (f && !f.classList.contains('open')) f.querySelector('.advsum').click(); return true; }
   }
   return false; });
-await need('Kachel mit Rückfrage-Schalter', sw);
+if (sw) {
+  // Real clicks (the fold animates and scrolls; the menu takes the pointer itself), as in rb16.
+  await page.locator('#pane .tile.sel .row.mask .combo > input').click();
+  await page.waitForTimeout(500);
+  await page.locator('.combo-menu .combo-opt', { hasText: /Vorher fragen|Ask first/ }).filter({ visible: true }).first().click();
+}
+await need('Kachel mit Auswahl „Tippverhalten“', sw);
 await page.waitForTimeout(500);
 const act = await H(() => { const b = [...window.__panel().shadowRoot.querySelectorAll('button')].find((x) => x.textContent.trim() === 'Ausprobieren' && x.getClientRects().length); if (b) b.click(); return !!b; });
 await check('Toast bietet „Ausprobieren“ an', act);
