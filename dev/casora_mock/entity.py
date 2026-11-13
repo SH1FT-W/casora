@@ -390,6 +390,32 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
         async def async_select_source(self, source: str) -> None:
             self.put(None, source=source)
 
+        # Grouping (medien.py speakers): group_members as the store keeps it, leader first, on every member.
+        @property
+        def group_members(self):
+            return self.a.get("group_members")
+
+        def _regroup(self, members: list) -> None:
+            for eid in members:
+                obj = self.mock.objs.get(eid)
+                if obj is not None:
+                    obj.put(None, group_members=list(members) if len(members) > 1 else [eid])
+
+        async def async_join_players(self, group_members: list) -> None:
+            members = [self.entity_id] + [e for e in (self.group_members or []) if e != self.entity_id]
+            members += [e for e in group_members if e not in members]
+            for eid in group_members:  # a joining player leaves its old group
+                obj = self.mock.objs.get(eid)
+                old = [e for e in ((obj.group_members if obj else None) or []) if e != eid and e not in members]
+                if old:
+                    self._regroup(old)
+            self._regroup(members)
+
+        async def async_unjoin_player(self) -> None:
+            rest = [e for e in (self.group_members or []) if e != self.entity_id]
+            self._regroup(rest)
+            self.put(None, group_members=[self.entity_id])
+
     class MVacuum(MockEntity, StateVacuumEntity):
         async def async_start(self) -> None:
             self.put("cleaning")

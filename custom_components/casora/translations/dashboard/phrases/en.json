@@ -2939,7 +2939,19 @@
     "Breaking": "Breaking change",
     "● KI-Fehler": "● AI error",
     "Tippen für das Livebild": "Tap for the live picture",
-    "Bildschirmschoner starten": "Start screensaver"
+    "Bildschirmschoner starten": "Start screensaver",
+    "Fernbedienung": "Remote",
+    "Steuerkreuz": "Direction pad",
+    "Nach oben": "Up",
+    "Nach unten": "Down",
+    "Nach links": "Left",
+    "Nach rechts": "Right",
+    "OK": "OK",
+    "Zusammen abspielen": "Play together",
+    "Person erkannt": "Person detected",
+    "Heute keine Bewegung": "No motion today",
+    "Heute · 1 Ereignis": "Today · 1 event",
+    "Startseite": "Home screen"
   },
   "patterns": [
     [
@@ -5317,6 +5329,14 @@
     [
       "^KI: (\\d+) von (\\d+) geprüft$",
       "AI: {1} of {2} checked"
+    ],
+    [
+      "^Heute · (\\d+) Ereignisse$",
+      "Today · {1} events"
+    ],
+    [
+      "^Zusammen abspielen · (\\d+) Lautsprecher$",
+      "Play together · {1} speakers"
     ]
   ]
 }

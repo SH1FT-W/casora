@@ -2957,7 +2957,19 @@
     "Breaking": "Istotna zmiana",
     "● KI-Fehler": "● Błąd AI",
     "Tippen für das Livebild": "Dotknij, aby zobaczyć obraz na żywo",
-    "Bildschirmschoner starten": "Uruchom wygaszacz ekranu"
+    "Bildschirmschoner starten": "Uruchom wygaszacz ekranu",
+    "Fernbedienung": "Pilot",
+    "Steuerkreuz": "Przyciski kierunkowe",
+    "Nach oben": "W górę",
+    "Nach unten": "W dół",
+    "Nach links": "W lewo",
+    "Nach rechts": "W prawo",
+    "OK": "OK",
+    "Zusammen abspielen": "Odtwarzaj razem",
+    "Person erkannt": "Wykryto osobę",
+    "Heute keine Bewegung": "Dziś bez ruchu",
+    "Heute · 1 Ereignis": "Dziś · 1 zdarzenie",
+    "Startseite": "Ekran główny"
   },
   "patterns": [
     [
@@ -5335,6 +5347,14 @@
     [
       "^KI: (\\d+) von (\\d+) geprüft$",
       "AI: sprawdzono {1} z {2}"
+    ],
+    [
+      "^Heute · (\\d+) Ereignisse$",
+      "Dziś · zdarzenia: {1}"
+    ],
+    [
+      "^Zusammen abspielen · (\\d+) Lautsprecher$",
+      "Odtwarzaj razem · głośniki: {1}"
     ]
   ]
 }

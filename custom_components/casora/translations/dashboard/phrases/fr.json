@@ -2957,7 +2957,19 @@
     "Breaking": "Changement majeur",
     "● KI-Fehler": "● Erreur IA",
     "Tippen für das Livebild": "Touche pour l’image en direct",
-    "Bildschirmschoner starten": "Lancer l’économiseur d’écran"
+    "Bildschirmschoner starten": "Lancer l’économiseur d’écran",
+    "Fernbedienung": "Télécommande",
+    "Steuerkreuz": "Pavé directionnel",
+    "Nach oben": "Haut",
+    "Nach unten": "Bas",
+    "Nach links": "Gauche",
+    "Nach rechts": "Droite",
+    "OK": "OK",
+    "Zusammen abspielen": "Lire ensemble",
+    "Person erkannt": "Personne détectée",
+    "Heute keine Bewegung": "Aucun mouvement aujourd'hui",
+    "Heute · 1 Ereignis": "Aujourd'hui · 1 événement",
+    "Startseite": "Écran d'accueil"
   },
   "patterns": [
     [
@@ -5335,6 +5347,14 @@
     [
       "^KI: (\\d+) von (\\d+) geprüft$",
       "IA : {1} sur {2} vérifiées"
+    ],
+    [
+      "^Heute · (\\d+) Ereignisse$",
+      "Aujourd'hui · {1} événements"
+    ],
+    [
+      "^Zusammen abspielen · (\\d+) Lautsprecher$",
+      "Lire ensemble · {1} enceintes"
     ]
   ]
 }

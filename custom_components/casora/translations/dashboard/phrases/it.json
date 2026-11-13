@@ -2957,7 +2957,19 @@
     "Breaking": "Cambiamento importante",
     "● KI-Fehler": "● Errore IA",
     "Tippen für das Livebild": "Tocca per l’immagine dal vivo",
-    "Bildschirmschoner starten": "Avvia salvaschermo"
+    "Bildschirmschoner starten": "Avvia salvaschermo",
+    "Fernbedienung": "Telecomando",
+    "Steuerkreuz": "Croce direzionale",
+    "Nach oben": "Su",
+    "Nach unten": "Giù",
+    "Nach links": "Sinistra",
+    "Nach rechts": "Destra",
+    "OK": "OK",
+    "Zusammen abspielen": "Riproduci insieme",
+    "Person erkannt": "Persona rilevata",
+    "Heute keine Bewegung": "Nessun movimento oggi",
+    "Heute · 1 Ereignis": "Oggi · 1 evento",
+    "Startseite": "Schermata Home"
   },
   "patterns": [
     [
@@ -5335,6 +5347,14 @@
     [
       "^KI: (\\d+) von (\\d+) geprüft$",
       "IA: {1} di {2} verificati"
+    ],
+    [
+      "^Heute · (\\d+) Ereignisse$",
+      "Oggi · {1} eventi"
+    ],
+    [
+      "^Zusammen abspielen · (\\d+) Lautsprecher$",
+      "Riproduci insieme · {1} altoparlanti"
     ]
   ]
 }

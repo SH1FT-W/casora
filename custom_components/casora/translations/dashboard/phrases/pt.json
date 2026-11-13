@@ -2957,7 +2957,19 @@
     "Breaking": "Alteração importante",
     "● KI-Fehler": "● Erro de IA",
     "Tippen für das Livebild": "Toque para ver a imagem em direto",
-    "Bildschirmschoner starten": "Iniciar proteção de ecrã"
+    "Bildschirmschoner starten": "Iniciar proteção de ecrã",
+    "Fernbedienung": "Comando",
+    "Steuerkreuz": "Teclas de direção",
+    "Nach oben": "Para cima",
+    "Nach unten": "Para baixo",
+    "Nach links": "Para a esquerda",
+    "Nach rechts": "Para a direita",
+    "OK": "OK",
+    "Zusammen abspielen": "Reproduzir em conjunto",
+    "Person erkannt": "Pessoa detetada",
+    "Heute keine Bewegung": "Sem movimento hoje",
+    "Heute · 1 Ereignis": "Hoje · 1 evento",
+    "Startseite": "Ecrã inicial"
   },
   "patterns": [
     [
@@ -5335,6 +5347,14 @@
     [
       "^KI: (\\d+) von (\\d+) geprüft$",
       "IA: {1} de {2} verificadas"
+    ],
+    [
+      "^Heute · (\\d+) Ereignisse$",
+      "Hoje · {1} eventos"
+    ],
+    [
+      "^Zusammen abspielen · (\\d+) Lautsprecher$",
+      "Reproduzir em conjunto · {1} colunas"
     ]
   ]
 }

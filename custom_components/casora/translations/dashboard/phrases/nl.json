@@ -2957,7 +2957,19 @@
     "Breaking": "Breaking change",
     "● KI-Fehler": "● AI-fout",
     "Tippen für das Livebild": "Tik voor het livebeeld",
-    "Bildschirmschoner starten": "Schermbeveiliging starten"
+    "Bildschirmschoner starten": "Schermbeveiliging starten",
+    "Fernbedienung": "Afstandsbediening",
+    "Steuerkreuz": "Richtingtoetsen",
+    "Nach oben": "Omhoog",
+    "Nach unten": "Omlaag",
+    "Nach links": "Links",
+    "Nach rechts": "Rechts",
+    "OK": "OK",
+    "Zusammen abspielen": "Samen afspelen",
+    "Person erkannt": "Persoon gedetecteerd",
+    "Heute keine Bewegung": "Vandaag geen beweging",
+    "Heute · 1 Ereignis": "Vandaag · 1 gebeurtenis",
+    "Startseite": "Startscherm"
   },
   "patterns": [
     [
@@ -5335,6 +5347,14 @@
     [
       "^KI: (\\d+) von (\\d+) geprüft$",
       "AI: {1} van {2} gecontroleerd"
+    ],
+    [
+      "^Heute · (\\d+) Ereignisse$",
+      "Vandaag · {1} gebeurtenissen"
+    ],
+    [
+      "^Zusammen abspielen · (\\d+) Lautsprecher$",
+      "Samen afspelen · {1} speakers"
     ]
   ]
 }

@@ -2950,7 +2950,19 @@
     "Breaking": "Brytende endring",
     "● KI-Fehler": "● KI-feil",
     "Tippen für das Livebild": "Trykk for livebilde",
-    "Bildschirmschoner starten": "Start skjermsparer"
+    "Bildschirmschoner starten": "Start skjermsparer",
+    "Fernbedienung": "Fjernkontroll",
+    "Steuerkreuz": "Retningsknapper",
+    "Nach oben": "Opp",
+    "Nach unten": "Ned",
+    "Nach links": "Venstre",
+    "Nach rechts": "Høyre",
+    "OK": "OK",
+    "Zusammen abspielen": "Spill sammen",
+    "Person erkannt": "Person oppdaget",
+    "Heute keine Bewegung": "Ingen bevegelse i dag",
+    "Heute · 1 Ereignis": "I dag · 1 hendelse",
+    "Startseite": "Startskjerm"
   },
   "patterns": [
     [
@@ -5328,6 +5340,14 @@
     [
       "^KI: (\\d+) von (\\d+) geprüft$",
       "KI: {1} av {2} sjekket"
+    ],
+    [
+      "^Heute · (\\d+) Ereignisse$",
+      "I dag · {1} hendelser"
+    ],
+    [
+      "^Zusammen abspielen · (\\d+) Lautsprecher$",
+      "Spill sammen · {1} høyttalere"
     ]
   ]
 }

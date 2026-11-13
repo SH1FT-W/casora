@@ -2957,7 +2957,19 @@
     "Breaking": "Cambio importante",
     "● KI-Fehler": "● Error de IA",
     "Tippen für das Livebild": "Toca para ver la imagen en directo",
-    "Bildschirmschoner starten": "Iniciar salvapantallas"
+    "Bildschirmschoner starten": "Iniciar salvapantallas",
+    "Fernbedienung": "Mando a distancia",
+    "Steuerkreuz": "Cruceta",
+    "Nach oben": "Arriba",
+    "Nach unten": "Abajo",
+    "Nach links": "Izquierda",
+    "Nach rechts": "Derecha",
+    "OK": "OK",
+    "Zusammen abspielen": "Reproducir juntos",
+    "Person erkannt": "Persona detectada",
+    "Heute keine Bewegung": "Hoy sin movimiento",
+    "Heute · 1 Ereignis": "Hoy · 1 evento",
+    "Startseite": "Pantalla de inicio"
   },
   "patterns": [
     [
@@ -5335,6 +5347,14 @@
     [
       "^KI: (\\d+) von (\\d+) geprüft$",
       "IA: {1} de {2} revisadas"
+    ],
+    [
+      "^Heute · (\\d+) Ereignisse$",
+      "Hoy · {1} eventos"
+    ],
+    [
+      "^Zusammen abspielen · (\\d+) Lautsprecher$",
+      "Reproducir juntos · {1} altavoces"
     ]
   ]
 }
