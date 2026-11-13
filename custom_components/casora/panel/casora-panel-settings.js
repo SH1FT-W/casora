@@ -143,7 +143,7 @@
           kw: "abfall müll muell tonne abholung restmüll papier gelber sack bio" },
         { k: "calendars", personal: ["calendars"], title: "Calendars",
           plain: "Which calendars the calendar tiles show, with name and color.",
-          kw: "kalender termine farbe calendar" },
+          kw: "kalender termine farbe calendar ausblenden verbergen filter hide" },
         { k: "devices", personal: ["devices"], title: "Other devices",
           plain: "Devices Casora found that have no place of their own, e.g. an e-bike.",
           kw: "geräte ebike e-bike fahrrad" },
