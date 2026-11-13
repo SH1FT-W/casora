@@ -98,6 +98,12 @@ assert.deepEqual(J(S.calendars(hc, ['calendar.c', 'calendar.a'])), ['calendar.c'
 assert.deepEqual(J(S.calendars(hc, ['calendar.gone'])), ['calendar.a', 'calendar.b', 'calendar.c']);
 assert.deepEqual(J(S.calendars(hc, [])), ['calendar.a', 'calendar.b', 'calendar.c']);
 assert.deepEqual(J(S.context({ hass: hc, now, kind: 'kalender', vars: { casora_screensaver_calendars: ['calendar.b'] }, events: [] }).cals), ['calendar.b']);
+// #189: without a pick of its own, the screensaver takes the calendars picked under Settings › Home & devices ›
+// Calendars (as the calendar tile and the greeting do); one shown only in the popup (tile: false) is left out.
+win.casoraSettings = () => ({ calendars: [{ entity: 'calendar.b' }, { entity: 'calendar.c', tile: false }] });
+assert.deepEqual(J(S.calendars(hc, [])), ['calendar.b'], 'no pick: the calendars of the settings');
+assert.deepEqual(J(S.calendars(hc, ['calendar.a'])), ['calendar.a'], 'its own pick still wins');
+delete win.casoraSettings;
 
 // No light control in the screensaver (owner, 13.11.2026: removed again): no button, even with the old setting.
 const lit = { states: { 'light.a': { state: 'on', attributes: { brightness: 128 } } } };

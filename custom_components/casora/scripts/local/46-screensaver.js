@@ -283,6 +283,15 @@
       var mine = only.map(String).filter(function (id) { return id.indexOf('calendar.') === 0 && S0[id]; });
       if (mine.length) return mine.slice(0, 8);
     }
+    // No pick of its own: the calendars picked under Settings › Home & devices › Calendars, as on the calendar tile
+    // and under the greeting (#189); one shown only in the popup (tile: false) is left out.
+    var own = null;
+    try { own = window.casoraSettings ? window.casoraSettings().calendars : null; } catch (e) { own = null; }
+    if (Array.isArray(own) && own.length) {
+      var set = own.map(function (c) { return typeof c === 'string' ? c : c && c.tile !== false && c.entity; })
+        .filter(function (id) { return id && String(id).indexOf('calendar.') === 0 && S0[id]; });
+      if (set.length) return set.slice(0, 8);
+    }
     return Object.keys(S0).filter(function (id) {
       var e = R[id];
       return id.indexOf('calendar.') === 0 && !(e && (e.hidden || e.disabled_by || e.platform === 'workday'));
