@@ -216,7 +216,7 @@
       if (!f || !f.label) continue;
       const head = tr(sec.title || sec.label) + ": " + tr(f.label);
       if (f.type === "bool") {
-        let on = v === undefined || v === null || v === "" ? (W.__casoraPanelInternals.fieldDefault(f, ctx && ctx.hass) !== false) : v === true || v === "true" || v === 1;
+        let on = v === undefined || v === null || v === "" ? (((W.__casoraPanelInternals || {}).fieldDefault || ((x) => x.boolDefault))(f, ctx && ctx.hass) !== false) : v === true || v === "true" || v === 1;
         if (f.invert) on = !on;
         return head + " " + tr(on ? "On" : "Off").toLowerCase();
       }
@@ -734,7 +734,7 @@
 
     // ── Changes ──────────────────────────────────────────────────────────────
     const flat = (sn) => sn.s.concat([sn.m || null]);
-    P._mCtx = function () { return { roomName: (r) => this._roomLabel(r), tileName }; };
+    P._mCtx = function () { return { roomName: (r) => this._roomLabel(r), tileName, hass: this._hass }; };
     P._mItems = function () {
       if (!this._state || !this._mBase || !(this._isDirty && this._isDirty())) return [];
       try { return changeItems(flat(this._mBase), flat(this._snap()), this._mCtx()); } catch (e) { return []; }

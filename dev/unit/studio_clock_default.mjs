@@ -1,6 +1,8 @@
 // Studio "12-hour clock" (use_12h): with no saved choice the toggle shows what the dashboard clock uses –
 // the HA user's time format, then the HA user's language – not the browser's language (#41).
 //   node dev/unit/studio_clock_default.mjs
+// @deckt: custom_components/casora/panel/casora-panel.js#fieldDefault,clock12 custom_components/casora/panel/casora-panel-b-mehr.js#settingText
+import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import { loadPanel } from './lib/testhaus.mjs';
 
@@ -30,4 +32,12 @@ assert.equal(sw(undefined, nl('24')), 'false', 'nothing saved, HA user 24-hour: 
 assert.equal(sw(undefined, nl('12')), 'true', 'nothing saved, HA user 12-hour: toggle on');
 assert.equal(sw(true, nl('24')), 'true', 'saved on wins');
 assert.equal(sw(false, nl('12')), 'false', 'saved off wins');
+
+// The change text for a reset ("Time: 12-hour clock on/off") names the same default, for the HA user.
+const win = { __casoraPanelInternals: I };
+new Function('window', fs.readFileSync(new URL('../../custom_components/casora/panel/casora-panel-b-mehr.js', import.meta.url), 'utf8'))(win);
+const state = (v) => [{ rooms: ['home', 'kueche', 'bad'].map((p) => ({ path: p, name: p, tiles: [], variables: { ...v } })) }, {}, {}, null, null];
+const reset = (hass) => win.__casoraStudioMehr.changeLines(state({ use_12h: true }), state({}), { sections: I.SECTIONS, hass });
+assert.deepEqual(reset(nl('24')), ['Time: 12-hour clock off'], 'reset, HA user 24-hour: off');
+assert.deepEqual(reset(nl('12')), ['Time: 12-hour clock on'], 'reset, HA user 12-hour: on');
 console.log('studio_clock_default: ok');

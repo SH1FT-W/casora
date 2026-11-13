@@ -19505,7 +19505,8 @@ class CasoraPanel extends HTMLElement {
         if (f.type === "bool") {
           // invert: the switch shows the opposite of the stored value.
           const flip = (v) => (f.invert && v !== undefined && v !== "" && v !== null ? !v : v);
-          row.appendChild(this._boolSwitch(flip(cur), f.invert ? !fieldDefault(f, this._hass) : fieldDefault(f, this._hass), (v) => {
+          const def = fieldDefault(f, this._hass);
+          row.appendChild(this._boolSwitch(flip(cur), f.invert ? !def : def, (v) => {
             setVar(f.key, flip(v), f);
             filled(f);
           }, f.label));
