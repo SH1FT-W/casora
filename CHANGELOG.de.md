@@ -4,6 +4,34 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.11.27 – 13.11.2026
+
+Mehr Bildschirmschoner, Verbrauch je Gerät, ruhigere Mitteilungen und Kacheln, die nur zeigen. Dazu Tumble für Waschmaschine und Trockner.
+
+### Neu
+- **Bildschirmschoner:** zwei neue, Kameras (Raster mit Standbildern, ein Tipp zeigt das Livebild) und Kalender (der Monat wie ein Wandkalender, Termine als Punkte). Unter „Abwechselnd“ wählst du, welche Schoner sich abwechseln; Schoner ohne Daten, etwa Wetter ohne Wetter-Entität, werden übersprungen, und Musik ist nur dabei, solange etwas läuft. „Bildschirmschoner starten“ im ⋯-Menü des Dashboards startet einen von Hand auf dem Tablet, auch ohne Startzeit. Auf Wunsch nehmen die Schoner beim Musikhören eine leichte Tönung in der Farbe des Covers an.
+
+  ![Die neuen Schoner Kalender und Kameras](https://raw.githubusercontent.com/SH1FT-W/casora/main/docs/images/news-26.11.27-screensavers.webp)
+
+- **Verbrauch je Gerät:** Das Energie-Popup hat eine Seite „Verbrauch je Gerät“ mit Tag, Woche und Monat, gestapelten Balken je Gerät, einer Durchschnittslinie und der Liste mit dem Anteil jedes Geräts. Ein Tipp auf ein Gerät zeigt es allein. Ist der Hausverbrauch bekannt, ist die Summe das Haus, der Rest steht als „Nicht erfasst“. Die Geräte kommen aus den Energie-Einstellungen von Home Assistant.
+
+  ![Verbrauch je Gerät, diese Woche](https://raw.githubusercontent.com/SH1FT-W/casora/main/docs/images/news-26.11.27-energy.webp)
+
+- **Mitteilungen:** Wiederholungen derselben Quelle sind eine Karte mit Zähler; ein Tipp klappt den Stapel auf, Löschen löscht ihn. Ein ausgelöster Alarm bleibt oben, solange er läuft. Neu im Studio: eigenes Kommen und Gehen ausblenden und „Gelöscht für alle Benutzer“, das Gelöschte für alle teilt (deine bisherigen Löschungen kommen mit).
+- **Nur ansehen:** Das „Tippverhalten“ jeder Kachel bietet Normal, Vorher fragen und Nur ansehen. Eine Kachel mit „Nur ansehen“ öffnet ihr Popup, schaltet aber nichts. Bisherige Einstellungen „Vor dem Schalten fragen“ bleiben erhalten.
+- **Bewegungsmelder:** „Zuletzt vor 11 Std.“ statt „Frei“ auf Kachel, Badge und Popup (auf schmalen Handy-Kacheln „vor 11 Std.“).
+- **Zusammen abspielen:** Das Medien-Popup eines gruppierbaren Lautsprechers listet die anderen Lautsprecher seines Systems; ein Tipp nimmt einen dazu oder heraus.
+- **Kamera-Zeitleiste:** Das Kamera-Popup zeigt die heutigen Bewegungs-, Personen- und Klingel-Ereignisse der kameraeigenen Melder auf einem Streifen von Mitternacht bis jetzt.
+- **Tumble:** Waschmaschinen und Trockner der Integration Tumble werden wie die von WashData erkannt: Zustand, „Wäsche ist noch drin“ mit „Ausgeräumt“, Pflege mit „Erledigt“, Statistik und die Notiz des Laufs als Programm.
+
+### Geändert
+- **Handy quer:** Es zählt nicht mehr als Wand-Tablet, also kein Bildschirmschoner und keine Rückkehr zu Zuhause ohne Bedienung.
+
+### Behoben
+- **Leere Reihe am Handy:** Eine leere Favoriten-Reihe blitzt nicht mehr bei jeder Zustandsänderung auf und schiebt die Seite nicht mehr nach unten.
+- **Übersetzungen (#175):** Im Updates-Popup blieben KI-Urteile („KI: Unkritisch“) und Zusammenfassungen deutsch. Danke an @daxy01.
+- **Solar-Tipp:** Ein Gerät mit „tumble“ im Namen gilt nicht mehr als Trockner.
+
 ## 26.11.26 – 13.11.2026
 
 Das große November-Update: Bildschirmschoner für Wand-Tablets, vier neue Designs, Ladesäulen in der Nähe deines E-Autos, eine Wärmepumpen-Kachel, Norwegisch als neunte Sprache, eine Landkarte und viele Fixes aus euren Meldungen.

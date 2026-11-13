@@ -4,6 +4,34 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.11.27 – 13.11.2026
+
+More screensavers, consumption per device, calmer notifications and tiles that only show. Plus Tumble for washers and dryers.
+
+### New
+- **Screensavers:** two new ones, Cameras (a grid of snapshots, tap one for the live picture) and Calendar (the month like a wall calendar, your events as dots). Under "One after the other" you pick which screensavers take turns; ones without data, such as Weather without a weather entity, are skipped, and Music only joins while something plays. "Start screensaver" in the dashboard's ⋯ menu starts one by hand on a tablet, also without a start time. Optionally the screensavers take on a soft tint of the album cover while music plays.
+
+  ![The new Calendar and Cameras screensavers](https://raw.githubusercontent.com/SH1FT-W/casora/main/docs/images/news-26.11.27-screensavers.webp)
+
+- **Consumption per device:** the energy popup has a page "Consumption per device" with day, week and month, stacked bars per device, an average line and the list with each device's share. Tap a device to see it alone. With a known house consumption the total is the house, and the rest shows as "Not recorded". The devices come from Home Assistant's energy settings.
+
+  ![Consumption per device, this week](https://raw.githubusercontent.com/SH1FT-W/casora/main/docs/images/news-26.11.27-energy.webp)
+
+- **Notifications:** repeats from the same source fold into one card with a count; a tap opens the stack, clearing clears it. A triggered alarm stays on top while it is going. New in the Studio: hide your own arrivals and departures, and "Cleared for all users", which shares what is cleared between everyone (your earlier clears come along).
+- **View only:** each tile's "When tapped" offers Normal, Ask first and View only. A view only tile opens its popup but switches nothing. Existing "Ask before switching" settings carry over.
+- **Motion sensors:** "Last seen 11 h ago" instead of "Clear" on the tile, badge and popup ("11 h ago" on narrow phone tiles).
+- **Play together:** the media popup of a speaker that can be grouped lists the other speakers of its system; a tap adds or removes one.
+- **Camera timeline:** the camera popup shows today's motion, person and doorbell events of the camera's own sensors on a strip from midnight to now.
+- **Tumble:** washers and dryers from the Tumble integration are recognised like WashData's: state, "Laundry still inside" with "Unloaded", care with "Done", statistics, and the run's note as programme.
+
+### Changed
+- **Phone held sideways:** it no longer counts as a wall tablet, so no screensaver and no return to Home when idle.
+
+### Fixed
+- **Empty row on the phone:** an empty Favourites row no longer flashes in and pushes the page down on every state change.
+- **Translations (#175):** the updates popup's AI verdicts ("KI: Unkritisch") and summaries stayed German. Thanks to @daxy01.
+- **Solar tip:** a device with "tumble" in its name no longer counts as a dryer.
+
 ## 26.11.26 – 13.11.2026
 
 The big November update: screensavers for wall tablets, four new designs, chargers near your electric car, a heat pump tile, Norwegian as the ninth language, a map card, and many fixes from your reports.
