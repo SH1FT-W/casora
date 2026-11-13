@@ -66,17 +66,21 @@
   K.next = function (states, variables) {
     var best = null, now = new Date();
     var ha = document.querySelector('home-assistant');
-    var cache = load(ha && ha.hass, variables);
-    var priority = function (ev) {
-      if (!ev.allDay && ev.start >= now && day0(ev.start).getTime() === day0(now).getTime()) return 0;
-      if (ev.allDay && ev.start <= now && ev.end > now) return 1;
-      return 2;
+    var cache = loadCache(ha && ha.hass, variables);
+    // Running timed event, next timed event today, running all-day event, then the rest.
+    var rank = function (ev) {
+      if (!ev.allDay && ev.start <= now) return 0;
+      if (!ev.allDay && day0(ev.start).getTime() === day0(now).getTime()) return 1;
+      if (ev.allDay && ev.start <= now) return 2;
+      return 3;
     };
+    var bestRank = 3;
     K.cals(variables).forEach(function (c) {
       if (c.tile === false) return;
       var consider = function (ev) {
         if (!K.allowsTitle(ev.name) || isNaN(ev.start) || ev.end <= now) return;
-        if (!best || priority(ev) < priority(best) || (priority(ev) === priority(best) && ev.start < best.start)) best = ev;
+        var r = rank(ev);
+        if (!best || r < bestRank || (r === bestRank && ev.start < best.start)) { best = ev; bestRank = r; }
       };
       var authoritative = cache && cache.key === cache.requestedKey && cache.ev !== null && !(cache.failed || {})[c.entity];
       if (authoritative) {
@@ -145,14 +149,18 @@
     K.ev = cache.key === cache.requestedKey ? cache.ev : null;
     K.key = cache.key; K.ts = cache.ts; K.failed = cache.failed; K.err = cache.err; K.busy = cache.busy;
   };
-  var load = function (hass, variables, force, popup) {
-    if (!K.month) K.month = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-    var today = day0(new Date()), gs = gridStart(K.month), ws = weekStart(today);
-    var s = gs < ws ? gs : ws, e0 = addD(gs, 42), e1 = addD(today, 32), e = e0 > e1 ? e0 : e1;
-    var cals = K.cals(variables), key = ymd(s) + '|' + ymd(e) + '|' + cals.map(function (c) {
+  // Cache key part: each calendar's entity id plus its current state, so a state change refetches.
+  var stamp = function (hass, cals) {
+    return cals.map(function (c) {
       var state = hass && hass.states && hass.states[c.entity];
       return c.entity + ':' + (state ? JSON.stringify([state.state, state.last_updated, state.attributes]) : '');
     }).join(',');
+  };
+  var loadCache = function (hass, variables, force, popup) {
+    if (!K.month) K.month = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    var today = day0(new Date()), gs = gridStart(K.month), ws = weekStart(today);
+    var s = gs < ws ? gs : ws, e0 = addD(gs, 42), e1 = addD(today, 32), e = e0 > e1 ? e0 : e1;
+    var cals = K.cals(variables), key = ymd(s) + '|' + ymd(e) + '|' + stamp(hass, cals);
     if (!hass || !hass.callApi) return;
     var id = JSON.stringify(cals.map(function (c) { return c.entity; }));
     var cache = caches.get(id);
@@ -195,15 +203,14 @@
       .then(function () {
         cache.busy = false;
         var pending = cache.pending; cache.pending = null;
-        if (pending) load.apply(null, pending);
+        if (pending) loadCache.apply(null, pending);
         if (popupCache === cache) showCache(cache);
         K.repaint();
       });
     return cache;
   };
   K.load = function (hass, variables, force) {
-    var cache = load(hass, variables, force, true);
-    return cache && cache.requestedKey;
+    loadCache(hass, variables, force, true);
   };
   /* Termine eines Tages (mehrtägige ganztägige auf jedem Tag). */
   var onDay = function (d) {
