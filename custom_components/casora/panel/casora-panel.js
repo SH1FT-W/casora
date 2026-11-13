@@ -2704,8 +2704,8 @@ const SECTIONS = [
       { key: "notify_people", sub: "house", glyph: "person", tone: "var(--casora-popup-ui-good, #30D158)", label: "People", type: "bool", boolDefault: true,
         always: true, ord: 6 },
       // Hemma round #11c: one's own comings and goings stay out (person.user_id == the reader). Off = as before.
-      { key: "notification_hide_own", sub: "house", label: "Hide my own arrivals and departures", type: "bool", boolDefault: false,
-        always: true, ord: 6.1, hint: "For people linked to a Home Assistant user: you see the others come and go, not yourself." },
+      { key: "notification_hide_own", sub: "house", glyph: "person", tone: "var(--casora-color-sand, #9A8672)", label: "Hide my own arrivals and departures", type: "bool", boolDefault: false,
+        always: true, ord: 9.1, hint: "For people linked to a Home Assistant user: you see the others come and go, not yourself." },
       { key: "notify_vacuum", sub: "house", glyph: "vacuum-charge", tone: "var(--casora-color-teal, #00C3D0)", label: "Vacuum", type: "bool", boolDefault: true,
         always: true, ord: 7 },
       { key: "notify_appliances", sub: "house", glyph: "stove-fill", tone: "var(--casora-popup-ui-good, #30D158)", label: "Appliances", type: "bool", boolDefault: true,
@@ -2726,7 +2726,7 @@ const SECTIONS = [
         always: true, ord: 12.1, hint: "What scripts and automations create with persistent_notification.create, and Home Assistant's own notices. Swiping one away in the bell dismisses it in Home Assistant too." },
 
       // Hemma round #11d: one list of removed messages for everyone (notify_hidden.py). Off = per user as before.
-      { key: "notification_hidden_shared", sub: "system", label: "Removed for all users", type: "bool", boolDefault: false,
+      { key: "notification_hidden_shared", sub: "system", glyph: "bell", tone: "var(--casora-color-sand, #9A8672)", label: "Removed for all users", type: "bool", boolDefault: false,
         always: true, ord: 12.2, hint: "A message removed from the bell is gone for everyone. Off: only on your own devices." },
 
       { ...LIST("notification_appliances", "Appliances to watch",
