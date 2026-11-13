@@ -2962,7 +2962,12 @@
     "Person erkannt": "Person oppdaget",
     "Heute keine Bewegung": "Ingen bevegelse i dag",
     "Heute · 1 Ereignis": "I dag · 1 hendelse",
-    "Startseite": "Startskjerm"
+    "Startseite": "Startskjerm",
+    "Verbrauch je Gerät": "Forbruk per enhet",
+    "Sonstige": "Andre",
+    "pro Stunde": "per time",
+    "pro Tag": "per dag",
+    "Nicht erfasst": "Ikke målt"
   },
   "patterns": [
     [
@@ -5348,6 +5353,10 @@
     [
       "^Zusammen abspielen · (\\d+) Lautsprecher$",
       "Spill sammen · {1} høyttalere"
+    ],
+    [
+      "^Geräte · (\\d+)$",
+      "Enheter · {1}"
     ]
   ]
 }

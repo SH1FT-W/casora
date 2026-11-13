@@ -2969,7 +2969,12 @@
     "Person erkannt": "Wykryto osobę",
     "Heute keine Bewegung": "Dziś bez ruchu",
     "Heute · 1 Ereignis": "Dziś · 1 zdarzenie",
-    "Startseite": "Ekran główny"
+    "Startseite": "Ekran główny",
+    "Verbrauch je Gerät": "Zużycie według urządzeń",
+    "Sonstige": "Pozostałe",
+    "pro Stunde": "na godzinę",
+    "pro Tag": "dziennie",
+    "Nicht erfasst": "Niezmierzone"
   },
   "patterns": [
     [
@@ -5355,6 +5360,10 @@
     [
       "^Zusammen abspielen · (\\d+) Lautsprecher$",
       "Odtwarzaj razem · głośniki: {1}"
+    ],
+    [
+      "^Geräte · (\\d+)$",
+      "Urządzenia · {1}"
     ]
   ]
 }

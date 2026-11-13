@@ -2969,7 +2969,12 @@
     "Person erkannt": "Persoon gedetecteerd",
     "Heute keine Bewegung": "Vandaag geen beweging",
     "Heute · 1 Ereignis": "Vandaag · 1 gebeurtenis",
-    "Startseite": "Startscherm"
+    "Startseite": "Startscherm",
+    "Verbrauch je Gerät": "Verbruik per apparaat",
+    "Sonstige": "Overige",
+    "pro Stunde": "per uur",
+    "pro Tag": "per dag",
+    "Nicht erfasst": "Niet gemeten"
   },
   "patterns": [
     [
@@ -5355,6 +5360,10 @@
     [
       "^Zusammen abspielen · (\\d+) Lautsprecher$",
       "Samen afspelen · {1} speakers"
+    ],
+    [
+      "^Geräte · (\\d+)$",
+      "Apparaten · {1}"
     ]
   ]
 }

@@ -2969,7 +2969,12 @@
     "Person erkannt": "Persona rilevata",
     "Heute keine Bewegung": "Nessun movimento oggi",
     "Heute · 1 Ereignis": "Oggi · 1 evento",
-    "Startseite": "Schermata Home"
+    "Startseite": "Schermata Home",
+    "Verbrauch je Gerät": "Consumo per dispositivo",
+    "Sonstige": "Altri",
+    "pro Stunde": "all'ora",
+    "pro Tag": "al giorno",
+    "Nicht erfasst": "Non misurato"
   },
   "patterns": [
     [
@@ -5355,6 +5360,10 @@
     [
       "^Zusammen abspielen · (\\d+) Lautsprecher$",
       "Riproduci insieme · {1} altoparlanti"
+    ],
+    [
+      "^Geräte · (\\d+)$",
+      "Dispositivi · {1}"
     ]
   ]
 }

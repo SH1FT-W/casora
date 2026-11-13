@@ -2969,7 +2969,12 @@
     "Person erkannt": "Personne détectée",
     "Heute keine Bewegung": "Aucun mouvement aujourd'hui",
     "Heute · 1 Ereignis": "Aujourd'hui · 1 événement",
-    "Startseite": "Écran d'accueil"
+    "Startseite": "Écran d'accueil",
+    "Verbrauch je Gerät": "Consommation par appareil",
+    "Sonstige": "Autres",
+    "pro Stunde": "par heure",
+    "pro Tag": "par jour",
+    "Nicht erfasst": "Non mesuré"
   },
   "patterns": [
     [
@@ -5355,6 +5360,10 @@
     [
       "^Zusammen abspielen · (\\d+) Lautsprecher$",
       "Lire ensemble · {1} enceintes"
+    ],
+    [
+      "^Geräte · (\\d+)$",
+      "Appareils · {1}"
     ]
   ]
 }

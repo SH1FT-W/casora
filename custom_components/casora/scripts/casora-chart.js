@@ -12,6 +12,8 @@
 //     accent colour and the Ø line over the whole buckets, several take their own colours and a legend.
 //   Fixed columns without a history (e.g. fuel "typical day"): kind: 'bar', points: [{ t, v, color, tick }],
 //     unit, decimals, focus: 'min' (default reading = lowest value, "Cheapest, 19:00").
+//   Stacked bars from buckets the caller has summed (energy per device, 48-energie-verlauf.js): kind: 'stack',
+//     stack: { per: 'hour'|'day', starts, cur, unit, decimals, avg, label, read, series: [{ name, color, opacity, vals }] }.
 // casora-esc:begin – canonical HTML escaping, the same block in every file that loads on its own
 // (checked by dev/unit/html_escape.mjs). Every value that goes into an HTML string goes through one of these:
 //   casoraEsc(v)      text and quoted attribute values: & < > " ' as entities
@@ -349,7 +351,7 @@
     }
     _load(force) {
       var c = this._c, h = this._h;
-      if (c && c.points) { this._draw(); return; }
+      if (c && (c.points || c.stack)) { this._draw(); return; }
       if (!c || !h || !h.connection || !c.series.length || !this.isConnected) { this._draw(); return; }
       var src = this._src(), per = this._per();
       var ids = c.series.map(function (s) { return s.entity; }).filter(function (e, i, a) { return a.indexOf(e) === i; });
@@ -444,6 +446,7 @@
       this._pt0 = this._pt; this._pt = null;
       box.textContent = '';
       this._release();
+      if (c.kind === 'stack') return this._stack(box, W);
       if (c.kind === 'bar' && c.points) return this._fixed(box, W);
       if (c.kind === 'bar') return this._bars(box, W);
       if (c.kind === 'heat') return this._heat(box, W);
@@ -857,6 +860,88 @@
         var x = cells[i], j = at[(x.r + dir) * cols + x.c];
         return j == null ? i : j;
       });
+    }
+    /* Stacked bars (energy per device): one column per bucket (hour of a day, day of a week or month), the series
+       stacked bottom up in their order, a thin gap between them, the top one rounded. The caller sums the buckets
+       (no request here); empty buckets (still to come) stay empty, the running one is marked on the axis. A legend
+       names the series (the reading shows each one's value), the Ø line is the caller's average (stack.avg).
+       Reading: the popup's number with data-casora-read="<stack.read>" shows the bucket's total and the trend its time. */
+    _stack(box, W) {
+      var c = this._c, me = this, S = c.stack || {}, now = Date.now();
+      var starts = S.starts || [], n = starts.length, per = S.per === 'hour' ? 'hour' : 'day';
+      var list = (S.series || []).filter(function (x) { return x && Array.isArray(x.vals); });
+      var unit = S.unit || 'kWh', dec = S.decimals != null ? S.decimals : 1;
+      var ro = this._head(box, '', unit), Hh = c.height || 160, padT = 10, padB = 24, padR = 40, padL = 2;
+      var tot = starts.map(function (t, i) {
+        var s = 0, any = false;
+        list.forEach(function (x) { var v = x.vals[i]; if (v != null && isFinite(v)) { s += Math.max(0, v); any = true; } });
+        return any ? s : null;
+      });
+      var have = tot.filter(function (v) { return v != null; });
+      var avg = S.avg != null && isFinite(S.avg) ? +S.avg : null;
+      var hi = have.length ? Math.max.apply(null, have) : 0;
+      var sc = C.nice(0, Math.max(hi, avg || 0), 2, true);
+      var sum = have.reduce(function (a, v) { return a + v; }, 0);
+      var label = C.tr(S.label || '');
+      var svg = this._svg(box, W, Hh, have.length ? label + ', ' + C.nf(sum, dec) + ' ' + unit + (avg != null ? ', Ø ' + C.nf(avg, dec) + ' ' + unit : '')
+        : label + ', ' + C.tr('Keine Daten'));
+      var lv = [];
+      if (c.legend !== false && list.length) {
+        var lg = document.createElement('div'); lg.className = 'lg'; lg.style.flexWrap = 'wrap'; lg.style.rowGap = '4px';
+        lg.innerHTML = list.map(function (x) {
+          return '<span><i style="background:' + window.casoraEsc(C.color(x.color)) + (x.opacity != null ? ';opacity:' + window.casoraEsc(x.opacity) : '') + '"></i>'
+            + window.casoraEsc(C.tr(x.name || '')) + '<b class="lv"></b></span>';
+        }).join('');
+        box.insertBefore(lg, svg);
+        lv = Array.prototype.slice.call(lg.querySelectorAll('.lv'));
+      }
+      var dflt = function () { lv.forEach(function (b) { b.textContent = ''; }); };
+      if (!have.length) { this._empty(svg, W, Hh); return; }
+      var Y = function (v) { return padT + (1 - (v - sc.lo) / (sc.hi - sc.lo || 1)) * (Hh - padT - padB); }, base = Y(0);
+      var tl = this._grid(svg, sc, Y, W, padR, function (v) { return C.nf(v, sc.step < 0.1 ? 2 : sc.step < 1 ? 1 : 0); });
+      var slot = (W - padL - padR) / Math.max(1, n), bw = Math.max(2, Math.min(26, slot * 0.62)), cur = S.cur != null ? S.cur : -1;
+      var every = per === 'hour' ? (slot >= 44 ? 1 : slot >= 22 ? 3 : 6) : n > 7 ? (slot >= 22 ? 2 : 5) : 1;
+      var cols = [];
+      starts.forEach(function (t, i) {
+        var cx = padL + slot * (i + 0.5), x = cx - bw / 2, y0 = base, acc = 0, g = el('g', {}), top = -1;
+        list.forEach(function (s, j) { if (s.vals[i] > 0) top = j; });
+        list.forEach(function (s, j) {
+          var v = s.vals[i];
+          if (!(v > 0)) return;
+          acc += v;
+          var y1 = Y(acc), h = y0 - y1;
+          // A hairline gap between two parts, never more than the part itself.
+          var gap = j < top && h > 3 ? 1 : 0;
+          var st = 'fill:' + C.color(s.color) + (s.opacity != null ? ';fill-opacity:' + s.opacity : '');
+          g.appendChild(el('path', { d: j === top ? roundTop(x, y1, bw, h, Math.min(4, bw / 2)) : 'M' + x + ',' + y0 + 'V' + (y1 + gap) + 'H' + (x + bw) + 'V' + y0 + 'Z', style: st }));
+          y0 = y1;
+        });
+        svg.appendChild(g); cols.push(g);
+        var d = new Date(t), show = per === 'hour' ? d.getHours() % every === 0 : n > 7 ? d.getDate() === 1 || d.getDate() % every === 0 : true;
+        if (n > 7 && per === 'day' && every === 5 && d.getDate() === 30) show = false;
+        if (show) {
+          svg.appendChild(el('text', { x: cx, y: Hh - 6, 'text-anchor': 'middle', style: i === cur && per !== 'hour' ? 'fill:var(--cink);font-weight:600' : null },
+            per === 'hour' ? C.hm(t, me._h12()) : n > 7 ? String(d.getDate()) : i === cur ? C.tr('Heute') : C.wd(t)));
+        }
+      });
+      if (avg != null) {
+        var ya = Y(avg);
+        tl.forEach(function (t) { if (Math.abs(t.getAttribute('y') - ya - 4) < 12) t.remove(); });
+        svg.appendChild(el('line', { x1: padL, x2: W - padR, y1: ya, y2: ya, style: 'stroke:var(--cink2);stroke-width:1.25;stroke-dasharray:4 4' }));
+        svg.appendChild(el('text', { x: W - padR + 10, y: ya + 4, style: 'fill:var(--cink2);font-weight:600' }, 'Ø'));
+      }
+      var txt = function (v) { return v == null ? '–' : C.nf(v, dec); };
+      var when = function (i) {
+        var t = starts[i];
+        if (per === 'hour') return C.when(t, now, me._h12());
+        return i === cur ? C.tr('Heute') : C.dayLong(t);
+      };
+      this._near = function (x) { return Math.max(0, Math.min(n - 1, Math.floor((x - padL) / slot))); };
+      this._bind(svg, n, function (i) {
+        cols.forEach(function (g, k) { g.style.opacity = k === i ? 1 : 0.35; });
+        lv.forEach(function (b, j) { var v = list[j].vals[i]; b.textContent = v == null ? '' : txt(v); });
+        me._say(ro, txt(tot[i]), unit, when(i), label, [{ entity: S.read || '', text: txt(tot[i]) + (tot[i] == null ? '' : ' ' + unit), num: txt(tot[i]) }]);
+      }, function () { cols.forEach(function (g) { g.style.opacity = 1; }); me._release(); dflt(); });
     }
     /* Fixed columns (points): scale on the right from the lowest value, dotted lines, colour per column;
        reading shows value and time, the default reading is the lowest value ("Cheapest"). */

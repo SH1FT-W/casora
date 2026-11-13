@@ -2969,7 +2969,12 @@
     "Person erkannt": "Persona detectada",
     "Heute keine Bewegung": "Hoy sin movimiento",
     "Heute · 1 Ereignis": "Hoy · 1 evento",
-    "Startseite": "Pantalla de inicio"
+    "Startseite": "Pantalla de inicio",
+    "Verbrauch je Gerät": "Consumo por dispositivo",
+    "Sonstige": "Otros",
+    "pro Stunde": "por hora",
+    "pro Tag": "por día",
+    "Nicht erfasst": "No medido"
   },
   "patterns": [
     [
@@ -5355,6 +5360,10 @@
     [
       "^Zusammen abspielen · (\\d+) Lautsprecher$",
       "Reproducir juntos · {1} altavoces"
+    ],
+    [
+      "^Geräte · (\\d+)$",
+      "Dispositivos · {1}"
     ]
   ]
 }

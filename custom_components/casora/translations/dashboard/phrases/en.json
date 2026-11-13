@@ -2951,7 +2951,12 @@
     "Person erkannt": "Person detected",
     "Heute keine Bewegung": "No motion today",
     "Heute · 1 Ereignis": "Today · 1 event",
-    "Startseite": "Home screen"
+    "Startseite": "Home screen",
+    "Verbrauch je Gerät": "Consumption per device",
+    "Sonstige": "Other",
+    "pro Stunde": "per hour",
+    "pro Tag": "per day",
+    "Nicht erfasst": "Untracked"
   },
   "patterns": [
     [
@@ -5337,6 +5342,10 @@
     [
       "^Zusammen abspielen · (\\d+) Lautsprecher$",
       "Play together · {1} speakers"
+    ],
+    [
+      "^Geräte · (\\d+)$",
+      "Devices · {1}"
     ]
   ]
 }
