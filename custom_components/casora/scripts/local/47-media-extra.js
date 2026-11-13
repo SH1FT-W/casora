@@ -283,14 +283,14 @@
     var parts = [R.html(R.find(hass, id), hass), G.html(hass, id)].filter(Boolean);
     // ha-card.disabled: the card has no tap action of its own; without this rule nothing inside could be tapped.
     // Desktop, two columns (§2 symmetry, maintainer 13.11.2026): the card fills the row the wheel sets, and the last
-    // section grows into it – the remote's plate centres its ring, a speaker list spreads its rows (up to 128 high) – so
+    // section grows into it – the remote's plate centres its ring, a speaker list keeps its rows at their usual height with room below (maintainer, 13.11.2026) – so
     // the right column does not end far above the left one. One column (phone): everything at its own height.
     return parts.length ? '<style>ha-card.disabled{pointer-events:auto!important;}:host{height:100%;}#aspect-ratio{display:block!important;height:100%!important;}ha-card{height:100%!important;}#container{grid-template-rows:1fr!important;height:100%!important;}#body{align-self:stretch!important;height:100%!important;}'
       + '.mx{display:flex;flex-direction:column;gap:var(--casora-popup-sec-gap, 24px);height:100%;}'
       + '.mx > .mx-s:last-child{flex:1 1 auto;display:flex;flex-direction:column;}'
       + '.mx > .mx-s:last-child > div:last-child{flex:1 1 auto;display:flex;flex-direction:column;}'
       + '.mx > .mx-s:last-child .hui-plate{flex:1 1 auto;}'
-      + '.mx > .mx-s:last-child .hui-plate > .hui-srow{flex:1 1 auto;max-height:128px;}'
+      + '.mx > .mx-s:last-child .hui-plate{justify-content:flex-start;}'
       + '</style><div class="mx">'
       + parts.map(function (partHtml) { return '<div class="mx-s">' + partHtml + '</div>'; }).join('') + '</div>' : '';
   };
