@@ -9,7 +9,7 @@
   const t = (s) => (window.casoraI18n ? window.casoraI18n.t(s) : s);
   const EXPORT_URL = "/api/casora/share/export";
   const IMPORT_URL = "/api/casora/share/import";
-  const SECTION_LABEL = { waste: "Waste", calendars: "Calendars", calendar_filter: "Hide when the title contains", scenes: "Scenes", contacts: "Doors and windows",
+  const SECTION_LABEL = { waste: "Waste", calendars: "Calendars", scenes: "Scenes", contacts: "Doors and windows",
     security: "Security", media: "Now Playing", night_entity: "Night", ebike: "E-bike" };
   const REASON = {
     not_casora: "This isn't a Casora dashboard file.",
