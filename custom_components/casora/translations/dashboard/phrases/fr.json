@@ -2959,11 +2959,11 @@
     "Nach links": "Gauche",
     "Nach rechts": "Droite",
     "OK": "OK",
-    "Wiedergabe/Pause": "Lecture/Pause",
     "Zusammen abspielen": "Lire ensemble",
     "Person erkannt": "Personne détectée",
     "Heute keine Bewegung": "Aucun mouvement aujourd'hui",
-    "Heute · 1 Ereignis": "Aujourd'hui · 1 événement"
+    "Heute · 1 Ereignis": "Aujourd'hui · 1 événement",
+    "Startseite": "Écran d'accueil"
   },
   "patterns": [
     [

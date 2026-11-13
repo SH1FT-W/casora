@@ -143,12 +143,15 @@ assert.equal(rows[1].selected, false);
 assert.equal(rows[1].iconTone, 'rgba(0,0,0,0)');
 assert.ok(rows.every((r) => r.noChev && r.svc));
 
-// Remote section: every key carries its service, the ring has four directions and OK.
+// Remote section: every key carries its service; the ring has four directions and OK, under it back and home.
 const html = R.html(R.find(house(), 'media_player.tv'), house());
 assert.equal((html.match(/class="crc-sec"/g) || []).length, 4);
 assert.ok(html.includes('class="crc-ok"'));
 assert.ok(html.includes('DPAD_CENTER') && html.includes('BACK') && html.includes('HOME'));
-assert.ok(/aria-label="Zurück"/.test(html) && /aria-label="Lauter"/.test(html));
+assert.ok(/aria-label="Zurück"/.test(html) && /aria-label="Startseite"/.test(html));
+// Maintainer, 13.11.2026: play/pause and volume are the wheel's – the remote has none of them.
+assert.ok(!/media_play_pause|volume_up|volume_down|VOLUME_|MEDIA_PLAY_PAUSE|Lauter|Leiser/.test(html), 'no play or volume keys in the remote');
+assert.equal((html.match(/class="crc-b"/g) || []).length, 2, 'back and home only');
 assert.ok(!/class="crc dis"/.test(html), 'remote on: usable');
 const hOff = house({ states: { 'remote.tv': { entity_id: 'remote.tv', state: 'unavailable', attributes: {} } } });
 assert.ok(/class="crc dis"/.test(R.html(R.find(hOff, 'media_player.tv'), hOff)), 'remote unavailable: greyed out');
@@ -188,7 +191,7 @@ deq(((src)).sort((a, b) => a.id.localeCompare(b.id)), [
   { id: 'binary_sensor.garten_person', kind: 'person' },
   { id: 'event.garten_klingel', kind: 'ring' },
 ], 'same device: motion, person (translation_key), doorbell event; no door contact, no button event');
-deq(C.sources(ch, 'camera.flur').map((s) => s.id), ['binary_sensor.flur_praesenz'], 'no sensor on the device: same area');
+deq(C.sources(ch, 'camera.flur'), [], 'no sensor on the device: no timeline, never the room\'s sensors (maintainer, 13.11.2026)');
 deq(C.sources(ch, 'camera.allein'), [], 'neither device nor area: no timeline');
 
 const start = Date.parse('2026-11-12T23:00:00Z');   // local midnight in Berlin

@@ -5,14 +5,14 @@
 //     .KEYS                     platform → command names; unknown platform → no remote
 //     .find(hass, playerId)     → { platform, remote, player, keys, via } | null
 //     .svc(spec, key, st)       → service call for one key (up, down, left, right, ok, back, home, play, volUp, volDown)
-//     .html(spec, hass)         → section „Fernbedienung“ (ring with OK, back, home, play/pause, volume)
+//     .html(spec, hass)         → section „Fernbedienung“ (ring with OK, back, home; play and volume are the wheel's)
 //   window._casoraMediaGroup    speaker grouping in the media popup (MediaPlayerEntityFeature.GROUPING = 524288)
 //     .can(st)                  → whether a player groups
 //     .list(hass, playerId)     → [{ id, name, area, on }] other groupable players of the same integration
 //     .html(hass, playerId)     → section „Zusammen abspielen“ (selection list, join/unjoin per row)
 //   window._casoraCamTimeline   today's motion, person and doorbell events in the general camera popup
 //     .sources(hass, camId)     → [{ id, kind }] binary_sensor (motion/occupancy/presence) and event (doorbell) of the
-//                               camera's device, else of its area
+//                               camera's own device; none → no timeline
 //     .parse(raw, sources, start) → [{ kind, at, id }] newest first (history/history_during_period answer)
 //     .media(hass, camId)       → media browser path with the camera's recordings, or null
 //     .mount(img)               fills the placeholder before the <img> (asks the history sparingly)
@@ -114,9 +114,11 @@
   R.css = function () {
     return '<style>'
       + '.crc{font-family:var(--primary-font-family, system-ui);background:var(--casora-popup-row-fill, rgba(140,115,90,.07));'
-      +   'border-radius:var(--casora-popup-row-radius, 20px);padding:20px 16px 18px;display:flex;flex-direction:column;align-items:center;gap:14px;}'
-      + '.crc-mid{display:grid;grid-template-columns:52px minmax(0,1fr) 52px;align-items:center;column-gap:14px;width:100%;max-width:340px;}'
-      + '.crc-ring{width:100%;max-width:212px;justify-self:center;aspect-ratio:1/1;display:block;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}'
+      +   'border-radius:var(--casora-popup-row-radius, 20px);padding:24px 16px 20px;display:flex;flex-direction:column;align-items:center;'
+      +   'justify-content:center;gap:18px;box-sizing:border-box;}'
+      + '.crc-ring{width:100%;max-width:264px;aspect-ratio:1/1;display:block;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}'
+      + '.crc-row{display:flex;justify-content:center;gap:56px;}'
+      + '.crc-k{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--casora-soft-sub, rgba(58,50,43,.6));}'
       + '.crc-sec{fill:var(--casora-soft-control-fill, rgba(140,115,90,.12));cursor:pointer;transition:fill .16s ease;outline:none;}'
       + '.crc-sec:active,.crc-sec.prs{fill:color-mix(in srgb, var(--casora-popup-accent, #B67A50) 30%, var(--casora-soft-control-fill, rgba(140,115,90,.12)));}'
       + '.crc-sec:focus-visible{stroke:var(--casora-popup-accent, #B67A50);stroke-width:2;}'
@@ -127,17 +129,12 @@
       + '.crc-ok:active,.crc-ok.prs{transform:scale(.95);}'
       + '.crc-ok:focus-visible{stroke:var(--casora-popup-accent, #B67A50);stroke-width:2;}'
       + '.crc-okt{font-size:17px;font-weight:700;letter-spacing:.02em;fill:var(--casora-soft-seg-on-ink, #2E2721);pointer-events:none;}'
-      + '.crc-col{display:flex;flex-direction:column;gap:12px;align-items:center;}'
       + '.crc-b{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;cursor:pointer;flex:none;'
       +   'background:var(--casora-soft-control-fill, rgba(140,115,90,.12));color:var(--casora-popup-tiles-text-primary, #3A322B);'
       +   'transition:transform .12s ease, background-color .16s ease;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;}'
       + '.crc-b > *{pointer-events:none;}'
       + '.crc-b:active,.crc-b.prs{transform:scale(var(--casora-press-scale, .94));background:color-mix(in srgb, var(--casora-popup-accent, #B67A50) 26%, var(--casora-soft-control-fill, rgba(140,115,90,.12)));}'
-      + '.crc-vol{width:52px;height:116px;border-radius:26px;display:flex;flex-direction:column;overflow:hidden;background:var(--casora-soft-control-fill, rgba(140,115,90,.12));}'
-      + '.crc-vol .crc-b{width:52px;height:58px;border-radius:0;background:transparent;}'
-      + '.crc-vol .crc-b:active,.crc-vol .crc-b.prs{transform:none;background:color-mix(in srgb, var(--casora-popup-accent, #B67A50) 26%, transparent);}'
       + '.crc.dis{opacity:.5;pointer-events:none;}'
-      + '.crc-gap{width:52px;height:52px;}'
       + '@media (prefers-reduced-motion: reduce){.crc-b,.crc-ok,.crc-sec{transition:none;}}'
       + '</style>';
   };
@@ -145,8 +142,11 @@
     return ' data-casora-rc="' + esc(JSON.stringify(svc)) + '" role="button" tabindex="0" aria-label="' + esc(T(label)) + '"';
   };
   var btnHtml = function (svc, icon, label) {
-    if (!svc) return '<div class="crc-gap" aria-hidden="true"></div>';
     return '<div class="crc-b"' + keyAttrHtml(svc, label) + ' title="' + esc(T(label)) + '"><ha-icon icon="' + esc(icon) + '" style="--mdc-icon-size:22px;"></ha-icon></div>';
+  };
+  var keyHtml = function (svc, icon, label) {
+    if (!svc) return '';
+    return '<div class="crc-k">' + btnHtml(svc, icon, label) + '<span>' + esc(T(label)) + '</span></div>';
   };
   R.html = function (spec, hass) {
     if (!spec) return '';
@@ -164,14 +164,10 @@
       + (s('ok') ? '<circle class="crc-ok" cx="110" cy="110" r="44"' + keyAttrHtml(s('ok'), 'OK') + '></circle>'
         + '<text class="crc-okt" x="110" y="116" text-anchor="middle">OK</text>' : '')
       + '</svg>';
-    var volHtml = s('volUp') && s('volDown')
-      ? '<div class="crc-vol">' + btnHtml(s('volUp'), 'mdi:plus', 'Lauter') + btnHtml(s('volDown'), 'mdi:minus', 'Leiser') + '</div>'
-      : '<div class="crc-col">' + btnHtml(null) + btnHtml(null) + '</div>';
+    // Maintainer, 13.11.2026: play/pause and volume stay on the wheel only; the remote is the ring, back and home.
     var bodyHtml = '<div class="crc' + (off ? ' dis' : '') + '"' + (off ? ' aria-disabled="true"' : '') + '>'
-      + '<div class="crc-mid">'
-      + '<div class="crc-col">' + btnHtml(s('back'), 'mdi:arrow-u-left-top', 'Zurück') + btnHtml(s('home'), 'mdi:home-outline', 'Home') + '</div>'
-      + ringSvg + volHtml + '</div>'
-      + (s('play') ? btnHtml(s('play'), 'mdi:play-pause', 'Wiedergabe/Pause') : '')
+      + ringSvg
+      + '<div class="crc-row">' + keyHtml(s('back'), 'mdi:arrow-u-left-top', 'Zurück') + keyHtml(s('home'), 'mdi:home-outline', 'Startseite') + '</div>'
       + '</div>';
     var UI = window._casoraUI;
     return R.css() + (UI && UI.label ? UI.label('Fernbedienung') : '') + bodyHtml;
@@ -286,8 +282,17 @@
     if (!id || !hass) return '';
     var parts = [R.html(R.find(hass, id), hass), G.html(hass, id)].filter(Boolean);
     // ha-card.disabled: the card has no tap action of its own; without this rule nothing inside could be tapped.
-    return parts.length ? '<style>ha-card.disabled{pointer-events:auto!important;}</style><div style="display:flex;flex-direction:column;gap:var(--casora-popup-sec-gap, 24px);">'
-      + parts.map(function (partHtml) { return '<div>' + partHtml + '</div>'; }).join('') + '</div>' : '';
+    // Desktop, two columns (§2 symmetry, maintainer 13.11.2026): the card fills the row the wheel sets, and the last
+    // section grows into it – the remote's plate centres its ring, a speaker list spreads its rows (up to 128 high) – so
+    // the right column does not end far above the left one. One column (phone): everything at its own height.
+    return parts.length ? '<style>ha-card.disabled{pointer-events:auto!important;}:host{height:100%;}#aspect-ratio{display:block!important;height:100%!important;}ha-card{height:100%!important;}#container{grid-template-rows:1fr!important;height:100%!important;}#body{align-self:stretch!important;height:100%!important;}'
+      + '.mx{display:flex;flex-direction:column;gap:var(--casora-popup-sec-gap, 24px);height:100%;}'
+      + '.mx > .mx-s:last-child{flex:1 1 auto;display:flex;flex-direction:column;}'
+      + '.mx > .mx-s:last-child > div:last-child{flex:1 1 auto;display:flex;flex-direction:column;}'
+      + '.mx > .mx-s:last-child .hui-plate{flex:1 1 auto;}'
+      + '.mx > .mx-s:last-child .hui-plate > .hui-srow{flex:1 1 auto;max-height:128px;}'
+      + '</style><div class="mx">'
+      + parts.map(function (partHtml) { return '<div class="mx-s">' + partHtml + '</div>'; }).join('') + '</div>' : '';
   };
   // Global markup builders for the templates (tools/html-escape-check.mjs counts window._casora…Html as markup).
   window._casoraMediaExtraHtml = function (entity, hass) { return X.sec(entity, hass); };
@@ -309,16 +314,8 @@
       return Object.keys(ents).filter(function (id) { return hass.states[id] && match(ents[id]) && kindOf(hass, id); })
         .map(function (id) { return { id: id, kind: kindOf(hass, id) }; });
     };
+    // Only the camera's own device (maintainer, 13.11.2026): a room's motion sensor says nothing about this picture.
     var out = ce.device_id ? pick(function (e) { return e.device_id === ce.device_id; }) : [];
-    if (!out.length) {
-      var area = ce.area_id || (ce.device_id && hass.devices && hass.devices[ce.device_id] ? hass.devices[ce.device_id].area_id : null);
-      if (area) {
-        out = pick(function (e) {
-          var a = e.area_id || (e.device_id && hass.devices && hass.devices[e.device_id] ? hass.devices[e.device_id].area_id : null);
-          return a === area && !e.hidden;
-        }).slice(0, 4);
-      }
-    }
     return out;
   };
   // history_during_period (minimal, no attributes) → events newest first. The first row of each entity is its state

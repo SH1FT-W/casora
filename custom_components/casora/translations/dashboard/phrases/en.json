@@ -2941,12 +2941,11 @@
     "Nach links": "Left",
     "Nach rechts": "Right",
     "OK": "OK",
-    "Home": "Home",
-    "Wiedergabe/Pause": "Play/Pause",
     "Zusammen abspielen": "Play together",
     "Person erkannt": "Person detected",
     "Heute keine Bewegung": "No motion today",
-    "Heute · 1 Ereignis": "Today · 1 event"
+    "Heute · 1 Ereignis": "Today · 1 event",
+    "Startseite": "Home screen"
   },
   "patterns": [
     [

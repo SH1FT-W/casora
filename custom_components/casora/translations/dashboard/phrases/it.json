@@ -2959,11 +2959,11 @@
     "Nach links": "Sinistra",
     "Nach rechts": "Destra",
     "OK": "OK",
-    "Wiedergabe/Pause": "Riproduci/Pausa",
     "Zusammen abspielen": "Riproduci insieme",
     "Person erkannt": "Persona rilevata",
     "Heute keine Bewegung": "Nessun movimento oggi",
-    "Heute · 1 Ereignis": "Oggi · 1 evento"
+    "Heute · 1 Ereignis": "Oggi · 1 evento",
+    "Startseite": "Schermata Home"
   },
   "patterns": [
     [

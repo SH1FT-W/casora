@@ -2952,11 +2952,11 @@
     "Nach links": "Venstre",
     "Nach rechts": "Høyre",
     "OK": "OK",
-    "Wiedergabe/Pause": "Spill av/Pause",
     "Zusammen abspielen": "Spill sammen",
     "Person erkannt": "Person oppdaget",
     "Heute keine Bewegung": "Ingen bevegelse i dag",
-    "Heute · 1 Ereignis": "I dag · 1 hendelse"
+    "Heute · 1 Ereignis": "I dag · 1 hendelse",
+    "Startseite": "Startskjerm"
   },
   "patterns": [
     [

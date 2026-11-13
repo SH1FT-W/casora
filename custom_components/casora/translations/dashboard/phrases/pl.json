@@ -2959,11 +2959,11 @@
     "Nach links": "W lewo",
     "Nach rechts": "W prawo",
     "OK": "OK",
-    "Wiedergabe/Pause": "Odtwarzaj/Pauza",
     "Zusammen abspielen": "Odtwarzaj razem",
     "Person erkannt": "Wykryto osobę",
     "Heute keine Bewegung": "Dziś bez ruchu",
-    "Heute · 1 Ereignis": "Dziś · 1 zdarzenie"
+    "Heute · 1 Ereignis": "Dziś · 1 zdarzenie",
+    "Startseite": "Ekran główny"
   },
   "patterns": [
     [

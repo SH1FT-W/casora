@@ -2959,11 +2959,11 @@
     "Nach links": "Izquierda",
     "Nach rechts": "Derecha",
     "OK": "OK",
-    "Wiedergabe/Pause": "Reproducir/Pausa",
     "Zusammen abspielen": "Reproducir juntos",
     "Person erkannt": "Persona detectada",
     "Heute keine Bewegung": "Hoy sin movimiento",
-    "Heute · 1 Ereignis": "Hoy · 1 evento"
+    "Heute · 1 Ereignis": "Hoy · 1 evento",
+    "Startseite": "Pantalla de inicio"
   },
   "patterns": [
     [
