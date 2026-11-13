@@ -478,6 +478,8 @@
           ], i ? undefined : "Calendar, name, color and whether it shows on the tile.").classList.add("casora-calrow");
         });
         addRow(g, "Add calendar", () => { S.calendars.push({ entity: "", name: "", color: CAL_DEFAULT }); });
+        row(g, "Hide when the title contains", [txt(S.calendar_filter, "", (v) => { S.calendar_filter = v; })],
+          "Separate entries with commas; an entry may have several words. The calendar popup still shows them.");
       }
 
       if (want("contacts")) {
@@ -1191,4 +1193,3 @@
     };
   });
 })();
-

@@ -70,18 +70,33 @@
   };
   var calOf = function (cals, id) { for (var i = 0; i < cals.length; i++) if (cals[i].entity === id) return cals[i]; return { entity: id, name: id, color: '#8E8E93' }; };
 
+  // The calendar popup keeps every event; only Home and screensavers use this filter.
+  K.allowsTitle = function (title) {
+    var settings = window.casoraSettings ? window.casoraSettings() : {};
+    var text = String(title || '').toLowerCase();
+    return !String(settings.calendar_filter || '').split(',').some(function (entry) {
+      entry = entry.trim().toLowerCase();
+      return entry && text.indexOf(entry) !== -1;
+    });
+  };
+
   /* Nächster Termin aus den Kalender-Zuständen (message/start_time/all_day). */
   K.next = function (states, variables) {
     var best = null, now = new Date();
+    var priority = function (ev) {
+      if (!ev.allDay && ev.start >= now && day0(ev.start).getTime() === day0(now).getTime()) return 0;
+      if (ev.allDay && ev.start <= now && ev.end > now) return 1;
+      return 2;
+    };
     K.cals(variables).forEach(function (c) {
       if (c.tile === false) return;
       var s = states[c.entity], a = s && s.attributes;
-      if (!a || !a.message || !a.start_time) return;
+      if (!a || !a.message || !a.start_time || !K.allowsTitle(a.message)) return;
       var st = new Date(String(a.start_time).replace(' ', 'T')), en = new Date(String(a.end_time || a.start_time).replace(' ', 'T'));
       if (isNaN(st)) return;
       var ev = { name: a.message, start: st, end: en, allDay: !!a.all_day, on: s.state === 'on', cal: c };
       if (!ev.on && en < now) return;
-      if (!best || (ev.on && !best.on) || (ev.on === best.on && st < best.start)) best = ev;
+      if (!best || priority(ev) < priority(best) || (priority(ev) === priority(best) && st < best.start)) best = ev;
     });
     return best;
   };

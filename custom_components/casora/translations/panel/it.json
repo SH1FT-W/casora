@@ -1,6 +1,8 @@
 {
   "_comment": "Traduzione del pannello Casora. Chiave = testo originale inglese del pannello. Nuova lingua: crea il file <codice>.json, poi esegui tools/build-panel-i18n.py.",
   "exact": {
+    "Hide when the title contains": "Nascondi se il titolo contiene",
+    "Separate entries with commas; an entry may have several words. The calendar popup still shows them.": "Separa le voci con virgole; una voce può contenere più parole. Il popup del calendario continua a mostrarle.",
     "Add sensor or event": "Aggiungi sensore o evento",
     "Camera detections": "Rilevamenti della telecamera",
     "Detection from": "Rilevamento da",
