@@ -7,7 +7,7 @@
       }
     },
     "create_entry": {
-      "default": "C'est fait. Ouvre maintenant **Casora Studio** dans la barre latérale : c'est là que tu configures ton tableau de bord."
+      "default": "Ouvre maintenant **Casora Studio** dans la barre latérale : c'est là que tu configures ton tableau de bord."
     },
     "abort": {
       "already_configured": "Casora est déjà configuré."

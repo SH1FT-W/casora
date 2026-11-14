@@ -7,7 +7,7 @@
       }
     },
     "create_entry": {
-      "default": "Fatto. Ora apri **Casora Studio** nella barra laterale: lì configuri la tua dashboard."
+      "default": "Ora apri **Casora Studio** nella barra laterale: lì configuri la tua dashboard."
     },
     "abort": {
       "already_configured": "Casora è già configurato."

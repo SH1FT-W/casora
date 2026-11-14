@@ -7,7 +7,7 @@
       }
     },
     "create_entry": {
-      "default": "Klaar. Open nu **Casora Studio** in de zijbalk: daar richt je je dashboard in."
+      "default": "Open nu **Casora Studio** in de zijbalk: daar richt je je dashboard in."
     },
     "abort": {
       "already_configured": "Casora is al ingesteld."

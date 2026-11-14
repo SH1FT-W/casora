@@ -7,7 +7,7 @@
       }
     },
     "create_entry": {
-      "default": "Listo. Abre ahora **Casora Studio** en la barra lateral: ahí configuras tu panel."
+      "default": "Abre ahora **Casora Studio** en la barra lateral: ahí configuras tu panel."
     },
     "abort": {
       "already_configured": "Casora ya está configurado."

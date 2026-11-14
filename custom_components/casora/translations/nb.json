@@ -7,7 +7,7 @@
       }
     },
     "create_entry": {
-      "default": "Ferdig. Åpne nå **Casora Studio** i sidepanelet: Der setter du opp dashbordet ditt."
+      "default": "Åpne nå **Casora Studio** i sidepanelet: Der setter du opp dashbordet ditt."
     },
     "abort": {
       "already_configured": "Casora er allerede satt opp."
