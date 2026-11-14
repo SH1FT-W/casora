@@ -6095,6 +6095,21 @@ const numOf = (states, id) => {
   return Number.isNaN(n) ? null : n;
 };
 
+// The dashboard's lamp count (window.casoraLightTally, scripts/local/01-basis.js) for the preview's light tiles and
+// badges. A Studio opened straight (not after a dashboard) has no dashboard scripts and counted groups instead of
+// lamps ("3 on" under a dashboard's "4 on"): that one module is loaded once, then the preview is drawn again.
+let lightTallyLoad = null;
+const lightTally = (ent, states, hass, V) => {
+  if (typeof window.casoraLightTally === "function") return window.casoraLightTally(ent, states || {}, hass, V);
+  if (!lightTallyLoad && typeof window.casoraImportScript === "function") {
+    lightTallyLoad = window.casoraImportScript("local/01-basis.js").then(() => {
+      const p = window._casoraStudioPanel;
+      if (p && p.isConnected && p._state && typeof p._rebuildPreview === "function") p._rebuildPreview();
+    }, () => {});
+  }
+  return null;
+};
+
 // casora_light: one row per physical light, groups of groups flattened.
 const lightUnits = (states, eid, seen) => {
   const memsOf = (id) => {
@@ -6732,7 +6747,7 @@ const tileStateWord = (kind, tile, ent, states, hass) => {
     }
     case "light": {
       // Same count as the dashboard's tile, badge and popup (window.casoraLightTally, scripts/local/01-basis.js).
-      const t = window.casoraLightTally ? window.casoraLightTally(ent, states || {}, hass, V) : null;
+      const t = lightTally(ent, states, hass, V);
       if (!t) return lightWord(states, ent.entity_id);
       if (!t.tot || t.tot === 1) return t.on ? "On" : "Off";
       if (!t.on) return "All off";
@@ -16112,7 +16127,19 @@ class CasoraPanel extends HTMLElement {
         try {
           const ha = f.contentDocument.querySelector("home-assistant");
           if (!(ha && ha.hass)) { if (Date.now() - t0 < 15000) setTimeout(tick, 200); else box.classList.add("ready"); return; }
-          if (typeof ha._updateHass === "function") ha._updateHass({ dockedSidebar: "always_hidden" });
+          if (typeof ha._updateHass === "function") {
+            // The frame shares the viewer's localStorage, and HA writes its whole state there again later (every
+            // profile change, e.g. the design step of the setup): the frame's "always hidden" then became the
+            // viewer's setting. The frame's own realm never writes the sidebar setting.
+            try {
+              const SP = f.contentWindow.Storage.prototype, set = SP.setItem;
+              if (!set._casoraPreview) {
+                SP.setItem = function (k, v) { if (k === "dockedSidebar") return undefined; return set.call(this, k, v); };
+                SP.setItem._casoraPreview = true;
+              }
+            } catch (e) { /* no access: HA keeps its sidebar in the frame below */ }
+            ha._updateHass({ dockedSidebar: "always_hidden" });
+          }
           setTimeout(() => box.classList.add("ready"), 1500);
           // T11 (test 2): right after creating, a badge whose card script was not there yet stayed HA's red
           // "Configuration error" in the preview (the dashboard itself was fine) – look once more and reload the frame once.
@@ -24563,7 +24590,10 @@ class CasoraPanel extends HTMLElement {
     const lights = hl ? hl.ids : listed.length ? listed
       : (Array.isArray(members) && members.length ? members.filter(Boolean) : (grp ? [grp] : []));
     if (on("show_lights") && (grp || listed.length || (hl && hl.ids.length))) {
-      const lit = lights.filter((e) => (st(e) || {}).state === "on").length;
+      // The lamps the dashboard's badge counts (casora_badge_light_group: a group's lamps, not its sub-groups).
+      const tally = hl ? null : lightTally(null, this._hass.states, this._hass,
+        window._casoraHomeLightVarsOf ? window._casoraHomeLightVarsOf(V) : null);
+      const lit = tally ? tally.on : lights.filter((e) => (st(e) || {}).state === "on").length;
       out.push({
         id: "lights", label: "Lights", icon: "light", color: LIGHT, dim: !lit,
         text: lit ? lit + " on" : "All off",
@@ -25763,7 +25793,12 @@ class CasoraPanel extends HTMLElement {
       t.textContent = deg + "\u00b0";
       const c = document.createElement("span");
       c.className = "mp-wcond";
-      const cond = went ? String(went.state).replace(/[-_]/g, " ") : "";
+      // HA's own word for the condition, as the dashboard and the desktop preview show it ("Teilweise bewölkt"; the
+      // raw state read "Partlycloudy"); the raw state only where HA has no word for it.
+      const raw = went ? String(went.state || "").toLowerCase() : "";
+      const lc = raw && this._hass.localize ? this._hass.localize("component.weather.entity_component._.state." + raw) : "";
+      const cond = lc || raw.replace(/[-_]/g, " ");
+      c.setAttribute("data-no-i18n", "");
       c.textContent = cond ? cond.charAt(0).toUpperCase() + cond.slice(1) : "";
       w.appendChild(t); w.appendChild(c);
       const file = WEATHER_SVG[String((went && went.state) || "").toLowerCase()];

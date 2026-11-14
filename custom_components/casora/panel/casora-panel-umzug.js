@@ -1642,14 +1642,18 @@
     return liveDone(done, list).size > 0;
   }
 
+  const otherOnTop = (panel) => !!(document.querySelector("[data-casora-welcome]")
+    || (panel.shadowRoot && panel.shadowRoot.querySelector(".bintro")));
   let offered = false;
   function offer(panel) {
     if (offered) return;
     offered = true;
     const t0 = Date.now();
     const wait = async () => {
-      if (Date.now() - t0 > 60000) return;
       if (panel._casoraUmzugShown || offerOff()) return;  // schon gezeigt (Erststart oder Menü) bzw. abgeschaltet
+      // Not over the "New in Casora" sheet or the Studio intro (they lay on top of each other): wait until both are closed.
+      if (otherOnTop(panel)) { if (panel.isConnected) setTimeout(wait, 700); return; }
+      if (Date.now() - t0 > 60000) return;
       if (!panel._hass || !panel._dashList || panel._flowMode || !panel.isConnected) return setTimeout(wait, 700);
       if (!panel._hass.user || !panel._hass.user.is_admin) return;
       // U-1: unterbrochener Umzug zuerst (vor dem allgemeinen Angebot und unabhängig von „Später“).
@@ -1665,9 +1669,13 @@
       const list = await candidates(panel);
       panel._casoraUmzugList = list;
       if (!list.length || panel._flowMode) return;
+      // The intro may have opened during the lookups above.
+      if (otherOnTop(panel)) { if (panel.isConnected) setTimeout(wait, 700); return; }
       // Handy: kein Vollbild-Assistent beim Öffnen, sondern ein Hinweis oben im Studio.
       if (panel.classList.contains("phone")) return banner(panel, list);
-      panel._casoraUmzug({ list, auto: true });
+      // Building the offer takes a moment before its sheet sets _flowMode; the intro waits for it meanwhile.
+      panel._casoraUmzugOpening = true;
+      Promise.resolve(panel._casoraUmzug({ list, auto: true })).finally(() => { panel._casoraUmzugOpening = false; });
     };
     setTimeout(wait, 1500);
   }

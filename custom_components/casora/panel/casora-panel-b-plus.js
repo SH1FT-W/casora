@@ -975,8 +975,8 @@
       const root = this.shadowRoot;
       if (!on(this) || !this._state || root.querySelector(".bintro")) return;
       // Nicht über einen offenen Dialog, ein Menü oder das „Neu“-Fenster legen – später noch einmal.
-      const busy = this._flowMode || root.querySelector(".askpane, .menu, [role=menu], .bsfs")
-        || document.querySelector("casora-welcome, .casora-welcome");
+      const busy = this._flowMode || this._casoraUmzugOpening || root.querySelector(".askpane, .menu, [role=menu], .bsfs")
+        || document.querySelector("[data-casora-welcome]");
       if (busy && !force) {
         this._bIntroTries = (this._bIntroTries || 0) + 1;
         if (this._bIntroTries < 6) setTimeout(() => this._bIntro(false), 2500);
