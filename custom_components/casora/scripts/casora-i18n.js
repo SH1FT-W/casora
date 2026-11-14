@@ -312,6 +312,13 @@
       var pd = pp.map(function (p) { var r = /[A-Za-zÄÖÜäöüß]/.test(p) ? one(p.trim(), t, (depth || 0) + 1) : null; return r === null ? p : r; });
       if (pd.some(function (p, i) { return p !== pp[i]; })) return pd.join(' + ');
     }
+    // A name with a counter („Bio +1“, the waste tile's short form: first bin and the others): the name alone,
+    // the counter stays as it is.
+    var cm = /^(.+?) \+(\d+)$/.exec(core);
+    if (cm && /[A-Za-zÄÖÜäöüß]/.test(cm[1])) {
+      var cn = one(cm[1].trim(), t, (depth || 0) + 1);
+      if (cn !== null) return cn + ' +' + cm[2];
+    }
     return null;
   }
 

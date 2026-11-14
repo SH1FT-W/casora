@@ -41,6 +41,11 @@ assert.equal(tile('Bio + Restmüll', 0, 'en'), 'Organic + General waste today', 
 assert.equal(tr(tile('Bio + Restmüll', 2, 'en')), '2 days · Organic + General waste', 'two bins in 2 days (translated on the way out)');
 assert.equal(tr('Bio + Tonne Hof'), 'Organic + Tonne Hof', 'an own name in a joined one stays');
 assert.equal(tr('Tonne + Hof'), 'Tonne + Hof', 'nothing known: unchanged');
+// Narrow phone tile (short form „In 2 T. · Bio +1“, first bin and a counter): the name stayed German in every
+// language while the popup said „Organic“ (Alltag round 14.11.2026). The name is translated, the counter stays.
+assert.equal(tr('In 2 T. · Bio +1'), 'In 2 d · Organic +1', 'short form: first bin translated');
+assert.equal(tr('In 5 T. · Restmüll +2'), 'In 5 d · General waste +2');
+assert.equal(tr('In 2 T. · Tonne Hof +1'), 'In 2 d · Tonne Hof +1', 'an own name stays');
 
 // 2. Name + state word of the alarm (01-basis.js describe: an + ' ' + word in lower case).
 assert.equal(tr('Verisure Alarm aus'), 'Verisure Alarm off');
