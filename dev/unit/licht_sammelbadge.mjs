@@ -98,6 +98,25 @@ assert.ok(basis.includes("if (!lightIds.length && groupId && S[groupId] && Strin
   const studio = fs.readFileSync(new URL('../../custom_components/casora/panel/casora-panel.js', import.meta.url), 'utf8');
   assert.ok(studio.includes('window.casoraLightTally(ent, states || {}, hass, V)') && !/rooms on/.test(studio), 'Studio preview');
 console.log('ok one light count');
+  // V4 (owner, 14.11.2026): the room badge said „Aus“, the tile „Alle aus“ for the same two lamps. The badge words its
+  // tally like the tile (casoraLightTallyText), also when every lamp is on.
+  const nm = T.casora_badge_light_group.name;
+  const a = nm.indexOf('const _t = window.casoraLightTally'), b = nm.indexOf('\n\n', a);
+  const badgeSub = new Function('window', 'entity', 'hass', 'variables', 'eids', 'onCount', nm.slice(a, b) + '\nreturn sub;');
+  const bs = (S2, ids) => badgeSub(window, sel, { states: S2 }, { entity_1: ids[0], entity_2: ids[1] }, ids,
+    ids.filter((x) => S2[x] && S2[x].state === 'on').length);
+  const twoOff = { 'light.a': off('light.a'), 'light.b': off('light.b') };
+  const twoOn = { 'light.a': on('light.a'), 'light.b': on('light.b') };
+  assert.equal(bs(twoOff, ['light.a', 'light.b']), 'Alle aus', 'badge: two lamps off – was „Aus“');
+  assert.equal(bs(twoOn, ['light.a', 'light.b']), 'Alle an', 'badge: two lamps on – was „An“');
+  assert.equal(bs({ 'light.a': on('light.a'), 'light.b': off('light.b') }, ['light.a', 'light.b']), '1 an');
+  assert.equal(bs({ 'light.a': off('light.a') }, ['light.a']), 'Aus', 'badge: one lamp');
+  for (const [S2, ids] of [[twoOff, ['light.a', 'light.b']], [twoOn, ['light.a', 'light.b']]]) {
+    assert.equal(bs(S2, ids), W(window.casoraLightTally(sel, S2, null, { entity_1: ids[0], entity_2: ids[1] })), 'badge = tile');
+  }
+  // The Studio preview's light badge says the same (All off / All on, one lamp On/Off).
+  assert.ok(/text: tot <= 1 \? \(lit \? "On" : "Off"\) : !lit \? "All off" : lit === tot \? "All on" : lit \+ " on"/.test(studio), 'Studio badge words');
+  console.log('ok badge says what the tile says');
 }
 assert.ok(/window\._casoraLPCv !== (\d+)/.test(lpc) && Number(lpc.match(/window\._casoraLPCv !== (\d+)/)[1]) >= 79, 'LPC-Version erhöht');
 console.log('ok licht_sammelbadge');

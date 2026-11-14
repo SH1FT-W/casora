@@ -28,7 +28,7 @@ Bis zur Wahl gilt der heutige Stand der Nachbarstellen, nicht die Empfehlung.
 |---|---|---|---|
 | An / Aus | On / Off | Ein, Eingeschaltet/Ausgeschaltet als Zustand (als Verb im Satz ok: „Kachel eingeschaltet“) | Licht „An“, Steckdose „Aus“ |
 | Zahl + Zustandswort | „1 an“, „3 an“, „2 offen“, „2 schwach“, „3 verfügbar“ (**klein**, Entscheidung 01.11.2026: Zählung ist eine Wortgruppe; allein stehend bleibt „An“/„Offen“ groß) | „3 An“, „2 Offen“ | Licht-Gruppenbadge, Batterie-Badge, Updates (EN „3 on“) |
-| Alle An / Alle Aus | All On / All Off | „Alle an“ | Licht-Popup |
+| Alle an / Alle aus (klein wie „3 an“, Entscheidung 01.11.2026; eine Lampe: „An“/„Aus“) | All on / All off | „Alle An“; „Aus“/„An“ für mehrere Lampen (Badge und Kachel sagen dasselbe, 14.11.2026) | Licht-Kachel, Raum-Badge, Licht-Popup (`dev/unit/licht_sammelbadge.mjs`) |
 | Zahl + aktiv | „2 aktiv“, „Keine aktiv“ (**klein**, Entscheidung 08.10. D13c) | „2 Aktiv“, „Keine Aktiv“ | Szenen-Badge |
 | Geöffnet / Geschlossen | Open / Closed | „Zu“ als Zustand (= Knopf „Close“) | Jalousie, Tür, Fenster, Garage |
 | „62 % geöffnet“, „3 von 5 geöffnet“, „Teilweise geöffnet“, „Alle geöffnet/geschlossen“ | „62% open“, „3 of 5 open“, „Partly open“, „All open/closed“ | – | Jalousie-Gruppe |
