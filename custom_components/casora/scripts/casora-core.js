@@ -14851,6 +14851,33 @@ window.casoraMenuGlass = {
     var k = String(t == null ? '' : t).trim();
     return Object.prototype.hasOwnProperty.call(RAW, k) ? RAW[k] : (Object.prototype.hasOwnProperty.call(RAW, k.toLowerCase()) && /^[a-z_]+$/i.test(k) && k === k.toLowerCase() ? RAW[k.toLowerCase()] : t);
   };
+  // A raw value HA had no words for (V14, owner 14.11.2026: „Tür closed“, „cooking_oven_program_…“ in lists), Casora's own
+  // fallback at one place: a state HA knows in the word list's words („closed“ → „Geschlossen“), else a snake_case code made
+  // readable – the prefix all options share (cooking_oven_program_heating_mode_), the domain or the device name in front
+  // dropped, underscores to spaces, the first letter upper case („Top bottom heating“). Free text (input_text, text) and
+  // anything not written as a lower-case code stays as the device wrote it („iPhone 15“, „WLAN_5G“).
+  var KNOWN = { open: 'Geöffnet', closed: 'Geschlossen', opening: 'Öffnet', closing: 'Schließt', stopped: 'Gestoppt',
+    locked: 'Verriegelt', unlocked: 'Entriegelt', locking: 'Wird verriegelt …', unlocking: 'Wird entriegelt …', jammed: 'Klemmt',
+    on: 'An', off: 'Aus', not_home: 'Unterwegs', unavailable: 'Nicht verfügbar', unknown: 'Unbekannt' };
+  window._casoraReadableRaw = function (value, e) {
+    var v = String(value == null ? '' : value), k = v.trim();
+    var w = window._casoraRawWord(k);
+    if (w !== k) return w;
+    if (Object.prototype.hasOwnProperty.call(KNOWN, k)) return KNOWN[k];
+    var id = String((e && e.entity_id) || ''), dom = id.split('.')[0];
+    if (/^(input_text|text)$/.test(dom) || !/^[a-z][a-z0-9]*(?:_[a-z0-9]+)+$/.test(k)) return v;
+    var a = (e && e.attributes) || {}, r = k;
+    var opts = Array.isArray(a.options) ? a.options.map(String).filter(function (o) { return /^[a-z0-9_]+$/.test(o); }) : [];
+    if (opts.length > 1 && opts.indexOf(k) > -1) {
+      var pre = opts.reduce(function (p, o) { var n = 0; while (n < p.length && p[n] === o[n]) n++; return p.slice(0, n); });
+      pre = pre.slice(0, pre.lastIndexOf('_') + 1);
+      if (pre && opts.every(function (o) { return o.length > pre.length; })) r = k.slice(pre.length);
+    }
+    var dev = String(a.friendly_name || '').toLowerCase().split(/\s+/)[0].replace(/[^a-z0-9]/g, '');
+    [dom, dev].forEach(function (p) { if (p && r.indexOf(p + '_') === 0 && r.length > p.length + 1) r = r.slice(p.length + 1); });
+    r = r.replace(/_+/g, ' ').trim();
+    return r ? r.charAt(0).toUpperCase() + r.slice(1) : v;
+  };
   // The state word of a popup head and of the search rows (wortliste): the words of HA in the language of the user, but a
   // state the word list names takes the Casora word („idle“/„ready“ → „Bereit“, German „Ein“ of HA → „An“), a camera or lock that is
   // gone says „Offline“. '' = nothing to say (unknown). null = no word of its own: a measurement of the entity, on/off of
@@ -14910,7 +14937,7 @@ window.casoraMenuGlass = {
     var f = '';
     try { f = hass && typeof hass.formatEntityState === 'function' ? String(hass.formatEntityState(e)) : ''; } catch (err) { f = ''; }
     if (!f) f = String(e.state);
-    return f === String(e.state) ? window._casoraRawWord(f) : f;
+    return f === String(e.state) ? window._casoraReadableRaw(f, e) : f;
   };
   window._casoraStateText = function (hass, e, map) {
     var s = String((e && e.state) == null ? '' : e.state).toLowerCase();
@@ -14927,6 +14954,7 @@ window.casoraMenuGlass = {
     } catch (err) { /* Entität halb geladen */ }
     if (BOOL[s]) return BOOL[s];
     if (RAW[s]) return RAW[s];
+    if (s && window._casoraReadableRaw(e.state, e) !== String(e.state)) return window._casoraReadableRaw(e.state, e);
     return s ? s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ') : ALL.unknown;
   };
 })();
