@@ -213,11 +213,102 @@
   };
   var ON = 5;
 
+  // ── Chart range (#195) ──────────────────────────────────────────────────────
+  // Solar and house open on 4 h, battery and grid on 24 h. A tap on „4 Std. / 24 Std.“ sets the range for all four
+  // pages at once (grid and solar can then be compared over the same time), for the session only (not saved), like
+  // the range of the energy history page (48-energie-verlauf.js).
+  var SPANS = ['4h', '24h'];
+  var SPAN_LABEL = { '4h': '4 Std.', '24h': '24 Std.' };
+  var SPAN_DEF = { solar: '4h', battery: '24h', home: '4h', grid: '24h' };
+  var spanPick = null, spanParts = [], spanKeys = {};
+  function span(focus) { return spanPick || SPAN_DEF[focus] || '24h'; }
+  var alive = function (el) { return el && el.isConnected; };
+  var kick = function (el) {
+    try { if (typeof window.casoraKick === 'function') window.casoraKick(el); } catch (e) { /* popup closed */ }
+  };
+  // (Re)writes the chart config of a page's key for the current range: 24 h averaged to 15 min, 4 h raw.
+  function chartCfg(key) {
+    var k = spanKeys[key];
+    if (!k || typeof window._hpChartCfg !== 'function') return null;
+    var sp = span(k.focus), c = window._hpChartCfg(key, k.label, sp, k.color, k.height);
+    c.series[0].entity = k.entity;
+    if (k.hero) c.readout = 'hero';
+    if (sp === '24h' && window._hpSmooth) window._hpSmooth(key, '15min');
+    return c;
+  }
+  function setSpan(sp) {
+    if (SPANS.indexOf(sp) < 0) return;
+    spanPick = sp;
+    // Every page's config, so a page shown again (‹ back) mounts its chart in the chosen range too.
+    Object.keys(spanKeys).forEach(chartCfg);
+    spanParts = spanParts.filter(alive);
+    spanParts.forEach(kick);
+  }
+  var spanHtml = function (UI, focus) {
+    var cur = span(focus), k = 0;
+    return UI.segments(SPANS.map(function (sp) { return { label: SPAN_LABEL[sp], active: sp === cur }; }), null)
+      .replace(/<div class="hui-seg/, '<div role="tablist" class="hui-seg')
+      .replace(/<div class="hui-sg( on)?"/g, function (m, on) {
+        return '<div role="tab" aria-selected="' + (on ? 'true' : 'false') + '" data-casora-efspan="' + UI.esc(SPANS[k++]) + '" class="hui-sg' + (on ? ' on' : '') + '"';
+      });
+  };
+  var rememberSpan = function (el) {
+    if (!el) return;
+    spanParts = spanParts.filter(alive);
+    if (spanParts.indexOf(el) < 0) spanParts.push(el);
+  };
+  // Taps on a range segment. A finger tap is taken on touchend (button-card cancels it on a phone, no click follows,
+  // #58), the click after it is dropped; a touch that moved (scrolling the sheet) is no tap.
+  var SLOP = 10, touch = null, touchAt = 0;
+  var spanOf = function (ev) {
+    var p = (ev.composedPath && ev.composedPath()) || [];
+    for (var i = 0; i < p.length; i++) { if (p[i] && p[i].hasAttribute && p[i].hasAttribute('data-casora-efspan')) return p[i]; }
+    return null;
+  };
+  function pickSpan(ev) {
+    var n = spanOf(ev);
+    if (!n) return false;
+    ev.preventDefault(); ev.stopPropagation();
+    if (ev.type === 'touchend') touchAt = Date.now();
+    else if (Date.now() - touchAt < 700) return false;
+    if (window.casoraHaptic) window.casoraHaptic('selection');
+    window._casoraSuppressDismiss = Date.now() + 600;
+    setSpan(n.getAttribute('data-casora-efspan'));
+    return true;
+  }
+  if (typeof document !== 'undefined' && document.addEventListener) {
+    document.addEventListener('touchstart', function (ev) {
+      var t = ev.touches && ev.touches.length === 1 && ev.touches[0];
+      if (t && spanOf(ev)) touch = { x: t.clientX, y: t.clientY, id: t.identifier };
+      else if (!t || !touch || touch.id !== t.identifier) touch = null;
+    }, { capture: true, passive: true });
+    document.addEventListener('touchend', function (ev) {
+      var s = touch, t = ev.changedTouches && ev.changedTouches[0];
+      touch = null;
+      if (!s || !t || Math.abs(t.clientX - s.x) > SLOP || Math.abs(t.clientY - s.y) > SLOP) return;
+      pickSpan(ev);
+    }, true);
+    document.addEventListener('click', pickSpan, true);
+  }
+
   // Live parts (called from the cards with triggers_update).
   function sec(part, C, states, hass) {
     var UI = window._casoraUI;
     if (!UI) return '';
     if (part === 'stage3') return stage3.call(this, UI, C, states, hass);
+    if (part === 'span') {
+      // Classic popup: the segments under the chart; its chart sits in a static card and is mounted again here.
+      var self0 = this && this.shadowRoot !== undefined ? this : null, sp0 = span(C.focus);
+      if (self0) {
+        rememberSpan(self0);
+        if (self0._efSpan && self0._efSpan !== sp0 && C.chart && window._hpPlantShow) {
+          if (!window._hpPlantCfg || !window._hpPlantCfg[C.chart] || window._hpPlantCfg[C.chart].span !== sp0) chartCfg(C.chart);
+          window._hpPlantShow(C.chart, null, true);
+        }
+        self0._efSpan = sp0;
+      }
+      return '<div style="margin-top:16px;">' + spanHtml(UI, C.focus) + '</div>';
+    }
     if (part === 'hero') {
       var hv = heroVal(C, states, hass);
       return UI.hero({ center: true, value: hv.value, sub: hv.bits.join(' · ') || null, read: C.chart || null });
@@ -247,12 +338,16 @@
       if (t && !t.hasAttribute('data-casora-reading') && t.textContent !== T3(l0)) t.textContent = T3(l0);
     }, 0);
     var chart = '';
+    if (self) rememberSpan(self);
+    // The range may have changed since this page was built (on another page, #195): the slot mounts the current one.
+    if (C.chart && window._hpPlantCfg && window._hpPlantCfg[C.chart] && window._hpPlantCfg[C.chart].span !== span(C.focus)) chartCfg(C.chart);
     if (C.chart && window._hpPlantCfg && window._hpPlantCfg[C.chart]) {
       if (self && window._hpStageChart) window._hpStageChart(self, C.chart);
       chart = '<div class="hp-chart-slot" style="min-height:' + (window.innerWidth <= 760 ? 140 : 160) + 'px;pointer-events:auto;"></div>';
     }
     var main = { solar: C.solar, battery: C.soc || C.batt, home: C.home, grid: C.grid }[C.focus];
     return UI.stage('chart', { value: memo.n, unit: memo.u, trend: memo.l, chart: chart, read: C.read || null,
+      extra: chart ? spanHtml(UI, C.focus) : '',
       state: main && states[main] && states[main].state === 'unavailable' && (C.asleep || []).indexOf(main) < 0 ? 'na' : null });
   }
 
@@ -406,13 +501,13 @@
     if (!main || !states[main]) return null;
     var f = {};
 
-    // Chart: solar/house 4 h of power, battery 24 h of charge, grid 24 h (above 0 import, below 0 feed-in).
-    var CH = { solar: ['Solarleistung', '4h'], battery: [C.soc ? 'Ladestand' : 'Akkuleistung', '24h'],
-      home: ['Verbrauch', '4h'], grid: ['Netzleistung', '24h'] }[focus];
+    // Chart: power of solar/house, charge of the battery, grid power (above 0 import, below 0 feed-in); the range
+    // (4 h / 24 h) from span() – the page's default until the switch under the chart is tapped (#195).
+    var CH = { solar: 'Solarleistung', battery: C.soc ? 'Ladestand' : 'Akkuleistung', home: 'Verbrauch', grid: 'Netzleistung' }[focus];
     if (typeof window._hpChartCfg === 'function' && ctx.metricCard && !(UI.v3 && UI.v3() && V3_LIST[focus])) {
       // Chart: casora-chart's checked steps (c1 blue, c2 orange, c3 teal, c4 gold) to match the kind.
-      window._hpChartCfg(main, CH[0], CH[1], { solar: 'c4', battery: 'c1', home: 'c3', grid: 'c2' }[focus], 120);
-      if (CH[1] === '24h' && window._hpSmooth) window._hpSmooth(main, '15min');
+      spanKeys[main] = { focus: focus, label: CH, color: { solar: 'c4', battery: 'c1', home: 'c3', grid: 'c2' }[focus], height: 120, entity: main };
+      chartCfg(main);
       var mc = ctx.metricCard;
       var cf = {
         ct: '<div class="hp-ct" style="font-family:var(--primary-font-family,system-ui);font-size:12px;color:var(--casora-h15-c, var(--casora-popup-tiles-text-muted, rgba(255,255,255,0.55)));margin:2px 2px 4px;text-align:left;">'
@@ -424,9 +519,12 @@
         grid: [{ 'grid-template-areas': '"ct" "chart"' }, { 'grid-template-columns': 'minmax(0, 1fr)' }, { 'row-gap': '0' }],
         custom_fields: cs,
       });
-      f.chart = { card: K.chartCard(Object.assign({}, mc, { styles: styles, custom_fields: cf })) };
-      window._hpChartInit(main, false);
       C.chart = main;
+      // The range switch inside the chart's plate, as a live card of its own (the chart card is static).
+      var spanCard = { card: K.secCard([], 'return window._casoraEnergyFocus ? window._casoraEnergyFocus.sec.call(this, "span", '
+        + JSON.stringify({ focus: focus, chart: main }) + ', states, hass) : "";', states) };
+      f.chart = { card: K.chartCard(Object.assign({}, mc, { styles: styles, custom_fields: cf }), spanCard) };
+      window._hpChartInit(main, false);
     }
 
     var watch = [C.solar, C.soc, C.batt, C.charge, C.discharge, C.home, C.grid, C.state, C.energy,
@@ -436,10 +534,9 @@
     if (UI.v3 && UI.v3() && UI.stage && V3_LIST[focus]) {
       if (typeof window._hpChartCfg === 'function') {
         // Own key: the energy popup's other charts register the same sensor with their own look.
-        var k3 = 'ef3:' + main, cfg3 = window._hpChartCfg(k3, CH[0], CH[1], V3_COL[focus], 160);
-        cfg3.series[0].entity = main; cfg3.readout = 'hero';
-        if (window.innerWidth <= 760) cfg3.height = 140;
-        if (CH[1] === '24h' && window._hpSmooth) window._hpSmooth(k3, '15min');
+        var k3 = 'ef3:' + main;
+        spanKeys[k3] = { focus: focus, label: CH, color: V3_COL[focus], height: window.innerWidth <= 760 ? 140 : 160, entity: main, hero: true };
+        chartCfg(k3);
         C.chart = k3; C.read = main;
       }
       var f3 = { stage: { card: K.secCard(watch, 'return window._casoraEnergyFocus ? window._casoraEnergyFocus.sec.call(this, "stage3", '
@@ -527,5 +624,5 @@
     return f ? COL[f] : null;
   });
 
-  window._casoraEnergyFocus = { detect: detect, peers: peers, model: model, sec: sec, build: build };
+  window._casoraEnergyFocus = { detect: detect, peers: peers, model: model, sec: sec, build: build, span: span, setSpan: setSpan, SPANS: SPANS };
 })();
