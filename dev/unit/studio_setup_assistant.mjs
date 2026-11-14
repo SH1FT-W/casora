@@ -162,6 +162,19 @@ const SRC = read('custom_components/casora/panel/casora-panel.js');
   console.log('ok setup: effect pictures as close-ups');
 }
 
+// ── V21: "Your Rooms" names the kind only when it adds something ("Lock / Lock" read double) ──
+{
+  const k = window.casoraBasis.kindLine;
+  assert.equal(k('Schloss', 'Schloss', 0), '', 'name = kind: one line');
+  assert.equal(k('Abfall', 'abfall ', 0), '', 'case and spaces do not matter');
+  assert.equal(k('Wohnungstür', 'Schloss', 0), 'Schloss', 'a named lock keeps its kind');
+  assert.equal(k('Jalousien', 'Jalousie-Gruppe', 6), '6 × Jalousie-Gruppe', 'groups keep their count');
+  assert.equal(k('Beleuchtung', 'Licht', 14), '14 × Licht');
+  const B = read('custom_components/casora/panel/casora-panel-basis.js');
+  assert.ok(/const kind = kindLine\(x\.label, tr\(\(t && t\.label\) \|\| x\.type\), x\.group \? x\.group\.length : 0\);\s*\n\s*if \(kind\) el\("small", "", tx, kind\);/.test(B), 'preview uses it');
+  console.log('ok setup: no double name/kind lines');
+}
+
 // ── E22 in the YAML import: the name comes first and the screen still gets its Import button ─────────
 // (The import review moved its name group before an undefined "head": a ReferenceError left the screen
 // without name field and button – t07 found it.)

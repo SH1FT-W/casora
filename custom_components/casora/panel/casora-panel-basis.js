@@ -930,7 +930,14 @@
     return here.length === 1 ? here[0].id : pumps.length === 1 ? pumps[0].id : null;
   }
 
-  window.casoraBasis = { plan, tilesOf, rules, DEFAULTS, shortName, fillBadges, energyProbe, housePower, housePowerOk, housePowerWhy, homeEnergyWhy, oldHouseTotal, wrongHousePower, roomPowerIds, homeSumIds, prefsHouse, prefsHomeVars, energyPrefsReady, openings, isCombo, addLight, houseLights, homeLightsWhy, homeClimateWhy, topUnits,
+  // The kind under a tile's name in "Your Rooms" (V21, newcomer round): "Lock / Lock" or "Waste / Waste" read as a
+  // double line. The kind shows only when it says more than the name (or counts a group).
+  function kindLine(label, kind, n) {
+    const fold = (x) => String(x || "").trim().toLocaleLowerCase();
+    if (n > 1) return n + " × " + kind;
+    return fold(kind) === fold(label) ? "" : kind;
+  }
+  window.casoraBasis = { plan, kindLine, tilesOf, rules, DEFAULTS, shortName, fillBadges, energyProbe, housePower, housePowerOk, housePowerWhy, homeEnergyWhy, oldHouseTotal, wrongHousePower, roomPowerIds, homeSumIds, prefsHouse, prefsHomeVars, energyPrefsReady, openings, isCombo, addLight, houseLights, homeLightsWhy, homeClimateWhy, topUnits,
     dosingPumps, dosingFill, dosingSuggest, DOSE_MAPS };
 
   // KI kostet: Casora schätzt vor dem ersten Einsatz grob, was es über den API-Schlüssel
@@ -1172,7 +1179,8 @@
           const tx = el("span", "", b); tx.setAttribute("data-no-i18n", "");
           el("b", "", tx, x.label);
           const t = typeById(x.tile.template && [].concat(x.tile.template)[0] === "casora_cover" && x.group ? "cover_group" : x.type);
-          el("small", "", tx, (x.group && x.group.length > 1 ? x.group.length + " × " : "") + tr((t && t.label) || x.type));
+          const kind = kindLine(x.label, tr((t && t.label) || x.type), x.group ? x.group.length : 0);
+          if (kind) el("small", "", tx, kind);
           b.onclick = () => { x.on = !x.on; b.setAttribute("aria-checked", x.on ? "true" : "false"); upd(); sync(); };
         });
         upd();
