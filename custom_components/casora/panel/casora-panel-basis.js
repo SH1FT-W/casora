@@ -1057,7 +1057,7 @@
       let pick = o.pick || "auto";
       const s = this._flowScreen({
         full: true, icon: "rooms",
-        title: "Fill Your Rooms", step: [2, 3],
+        title: "Fill Your Rooms", step: ((I() || {}).setupStep || ((n) => [n, 3]))(2, o.setup),
         lede: "Casora can put your devices into the rooms right away – you check everything before it's created.",
         back: o.back,
       });
@@ -1120,7 +1120,7 @@
     P._fillPreview = async function (o) {
       const s = this._flowScreen({
         icon: "rooms",
-        title: "Your Rooms", step: [3, 3],
+        title: "Your Rooms", step: ((I() || {}).setupStep || ((n) => [n, 3]))(3, o.setup),
         lede: "This is what Casora puts in. Tap a tile to leave it out – you can change everything later.",
         back: o.back,
       });
