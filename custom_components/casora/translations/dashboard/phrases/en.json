@@ -3074,7 +3074,7 @@
       "Match {1}%"
     ],
     [
-      "^Gestern (\\d{1,2}:\\d{2})$",
+      "^Gestern (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
       "Yesterday {1}"
     ],
     [
@@ -3858,6 +3858,10 @@
       "Last seen {1}"
     ],
     [
+      "^Zuletzt (.+) (vor \\d+ (?:Min\\.|Std\\.|T\\.|Tagen)|gestern|gerade eben)$",
+      "Last {1} {2}"
+    ],
+    [
       "^Zuletzt (.+)$",
       "Last {1}"
     ],
@@ -4526,11 +4530,11 @@
       "vs {1}"
     ],
     [
-      "^Heute (\\d\\d:\\d\\d)$",
+      "^Heute (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
       "Today {1}"
     ],
     [
-      "^Morgen (\\d\\d:\\d\\d)$",
+      "^Morgen (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
       "Tomorrow {1}"
     ],
     [

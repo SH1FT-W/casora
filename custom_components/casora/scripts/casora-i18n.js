@@ -345,7 +345,11 @@
     return lead + pct(out) + trail;
   }
 
-  // Text oder HTML: nur die Textstücke zwischen den Tags werden übersetzt.
+  // Attributes that name or describe an element to people: translated like text (in HTML and on elements).
+  var NAME_ATTRS = ['aria-label', 'title', 'placeholder', 'alt'];
+  var NAME_ATTR_RE = /(\s(?:aria-label|title|placeholder|alt)=)(?:"([^"]*)"|'([^']*)')/gi;
+
+  // Text oder HTML: nur die Textstücke zwischen den Tags (und Namens-Attribute) werden übersetzt.
   function tr(s) {
     if (typeof s !== 'string' || !s) return s;
     var t = phTable();
@@ -363,7 +367,11 @@
           // <span data-no-i18n>…</span>: selbst gewählte Namen (z. B. „Home“) bleiben wörtlich.
           if (keep) { if (/^<span\b/i.test(p)) keep++; else if (/^<\/span/i.test(p)) keep--; }
           else if (/^<span\b[^>]*\bdata-no-i18n\b/i.test(p)) keep = 1;
-          return p;
+          // Screen reader names and tooltips speak the shown language too (a11y round 14.11.2026).
+          return keep || inStyle || /\bdata-no-i18n\b/i.test(p) ? p : p.replace(NAME_ATTR_RE, function (m, pre, dq, sq) {
+            var q = dq != null ? '"' : "'", v = dq != null ? dq : sq;
+            return pre + q + (/[A-Za-zÄÖÜäöüß]/.test(v) ? seg(v, t) : v) + q;
+          });
         }
         return inStyle || keep ? p : seg(p, t);
       }).join('');
@@ -417,9 +425,22 @@
     var out = tr(v);
     if (out !== v) { n.data = out; stats.fixed++; }
   }
+  function fixAttrs(el) {
+    if (!el || el.nodeType !== 1 || !el.getAttribute) return;
+    if (el.closest && el.closest('[data-no-i18n]')) return;
+    for (var i = 0; i < NAME_ATTRS.length; i++) {
+      var v = el.getAttribute(NAME_ATTRS[i]);
+      if (!v || !/[A-Za-zÄÖÜäöüß]/.test(v)) continue;
+      var out = tr(v);
+      if (out !== v) { el.setAttribute(NAME_ATTRS[i], out); stats.fixed++; }
+    }
+  }
+  var ATTR_SEL = NAME_ATTRS.map(function (a) { return '[' + a + ']'; }).join(',');
   function fixTree(node) {
     if (node.nodeType === 3) { fixText(node); return; }
     if ((node.nodeType !== 1 && node.nodeType !== 11) || node.nodeName === 'STYLE' || node.nodeName === 'SCRIPT') return;
+    fixAttrs(node);
+    if (node.querySelectorAll) { var els = node.querySelectorAll(ATTR_SEL); for (var i = 0; i < els.length; i++) fixAttrs(els[i]); }
     var w = document.createTreeWalker(node, NodeFilter.SHOW_TEXT), n;
     while ((n = w.nextNode())) fixText(n);
   }
@@ -433,9 +454,10 @@
       if (!active()) return;
       list.forEach(function (m) {
         if (m.type === 'characterData') fixText(m.target);
+        else if (m.type === 'attributes') fixAttrs(m.target);
         else m.addedNodes.forEach(fixTree);
       });
-    }).observe(root, { childList: true, subtree: true, characterData: true });
+    }).observe(root, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: NAME_ATTRS });
   }
   window.casoraTrWatch = watch;
   var TAGS = ['button-card', 'casora-popup', 'casora-smart-row'];

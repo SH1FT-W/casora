@@ -4763,12 +4763,13 @@
         + ((!st.attributes.color_mode || st.attributes.color_mode === 'color_temp') && k ? ' · ' + Math.round(k / 50) * 50 + ' K' : '');
     } else sub = tr('Aus');   // short as every row (owner, 03.11.2026: no „zuletzt …“ beside „Aus“)
     var tg = attr({ a: 'toggle', id: id });
+    var label = shown != null ? shown : short(nameOf(id, states), roomName);
     // The open lamp stays in its room's list, marked as the one in the dial (owner, 01.11.2026): ring + aria-current.
     return '<div class="lps-row' + (on ? ' on' : '') + (na ? ' na' : '') + (self ? ' sel' : '') + '"'
       + (self ? ' aria-current="true"' : ' data-lps-tap="' + attr({ a: 'mi', id: id }) + '"') + '>'
       + '<div class="lps-ic" data-lps-tap="' + tg + '">' + glyph('light') + '</div>'
-      + '<div class="lps-tx"><b>' + esc(shown != null ? shown : short(nameOf(id, states), roomName)) + '</b><small>' + esc(sub) + '</small></div>'
-      + '<div class="lps-sw" role="switch" aria-checked="' + (on ? 'true' : 'false') + '" data-lps-tap="' + tg + '"></div>'
+      + '<div class="lps-tx"><b>' + esc(label) + '</b><small>' + esc(sub) + '</small></div>'
+      + '<div class="lps-sw" role="switch" tabindex="0" aria-label="' + esc(label) + '" aria-checked="' + (on ? 'true' : 'false') + '" data-lps-tap="' + tg + '"></div>'
       + '</div>';
   };
 
@@ -5159,7 +5160,7 @@
       if (cur != null) pr.forEach(function (p, i) { if (best < 0 || Math.abs(p.k - cur) < Math.abs(pr[best].k - cur)) best = i; });
       left += '<div class="lps-lbl' + (left ? ' lps-gap' : '') + '">' + esc(tr('Lichtfarbe')) + '</div><div class="lps-seg">'
         + pr.map(function (p, i) {
-          return '<div class="lps-sg' + (i === best ? ' on' : '') + '" role="button" data-lps-tap="'
+          return '<div class="lps-sg' + (i === best ? ' on' : '') + '" role="button" tabindex="0" data-lps-tap="'
             + attr({ a: 'ct', ids: ctT, k: p.k }) + '">'
             + '<i class="lps-dot" style="background:' + esc(p.d === 'cold' ? 'var(--casora-soft-dot-cold, var(--casora-lps-dot-cold))' : 'var(--casora-lps-dot-' + p.d + ')') + '"></i>' + esc(tr(p.l)) + '</div>';
         }).join('') + '</div>';
@@ -5172,7 +5173,7 @@
       // 1.3 header A: scenes with their own section heading.
       left += '<div class="lps-lbl' + (left ? ' lps-gap' : '') + '">' + esc(tr('Szenen')) + '</div>'
         + '<div class="lps-chips" style="margin-top:0">' + sc2.map(function (id) {
-        return '<div class="lps-chip' + (id === last ? ' on' : '') + '" role="button" data-lps-tap="' + attr({ a: 'scene', id: id }) + '">'
+        return '<div class="lps-chip' + (id === last ? ' on' : '') + '" role="button" tabindex="0" data-lps-tap="' + attr({ a: 'scene', id: id }) + '">'
           + esc(short(nameOf(id, states), room)) + '</div>';
       }).join('') + '</div>';
     }
@@ -5261,7 +5262,7 @@
         return '<div class="lps-row' + (s.on ? ' on' : '') + '" data-lps-tap="' + attr({ a: 'room', gid: cfg.gid, idx: i, name: r.name }) + '">'
           + '<div class="lps-ic" data-lps-tap="' + attr(sc) + '">' + glyph('light') + '</div>'
           + '<div class="lps-tx"><b>' + esc(r.name) + '</b><small>' + esc(subline(s, false)) + '</small></div>'
-          + '<div class="lps-sw" role="switch" aria-checked="' + (s.on ? 'true' : 'false') + '" data-lps-tap="' + attr(sc) + '"></div>'
+          + '<div class="lps-sw" role="switch" tabindex="0" aria-label="' + esc(r.name) + '" aria-checked="' + (s.on ? 'true' : 'false') + '" data-lps-tap="' + attr(sc) + '"></div>'
           + '</div>';
       }).join('') + '</div>';
   };
@@ -5509,6 +5510,13 @@
     tDone = Date.now(); if (ev.cancelable) ev.preventDefault(); ev.stopPropagation();
     act(el);
   }, { capture: true, passive: false });
+  window.addEventListener('keydown', function (ev) {
+    if (ev.key !== 'Enter' && ev.key !== ' ') return;
+    var el = ev.composedPath ? ev.composedPath()[0] : ev.target;
+    if (!el || !el.hasAttribute || !el.hasAttribute('data-lps-tap') || !/^(switch|button)$/.test(el.getAttribute('role') || '')) return;
+    ev.preventDefault(); ev.stopPropagation();
+    act(el);
+  }, true);
   window.addEventListener('click', function (ev) {
     var el = find(ev, 'data-lps-tap'); if (!el) return;
     ev.preventDefault(); ev.stopPropagation();

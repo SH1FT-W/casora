@@ -3092,7 +3092,7 @@
       "Coincidencia {1} %"
     ],
     [
-      "^Gestern (\\d{1,2}:\\d{2})$",
+      "^Gestern (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
       "Ayer {1}"
     ],
     [
@@ -3876,6 +3876,10 @@
       "Última vez {1}"
     ],
     [
+      "^Zuletzt (.+) (vor \\d+ (?:Min\\.|Std\\.|T\\.|Tagen)|gestern|gerade eben)$",
+      "Último {1} {2}"
+    ],
+    [
       "^Zuletzt (.+)$",
       "Último {1}"
     ],
@@ -4544,11 +4548,11 @@
       "vs {1}"
     ],
     [
-      "^Heute (\\d\\d:\\d\\d)$",
+      "^Heute (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
       "Hoy {1}"
     ],
     [
-      "^Morgen (\\d\\d:\\d\\d)$",
+      "^Morgen (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
       "Mañana {1}"
     ],
     [

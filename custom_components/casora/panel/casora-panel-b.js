@@ -894,7 +894,13 @@
         // Name from the visible text: the tooltip is partly a hint ("Smart
         // Sort is on …") and does not work as a name for screen readers.
         const nm = el.querySelector(".mname, .plabel, .bgn");
-        const t = ((nm && nm.textContent) || el.textContent || el.title || "").trim().replace(/\s+/g, " ").slice(0, 80);
+        let t = ((nm && nm.textContent) || el.textContent || el.title || "").trim().replace(/\s+/g, " ").slice(0, 80);
+        // Parts without text: the room photo and a tile's switch (a screen reader said just "button").
+        if (!t && el.dataset.pv === "photo") t = tr("Change the photo");
+        if (!t && el.classList.contains("mtgl")) {
+          const tn = el.closest(".mtile") && el.closest(".mtile").querySelector(".mname");
+          t = ((tn && tn.textContent.trim()) ? tn.textContent.trim().replace(/\s+/g, " ") + " · " : "") + tr("Switch");
+        }
         if (t && el.getAttribute("aria-label") !== t) el.setAttribute("aria-label", t);
       });
       if (!map._bWired) {
