@@ -1,6 +1,6 @@
 // @deckt: custom_components/casora/scripts/local/00-finder.js#casoraSecLead,casoraSecuritySummary
 // Security badge sub-line, several findings (owner, 13.11.2026): the most important one in words, icons only for the
-// rest. Rank: lock jammed, then open (alarm off, doors, windows, gates, locks, blinds), then tilted, then offline;
+// rest. Rank: lock jammed, then open (doors, windows, gates, locks, blinds), then tilted, then offline, then alarm off (2B);
 // within a rank the line's order (usual or the Studio's). One finding alone and the calm state stay as they were.
 //   node dev/unit/security_lead.mjs
 import fs from 'node:fs';
@@ -39,7 +39,7 @@ assert.deepEqual(p.icons, ['window-tilt', 'lock-open', 'camera'], 'the rest as i
 for (const [o, lead] of [
   [{ lockJammed: 1, doors: 2, windows: 1, camDead: 1 }, 'Schloss klemmt'],
   [{ lockJammed: 2, disarmed: true }, '2 Schlösser klemmen'],
-  [{ disarmed: true, doors: 1, lockDead: 1 }, 'Alarm aus'],
+  [{ disarmed: true, doors: 1, lockDead: 1 }, 'Tür offen'],
   [{ doors: 2, windows: 1 }, '2 Türen offen'],
   [{ windows: 3, locks: 1 }, '3 Fenster offen'],
   [{ windowsTilted: 2, gates: 1 }, 'Tor offen'],
@@ -50,11 +50,11 @@ for (const [o, lead] of [
   [{ lockDead: 1, camDead: 3 }, 'Schloss offline'],
 ]) assert.equal(parts(sum(o).html).lead, lead, JSON.stringify(o));
 
-// Jammed leads and leaves the rest in their order; „Alarm aus“ has no icon and stays a word there.
+// Jammed leads and leaves the rest in their order; „Alarm aus“ is the last icon (2B, 14.11.2026).
 p = parts(sum({ lockJammed: 1, disarmed: true, windows: 2, camDead: 1 }).html);
 assert.equal(p.lead, 'Schloss klemmt');
-assert.deepEqual(p.icons, ['window-open', 'camera']);
-assert.ok(sum({ lockJammed: 1, disarmed: true, windows: 2 }).html.indexOf('>Alarm aus<') > 0);
+assert.deepEqual(p.icons, ['window-open', 'camera', 'shield_off']);
+assert.ok(!sum({ lockJammed: 1, disarmed: true, windows: 2 }).html.includes('>Alarm aus<'));
 assert.ok(!sum({ lockJammed: 1, windows: 2 }).html.includes('lock-unlocking'), 'the lead has no icon of its own');
 // No number words like „4 offen“ any more.
 assert.ok(!/>\d+ (offen|offline|gekippt|klemm)/.test(sum({ doors: 1, windows: 1, locks: 1, camDead: 1 }).html));

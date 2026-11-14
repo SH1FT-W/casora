@@ -59,8 +59,8 @@ const deskState = (pg) => pg.evaluate((KIND) => {
   const items = g ? [...g.shadowRoot.querySelectorAll('.cs-sum-item')].map((x) => {
     const w = (x.getAttribute('aria-label') || x.textContent || '');
     const hit = Object.keys(KIND).find((re) => new RegExp(re, 'i').test(w));
-    // Rank of the finding as casoraSecLead has it: jammed, open (also „Alarm aus“), tilted, offline.
-    const rank = /klemm/i.test(w) ? 0 : /offen|Alarm aus/i.test(w) ? 1 : /gekippt/i.test(w) ? 2 : /offline/i.test(w) ? 3 : 4;
+    // Rank of the finding as casoraSecLead has it: jammed, open, tilted, offline, „Alarm aus“ (2B, 14.11.2026).
+    const rank = /klemm/i.test(w) ? 0 : /Alarm aus/i.test(w) ? 4 : /offen/i.test(w) ? 1 : /gekippt/i.test(w) ? 2 : /offline/i.test(w) ? 3 : 5;
     return { kind: hit ? KIND[hit] : w, rank, lead: x.classList.contains('cs-sum-lead') };
   }) : [];
   const sub = items.map((x) => x.kind);
@@ -234,7 +234,7 @@ const kinds = (got) => got.filter((k, i) => i === 0 || got[i - 1] !== k);
 const follows = (got) => JSON.stringify(kinds(got)) === JSON.stringify(want.filter((k) => got.includes(k)));
 await check('desktop: sub-row follows the order', follows(after.row) && JSON.stringify(after.row) !== JSON.stringify(before.row), { before: before.row, after: after.row, want });
 // Owner (13.11.2026): with several findings the most important one leads in words (rank: jammed, open, tilted,
-// offline; within a rank the Studio's order), the icons after it follow the Studio's order.
+// offline, alarm off; within a rank the Studio's order), the icons after it follow the Studio's order.
 const lead = after.items[0] || {};
 const top = Math.min(...after.items.map((x) => x.rank));
 const leadWant = after.items.filter((x) => x.rank === top).map((x) => x.kind)
