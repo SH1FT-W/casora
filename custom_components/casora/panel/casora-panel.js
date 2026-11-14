@@ -24594,9 +24594,11 @@ class CasoraPanel extends HTMLElement {
       const tally = hl ? null : lightTally(null, this._hass.states, this._hass,
         window._casoraHomeLightVarsOf ? window._casoraHomeLightVarsOf(V) : null);
       const lit = tally ? tally.on : lights.filter((e) => (st(e) || {}).state === "on").length;
+      // The dashboard badge's words (casoraLightTallyText): one lamp On/Off, several All off/All on/"2 on".
+      const tot = tally ? tally.tot : lights.length;
       out.push({
         id: "lights", label: "Lights", icon: "light", color: LIGHT, dim: !lit,
-        text: lit ? lit + " on" : "All off",
+        text: tot <= 1 ? (lit ? "On" : "Off") : !lit ? "All off" : lit === tot ? "All on" : lit + " on",
         subs: (hl ? hl.subs : lights).map((e) => {
           const l = st(e) || {};
           const br = l.attributes && l.attributes.brightness;
