@@ -3117,7 +3117,8 @@
     "Only shows: neither the icon nor the popup switches anything. For devices others should only look at.": "Toont alleen: pictogram en pop-up schakelen niets. Voor apparaten die alleen bekeken mogen worden.",
     "The tile only shows": "De tegel toont alleen",
     "view only": "alleen bekijken",
-    "It only shows, nothing switches.": "Ze toont alleen, er wordt niets geschakeld."
+    "It only shows, nothing switches.": "Ze toont alleen, er wordt niets geschakeld.",
+    "{room} has no area in Home Assistant, so Casora has nothing to suggest here. Search for a device above, or give an area in Home Assistant the name {room}.": "{room} heeft geen ruimte in Home Assistant, dus Casora heeft hier niets voor te stellen. Zoek hierboven een apparaat of geef een ruimte in Home Assistant de naam {room}."
   },
   "patterns": [
     [

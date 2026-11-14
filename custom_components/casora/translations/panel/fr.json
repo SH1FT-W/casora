@@ -3117,7 +3117,8 @@
     "Only shows: neither the icon nor the popup switches anything. For devices others should only look at.": "Affiche seulement : ni l’icône ni le popup ne commandent quoi que ce soit. Pour les appareils que les autres doivent seulement voir.",
     "The tile only shows": "La tuile affiche seulement",
     "view only": "lecture seule",
-    "It only shows, nothing switches.": "Elle affiche seulement, rien n’est commandé."
+    "It only shows, nothing switches.": "Elle affiche seulement, rien n’est commandé.",
+    "{room} has no area in Home Assistant, so Casora has nothing to suggest here. Search for a device above, or give an area in Home Assistant the name {room}.": "{room} n'est associé à aucune pièce dans Home Assistant, Casora n'a donc rien à proposer ici. Cherche un appareil ci-dessus ou donne le nom {room} à une pièce dans Home Assistant."
   },
   "patterns": [
     [

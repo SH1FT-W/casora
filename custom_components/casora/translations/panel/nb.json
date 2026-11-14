@@ -3117,7 +3117,8 @@
     "Only shows: neither the icon nor the popup switches anything. For devices others should only look at.": "Viser bare: verken symbolet eller popupen slår noe av eller på. For enheter andre bare skal se på.",
     "The tile only shows": "Flisen viser bare",
     "view only": "bare se",
-    "It only shows, nothing switches.": "Den viser bare, ingenting slås av eller på."
+    "It only shows, nothing switches.": "Den viser bare, ingenting slås av eller på.",
+    "{room} has no area in Home Assistant, so Casora has nothing to suggest here. Search for a device above, or give an area in Home Assistant the name {room}.": "{room} har ikke noe område i Home Assistant, så Casora har ingenting å foreslå her. Søk etter en enhet ovenfor, eller gi et område i Home Assistant navnet {room}."
   },
   "patterns": [
     [

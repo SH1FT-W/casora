@@ -250,7 +250,13 @@
     const n = Math.max(first, l.filter((c) => c.suggested || c.loose).length);
     return { shown: l.slice(0, n), rest: l.slice(n) };
   }
-  W.__casoraStudioUx = { SUB, WHAT, SCOPE, scopeOf, pathOf, typeFor, rankDevices, rankTypes, BY_DOMAIN, newInRoom, WORDS };
+  // Nothing new in the room (V18, newcomer round): a room without an HA area has no devices of its own, so "every
+  // device already has a tile" was wrong. Rooms find their area by name (casora-panel.js _roomArea), not by a setting.
+  function emptyRoomText(hasArea) {
+    return hasArea ? "Every device in {room} already has a tile. Search for one above."
+      : "{room} has no area in Home Assistant, so Casora has nothing to suggest here. Search for a device above, or give an area in Home Assistant the name {room}.";
+  }
+  W.__casoraStudioUx = { SUB, WHAT, SCOPE, scopeOf, pathOf, typeFor, rankDevices, rankTypes, BY_DOMAIN, newInRoom, WORDS, emptyRoomText };
   if (typeof customElements === "undefined" || !W.document) return;
 
   const CSS = `
@@ -921,7 +927,7 @@
           if (!list.length) {
             const e = document.createElement("div");
             e.className = "mempty";
-            e.textContent = fill(tr("Every device in {room} already has a tile. Search for one above."), { room: roomName });
+            e.textContent = fill(tr(emptyRoomText(overview || !!(this._roomArea && this._roomArea(room)))), { room: roomName });
             res.appendChild(e);
           }
           at = Math.min(at, Math.max(0, list.length - 1));
