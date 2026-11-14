@@ -3225,31 +3225,31 @@
       "“{1} Mobile” toegevoegd. Open het via Kies een dashboard."
     ],
     [
-      "^(-?[\\d.]+°) · Cooling$",
+      "^(-?[\\d.,]+°) · Cooling$",
       "{1} · Koelt"
     ],
     [
-      "^(-?[\\d.]+°) · Heating$",
+      "^(-?[\\d.,]+°) · Heating$",
       "{1} · Verwarmt"
     ],
     [
-      "^(-?[\\d.]+°) · Off$",
+      "^(-?[\\d.,]+°) · Off$",
       "{1} · Uit"
     ],
     [
-      "^(-?[\\d.]+°) · Ready$",
+      "^(-?[\\d.,]+°) · Ready$",
       "{1} · Gereed"
     ],
     [
-      "^(-?[\\d.]+°) · Automatic$",
+      "^(-?[\\d.,]+°) · Automatic$",
       "{1} · Automatisch"
     ],
     [
-      "^(-?[\\d.]+°) · Heating to (.+)$",
+      "^(-?[\\d.,]+°) · Heating to (.+)$",
       "{1} · Verwarmt naar {2}"
     ],
     [
-      "^(-?[\\d.]+°) · Cooling to (.+)$",
+      "^(-?[\\d.,]+°) · Cooling to (.+)$",
       "{1} · Koelt naar {2}"
     ],
     [

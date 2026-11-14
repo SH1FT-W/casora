@@ -13442,8 +13442,11 @@ window.casoraMenuGlass = {
     + '.hui-dl-c{position:absolute;left:20%;right:20%;top:20cqw;height:60cqw;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none;white-space:normal;'
     +   'hyphens:auto;-webkit-hyphens:auto;hyphenate-limit-chars:10 4 4;overflow-wrap:break-word;}'
     + '.hui-dl-c > *{max-width:100%;text-wrap:balance;}'
-    // A fact keeps its value together, its word may move to the next line (a phone's wheel is narrow).
-    + '.hui-dl-c .hui-dl-w2 b{white-space:nowrap;}'
+    // A fact keeps a short value together („1.192 km“), its word may move to the next line (a phone's wheel is narrow).
+    // A long value („Landkreis Musterberg Nordwest“) wraps at its spaces – kept on one line it was cut off (audit 14.11.2026).
+    + '.hui-dl-c .hui-dl-w2 b.nw{white-space:nowrap;}'
+    // A long value breaks between its words, not inside one („Ems-land“); an over-long word still breaks (overflow-wrap).
+    + '.hui-dl-c .hui-dl-w2 b{-webkit-hyphens:manual;hyphens:manual;}'
     + '.hui-dl-c .hui-st-val{justify-content:center;}'
     + '.hui-dl-c .hui-st-n{font-size:clamp(46px, 18cqw, 80px);letter-spacing:-0.04em;line-height:1;}'
     + '.hui-dl-c .hui-st-u{font-size:clamp(20px, 6.7cqw, 28px);}'
@@ -14082,8 +14085,8 @@ window.casoraMenuGlass = {
         // A count reads „2 geöffnet“; anything else names its word first („Seit 19:40“, „Zuletzt vor 7 Min.“,
         // „Letzte Fahrt vor 42 Tagen“) – „vor 7 Min. Zuletzt“ read backwards (review 2, DD-11/T16/fam-12).
         + (facts.length ? '<div class="hui-dl-w2 fx">' + facts.map(function (f) {
-          return /^\d+$/.test(String(f.value)) ? '<span class="l"><b>' + esc(f.value) + '</b> <span>' + esc(f.label) + '</span></span>'
-            : '<span class="l"><span>' + esc(f.label) + '</span> <b>' + esc(f.value) + '</b></span>';
+          return /^\d+$/.test(String(f.value)) ? '<span class="l"><b class="nw">' + esc(f.value) + '</b> <span>' + esc(f.label) + '</span></span>'
+            : '<span class="l"><span>' + esc(f.label) + '</span> <b' + (String(f.value).length <= 16 ? ' class="nw"' : '') + '>' + esc(f.value) + '</b></span>';
         }).join('') + '</div>' : '');
       // o.image (the car's picture, #89): the picture large in the middle, under it only the value and its word
       // (o.value/o.unit/o.caption, else o.text) – the facts go to the head's status line. o.imageOwn: a photo with a

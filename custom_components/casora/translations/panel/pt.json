@@ -3225,31 +3225,31 @@
       "“{1} Mobile” adicionado. Abre-o em Escolhe um painel."
     ],
     [
-      "^(-?[\\d.]+°) · Cooling$",
+      "^(-?[\\d.,]+°) · Cooling$",
       "{1} · Arrefece"
     ],
     [
-      "^(-?[\\d.]+°) · Heating$",
+      "^(-?[\\d.,]+°) · Heating$",
       "{1} · Aquece"
     ],
     [
-      "^(-?[\\d.]+°) · Off$",
+      "^(-?[\\d.,]+°) · Off$",
       "{1} · Desligado"
     ],
     [
-      "^(-?[\\d.]+°) · Ready$",
+      "^(-?[\\d.,]+°) · Ready$",
       "{1} · Pronto"
     ],
     [
-      "^(-?[\\d.]+°) · Automatic$",
+      "^(-?[\\d.,]+°) · Automatic$",
       "{1} · Auto"
     ],
     [
-      "^(-?[\\d.]+°) · Heating to (.+)$",
+      "^(-?[\\d.,]+°) · Heating to (.+)$",
       "{1} · Aquece até {2}"
     ],
     [
-      "^(-?[\\d.]+°) · Cooling to (.+)$",
+      "^(-?[\\d.,]+°) · Cooling to (.+)$",
       "{1} · Arrefece até {2}"
     ],
     [
