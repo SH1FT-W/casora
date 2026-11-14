@@ -1081,8 +1081,14 @@
       s2.textContent = CSS;
       root.appendChild(s2);
     }
-    var api = { kind: '' };
+    var api = { kind: '' }, shown = false, gone = false;
     var update = function () {
+      // A box that was in the page and left it (the Studio draws its page again and never calls destroy): stop, or
+      // every redraw would leave a timer and a repaint listener behind.
+      if (gone) return;
+      // A box not in the page yet (drawn before it is inserted) is drawn as before.
+      if (host.isConnected === false && shown) { api.destroy(); return; }
+      if (host.isConnected) shown = true;
       var want = typeof o.kind === 'function' ? o.kind() : kind;
       var base = (typeof o.context === 'function' ? o.context() : o.context) || {};
       var now = base.now || new Date();
@@ -1115,7 +1121,15 @@
     // Data that arrives later (forecast, calendar) repaints at once.
     listeners.push(update);
     api.update = update;
-    api.destroy = function () { clearInterval(timer); listeners.splice(listeners.indexOf(update), 1); host.innerHTML = ''; };
+    // Once only: a second call must not take another mount's listener (indexOf -1 would splice the last one).
+    api.destroy = function () {
+      if (gone) return;
+      gone = true;
+      clearInterval(timer);
+      var i = listeners.indexOf(update);
+      if (i > -1) listeners.splice(i, 1);
+      host.innerHTML = '';
+    };
     return api;
   };
 
