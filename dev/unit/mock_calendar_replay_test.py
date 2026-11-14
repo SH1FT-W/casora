@@ -125,6 +125,13 @@ class CalendarReplayTest(unittest.TestCase):
         self.assertIsNone(replay.fixture_events({}, fixture, start, end))
         self.assertEqual(replay.fixture_events({"events": []}, fixture, start, end), [])
 
+    def test_events_without_export_date_name_the_missing_key(self):
+        start = datetime(2026, 11, 9, tzinfo=timezone.utc)
+        end = datetime(2026, 11, 10, tzinfo=timezone.utc)
+        entity = {"events": [{"start": "2026-11-09", "end": "2026-11-10", "summary": "Naam vrij"}]}
+        with self.assertRaisesRegex(ValueError, "calendar_export_date"):
+            replay.fixture_events(entity, {}, start, end)
+
     def test_all_day_and_midnight_crossing_events_overlap_query(self):
         events = [
             {"summary": "Naam-AAAAAA", "start": "2026-11-09", "end": "2026-11-12"},
