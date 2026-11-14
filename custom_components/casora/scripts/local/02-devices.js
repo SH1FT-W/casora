@@ -597,7 +597,7 @@
       const nm = (o) => { try { if (hass && hass.formatEntityState) return hass.formatEntityState(sel, o) || o; } catch (x) {} return o; };
       const seen = new Set();
       return (sel.attributes.options || []).filter((o) => { const k = nm(o); if (seen.has(k)) return false; seen.add(k); return true; })
-        .map((o) => ({ icon: aqIcon(o + ' ' + nm(o)), text: nm(o), active: sel.state === o,
+        .map((o) => ({ icon: aqIcon(o + ' ' + nm(o)), text: nm(o), fit: true, active: sel.state === o,
           svc: { domain: 'select', service: 'select_option', data: { option: o }, target: { entity_id: c.hx.sel } } }));
     }
     if (!l || l.state === 'unavailable') return [];
@@ -606,7 +606,8 @@
     // A raw effect key HA has no word for („partly_cloudy“) reads as words („Partly cloudy“) – never the raw value.
     const fxName = (e) => { let t = e; try { if (hass && hass.formatEntityAttributeValue) t = hass.formatEntityAttributeValue(l, 'effect', e) || e; } catch (x) {}
       return t === e && /^[a-z0-9_]+$/.test(e) ? (e.charAt(0).toUpperCase() + e.slice(1)).replace(/_/g, ' ') : t; };
-    return fx.length >= 2 ? fx.map((e) => ({ icon: aqIcon(e + ' ' + fxName(e)), text: fxName(e), active: l.state === 'on' && a.effect === e,
+    // fit: a long name gets a short word on the moon instead of a smaller size (V16, owner 14.11.2026; casora-core moonFitWord).
+    return fx.length >= 2 ? fx.map((e) => ({ icon: aqIcon(e + ' ' + fxName(e)), text: fxName(e), fit: true, active: l.state === 'on' && a.effect === e,
       svc: { domain: 'light', service: 'turn_on', data: { effect: e }, target: { entity_id: c.light } } })) : [];
   };
   // Who sets the colours: 'ha' | 'lamp' | null (no schedule switch).
