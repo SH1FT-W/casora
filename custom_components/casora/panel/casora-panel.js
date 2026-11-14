@@ -6095,6 +6095,21 @@ const numOf = (states, id) => {
   return Number.isNaN(n) ? null : n;
 };
 
+// The dashboard's lamp count (window.casoraLightTally, scripts/local/01-basis.js) for the preview's light tiles and
+// badges. A Studio opened straight (not after a dashboard) has no dashboard scripts and counted groups instead of
+// lamps ("3 on" under a dashboard's "4 on"): that one module is loaded once, then the preview is drawn again.
+let lightTallyLoad = null;
+const lightTally = (ent, states, hass, V) => {
+  if (typeof window.casoraLightTally === "function") return window.casoraLightTally(ent, states || {}, hass, V);
+  if (!lightTallyLoad && typeof window.casoraImportScript === "function") {
+    lightTallyLoad = window.casoraImportScript("local/01-basis.js").then(() => {
+      const p = window._casoraStudioPanel;
+      if (p && p.isConnected && p._state && typeof p._rebuildPreview === "function") p._rebuildPreview();
+    }, () => {});
+  }
+  return null;
+};
+
 // casora_light: one row per physical light, groups of groups flattened.
 const lightUnits = (states, eid, seen) => {
   const memsOf = (id) => {
@@ -6729,7 +6744,7 @@ const tileStateWord = (kind, tile, ent, states, hass) => {
     }
     case "light": {
       // Same count as the dashboard's tile, badge and popup (window.casoraLightTally, scripts/local/01-basis.js).
-      const t = window.casoraLightTally ? window.casoraLightTally(ent, states || {}, hass, V) : null;
+      const t = lightTally(ent, states, hass, V);
       if (!t) return lightWord(states, ent.entity_id);
       if (!t.tot || t.tot === 1) return t.on ? "On" : "Off";
       if (!t.on) return "All off";
@@ -24572,7 +24587,10 @@ class CasoraPanel extends HTMLElement {
     const lights = hl ? hl.ids : listed.length ? listed
       : (Array.isArray(members) && members.length ? members.filter(Boolean) : (grp ? [grp] : []));
     if (on("show_lights") && (grp || listed.length || (hl && hl.ids.length))) {
-      const lit = lights.filter((e) => (st(e) || {}).state === "on").length;
+      // The lamps the dashboard's badge counts (casora_badge_light_group: a group's lamps, not its sub-groups).
+      const tally = hl ? null : lightTally(null, this._hass.states, this._hass,
+        window._casoraHomeLightVarsOf ? window._casoraHomeLightVarsOf(V) : null);
+      const lit = tally ? tally.on : lights.filter((e) => (st(e) || {}).state === "on").length;
       out.push({
         id: "lights", label: "Lights", icon: "light", color: LIGHT, dim: !lit,
         text: lit ? lit + " on" : "All off",
