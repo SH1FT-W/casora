@@ -56,7 +56,12 @@ def clean(all_ms: Any, rows: Any, now_ms: float | None = None) -> dict:
 class HiddenList:
     def __init__(self, hass: HomeAssistant) -> None:
         self.hass = hass
-        self.store: Store = Store(hass, 1, STORE_KEY)
+        # One Store per HA run: after a reload the new list reads a still pending (delayed) save from it,
+        # a new Store object would read the older file.
+        dom = hass.data.setdefault(DOMAIN, {})
+        if "notify_hidden_store" not in dom:
+            dom["notify_hidden_store"] = Store(hass, 1, STORE_KEY)
+        self.store: Store = dom["notify_hidden_store"]
         self.data: dict = {"all": 0.0, "rows": {}}
 
     async def async_load(self) -> None:
