@@ -1903,8 +1903,10 @@
   /* Taps: chart rows (data-hp-metric) and „Erledigt“ for maintenance (two steps). */
   L.wrap = function (html) {
     return '<style>.hui-row.hp-sel{background:var(--casora-popup-row-hover, rgba(255,255,255,0.08));}'
-      + '.hw-done{display:inline-block;pointer-events:auto;cursor:pointer;padding:8px 10px;margin:-8px -10px;white-space:nowrap;'
+      // Hit area 44 on the phone (the word with its padding is 36): an invisible ::before above and below (§12).
+      + '.hw-done{position:relative;display:inline-block;pointer-events:auto;cursor:pointer;padding:8px 10px;margin:-8px -10px;white-space:nowrap;'
       + 'font-size:16px;font-weight:500;color:var(--casora-popup-ui-action, var(--casora-color-teal, #00C3D0));}'
+      + '.hw-done::before{content:"";position:absolute;inset:-4px 0;}'
       + '.hw-done.armed{color:#fff;background:var(--casora-popup-ui-action, var(--casora-color-teal, #00C3D0));border-radius:11px;}'
       + '</style>'
       + '<div ontouchstart="window._hpPlantTap&&window._hpPlantTap(event,\'s\');window._casoraLaundry.tap(event,\'s\')"'
