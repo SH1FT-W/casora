@@ -1902,16 +1902,17 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
 
   // ── Most important finding of the security sub-line (owner, 13.11.2026) ─────────
   // Rank as everywhere in the badge: a jammed lock first (casoraSecurityLevel: always „alarm“; a triggered alarm says
-  // „Alarm!“ alone before this is asked), then what is open (alarm off, doors, windows, gates, locks, blinds), then
-  // what is tilted, then what is offline (the old lead word: „N offen“, else tilted, else offline). Within one rank
+  // „Alarm!“ alone before this is asked), then what is open (doors, windows, gates, locks, blinds), then what is
+  // tilted, then what is offline (the old lead word: „N offen“, else tilted, else offline), then „Alarm aus“: an alarm
+  // that is off is normal by day and must not push the real findings aside (owner, 14.11.2026, „2B“). Within one rank
   // the line's own order decides (the usual one or the Studio's security_sub_order). L = the list of
   // casoraSecuritySummary ([word, icon, number, offline?, key, kind]); returns the index of the lead, -1 if empty.
-  var SEC_LEAD_RANK = { jammed: 0, open: 1, tilted: 2, offline: 3 };
+  var SEC_LEAD_RANK = { jammed: 0, open: 1, tilted: 2, offline: 3, disarmed: 4 };
   window.casoraSecLead = function (L) {
     var best = -1, r = 99;
     (L || []).forEach(function (x, i) {
       var k = SEC_LEAD_RANK[x && x[5]];
-      if (k === undefined) k = 4;
+      if (k === undefined) k = 5;
       if (k < r) { r = k; best = i; }
     });
     return best;
@@ -1925,7 +1926,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
   // o.order: security_sub_order (casoraSecSub), the Studio's own order of the kinds.
   // Returns { text, html }: text is always the list in words (also for tooltip/screen reader),
   // html only for 'short' with findings, otherwise null.
-  // Order: alarm off, door, window open, tilted, gate, lock, covers, offline.
+  // Order: door, window open, tilted, gate, lock, covers, offline, alarm off (last: the real findings first, 2B).
   window.casoraSecuritySummary = function (sec, o) {
     var S = sec || {};
     o = o || {};
@@ -1937,7 +1938,6 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     }
     // [word, icon, number, offline?, key, kind]; kind ranks the lead (casoraSecLead); words with a number are in phrases/en.json.
     var L = [];
-    if (S.disarmed) L.push(['Alarm aus', null, 0, false, 'alarm', 'open']);
     if (S.doors) L.push([n(S.doors, 'Tür offen', 'Türen offen'), 'door-open', S.doors, false, 'doors', 'open']);
     if (S.windows) L.push([n(S.windows, 'Fenster offen', 'Fenster offen'), 'window-open', S.windows, false, 'windows', 'open']);
     if (S.windowsTilted) L.push([n(S.windowsTilted, 'Fenster gekippt', 'Fenster gekippt'), 'window-tilt', S.windowsTilted, false, 'windows', 'tilted']);
@@ -1949,6 +1949,8 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     if (S.covers) L.push([n(S.covers, 'Jalousie offen', 'Jalousien offen'), 'cover_open', S.covers, false, 'covers', 'open']);
     if (S.lockDead) L.push([n(S.lockDead, 'Schloss offline', 'Schlösser offline'), 'lock', S.lockDead, true, 'locks', 'offline']);
     if (S.camDead) L.push([n(S.camDead, 'Kamera offline', 'Kameras offline'), 'camera', S.camDead, true, 'cameras', 'offline']);
+    // Alarm off: a sign behind the findings (icon, no number); alone it stays in words like any single finding.
+    if (S.disarmed) L.push(['Alarm aus', 'shield_off', 0, false, 'alarm', 'disarmed']);
     // Own order from the Studio (security_sub_order): by kind; the lead (most important finding) still goes first.
     if (o.order && window.casoraSecSub) L = window.casoraSecSub.sort(L, o.order, function (x) { return x[4]; });
     var text = L.map(function (x) { return x[0]; }).join(' · ');
@@ -1973,7 +1975,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
         + '<span aria-hidden="true" style="position:relative;display:inline-block;width:1.05em;height:1.05em;flex:none">'
         + '<span style="position:absolute;inset:0;background-color:currentColor;-webkit-mask:url(\'' + u + '\') center / contain no-repeat;mask:url(\'' + u + '\') center / contain no-repeat;' + (x[3] ? 'opacity:.7;' : '') + '"></span>'
         + (x[3] ? '<span style="position:absolute;left:-12%;top:50%;width:124%;height:1.6px;margin-top:-0.8px;border-radius:1px;background:currentColor;transform:rotate(-45deg)"></span>' : '')
-        + '</span><span aria-hidden="true" style="font-variant-numeric:tabular-nums;font-weight:700">' + x[2] + '</span></span>';
+        + '</span>' + (x[2] ? '<span aria-hidden="true" style="font-variant-numeric:tabular-nums;font-weight:700">' + x[2] + '</span>' : '') + '</span>';
     });
     // The lead goes first, the rest keep their order (the usual one or the Studio's).
     if (li > 0) items.unshift(items.splice(li, 1)[0]);

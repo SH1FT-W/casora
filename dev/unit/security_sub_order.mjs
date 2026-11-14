@@ -80,13 +80,13 @@ const sec = { triggered: false, disarmed: true, locks: 1, lockJammed: 0, lockDea
   windowsTilted: 0, gates: 0, covers: 0, camDead: 1, insecure: true, problem: true };
 const sum = window.casoraSecuritySummary;
 assert.equal(sum(sec, { summary: 'detailed' }).text,
-  'Alarm aus · 2 Türen offen · Fenster offen · Schloss offen · Schloss offline · Kamera offline');
+  '2 Türen offen · Fenster offen · Schloss offen · Schloss offline · Kamera offline · Alarm aus');
 assert.equal(sum(sec, { summary: 'detailed', order: ['cameras', 'locks', 'windows'] }).text,
   'Kamera offline · Schloss offen · Schloss offline · Fenster offen · Alarm aus · 2 Türen offen');
 const short = sum(sec, { summary: 'short', order: ['windows', 'doors'] }).html;
 const icons = [...short.matchAll(/mask:url\('\/i\/([\w-]+)\.svg'\)/g)].map((m) => m[1]).filter((x, i, a) => a.indexOf(x) === i);
 // The most important finding stands in words in front (casoraSecLead): of the open ones the first in the list's order.
-assert.deepEqual(icons, ['door-open', 'lock-open', 'lock', 'camera']);
+assert.deepEqual(icons, ['door-open', 'shield_off', 'lock-open', 'lock', 'camera']);
 assert.ok(/^<span class="cs-sum"[^>]*><span class="cs-sum-item cs-sum-lead"[^>]*>Fenster offen</.test(short), 'the lead word stays first');
 
 // ── Studio: kinds the badge has, list rows ───────────────────────────────────

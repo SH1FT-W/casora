@@ -36,7 +36,7 @@ const mix = sec({ locks: 1, windows: 2, doorsTilted: 1, camDead: 1 });
 assert.deepEqual(sum(mix, { summary: 'detailed' }), { text: '2 Fenster offen · Tür gekippt · Schloss offen · Kamera offline', html: null });
 const all = sec({ disarmed: true, doors: 2, gates: 1, locks: 2, windows: 1, windowsTilted: 3, doorsTilted: 2, lockDead: 2, camDead: 2 });
 assert.equal(sum(all, { summary: 'detailed' }).text,
-  'Alarm aus · 2 Türen offen · Fenster offen · 3 Fenster gekippt · 2 Türen gekippt · Tor offen · 2 Schlösser offen · 2 Schlösser offline · 2 Kameras offline');
+  '2 Türen offen · Fenster offen · 3 Fenster gekippt · 2 Türen gekippt · Tor offen · 2 Schlösser offen · 2 Schlösser offline · 2 Kameras offline · Alarm aus');
 assert.equal(sum(sec({ gates: 2, lockDead: 1 }), { summary: 'detailed' }).text, '2 Tore offen · Schloss offline');
 assert.equal(sum(sec({ disarmed: true }), { summary: 'detailed' }).text, 'Alarm aus');
 
@@ -48,10 +48,11 @@ for (const o of [{}, { summary: 'short' }, { summary: 'irgendwas' }]) {
 }
 const html = sum(all, {}).html;
 const icons = [...html.matchAll(/url\('\/i\/([\w-]+)\.svg'\)/g)].map((m) => m[1]).filter((x, i, a) => a.indexOf(x) === i);
-assert.deepEqual(icons, ['door-open', 'window-open', 'window-tilt', 'garage', 'lock-open', 'lock', 'camera'], 'Reihenfolge der Symbole');
+assert.deepEqual(icons, ['window-open', 'window-tilt', 'garage', 'lock-open', 'lock', 'camera', 'shield_off'], 'Reihenfolge der Symbole');
 const labels = [...html.matchAll(/aria-label="([^"]+)" title="([^"]+)"/g)].map((m) => { assert.equal(m[1], m[2]); return m[1]; });
-assert.deepEqual(labels, ['2 Türen offen', 'Fenster offen', '3 Fenster gekippt', '2 Türen gekippt', 'Tor offen', '2 Schlösser offen', '2 Schlösser offline', '2 Kameras offline']);
-assert.ok(html.indexOf('>Alarm aus<') > 0 && html.indexOf('>Alarm aus<') < html.indexOf('door-open'), 'Alarm aus steht vorn, als Wort');
+assert.deepEqual(labels, ['Fenster offen', '3 Fenster gekippt', '2 Türen gekippt', 'Tor offen', '2 Schlösser offen', '2 Schlösser offline', '2 Kameras offline', 'Alarm aus']);
+// 2B (14.11.2026): the first open finding leads in words, „Alarm aus“ is the last icon.
+assert.ok(/cs-sum-lead"[^>]*>2 Türen offen</.test(html) && !html.includes('>Alarm aus<'), 'Alarm aus hinten, als Symbol');
 // Security badge rework (07.11.2026): one finding alone stands in words, short form too („Fenster offen“, not
 // „1 offen ▢ 1“ – the same number twice).
 for (const [o, w] of [[{ windows: 1 }, 'Fenster offen'], [{ windows: 2 }, '2 Fenster offen'], [{ locks: 1 }, 'Schloss offen'],
