@@ -5,7 +5,8 @@
 // before: phone badges 40 high, bell „Alles gelesen“/„Alle entfernen“ 32 high, tablet page dots 18 × 18, room bar
 // arrows 30 × 30 (the phone bar's bell/assist/⋯ already reached 48 through --casora-chrome-hit). Invisible rims keep the
 // look; only the page dots sit wider apart on touch (44 each, they cannot grow without overlapping). The mouse keeps
-// the old sizes. Measured as a finger meets it: how far from the centre elementFromPoint (through shadow roots) still
+// the old sizes. The page dots fill the row's bottom padding down to the screen edge but never reach up over the tiles:
+// 44 high dots took the bottom 12 px of the tiles above them (14.11.2026, r30: a swipe stack's own dots went dead). Measured as a finger meets it: how far from the centre elementFromPoint (through shadow roots) still
 // lands on the element.
 import { open, usePage, dashboard, casoraDashboards, check, need, finish } from './lib.mjs';
 
@@ -27,6 +28,7 @@ const HIT = () => {
       for (let p = n; p; p = p.parentNode || p.host) if (p === el) return true;
       return false;
     };
+    window.__hits = hits;
     const ext = (dx, dy) => { let k = 0; while (k < 30 && hits(cx + dx * (k + 1), cy + dy * (k + 1))) k++; return k; };
     if (!hits(cx, cy)) return { w: 0, h: 0, vis: [Math.round(R.width), Math.round(R.height)] };
     return { w: ext(-1, 0) + ext(1, 0) + 1, h: ext(0, -1) + ext(0, 1) + 1, vis: [Math.round(R.width), Math.round(R.height)] };
@@ -76,7 +78,12 @@ const measureTablet = async (touch) => {
   await dashboard(page, desk.url + '/' + room);
   await page.evaluate(HIT);
   return page.evaluate(() => {
-    const dots = window.__pierce('#dots > button').filter((b) => b.getBoundingClientRect().width > 0).map((b, i) => ({ n: 'Punkt ' + (i + 1), ...window.__hitBox(b) }));
+    const dots = window.__pierce('#dots > button').filter((b) => b.getBoundingClientRect().width > 0).map((b, i) => {
+      const R = b.getBoundingClientRect(), top = b.parentElement.getBoundingClientRect().top;
+      const hb = window.__hitBox(b);
+      // Above the padding (over the tile) the tile must take the tap, not the dot.
+      return { n: 'Punkt ' + (i + 1), ...hb, edge: R.bottom >= innerHeight - 1, overTile: window.__hits(R.x + R.width / 2, top - 3) };
+    });
     const arrows = window.__pierce('casora-nav-bar').flatMap((nb) => [...(nb.shadowRoot ? nb.shadowRoot.querySelectorAll('.more') : [])])
       .filter((b) => b.getBoundingClientRect().width > 0 && getComputedStyle(b).pointerEvents !== 'none' && getComputedStyle(b).visibility !== 'hidden')
       .map((b) => ({ n: b.className, ...window.__hitBox(b) }));
@@ -86,7 +93,10 @@ const measureTablet = async (touch) => {
 const tab = await measureTablet(true);
 await need('Tablet meldet Touch', tab.coarse);
 await need('Tablet: Seitenpunkte unter der Kachelreihe', tab.dots.length >= 2, tab.dots.length);
-await check('Tablet: Seitenpunkte mindestens 44 × 44', tab.dots.every((x) => x.w >= 44 && x.h >= 44), fmt(tab.dots));
+// The tablet row ends at the screen edge (row padding below the tiles 20): a dot reaching that edge cannot be missed
+// downwards, so it counts as tall enough without covering the tiles.
+await check('Tablet: Seitenpunkte 44 breit, 44 hoch oder bis zum Bildschirmrand', tab.dots.every((x) => x.w >= 44 && (x.h >= 44 || x.edge)), fmt(tab.dots));
+await check('Tablet: Seitenpunkte reichen nicht über die Kacheln', tab.dots.every((x) => !x.overTile), fmt(tab.dots));
 if (tab.arrows.length) await check('Tablet: Raumleiste Weiter/Zurück mindestens 44 × 44', tab.arrows.every((x) => x.w >= 44 && x.h >= 44), fmt(tab.arrows));
 else console.log('  info   Raumleiste ohne aktiven Pfeil');
 await check('Tablet: Pfeile sichtbar weiter 30', tab.arrows.every((x) => x.vis[0] === 30), fmt(tab.arrows));

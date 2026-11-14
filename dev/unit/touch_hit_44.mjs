@@ -15,9 +15,9 @@ const flat = (s) => s.replace(/\s+/g, ' ');
 assert.match(core, /@media \(pointer:coarse\)\{' \+ W \+ '\.casora-notify-read\{position:relative;\}'\s*\+\s*W \+ '\.casora-notify-read::before\{content:"";position:absolute;inset:-6px 0;/, 'bell pills: 44 on touch');
 // Room bar arrows: invisible 7 px rim, touch only.
 assert.match(flat(core), /@media \(pointer: coarse\) \{ \.bar\.paged \.scroller \.more::after \{ content: ""; position: absolute; inset: -7px;/, 'room bar arrows: 44 on touch');
-// Page dots: 44 × 44 on touch, 18 with a mouse.
+// Page dots: 44 wide on touch, filling the row's bottom padding (not reaching over the tiles); 18 with a mouse.
 assert.match(flat(row), /#dots > button \{ width: 18px; height: 18px;/, 'dots stay 18 with a mouse');
-assert.match(flat(row), /@media \(pointer: coarse\) \{ #dots \{ gap: 0; \} #dots > button, #dots > button\.on \{ width: 44px; height: 44px; margin: -2px 0; \} \}/, 'dots 44 on touch');
+assert.match(flat(row), /@media \(pointer: coarse\) \{ #dots \{ gap: 0; \} #dots > button, #dots > button\.on \{ width: 44px; height: 100%; \} \}/, 'dots 44 wide on touch, as high as the bottom padding');
 
 // Phone badges: the hit layer fills the badge plus --casora-badge-hit-top above it; only the phone rows set it, on touch.
 const base = T.casora_badge_base;
