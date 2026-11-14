@@ -96,8 +96,8 @@ casora_pulse: { keys: ["problems"], domain: "sensor", platform: "pulse", both: t
 | Entität fehlt / gelöscht | Kachel bleibt ruhig (Rückfall), kein TypeError |
 | Integration fehlt | im Studio nicht angeboten (`onlyIf`) |
 | leer / viele Einträge | „Alles ok“-Text bzw. Zählung, Gruppen: Einzahl bei genau 1 („An“, nicht „Alle an“) |
-| langer Name / langer Zustand | `…` bzw. `casoraStateFit`, nichts ragt heraus |
-| Desktop 1440 · Tablet 1024/768 · Handy 393 (WebKit) | Kreis ringsum gleich, Name nicht zu früh gekürzt |
+| langer Name / langer Zustand | `…` bzw. `casoraStateFit`, nichts ragt heraus; ein Zähler („+1“, auch am Ende der Kurzform) steht als Pille und wird nie gekürzt (`statefit_counter_pill.mjs`) |
+| Desktop 1440 · Tablet 1024/768 · Handy 393 (WebKit) | Kreis ringsum gleich, Name nicht zu früh gekürzt (Handy: bis 4 px vor den Kachelrand, r812) |
 | hell / dunkel | Kontrast Text 4,5:1, Symbol 3:1 |
 | Deutsch / Englisch | keine deutschen Reste im Englischen |
 | Studio-Vorschau | sieht aus wie im Dashboard |

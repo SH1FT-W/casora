@@ -3132,12 +3132,18 @@ window.casoraMenuGlass = {
       const em = window.casoraTextEm(t, weight);
       const escHtml = window.casoraEsc || ((x) => String(x == null ? '' : x).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
       if (!(em > 0)) return escHtml(t);
+      // The counter as its own small pill: never cut, only the text before it ends with "…" („Organi… +1“).
+      const pillHtml = (n) => '<span style="flex:none;margin-left:6px;padding:0 6px;border-radius:999px;font-size:.86em;font-weight:700;'
+        + 'background:color-mix(in srgb, currentColor 14%, transparent)" data-no-i18n>+' + escHtml(n) + '</span>';
       const a = alt == null ? '' : String(alt);
       if (a) {
+        // A short form ending in " +N" (waste: „In 2 T. · Bio +1“) shows N as the pill, like the counter below.
+        const at = /^(.*\S)\s\+(\d+)$/.exec(a);
         return '<casora-statefit data-casora-clip style="display:inline-block;vertical-align:top;max-width:calc(100cqi - '
           + 'var(--casora-tile-state-inset, 0px));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'
-          + '<span class="sf-f">' + escHtml(t) + '</span><span class="sf-s" style="display:none;max-width:100%">'
-          + '<span style="min-width:0;overflow:hidden;text-overflow:ellipsis">' + escHtml(a) + '</span></span></casora-statefit>';
+          + '<span class="sf-f">' + escHtml(t) + '</span><span class="sf-s" style="display:none;max-width:100%;align-items:baseline">'
+          + '<span style="min-width:0;overflow:hidden;text-overflow:ellipsis">' + escHtml(at ? at[1] : a) + '</span>'
+          + (at ? pillHtml(at[2]) : '') + '</span></casora-statefit>';
       }
       /* 1.4.1: überall (Handy und Desktop) dieselbe Schriftgröße – kein Verkleinern mehr. Passt ein Text
          mit „ · “ nicht, zeigt casora-statefit den ersten Teil ganz und zählt den Rest („Trocknet Mopp +3“,
@@ -3152,8 +3158,7 @@ window.casoraMenuGlass = {
         // Der Zähler bleibt immer sichtbar; zu lang wird nur der erste Teil gekürzt („Trocknu… +1“).
         short = '<span class="sf-s" style="display:none;max-width:100%;align-items:baseline">'
           + '<span style="min-width:0;overflow:hidden;text-overflow:ellipsis">' + escHtml(parts[0]) + '</span>'
-          + '<span style="flex:none;margin-left:6px;padding:0 6px;border-radius:999px;font-size:.86em;font-weight:700;'
-          + 'background:color-mix(in srgb, currentColor 14%, transparent)" data-no-i18n>+' + more + '</span></span>';
+          + pillHtml(more) + '</span>';
       }
       return '<casora-statefit data-casora-clip style="display:inline-block;vertical-align:top;max-width:calc(100cqi - '
         + 'var(--casora-tile-state-inset, 0px));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'
