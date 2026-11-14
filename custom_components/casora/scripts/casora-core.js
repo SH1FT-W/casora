@@ -1259,7 +1259,7 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
   // Lange Begrüßung: eine Zeile, Schrift so weit kleiner, bis sie passt (nie größer als im Design).
   // area: Rasterplatz erzwingen (button-card setzt grid-area eigener Felder selbst).
   // avoid: function returning an element on the same line to the right (phone: the weather). The greeting ends 12 px
-  // before it starts; a fixed reserve was too small for long weather texts (#197, "Gedeeltelijk bewolkt").
+  // before it starts; a fixed reserve was too small for long weather texts (#197, long Dutch condition texts).
   window.casoraFitTitle = function (el, area, avoid) {
     if (!el) return;
     // First render: the card is not in the page yet. Try again shortly instead of waiting for the next render (#197).
