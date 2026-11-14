@@ -13445,6 +13445,8 @@ window.casoraMenuGlass = {
     // A fact keeps a short value together („1.192 km“), its word may move to the next line (a phone's wheel is narrow).
     // A long value („Landkreis Musterberg Nordwest“) wraps at its spaces – kept on one line it was cut off (audit 14.11.2026).
     + '.hui-dl-c .hui-dl-w2 b.nw{white-space:nowrap;}'
+    // A long value breaks between its words, not inside one („Ems-land“); an over-long word still breaks (overflow-wrap).
+    + '.hui-dl-c .hui-dl-w2 b{-webkit-hyphens:manual;hyphens:manual;}'
     + '.hui-dl-c .hui-st-val{justify-content:center;}'
     + '.hui-dl-c .hui-st-n{font-size:clamp(46px, 18cqw, 80px);letter-spacing:-0.04em;line-height:1;}'
     + '.hui-dl-c .hui-st-u{font-size:clamp(20px, 6.7cqw, 28px);}'
