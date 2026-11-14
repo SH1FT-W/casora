@@ -8,6 +8,8 @@ def fixture_events(entity, fixture, start, end, today=None, local_tz=None):
         return None
     if not entity["events"]:
         return []
+    if "calendar_export_date" not in fixture:
+        raise ValueError("fixture calendar events need calendar_export_date")
     return events_for_range(entity["events"], date.fromisoformat(fixture["calendar_export_date"]),
                             today or datetime.now(local_tz or start.tzinfo).date(), start, end, local_tz)
 
