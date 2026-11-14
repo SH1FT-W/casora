@@ -1012,7 +1012,7 @@
         "casora-badge"
       ]
     },
-    "extra_styles": ":host{\n  --badge-sub-opacity: var(--casora-badge-sub-opacity, .80);\n  --badge-after-z:  2;\n  --badge-before-z: 3;\n  --casora-badge-hover-shadow: none;\n\n  /* Sub-badge entrance */\n  --casora-badge-enter-t: var(--casora-row-fade, 1);\n  --casora-badge-enter-p: calc(1 - var(--casora-badge-enter-t));\n  --casora-badge-enter-lift: -22px;\n  --casora-badge-enter-depth: 0.24;\n  --casora-badge-enter-origin: 50% -45%;\n  --casora-badge-enter-dur: calc(0.30s + var(--casora-badge-enter-t) * 0.12s);\n  --casora-badge-enter-fade: calc(0.18s + var(--casora-badge-enter-t) * 0.04s);\n  --casora-badge-enter-squash: 0.08;\n  --casora-badge-enter-transform:\n    translateX(calc(var(--casora-badge-enter-p) * var(--casora-badge-converge-x, 0px)))\n    translateY(calc(var(--casora-badge-enter-p) * var(--casora-badge-enter-lift)))\n    scaleX(calc(1 - var(--casora-badge-enter-p) *\n      (var(--casora-badge-enter-depth) - var(--casora-badge-enter-squash))))\n    scaleY(calc(1 - var(--casora-badge-enter-p) *\n      (var(--casora-badge-enter-depth) + var(--casora-badge-enter-squash))));\n}\n\n/* Reduced motion */\n@media (prefers-reduced-motion: reduce) {\n  :host {\n    --casora-badge-enter-lift: 0px !important;\n    --casora-badge-enter-depth: 0 !important;\n    --casora-badge-enter-squash: 0 !important;\n    --casora-badge-converge-x: 0px !important;\n  }\n  :host ha-card {\n    --casora-badge-enter-delay: 0ms !important;\n  }\n}\n\n@media (max-width: 767px) and (orientation: portrait) {\n  ha-card {\n    min-height: var(--badge-min-height-current, 43px) !important;\n    padding: var(--badge-padding-current, 1px 14px 1px 6px) !important;\n    /* Nie breiter als der Bildschirm abzüglich Rand (01.10.2026): lange Zusammenfassungen\n       („1 Schloss · 2 Fenster offen · …“) enden mit „…“ in der Pille statt rechts aus dem Bild. */\n    max-width: calc(100vw - 2 * var(--casora-badge-row-gutter, 16px)) !important;\n  }\n  #img-cell, .img-cell {\n    width: var(--badge-icon-size-current, 32px) !important;\n    height: var(--badge-icon-size-current, 32px) !important;\n  }\n  #name { font-size: var(--badge-font-size-current, 13px) !important; }\n  .badge-title { font-size: var(--badge-font-size-current, 13px) !important; }\n  .badge-sub { font-size: calc(var(--badge-font-size-current, 13px) * var(--badge-sub-scale, 1) - var(--badge-sub-delta, 1px)) !important; }\n}\n\n@media (max-height: 500px) and (orientation: landscape), (max-height: 600px) and (orientation: landscape) and (hover: hover) {\n  ha-card {\n    min-height: var(--badge-min-height-current, 36px) !important;\n    padding: var(--badge-padding-current, 1px 12px 1px 6px) !important;\n  }\n  #img-cell, .img-cell {\n    width: var(--badge-icon-size-current, 26px) !important;\n    height: var(--badge-icon-size-current, 26px) !important;\n  }\n  #name { font-size: var(--badge-font-size-current, 12px) !important; }\n  .badge-title { font-size: var(--badge-font-size-current, 12px) !important; }\n  .badge-sub { font-size: calc(var(--badge-font-size-current, 12px) * var(--badge-sub-scale, 1) - var(--badge-sub-delta, 1px)) !important; }\n}\n\n/* Tablet (touch, 768-1400px) */\n@media (min-width: 768px) and (max-width: 1400px) and (min-height: 501px) and (pointer: coarse),\n       (min-width: 768px) and (max-width: 1400px) and (min-height: 501px) and (hover: none) {\n  :host {\n    --badge-icon-size-current: var(--badge-icon-size-tablet, 26px) !important;\n    --badge-min-height-current: var(--badge-min-height-tablet, 40px) !important;\n    --badge-padding-current: var(--badge-padding-tablet, 7px 14px 8px 7px) !important;\n    --badge-font-size-current: var(--badge-font-size-tablet, 13px) !important;\n  }\n  #img-cell, .img-cell {\n    width: var(--badge-icon-size-current, 26px) !important;\n    height: var(--badge-icon-size-current, 26px) !important;\n  }\n  #name { font-size: var(--badge-font-size-current, 13px) !important; }\n  .badge-title { font-size: var(--badge-font-size-current, 13px) !important; }\n  .badge-sub { font-size: calc(var(--badge-font-size-current, 13px) * var(--badge-sub-scale-tablet, var(--badge-sub-scale, 1)) - var(--badge-sub-delta, 1px)) !important; }\n}\n\n:host ha-card {\n  /* Stagger In */\n  --casora-badge-enter-delay-current:\n    calc(var(--casora-badge-enter-delay, 0ms) * var(--casora-badge-enter-t));\n\n  opacity: var(--casora-badge-enter-t);\n  transform-origin: var(--casora-badge-enter-origin);\n  transform: var(--casora-badge-enter-transform);\n  translate: var(--casora-badge-flip-x, 0px);\n  box-shadow: var(--casora-badge-glass-rim, none) !important;\n  transition: background-color .22s ease,\n              box-shadow .24s ease,\n              translate var(--casora-badge-flip-dur, 0.42s)\n                        var(--casora-badge-flip-ease, cubic-bezier(0.32, 0.72, 0, 1)),\n              /* Geometry holds its value for --casora-badge-hold, non-zero\n                 only while hiding, so the badge keeps its size until its\n                 field finishes closing over it. Zero (instant) otherwise. */\n              max-width 0s var(--casora-badge-hold, 0s),\n              padding 0s var(--casora-badge-hold, 0s),\n              min-height 0s var(--casora-badge-hold, 0s),\n              transform var(--casora-badge-enter-dur) var(--casora-badge-enter-ease, cubic-bezier(0.34, 1.26, 0.44, 1)) var(--casora-badge-enter-delay-current),\n              filter .18s ease,\n              opacity var(--casora-badge-enter-fade) ease var(--casora-badge-enter-delay-current) !important;\n}\n\nha-card:not(#casora-badge-shadow-suppress):hover {\n  box-shadow: var(--casora-badge-glass-rim, none) !important;\n  opacity: 0.99 !important;\n}\n\n@media (max-width: 767px), (max-height: 500px), (max-height: 600px) and (hover: hover) {\n  ha-card { --casora-badge-glass-rim: var(--casora-badge-shadow-mobile, none); }\n}\n\nha-card::after{  z-index: var(--badge-after-z, 2) !important; }\nha-card::before{ z-index: var(--badge-before-z, 3) !important; }\n\n#img-cell{\n  width:  var(--badge-icon-size-current, var(--badge-icon-size, 30px)) !important;\n  height: var(--badge-icon-size-current, var(--badge-icon-size, 30px)) !important;\n  border-radius: 9999px !important;\n  overflow: hidden !important;\n  display: flex !important;\n  align-items: center !important;\n  justify-content: center !important;\n  /* Fix-Runde 1 (A-04): Symbolkreis in Gerätefarbe. --casora-badge-circle-mix ist nur in Weich\n     gesetzt (100 %); ohne ihn bleibt der Kreis durchsichtig wie bisher. Die Farbe kommt aus\n     --casora-badge-tone (Aus-Zustände) bzw. der Symbolfarbe des jeweiligen Badges. */\n  background: var(--casora-badge-icon-bg, color-mix(in srgb,\n    var(--casora-badge-tone, var(--casora-badge-icon-color, var(--casora-icon-color, transparent)))\n    var(--casora-badge-circle-mix, 0%), transparent)) !important;\n}\n\n/* Glyph im Kreis: weiß (bzw. --casora-badge-glyph) und kleiner – nur bei gesetztem Kreis-Mix. */\n#img-cell ha-state-icon, #img-cell > ha-icon {\n  scale: var(--casora-badge-glyph-scale, none);\n}\n\n#img-cell img,\n#img-cell ha-img{\n  width: 100% !important;\n  height: 100% !important;\n  object-fit: cover !important;\n  display: block !important;\n  border-radius: inherit !important;\n}\n\n#icon{\n  display: flex !important;\n  align-items: center !important;\n  justify-content: center !important;\n  pointer-events: none !important;\n}\n\n#icon ha-icon,\n#icon ha-svg-icon,\n#img-cell{\n  pointer-events: none !important;\n}\n\n#name{\n  display:flex !important;\n  align-items:center !important;\n  min-width: 0 !important;\n  overflow: hidden !important;\n  line-height: normal !important;\n}\n\n.badge-wrap{\n  display:flex;\n  flex-direction:column;\n  align-items:flex-start;\n  gap: 1px;\n  min-width:0;\n  max-width:100%;\n  padding-top: 0 !important;\n  padding-bottom: 0 !important;\n}\n\n.badge-title{\n  font-size: var(--badge-font-size-current, 13px);\n  font-weight: 700;\n  line-height: 1.2;\n  color: var(--badge-title-color, var(--secondary-text-color));\n  white-space:nowrap;\n  overflow:hidden;\n  text-overflow:ellipsis;\n  /* Spalte (align-items:flex-start) dehnt nicht: ohne Grenze lief ein langer Name\n     über den Badge-Rand hinaus und wurde hart abgeschnitten statt mit „…“ (d-kacheln, 1.3). */\n  max-width:100%;\n}\n\n.badge-sub{\n  font-size: calc(var(--badge-font-size-current, 13px) * var(--badge-sub-scale, 1) - var(--badge-sub-delta, 1px));\n  font-weight: 500;\n  line-height: 1.2;\n  opacity: var(--badge-sub-opacity, .82);\n  color: var(--badge-sub-color, var(--secondary-text-color));\n  white-space:nowrap;\n  overflow:hidden;\n  text-overflow:ellipsis;\n  /* Spalte (align-items:flex-start) dehnt nicht: ohne Grenze lief ein langer Name\n     über den Badge-Rand hinaus und wurde hart abgeschnitten statt mit „…“ (d-kacheln, 1.3). */\n  max-width:100%;\n}\n",
+    "extra_styles": ":host{\n  --badge-sub-opacity: var(--casora-badge-sub-opacity, .80);\n  --badge-after-z:  2;\n  --badge-before-z: 3;\n  --casora-badge-hover-shadow: none;\n\n  /* Sub-badge entrance */\n  --casora-badge-enter-t: var(--casora-row-fade, 1);\n  --casora-badge-enter-p: calc(1 - var(--casora-badge-enter-t));\n  --casora-badge-enter-lift: -22px;\n  --casora-badge-enter-depth: 0.24;\n  --casora-badge-enter-origin: 50% -45%;\n  --casora-badge-enter-dur: calc(0.30s + var(--casora-badge-enter-t) * 0.12s);\n  --casora-badge-enter-fade: calc(0.18s + var(--casora-badge-enter-t) * 0.04s);\n  --casora-badge-enter-squash: 0.08;\n  --casora-badge-enter-transform:\n    translateX(calc(var(--casora-badge-enter-p) * var(--casora-badge-converge-x, 0px)))\n    translateY(calc(var(--casora-badge-enter-p) * var(--casora-badge-enter-lift)))\n    scaleX(calc(1 - var(--casora-badge-enter-p) *\n      (var(--casora-badge-enter-depth) - var(--casora-badge-enter-squash))))\n    scaleY(calc(1 - var(--casora-badge-enter-p) *\n      (var(--casora-badge-enter-depth) + var(--casora-badge-enter-squash))));\n}\n\n/* Reduced motion */\n@media (prefers-reduced-motion: reduce) {\n  :host {\n    --casora-badge-enter-lift: 0px !important;\n    --casora-badge-enter-depth: 0 !important;\n    --casora-badge-enter-squash: 0 !important;\n    --casora-badge-converge-x: 0px !important;\n  }\n  :host ha-card {\n    --casora-badge-enter-delay: 0ms !important;\n  }\n}\n\n@media (max-width: 767px) and (orientation: portrait) {\n  ha-card {\n    min-height: var(--badge-min-height-current, 43px) !important;\n    padding: var(--badge-padding-current, 1px 14px 1px 6px) !important;\n    /* Nie breiter als der Bildschirm abzüglich Rand (01.10.2026): lange Zusammenfassungen\n       („1 Schloss · 2 Fenster offen · …“) enden mit „…“ in der Pille statt rechts aus dem Bild. */\n    max-width: calc(100vw - 2 * var(--casora-badge-row-gutter, 16px)) !important;\n  }\n  #img-cell, .img-cell {\n    width: var(--badge-icon-size-current, 32px) !important;\n    height: var(--badge-icon-size-current, 32px) !important;\n  }\n  #name { font-size: var(--badge-font-size-current, 13px) !important; }\n  .badge-title { font-size: var(--badge-font-size-current, 13px) !important; }\n  .badge-sub { font-size: calc(var(--badge-font-size-current, 13px) * var(--badge-sub-scale, 1) - var(--badge-sub-delta, 1px)) !important; }\n}\n\n@media (max-height: 500px) and (orientation: landscape), (max-height: 600px) and (orientation: landscape) and (hover: hover) {\n  ha-card {\n    min-height: var(--badge-min-height-current, 36px) !important;\n    padding: var(--badge-padding-current, 1px 12px 1px 6px) !important;\n  }\n  #img-cell, .img-cell {\n    width: var(--badge-icon-size-current, 26px) !important;\n    height: var(--badge-icon-size-current, 26px) !important;\n  }\n  #name { font-size: var(--badge-font-size-current, 12px) !important; }\n  .badge-title { font-size: var(--badge-font-size-current, 12px) !important; }\n  .badge-sub { font-size: calc(var(--badge-font-size-current, 12px) * var(--badge-sub-scale, 1) - var(--badge-sub-delta, 1px)) !important; }\n}\n\n/* Tablet (touch, 768-1400px) */\n@media (min-width: 768px) and (max-width: 1400px) and (min-height: 501px) and (pointer: coarse),\n       (min-width: 768px) and (max-width: 1400px) and (min-height: 501px) and (hover: none) {\n  :host {\n    --badge-icon-size-current: var(--badge-icon-size-tablet, 26px) !important;\n    --badge-min-height-current: var(--badge-min-height-tablet, 40px) !important;\n    --badge-padding-current: var(--badge-padding-tablet, 7px 14px 8px 7px) !important;\n    --badge-font-size-current: var(--badge-font-size-tablet, 13px) !important;\n  }\n  #img-cell, .img-cell {\n    width: var(--badge-icon-size-current, 26px) !important;\n    height: var(--badge-icon-size-current, 26px) !important;\n  }\n  #name { font-size: var(--badge-font-size-current, 13px) !important; }\n  .badge-title { font-size: var(--badge-font-size-current, 13px) !important; }\n  .badge-sub { font-size: calc(var(--badge-font-size-current, 13px) * var(--badge-sub-scale-tablet, var(--badge-sub-scale, 1)) - var(--badge-sub-delta, 1px)) !important; }\n}\n\n:host ha-card {\n  /* Stagger In */\n  --casora-badge-enter-delay-current:\n    calc(var(--casora-badge-enter-delay, 0ms) * var(--casora-badge-enter-t));\n\n  opacity: var(--casora-badge-enter-t);\n  transform-origin: var(--casora-badge-enter-origin);\n  transform: var(--casora-badge-enter-transform);\n  translate: var(--casora-badge-flip-x, 0px);\n  box-shadow: var(--casora-badge-glass-rim, none) !important;\n  transition: background-color .22s ease,\n              box-shadow .24s ease,\n              translate var(--casora-badge-flip-dur, 0.42s)\n                        var(--casora-badge-flip-ease, cubic-bezier(0.32, 0.72, 0, 1)),\n              /* Geometry holds its value for --casora-badge-hold, non-zero\n                 only while hiding, so the badge keeps its size until its\n                 field finishes closing over it. Zero (instant) otherwise. */\n              max-width 0s var(--casora-badge-hold, 0s),\n              padding 0s var(--casora-badge-hold, 0s),\n              min-height 0s var(--casora-badge-hold, 0s),\n              transform var(--casora-badge-enter-dur) var(--casora-badge-enter-ease, cubic-bezier(0.34, 1.26, 0.44, 1)) var(--casora-badge-enter-delay-current),\n              filter .18s ease,\n              opacity var(--casora-badge-enter-fade) ease var(--casora-badge-enter-delay-current) !important;\n}\n\nha-card:not(#casora-badge-shadow-suppress):hover {\n  box-shadow: var(--casora-badge-glass-rim, none) !important;\n  opacity: 0.99 !important;\n}\n\n@media (max-width: 767px), (max-height: 500px), (max-height: 600px) and (hover: hover) {\n  ha-card { --casora-badge-glass-rim: var(--casora-badge-shadow-mobile, none); }\n}\n\nha-card::after{  z-index: var(--badge-after-z, 2) !important; }\nha-card::before{ z-index: var(--badge-before-z, 3) !important; }\n\n#img-cell{\n  width:  var(--badge-icon-size-current, var(--badge-icon-size, 30px)) !important;\n  height: var(--badge-icon-size-current, var(--badge-icon-size, 30px)) !important;\n  border-radius: 9999px !important;\n  overflow: hidden !important;\n  display: flex !important;\n  align-items: center !important;\n  justify-content: center !important;\n  /* Fix-Runde 1 (A-04): Symbolkreis in Gerätefarbe. --casora-badge-circle-mix ist nur in Weich\n     gesetzt (100 %); ohne ihn bleibt der Kreis durchsichtig wie bisher. Die Farbe kommt aus\n     --casora-badge-tone (Aus-Zustände) bzw. der Symbolfarbe des jeweiligen Badges. */\n  background: var(--casora-badge-icon-bg, color-mix(in srgb,\n    var(--casora-badge-tone, var(--casora-badge-icon-color, var(--casora-icon-color, transparent)))\n    var(--casora-badge-circle-mix, 0%), transparent)) !important;\n}\n\n/* Glyph im Kreis: weiß (bzw. --casora-badge-glyph) und kleiner – nur bei gesetztem Kreis-Mix. */\n#img-cell ha-state-icon, #img-cell > ha-icon {\n  scale: var(--casora-badge-glyph-scale, none);\n}\n\n#img-cell img,\n#img-cell ha-img{\n  width: 100% !important;\n  height: 100% !important;\n  object-fit: cover !important;\n  display: block !important;\n  border-radius: inherit !important;\n}\n\n#icon{\n  display: flex !important;\n  align-items: center !important;\n  justify-content: center !important;\n  pointer-events: none !important;\n}\n\n#icon ha-icon,\n#icon ha-svg-icon,\n#img-cell{\n  pointer-events: none !important;\n}\n\n#name{\n  display:flex !important;\n  align-items:center !important;\n  min-width: 0 !important;\n  overflow: hidden !important;\n  line-height: normal !important;\n}\n\n.badge-wrap{\n  display:flex;\n  flex-direction:column;\n  align-items:flex-start;\n  gap: 1px;\n  min-width:0;\n  max-width:100%;\n  padding-top: 0 !important;\n  padding-bottom: 0 !important;\n}\n\n.badge-title{\n  font-size: var(--badge-font-size-current, 13px);\n  font-weight: 700;\n  line-height: 1.2;\n  color: var(--badge-title-color, var(--secondary-text-color));\n  white-space:nowrap;\n  overflow:hidden;\n  text-overflow:ellipsis;\n  /* Spalte (align-items:flex-start) dehnt nicht: ohne Grenze lief ein langer Name\n     über den Badge-Rand hinaus und wurde hart abgeschnitten statt mit „…“ (d-kacheln, 1.3). */\n  max-width:100%;\n}\n\n.badge-sub{\n  font-size: calc(var(--badge-font-size-current, 13px) * var(--badge-sub-scale, 1) - var(--badge-sub-delta, 1px));\n  font-weight: 500;\n  line-height: 1.2;\n  opacity: var(--badge-sub-opacity, .82);\n  color: var(--badge-sub-color, var(--secondary-text-color));\n  white-space:nowrap;\n  overflow:hidden;\n  text-overflow:ellipsis;\n  /* Spalte (align-items:flex-start) dehnt nicht: ohne Grenze lief ein langer Name\n     über den Badge-Rand hinaus und wurde hart abgeschnitten statt mit „…“ (d-kacheln, 1.3). */\n  max-width:100%;\n}\n\n/* Touch hit layer (V1, 14.11.2026): button-card puts each custom field in its own grid cell; this one spans the card. */\n#hit{ grid-area: auto !important; }\n",
     "styles": {
       "card": [
         {
@@ -1091,7 +1091,7 @@
           "--badge-sub-color": "var(--casora-badge-sub-color, var(--secondary-text-color))"
         },
         {
-          "overflow": "hidden"
+          "overflow": "var(--casora-badge-hit-overflow, hidden)"
         },
         {
           "clip-path": "var(--casora-badge-clip, inset(0 round var(--badge-br, 9999px)))"
@@ -1212,7 +1212,32 @@
         {
           "font-size": "var(--badge-font-size-current, var(--badge-font-size, 13px))"
         }
-      ]
+      ],
+      "custom_fields": {
+        "hit": [
+          {
+            "display": "var(--casora-badge-hit-display, none)"
+          },
+          {
+            "position": "absolute"
+          },
+          {
+            "left": "0"
+          },
+          {
+            "right": "0"
+          },
+          {
+            "top": "calc(-1 * var(--casora-badge-hit-top, 0px))"
+          },
+          {
+            "bottom": "0"
+          },
+          {
+            "pointer-events": "auto"
+          }
+        ]
+      }
     },
     "variables": {
       "casora_camera_alert_helper": {
@@ -1223,6 +1248,9 @@
         "force_eval": true,
         "value": "[[[\n  if (typeof window.casoraIconUrl !== 'function') {\n    window.casoraIconUrl = (name) =>\n      (window.CASORA_ICONS && window.CASORA_ICONS[name]) ||\n      `/casora_assets/icons/${name}.svg`;\n  }\n  return true;\n]]]\n"
       }
+    },
+    "custom_fields": {
+      "hit": "[[[\n  /* Touch on the phone (V1, 14.11.2026): an empty layer that reaches past the 40 px pill to 44 px, so a finger\n     meets the badge without the badge growing. The badge rows set --casora-badge-hit-* (pointer: coarse). */\n  return '';\n]]]\n"
     }
   },
   "casora_badge_camera_group": {
@@ -3065,7 +3093,8 @@
     ],
     "variables": {
       "icon": "pulse",
-      "casora_default_name": "Pulse"
+      "casora_default_name": "Pulse",
+      "show_offline": false
     }
   },
   "casora_calendar": {
@@ -3235,7 +3264,8 @@
       "cameras": null,
       "icon": "camera",
       "mobile_filter_category": "security",
-      "casora_default_name": "Kameras"
+      "casora_default_name": "Kameras",
+      "show_offline": false
     }
   },
   "casora_car": {
@@ -3520,7 +3550,8 @@
       "casora_entity"
     ],
     "variables": {
-      "icon": null
+      "icon": null,
+      "show_offline": false
     },
     "custom_fields": {
       "card": {
@@ -3937,6 +3968,58 @@
               },
               {
                 "opacity": "0.6"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "casora_offline",
+        "operator": "template",
+        "value": "[[[\n  /* Offline (V2, 14.11.2026): an unavailable device looked exactly like „Aus“. Second state after „Gerät fehlt“,\n     before the tile templates' own: warning colour, dashed rim, „Offline · seit …“, no switch (casoraTileOffline,\n     casora-core.js). Tiles whose entity is not one device opt out with variables.show_offline: false. */\n  if (variables.show_offline === false || !window.casoraTileOffline) return false;\n  return !!window.casoraTileOffline(entity, states, variables);\n]]]\n",
+        "state_display": "[[[\n  const info = window.casoraTileOffline ? window.casoraTileOffline(entity, states, variables) : null;\n  return window.casoraOfflineHtml ? window.casoraOfflineHtml(info) : 'Offline';\n]]]\n",
+        "styles": {
+          "card": [
+            {
+              "--casora-active-overlay-opacity": "0"
+            },
+            {
+              "--casora-entity-glow-opacity": "var(--casora-entity-glow-opacity-inactive, 0.08)"
+            },
+            {
+              "outline": "1.5px dashed color-mix(in srgb, var(--casora-security-warn-color, var(--casora-color-orange, #DE8A4E)) 80%, transparent)"
+            },
+            {
+              "outline-offset": "-1.5px"
+            }
+          ],
+          "state": [
+            {
+              "color": "var(--casora-entity-offline-color, var(--casora-popup-ui-warn, var(--casora-color-orange-deep, #B96A33))) !important"
+            },
+            {
+              "font-weight": "600"
+            }
+          ],
+          "custom_fields": {
+            "toggle": [
+              {
+                "display": "none"
+              }
+            ],
+            "ctl_up": [
+              {
+                "display": "none"
+              }
+            ],
+            "ctl_set": [
+              {
+                "display": "none"
+              }
+            ],
+            "ctl_down": [
+              {
+                "display": "none"
               }
             ]
           }
@@ -4429,7 +4512,8 @@
       "size_large": "[[[\n  /* Groß am Handy: fest (size: large) oder „Automatisch“ und gerade groß gezogen – smart-row bzw. das\n     Raum-Raster setzen dann data-size / data-casora-size am Rahmen (1.5). */\n  if (!/^\\/[^/]*[-_]mobile(\\/|$)/i.test(window.location.pathname)) return false;\n  const v = String(variables.size || '').toLowerCase();\n  if (v === 'large') return true;\n  let el = this, inSwipe = false;\n  // Tief genug für Kachel in Karussell in Bedingung (Kamera-Karussell, 1.5).\n  // A tile in a large carousel fills its height, so it lays out large whatever its own size says.\n  for (let i = 0; i < 16 && el; i++) {\n    if (el.tagName === 'CASORA-SWIPE-CARD') inSwipe = true;\n    if (el.dataset && (el.dataset.size === 'large' || el.dataset.casoraSize === 'large')) return v === 'auto' || inSwipe;\n    el = el.parentElement || (el.parentNode && el.parentNode.host) || null;\n  }\n  return false;\n]]]\n",
       "toggle_entity": null,
       "toggle_service": null,
-      "toggle_service_data": null
+      "toggle_service_data": null,
+      "show_offline": true
     },
     "name": "[[[\n  const esc = window.casoraEsc || ((t) => String(t ?? '').replace(/[&<>\"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', \"'\": '&#39;' }[c])));\n  /* Wie button-cards eigener Standard (Anzeigename, sonst Objekt-ID). Ohne Entität: Ersatzname der\n     Vorlage (variables.casora_default_name), nur wenn das Design --casora-tile-fallback-name: 1 setzt\n     (Weich, Fix-Runde 1 A-15) – sonst wie bisher ohne Namen. */\n  if (entity) {\n    const a = entity.attributes || {};\n    return esc(a.friendly_name ? a.friendly_name : entity.entity_id.substr(entity.entity_id.indexOf('.') + 1));\n  }\n  let on = false;\n  try { on = getComputedStyle(document.documentElement).getPropertyValue('--casora-tile-fallback-name').trim() === '1'; } catch (e) {}\n  return on ? esc(variables.casora_default_name || '') : '';\n]]]\n"
   },
@@ -4888,7 +4972,8 @@
         "armed_vacation",
         "armed_custom_bypass",
         "triggered"
-      ]
+      ],
+      "show_offline": false
     },
     "hold_action": {
       "action": "[[[\n  /* Halten (1.6): Casoras Halten-Menü bzw. dasselbe Popup wie Tippen (22-halten.js); ohne Casora-Popups nichts. */\n  return window.casoraPopup && window.casoraPopup.enabled && window.CASORA_HOLD_MENU !== false ? 'more-info' : 'none';\n]]]\n",
@@ -4923,7 +5008,8 @@
       "icon": "list",
       "casora_default_name": "Liste",
       "mobile_filter_category": "unfiltered",
-      "active_override": "[[[\n  /* Something on in the list (#59): highlighted like other active tiles - window._casoraEntityList in 34-entity-list.js. */\n  const L = window._casoraEntityList;\n  try { return L ? L.tileActive(hass, states, variables) : null; } catch (e) { return null; }\n]]]\n"
+      "active_override": "[[[\n  /* Something on in the list (#59): highlighted like other active tiles - window._casoraEntityList in 34-entity-list.js. */\n  const L = window._casoraEntityList;\n  try { return L ? L.tileActive(hass, states, variables) : null; } catch (e) { return null; }\n]]]\n",
+      "show_offline": false
     },
     "hold_action": {
       "action": "[[[\n  /* Halten (1.6): Casoras Halten-Menü bzw. dasselbe Popup wie Tippen (22-halten.js); ohne Casora-Popups nichts. */\n  return window.casoraPopup && window.casoraPopup.enabled && window.CASORA_HOLD_MENU !== false ? 'more-info' : 'none';\n]]]\n",
@@ -4953,7 +5039,8 @@
       "icon": "grid",
       "casora_default_name": "Mehr",
       "mobile_filter_category": "unfiltered",
-      "active_override": false
+      "active_override": false,
+      "show_offline": false
     },
     "hold_action": {
       "action": "[[[\n  /* Halten (1.6): Casoras Halten-Menü bzw. dasselbe Popup wie Tippen (22-halten.js); ohne Casora-Popups nichts. */\n  return window.casoraPopup && window.casoraPopup.enabled && window.CASORA_HOLD_MENU !== false ? 'more-info' : 'none';\n]]]\n",
@@ -6163,7 +6250,7 @@
     "double_tap_action": {
       "action": "none"
     },
-    "extra_styles": ":host {\n  position: sticky !important;\n  top: -200px !important;\n  z-index: 100 !important;\n  display: block !important;\n}\n:host(.casora-navbar-card.casora-navbar-card):active {\n  filter: none !important;\n  -webkit-filter: none !important;\n}\n:host { filter: none !important; -webkit-filter: none !important; }\nha-card.button-card-main {\n  background: transparent !important;\n  backdrop-filter: none !important;\n  -webkit-backdrop-filter: none !important;\n  box-shadow: none !important;\n  border: none !important;\n  overflow: visible !important;\n  padding: 0 !important;\n  contain: none !important;\n  isolation: auto !important;\n  will-change: auto !important;\n  transition: none !important;\n  filter: none !important;\n  -webkit-filter: none !important;\n}\n.button-card-main, .button-card-content, #customfields {\n  overflow: visible !important;\n  contain: none !important;\n  isolation: auto !important;\n}\n\n/* Handy: zu breite Badge-Reihen blättern seitwärts (30.09.2026). Die innere Karte ist so breit\n   wie ihre Badges (mindestens die Reihe), damit die Reihe selbst scrollt und nicht das Raster\n   darin über den Rand ragt. Der rechte Abstand sitzt an der inneren Karte, sonst fehlt er\n   am Ende des Scrollbereichs. Weiche Ränder setzt window._casoraBadgeRows (01-basis.js). */\n#badges > *{width:var(--casora-badge-row-child-w, max-content)!important;min-width:100%!important;display:block!important;box-sizing:border-box!important;padding-right:var(--casora-rail-left, 16px)!important}\n#badges::-webkit-scrollbar{display:none!important}\n#badges{touch-action:pan-x pan-y;-webkit-overflow-scrolling:touch}\n#badges[data-cs-fade=\"r\"]{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 32px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 32px),transparent)}\n#badges[data-cs-fade=\"l\"]{-webkit-mask-image:linear-gradient(to right,transparent,#000 32px);mask-image:linear-gradient(to right,transparent,#000 32px)}\n#badges[data-cs-fade=\"l r\"]{-webkit-mask-image:linear-gradient(to right,transparent,#000 32px,#000 calc(100% - 32px),transparent);mask-image:linear-gradient(to right,transparent,#000 32px,#000 calc(100% - 32px),transparent)}\n",
+    "extra_styles": ":host {\n  position: sticky !important;\n  top: -200px !important;\n  z-index: 100 !important;\n  display: block !important;\n}\n:host(.casora-navbar-card.casora-navbar-card):active {\n  filter: none !important;\n  -webkit-filter: none !important;\n}\n:host { filter: none !important; -webkit-filter: none !important; }\nha-card.button-card-main {\n  background: transparent !important;\n  backdrop-filter: none !important;\n  -webkit-backdrop-filter: none !important;\n  box-shadow: none !important;\n  border: none !important;\n  overflow: visible !important;\n  padding: 0 !important;\n  contain: none !important;\n  isolation: auto !important;\n  will-change: auto !important;\n  transition: none !important;\n  filter: none !important;\n  -webkit-filter: none !important;\n}\n.button-card-main, .button-card-content, #customfields {\n  overflow: visible !important;\n  contain: none !important;\n  isolation: auto !important;\n}\n\n/* Handy: zu breite Badge-Reihen blättern seitwärts (30.09.2026). Die innere Karte ist so breit\n   wie ihre Badges (mindestens die Reihe), damit die Reihe selbst scrollt und nicht das Raster\n   darin über den Rand ragt. Der rechte Abstand sitzt an der inneren Karte, sonst fehlt er\n   am Ende des Scrollbereichs. Weiche Ränder setzt window._casoraBadgeRows (01-basis.js). */\n#badges > *{width:var(--casora-badge-row-child-w, max-content)!important;min-width:100%!important;display:block!important;box-sizing:border-box!important;padding-right:var(--casora-rail-left, 16px)!important}\n#badges::-webkit-scrollbar{display:none!important}\n#badges{touch-action:pan-x pan-y;-webkit-overflow-scrolling:touch}\n#badges[data-cs-fade=\"r\"]{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 32px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 32px),transparent)}\n#badges[data-cs-fade=\"l\"]{-webkit-mask-image:linear-gradient(to right,transparent,#000 32px);mask-image:linear-gradient(to right,transparent,#000 32px)}\n#badges[data-cs-fade=\"l r\"]{-webkit-mask-image:linear-gradient(to right,transparent,#000 32px,#000 calc(100% - 32px),transparent);mask-image:linear-gradient(to right,transparent,#000 32px,#000 calc(100% - 32px),transparent)}\n/* Touch (V1, 14.11.2026): the 40 px badges reach 44 px to a finger. The row grows 4 px upwards inside its own\n   space (padding-top with the same negative margin, layout unchanged); each badge's hit layer fills it. */\n@media (pointer: coarse) {\n  :host { --casora-badge-hit-top: 4px; --casora-badge-hit-display: block; --casora-badge-hit-overflow: visible; }\n}\n",
     "hold_action": {
       "action": "none"
     },
@@ -6263,6 +6350,12 @@
           },
           {
             "--casora-badge-row-child-w": "[[[ /* Wrap option (#53): the inner card takes the row's width, so the flex row can wrap. */ const _hv = variables.casora_hv; return (_hv ? _hv.badges_wrap : variables.badges_wrap) === true ? '100%' : 'max-content' ]]]"
+          },
+          {
+            "padding-top": "var(--casora-badge-hit-top, 0px) !important"
+          },
+          {
+            "margin-top": "calc(-1 * var(--casora-badge-hit-top, 0px)) !important"
           }
         ]
       },
@@ -8956,7 +9049,7 @@
       "action": "none"
     },
     "entity": "input_select.casora_mobile_filter",
-    "extra_styles": ":host(.casora-navbar-card.casora-navbar-card):active{filter:none!important;-webkit-filter:none!important}\n:host{position:sticky!important;top:-9999px!important;filter:none!important;-webkit-filter:none!important}\n#aspect-ratio{display:block!important;min-width:0!important;min-height:0!important}\nha-card.button-card-main{background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;box-shadow:none!important;border:none!important;overflow:visible!important;padding:0!important;contain:none!important;isolation:auto!important;will-change:auto!important;transition:none!important}\n.button-card-main,.button-card-content,#customfields{overflow:visible!important;contain:none!important;isolation:auto!important}\n\n/* Handy: zu breite Badge-Reihen blättern seitwärts (30.09.2026). Die innere Karte ist so breit\n   wie ihre Badges (mindestens die Reihe), damit die Reihe selbst scrollt und nicht das Raster\n   darin über den Rand ragt. Der rechte Abstand sitzt an der inneren Karte, sonst fehlt er\n   am Ende des Scrollbereichs. Weiche Ränder setzt window._casoraBadgeRows (01-basis.js). */\n#climate_row > *,#security_row > *,#energy_row > *,#rooms_row > *,#room_sub_climate > *,#room_sub_security > *,#room_sub_lights > *,#room_sub_presence > *,#room_sub_energy > *,#room_sub_media > *{width:var(--casora-badge-row-child-w, max-content)!important;min-width:100%!important;display:block!important;box-sizing:border-box!important;padding-right:var(--casora-rail-left, 16px)!important}\n#climate_row::-webkit-scrollbar,#security_row::-webkit-scrollbar,#energy_row::-webkit-scrollbar,#rooms_row::-webkit-scrollbar,#room_sub_climate::-webkit-scrollbar,#room_sub_security::-webkit-scrollbar,#room_sub_lights::-webkit-scrollbar,#room_sub_presence::-webkit-scrollbar,#room_sub_energy::-webkit-scrollbar,#room_sub_media::-webkit-scrollbar{display:none!important}\n#climate_row,#security_row,#energy_row,#rooms_row,#room_sub_climate,#room_sub_security,#room_sub_lights,#room_sub_presence,#room_sub_energy,#room_sub_media{touch-action:pan-x pan-y;-webkit-overflow-scrolling:touch}\n#climate_row[data-cs-fade=\"r\"],#security_row[data-cs-fade=\"r\"],#energy_row[data-cs-fade=\"r\"],#rooms_row[data-cs-fade=\"r\"],#room_sub_climate[data-cs-fade=\"r\"],#room_sub_security[data-cs-fade=\"r\"],#room_sub_lights[data-cs-fade=\"r\"],#room_sub_presence[data-cs-fade=\"r\"],#room_sub_energy[data-cs-fade=\"r\"],#room_sub_media[data-cs-fade=\"r\"]{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 32px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 32px),transparent)}\n#climate_row[data-cs-fade=\"l\"],#security_row[data-cs-fade=\"l\"],#energy_row[data-cs-fade=\"l\"],#rooms_row[data-cs-fade=\"l\"],#room_sub_climate[data-cs-fade=\"l\"],#room_sub_security[data-cs-fade=\"l\"],#room_sub_lights[data-cs-fade=\"l\"],#room_sub_presence[data-cs-fade=\"l\"],#room_sub_energy[data-cs-fade=\"l\"],#room_sub_media[data-cs-fade=\"l\"]{-webkit-mask-image:linear-gradient(to right,transparent,#000 32px);mask-image:linear-gradient(to right,transparent,#000 32px)}\n#climate_row[data-cs-fade=\"l r\"],#security_row[data-cs-fade=\"l r\"],#energy_row[data-cs-fade=\"l r\"],#rooms_row[data-cs-fade=\"l r\"],#room_sub_climate[data-cs-fade=\"l r\"],#room_sub_security[data-cs-fade=\"l r\"],#room_sub_lights[data-cs-fade=\"l r\"],#room_sub_presence[data-cs-fade=\"l r\"],#room_sub_energy[data-cs-fade=\"l r\"],#room_sub_media[data-cs-fade=\"l r\"]{-webkit-mask-image:linear-gradient(to right,transparent,#000 32px,#000 calc(100% - 32px),transparent);mask-image:linear-gradient(to right,transparent,#000 32px,#000 calc(100% - 32px),transparent)}\n",
+    "extra_styles": ":host(.casora-navbar-card.casora-navbar-card):active{filter:none!important;-webkit-filter:none!important}\n:host{position:sticky!important;top:-9999px!important;filter:none!important;-webkit-filter:none!important}\n#aspect-ratio{display:block!important;min-width:0!important;min-height:0!important}\nha-card.button-card-main{background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;box-shadow:none!important;border:none!important;overflow:visible!important;padding:0!important;contain:none!important;isolation:auto!important;will-change:auto!important;transition:none!important}\n.button-card-main,.button-card-content,#customfields{overflow:visible!important;contain:none!important;isolation:auto!important}\n\n/* Handy: zu breite Badge-Reihen blättern seitwärts (30.09.2026). Die innere Karte ist so breit\n   wie ihre Badges (mindestens die Reihe), damit die Reihe selbst scrollt und nicht das Raster\n   darin über den Rand ragt. Der rechte Abstand sitzt an der inneren Karte, sonst fehlt er\n   am Ende des Scrollbereichs. Weiche Ränder setzt window._casoraBadgeRows (01-basis.js). */\n#climate_row > *,#security_row > *,#energy_row > *,#rooms_row > *,#room_sub_climate > *,#room_sub_security > *,#room_sub_lights > *,#room_sub_presence > *,#room_sub_energy > *,#room_sub_media > *{width:var(--casora-badge-row-child-w, max-content)!important;min-width:100%!important;display:block!important;box-sizing:border-box!important;padding-right:var(--casora-rail-left, 16px)!important}\n#climate_row::-webkit-scrollbar,#security_row::-webkit-scrollbar,#energy_row::-webkit-scrollbar,#rooms_row::-webkit-scrollbar,#room_sub_climate::-webkit-scrollbar,#room_sub_security::-webkit-scrollbar,#room_sub_lights::-webkit-scrollbar,#room_sub_presence::-webkit-scrollbar,#room_sub_energy::-webkit-scrollbar,#room_sub_media::-webkit-scrollbar{display:none!important}\n#climate_row,#security_row,#energy_row,#rooms_row,#room_sub_climate,#room_sub_security,#room_sub_lights,#room_sub_presence,#room_sub_energy,#room_sub_media{touch-action:pan-x pan-y;-webkit-overflow-scrolling:touch}\n#climate_row[data-cs-fade=\"r\"],#security_row[data-cs-fade=\"r\"],#energy_row[data-cs-fade=\"r\"],#rooms_row[data-cs-fade=\"r\"],#room_sub_climate[data-cs-fade=\"r\"],#room_sub_security[data-cs-fade=\"r\"],#room_sub_lights[data-cs-fade=\"r\"],#room_sub_presence[data-cs-fade=\"r\"],#room_sub_energy[data-cs-fade=\"r\"],#room_sub_media[data-cs-fade=\"r\"]{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 32px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 32px),transparent)}\n#climate_row[data-cs-fade=\"l\"],#security_row[data-cs-fade=\"l\"],#energy_row[data-cs-fade=\"l\"],#rooms_row[data-cs-fade=\"l\"],#room_sub_climate[data-cs-fade=\"l\"],#room_sub_security[data-cs-fade=\"l\"],#room_sub_lights[data-cs-fade=\"l\"],#room_sub_presence[data-cs-fade=\"l\"],#room_sub_energy[data-cs-fade=\"l\"],#room_sub_media[data-cs-fade=\"l\"]{-webkit-mask-image:linear-gradient(to right,transparent,#000 32px);mask-image:linear-gradient(to right,transparent,#000 32px)}\n#climate_row[data-cs-fade=\"l r\"],#security_row[data-cs-fade=\"l r\"],#energy_row[data-cs-fade=\"l r\"],#rooms_row[data-cs-fade=\"l r\"],#room_sub_climate[data-cs-fade=\"l r\"],#room_sub_security[data-cs-fade=\"l r\"],#room_sub_lights[data-cs-fade=\"l r\"],#room_sub_presence[data-cs-fade=\"l r\"],#room_sub_energy[data-cs-fade=\"l r\"],#room_sub_media[data-cs-fade=\"l r\"]{-webkit-mask-image:linear-gradient(to right,transparent,#000 32px,#000 calc(100% - 32px),transparent);mask-image:linear-gradient(to right,transparent,#000 32px,#000 calc(100% - 32px),transparent)}\n/* Touch (V1, 14.11.2026): the 40 px badges reach 44 px to a finger. The row grows 4 px upwards inside its own\n   space (padding-top with the same negative margin, layout unchanged); each badge's hit layer fills it. */\n@media (pointer: coarse) {\n  :host { --casora-badge-hit-top: 4px; --casora-badge-hit-display: block; --casora-badge-hit-overflow: visible; }\n}\n",
     "hold_action": {
       "action": "none"
     },
@@ -9059,6 +9152,12 @@
           },
           {
             "height": "auto"
+          },
+          {
+            "padding-top": "var(--casora-badge-hit-top, 0px) !important"
+          },
+          {
+            "margin-top": "calc(-1 * var(--casora-badge-hit-top, 0px)) !important"
           }
         ],
         "energy_row": [
@@ -9115,6 +9214,12 @@
           },
           {
             "height": "auto"
+          },
+          {
+            "padding-top": "var(--casora-badge-hit-top, 0px) !important"
+          },
+          {
+            "margin-top": "calc(-1 * var(--casora-badge-hit-top, 0px)) !important"
           }
         ],
         "rooms_row": [
@@ -9174,6 +9279,12 @@
           },
           {
             "--casora-badge-row-child-w": "[[[ /* Wrap option (#53): the inner card takes the row's width, so the flex row can wrap. */ const _rv = variables.casora_rv || {}; return _rv.badges_wrap === true ? '100%' : 'max-content' ]]]"
+          },
+          {
+            "padding-top": "var(--casora-badge-hit-top, 0px) !important"
+          },
+          {
+            "margin-top": "calc(-1 * var(--casora-badge-hit-top, 0px)) !important"
           },
           {
             "--casora-badge-order-security": "[[[ const _rv = variables.casora_rv || {}; \n  // Standard wie das Studio (BADGE_ORDER_IDS): gespeicherte Reihenfolge zuerst, was fehlt, danach.\n  const D = ['security', 'climate', 'lights', 'people', 'energy', 'scenes', 'media', 'updates'];\n  const o = (Array.isArray(_rv.badge_order) ? _rv.badge_order : []).filter((x) => D.includes(x));\n  D.forEach((x) => { if (!o.includes(x)) o.push(x); });\n  return o.indexOf('security') + 1;\n]]]\n"
@@ -9248,6 +9359,12 @@
           },
           {
             "height": "auto"
+          },
+          {
+            "padding-top": "var(--casora-badge-hit-top, 0px) !important"
+          },
+          {
+            "margin-top": "calc(-1 * var(--casora-badge-hit-top, 0px)) !important"
           }
         ],
         "room_sub_climate": [
@@ -9307,6 +9424,12 @@
           },
           {
             "--casora-badge-row-child-w": "[[[ /* Wrap option (#53): the inner card takes the row's width, so the flex row can wrap. */ const _rv = variables.casora_rv || {}; return _rv.badges_wrap === true ? '100%' : 'max-content' ]]]"
+          },
+          {
+            "padding-top": "var(--casora-badge-hit-top, 0px) !important"
+          },
+          {
+            "margin-top": "calc(-1 * var(--casora-badge-hit-top, 0px)) !important"
           },
           {
             "--casora-badge-order-security": "[[[ const _rv = variables.casora_rv || {}; \n  // Standard wie das Studio (BADGE_ORDER_IDS): gespeicherte Reihenfolge zuerst, was fehlt, danach.\n  const D = ['security', 'climate', 'lights', 'people', 'energy', 'scenes', 'media', 'updates'];\n  const o = (Array.isArray(_rv.badge_order) ? _rv.badge_order : []).filter((x) => D.includes(x));\n  D.forEach((x) => { if (!o.includes(x)) o.push(x); });\n  return o.indexOf('security') + 1;\n]]]\n"
@@ -9392,6 +9515,12 @@
             "--casora-badge-row-child-w": "[[[ /* Wrap option (#53): the inner card takes the row's width, so the flex row can wrap. */ const _rv = variables.casora_rv || {}; return _rv.badges_wrap === true ? '100%' : 'max-content' ]]]"
           },
           {
+            "padding-top": "var(--casora-badge-hit-top, 0px) !important"
+          },
+          {
+            "margin-top": "calc(-1 * var(--casora-badge-hit-top, 0px)) !important"
+          },
+          {
             "--casora-badge-order-security": "[[[ const _rv = variables.casora_rv || {}; \n  // Standard wie das Studio (BADGE_ORDER_IDS): gespeicherte Reihenfolge zuerst, was fehlt, danach.\n  const D = ['security', 'climate', 'lights', 'people', 'energy', 'scenes', 'media', 'updates'];\n  const o = (Array.isArray(_rv.badge_order) ? _rv.badge_order : []).filter((x) => D.includes(x));\n  D.forEach((x) => { if (!o.includes(x)) o.push(x); });\n  return o.indexOf('security') + 1;\n]]]\n"
           },
           {
@@ -9473,6 +9602,12 @@
           },
           {
             "--casora-badge-row-child-w": "[[[ /* Wrap option (#53): the inner card takes the row's width, so the flex row can wrap. */ const _rv = variables.casora_rv || {}; return _rv.badges_wrap === true ? '100%' : 'max-content' ]]]"
+          },
+          {
+            "padding-top": "var(--casora-badge-hit-top, 0px) !important"
+          },
+          {
+            "margin-top": "calc(-1 * var(--casora-badge-hit-top, 0px)) !important"
           },
           {
             "--casora-badge-order-security": "[[[ const _rv = variables.casora_rv || {}; \n  // Standard wie das Studio (BADGE_ORDER_IDS): gespeicherte Reihenfolge zuerst, was fehlt, danach.\n  const D = ['security', 'climate', 'lights', 'people', 'energy', 'scenes', 'media', 'updates'];\n  const o = (Array.isArray(_rv.badge_order) ? _rv.badge_order : []).filter((x) => D.includes(x));\n  D.forEach((x) => { if (!o.includes(x)) o.push(x); });\n  return o.indexOf('security') + 1;\n]]]\n"
@@ -9558,6 +9693,12 @@
             "--casora-badge-row-child-w": "[[[ /* Wrap option (#53): the inner card takes the row's width, so the flex row can wrap. */ const _rv = variables.casora_rv || {}; return _rv.badges_wrap === true ? '100%' : 'max-content' ]]]"
           },
           {
+            "padding-top": "var(--casora-badge-hit-top, 0px) !important"
+          },
+          {
+            "margin-top": "calc(-1 * var(--casora-badge-hit-top, 0px)) !important"
+          },
+          {
             "--casora-badge-order-security": "[[[ const _rv = variables.casora_rv || {}; \n  // Standard wie das Studio (BADGE_ORDER_IDS): gespeicherte Reihenfolge zuerst, was fehlt, danach.\n  const D = ['security', 'climate', 'lights', 'people', 'energy', 'scenes', 'media', 'updates'];\n  const o = (Array.isArray(_rv.badge_order) ? _rv.badge_order : []).filter((x) => D.includes(x));\n  D.forEach((x) => { if (!o.includes(x)) o.push(x); });\n  return o.indexOf('security') + 1;\n]]]\n"
           },
           {
@@ -9641,6 +9782,12 @@
             "--casora-badge-row-child-w": "[[[ /* Wrap option (#53): the inner card takes the row's width, so the flex row can wrap. */ const _rv = variables.casora_rv || {}; return _rv.badges_wrap === true ? '100%' : 'max-content' ]]]"
           },
           {
+            "padding-top": "var(--casora-badge-hit-top, 0px) !important"
+          },
+          {
+            "margin-top": "calc(-1 * var(--casora-badge-hit-top, 0px)) !important"
+          },
+          {
             "--casora-badge-order-security": "[[[ const _rv = variables.casora_rv || {}; \n  // Standard wie das Studio (BADGE_ORDER_IDS): gespeicherte Reihenfolge zuerst, was fehlt, danach.\n  const D = ['security', 'climate', 'lights', 'people', 'energy', 'scenes', 'media', 'updates'];\n  const o = (Array.isArray(_rv.badge_order) ? _rv.badge_order : []).filter((x) => D.includes(x));\n  D.forEach((x) => { if (!o.includes(x)) o.push(x); });\n  return o.indexOf('security') + 1;\n]]]\n"
           },
           {
@@ -9722,6 +9869,12 @@
           },
           {
             "--casora-badge-row-child-w": "[[[ /* Wrap option (#53): the inner card takes the row's width, so the flex row can wrap. */ const _rv = variables.casora_rv || {}; return _rv.badges_wrap === true ? '100%' : 'max-content' ]]]"
+          },
+          {
+            "padding-top": "var(--casora-badge-hit-top, 0px) !important"
+          },
+          {
+            "margin-top": "calc(-1 * var(--casora-badge-hit-top, 0px)) !important"
           },
           {
             "--casora-badge-order-security": "[[[ const _rv = variables.casora_rv || {}; \n  // Standard wie das Studio (BADGE_ORDER_IDS): gespeicherte Reihenfolge zuerst, was fehlt, danach.\n  const D = ['security', 'climate', 'lights', 'people', 'energy', 'scenes', 'media', 'updates'];\n  const o = (Array.isArray(_rv.badge_order) ? _rv.badge_order : []).filter((x) => D.includes(x));\n  D.forEach((x) => { if (!o.includes(x)) o.push(x); });\n  return o.indexOf('security') + 1;\n]]]\n"
@@ -16543,7 +16696,8 @@
     "variables": {
       "icon": "scenes",
       "mobile_filter_category": "unfiltered",
-      "casora_default_name": "Szenen"
+      "casora_default_name": "Szenen",
+      "show_offline": false
     }
   },
   "casora_settings_button": {
@@ -16666,7 +16820,8 @@
     "variables": {
       "icon": "sun",
       "room_name": "Sonnenstrom übrig",
-      "casora_default_name": "Solar-Tipp"
+      "casora_default_name": "Solar-Tipp",
+      "show_offline": false
     },
     "hold_action": {
       "action": "[[[\n  /* Halten (1.6): Casoras Halten-Menü bzw. dasselbe Popup wie Tippen (22-halten.js); ohne Casora-Popups nichts. */\n  return window.casoraPopup && window.casoraPopup.enabled && window.CASORA_HOLD_MENU !== false ? 'more-info' : 'none';\n]]]\n",
@@ -17869,7 +18024,8 @@
       "icon": "[[[\n  /* 04.10.2026: Symbol je Zustand – Neustart ausstehend = Neustart-Pfeil, sonst Download (updates). */\n  const restart = Object.keys(states).filter((id) => id.startsWith('update.') && window.casoraNeedsRestart?.(states[id])).length > 0;\n  return restart ? 'updates-restart' : 'updates';\n]]]\n",
       "idle": "[[[\n  const restart = Object.keys(states).filter((id) => id.startsWith('update.') && window.casoraNeedsRestart?.(states[id])).length > 0;\n  const n = (() => { const _e = entity, _v = Number(_e?.state), _a = (_e && _e.attributes) || {}; if (_e && !String(_e.entity_id).startsWith('update.') && !_a.unit_of_measurement && !_a.device_class && Number.isInteger(_v) && _v >= 0) return _v; return Object.keys(states).filter((id) => id.startsWith('update.') && states[id]?.state === 'on').length; })();\n  return !(n > 0) && !restart;\n]]]\n",
       "show_when": "active",
-      "casora_default_name": "Updates"
+      "casora_default_name": "Updates",
+      "show_offline": false
     }
   },
   "casora_vacuum": {

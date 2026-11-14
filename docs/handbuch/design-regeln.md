@@ -285,6 +285,11 @@ dunkel das helle Rot für dunkle Zeilen (Nutzertest 07.11.2026: 1,7 : 1). **Pfei
 - Handy: jede Taste **≥ 40 px** (Navigationsleiste ≥ 48). Kleine sichtbare Knöpfe vergrößern die
   Fläche unsichtbar mit `::before { inset: -Npx }` – Optik bleibt (Fund DP-02: Szenen-Chips 38, Kalender-Pfeile 32).
 - Nichts Antippbares näher als 8 px an einer anderen Taste ohne Abstand dazwischen.
+- Touch (`pointer: coarse`, V1 14.11.2026): Ziele erreichen **44 × 44**, sichtbar bleibt alles gleich – Handy-Badges
+  (sichtbar 40, Treffer-Ebene `hit` reicht 4 px nach oben, die Badge-Reihe gibt dafür Platz mit `padding-top` und gleich
+  großem negativem Rand), Glocke „Alles gelesen“/„Alle entfernen“ (32, `::before`), Raumleiste ‹ › (30, `::after`), Handy-Leiste
+  (36, `--casora-chrome-hit`). Ausnahme: die Seitenpunkte der Kachelreihe stehen am Touch-Gerät 44 auseinander (wachsen
+  sonst in den Nachbarn). Prüfung `dev/qa/regress/r768_tippen_44_touch.mjs`.
 
 ## 13. Popup-Aufbau
 

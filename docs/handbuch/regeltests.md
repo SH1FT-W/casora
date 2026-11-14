@@ -24,6 +24,8 @@ für Fehler, die wirklich wiederkehren.
 | Keine doppelten Farben im Casora-Look | `farben_zwillinge.mjs` | statisch |
 | Popup-Design: Kontrast Schalter/Pfeil auf aktiver Zeile, Kopf, langer Titel, Trefferflächen, Leck | `dev/qa/regress/r105_popup_design.mjs` | Laufzeit |
 | Studio-Felder 38/44 px | `dev/qa/regress/r19_einstellungen_feldgroesse.mjs` | Laufzeit |
+| Touch-Ziele 44 px (Handy-Leiste, Handy-Badges, Glocke, Seitenpunkte, Raumleisten-Pfeile), Maus unverändert | `dev/qa/regress/r768_tippen_44_touch.mjs` | Laufzeit |
+| Offline-Kachel: Warnfarbe, gestrichelter Rand, „Offline · seit …“, kein Schalter | `dev/unit/tile_offline.mjs`, `dev/qa/regress/r769_offline_kachel.mjs` | statisch + Laufzeit |
 | Umzug unverändert | `r24_umzug_wie_vorher`, `rf02_raum_ablauf`, `r121`, `r122` | Laufzeit |
 | Leistung: Voll-Durchläufe, Leck, doppelte Abrufe | `dev/unit/leistung_13.mjs`, `dev/qa/leistung.mjs --grenzen dev/qa/leistung-grenzen.json` | statisch + Laufzeit (Zähler) |
 | Popup v3 „Bühne“ ([popup-richtlinien-v3.md](popup-richtlinien-v3.md)): `UI.stage` S1–S8 und `UI.quick` da, migrierte Popups mit variant 'v3' und Bühne aus `UI.stage`, Schnellwahl ohne gefährliche Einträge und höchstens 4, Diagramme ohne Hex und nur 120/140/160 hoch, jede Popup-Vorlage in der Liste, Bausteine aus v2 (Zeilen, Breite, Symmetrie), keine neuen eigenen Breiten/Köpfe/Pfeile außer den bekannten Stellen | `dev/unit/popup_v3.mjs` | statisch |
