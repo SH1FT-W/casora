@@ -3896,7 +3896,7 @@
   var lastLine = function (states) {
     var u = H.list && H.list[0];
     // The update's name stays as written (V24): only „Zuletzt … gestern“ around it is translated.
-    return u ? 'Zuletzt <span data-no-i18n>' + esc(nameOf(states, u.id)) + '</span> ' + agoMs(u.t) : '';
+    return u ? 'Zuletzt <span data-no-i18n>' + esc(nameOf(states, u.id)) + '</span> ' + esc(agoMs(u.t)) : '';
   };
   X.ov = function (states, hass, pend) {
     pend = pend || Object.keys(states).filter(function (id) { return id.indexOf('update.') === 0 && states[id].state === 'on'; });
