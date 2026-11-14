@@ -31,7 +31,7 @@ for (const [name, tpls] of [['Quelle', T], ['Paket', B]]) {
   assert.equal(run(style('--casora-badge-tone'), v, states), 'initial', name + ': Symbol leuchtet bei einem Licht an');
   // Ohne alles bleibt es aus, mit Einzel-Lichtern wie bisher.
   assert.equal(run(style('display'), { enabled: true }, states), 'none', name + ': ohne Lichter aus');
-  assert.match(run(t.name, { enabled: true, entity_1: 'light.b', entity_2: 'light.c' }, states), /Aus/, name + ': Einzel-Lichter wie bisher');
+  assert.match(run(t.name, { enabled: true, entity_1: 'light.b', entity_2: 'light.c' }, states), /Alle aus/, name + ': Einzel-Lichter wie bisher (zwei aus: „Alle aus“ wie die Kachel, V4)');
 }
 
 console.log('ok umzug_licht_badge');
