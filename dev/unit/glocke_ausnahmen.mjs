@@ -65,6 +65,7 @@ globalThis.CustomEvent = class { constructor(n, o) { this.type = n; this.detail 
 window.casoraSecurityIcon = () => 'door-open';
 window.CASORA_SETTINGS = { notify: {} };
 
+globalThis.setTimeout = () => 0;
 new Function(mod)();
 new Function(finden)();
 new Function(basisMod)();
