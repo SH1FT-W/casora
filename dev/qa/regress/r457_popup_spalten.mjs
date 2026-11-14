@@ -25,7 +25,10 @@ const MAX_GAP = 200;
 const KNOWN = {
   // Light popups (owner 03.11.2026): the column rule moves only whole sections and never splits a list, so the light
   // popups (one list right of the dial) keep their layout and their caps of 03.11.2026.
-  'licht-raum': 283, 'licht-haus': 440,
+  // 14.11.2026: the mock's mixed room (dev/casora_mock/mixed_lights.py, join_house_group) adds one room group to the
+  // house light group the gallery picks for licht-raum, so its list on the right is one row (59 px) longer: 243 → 302 px
+  // measured, the same on 8aa572f0 with only the mock change. Cap = measured + 40.
+  'licht-raum': 342, 'licht-haus': 440,
   // Person popup: its right column is one Verlauf list that grows with the test house's tracker changes during the run
   // (94 px alone, 202 px after the double pass of 03.11.2026) – one section, nothing the column rule can move.
   'person-badge': 260,
