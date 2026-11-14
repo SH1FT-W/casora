@@ -123,6 +123,7 @@ assert.ok(!/window\.casoraIsPlant\s*=[^=]/.test(core), 'casora-core.js has no pl
 }
 
 // ── Bell (casora-core.js notify module) ────────────────────────────────────────
+globalThis.setTimeout = () => 0;
 new Function(slice(core, '(function () {\n  if (window._casoraNotify) return;', '\n})();'))();
 const finden = read('custom_components/casora/scripts/local/00-finder.js');
 new Function(finden)();

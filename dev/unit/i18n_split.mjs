@@ -5,11 +5,37 @@
 // texts translate once it is there, a language change fetches the new one.   node dev/unit/i18n_split.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
+// Own small fake clock: setTimeout only collects the callbacks; advance(ms) runs the due ones in time order, so the
+// test does not sleep.
+// Date.now moves with it, so the code's own time checks see the same time.
+const realNow = Date.now;
+const realClear = globalThis.clearTimeout;
+const FAKE = Symbol('fake timer');
+let fakeNow = 0;
+const fakeQueue = [];
+globalThis.setTimeout = (fn, ms = 0, ...args) => {
+  const t = { fn, args, at: fakeNow + (Number(ms) || 0), dead: false, [FAKE]: true };
+  fakeQueue.push(t);
+  return t;
+};
+globalThis.clearTimeout = (t) => (t && t[FAKE] ? (t.dead = true) : realClear(t));
+Date.now = () => realNow() + fakeNow;
+const advance = async (ms) => {
+  const end = fakeNow + ms;
+  await new Promise((r) => setImmediate(r));
+  for (let due; (due = fakeQueue.filter((t) => !t.dead && t.at <= end).sort((a, b) => a.at - b.at)[0]); ) {
+    fakeQueue.splice(fakeQueue.indexOf(due), 1);
+    fakeNow = Math.max(fakeNow, due.at);
+    due.fn(...due.args);
+    await new Promise((r) => setImmediate(r));
+  }
+  fakeNow = end;
+};
 
 const CC = new URL('../../custom_components/casora/', import.meta.url);
 const read = (p) => fs.readFileSync(new URL(p, CC), 'utf8');
 const langs = (d) => fs.readdirSync(new URL(d, CC)).filter((f) => f.endsWith('.json')).map((f) => f.slice(0, -5)).sort();
-const tick = () => new Promise((r) => setTimeout(r, 0));
+const tick = () => advance(0);
 
 // ── Budget and completeness ───────────────────────────────────────────────────
 const DASH = read('scripts/casora-i18n.js');
@@ -72,7 +98,7 @@ function dash(language, { remembered = null, hass = true } = {}) {
   // Language change: the new one is fetched (after 1.5 s when it differs from last time's), French stays loaded.
   d.H.hass = { locale: { language: 'en' } };
   d.tr('Gerät fehlt');
-  await new Promise((r) => setTimeout(r, 1700));
+  await advance(1700);
   await tick(); await tick();
   assert.equal(d.calls.length, 2, 'language change fetches the new language: ' + d.calls.join(', '));
   assert.equal(d.tr('Gerät fehlt'), 'Device missing', 'English after the change');

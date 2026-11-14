@@ -52,6 +52,7 @@ const callWS = (msg) => {
 function fresh(states, extra = {}) {
   hass = { states, callWS, entities: {}, devices: {}, areas: {}, ...extra };
   delete window._casoraNotify;
+    globalThis.setTimeout = () => 0;
   new Function(mod)();
   return window._casoraNotify;
 }

@@ -9,6 +9,36 @@
 //   node dev/unit/lader_stufen.mjs
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+// Own small fake clock: setTimeout only collects the callbacks; advance(ms) runs the due ones in time order, so the
+// test does not sleep. Nothing here reads the real clock.
+const realClear = globalThis.clearTimeout;
+const FAKE = Symbol('fake timer');
+let fakeNow = 0;
+const fakeQueue = [];
+globalThis.setTimeout = (fn, ms = 0, ...args) => {
+  const t = { fn, args, at: fakeNow + (Number(ms) || 0), dead: false, [FAKE]: true };
+  fakeQueue.push(t);
+  return t;
+};
+globalThis.clearTimeout = (t) => (t && t[FAKE] ? (t.dead = true) : realClear(t));
+const advance = async (ms) => {
+  const end = fakeNow + ms;
+  await new Promise((r) => setImmediate(r));
+  for (let due; (due = fakeQueue.filter((t) => !t.dead && t.at <= end).sort((a, b) => a.at - b.at)[0]); ) {
+    fakeQueue.splice(fakeQueue.indexOf(due), 1);
+    fakeNow = Math.max(fakeNow, due.at);
+    due.fn(...due.args);
+    await new Promise((r) => setImmediate(r));
+  }
+  fakeNow = end;
+};
+// Runs the fake clock in steps until the page's loader has finished (its promise settles).
+const settle = async (p) => {
+  let done = false;
+  p.then(() => { done = true; });
+  for (let i = 0; i < 200 && !done; i++) await advance(20);
+  return p;
+};
 
 const SRC = fs.readFileSync(new URL('../../custom_components/casora/scripts/casora-local.js', import.meta.url), 'utf8');
 const ROW = fs.readFileSync(new URL('../../custom_components/casora/scripts/smart-row.js', import.meta.url), 'utf8');
@@ -77,7 +107,7 @@ const fileReqs = (log) => log.filter((x) => x.includes('einstellungen.js'));
 // 1) Remembered, stored settings: no file request at all; the modules run while the WebSocket never answers.
 {
   const t = await run({ cache: { stored: true, settings: { scenes: { exclude: ['scene.a'] } }, file: 'k1' }, ws: 'never' });
-  await t.done;
+  await settle(t.done);
   assert.deepEqual(fileReqs(t.log), [], 'stored settings: the file is not fetched');
   assert.deepEqual(t.win.CASORA_SETTINGS, { scenes: { exclude: ['scene.a'] } }, 'remembered settings in force');
   assert.equal(mods(t.log).length, NMOD, 'all modules ran without the WebSocket');
@@ -87,7 +117,7 @@ const fileReqs = (log) => log.filter((x) => x.includes('einstellungen.js'));
 // 2) Remembered: a file with version key → versioned (cacheable) request, never ?t=.
 {
   const t = await run({ cache: { stored: false, settings: {}, file: 'abc-1' }, ws: 'never', files: { 'v=abc-1': { waste: { a: 1 } } } });
-  await t.done;
+  await settle(t.done);
   assert.deepEqual(fileReqs(t.log), ['import:/casora_assets/einstellungen.js?v=abc-1'], 'versioned file URL');
   assert.deepEqual(t.win.CASORA_SETTINGS, { waste: { a: 1 } }, 'file settings in force');
 }
@@ -95,14 +125,14 @@ const fileReqs = (log) => log.filter((x) => x.includes('einstellungen.js'));
 // 3) Remembered: no file → no request.
 {
   const t = await run({ cache: { stored: false, settings: {}, file: null }, ws: 'never' });
-  await t.done;
+  await settle(t.done);
   assert.deepEqual(fileReqs(t.log), [], 'no file, no request');
 }
 
 // 4) First open (nothing remembered): the old unversioned request, the modules do not wait for the WebSocket.
 {
   const t = await run({ cache: undefined, ws: 'never' });
-  await t.done;
+  await settle(t.done);
   const f = fileReqs(t.log);
   assert.equal(f.length, 1, 'one file request');
   assert.match(f[0], /einstellungen\.js\?t=\d+$/, 'unversioned the first time');
@@ -112,7 +142,7 @@ const fileReqs = (log) => log.filter((x) => x.includes('einstellungen.js'));
 // 5) Order: start modules, then casora-local-started (+ one redraw), then the rest with a yield before each.
 {
   const t = await run({ cache: { stored: true, settings: {} }, ws: 'never' });
-  await t.done;
+  await settle(t.done);
   const m = mods(t.log);
   assert.deepEqual(m.slice(0, 5), ['00-finder', '01-basis', '04-navigation', '02-devices', '03-popups'], 'start modules first');
   const iStart = t.log.indexOf('event:casora-local-started');
@@ -129,16 +159,16 @@ const fileReqs = (log) => log.filter((x) => x.includes('einstellungen.js'));
 // 5b) Phone Home with a veil: the cards are drawn once more when the start modules are there.
 {
   const t = await run({ cache: { stored: true, settings: {} }, ws: 'never', slim: true });
-  await t.done;
+  await settle(t.done);
   assert.deepEqual(t.kicks, ['modules-started', 'modules-loaded'], 'veil: redraw after the start modules and at the end');
 }
 
 // 6) Fresh answer names a new file key: the new file runs, the tiles are drawn once more.
 {
   const t = await run({ cache: { stored: false, settings: {}, file: 'old' }, files: { 'v=old': { a: 1 }, 'v=new': { a: 2 } } });
-  await t.done;
+  await settle(t.done);
   t.answer({ stored: false, settings: {}, file: 'new' });
-  await new Promise((r) => setTimeout(r, 20));
+  await advance(20);
   assert.ok(fileReqs(t.log).includes('import:/casora_assets/einstellungen.js?v=new'), 'new file version loaded');
   assert.deepEqual(t.win.CASORA_SETTINGS, { a: 2 }, 'new file settings in force');
   assert.ok(t.kicks.includes('settings'), 'redraw for the changed settings');
@@ -148,9 +178,9 @@ const fileReqs = (log) => log.filter((x) => x.includes('einstellungen.js'));
 // 7) Same answer as remembered: no second redraw, no second file request.
 {
   const t = await run({ cache: { stored: false, settings: {}, file: 'k' }, files: { 'v=k': { a: 1 } } });
-  await t.done;
+  await settle(t.done);
   t.answer({ stored: false, settings: {}, file: 'k' });
-  await new Promise((r) => setTimeout(r, 20));
+  await advance(20);
   assert.equal(fileReqs(t.log).length, 1, 'file fetched once');
   assert.ok(!t.kicks.includes('settings'), 'no redraw when nothing changed');
 }
@@ -159,9 +189,9 @@ const fileReqs = (log) => log.filter((x) => x.includes('einstellungen.js'));
 //     answer names the same file – no second run, no redraw.
 {
   const t = await run({ cache: { stored: false, settings: {} }, files: {} });
-  await t.done;
+  await settle(t.done);
   t.answer({ stored: false, settings: {}, file: 'k9' });
-  await new Promise((r) => setTimeout(r, 20));
+  await advance(20);
   assert.equal(fileReqs(t.log).length, 1, 'file ran once');
   assert.match(fileReqs(t.log)[0], /\?t=\d+$/, 'the unversioned request');
   assert.ok(!t.kicks.includes('settings'), 'no redraw on account of the key');
@@ -170,9 +200,9 @@ const fileReqs = (log) => log.filter((x) => x.includes('einstellungen.js'));
 // 7c) Stored settings removed in the Studio, no file: Casora's defaults again, drawn once more.
 {
   const t = await run({ cache: { stored: true, settings: { a: 1 }, file: null } });
-  await t.done;
+  await settle(t.done);
   t.answer({ stored: false, settings: {}, file: null });
-  await new Promise((r) => setTimeout(r, 20));
+  await advance(20);
   assert.equal(t.win.CASORA_SETTINGS, undefined, 'stored settings gone');
   assert.ok(t.kicks.includes('settings'), 'redraw');
 }
@@ -180,9 +210,9 @@ const fileReqs = (log) => log.filter((x) => x.includes('einstellungen.js'));
 // 7d) The file went away: its settings go too.
 {
   const t = await run({ cache: { stored: false, settings: {}, file: 'k' }, files: { 'v=k': { a: 1 } } });
-  await t.done;
+  await settle(t.done);
   t.answer({ stored: false, settings: {}, file: null });
-  await new Promise((r) => setTimeout(r, 20));
+  await advance(20);
   assert.equal(t.win.CASORA_SETTINGS, undefined, 'file settings gone');
   assert.ok(t.kicks.includes('settings'), 'redraw');
 }
@@ -190,9 +220,9 @@ const fileReqs = (log) => log.filter((x) => x.includes('einstellungen.js'));
 // 7e) Nothing remembered (first open, private mode) and the answer is Casora's defaults: no redraw.
 {
   const t = await run({ cache: undefined });
-  await t.done;
+  await settle(t.done);
   t.answer({ stored: false, settings: {}, file: null });
-  await new Promise((r) => setTimeout(r, 20));
+  await advance(20);
   assert.ok(!t.kicks.includes('settings'), 'defaults as started: no redraw');
 }
 
@@ -200,8 +230,8 @@ const fileReqs = (log) => log.filter((x) => x.includes('einstellungen.js'));
 {
   const t = await run({ cache: { stored: false, settings: {}, file: null } });
   t.answer({ stored: true, settings: { x: 1 } });
-  await t.done;
-  await new Promise((r) => setTimeout(r, 20));
+  await settle(t.done);
+  await advance(20);
   assert.deepEqual(t.win.CASORA_SETTINGS, { x: 1 }, 'stored settings in force');
   assert.equal(t.kicks.filter((k) => k === 'settings').length, 1, 'one redraw');
   assert.ok(t.win._casoraLocalLoaded, 'loader finished');
