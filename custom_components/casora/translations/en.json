@@ -6,6 +6,9 @@
         "description": "Adds the Casora configuration panel to the sidebar."
       }
     },
+    "create_entry": {
+      "default": "Done. Open **Casora Studio** in the sidebar now: that's where you set up your dashboard."
+    },
     "abort": {
       "already_configured": "Casora is already set up."
     }
