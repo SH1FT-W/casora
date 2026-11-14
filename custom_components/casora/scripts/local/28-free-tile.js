@@ -89,6 +89,12 @@
     var txt = n.toLocaleString(loc(), { minimumFractionDigits: p, maximumFractionDigits: p });
     return a.unit_of_measurement ? txt + ' ' + a.unit_of_measurement : txt;
   };
+  // HA had no word for it: Casora's own fallback (core: a known state in Casora's words, a code made readable).
+  var raw = function (st) {
+    var v = String(st.state);
+    if (window._casoraReadableRaw) return window._casoraReadableRaw(v, st);
+    return window._casoraRawWord ? window._casoraRawWord(v) : v;
+  };
   F.word = function (hass, st) {
     if (!st) return 'Nicht verfügbar';
     var s = String(st.state == null ? '' : st.state).toLowerCase();
@@ -105,9 +111,9 @@
       try {
         var f = hass && typeof hass.formatEntityState === 'function' ? hass.formatEntityState(st) : '';
         // HA had no word for it (a raw „ready“): Casora's word (review 2, DH-14).
-        if (f != null && String(f) !== '') return String(f) === String(st.state) && window._casoraRawWord ? window._casoraRawWord(String(f)) : String(f);
+        if (f != null && String(f) !== '') return String(f) === String(st.state) ? raw(st) : String(f);
       } catch (e) { /* entity half loaded */ }
-      return window._casoraRawWord ? window._casoraRawWord(String(st.state)) : String(st.state);
+      return raw(st);
     }
     // Casora's words before HA's ("Ein"): the core would take hass.formatEntityState first.
     if (s === 'on') return 'An';

@@ -5730,7 +5730,7 @@
         // Running: the cavity's temperature as the value, the target and the programme under it, the end as the foot.
         if (temp != null) { value = String(Math.round(temp)); unit = unitOf(states, c.temp); }
         var heating = temp != null && tgt != null && temp < tgt - 5;
-        word = [s.raw === 'run' ? null : s.word, target ? (heating ? T('Heizt auf') + ' ' + target : T('Ziel') + ' ' + target) : null, progTxt]
+        word = [s.raw === 'run' ? null : s.word, target ? (heating ? T('Heizt auf') + ' ' + target : T('Ziel ' + target)) : null, progTxt]
           .filter(Boolean).join(' · ') || null;
         program = [pct != null ? Math.round(pct) + ' %' : null, left != null && left > 0 ? 'Fertig gegen ' + clock(new Date(Date.now() + left * 60000)) + ' Uhr' : null]
           .filter(Boolean).join(' · ') || null;

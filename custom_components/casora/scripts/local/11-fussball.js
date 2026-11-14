@@ -8,6 +8,9 @@
 (function () {
   if (window._casoraFootball) return;
   var K = window._casoraFootball = { data: {}, busy: {}, next: {}, full: false, _id: null };
+  /* Result tones of the form (S/U/N) in the head and the form list: deep green, sand and red so bold white letters keep
+     ≥ 4,9 : 1 (5,1 / 6,3 / 5,9) in every theme; the theme's mid tones missed 4,5 with either ink. */
+  K.formTone = { W: '#3F7A4C', D: '#6E5D4C', L: '#A8443A' };
   var API = 'https://site.api.espn.com/apis';
   var TTL = 10 * 60000, TTL_LIVE = 60000, TTL_NEXT = 60 * 60000, H = 3600000;
 
@@ -578,7 +581,8 @@
       + '.cfb-r img{width:22px;height:22px;object-fit:contain;}'
       + '.cfb-r img.fl,.cfb-f img.fl{width:20px;height:15px;justify-self:center;object-fit:cover;border-radius:3px;box-shadow:0 0 0 .5px ' + hair + ';}'
       + '.cfb-r .n{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
-      + '.cfb-r .n em{font-style:normal;font-size:11px;font-weight:600;color:var(--primary-color, #B67A50);margin-left:7px;}'
+      // „nächster Gegner“: text-2 at 12 px (owner 14.11.2026) – the accent on the light row was 2,9 : 1.
+      + '.cfb-r .n em{font-style:normal;font-size:12px;font-weight:600;color:' + sub + ';margin-left:7px;}'
       /* Schmal: das Etikett „nächster Gegner“ würde den Namen abschneiden – dort ein Punkt vor dem Namen. */
       + '@media (max-width:520px){.cfb-r{grid-template-columns:20px 22px minmax(0,1fr) 22px 34px 28px;gap:6px;padding:0 12px 0 14px;}.cfb-r .n em{display:none;}.cfb-r.opp .n::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--primary-color, #B67A50);margin-right:6px;vertical-align:middle;}}'
       + '.cfb-r .c{text-align:right;color:' + sub + ';}.cfb-r .p{text-align:right;font-weight:700;}'
@@ -601,11 +605,12 @@
       /* Spaltenkopf der Form wie „# Team Sp. …“ der Tabelle daneben (08.10.2026): gleiche Höhe, Zeilen fluchten. */
       + '.cfb-f.h{background:none;min-height:18px;padding-top:0;padding-bottom:0;font-size:11px;font-weight:600;letter-spacing:.04em;color:' + T.ink3 + ';}'
       + '.cfb-f{display:grid;grid-template-columns:28px 22px minmax(0,1fr) auto;align-items:center;gap:8px;min-height:44px;padding:4px 14px 4px 8px;border-radius:' + rad + ';background:' + row + ';font-size:14.5px;}'
-      // The letter on the result colour: the ink inkOn picks for 4,5 : 1 (white on green was 2,6 : 1, on sand 4,1, on red 3,9).
-      + '.cfb-res{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:12.5px;}'
-      + (window._casoraInkOn ? esc('.cfb-res.W{color:' + window._casoraInkOn('var(--casora-color-green, #6AAE78)', 4.5) + ';}.cfb-res.D{color:'
-        + window._casoraInkOn('var(--casora-color-sand, #9A8672)', 4.5) + ';}.cfb-res.L{color:' + window._casoraInkOn('var(--casora-color-red, #D35A4E)', 4.5) + ';}') : '')
-      + '.cfb-res.W{background:var(--casora-color-green, #6AAE78);}.cfb-res.D{background:var(--casora-color-sand, #9A8672);}.cfb-res.L{background:var(--casora-color-red, #D35A4E);}'
+      // The letter on the result colour (owner 14.11.2026): bold white on the deep result tones (K.formTone), at least
+      // 4,9 : 1 in every theme – on the theme's mid green/sand/red it was 2,6 / 3,5 / 3,9.
+      + '.cfb-res{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:12.5px;}'
+      + (window._casoraInkOn ? esc('.cfb-res.W{color:' + window._casoraInkOn(K.formTone.W, 4.5) + ';}.cfb-res.D{color:'
+        + window._casoraInkOn(K.formTone.D, 4.5) + ';}.cfb-res.L{color:' + window._casoraInkOn(K.formTone.L, 4.5) + ';}') : '')
+      + '.cfb-res.W{background:' + K.formTone.W + ';}.cfb-res.D{background:' + K.formTone.D + ';}.cfb-res.L{background:' + K.formTone.L + ';}'
       + '.cfb-f img{width:22px;height:22px;object-fit:contain;}'
       + '.cfb-f .o{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.2;}'
       + '.cfb-f .o small{display:block;font-weight:500;font-size:12px;color:' + sub + ';}'
@@ -643,11 +648,12 @@
       // on the right; without form data the next match.
       var fm = ((d && d.form) || []).filter(function (x) { return x && /^[WDL]$/.test(x.res); }).slice(0, 5).reverse();
       if (fm.length) {
-        var ab3 = K.abbr(), bg = { W: 'var(--casora-color-green, #6AAE78)', D: 'var(--casora-color-sand, #9A8672)', L: 'var(--casora-color-red, #D35A4E)' };
+        var ab3 = K.abbr(), bg = K.formTone;
         var pillsHtml = fm.map(function (x) {
           var ink = window._casoraInkOn ? window._casoraInkOn(bg[x.res], 4.5) : '#fff';
+          // Owner 14.11.2026: a bit larger (1,75 em) with bold white letters on the deep tones, ≥ 4,5 : 1.
           return '<i class="cfb-hf ' + esc(x.res) + '" title="' + esc((x.home ? 'gegen ' : 'bei ') + K.name(x.opp) + ' ' + x.my + ':' + x.their) + '" style="display:inline-grid;place-items:center;'
-            + 'width:1.45em;height:1.45em;margin-left:4px;border-radius:50%;font-style:normal;font-size:.82em;font-weight:700;vertical-align:.06em;'
+            + 'width:1.75em;height:1.75em;margin-left:4px;border-radius:50%;font-style:normal;font-size:.82em;font-weight:800;vertical-align:.06em;'
             + 'background:' + esc(bg[x.res]) + ';color:' + esc(ink) + ';">' + esc(ab3[x.res] || x.res) + '</i>';
         }).join('');
         return U.line('Form', []).replace(/<\/div>\s*$/, '<span data-no-i18n aria-label="' + esc(fm.map(function (x) { return ab3[x.res]; }).join(' ')) + '">' + pillsHtml + '</span></div>');

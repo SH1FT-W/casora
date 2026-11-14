@@ -36,3 +36,4 @@ custom_components/casora/scripts/casora-core.js | re:^dLines\( | dial centre: dL
 custom_components/casora/scripts/casora-core.js | re:^moonWord(?:Cls|Fit)\((?:shown|it\.text)\)$ | moon: one of the fixed class words ' lw' / ' xw', or a style attribute made of numbers only (moonWordFit) | 4
 custom_components/casora/scripts/casora-core.js | proxies | „Alle (n)“ moon: hidden proxies built in moonMenuHtml, every value escaped there (esc, stAttrs) | 1
 custom_components/casora/scripts/casora-core.js | o.chart | S6 dial and plate: the caller's ready chart markup (contract of UI.stage) | 2
+custom_components/casora/scripts/casora-core.js | re:^(?:a|b)$ | litWrap: pieces of the already escaped text it wraps in <span data-no-i18n> | 2

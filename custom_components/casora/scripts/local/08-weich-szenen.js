@@ -49,12 +49,12 @@
         var la = function (id) { return SC.lastActive ? (SC.lastActive(id, states) || NaN) : Date.parse(states[id] && states[id].state); };
         var since = ago(la(act[0]));
         return UI.hero({ center: true, value: nameOf(act[0], states, V.room) + (act.length > 1 ? ' +' + (act.length - 1) : ''),
-          sub: since ? 'Aktiv · ' + since : 'Aktiv', subTone: 'good' });
+          sub: since ? 'Aktiv · ' + since : 'Aktiv', subTone: 'good', lit: [nameOf(act[0], states, V.room)] });
       }
       var last = null, lastT = 0;
       ids.forEach(function (id) { var t = SC.lastActive ? (SC.lastActive(id, states) || NaN) : Date.parse(states[id].state); if (!isNaN(t) && t > lastT) { lastT = t; last = id; } });
       return UI.hero({ center: true, value: 'Keine Szene aktiv',
-        sub: last ? 'Zuletzt ' + nameOf(last, states, V.room) + ' · ' + ago(lastT) : null });
+        sub: last ? 'Zuletzt ' + nameOf(last, states, V.room) + ' · ' + ago(lastT) : null, lit: last ? [nameOf(last, states, V.room)] : null });
     }
     if (part === 'chips') {
       if (!ids.length) {
@@ -67,7 +67,7 @@
         return '<div class="zs-chip' + (on ? ' on' : '') + '" role="button" data-casora-svc="' + esc(JSON.stringify(svc)) + '"'
           + (clr ? ' style="background:color-mix(in srgb, ' + esc(clr) + ' 16%, var(--casora-lps-chip-on, #FFFDF9));"' : '') + '>'
           + (clr ? '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:1px;background:' + esc(clr) + ';"></span>' : '')
-          + esc(nameOf(id, states, V.room)) + '</div>';
+          + '<span data-no-i18n>' + esc(nameOf(id, states, V.room)) + '</span></div>';
       }).join('') + '</div></div>';
     }
     return '';
@@ -142,11 +142,12 @@
       if (act.length) {
         var la = function (id) { return SC.lastActive ? (SC.lastActive(id, states) || NaN) : Date.parse(states[id] && states[id].state); };
         var since = ago(la(act[0]));
-        return UI.line(nameOf(act[0], states, V.room) + (act.length > 1 ? ' +' + (act.length - 1) : ''), [since ? 'aktiv ' + since : 'aktiv'], { tone: 'good' });
+        return UI.line(nameOf(act[0], states, V.room) + (act.length > 1 ? ' +' + (act.length - 1) : ''), [since ? 'aktiv ' + since : 'aktiv'], { tone: 'good', lit: [nameOf(act[0], states, V.room)] });
       }
       var last = null, lastT = 0;
       ids.forEach(function (id) { var t = SC.lastActive ? (SC.lastActive(id, states) || NaN) : Date.parse(states[id].state); if (!isNaN(t) && t > lastT) { lastT = t; last = id; } });
-      return UI.line('Keine Szene aktiv', last ? ['Zuletzt ' + nameOf(last, states, V.room) + ' ' + ago(lastT)] : []);
+      // The scene's own name stays as written (V24): „Last Guten Morgen 49 d ago“, not „Good morning“.
+      return UI.line('Keine Szene aktiv', last ? ['Zuletzt ' + nameOf(last, states, V.room) + ' ' + ago(lastT)] : [], { lit: last ? [nameOf(last, states, V.room)] : null });
     }
     if (part === 'stage') {
       if (!ids.length) return UI.stage('content', { empty: { icon: 'mdi:palette-outline', studio: true, text: 'Keine Szenen gefunden. Casora zeigt alle Szenen, die in den Entitäten weder ausgeblendet noch deaktiviert sind.' } });
@@ -154,9 +155,10 @@
         var svc = { domain: 'scene', service: 'turn_on', data: V.trans > 0 ? { transition: V.trans } : {}, target: { entity_id: id } };
         var on = act.indexOf(id) > -1, clr = on && window.casoraSceneColor ? window.casoraSceneColor(id) : null;
         var n = nameOf(id, states, V.room);
-        return '<div class="zs-t' + (on ? ' on' : '') + '" role="button" aria-pressed="' + (on ? 'true' : 'false') + '" aria-label="' + esc(n) + '"'
+        // Scene names people chose stay as written in every language (V24): name and aria-label not translated.
+        return '<div class="zs-t' + (on ? ' on' : '') + '" role="button" data-no-i18n aria-pressed="' + (on ? 'true' : 'false') + '" aria-label="' + esc(n) + '"'
           + ' data-casora-svc="' + esc(JSON.stringify(svc)) + '"' + (clr ? ' style="--zs-c:' + esc(clr) + '"' : '') + '>'
-          + iconHtml(id, states, V) + '<b>' + esc(n) + '</b></div>';
+          + iconHtml(id, states, V) + '<b><span data-no-i18n>' + esc(n) + '</span></b></div>';
       };
       var head = ids.slice(0, 12), rest = ids.slice(12);
       var html = V3CSS + '<div class="zs-g">' + head.map(tileHtml).join('') + '</div>';

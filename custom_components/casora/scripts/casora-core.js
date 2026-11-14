@@ -7715,7 +7715,11 @@ window.casoraMenuGlass = {
     var C = inkOn.c || (inkOn.c = { at: 0, m: {} });
     if (Date.now() - C.at > 2000) { C.m = {}; C.at = Date.now(); }
     if (C.m[key]) return C.m[key];
-    var see = true;
+    var see = true, rgbSeen = null;
+    var relLum = function (rgb) {
+      var g = function (c) { c = Number(c) / 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+      return 0.2126 * g(rgb[0]) + 0.7152 * g(rgb[1]) + 0.0722 * g(rgb[2]);
+    };
     var lum = function (col) {
       var h = /#([0-9a-f]{6}|[0-9a-f]{3})\b/i.exec(col || ''), rgb;
       if (h) { var x = h[1].length === 3 ? h[1].replace(/./g, '$&$&') : h[1]; rgb = [0, 2, 4].map(function (i) { return parseInt(x.substr(i, 2), 16); }); }
@@ -7729,8 +7733,8 @@ window.casoraMenuGlass = {
         if (m[4] != null && Number(m[4]) < 0.5) { see = false; return null; }
         rgb = [m[1], m[2], m[3]];
       }
-      var g = function (c) { c = Number(c) / 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
-      return 0.2126 * g(rgb[0]) + 0.7152 * g(rgb[1]) + 0.0722 * g(rgb[2]);
+      rgbSeen = rgb.map(Number);
+      return relLum(rgbSeen);
     };
     // The colour as the browser resolves it where the popup's tokens live; else the fallback written in the fill.
     var L = null;
@@ -7744,7 +7748,18 @@ window.casoraMenuGlass = {
       pr.remove();
     } catch (e) { L = null; }
     if (L == null && see) L = lum(f);
-    var out = !see ? 'var(--casora-soft-glyph-off, rgba(58,50,43,.7))' : L != null && 1.05 / (L + 0.05) < need ? dark : white;
+    // White unless it misses the contrast; then the dark glyph – but only where the dark one does better. When neither
+    // reaches it (mid red, sand), the better of the two wins instead of always the dark one.
+    var useDark = false;
+    if (L != null && 1.05 / (L + 0.05) < need) {
+      useDark = true;
+      if (rgbSeen) {
+        var Ld = relLum([0, 1, 2].map(function (n) { return [46, 34, 20][n] * 0.88 + rgbSeen[n] * 0.12; }));
+        var cd = (L + 0.05) / (Ld + 0.05);
+        if (cd < need && cd < 1.05 / (L + 0.05)) useDark = false;
+      }
+    }
+    var out = !see ? 'var(--casora-soft-glyph-off, rgba(58,50,43,.7))' : useDark ? dark : white;
     C.m[key] = out;
     return out;
   }
@@ -10234,10 +10249,27 @@ window.casoraMenuGlass = {
   // Auch eine feste Farbe (var(…)/#…), z. B. Schrift-Rot --casora-color-red-text für „Läuft“ (Frigate, 4,9 : 1).
   function alertTone(t) { return (t === 'warn' || t === 'bad') ? tone(t) : (typeof t === 'string' && /^(var\(|#)/.test(t) ? t : null); }
 
+  // Names people chose (a scene „Guten Morgen“, an update's name) inside a sentence stay as written (V24, owner
+  // 14.11.2026): o.lit lists them; each whole occurrence in the text (never in a tag or attribute) gets
+  // <span data-no-i18n>, so casora-i18n translates „Zuletzt … vor 49 T.“ around it but not the name.
+  function litWrap(html, names) {
+    var ns = (Array.isArray(names) ? names : [names]).filter(function (n) { return n != null && String(n).trim(); })
+      .map(function (n) { return esc(String(n).trim()); }).sort(function (a, b) { return b.length - a.length; });
+    if (!ns.length) return html;
+    var re = new RegExp('(^|[\\s(„“"])(' + ns.map(function (n) { return n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }).join('|')
+      + ')(?=$|[\\s.,;:!?)“"])', 'g');
+    var inStyle = false;
+    return String(html).split(/(<(?:[^>"']|"[^"]*"|'[^']*')*>)/).map(function (p) {
+      if (p.charAt(0) === '<') { inStyle = /^<style\b/i.test(p) || (inStyle && !/^<\/style/i.test(p)); return p; }
+      return inStyle ? p : p.replace(re, function (m, a, b) { return a + '<span data-no-i18n>' + b + '</span>'; });
+    }).join('');
+  }
+
   // Statuszeile: Zustand fett und dunkel, Rest gedämpft, dicht unter dem Titel.
-  // rest: Texte oder { text, tone } (Ton nur für Warnung/Fehler).
+  // rest: Texte oder { text, tone } (Ton nur für Warnung/Fehler). o.lit: Namen, die nicht übersetzt werden (litWrap).
   function softLine(main, rest, o) {
     o = o || {};
+    if (o.lit) return litWrap(softLine(main, rest, Object.assign({}, o, { lit: null })), o.lit);
     var bits = (Array.isArray(rest) ? rest : [rest]).filter(function (x) {
       return x != null && x !== '' && !(typeof x === 'object' && !x.text);
     });
@@ -10437,6 +10469,7 @@ window.casoraMenuGlass = {
 
   function hero(o) {
     o = o || {};
+    if (o.lit) return litWrap(hero(Object.assign({}, o, { lit: null })), o.lit);
     if (o.center && !o.compact && soft()) return softHero(o);
     if (o.compact) {
       var cInk = tone(o.subTone);
@@ -14513,7 +14546,7 @@ window.casoraMenuGlass = {
       + '>' + tiles + '</div></div>';
   }
 
-  window._casoraUI = { line: softLine, hero: hero, headline: headline, group: group, popupNames: popupNames, legend: legend, note: note, kiCard: kiCard, shelf: shelf, mediaRow: mediaRow, segments: segments, slider: slider, icon: icon, iconFill: iconFill, esc: esc, prime: prime, plantWater: plantWater, soft: soft, label: softLabel, tokens: T, v: 149 };
+  window._casoraUI = { line: softLine, hero: hero, lit: litWrap, headline: headline, group: group, popupNames: popupNames, legend: legend, note: note, kiCard: kiCard, shelf: shelf, mediaRow: mediaRow, segments: segments, slider: slider, icon: icon, iconFill: iconFill, esc: esc, prime: prime, plantWater: plantWater, soft: soft, label: softLabel, tokens: T, v: 149 };
   window._casoraUI.more = more;
   Object.assign(window._casoraUI, { section: section, row: row, settingsRow: settingsRow, settings: settings, actions: actions,
     empty: empty, width: width, switchHtml: switchHtml, page: page, SEC_ORDER: SEC_ORDER, WIDTH: WIDTH,
@@ -14836,6 +14869,33 @@ window.casoraMenuGlass = {
     var k = String(t == null ? '' : t).trim();
     return Object.prototype.hasOwnProperty.call(RAW, k) ? RAW[k] : (Object.prototype.hasOwnProperty.call(RAW, k.toLowerCase()) && /^[a-z_]+$/i.test(k) && k === k.toLowerCase() ? RAW[k.toLowerCase()] : t);
   };
+  // A raw value HA had no words for (V14, owner 14.11.2026: „Tür closed“, „cooking_oven_program_…“ in lists), Casora's own
+  // fallback at one place: a state HA knows in the word list's words („closed“ → „Geschlossen“), else a snake_case code made
+  // readable – the prefix all options share (cooking_oven_program_heating_mode_), the domain or the device name in front
+  // dropped, underscores to spaces, the first letter upper case („Top bottom heating“). Free text (input_text, text) and
+  // anything not written as a lower-case code stays as the device wrote it („iPhone 15“, „WLAN_5G“).
+  var KNOWN = { open: 'Geöffnet', closed: 'Geschlossen', opening: 'Öffnet', closing: 'Schließt', stopped: 'Gestoppt',
+    locked: 'Verriegelt', unlocked: 'Entriegelt', locking: 'Wird verriegelt …', unlocking: 'Wird entriegelt …', jammed: 'Klemmt',
+    on: 'An', off: 'Aus', not_home: 'Unterwegs', unavailable: 'Nicht verfügbar', unknown: 'Unbekannt' };
+  window._casoraReadableRaw = function (value, e) {
+    var v = String(value == null ? '' : value), k = v.trim();
+    var w = window._casoraRawWord(k);
+    if (w !== k) return w;
+    if (Object.prototype.hasOwnProperty.call(KNOWN, k)) return KNOWN[k];
+    var id = String((e && e.entity_id) || ''), dom = id.split('.')[0];
+    if (/^(input_text|text)$/.test(dom) || !/^[a-z][a-z0-9]*(?:_[a-z0-9]+)+$/.test(k)) return v;
+    var a = (e && e.attributes) || {}, r = k;
+    var opts = Array.isArray(a.options) ? a.options.map(String).filter(function (o) { return /^[a-z0-9_]+$/.test(o); }) : [];
+    if (opts.length > 1 && opts.indexOf(k) > -1) {
+      var pre = opts.reduce(function (p, o) { var n = 0; while (n < p.length && p[n] === o[n]) n++; return p.slice(0, n); });
+      pre = pre.slice(0, pre.lastIndexOf('_') + 1);
+      if (pre && opts.every(function (o) { return o.length > pre.length; })) r = k.slice(pre.length);
+    }
+    var dev = String(a.friendly_name || '').toLowerCase().split(/\s+/)[0].replace(/[^a-z0-9]/g, '');
+    [dom, dev].forEach(function (p) { if (p && r.indexOf(p + '_') === 0 && r.length > p.length + 1) r = r.slice(p.length + 1); });
+    r = r.replace(/_+/g, ' ').trim();
+    return r ? r.charAt(0).toUpperCase() + r.slice(1) : v;
+  };
   // The state word of a popup head and of the search rows (wortliste): the words of HA in the language of the user, but a
   // state the word list names takes the Casora word („idle“/„ready“ → „Bereit“, German „Ein“ of HA → „An“), a camera or lock that is
   // gone says „Offline“. '' = nothing to say (unknown). null = no word of its own: a measurement of the entity, on/off of
@@ -14895,7 +14955,7 @@ window.casoraMenuGlass = {
     var f = '';
     try { f = hass && typeof hass.formatEntityState === 'function' ? String(hass.formatEntityState(e)) : ''; } catch (err) { f = ''; }
     if (!f) f = String(e.state);
-    return f === String(e.state) ? window._casoraRawWord(f) : f;
+    return f === String(e.state) ? window._casoraReadableRaw(f, e) : f;
   };
   window._casoraStateText = function (hass, e, map) {
     var s = String((e && e.state) == null ? '' : e.state).toLowerCase();
@@ -14912,6 +14972,7 @@ window.casoraMenuGlass = {
     } catch (err) { /* Entität halb geladen */ }
     if (BOOL[s]) return BOOL[s];
     if (RAW[s]) return RAW[s];
+    if (s && window._casoraReadableRaw(e.state, e) !== String(e.state)) return window._casoraReadableRaw(e.state, e);
     return s ? s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ') : ALL.unknown;
   };
 })();

@@ -151,7 +151,7 @@
           return { dis: m.dead || (dir < 0 ? g.value <= lo : g.value >= hi), step: step, min: lo, max: hi, svc: at(Math.max(lo, Math.min(hi, v))) };
         };
         // Dial (§4.8 ring a): the target on the ring in the device's steps (heat colours), the water now as the dot.
-        return UI.stage('value', { caption: 'Ziel', label: 'Zieltemperatur', value: g.value, unit: unitOf(m), digits: step < 1 ? 1 : 0,
+        return UI.stage('value', { caption: 'Zielwert', label: 'Zieltemperatur', value: g.value, unit: unitOf(m), digits: step < 1 ? 1 : 0,
           step: step, min: lo, max: hi, heat: true, current: m.t, foot: m.t != null ? 'Jetzt ' + fmt(m.t) + '°' : null,
           minus: side(-1), plus: side(1), state: m.dead ? 'na' : null, moons: moons });
       }

@@ -8,7 +8,7 @@ custom_components/casora/scripts/local/06-kalender.js | re:^(?:body|g|lg|wev|\(w
 custom_components/casora/scripts/local/06-kalender.js | (window.casoraTr || function (x) { return x; })(K.html(k, K._vars)) | markup from K.html (escapes its values), translated by the phrase table | 1
 custom_components/casora/scripts/local/06-kalender.js | re:^(?:cls|wcls|pre)$ | class names / action prefixes from code literals | 6
 custom_components/casora/scripts/local/06-kalender.js | re:^(?:d|w|DAYS\[wd\.getDay\(\)\]|hm\(e\.start\)|ymd\(d\)|ymd\(wd\))$ | day number, fixed weekday names, digits-only time/date formatting | 6
-custom_components/casora/scripts/local/11-fussball.js | re:^(?:row|sub|on|onSh|onInk|rad|crestBg|hair|plate)$ | CSS values of CSS() (fixed var(--…) strings / design tokens) for the <style> block; "on" in K.corner is ' on' or '' | 26
+custom_components/casora/scripts/local/11-fussball.js | re:^(?:row|sub|on|onSh|onInk|rad|crestBg|hair|plate)$ | CSS values of CSS() (fixed var(--…) strings / design tokens) for the <style> block; "on" in K.corner is ' on' or '' | 27
 custom_components/casora/scripts/local/11-fussball.js | re:^(?:t|\(right \|\| ''\))$ | head() parameters: callers pass esc() text, fixed titles or markup built here | 4
 custom_components/casora/scripts/local/11-fussball.js | re:^(?:CSS\(\)|head\(.*\)|crest\(.*\)|mini\(.*\)|du\.map\(function \(x\) \{ return gameRow\(x, 'd', true\); \}\)\.join\(''\))$ | markup builders of this module; they escape names and image URLs (crest/mini use esc(K.img(…))) | 22
 custom_components/casora/scripts/local/11-fussball.js | re:^(?:body|more|lg|wait|tag)$ | markup built from escaped parts in K.html | 6
