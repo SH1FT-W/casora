@@ -9,6 +9,8 @@
 // gibt es die Kurzform. Dessen Badges sind breiter als bei Hemma 2: Am Tablet mit angedockter Seitenleiste passt die
 // Reihe auch mit Kurzform nicht ganz (v1.6.0 mit default genauso, 1005 statt 941 px). Geprüft wird deshalb:
 // Kurzform spart sichtbar Platz, und die Reihe passt oder lässt sich quer scrollen (Rest erreichbar).
+// Since 26.11.28b2 Start fresh also puts the alarm panel into Home's security group (V11): the stress house's long line
+// gains „Alarm aus“ and no longer fits beside the other badges at 1920, so "wide" is measured at 2560.
 //   QA_BILD=<ordner> legt Bilder der Reihe ab.
 import { open, ready, check, need, finish } from './lib.mjs';
 
@@ -28,7 +30,7 @@ const messen = (page) => page.evaluate(() => {
     clip: (() => { const q = (row || b).getBoundingClientRect(); return { x: Math.max(0, q.x - 8), y: Math.max(0, q.y - 8), width: Math.min(q.width + 16, innerWidth - Math.max(0, q.x - 8)), height: q.height + 16 }; })() };
 });
 
-for (const [w, h, label] of [[1024, 768, 'Tablet'], [1920, 1080, 'Desktop breit']]) {
+for (const [w, h, label] of [[1024, 768, 'Tablet'], [2560, 1440, 'Desktop breit']]) {
   const { page } = await open({ width: w, height: h, touch: w === 1024, theme: 'default', dark: false });
   await ready(page, '/' + DASH + '/home', () => window.__pierce && window.__pierce('button-card').length > 3);
   await page.waitForTimeout(5000);
