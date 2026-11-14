@@ -50,6 +50,25 @@ for (const [top, tpl] of Object.entries(T)) {
 }
 console.log('ok templates pass the lists');
 
+// Phone start page (Alltag round 14.11.2026): Home's climate chips (casora_mobile_sensor_chips, climate_row – what the
+// phone's Klima popup lists) showed the first humidity sensor (55 %) while the tablet's Home showed the average of
+// its five (51 %). They take Home's desktop lists (casoraPhoneRoom.home, as the badge row's casora_hv).
+const chips = T.casora_mobile_sensor_chips.custom_fields.climate_row.card.cards;
+const expr = (s) => String(s || '').trim().replace(/^\[\[\[/, '').replace(/\]\]\]$/, '');
+const avgOf = (card, variables, home) => {
+  window.casoraPhoneRoom = home === undefined ? undefined : { home: () => home };
+  try { return new Function('variables', 'states', 'hass', 'entity', expr((card.variables || {}).avg_sensors))(variables, {}, {}, null); }
+  finally { delete window.casoraPhoneRoom; }
+};
+const homeVars = { temp_sensor_1: 'sensor.t1', temp_sensor_2: 'sensor.t2', temp_sensor_3: 'sensor.t3',
+  humidity_sensor: 'sensor.h1', humidity_sensor_2: 'sensor.h2', humidity_sensor_3: 'sensor.h3', humidity_sensor_4: 'sensor.h4', humidity_sensor_5: 'sensor.h5' };
+const tChip = chips.find((c) => c.template === 'casora_badge_temp'), hChip = chips.find((c) => c.template === 'casora_badge_humidity');
+assert.deepEqual(avgOf(hChip, { humidity_entity: 'sensor.h1' }, homeVars), ['sensor.h1', 'sensor.h2', 'sensor.h3', 'sensor.h4', 'sensor.h5'], 'phone Home humidity: the five of Home');
+assert.deepEqual(avgOf(tChip, { temp_entity: 'sensor.t1' }, homeVars), ['sensor.t1', 'sensor.t2', 'sensor.t3'], 'phone Home temperature: the list of Home');
+assert.deepEqual(avgOf(hChip, { humidity_entity: 'sensor.h1' }, null), ['sensor.h1'], 'no desktop Home (older server): its own sensor');
+assert.deepEqual(avgOf(hChip, { humidity_entity: 'sensor.x' }, homeVars), ['sensor.x'], 'a list without the chip\'s own sensor is not taken');
+console.log('ok phone Home chips average like the desktop');
+
 // ── 3. Studio fields ───────────────────────────────────────────────────────
 const panel = read('custom_components/casora/panel/casora-panel.js');
 assert.ok(/R\("hum", "Humidity sensor", 5, \[\{ \.\.\.E\("humidity_sensor_%", "Humidity %", \["sensor"\]\), key1: "humidity_sensor"/.test(panel), 'humidity list of five');

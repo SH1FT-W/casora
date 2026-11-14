@@ -7182,7 +7182,8 @@
                 "gauge": true,
                 "room_name": "[[[ return variables.aqi_room_name ]]]",
                 "sensors": "[[[ return variables.aqi_sensors ]]]",
-                "temp_unit": "[[[ return variables.temp_unit || (hass.config?.unit_system?.temperature === \"°F\" ? \"F\" : \"C\") ]]]"
+                "temp_unit": "[[[ return variables.temp_unit || (hass.config?.unit_system?.temperature === \"°F\" ? \"F\" : \"C\") ]]]",
+                "avg_sensors": "[[[\n  /* Home's lists on the desktop (casoraPhoneRoom.home, as the badge row's casora_hv): the phone averages the same\n     sensors as the tablet (Alltag round 14.11.2026); without them, or when they do not hold this chip's sensor, its own. */\n  const hv = window.casoraPhoneRoom && window.casoraPhoneRoom.home ? window.casoraPhoneRoom.home() : null;\n  const l = hv ? [hv.temp_sensor_1, hv.temp_sensor_2, hv.temp_sensor_3, hv.temp_sensor_4, hv.temp_sensor_5].filter(Boolean) : [];\n  return l.length && l.indexOf(variables.temp_entity) > -1 ? l : [variables.temp_entity].filter(Boolean);\n]]]"
               }
             },
             {
@@ -7196,7 +7197,8 @@
                 "entity_temp": "[[[ return variables.entity_temp || variables.temp_entity ]]]",
                 "gauge": true,
                 "room_name": "[[[ return variables.aqi_room_name ]]]",
-                "sensors": "[[[ return variables.aqi_sensors ]]]"
+                "sensors": "[[[ return variables.aqi_sensors ]]]",
+                "avg_sensors": "[[[\n  /* Home's lists on the desktop (casoraPhoneRoom.home, as the badge row's casora_hv): the phone averages the same\n     sensors as the tablet (Alltag round 14.11.2026); without them, or when they do not hold this chip's sensor, its own. */\n  const hv = window.casoraPhoneRoom && window.casoraPhoneRoom.home ? window.casoraPhoneRoom.home() : null;\n  const l = hv ? [hv.humidity_sensor, hv.humidity_sensor_2, hv.humidity_sensor_3, hv.humidity_sensor_4, hv.humidity_sensor_5].filter(Boolean) : [];\n  return l.length && l.indexOf(variables.humidity_entity) > -1 ? l : [variables.humidity_entity].filter(Boolean);\n]]]"
               }
             },
             {
