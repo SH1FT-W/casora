@@ -329,6 +329,9 @@
     if (isCopy(e)) return;
     var t0 = e.touches && e.touches.length === 1 ? e.touches[0] : null;
     live = e.isTrusted && t0 ? { x: t0.clientX, y: t0.clientY, ts: e.timeStamp || Date.now() } : null;
+    // A touch that lands while the page follows a finger (a second finger, or a stale gesture without touchend):
+    // the page goes back to its place before the gesture is dropped, it stayed shifted and faded otherwise.
+    if (g && g.axis === 'h') reset(g.el, true);
     g = null;
     if (!e.touches || e.touches.length !== 1 || popupOpen()) return;
     var t = e.touches[0];
