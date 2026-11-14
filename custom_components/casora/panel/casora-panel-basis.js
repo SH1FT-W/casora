@@ -673,6 +673,14 @@
     put(h, "media_player_", [...new Set(all.media)], 10);
     if (all.lock.length) h.security_locks = [...new Set(all.lock)];
     if (all.camera.length) h.security_cameras = [...new Set(all.camera)];
+    // V11 (owner, 14.11.2026): the house's alarm panels go into Home's security group (badge, popup) like its locks –
+    // ticked alarm tiles of the rooms and alarm panels without a room. Only where nothing is set yet (fillBadges),
+    // the Studio's own pick wins; saved dashboards are not rewritten.
+    const alarms = [...new Set(p.rooms.flatMap((room) => room.items.filter((x) => x.on && x.type === "casora_alarm")
+      .flatMap((x) => x.group || [x.entity]))
+      .concat((p.loose || []).filter((it) => it.type === "casora_alarm").map((it) => it.entity)))]
+      .filter((id) => /^alarm_control_panel\./.test(String(id || "")));
+    put(h, "security_entity_", alarms, 8);
     out[p.rooms[0].name] = h;
     return out;
   }
