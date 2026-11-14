@@ -1224,7 +1224,11 @@
     stage.style.cssText = 'position:absolute;inset:0;';
     layer.appendChild(stage);
     // A touch only wakes the dashboard: it must not reach a tile underneath. A camera and its live picture are the
-    // exception: they keep the screensaver.
+    // exception: they keep the screensaver. The layer fades at once but stays until the tap is over: removed on
+    // pointerdown, the rest of the tap (pointerup, click) landed on the tile or badge underneath (Alltag round
+    // 14.11.2026: waking expanded a badge, r731).
+    var ending = null;
+    var mine = layer, endSoon = function (ms) { clearTimeout(ending); ending = setTimeout(function () { if (layer === mine) hide(); }, ms); };
     var wake = function (ev) {
       var t = ev.composedPath ? ev.composedPath()[0] : ev.target;
       var act = t && t.closest ? t.closest('[data-sv-act]') : null;
@@ -1236,9 +1240,13 @@
         if (what === 'cam') openCam(act.getAttribute('data-cam'));
         return;
       }
-      ev.preventDefault(); ev.stopPropagation(); hide();
+      ev.preventDefault(); ev.stopPropagation();
+      var lyr = ev.currentTarget;
+      if (lyr && lyr.style) { lyr.style.transition = 'opacity .18s ease'; lyr.style.opacity = '0'; }
+      // Down: wait for the end of the tap (a finger left resting: at most 1.5 s); up or the click: gone shortly after.
+      endSoon(/down|start/.test(ev.type) ? 1500 : 300);
     };
-    ['pointerdown', 'touchstart', 'click', 'contextmenu'].forEach(function (t) { layer.addEventListener(t, wake, { passive: false }); });
+    ['pointerdown', 'touchstart', 'pointerup', 'touchend', 'mousedown', 'mouseup', 'click', 'contextmenu'].forEach(function (t) { layer.addEventListener(t, wake, { passive: false }); });
     document.body.appendChild(layer);
     // Every five seconds: the cameras' pictures stay fresh (everything else only repaints when it changed).
     live = S.mount(stage, null, { drift: true, every: 5000, kind: function () { return S.vars(config() || cfg).casora_screensaver_kind || 'mix'; },
