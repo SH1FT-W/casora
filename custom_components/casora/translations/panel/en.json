@@ -13,7 +13,8 @@
     "Lamps": "Lamps",
     "Household": "Household",
     "Name or entity": "Name or entity",
-    "No device matches the filter.": "No device matches the filter."
+    "No device matches the filter.": "No device matches the filter.",
+    "Lights": "Lighting"
   },
   "patterns": [
     [
