@@ -11,6 +11,7 @@ from homeassistant.components.frontend import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import async_get_platforms
 
 from .assets import CasoraAssetsView
 from .scripts_view import STUDIO_LOADER, STUDIO_LOADER_KEY, CasoraPanelView, CasoraScriptsView, studio_loader, studio_stamp
@@ -261,6 +262,22 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set Casora up; a step that raises rolls back what the steps before it registered.
+
+    HA does not call async_unload_entry after a failed setup (only the entry's on_unload callbacks), so without
+    the rollback listeners, timers and services of the earlier steps stayed and the next try registered them twice.
+    """
+    try:
+        return await _async_setup_entry(hass, entry)
+    except BaseException:  # also CancelledError: HA cancels a setup that hangs at shutdown
+        try:
+            await _async_teardown(hass, entry, remove_panel=True, failed=True)
+        except Exception:  # noqa: BLE001 - the original error is the one to report
+            _LOGGER.exception("Casora: rollback after a failed setup incomplete")
+        raise
+
+
+async def _async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Register the panel assets and the sidebar entry."""
     # Designs first: the frontend is running, and an open dashboard reconnects while Casora
     # still loads. Without the design it would draw in the wrong look that long.
@@ -457,9 +474,12 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     async_remove_ai_jobs(hass)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Remove the sidebar entry."""
-    if not hass.data.get(DOMAIN, {}).get("reloading"):
+async def _async_teardown(hass: HomeAssistant, entry: ConfigEntry, *, remove_panel: bool, failed: bool = False) -> bool:
+    """Undo async_setup_entry: on unload, and after a setup that raised part way (then only what got that far).
+
+    Every step looks up what it stops in hass.data or removes by name, so a step that never ran is skipped.
+    """
+    if remove_panel:
         async_remove_panel(hass, PANEL_URL, warn_if_unknown=False)
     async_unload_helfer(hass)
     async_unload_theme(hass)
@@ -492,4 +512,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     live = hass.data.get(DOMAIN, {}).pop("live", None)
     if live:
         live.stop()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if not failed:
+        return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    # Failed setup: only the platforms that got set up (unloading one that never loaded logs an error in HA).
+    loaded = {p.domain for p in async_get_platforms(hass, DOMAIN) if p.config_entry is entry}
+    return await hass.config_entries.async_unload_platforms(entry, [p for p in PLATFORMS if p in loaded])
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Remove the sidebar entry and stop everything setup started."""
+    return await _async_teardown(hass, entry, remove_panel=not hass.data.get(DOMAIN, {}).get("reloading"))

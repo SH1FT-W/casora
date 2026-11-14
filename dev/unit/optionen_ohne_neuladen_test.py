@@ -40,7 +40,8 @@ check("KI-Option geändert: Neuladen", not live_only({}, {"ai_entity": "ai.x"}))
 check("gemischt: Neuladen", not live_only({}, {"lueften_push": ["notify.a"], "ai_entity": "ai.x"}))
 check("nichts geändert: wie bisher (Neuladen)", not live_only({"a": 1}, {"a": 1}))
 check("Entladen beim Neuladen behält die Studio-Seite",
-      'if not hass.data.get(DOMAIN, {}).get("reloading"):\n        async_remove_panel(hass, PANEL_URL' in SRC)
+      'remove_panel=not hass.data.get(DOMAIN, {}).get("reloading")' in SRC
+      and 'if remove_panel:\n        async_remove_panel(hass, PANEL_URL' in SRC)
 check("lueften_push liest Optionen zur Laufzeit",
       "self.entry.options.get(OPT_VENT_NOTIFY)" in open(os.path.join(ROOT, "custom_components/casora/lueften_push.py"), encoding="utf-8").read())
 
