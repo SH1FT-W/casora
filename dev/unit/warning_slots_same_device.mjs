@@ -66,6 +66,17 @@ globalThis.window = win;
 const levels = fn(tile.variables.levels)({}, null, {}, {}, {});
 const vars = { sensors: [], levels };
 assert.match(fn(tile.state_display).call({}, states, states[id(1)], {}, hass, vars), /Windböen · 2 weitere/, 'tile: Windböen plus two more');
+// The narrow tile's short form: casoraStateFit counts the parts after „ · “, so „Windböen · 2 weitere“ became „+1“;
+// the tile hands its own short form „Windböen +2“ (alt) so the pill says +2.
+{
+  const calls = [];
+  win.casoraStateFit = (t, w, a) => { calls.push([t, a]); return t; };
+  fn(tile.state_display).call({}, states, states[id(1)], {}, hass, vars);
+  assert.deepEqual(calls.at(-1), ['Windböen · 2 weitere', 'Windböen +2'], 'short form with the real count');
+  fn(tile.state_display).call({}, states, states[id(1)], {}, { ...hass, entities: {} }, vars);
+  assert.deepEqual(calls.at(-1), ['Windböen', undefined], 'one warning: no short form, no counter');
+  win.casoraStateFit = (t) => t;
+}
 const off1 = { ...states, [id(1)]: { ...states[id(1)], state: 'off' } };
 assert.equal(fn(tile.state[0].value)(off1, off1[id(1)], {}, hass, vars), true, 'tile active while only another slot is on');
 win._casoraUI = { tokens: new Proxy({}, { get: (o, k) => 'var(--t-' + String(k) + ')' }),

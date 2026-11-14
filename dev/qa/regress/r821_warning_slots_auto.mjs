@@ -158,7 +158,8 @@ for (const [tag, o, url, view, mobile] of VIEWS) {
         const parts = [];
         const walk = (n) => n.childNodes.forEach((c) => {
           if (c.nodeType === 3) { parts.push(c.textContent); return; }
-          if (c.nodeType !== 1 || c.nodeName === 'STYLE') return;
+          // Visible text only: casora-statefit holds the full line and the short form, one of them hidden.
+          if (c.nodeType !== 1 || c.nodeName === 'STYLE' || getComputedStyle(c).display === 'none') return;
           if (c.shadowRoot) walk(c.shadowRoot);
           walk(c);
         });
@@ -169,11 +170,16 @@ for (const [tag, o, url, view, mobile] of VIEWS) {
     await need(tag + ': Warn-Kachel sichtbar', at);
     await page.waitForTimeout(800);
     if (BILDER) await page.screenshot({ path: file('kachel') });
-    await check(tag + ': Kachel zeigt „Windböen · 2 weitere“', /Windböen · 2 weitere/.test(at.text), at.text);
+    // The tile's count of further warnings, long („· 2 weitere“) or as the short form's pill („+2“).
+    const more = ((/Windböen · (\d+) weitere/.exec(at.text) || /Windböen \+(\d+)/.exec(at.text) || [])[1]);
+    await check(tag + ': Kachel zeigt Windböen und 2 weitere („· 2 weitere“ oder „+2“)', more === '2', at.text);
     await tap(page, mobile, at);
     const pop = await stable(page, POPUP, null, { max: 12000, quiet: 1200, until: (t) => !!t && /FROST|WINDBÖEN/.test(t) });
     await check(tag + ': Kachel-Popup zeigt Windböen (Warnung 1, Entität der Kachel)', pop && /WARNUNG vor WINDBÖEN/.test(pop), pop);
     await check(tag + ': Kachel-Popup zeigt Frost und Glätte (Warnung 2 und 3, nur über das Gerät)', pop && /WARNUNG vor FROST/.test(pop) && /WARNUNG vor GLÄTTE/.test(pop), pop);
+    // Tile and popup agree: the popup's warning count is the tile's „weitere“ plus one.
+    const total = ((pop && /(\d+) Warnungen/.exec(pop)) || [])[1];
+    await check(tag + ': Zahl der Kachel = Zahl im Popup minus 1', !!total && Number(more) === Number(total) - 1, { kachel: at.text, popup: total });
     await settle(page);
     if (BILDER) await page.screenshot({ path: file('popup') });
     await closePopup(page);
