@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import math
 import re
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
@@ -454,9 +455,11 @@ def _num(st) -> float | None:
     if st is None:
         return None
     try:
-        return float(st.state)
+        v = float(st.state)
     except (TypeError, ValueError):
         return None
+    # "nan"/"inf" parse as floats, but int() of them raises: no value.
+    return v if math.isfinite(v) else None
 
 
 def _unit(st) -> str:

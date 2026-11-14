@@ -974,6 +974,29 @@ check("Titel: Produktname → Geräteart (de)", la.LiveActivity._title(_ta, _f, 
 _f2 = Found("d", "vacuum", "x", "full", {}, name="Robbi", generic_name=False)
 check("Titel: eigener Name bleibt im Titel", la.LiveActivity._title(_ta, _f2, 0) == "Robbi")
 
+# Non-finite numbers ("nan", "inf" from MQTT/template sensors) count as no value: int() of them raised and every
+# evaluation of the device failed until the sensor changed again.
+_vorher = dict(S)
+for _bad in ("nan", "inf", "-inf"):
+    S.clear()
+    st("sensor.w_state", "running"); st("sensor.w_pct", _bad); st("sensor.w_rem", _bad, unit_of_measurement="min")
+    st("sensor.w_el", _bad, unit_of_measurement="s")
+    try:
+        _s = la.snapshot(washer(), S.get, NOW, 0)
+        la.build_payload(_s, "washer", "W", "t", "/", False)
+        check(f"Wäsche mit „{_bad}“: kein Fehler, keine Zahl", _s.pct is None and _s.end_ts is None and _s.start_ts is None, _s)
+    except (ValueError, OverflowError) as _err:
+        check(f"Wäsche mit „{_bad}“: kein Fehler, keine Zahl", False, repr(_err))
+    S.clear()
+    st("sensor.p_state", "running"); st("sensor.p_stage", "printing"); st("sensor.p_pct", "5"); st("sensor.p_rem", "10")
+    st("sensor.p_layer", _bad); st("sensor.p_layers", "100")
+    try:
+        _s = la.snapshot(printer(), S.get, NOW, 0)
+        check(f"Drucker mit Schicht „{_bad}“: kein Fehler, keine Schichtangabe", _s.extra is None and _s.pct == 5, _s)
+    except (ValueError, OverflowError) as _err:
+        check(f"Drucker mit Schicht „{_bad}“: kein Fehler, keine Schichtangabe", False, repr(_err))
+S.clear(); S.update(_vorher)
+
 asyncio.run(flow())
 
 print("\nALLES OK" if not fails else f"\n{len(fails)} FEHLER")
