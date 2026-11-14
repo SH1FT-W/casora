@@ -16,6 +16,8 @@
     } catch (e) { return "0"; }
   })();
   const SEEN_KEY = "casora.seenVersion";
+  // Keys only the Studio writes once someone has been in it: its intro (casora-panel-b-plus.js) or welcome (casora-panel.js).
+  const STUDIO_USED = /^casora\.(studio\.intro|welcomed)$/;
   const CHANGELOG_URL = "https://github.com/SH1FT-W/casora/blob/main/CHANGELOG.md";
 
   const TEXT = {
@@ -184,8 +186,9 @@
       const seen = localStorage.getItem(SEEN_KEY);
       if (seen === VERSION) return null;
       if (seen !== null) return "whatsNew";
-      // Studio used before this sheet existed → an update.
-      const used = Object.keys(localStorage).some((k) => /^casora[._-]/i.test(k) && k !== SEEN_KEY);
+      // Only the Studio's own marks (its intro or welcome seen in this browser) mean "used before": a new device
+      // where only the dashboard ran has casora.* keys from its scripts, and its user gets the short welcome.
+      const used = Object.keys(localStorage).some((k) => STUDIO_USED.test(k));
       return used ? "whatsNew" : "welcome";
     } catch (e) { return null; }
   })();
