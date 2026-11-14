@@ -367,7 +367,7 @@ Popups über `window._hpChartCfg(entity, titel, zeitraum, farbe, höhe)` (`01-ba
 | Linie | 2 px, Fläche darunter 12 % → 0, Hilfslinien gepunktet, Skala rechts mit 3 Werten (wie `casora-chart` heute) |
 | Balken | für Summen je Zeitraum (kWh je Tag, Verbrauch je Monat); Linie für Zustandsgrößen (Temperatur, Leistung, Feuchte) |
 | Ablesen | keine schwebende Blase: auf der Bühne liest die große Zahl mit (`readout: 'hero'`), im Abschnitt die Zahl im Plattenkopf (`readout: 'own'`) |
-| Zeitraum | Abschnitt: fest 24 Std.; läuft ein Programm: 4 Std. Umschalter nur auf der Bühne (S6) und der Messwertseite, als Segment unter dem Diagramm: **24 Std. · 7 Tage · 30 Tage** (Diagramm-Kachel zusätzlich „Jahr“) – Wörter wie `27-chart.js` |
+| Zeitraum | Abschnitt: fest 24 Std.; läuft ein Programm: 4 Std. Umschalter nur auf der Bühne (S6) und der Messwertseite, als Segment unter dem Diagramm: **24 Std. · 7 Tage · 30 Tage** (Diagramm-Kachel zusätzlich „Jahr“) – Wörter wie `27-chart.js`. Energie-Unterseiten (Solar, Haus, Netz, Akku): **4 Std. · 24 Std.** (#195, `20-energie-fokus.js`); Solar und Haus öffnen auf 4 Std., Netz und Akku auf 24 Std. (geglättet auf 15 Min.), eine Wahl gilt für alle vier Seiten bis zum Neuladen (nicht gespeichert), Test `r819_energy_focus_span.mjs` |
 | Abstände | Kopf → Diagramm 8, Diagramm → Segment 16, Innenabstand der Platte 16 |
 
 ### 7.3 Farben
