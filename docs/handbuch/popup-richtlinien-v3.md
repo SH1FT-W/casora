@@ -262,7 +262,10 @@ der Bühne. Das Feld „quick“ im Layout entfällt dann.
 Symbole: nur einfarbige MDI-Symbole (Outline, wo es sie gibt: `mdi:lock-outline`, `mdi:door-closed`,
 `mdi:window-closed-variant`, `mdi:speaker`, `mdi:spotify`, `mdi:radio`, `mdi:television`, `mdi:cast-audio`) bzw. die
 Casora-Symbole; keine Emojis. Ein Symbol aus einem anderen Satz (`ios:lamp-floor`) wird auf dem Mond auf MDI abgebildet.
-Medien: ein Fernseher hat keine Schallplatte (ruhige Scheibe mit `mdi:television`, aus ohne Lautstärke-Zeile). Farben nur aus Tokens (`--casora-color-*`, `--casora-soft-*`, `--casora-lps-knob`).
+Medien: ohne Quellen-Spalte und ohne Lautsprecher zum Gruppieren steht rechts nichts – das Popup ist einspaltig 552
+breit; am Handy schließen sich die leeren Plätze für Titel, Unterzeile und Fortschritt, solange nichts spielt (die Tasten
+rücken unter die Lautstärke; Tablet und Desktop behalten die Plätze, dort springen die Tasten bei „Play“ nicht; 14.11.2026,
+Tests `media_popup_one_column.mjs`, `r64`). Ein Fernseher hat keine Schallplatte (ruhige Scheibe mit `mdi:television`, aus ohne Lautstärke-Zeile). Farben nur aus Tokens (`--casora-color-*`, `--casora-soft-*`, `--casora-lps-knob`).
 
 ## 5. Schnellwahl
 

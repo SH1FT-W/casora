@@ -8,6 +8,7 @@
 // Lautstärke ohne Scrollen ganz zu sehen. Zustände nur im Browser (fakeStates), am HA spielt nichts.
 // v3 (01.11.2026): the volume is the dial's ring, „Lautstärke 40 %“ stands under the wheel (.hui-dl-vol); the
 // keys under title and progress. On the tablet the keys and the volume line must both be on screen.
+// V13 (14.11.2026): the phone closes the empty slots while nothing plays (gap ≤ 60 px instead of a fixed key).
 import { open, usePage, dashboard, casoraDashboards, fakeStates, check, need, finish } from './lib.mjs';
 
 const all = await casoraDashboards();
@@ -49,7 +50,10 @@ for (const [name, opts, mobile] of VIEWS) {
   await fakeStates(page, { [ent]: { state: 'playing', attributes: { ...base, media_title: 'Beispiel-Titel', media_artist: 'Beispiel', media_duration: 200, media_position: 20, media_position_updated_at: new Date().toISOString() } } }, { sticky: true });
   await page.waitForTimeout(1500);
   const nach = await m();
-  await check(`${name}: Wiedergabe-Knopf bleibt nach dem Start an seiner Stelle`, nach && nach.play && Math.abs(nach.play.top - vor.play.top) <= 2, { vor: vor.play, nach: nach && nach.play });
+  // V13 (owner, 14.11.2026): on the phone the empty slots under the wheel close while nothing plays (the keys sat
+  // ~130 px under the volume line), so there the keys move down with the title – the tablet keeps them in place.
+  if (mobile) await check(`${name}: ohne Wiedergabe keine große Lücke zwischen Lautstärke und Tasten`, vor.vol && vor.play.top - vor.vol.bottom <= 60, vor);
+  else await check(`${name}: Wiedergabe-Knopf bleibt nach dem Start an seiner Stelle`, nach && nach.play && Math.abs(nach.play.top - vor.play.top) <= 2, { vor: vor.play, nach: nach && nach.play });
   if (!mobile) await check(`${name}: Tasten und Lautstärke beim Abspielen ohne Scrollen sichtbar`, nach && nach.vol && nach.vol.bottom <= nach.h && nach.play && nach.play.bottom <= nach.h, nach);
 }
 await finish();
