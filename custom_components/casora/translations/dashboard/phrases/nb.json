@@ -3085,7 +3085,7 @@
       "Treff {1}%"
     ],
     [
-      "^Gestern (\\d{1,2}:\\d{2})$",
+      "^Gestern (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
       "I går {1}"
     ],
     [
@@ -3869,6 +3869,10 @@
       "Sist sett {1}"
     ],
     [
+      "^Zuletzt (.+) (vor \\d+ (?:Min\\.|Std\\.|T\\.|Tagen)|gestern|gerade eben)$",
+      "Sist {1} {2}"
+    ],
+    [
       "^Zuletzt (.+)$",
       "Sist {1}"
     ],
@@ -4537,11 +4541,11 @@
       "mot {1}"
     ],
     [
-      "^Heute (\\d\\d:\\d\\d)$",
+      "^Heute (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
       "I dag {1}"
     ],
     [
-      "^Morgen (\\d\\d:\\d\\d)$",
+      "^Morgen (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
       "I morgen {1}"
     ],
     [
