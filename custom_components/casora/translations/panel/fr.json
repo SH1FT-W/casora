@@ -1064,6 +1064,8 @@
     "Which players a dashboard shows is set in the Studio under Now Playing. Here you set the icon and volume for all dashboards.": "Les lecteurs affichés par un tableau de bord se règlent dans le Studio sous En lecture. Ici tu définis l'icône et le volume pour tous les tableaux de bord.",
     "Icon: Automatic": "Icône : automatique",
     "Volume: through the player": "Volume : via le lecteur",
+    "Volume step": "Pas du volume",
+    "How much Quieter and Louder change the volume.": "De combien Plus silencieux et Plus fort changent le volume.",
     "In every dashboard: {n} hidden": "Dans tous les tableaux de bord : {n} masquées",
     "Hide scenes in every dashboard": "Masquer des scènes dans tous les tableaux de bord",
     "Player icons and volume controls for every dashboard": "Icônes des lecteurs et commandes de volume pour tous les tableaux de bord",

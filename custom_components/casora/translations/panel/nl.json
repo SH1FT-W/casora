@@ -1064,6 +1064,8 @@
     "Which players a dashboard shows is set in the Studio under Now Playing. Here you set the icon and volume for all dashboards.": "Welke spelers een dashboard toont, stel je in de Studio in onder Speelt nu. Hier stel je pictogram en volume voor alle dashboards in.",
     "Icon: Automatic": "Pictogram: automatisch",
     "Volume: through the player": "Volume: via de speler",
+    "Volume step": "Volumestap",
+    "How much Quieter and Louder change the volume.": "Hoeveel Stiller en Harder het volume veranderen.",
     "In every dashboard: {n} hidden": "In elk dashboard: {n} verborgen",
     "Hide scenes in every dashboard": "Scènes in elk dashboard verbergen",
     "Player icons and volume controls for every dashboard": "Spelerpictogrammen en volumeregelaars voor elk dashboard",

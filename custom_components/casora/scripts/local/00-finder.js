@@ -821,6 +821,12 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     return key ? (all[key] || {}) : all;
   }
   window.casoraSettings = settings;
+  // #194: the step of the quieter/louder keys (Studio › Settings › Home & devices › Music and players): 1, 2, 5 or 10 %
+  // as a fraction. null = not set: each key keeps its own step (quick menu: the player's volume_up/down, older popup 5 %).
+  window.casoraVolumeStep = function () {
+    var v = Number(settings('media').volume_step);
+    return [1, 2, 5, 10].indexOf(v) >= 0 ? v / 100 : null;
+  };
 
   // ── Network: routers, access points, switches, WLANs, latency (27.09.2026) ────
   // Maker-neutral (UniFi, FRITZ!Box, TP-Link, ASUS, Netgear, MikroTik,

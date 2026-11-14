@@ -1064,6 +1064,8 @@
     "Which players a dashboard shows is set in the Studio under Now Playing. Here you set the icon and volume for all dashboards.": "Qué reproductores muestra un panel se configura en Studio, en Reproduciendo. Aquí ajustas el icono y el volumen para todos los paneles.",
     "Icon: Automatic": "Icono: automático",
     "Volume: through the player": "Volumen: a través del reproductor",
+    "Volume step": "Paso de volumen",
+    "How much Quieter and Louder change the volume.": "Cuánto cambian el volumen Más silencioso y Más alto.",
     "In every dashboard: {n} hidden": "En todos los paneles: {n} ocultas",
     "Hide scenes in every dashboard": "Ocultar escenas en todos los paneles",
     "Player icons and volume controls for every dashboard": "Iconos de reproductores y controles de volumen para todos los paneles",

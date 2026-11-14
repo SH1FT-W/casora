@@ -615,6 +615,34 @@
           });
         }
         const shown = self._casoraNPShown;
+        // #194: how much „Quieter“ and „Louder“ change the volume (quick menu, media popup): 1, 2, 5 or 10 %.
+        // Nothing stored = as before (shown as 10 %, the player's own step); a draft like the rest.
+        const volChips = document.createElement("div");
+        volChips.className = "casora-chips casora-pvolstep";
+        volChips.setAttribute("role", "radiogroup");
+        volChips.setAttribute("aria-label", window.casoraI18n ? window.casoraI18n.t("Volume step") : "Volume step");
+        const volNow = [1, 2, 5, 10].includes(Number(S.media.volume_step)) ? Number(S.media.volume_step) : 10;
+        [1, 2, 5, 10].forEach((v) => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "casora-chip" + (v === volNow ? " on" : "");
+          b.textContent = v + " %";
+          b.dataset.step = String(v);
+          b.setAttribute("role", "radio");
+          b.setAttribute("aria-checked", String(v === volNow));
+          b.setAttribute("data-no-i18n", "");
+          b.onclick = () => {
+            S.media.volume_step = v;
+            volChips.querySelectorAll(".casora-chip").forEach((x) => {
+              const on = x === b;
+              x.classList.toggle("on", on);
+              x.setAttribute("aria-checked", String(on));
+            });
+            if (typeof self._csBar === "function") self._csBar();
+          };
+          volChips.appendChild(b);
+        });
+        row(g, "Volume step", [volChips], "How much Quieter and Louder change the volume.");
         const icon = (c, onSet) => pick(c.icon || "", ICONS, ICON_LABELS, (v) => { if (v) c.icon = v; else delete c.icon; onSet && onSet(); });
         const vol = (c, onSet) => ent(c.volume_entity, ["number", "media_player"],
           (v) => { if (v) c.volume_entity = v; else delete c.volume_entity; onSet && onSet(); }, "Volume: through the player");

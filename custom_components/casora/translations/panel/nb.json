@@ -1064,6 +1064,8 @@
     "Which players a dashboard shows is set in the Studio under Now Playing. Here you set the icon and volume for all dashboards.": "Hvilke spillere et dashbord viser, stiller du inn i Studio under Spilles nå. Her velger du ikon og volum for alle dashbord.",
     "Icon: Automatic": "Ikon: Automatisk",
     "Volume: through the player": "Volum: via spilleren",
+    "Volume step": "Volumtrinn",
+    "How much Quieter and Louder change the volume.": "Hvor mye Stillere og Høyere endrer volumet.",
     "In every dashboard: {n} hidden": "I alle dashbord: {n} skjult",
     "Hide scenes in every dashboard": "Skjul scener i alle dashbord",
     "Player icons and volume controls for every dashboard": "Spillerikoner og volumkontroller for alle dashbord",

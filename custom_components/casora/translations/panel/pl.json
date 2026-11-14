@@ -1064,6 +1064,8 @@
     "Which players a dashboard shows is set in the Studio under Now Playing. Here you set the icon and volume for all dashboards.": "Które odtwarzacze pokazuje pulpit, ustawisz w Studio w sekcji „Teraz odtwarzane”. Tutaj ustawiasz ikonę i głośność dla wszystkich pulpitów.",
     "Icon: Automatic": "Ikona: auto",
     "Volume: through the player": "Głośność: przez odtwarzacz",
+    "Volume step": "Krok głośności",
+    "How much Quieter and Louder change the volume.": "O ile Ciszej i Głośniej zmieniają głośność.",
     "In every dashboard: {n} hidden": "Ukryte na wszystkich pulpitach: {n}",
     "Hide scenes in every dashboard": "Ukryj sceny na wszystkich pulpitach",
     "Player icons and volume controls for every dashboard": "Ikony odtwarzaczy i regulacja głośności dla wszystkich pulpitów",
