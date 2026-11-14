@@ -167,7 +167,9 @@ basis = open(os.path.join(PKG, "panel", "casora-panel-basis.js"), encoding="utf-
 guide = open(os.path.join(ROOT, "docs", "guide.md"), encoding="utf-8").read()
 # Also with the AI option "Your own assistant (MCP)" (casora/ki/models → mcp): that wizard step cannot wait for it.
 check("wizard hint without any ai_task or in MCP mode",
-      "if (noAiTask || mcpMode) {" in basis and "mcpMode = !!(m && m.mcp)" in basis and "casora.setup_overview" in basis)
+      "if (noAiTask || mcpMode) {" in basis and "mcpMode = !!(m && m.mcp)" in basis
+      # Behind "More" since the newcomer round (14.11.2026); the action's name is in the guide, not on the screen.
+      and 'el("summary", "", mcp, "More")' in basis and "casora.setup_overview" in guide)
 check("wizard link points to the guide section",
       "docs/guide.md#set-up-with-your-own-assistant-over-mcp" in basis
       and "\n## Set up with your own assistant over MCP\n" in guide)
