@@ -12354,6 +12354,9 @@ class CasoraPanel extends HTMLElement {
         .conddel { width:28px; height:28px; border-radius:50%; border:none; padding:0; cursor:pointer; background:rgba(255,69,58,.16); color:var(--casora-studio-bad, #ff453a); display:grid; place-items:center; }
         .conddel svg { width:14px; height:14px; }
         .condadd { align-self:flex-start; border:none; background:none; color:var(--casora-studio-link, #0a84ff); font:500 var(--t-foot) var(--casora-font-studio, system-ui); cursor:pointer; padding:4px 2px; }
+        /* V21: the whole dashboard at card size looked the same three times. A close-up of badges and tiles over the
+           room photo shows the difference: blurred (all effects), sharp (reduced), half and half (automatic). */
+        .perfgrid .pvshot { background-size:266.7%; background-position:39% 71.6%; }
         :host(.phone) .perfgrid .pvshot { flex:0 0 96px; width:96px; aspect-ratio:auto; background-size:cover; background-position:82% 50%; }
         :host(.phone) .perfgrid { gap:10px; }
         .frec2 {

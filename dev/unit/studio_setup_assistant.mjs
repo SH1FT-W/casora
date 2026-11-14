@@ -154,6 +154,14 @@ const SRC = read('custom_components/casora/panel/casora-panel.js');
   console.log('ok setup: MCP note behind More');
 }
 
+// ── V21: "Smooth on Every Screen" shows a close-up, so the three pictures differ visibly ──
+{
+  const m = SRC.match(/\.perfgrid \.pvshot \{ background-size:([\d.]+)%; background-position:[\d.]+% [\d.]+%; \}/);
+  assert.ok(m && Number(m[1]) >= 200, 'perf pictures zoomed in (blur vs. sharp shows at card size)');
+  assert.ok(SRC.indexOf(m[0]) < SRC.indexOf(':host(.phone) .perfgrid .pvshot {'), 'the phone layout keeps its own crop');
+  console.log('ok setup: effect pictures as close-ups');
+}
+
 // ── E22 in the YAML import: the name comes first and the screen still gets its Import button ─────────
 // (The import review moved its name group before an undefined "head": a ReferenceError left the screen
 // without name field and button – t07 found it.)
