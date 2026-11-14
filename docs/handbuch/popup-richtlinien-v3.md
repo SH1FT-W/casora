@@ -138,7 +138,9 @@ keinem Raum zuordnet. Ein eigener Popup-Titel (`room_name`) gilt nur für die Se
 Satz in der Rad-Mitte („Aktiviert · Zuhause“). Sie sagt etwas anderes in Worten – Energie: woher der Strom kommt („Bezug
 aus dem Netz · Akku bereit“, „Solar deckt 80 %“, „Netz offline“); Alarm und andere S7 ohne eigenes Wort: seit wann
 („Seit 14:42“). Liest sich der erste Teil der Kopfzeile wie der Wert bzw. Satz der Bühne (auch HAs Zustandswort als Rückfall: „Aus“ im Kopf und im Rad, „Verriegelt“ zweimal), setzt der Rahmen „Seit 14:42“ dafür ein (`_dedupeHead`, Zeit der Kachel-Entität). Geprüft
-von `popup-geo.mjs` („doppelt“: erster Teil der Kopfzeile = Wert bzw. Satz der Bühne).
+von `popup-geo.mjs` („doppelt“: erster Teil der Kopfzeile = Wert bzw. Satz der Bühne). Umgekehrt nennt das Rad nicht noch
+einmal, was schon im Kopf steht: die Wetterwarnung zeigt ihr Gebiet nur in der Statuszeile, im Rad stehen Satz,
+„Bis …“ und bei mehreren die Zahl (14.11.2026, Test `warning_area_once.mjs`).
 
 ## 4. Bühne
 
