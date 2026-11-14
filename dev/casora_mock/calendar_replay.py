@@ -25,16 +25,16 @@ def events_for_range(events, export_date, today, start, end, local_tz=None):
             duration = (item["end"].astimezone(timezone.utc)
                         - item["start"].astimezone(timezone.utc))
             original_offset = item["start"].utcoffset()
-            first = item["start"].replace(tzinfo=local_tz, fold=0)
-            second = first.replace(fold=1)
+            fold_zero = item["start"].replace(tzinfo=local_tz, fold=0)
+            fold_one = fold_zero.replace(fold=1)
             # Round-trip through UTC: a nonexistent spring time moves forward.
-            normalized = first.astimezone(timezone.utc).astimezone(local_tz)
-            if normalized.replace(tzinfo=None) != first.replace(tzinfo=None):
+            normalized = fold_zero.astimezone(timezone.utc).astimezone(local_tz)
+            if normalized.replace(tzinfo=None) != fold_zero.replace(tzinfo=None):
                 item["start"] = normalized
-            elif second.utcoffset() != first.utcoffset() and second.utcoffset() == original_offset:
-                item["start"] = second
+            elif fold_one.utcoffset() != fold_zero.utcoffset() and fold_one.utcoffset() == original_offset:
+                item["start"] = fold_one
             else:
-                item["start"] = first
+                item["start"] = fold_zero
             item["end"] = (item["start"].astimezone(timezone.utc) + duration).astimezone(local_tz)
         def instant(value):
             if not isinstance(value, datetime):
