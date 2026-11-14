@@ -25790,7 +25790,12 @@ class CasoraPanel extends HTMLElement {
       t.textContent = deg + "\u00b0";
       const c = document.createElement("span");
       c.className = "mp-wcond";
-      const cond = went ? String(went.state).replace(/[-_]/g, " ") : "";
+      // HA's own word for the condition, as the dashboard and the desktop preview show it ("Teilweise bewölkt"; the
+      // raw state read "Partlycloudy"); the raw state only where HA has no word for it.
+      const raw = went ? String(went.state || "").toLowerCase() : "";
+      const lc = raw && this._hass.localize ? this._hass.localize("component.weather.entity_component._.state." + raw) : "";
+      const cond = lc || raw.replace(/[-_]/g, " ");
+      c.setAttribute("data-no-i18n", "");
       c.textContent = cond ? cond.charAt(0).toUpperCase() + cond.slice(1) : "";
       w.appendChild(t); w.appendChild(c);
       const file = WEATHER_SVG[String((went && went.state) || "").toLowerCase()];
