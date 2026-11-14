@@ -10,7 +10,7 @@
 //      bleibt beim Zeitraumwechsel); „Jahr“ → Balken je Monat, Statistik „Letzte 12 Monate“; zurück auf „Linie“.
 //   5. Zähler (Testserver-Energie, total_increasing): öffnet automatisch als Balken je Stunde mit „Heute“; 7 Tage → Balken je
 //      Tag mit „Ø pro Tag“; Jahr → Balken je Monat mit „Dieser Monat“, „Letzte 12 Monate“, „Ø pro Monat“.
-//   6. Nicht verfügbar (nur im Browser): Kachel „Nicht verfügbar“, Popup wirft nicht.
+//   6. Nicht verfügbar (nur im Browser): Kachel „Offline“ (V2), Popup „Nicht verfügbar“, wirft nicht.
 // Nichts wird gespeichert: die Kacheln entstehen nur im Browser. DIAGRAMM_BILDER=<ordner>: Bilder ablegen.
 import { open, casoraDashboard, dashboard, check, need, finish, stable, fakeStates } from './lib.mjs';
 
@@ -158,7 +158,8 @@ const run = async (view, dark, first) => {
     // Nicht verfügbar nur im Browser: Kachel sagt es, das Popup bleibt ruhig.
     await fakeStates(page, { [ID]: { state: 'unavailable' } }, { sticky: true });
     t = await tile();
-    await check(tag + ': nicht verfügbar → „Nicht verfügbar“ auf der Kachel', t && /Nicht verfügbar/.test(t.state), t);
+    // Since V2 (26.11.28b2) an unavailable tile reads „Offline · seit …“ (casora_offline) instead of „Nicht verfügbar“.
+    await check(tag + ': nicht verfügbar → „Offline“ auf der Kachel', t && /^Offline/.test(t.state), t);
     p = await stable(page, popupInfo, null, { max: 8000, quiet: 1500 });
     await tapTile();
     p = await stable(page, popupInfo, null, { max: 8000, quiet: 1500 });
