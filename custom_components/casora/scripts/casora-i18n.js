@@ -305,6 +305,13 @@
         });
       }
     }
+    // Joined names („Bio + Restmüll“, two bins on one day on the waste tile): the parts one by one; text with „ · “
+    // is split there first (seg, the groups above).
+    if (core.indexOf(' + ') > 0 && core.indexOf(' · ') < 0) {
+      var pp = core.split(' + ');
+      var pd = pp.map(function (p) { var r = /[A-Za-zÄÖÜäöüß]/.test(p) ? one(p.trim(), t, (depth || 0) + 1) : null; return r === null ? p : r; });
+      if (pd.some(function (p, i) { return p !== pp[i]; })) return pd.join(' + ');
+    }
     return null;
   }
 

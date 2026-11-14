@@ -1575,8 +1575,9 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
       var hm = best.allDay ? '' : ' ' + String(best.d.getHours()).padStart(2, '0') + ':' + String(best.d.getMinutes()).padStart(2, '0');
       parts.push((best.on && !best.allDay ? tr('Jetzt') : word(best.d) + hm) + ' ' + best.title);
     }
+    // The line is no-i18n (the calendar title is the user's own): the bin name is translated here, as on the waste tile.
     var bins = W && Array.isArray(W.bins) ? W.bins.filter(function (b) { return b && b.days != null && isFinite(b.days) && b.days >= 0; }).sort(function (a, b) { return a.days - b.days; }) : [];
-    if (bins.length) parts.push(word(new Date(day0.getFullYear(), day0.getMonth(), day0.getDate() + bins[0].days)) + ' ' + bins[0].label);
+    if (bins.length) parts.push(word(new Date(day0.getFullYear(), day0.getMonth(), day0.getDate() + bins[0].days)) + ' ' + tr(bins[0].label));
     return parts.join(' · ');
   };
   // casora-home-next:end

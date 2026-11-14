@@ -2,6 +2,7 @@
 // @deckt: custom_components/casora/scripts/local/00-finder.js#casoraHomeNext dashboards/casora/button_card_templates.json#casora_room,casora_mobile_weather custom_components/casora/panel/casora-panel.js
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
+import { phrases } from './lib/i18n_phrases.mjs';
 
 const src = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/00-finder.js', import.meta.url), 'utf8');
 const a = src.indexOf('// casora-home-next:start'), b = src.indexOf('// casora-home-next:end');
@@ -42,6 +43,24 @@ assert.equal(picked([{ entity: 'calendar.familie', name: 'Familie' }])(both), 'M
 assert.equal(picked([{ entity: 'calendar.familie' }, { entity: 'calendar.arbeit', tile: false }])(both), 'Morgen 15:00 Zahnarzt', 'a calendar picked only for the popup (tile: false) is no appointment either');
 assert.equal(picked([])(both), 'Heute 11:00 Meeting', 'an empty pick means all calendars');
 assert.equal(picked(['calendar.arbeit'])(both), 'Heute 11:00 Meeting', 'a pick given as plain ids works too');
+// #189 (r68, English Studio preview): the line stands in a data-no-i18n block, so the bin name went in untranslated
+// („Restmüll“ under an English title). It is translated as on the waste tile (casoraTr, a joined name „Bio + Restmüll“
+// part by part); the calendar title is the user's own text and stays as it is.
+{
+  const i18n = fs.readFileSync(new URL('../../custom_components/casora/scripts/casora-i18n.js', import.meta.url), 'utf8');
+  const win = { __casoraI18nPhrases: phrases() };
+  const doc = { querySelector: (q) => (q === 'home-assistant' ? { hass: { locale: { language: 'en' } } } : null), addEventListener() {} };
+  try { new Function('window', 'document', 'customElements', 'MutationObserver', i18n)(win, doc, { whenDefined: () => new Promise(() => {}), get: () => null }, class { observe() {} }); } catch (e) { /* no DOM */ }
+  window.casoraTr = win.casoraTr;
+  const en = (S, W) => { window.casoraDevice = { waste: () => W }; return window.casoraHomeNext({ states: S, locale: { language: 'en' } }, on, now); };
+  try {
+    assert.equal(en({}, { bins: [{ label: 'Restmüll', days: 1 }] }), 'Tomorrow General waste', 'English: a standard bin name is translated');
+    assert.equal(en({}, { bins: [{ label: 'Bio', days: 0 }] }), 'Today Organic', 'English: „Bio“ too');
+    assert.equal(en({}, { bins: [{ label: 'Bio + Restmüll', days: 3 }] }), 'Thursday Organic + General waste', 'English: a joined name part by part');
+    assert.equal(en({}, { bins: [{ label: 'Tonne Hof', days: 1 }] }), 'Tomorrow Tonne Hof', 'English: an own name stays');
+    assert.equal(en({ 'calendar.a': cal('Zahnarzt', '2026-11-09 15:00:00') }, { bins: [] }), 'Today 15:00 Zahnarzt', 'English: the calendar title stays');
+  } finally { delete window.casoraTr; }
+}
 // #189: the line also stands under the room name (title „Room name“), still only when switched on; with the switch off
 // the room name stays in button-card's #name exactly as before. Template code run with a stand-in window.
 const T = JSON.parse(fs.readFileSync(new URL('../../dashboards/casora/button_card_templates.json', import.meta.url), 'utf8'));
