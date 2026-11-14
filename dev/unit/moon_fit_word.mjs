@@ -1,6 +1,6 @@
 // V16 (optimisation round 14.11.2026, owner's go): moons with long effect names a lamp brings („Thunderstorm“,
 // „Daylight-simulation“) were set at 9–10 px to fit. Expected: such a moon shows a short word (its first word, cut to
-// 8 letters + „…“ if that is long too) at the normal 11 px; the full name stays tooltip and aria-label. Only moons that ask
+// 7 letters + „…“ if that is long too) at the normal 11 px; the full name stays tooltip and aria-label. Only moons that ask
 // for it (it.fit: the aquarium light's effects and profiles), curated words („Beschatten“) keep the size rule.
 //   node dev/unit/moon_fit_word.mjs
 // @deckt: custom_components/casora/scripts/casora-core.js#moonFitWord,moonHtml, custom_components/casora/scripts/local/02-devices.js#_casoraAqMoons
@@ -19,13 +19,15 @@ const moonWordCls = new Function(fn('moonWordCls') + '\nreturn moonWordCls;')();
 // Short names stay as they are.
 for (const t of ['Lightning', 'Crescent moon', 'Sun and lightning', 'Partly cloudy', 'Mond']) assert.equal(moonFitWord(t), null, t);
 // Long ones get a short word at 11 px (no smaller class, no inline size).
-const cases = { Thunderstorm: 'Thunders…', 'Daylight-simulation': 'Daylight', 'Sun and Thunderstorm': 'Sun',
-  'Sonnenaufgangssimulation': 'Sonnenau…', 'Mondlicht Wellenbewegung': 'Mondlicht' };
+const cases = { Thunderstorm: 'Thunder…', 'Daylight-simulation': 'Daylight', 'Sun and Thunderstorm': 'Sun',
+  'Sonnenaufgangssimulation': 'Sonnena…', 'Mondlicht Wellenbewegung': 'Mondlicht' };
 for (const [t, want] of Object.entries(cases)) {
   const s = moonFitWord(t);
   assert.equal(s, want, t);
   assert.equal(moonWordFit(s), '', t + ': no smaller size for the short word');
   assert.equal(moonWordCls(s), '', t + ': no lw/xw class');
+  // A cut word is 7 letters + „…“: the 8 + „…“ of the first version overran the phone's 62 px moon at 11 px.
+  if (s.endsWith('\u2026')) assert.equal(s.length, 8, t + ': 7 letters + „…“');
 }
 
 // The moon uses it for it.fit and keeps the full name as tooltip/aria-label.

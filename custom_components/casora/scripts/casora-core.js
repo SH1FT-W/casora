@@ -13674,14 +13674,14 @@ window.casoraMenuGlass = {
     return ' style="font-size:max(7px, min(' + (lw >= 13 ? 9 : 10) + 'px, calc((clamp(62px, 20cqw, 76px) - 8px) / ' + dRound(lw * 0.56) + ')))"';
   }
   // A name the lamp brings (effect, profile: „Thunderstorm“, „Daylight-simulation“) gets a short word instead of a
-  // smaller size (V16, owner 14.11.2026: never below 11 px): its first word, cut to 8 letters + „…“ when that one is
+  // smaller size (V16, owner 14.11.2026: never below 11 px): its first word, cut to 7 letters + „…“ when that one is
   // long too. Moons that ask for it (it.fit) only – curated words („Beschatten“) keep their size rule. Full name: tooltip.
   function moonFitWord(text) {
     var t = String(text || '').trim(), lw = 0;
     t.split(/\s+/).forEach(function (w) { lw = Math.max(lw, w.length); });
     if (lw < 10) return null;
     var first = t.split(/[\s\-_\/]+/).filter(Boolean)[0] || t;
-    return first.length < 10 ? first : first.slice(0, 8) + '\u2026';
+    return first.length < 10 ? first : first.slice(0, 7) + '\u2026';
   }
   // Moons show one symbol set (§4.8: MDI, outline): a lamp's icon from another set („ios:lamp-floor“) is mapped.
   function moonIcon(ic) {
