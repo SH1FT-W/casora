@@ -92,6 +92,26 @@ const SRC = read('custom_components/casora/panel/casora-panel.js');
   console.log('ok setup: step 1');
 }
 
+// ── V19: the design choice shows at most four cards side by side ────────────
+// (newcomer round 14.11.2026: seven narrow cards next to HA's sidebar broke their text after every word)
+{
+  const props = {};
+  const p = Object.create(P);
+  p._hass = { states: {}, themes: { darkMode: false, themes: {} }, language: 'en' };
+  p._flowScreen = () => ({ box: { classList: { add: noop }, style: { setProperty: (k, v) => { props[k] = v; } } }, body: stub(), acts: stub() });
+  p._flowButton = noop;
+  const savedTheme = window.casoraTheme;
+  window.casoraTheme = { names: () => [], active: () => '' };
+  p._themeStep();
+  window.casoraTheme = savedTheme;
+  const n = Number(props['--fcols']);
+  assert.ok(n >= 1 && n <= 4, 'at most four columns, got ' + props['--fcols']);
+  const i = SRC.indexOf('_themeStep() {');
+  const body = SRC.slice(i, SRC.indexOf('\n  }\n', i));
+  assert.ok(/setProperty\("--fcols", Math\.min\(cards\.length, THEME_COLS\)\)/.test(body) && /const THEME_COLS = 4;/.test(SRC), 'capped at THEME_COLS = 4');
+  console.log('ok setup: design choice in four columns');
+}
+
 // ── E22 in the YAML import: the name comes first and the screen still gets its Import button ─────────
 // (The import review moved its name group before an undefined "head": a ReferenceError left the screen
 // without name field and button – t07 found it.)

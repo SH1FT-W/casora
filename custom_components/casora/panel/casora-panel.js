@@ -3885,6 +3885,8 @@ let firstRunFont = null;
 // E10 (test 2): the setup assistant remembers its step and choices in this browser (a reload started over at the
 // look, with "Casora" picked again). Kept a day; cleared when a dashboard is made or the assistant is restarted.
 const SETUP_KEY = "casora.setup.progress";
+// Design choice in the setup: cards per row on a wide screen (more designs wrap to a second row).
+const THEME_COLS = 4;
 function setupLoad() {
   try {
     const v = JSON.parse(localStorage.getItem(SETUP_KEY) || "null");
@@ -14910,7 +14912,8 @@ class CasoraPanel extends HTMLElement {
     if (own) card(own, own, "Keep your current theme", null);
     s.body.appendChild(grid);
     s.box.classList.add("fwide");
-    s.box.style.setProperty("--fcols", cards.length);
+    // At most four side by side (V19): seven narrow cards broke every word of their text onto its own line.
+    s.box.style.setProperty("--fcols", Math.min(cards.length, THEME_COLS));
     paint();
 
     this._flowButton(s.acts, "Continue", async (ev) => {
