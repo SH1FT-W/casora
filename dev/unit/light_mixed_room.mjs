@@ -46,7 +46,7 @@ const renderLegacy = (ids) => {
   return html;
 };
 const legacyTone = (html, label = 'Warm') => {
-  const row = [...html.matchAll(/<div class="lps-sg(?: [^"]*)?" role="button" data-lps-tap="([^"]+)">([\s\S]*?)<\/div>/g)]
+  const row = [...html.matchAll(/<div class="lps-sg(?: [^"]*)?" role="button"(?: tabindex="0")? data-lps-tap="([^"]+)">([\s\S]*?)<\/div>/g)]
     .find((m) => m[2].includes(label));
   return row ? JSON.parse(row[1].replace(/&quot;/g, '"')) : null;
 };
