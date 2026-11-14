@@ -7,7 +7,7 @@
 // Frost only; with the tile on Warnung 1 alone the second row opened the plain entity popup („An“).
 // Expected (desktop and phone 393): the popup lists both warnings; the bell has one „Wetterwarnung: Windböen“ and one
 // „Wetterwarnung: Frost“ row and no „Sicherheitswarnung“; each row opens the warning popup with its warning. Tile on
-// Warnung 1 alone: only the Windböen row (owner, 01.11.2026: the bell shows the tile's sources), none that leads nowhere.
+// Warnung 1 alone: both rows, the tile reads its device's other slots (#196 auto, r821).
 // The five slots are made up and live only in the browser (registry platform wetter, translation_key warning);
 // the tile sits in copies of the test dashboards, removed at the end. Pictures: WARN196_BILDER=<folder>.
 import fs from 'node:fs';
@@ -223,8 +223,9 @@ await save('qa-warn196', withTile(desk.config, []).config, 'QA Warnungen 196');
   await settle(page);
   if (BILDER) await page.screenshot({ path: BILDER + '/desktop-nur-warnung1-glocke.png' });
   await check('Nur Warnung 1: keine „Sicherheitswarnung“ für Warnung 2', !shown.some((t) => /Sicherheitswarnung.*QA Wetter Warnung/.test(t)), shown);
-  await check('Nur Warnung 1: Zeile „Wetterwarnung: Windböen“, keine für Frost',
-    shown.some((t) => /Wetterwarnung: Windböen/.test(t)) && !shown.some((t) => /Wetterwarnung: Frost/.test(t)), shown);
+  // Since #196 auto the tile reads the other slots of its device, so Frost has its row too (r821).
+  await check('Nur Warnung 1: Zeilen „Wetterwarnung: Windböen“ und „Wetterwarnung: Frost“ (Gerät der Kachel)',
+    shown.some((t) => /Wetterwarnung: Windböen/.test(t)) && shown.some((t) => /Wetterwarnung: Frost/.test(t)), shown);
   await page.context().browser().close().catch(() => {});
 }
 await finish();

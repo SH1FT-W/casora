@@ -17011,8 +17011,12 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     if (!entityId) return true;
     var v = cfg.variables || {};
     // Auch Listen in Variablen (locks: [...] einer Schloss-Gruppe) zählen (B-NOTI).
-    return cfg.entity === entityId
-      || Object.keys(v).some(function (k) { return v[k] === entityId || (Array.isArray(v[k]) && v[k].indexOf(entityId) !== -1); });
+    if (cfg.entity === entityId
+      || Object.keys(v).some(function (k) { return v[k] === entityId || (Array.isArray(v[k]) && v[k].indexOf(entityId) !== -1); })) return true;
+    // A weather warning tile also shows the other warning slots of its device (#196, 01-basis.js casoraWarnings.sources):
+    // the bell's „Wetterwarnung: Frost“ of Warnung 2 opens the tile set to Warnung 1.
+    var W = typeof window !== 'undefined' ? window.casoraWarnings : null, h = W && W.sources && list.some(function (n) { return /^casora_(popup_)?weather_warning$/.test(n); }) ? hassOf() : null;
+    return !!(h && h.entities) && W.sources(cfg.entity, v.sensors, h.entities).indexOf(entityId) !== -1;
   }
 
   // ── „Wer sieht das?“ auch auf Umwegen (R-01) ─────────────────────────────

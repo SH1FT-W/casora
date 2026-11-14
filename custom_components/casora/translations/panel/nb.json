@@ -1485,7 +1485,7 @@
     "Active program": "Aktivt program",
     "Add a warning sensor": "Legg til en varselsensor",
     "Chamber light": "Kammerlys",
-    "E.g. the NINA or Meteoalarm warnings or the DWD warning level for your town.": "F.eks. NINA- eller Meteoalarm-varslene eller DWD-varselnivået for stedet ditt.",
+    "E.g. the NINA or Meteoalarm warnings or the DWD warning level for your town. The other warnings of the same device come along by themselves.": "F.eks. NINA- eller Meteoalarm-varslene eller DWD-varselnivået for stedet ditt. De andre varslene fra samme enhet kommer med av seg selv.",
     "Electricity price per kWh": "Strømpris per kWh",
     "Leak sensor": "Lekkasjesensor",
     "Leak sensor battery": "Batteri lekkasjesensor",

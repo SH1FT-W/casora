@@ -2593,7 +2593,7 @@
     "Own popup": "Własne okno",
     "This badge's device": "Urządzenie tej odznaki",
     "Visible in the popup": "Widoczne w oknie",
-    "E.g. the NINA or Meteoalarm warnings or the DWD warning level for your town.": "Np. ostrzeżenia NINA lub Meteoalarm albo poziom ostrzeżenia DWD dla Twojej miejscowości.",
+    "E.g. the NINA or Meteoalarm warnings or the DWD warning level for your town. The other warnings of the same device come along by themselves.": "Np. ostrzeżenia NINA lub Meteoalarm albo poziom ostrzeżenia DWD dla Twojej miejscowości. Pozostałe ostrzeżenia z tego samego urządzenia dochodzą same.",
     "A zone temperature, setpoint or door of the fridge": "Temperatura strefy, wartość zadana lub drzwi lodówki",
     "Zone 1 temperature": "Temperatura strefy 1",
     "Zone 1 setpoint": "Wartość zadana strefy 1",
