@@ -306,7 +306,8 @@
   var row = function (e, cals, withDay) {
     var c = calOf(cals, e.cal);
     var tm = e.allDay ? 'ganztägig' : hm(e.start);
-    var span = e.allDay && (e.end - e.start) > 86400000 ? 'bis ' + dayWord(addD(e.end, -1), false) : (!e.allDay ? 'bis ' + hm(e.end) : '');
+    // More than one day by the calendar: 25.10. is 25 hours long and still one day.
+    var span = e.allDay && Math.round((day0(e.end) - day0(e.start)) / 86400000) > 1 ? 'bis ' + dayWord(addD(e.end, -1), false) : (!e.allDay ? 'bis ' + hm(e.end) : '');
     /* Ort ohne Leerzeichen/Kommas am Rand; nur Satzzeichen (z. B. „ , “) gilt als leer. */
     var loc = String(e.loc || '').replace(/^[\s,;.·\-–]+|[\s,;·\-–]+$/g, '');
     if (!/[\p{L}\p{N}]/u.test(loc)) loc = '';
