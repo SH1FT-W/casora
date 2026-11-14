@@ -21,6 +21,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 
+from .calendar_replay import fixture_events
+
 DOMAIN = "casora_mock"
 HIDE_ATTRS = {"friendly_name", "icon", "unit_of_measurement", "device_class", "supported_features"}
 # Numeric code of the test alarm panels with code_format (halten.py: "Testalarm Code").
@@ -687,6 +689,9 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
 
     class MCalendar(MockEntity, CalendarEntity):
         def _events(self, start: datetime, end: datetime):
+            fixture = fixture_events(self.mock.entities[self._key], self.mock.fixture, start, end)
+            if fixture is not None:
+                return [CalendarEvent(**event) for event in fixture]
             base = dt_util.start_of_local_day()
             titles = ["Termin", "Müllabfuhr", "Arzttermin", "Feiertag", "Training", "Geburtstag"]
             out = []
