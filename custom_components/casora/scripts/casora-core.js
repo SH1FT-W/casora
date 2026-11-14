@@ -14465,7 +14465,8 @@ window.casoraMenuGlass = {
       ev.preventDefault(); stageZoom(f.z, true);
     });
   })();
-  // UI.quick(items, label): 2–4 equal tiles (§5); more than 4 → the first 3 and „Alle (n)“ (o.page).
+  // UI.quick(items, label): 2–4 equal tiles (§5) filling the row – two tiles take half each (V6, owner 14.11.2026; before
+  // they took two thirds and left a hole); more than 4 → the first 3 and „Alle (n)“ (o.page).
   //   items: [{ icon, text, sub, active, svc, confirm, attrs }] – never dangerous (rule test popup_v3.mjs).
   var QUICK_CSS = '.hui-quick{font-family:' + T.font + ';text-align:left;}'
     + '.hui-qk-g{display:grid;grid-template-columns:repeat(var(--n,4),minmax(0,1fr));gap:10px;}'
@@ -14519,7 +14520,7 @@ window.casoraMenuGlass = {
     }).join('');
     return '<style>' + QUICK_CSS + '</style><div class="hui-quick" data-casora-quick="' + list.length + '">'
       + (label ? softLabel(label) : '')
-      + '<div class="hui-qk-g' + (list.length === 4 ? ' n4' : '') + '" style="--n:' + Math.max(3, list.length) + '"'
+      + '<div class="hui-qk-g' + (list.length === 4 ? ' n4' : '') + '" style="--n:' + Math.max(2, list.length) + '"'
       + (lvq ? ' data-casora-live="seg" data-casora-ents="' + esc(JSON.stringify(lvq.entities)) + '" data-casora-attr="' + esc(lvq.attr || 'current_position') + '"' : '')
       + '>' + tiles + '</div></div>';
   }

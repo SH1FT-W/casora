@@ -272,9 +272,9 @@ Kacheln für die 2–4 häufigsten **Wahlen** – Modi, Szenen, Programme, Vorga
 
 | Regel | Wert |
 |---|---|
-| Anzahl | 2 bis 4 in einer Reihe; Handy: 4 als 2 × 2, 3 bleiben eine Reihe |
+| Anzahl | 2 bis 4 in einer Reihe, die Kacheln füllen die Reihe (2 je halbe Breite, 14.11.2026); Handy: 4 als 2 × 2, 3 bleiben eine Reihe |
 | Kachel | gleich breit, mindestens 96 hoch, Radius 24, Innenabstand 14, Fläche `--casora-soft-control-fill` |
-| Inhalt | Symbol 24 oben links, unten Titel 14/700, optional Unterzeile 12/500 („ab 13:00“, „Aktiv“) |
+| Inhalt | Symbol 24 oben links, unten Titel 14/700, optional Unterzeile 12/500 („ab 13:00“, „Aktiv“); öffnet eine Kachel die Seite eines Werts, steht der Wert darunter (Energie: „620 W“, „1,8 kW“, Netz beim Einspeisen „↑ 520 W“, Akku „78 %“, 14.11.2026) |
 | Gewählt | Fläche `--casora-soft-row-active` mit `--casora-soft-row-active-shadow`, Symbol in Gerätefarbe, Unterzeile „Aktiv“ oder der Wert |
 | Überschrift | nur wenn die Kacheln sich nicht selbst erklären („Szenen“, „Modus“); Stil der Listen-Überschrift §6 |
 | Abstand | 16 unter der Bühne (mit Überschrift: 24 bis zur Überschrift), 10 zwischen den Kacheln |
