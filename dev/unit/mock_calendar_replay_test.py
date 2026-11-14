@@ -3,6 +3,8 @@ import importlib.util
 from datetime import date, datetime, timezone
 from pathlib import Path
 import unittest
+from unittest.mock import patch
+from zoneinfo import ZoneInfo
 
 PATH = Path(__file__).resolve().parents[1] / "casora_mock" / "calendar_replay.py"
 spec = importlib.util.spec_from_file_location("calendar_replay", PATH)
@@ -11,6 +13,48 @@ spec.loader.exec_module(replay)
 
 
 class CalendarReplayTest(unittest.TestCase):
+    def test_all_day_overlap_uses_local_midnights_for_utc_query(self):
+        events = [{"summary": "Naam-ABCDEF", "start": "2026-11-09", "end": "2026-11-10"}]
+        zone = ZoneInfo("Europe/Amsterdam")
+        for start, end, expected in [
+            (datetime(2026, 11, 8, 23, tzinfo=timezone.utc),
+             datetime(2026, 11, 8, 23, 30, tzinfo=timezone.utc), True),
+            (datetime(2026, 11, 9, 23, tzinfo=timezone.utc),
+             datetime(2026, 11, 9, 23, 30, tzinfo=timezone.utc), False),
+        ]:
+            with self.subTest(start=start):
+                result = replay.events_for_range(
+                    events, date(2026, 11, 9), date(2026, 11, 9),
+                    start, end, local_tz=zone)
+                self.assertEqual(bool(result), expected)
+
+    def test_utc_sunday_query_uses_local_monday_for_current_week(self):
+        class Clock(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return datetime(2026, 11, 15, 23, 30, tzinfo=timezone.utc).astimezone(tz)
+
+        entity = {"events": [{"summary": "Naam-ABCDEF", "start": "2026-11-09",
+                              "end": "2026-11-10"}]}
+        with patch.object(replay, "datetime", Clock):
+            result = replay.fixture_events(
+                entity, {"calendar_export_date": "2026-11-09"},
+                datetime(2026, 11, 15, tzinfo=timezone.utc),
+                datetime(2026, 11, 23, tzinfo=timezone.utc),
+                local_tz=ZoneInfo("Europe/Amsterdam"))
+        self.assertEqual(result[0]["start"], date(2026, 11, 16))
+
+    def test_timed_event_keeps_clock_and_duration_in_another_season(self):
+        events = [{"summary": "Naam-ABCDEF", "start": "2026-01-05T09:30:00+01:00",
+                   "end": "2026-01-05T10:30:00+01:00"}]
+        result = replay.events_for_range(
+            events, date(2026, 1, 5), date(2026, 7, 6),
+            datetime(2026, 7, 6, tzinfo=timezone.utc),
+            datetime(2026, 7, 7, tzinfo=timezone.utc),
+            local_tz=ZoneInfo("Europe/Amsterdam"))
+        self.assertEqual(result[0]["start"].isoformat(), "2026-07-06T09:30:00+02:00")
+        self.assertEqual(result[0]["end"].isoformat(), "2026-07-06T10:30:00+02:00")
+
     def test_monday_stays_monday_on_every_test_house_weekday(self):
         events = [{"summary": "Naam-ABCDEF", "start": "2026-11-09T09:30:00+01:00",
                    "end": "2026-11-09T10:30:00+01:00"}]

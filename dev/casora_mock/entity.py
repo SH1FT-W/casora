@@ -689,7 +689,8 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
 
     class MCalendar(MockEntity, CalendarEntity):
         def _events(self, start: datetime, end: datetime):
-            fixture = fixture_events(self.mock.entities[self._key], self.mock.fixture, start, end)
+            fixture = fixture_events(self.mock.entities[self._key], self.mock.fixture, start, end,
+                                     local_tz=dt_util.get_default_time_zone())
             if fixture is not None:
                 return [CalendarEvent(**event) for event in fixture]
             base = dt_util.start_of_local_day()
