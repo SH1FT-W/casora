@@ -229,7 +229,9 @@ await dashboard(page, dash.url + '/' + (dash.config.views[0].path || '0'));
 await fakeStates(page, patch, { sticky: true });
 await openRow(page);
 const after = await deskState(page);
-const follows = (got) => JSON.stringify(got) === JSON.stringify(want.filter((k) => got.includes(k)));
+// Several entries of one kind (Home's alarm panels since V11, 14.11.2026) stand together: compare the kinds once each.
+const kinds = (got) => got.filter((k, i) => i === 0 || got[i - 1] !== k);
+const follows = (got) => JSON.stringify(kinds(got)) === JSON.stringify(want.filter((k) => got.includes(k)));
 await check('desktop: sub-row follows the order', follows(after.row) && JSON.stringify(after.row) !== JSON.stringify(before.row), { before: before.row, after: after.row, want });
 // Owner (13.11.2026): with several findings the most important one leads in words (rank: jammed, open, tilted,
 // offline; within a rank the Studio's order), the icons after it follow the Studio's order.
