@@ -9,7 +9,7 @@ const b = src.indexOf('  // Active as a warning source:', a);
 assert.ok(a > 0 && b > a, 'pickedWarnings/isWarning in 01-basis.js');
 let LC = null;
 const window = { _casoraLovelaceCfg: () => LC,
-  casoraWarnings: { isLevelSensor: (st, id) => /^sensor\..*warning_level$/.test(id), isAdvance: (st, id) => /advance/.test(id) } };
+  casoraWarnings: { isLevelSensor: (st, id) => /^sensor\..*warning_level$/.test(id), isAdvance: (st, id) => /advance/.test(id), isSlot: () => false } };
 const cfg = () => ({ warn_prefix: 'binary_sensor.warnung_' });
 const isWarning = new Function('window', 'cfg', src.slice(a, b) + '\nreturn isWarning;')(window, cfg);
 const ids = ['binary_sensor.warnung_nina', 'sensor.dwd_current_warning_level', 'sensor.dwd_advance_warning_level', 'binary_sensor.other'];

@@ -181,6 +181,12 @@ Kern-Integrationen (Schlüssel im Test geprüft):
   _description/_instruction/_start/_end` (`01-basis.js` `casoraWarnings`, `casora-panel.js` `isWarningLevelSensor`;
   Test `dev/unit/wetterwarnung_dwd.mjs`, Testhaus `dev/casora_mock/testserver.py`). Erkennung nur über `warning_count`,
   nicht über `translation_key`.
+- „Wetter & Warnungen“ (`wetter`, eigene Integration SH1FT-W/wetter-warnungen, #196): Warnplätze 1–5 als `binary_sensor`
+  mit `device_class` `safety`, `platform` `wetter`, `translation_key` `warning` (Entitäts-IDs ohne NINA-Präfix, z. B.
+  `…_warnung_1`), nach Schwere sortiert (Platz 1 = schwerste), Attribute wie NINA bis HA 2026.10 (`severity`,
+  `headline`, `description`, `event`, `sent`, `expires`, immer `region`). Die Glocke zählt sie als Warnquelle
+  (`01-basis.js` `casoraWarnings.isSlot`, `isWarnSource`; `00-finder.js` `notifySources`); ebenso jeden Sensor, der in
+  einer Wetterwarnungs-Kachel eingetragen ist. Test `dev/unit/bell_warning_slots.mjs`.
 - `cookidoo` (Rezept, `03-popups.js`, `ki.py`), `mealie` (Rezept als zweite Quelle, `03-popups.js`, `mealie_plan.py`, #140), `backup` (`03-popups.js`), `proximity` (`15-person.js`),
   `unifi` (Netzwerk, `00-finder.js`), `lamarzocco` (Kaffee, `25-coffee.js`), `tankerkoenig` (nur `platform`,
   `tanken.py`)

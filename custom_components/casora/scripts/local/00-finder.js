@@ -1514,7 +1514,11 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
         && !plants.some(function (p) { return id.slice(7).indexOf(p) === 0; })) {
         add(id, 'co2', parseFloat(s) >= co2);
       }
-      if (warn && id.indexOf(warn) === 0) add(id, 'warning', s === 'on');
+      // A „Wetter & Warnungen“ slot is a warning source like NINA (#196, 01-basis.js casoraWarnings.isSlot).
+      if ((warn && id.indexOf(warn) === 0)
+        || (window.casoraWarnings && window.casoraWarnings.isSlot && window.casoraWarnings.isSlot((hass.entities || {})[id]))) {
+        add(id, 'warning', s === 'on');
+      }
       // DWD level sensor (issue #55): the same source as in the bell (01-basis.js casoraWarnings).
       else if (dom === 'sensor' && window.casoraWarnings && window.casoraWarnings.isLevelSensor(st, id)
         && !window.casoraWarnings.isAdvance(st, id)) {
