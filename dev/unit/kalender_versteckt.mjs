@@ -4,6 +4,7 @@
 //   node dev/unit/kalender_versteckt.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
+import { loadCalendars } from './lib/calendars_block.mjs';
 
 const st = (name) => ({ state: 'off', attributes: { friendly_name: name } });
 const hass = {
@@ -14,6 +15,7 @@ globalThis.window = globalThis;
 globalThis.document = { querySelector: (q) => (q === 'home-assistant' ? { hass } : null) };
 globalThis.addEventListener = () => {};
 globalThis.setTimeout = () => 0;
+loadCalendars(globalThis);
 new Function(fs.readFileSync(new URL('../../custom_components/casora/scripts/local/06-kalender.js', import.meta.url), 'utf8'))();
 const ids = (v) => window._casoraCalendar.cals(v).map((c) => c.entity);
 

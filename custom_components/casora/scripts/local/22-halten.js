@@ -17,6 +17,8 @@
   var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var hassNow = function () { var ha = document.querySelector('home-assistant'); return ha && ha.hass; };
   var num = function (v) { var n = parseFloat(v); return isFinite(n) ? n : null; };
+  // A volume level in 0…1, rounded to whole percent (0.14 + 0.01 is 0.15000000000000002).
+  var volClamp = function (x) { return Math.max(0, Math.min(1, Math.round(x * 100) / 100)); };
   var bad = function (s) { return s == null || s === 'unknown' || s === 'unavailable'; };
   var two = function (n) { return (n < 10 ? '0' : '') + n; };
   var TIMERS = 'sensor.casora_timers';
@@ -143,12 +145,18 @@
         m.quick.push({ kind: 'step', label: 'Zieltemperatur', value: o.pendingTemp != null ? o.pendingTemp : num(a.temperature), step: step,
           min: num(a.min_temp), max: num(a.max_temp), unit: (o.unit || '°C'), svc: 'climate.set_temperature' });
       } else if (dom === 'media_player' && s !== 'off' && s !== 'standby') {
-        var mb = [];
+        var mb = [], vol = num(a.volume_level);
+        // #194: with a step set in the Studio (casoraVolumeStep) the keys set the volume by that step (VOLUME_SET 4);
+        // without one, or for a player that only steps (VOLUME_STEP 1024), the player's own volume_down/volume_up.
+        var vStep = window.casoraVolumeStep ? window.casoraVolumeStep() : null;
+        var volKey = function (t, ic, dir) {
+          if (!(vStep && (feats & 4) && vol != null)) return svc(t, ic, 'media_player.volume_' + (dir < 0 ? 'down' : 'up'));
+          return svc(t, ic, 'media_player.volume_set', { volume_level: volClamp(vol + dir * vStep) }, { volStep: dir * vStep });
+        };
         if (feats & 16) mb.push(svc('Zurück', 'mdi:skip-previous', 'media_player.media_previous_track'));
-        if (feats & 1024 || feats & 4) mb.push(svc('Leiser', 'mdi:volume-minus', 'media_player.volume_down'));
-        if (feats & 1024 || feats & 4) mb.push(svc('Lauter', 'mdi:volume-plus', 'media_player.volume_up'));
+        if (feats & 1024 || feats & 4) mb.push(volKey('Leiser', 'mdi:volume-minus', -1));
+        if (feats & 1024 || feats & 4) mb.push(volKey('Lauter', 'mdi:volume-plus', 1));
         if (feats & 32) mb.push(svc('Weiter', 'mdi:skip-next', 'media_player.media_next_track'));
-        var vol = num(a.volume_level);
         if (mb.length) m.quick.push({ kind: 'buttons', labels: true, label: vol != null ? 'Lautstärke' : null, value: vol != null ? pct(vol * 100) : '', items: mb });
       } else if (dom === 'vacuum' && s === 'cleaning' && (feats & 4)) {
         m.quick.push({ kind: 'buttons', items: [svc('Pause', 'mdi:pause', 'vacuum.pause', null, { wide: true })] });
@@ -495,6 +503,11 @@
   var act = function (id, it) {
     var go = function () {
       var d = Object.assign(it.noEntity ? {} : { entity_id: it.entity || id }, it.data || {});
+      // #194: a volume step counts from the level at the tap (two quick taps before the player reports go two steps).
+      if (it.volStep) {
+        var hv = hassNow(), cs = hv && hv.states[it.entity || id], cl = cs && num((cs.attributes || {}).volume_level);
+        if (cl != null) d.volume_level = volClamp(cl + it.volStep);
+      }
       return call(it.svc, d).then(function () { if (it.done) notice(T(it.done)); return true; }).catch(function (e) { failed(e); return null; });
     };
     // Riskantes (Entriegeln, Tür öffnen) fragt immer – unabhängig von der Studio-Einstellung.
@@ -863,6 +876,8 @@
     }
   };
 
+  // Run one menu item as a tap does (tests: the volume step counts from the level at the tap, #194).
+  H.act = function (id, it) { return act(id, it); };
   H.close = function (refocus) {
     if (!host || !cur) return;
     var was = cur;

@@ -275,29 +275,19 @@
     }
     return DATA.fc[key] || [];
   };
-  // The calendars that count: visible ones, not the Workday integration's (as under the greeting, #157).
-  // only: one calendar, or the ones picked in the Studio (casora_screensaver_calendars); none picked (or none of them
-  // left) = all that count.
+  // The calendars that count: only: one calendar, or the ones picked for the screensaver (casora_screensaver_calendars);
+  // none picked (or none of them left) = the ones that count on the calendar tile and under the greeting
+  // (window.casoraCalendars, V26), without those shown only in the popup (tile: false).
   S.calendars = function (hass, only) {
-    var R = (hass && hass.entities) || {}, S0 = (hass && hass.states) || {};
+    var S0 = (hass && hass.states) || {};
     if (typeof only === 'string' && only && S0[only]) return [only];
     if (Array.isArray(only) && only.length) {
       var mine = only.map(String).filter(function (id) { return id.indexOf('calendar.') === 0 && S0[id]; });
       if (mine.length) return mine.slice(0, 8);
     }
-    // No pick of its own: the calendars picked under Settings › Home & devices › Calendars, as on the calendar tile
-    // and under the greeting (#189); one shown only in the popup (tile: false) is left out.
-    var own = null;
-    try { own = window.casoraSettings ? window.casoraSettings().calendars : null; } catch (e) { own = null; }
-    if (Array.isArray(own) && own.length) {
-      var set = own.map(function (c) { return typeof c === 'string' ? c : c && c.tile !== false && c.entity; })
-        .filter(function (id) { return id && String(id).indexOf('calendar.') === 0 && S0[id]; });
-      if (set.length) return set.slice(0, 8);
-    }
-    return Object.keys(S0).filter(function (id) {
-      var e = R[id];
-      return id.indexOf('calendar.') === 0 && !(e && (e.hidden || e.disabled_by || e.platform === 'workday'));
-    }).sort().slice(0, 8);
+    var all = window.casoraCalendars ? window.casoraCalendars(hass, null) : [];
+    return all.filter(function (c) { return c.tile !== false && S0[c.entity]; })
+      .map(function (c) { return c.entity; }).slice(0, 8);
   };
   // Events of the coming days from Home Assistant's calendar API: [{ title, start, end, allDay }] sorted by start.
   // from: the first day asked for (the month calendar starts with the week of the 1st); default today.
