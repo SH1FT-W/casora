@@ -24,10 +24,22 @@ def events_for_range(events, export_date, today, start, end, local_tz=None):
         if local_tz is not None and isinstance(item["start"], datetime):
             duration = (item["end"].astimezone(timezone.utc)
                         - item["start"].astimezone(timezone.utc))
-            item["start"] = item["start"].replace(tzinfo=local_tz)
+            original_offset = item["start"].utcoffset()
+            first = item["start"].replace(tzinfo=local_tz, fold=0)
+            second = first.replace(fold=1)
+            # Round-trip through UTC: a nonexistent spring time moves forward.
+            normalized = first.astimezone(timezone.utc).astimezone(local_tz)
+            if normalized.replace(tzinfo=None) != first.replace(tzinfo=None):
+                item["start"] = normalized
+            elif second.utcoffset() != first.utcoffset() and second.utcoffset() == original_offset:
+                item["start"] = second
+            else:
+                item["start"] = first
             item["end"] = (item["start"].astimezone(timezone.utc) + duration).astimezone(local_tz)
         def instant(value):
-            return value if isinstance(value, datetime) else datetime.combine(value, time.min, local_tz or start.tzinfo)
-        if instant(item["start"]) < end and instant(item["end"]) > start:
+            if not isinstance(value, datetime):
+                value = datetime.combine(value, time.min, local_tz or start.tzinfo)
+            return value.astimezone(timezone.utc)
+        if instant(item["start"]) < instant(end) and instant(item["end"]) > instant(start):
             result.append(item)
     return sorted(result, key=lambda event: instant(event["start"]))

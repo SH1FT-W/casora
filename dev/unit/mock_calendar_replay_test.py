@@ -13,6 +13,53 @@ spec.loader.exec_module(replay)
 
 
 class CalendarReplayTest(unittest.TestCase):
+    def test_repeated_hour_events_sort_by_instant_and_keep_elapsed_duration(self):
+        zone = ZoneInfo("Europe/Amsterdam")
+        events = [
+            {"summary": "later", "start": "2026-10-25T02:10:00+01:00",
+             "end": "2026-10-25T02:30:00+01:00"},
+            {"summary": "earlier", "start": "2026-10-25T02:50:00+02:00",
+             "end": "2026-10-25T02:20:00+01:00"},
+        ]
+        result = replay.events_for_range(
+            events, date(2026, 10, 25), date(2026, 10, 25),
+            datetime(2026, 10, 25, tzinfo=timezone.utc),
+            datetime(2026, 10, 26, tzinfo=timezone.utc), local_tz=zone)
+        self.assertEqual([event["summary"] for event in result], ["earlier", "later"])
+        self.assertEqual(result[0]["end"].isoformat(), "2026-10-25T02:20:00+01:00")
+
+    def test_query_in_second_fold_does_not_overlap_first_fold_event(self):
+        zone = ZoneInfo("Europe/Amsterdam")
+        events = [{"summary": "Naam-ABCDEF", "start": "2026-10-25T02:30:00+02:00",
+                   "end": "2026-10-25T02:45:00+02:00"}]
+        result = replay.events_for_range(
+            events, date(2026, 10, 25), date(2026, 10, 25),
+            datetime(2026, 10, 25, 2, 0, tzinfo=zone, fold=1),
+            datetime(2026, 10, 25, 3, 0, tzinfo=zone), local_tz=zone)
+        self.assertEqual(result, [])
+
+    def test_spring_gap_moves_forward_and_keeps_elapsed_duration(self):
+        zone = ZoneInfo("Europe/Amsterdam")
+        events = [{"summary": "Naam-ABCDEF", "start": "2026-03-22T02:30:00+01:00",
+                   "end": "2026-03-22T03:30:00+01:00"}]
+        result = replay.events_for_range(
+            events, date(2026, 3, 22), date(2026, 3, 29),
+            datetime(2026, 3, 29, tzinfo=timezone.utc),
+            datetime(2026, 3, 30, tzinfo=timezone.utc), local_tz=zone)
+        self.assertEqual(result[0]["start"].isoformat(), "2026-03-29T03:30:00+02:00")
+        self.assertEqual(result[0]["end"].isoformat(), "2026-03-29T04:30:00+02:00")
+
+    def test_replay_preserves_second_occurrence_of_repeated_local_time(self):
+        zone = ZoneInfo("Europe/Amsterdam")
+        events = [{"summary": "Naam-ABCDEF", "start": "2026-10-25T02:30:00+01:00",
+                   "end": "2026-10-25T02:45:00+01:00"}]
+        result = replay.events_for_range(
+            events, date(2026, 10, 25), date(2026, 10, 25),
+            datetime(2026, 10, 25, tzinfo=timezone.utc),
+            datetime(2026, 10, 26, tzinfo=timezone.utc), local_tz=zone)
+        self.assertEqual(result[0]["start"].isoformat(), "2026-10-25T02:30:00+01:00")
+        self.assertEqual(result[0]["end"].isoformat(), "2026-10-25T02:45:00+01:00")
+
     def test_all_day_overlap_uses_local_midnights_for_utc_query(self):
         events = [{"summary": "Naam-ABCDEF", "start": "2026-11-09", "end": "2026-11-10"}]
         zone = ZoneInfo("Europe/Amsterdam")
