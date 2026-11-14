@@ -5196,6 +5196,7 @@ window.casoraMenuGlass = {
     set hass(hass) {
       this._hass = hass;
       if (!this._built) return;
+      this._syncNames();
       this._syncBadges();
       if (this._menu) this._menu._refresh && this._menu._refresh();
     }
@@ -5310,6 +5311,7 @@ window.casoraMenuGlass = {
       this._fill = fill;
 
       this._bar       = bar;
+      bar.classList.toggle('homeicon', !!this._homeIcon);
       this._scroller  = scroller;
       scroller.addEventListener('scroll', () => this._syncFade(), { passive: true });
       // per-01 (10.10.2026): Mausrad (senkrecht) blättert die Leiste waagerecht – sonst kamen
@@ -5378,6 +5380,7 @@ window.casoraMenuGlass = {
           label.appendChild(hic);
           label.appendChild(htx);
           btn.setAttribute('aria-label', htx.textContent);
+          if (this._homeIcon) btn.title = htx.textContent;
         }
         btn.appendChild(label);
 
@@ -5562,8 +5565,35 @@ window.casoraMenuGlass = {
         { duration: 560, easing: 'ease-out' });
     }
 
+    // "Show names" of the dashboard (Studio, Look & feel › Room bar; variable nav_names on the room views): "rooms" =
+    // Home only as its house circle, always (the tight state does the same, but only when the row is very narrow).
+    // Read from the dashboard's config whenever it is a new object (saved in the Studio), at most once a second.
+    _syncNames(force) {
+      const now = Date.now();
+      if (!force && now - (this._namesAt || 0) < 1000) return;
+      this._namesAt = now;
+      const hr = huiRoot();
+      const cfg = hr && hr.lovelace && hr.lovelace.config;
+      if (!cfg || cfg === this._namesCfg) return;
+      this._namesCfg = cfg;
+      this._setHomeIcon(navNamesOf(cfg) === 'rooms');
+    }
+
+    _setHomeIcon(on) {
+      on = !!on;
+      if (on === !!this._homeIcon) return;
+      this._homeIcon = on;
+      if (!this._built || !this._bar) return;
+      this._bar.classList.toggle('homeicon', on);
+      const home = this._bar.querySelector('.route.home');
+      const htx = home && home.querySelector('.htx');
+      if (home) { if (on && htx) home.title = htx.textContent; else home.removeAttribute('title'); }
+      if (this._pagedMode) this._queueLayout(); else this._placeIndicator(true);
+    }
+
     _syncRoute() {
       if (!this._built) return;
+      this._syncNames(true);
       const path = normalize(location.pathname);
       this._path = path;
 
@@ -6388,8 +6418,9 @@ window.casoraMenuGlass = {
           .bar.paged .rooms { flex: 1 1 auto; }
           .rooms { justify-content: center; }
           .bar.paged .rooms { justify-content: flex-start; }
-          .bar.tight .route.home .htx { display: none; }
-          .bar.tight .route.home .label { padding-right: calc((var(--casora-nav-pill-height-tablet, 46px)
+          /* tight: very narrow row (set in _layout); homeicon: "Show names: Without Home text" (nav_names). */
+          :is(.bar.tight, .bar.homeicon) .route.home .htx { display: none; }
+          :is(.bar.tight, .bar.homeicon) .route.home .label { padding-right: calc((var(--casora-nav-pill-height-tablet, 46px)
               - 2 * var(--casora-nav-pill-inset-y-tablet, 4px) - 30px) / 2); gap: 0; }
           .rooms .route { margin-left: 0 !important; }
           .route[hidden] { display: none; }
@@ -6525,6 +6556,18 @@ window.casoraMenuGlass = {
 
   customElements.define('casora-nav-bar', CasoraNavBar);
 
+  // nav_names of a dashboard config: the first room view whose hero card (cards[0], casora_room) sets it, like
+  // swipe_rooms. Anything but "rooms" counts as the default (every name shown).
+  function navNamesOf(cfg) {
+    const views = (cfg && cfg.views) || [];
+    for (const v of views) {
+      const hero = ((v || {}).cards || [])[0];
+      const x = hero && hero.variables && hero.variables.nav_names;
+      if (x !== undefined && x !== null && x !== '') return x === 'rooms' ? 'rooms' : '';
+    }
+    return '';
+  }
+
   function walkFind(root, selector, out, depth) {
     if (!root || depth > 20 || !root.querySelectorAll) return;
     root.querySelectorAll(selector).forEach((el) => out.push(el));
@@ -6599,10 +6642,12 @@ window.casoraMenuGlass = {
 
       if (!bar) {
         bar = document.createElement('casora-nav-bar');
+        bar._syncNames(true);
         bar.setConfig(this._config);
         CasoraNav._bar = bar;
       } else {
         bar.updateConfig(this._config);
+        bar._syncNames(true);
       }
 
       const host = persistentHost();
@@ -15461,24 +15506,87 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     announce();
   }
   // „Alle entfernen“ lässt sich 10 s lang zurücknehmen (14.10.2026: Glocke war versehentlich leer).
+  // Variant 3A (14.11.2026): the undo sits in the bell itself (title, „Rückgängig“, a 10 s bar), no HA toast:
+  // on the phone the toast covered the bell and the bar. _undo holds what to restore until the time runs out.
+  var UNDO_MS = 10000;
+  var _undo = null;
+  function undoTick() {
+    var m = _menu && _menu._redraw;
+    if (m) m();
+  }
   function hideAll() {
     var prevHid = { all: _hid.all, rows: Object.assign({}, _hid.rows), uid: _hid.uid };
+    if (_undo) clearTimeout(_undo.timer);
     _hid = { all: Math.max(Date.now(), _rows.reduce(function (m, r) { return Math.max(m, r.when || 0); }, 0)), rows: {}, uid: _hid.uid };
     saveHidden();
     rebuild();
     announce();
-    var h = ha();
-    if (!h) return;
-    var T = window.casoraTr || function (x) { return x; };
-    var nev = new Event('hass-notification', { bubbles: true, composed: true });
-    nev.detail = { message: T('Alle Meldungen entfernt'), duration: 10000, dismissable: true,
-      action: { text: T('Rückgängig'), action: function () {
-        _hid = prevHid;
-        saveHidden();
-        rebuild();
-        announce();
-      } } };
-    h.dispatchEvent(nev);
+    var u = { prev: prevHid, until: Date.now() + UNDO_MS };
+    u.timer = setTimeout(function () { if (_undo === u) { _undo = null; undoTick(); } }, UNDO_MS);
+    _undo = u;
+  }
+  function undoAll() {
+    var u = _undo;
+    if (!u) return false;
+    clearTimeout(u.timer);
+    _undo = null;
+    _hid = u.prev;
+    saveHidden();
+    rebuild();
+    announce();
+    return true;
+  }
+  // The undo state in place of „Nichts Neues“; the bar runs down from what is left of the 10 s.
+  function undoHtml() {
+    var UI = window._casoraUI;
+    var FONT = (UI && UI.tokens && UI.tokens.font) || 'var(--primary-font-family, system-ui)';
+    var INK3 = (UI && UI.tokens && UI.tokens.ink3) || 'var(--secondary-text-color)';
+    var ACC = 'var(--casora-accent, var(--primary-color, #B67A50))';
+    var left = Math.max(0, _undo ? _undo.until - Date.now() : 0);
+    var frac = Math.min(1, left / UNDO_MS);
+    return '<div class="casora-notify-undo" style="font-family:' + FONT + ';text-align:center;padding:26px 16px 22px;">'
+      + '<div role="status" aria-live="polite">'
+      + '<div style="font-size:15px;font-weight:600;letter-spacing:-0.01em;color:var(--casora-popup-tiles-text-primary, var(--primary-text-color));">Alle Meldungen entfernt</div>'
+      + '<div style="margin-top:3px;font-size:13px;color:' + INK3 + ';">Nichts Neues</div></div>'
+      + '<button type="button" class="casora-notify-undo-btn" data-casora-nodismiss style="all:unset;box-sizing:border-box;cursor:pointer;'
+      + 'display:inline-flex;align-items:center;justify-content:center;gap:8px;margin-top:16px;min-height:44px;padding:0 20px;'
+      + 'border-radius:var(--casora-r-pill, 999px);background:color-mix(in srgb, ' + ACC + ' 14%, transparent);color:' + ACC + ';'
+      + 'font:600 15px/1 ' + FONT + ';letter-spacing:-0.01em;">'
+      + '<svg viewBox="0 0 24 24" aria-hidden="true" style="width:18px;height:18px;flex:none;" fill="currentColor">'
+      + '<path d="M13.5 7A6.5 6.5 0 0 1 20 13.5 6.5 6.5 0 0 1 13.5 20H10v-2h3.5a4.5 4.5 0 0 0 4.5-4.5A4.5 4.5 0 0 0 13.5 9H7.83l3.08 3.09L9.5 13.5 4 8l5.5-5.5 1.42 1.41L7.83 7z"/></svg>'
+      + '<span>Rückgängig</span></button>'
+      + '<div aria-hidden="true" style="margin:16px auto 0;width:min(70%, 240px);height:3px;border-radius:2px;overflow:hidden;'
+      + 'background:color-mix(in srgb, var(--casora-popup-tiles-text-primary, var(--primary-text-color)) 12%, transparent);">'
+      + '<div class="casora-notify-undo-bar" data-left="' + Math.round(left) + '" style="height:100%;border-radius:inherit;background:' + ACC + ';'
+      + 'transform-origin:left center;transform:scaleX(' + frac.toFixed(4) + ');"></div></div>'
+      + '</div>';
+  }
+  // Starts the bar's run-down (CSS transition) and binds the button; reduced motion: the bar stands still.
+  function bindUndo(body, after) {
+    var b = body.querySelector('.casora-notify-undo-btn');
+    if (b && !document.getElementById('casora-notify-undo-style')) {
+      var st = document.createElement('style');
+      st.id = 'casora-notify-undo-style';
+      st.textContent = '.casora-notify-undo-btn:focus-visible{outline:2px solid currentColor;outline-offset:2px;}'
+        + '.casora-notify-undo-btn{transition:transform var(--casora-dur-feedback,160ms) var(--casora-ease-feedback,ease);}'
+        + '.casora-notify-undo-btn:active{transform:scale(var(--casora-press-scale,.97));}';
+      (document.head || document.documentElement).appendChild(st);
+    }
+    if (b) b.addEventListener('click', function (e) {
+      e.preventDefault(); e.stopPropagation();
+      if (undoAll()) { window.casoraHaptic && window.casoraHaptic('light'); after(); }
+    });
+    var bar = body.querySelector('.casora-notify-undo-bar');
+    if (!bar) return;
+    var still = false;
+    try { still = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { /* runs */ }
+    if (still) return;
+    var left = +bar.getAttribute('data-left') || 0;
+    // Two frames: the starting width must be painted before the transition begins.
+    requestAnimationFrame(function () { requestAnimationFrame(function () {
+      bar.style.transition = 'transform ' + left + 'ms linear';
+      bar.style.transform = 'scaleX(0)';
+    }); });
   }
 
   function nameOf(st) {
@@ -17667,8 +17775,9 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       ask.then(function (ok) {
         menu._keep = false;
         if (!ok) return;
+        // The bell stays open and offers the undo in place (3A).
         hideAll();
-        menu._close();
+        if (_menu === menu) menu._redraw(); else if (!_menu) open(anchor);
       });
     };
     head.appendChild(wipe);
@@ -17691,7 +17800,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       head.style.alignItems = 'center';
       head.style.padding = '6px calc(var(--casora-popup-row-pad-x, 16px) + 8px) 0';
     }
-    if (!win && (unread() || softBell || _rows.length)) inner.appendChild(head);
+    if (!win && (unread() || softBell || _rows.length || _undo)) inner.appendChild(head);
 
     var body = document.createElement('div');
     Object.assign(body.style, {
@@ -17740,9 +17849,10 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     if (!unread()) body.style.paddingTop = 'var(--casora-notify-pad-solo-top, 0px)';
     if (win) body.style.padding = '8px';
     body.style.boxSizing = 'border-box';
-    body.innerHTML = (window.casoraTr || function (x) { return x; })(sections());
+    var listHtml = function () { return (window.casoraTr || function (x) { return x; })(_undo && !_rows.length ? undoHtml() : sections()); };
+    body.innerHTML = listHtml();
     inner.appendChild(body);
-    if (win && (unread() || _rows.length)) {
+    if (win && (unread() || _rows.length || _undo)) {
       // Fenster-Gestaltung: „Alles gelesen“ und „Alle entfernen“ als Pillen nebeneinander unter der Liste.
       var acts = document.createElement('div');
       acts.className = 'casora-notify-acts';
@@ -17770,16 +17880,22 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       // nach oben – sonst schwebte es nach dem Entfernen über der Leiste (1.4.1).
       var mr = menu.getBoundingClientRect();
       var upward = mr.top < r.top;
-      body.innerHTML = (window.casoraTr || function (x) { return x; })(sections());
+      body.innerHTML = listHtml();
       paint(body);
       swipeRows(body, redraw);
+      bindUndo(body, redraw);
       fade();
-      if (!_rows.length) { wipe.style.display = 'none'; clear.style.display = 'none'; }
-      else if (!unread()) clear.style.display = 'none';
+      // After „Rückgängig“ the list is back: so are the buttons (each in the display it was given above).
+      wipe.style.display = _rows.length ? wipeShow : 'none';
+      clear.style.display = _rows.length && unread() ? clearShow : 'none';
       if (upward) menu.style.top = Math.round(mr.bottom - menu.offsetHeight) + 'px';
     };
+    var wipeShow = win ? '' : (softBell ? 'inline-flex' : 'block');
+    var clearShow = wipeShow;
     swipeRows(body, redraw);
+    bindUndo(body, redraw);
     body._casoraRedraw = redraw;
+    menu._redraw = redraw;
 
     var w = menu.offsetWidth;
     menu.style.top = GLASS.dropTop(r, 10) + 'px';

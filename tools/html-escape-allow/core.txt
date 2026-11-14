@@ -25,7 +25,6 @@ custom_components/casora/scripts/casora-core.js | cols | CSS grid template from 
 custom_components/casora/scripts/casora-core.js | live.replace(' data-casora-invert="1"', '') | live attributes built with esc() | 1
 custom_components/casora/scripts/casora-core.js | (o.body || '') | kiCard body is ready markup by contract; callers (02-devices, 03-popups, 05-standard-medien) build it from escaped parts | 1
 custom_components/casora/scripts/casora-core.js | (o.btnSvc || '') | kiCard btnSvc is a ready data attribute built by the caller with esc() | 1
-custom_components/casora/scripts/casora-core.js | (window.casoraTr || function (x) { return x; })(sections()) | sections() builds the notification list with UI.group(), which escapes every text | 2
 custom_components/casora/scripts/casora-chart.js | n._casoraOrig | restores the innerHTML this card saved from the same node before | 1
 custom_components/casora/scripts/layout-card-modified.js | re:. | vendored layout-card (lit-html internals and CSS for :host), no Casora values in HTML | 4
 custom_components/casora/scripts/casora-core.js | re:^(?:stCls|stFill|stLive|code|body|tiles|pm\('(?:minus|plus)', -?1\))$ | UI.stage/UI.quick (popup v3): class names and numbers from code, markup built from esc()'d parts | 8

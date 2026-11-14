@@ -2551,6 +2551,13 @@ const SECTIONS = [
       { key: "swipe_rooms", sub: "chrome", label: "Swipe between rooms", type: "bool",
         boolDefault: false, auto: true, scope: "dashboard",
         hint: "On a phone or tablet, swipe left or right on Home or an open room to get to the next or previous room, in the order of the room menu." },
+      // Room bar on desktop and tablet (casora-nav-bar, casora-core.js): "" = every name (default), "rooms" = Home only
+      // as its round house icon, the rooms keep their names. Read from the room views like swipe_rooms. The phone's
+      // bottom bar is not affected. Drawn as its own block "Room bar" under Settings › Look & feel.
+      { key: "nav_names", sub: "chrome", label: "Show names", type: "select", seg: true, auto: true, scope: "dashboard",
+        options: ["", "rooms"],
+        optionLabels: { "": "All", rooms: "Without Home text" },
+        hint: "Without the text, one more room fits in the bar." },
       // Screensaver for wall tablets (scripts/local/46-screensaver.js). Off until a dashboard turns it on; the kind
       // "" shows one after the other. Drawn on the Studio's Screensaver page with a preview (casora-panel-settings.js).
       { key: "casora_screensaver", sub: "chrome", label: "Start the screensaver", type: "select", auto: true, scope: "dashboard",
@@ -10375,6 +10382,15 @@ class CasoraPanel extends HTMLElement {
         .mini-tabs.clipped.cl-l .mini-strip { --fl:8%; }
         .mini-tabs.clipped.cl-r .mini-strip { --fr:8%; }
         .mini-tab.home { flex:none; }
+        /* Home as a house in a circle (nav_names "rooms"), like .route.home .hic on the dashboard. */
+        .mini-tab.home.homeicon { padding:0; width:var(--nav-label-h, 1.7em); height:var(--nav-label-h, 1.7em);
+          justify-content:center; border-radius:50%; box-shadow:none; }
+        .mini-tab.home.homeicon::before {
+          content:""; width:62%; height:62%; background:currentColor;
+          -webkit-mask:var(--house) center/contain no-repeat; mask:var(--house) center/contain no-repeat;
+          --house:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3l8 6v12h-5v-7H9v7H4V9z'/%3E%3C/svg%3E");
+        }
+        .mini-tab.home.homeicon.on { background:var(--primary-color, #B67A50); color:#fff; opacity:1; }
         .mini-tabsep { flex:none; align-self:center; width:1px; height:1.1em; background:currentColor; opacity:.25; }
         .mini-cap, .mini-capsep { display:none; }
         .capsule .mini-cap {
@@ -11502,6 +11518,10 @@ class CasoraPanel extends HTMLElement {
         /* Liste mit Chips (z. B. Kameras): das Minus gehört ans Ende, neben das Eingabefeld,
            nicht mittig zwischen Chip und Feld. */
         .row:has(> .chipwrap) > .drop { align-self:end !important; margin-bottom:8px; }
+        /* A section field drawn as segments (seg: true): label above, the segments across the full width. */
+        .row.segrow { grid-template-columns:minmax(0,1fr); row-gap:10px; }
+        .row.segrow > label, .row.segrow > .seg { grid-column:1 / -1; }
+        .row.segrow > .drop.blank { display:none; }
         .row:hover .drop { opacity:1; }
         .row .drop:hover { background:var(--casora-studio-danger, #ff453a); color:#fff; opacity:1; filter:none; }
         .row:first-of-type { border-top:0; }
@@ -19577,6 +19597,34 @@ class CasoraPanel extends HTMLElement {
           return;
         }
 
+        // A few fixed choices as segments (seg: true): one tap, all choices visible; "" is the default.
+        if (f.type === "select" && f.seg) {
+          const seg = document.createElement("div");
+          seg.className = "seg fieldseg";
+          seg.setAttribute("role", "group");
+          seg.setAttribute("aria-label", f.label);
+          seg.appendChild(document.createElement("span")).className = "segthumb";
+          (f.options || []).forEach((o) => {
+            const b = document.createElement("button");
+            b.type = "button";
+            b.className = "segopt";
+            b.dataset.v = o;
+            b.textContent = (f.optionLabels && f.optionLabels[o]) || o;
+            seg.appendChild(b);
+          });
+          const now = String(cur);
+          this._wireSeg(seg, "v", (f.options || []).includes(now) ? now : "", (v) => {
+            setVar(f.key, v || undefined, f);
+            filled(f);
+            if (f.reveals) this._renderForm();
+          });
+          row.classList.add("segrow");
+          row.appendChild(seg);
+          addDrop(row, f);
+          fs.appendChild(row);
+          addHint();
+          return;
+        }
         if (f.type === "select") {
           const c = this._combo(String(cur), f.options, "",
             (v) => { setVar(f.key, v, f); filled(f); if (f.reveals) this._renderForm(); },
@@ -27156,6 +27204,12 @@ class CasoraPanel extends HTMLElement {
           this._renderTabs();
           this._renderForm();
         };
+      }
+      // "Show names: Without Home text" (nav_names): Home as its round house icon, as on the dashboard.
+      if (homeFixed && ri === 0 && V.nav_names === "rooms") {
+        t.classList.add("homeicon");
+        t.setAttribute("aria-label", t.textContent);
+        t.textContent = "";
       }
       if (homeFixed && ri === 0) {
         tabs.insertBefore(t, strip);
