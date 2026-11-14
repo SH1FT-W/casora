@@ -5196,6 +5196,7 @@ window.casoraMenuGlass = {
     set hass(hass) {
       this._hass = hass;
       if (!this._built) return;
+      this._syncNames();
       this._syncBadges();
       if (this._menu) this._menu._refresh && this._menu._refresh();
     }
@@ -5310,6 +5311,7 @@ window.casoraMenuGlass = {
       this._fill = fill;
 
       this._bar       = bar;
+      bar.classList.toggle('homeicon', !!this._homeIcon);
       this._scroller  = scroller;
       scroller.addEventListener('scroll', () => this._syncFade(), { passive: true });
       // per-01 (10.10.2026): Mausrad (senkrecht) blättert die Leiste waagerecht – sonst kamen
@@ -5378,6 +5380,7 @@ window.casoraMenuGlass = {
           label.appendChild(hic);
           label.appendChild(htx);
           btn.setAttribute('aria-label', htx.textContent);
+          if (this._homeIcon) btn.title = htx.textContent;
         }
         btn.appendChild(label);
 
@@ -5562,8 +5565,35 @@ window.casoraMenuGlass = {
         { duration: 560, easing: 'ease-out' });
     }
 
+    // "Show names" of the dashboard (Studio, Look & feel › Room bar; variable nav_names on the room views): "rooms" =
+    // Home only as its house circle, always (the tight state does the same, but only when the row is very narrow).
+    // Read from the dashboard's config whenever it is a new object (saved in the Studio), at most once a second.
+    _syncNames(force) {
+      const now = Date.now();
+      if (!force && now - (this._namesAt || 0) < 1000) return;
+      this._namesAt = now;
+      const hr = huiRoot();
+      const cfg = hr && hr.lovelace && hr.lovelace.config;
+      if (!cfg || cfg === this._namesCfg) return;
+      this._namesCfg = cfg;
+      this._setHomeIcon(navNamesOf(cfg) === 'rooms');
+    }
+
+    _setHomeIcon(on) {
+      on = !!on;
+      if (on === !!this._homeIcon) return;
+      this._homeIcon = on;
+      if (!this._built || !this._bar) return;
+      this._bar.classList.toggle('homeicon', on);
+      const home = this._bar.querySelector('.route.home');
+      const htx = home && home.querySelector('.htx');
+      if (home) { if (on && htx) home.title = htx.textContent; else home.removeAttribute('title'); }
+      if (this._pagedMode) this._queueLayout(); else this._placeIndicator(true);
+    }
+
     _syncRoute() {
       if (!this._built) return;
+      this._syncNames(true);
       const path = normalize(location.pathname);
       this._path = path;
 
@@ -6388,8 +6418,9 @@ window.casoraMenuGlass = {
           .bar.paged .rooms { flex: 1 1 auto; }
           .rooms { justify-content: center; }
           .bar.paged .rooms { justify-content: flex-start; }
-          .bar.tight .route.home .htx { display: none; }
-          .bar.tight .route.home .label { padding-right: calc((var(--casora-nav-pill-height-tablet, 46px)
+          /* tight: very narrow row (set in _layout); homeicon: "Show names: Without Home text" (nav_names). */
+          :is(.bar.tight, .bar.homeicon) .route.home .htx { display: none; }
+          :is(.bar.tight, .bar.homeicon) .route.home .label { padding-right: calc((var(--casora-nav-pill-height-tablet, 46px)
               - 2 * var(--casora-nav-pill-inset-y-tablet, 4px) - 30px) / 2); gap: 0; }
           .rooms .route { margin-left: 0 !important; }
           .route[hidden] { display: none; }
@@ -6525,6 +6556,18 @@ window.casoraMenuGlass = {
 
   customElements.define('casora-nav-bar', CasoraNavBar);
 
+  // nav_names of a dashboard config: the first room view whose hero card (cards[0], casora_room) sets it, like
+  // swipe_rooms. Anything but "rooms" counts as the default (every name shown).
+  function navNamesOf(cfg) {
+    const views = (cfg && cfg.views) || [];
+    for (const v of views) {
+      const hero = ((v || {}).cards || [])[0];
+      const x = hero && hero.variables && hero.variables.nav_names;
+      if (x !== undefined && x !== null && x !== '') return x === 'rooms' ? 'rooms' : '';
+    }
+    return '';
+  }
+
   function walkFind(root, selector, out, depth) {
     if (!root || depth > 20 || !root.querySelectorAll) return;
     root.querySelectorAll(selector).forEach((el) => out.push(el));
@@ -6599,10 +6642,12 @@ window.casoraMenuGlass = {
 
       if (!bar) {
         bar = document.createElement('casora-nav-bar');
+        bar._syncNames(true);
         bar.setConfig(this._config);
         CasoraNav._bar = bar;
       } else {
         bar.updateConfig(this._config);
+        bar._syncNames(true);
       }
 
       const host = persistentHost();

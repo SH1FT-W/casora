@@ -52,6 +52,10 @@
       blocks: [
         { k: "design", page: "design", title: "Design", plain: "Pick how all Casora dashboards look.",
           kw: "design theme thema farben farbe hintergrund dunkel hell glas nebel aussehen look colors" },
+        // The room bar at the top (desktop and tablet): one field of Controls › Screen, shown as a block of its own.
+        { k: "navbar", sec: "General", sub: "chrome", keys: ["nav_names"], title: "Room bar",
+          plain: "The bar at the top with Home and your rooms, on desktop and tablet.",
+          kw: "raumleiste leiste navigation räume namen zuhause haus symbol text room bar names home icon" },
         { k: "time", sec: "Time", title: "Clock", plain: "Show the clock at the top left, as 12 or 24 hours.",
           kw: "uhr uhrzeit zeit 12 stunden 24 clock time zeitsensor suffix" },
         { k: "font", sec: "General", sub: "text", title: "Font", plain: "The typeface of this dashboard, or a font you bring yourself.",
