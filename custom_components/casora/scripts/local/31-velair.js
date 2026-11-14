@@ -665,7 +665,7 @@
       var mn3 = function () { return V.sec('quick', id, states, hass, el, sensor); };
       if (bad(st.state) || st.state === 'off' || t3 == null) {
         // Short caption: the wheel's top is narrow on a phone („Zieltemper…“, review 2 DH-08).
-        return UI.stage('value', { caption: 'Ziel', label: 'Zieltemperatur', value: t3 != null ? t3 : '–', unit: t3 != null ? unit3 : '',
+        return UI.stage('value', { caption: 'Zielwert', label: 'Zieltemperatur', value: t3 != null ? t3 : '–', unit: t3 != null ? unit3 : '',
           state: bad(st.state) ? 'na' : 'off', foot: foot3, heat: true, current: rt3, min: L3.lo, max: L3.hi, moons: mn3 });
       }
       var pm3 = function (dir) {
@@ -673,7 +673,7 @@
         return { svc: { domain: 'climate', service: 'set_temperature', data: { temperature: v }, target: tgt3 },
           step: step3, min: L3.lo, max: L3.hi, dis: dir < 0 ? t3 <= L3.lo : t3 >= L3.hi };
       };
-      return UI.stage('value', { caption: 'Ziel', label: 'Zieltemperatur', value: t3, unit: unit3, minus: pm3(-1), plus: pm3(1), foot: foot3,
+      return UI.stage('value', { caption: 'Zielwert', label: 'Zieltemperatur', value: t3, unit: unit3, minus: pm3(-1), plus: pm3(1), foot: foot3,
         heat: true, current: rt3, moons: mn3 });
     }
     if (part === 'rows') {
