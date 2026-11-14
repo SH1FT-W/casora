@@ -52,7 +52,7 @@
   };
   var calOf = function (cals, id) { for (var i = 0; i < cals.length; i++) if (cals[i].entity === id) return cals[i]; return { entity: id, name: id, color: '#8E8E93' }; };
 
-  // The calendar popup keeps every event; only Home and screensavers use this filter.
+  // The calendar popup keeps every event; Home, the screensavers and the Agenda tile use this filter.
   K.allowsTitle = function (title) {
     var settings = window.casoraSettings ? window.casoraSettings() : {};
     var text = String(title || '').toLowerCase();
