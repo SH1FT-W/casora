@@ -56,16 +56,19 @@ const deskState = (pg) => pg.evaluate((KIND) => {
   const g = window.__pierce('button-card').find((b) => [].concat((b._config || {}).template || []).includes('casora_badge_security_group')
     && b.getBoundingClientRect().width > 0);
   // Kind from the item's words (aria-label / text): „2 Fenster offen“, „Schloss offline“ …
-  const sub = g ? [...g.shadowRoot.querySelectorAll('.cs-sum-item')].map((x) => {
+  const items = g ? [...g.shadowRoot.querySelectorAll('.cs-sum-item')].map((x) => {
     const w = (x.getAttribute('aria-label') || x.textContent || '');
     const hit = Object.keys(KIND).find((re) => new RegExp(re, 'i').test(w));
-    return hit ? KIND[hit] : w;
+    // Rank of the finding as casoraSecLead has it: jammed, open (also „Alarm aus“), tilted, offline.
+    const rank = /klemm/i.test(w) ? 0 : /offen|Alarm aus/i.test(w) ? 1 : /gekippt/i.test(w) ? 2 : /offline/i.test(w) ? 3 : 4;
+    return { kind: hit ? KIND[hit] : w, rank, lead: x.classList.contains('cs-sum-lead') };
   }) : [];
+  const sub = items.map((x) => x.kind);
   const field = window.__pierce('#badges_security')[0];
   const row = field ? window.__pierce('button-card', field).filter((b) => {
     const hc = b.shadowRoot && b.shadowRoot.querySelector('ha-card'); return hc && getComputedStyle(hc).display !== 'none';
   }).map((b) => window.casoraSecSub.keyOfCard(b._config, document.querySelector('home-assistant').hass.states)) : [];
-  return { sub: sub.filter((k, i, a) => a.indexOf(k) === i), row };
+  return { sub: sub.filter((k, i, a) => a.indexOf(k) === i), row, items };
 }, KIND);
 const openRow = async (pg) => {
   await pg.evaluate(() => document.querySelector('home-assistant').hass.callService('input_select', 'select_option',
@@ -228,7 +231,16 @@ await openRow(page);
 const after = await deskState(page);
 const follows = (got) => JSON.stringify(got) === JSON.stringify(want.filter((k) => got.includes(k)));
 await check('desktop: sub-row follows the order', follows(after.row) && JSON.stringify(after.row) !== JSON.stringify(before.row), { before: before.row, after: after.row, want });
-await check('desktop: sub-line follows the order', follows(after.sub), { before: before.sub, after: after.sub, want });
+// Owner (13.11.2026): with several findings the most important one leads in words (rank: jammed, open, tilted,
+// offline; within a rank the Studio's order), the icons after it follow the Studio's order.
+const lead = after.items[0] || {};
+const top = Math.min(...after.items.map((x) => x.rank));
+const leadWant = after.items.filter((x) => x.rank === top).map((x) => x.kind)
+  .sort((a, b) => (want.indexOf(a) < 0 ? 99 : want.indexOf(a)) - (want.indexOf(b) < 0 ? 99 : want.indexOf(b)))[0];
+const rest = after.items.slice(1).map((x) => x.kind).filter((k, i, a) => a.indexOf(k) === i);
+await check('desktop: sub-line leads with the most important finding (rank, then the order)',
+  after.items.length >= 2 && lead.lead && lead.rank === top && lead.kind === leadWant, { items: after.items, want });
+await check('desktop: sub-line icons after the lead follow the order', follows(rest), { before: before.sub, after: after.sub, rest, want });
 await keep(page, 'nachher_desktop_badge', await headClip(page));
 await shot('desktop_after');
 

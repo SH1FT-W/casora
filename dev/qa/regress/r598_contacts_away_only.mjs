@@ -59,10 +59,20 @@ const look = () => {
   const counted = window.casoraHouseContacts ? window.casoraHouseContacts(hass) : null;
   if (!b) return { badge: null, counted };
   const sub = b.shadowRoot && b.shadowRoot.querySelector('.badge-sub');
-  return { badge: sub ? sub.textContent.replace(/\s+/g, ' ').trim() : '', counted };
+  // Each finding's words: the short form's items (lead in words, the rest icons with an aria-label), else the line in
+  // words („Fenster offen“, „Tür offen · Kamera offline“).
+  const vis = sub ? [...sub.querySelectorAll('.cs-sum-item')].filter((x) => x.getClientRects().length) : [];
+  const items = vis.length ? vis.map((x) => (x.getAttribute('aria-label') || x.textContent).replace(/\s+/g, ' ').trim())
+    : (sub ? sub.textContent.replace(/\s+/g, ' ').trim().split(' · ') : []);
+  return { badge: sub ? sub.textContent.replace(/\s+/g, ' ').trim() : '', items, counted };
 };
-// The summary reads „N offen“ (plus icons): count what it says is open.
-const openN = (v) => { const m = /(\d+) offen/.exec((v && v.badge) || ''); return m ? Number(m[1]) : 0; };
+// Owner (13.11.2026): several findings show the most important one in words and the rest as icons, no „N offen“ any
+// more (casoraSecuritySummary). Count what the findings say is open or tilted: „2 Fenster offen“ = 2, „Tür offen“ = 1.
+const openN = (v) => ((v && v.items) || []).reduce((n, t) => {
+  if (!/\b(offen|gekippt)\b/.test(t)) return n;
+  const m = /^(\d+) /.exec(t);
+  return n + (m ? Number(m[1]) : 1);
+}, 0);
 // The window's popup: tap the „Fenster“ sub-badge of the security row, as a person would.
 const SUB = (word) => {
   const b = window.__pierce('button-card').find((x) => [].concat((x._config || {}).template || []).includes('casora_badge_contact_group')
