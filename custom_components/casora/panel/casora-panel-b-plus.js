@@ -475,12 +475,42 @@
         void el.offsetWidth;
       }
       el.classList.add("on");
+      this._bToastLift();
       clearTimeout(this._bToastT);
       // Mit Knopf („Rückgängig“, „Jetzt speichern“) mindestens 12 s – Nutzertest 7: der zweite Tipp
       // ging ins Leere, weil die Meldung schon weg war.
       el.dataset.long = o.action || canSave ? "1" : "";
       if (o.kind !== "err") this._bToastLater(o.action || canSave ? Math.max(o.ms || 0, 12000) : o.ms || (o.big ? 4200 : 2600));
     };
+    // The settings bar (".cs-bar", "Save settings") sits at the bottom like the toast: the toast covered its
+    // button, a tap on "Save settings" hit the toast (gate 14.11.2026, rb15). While the bar shows, the toast
+    // stands just above it; otherwise at its usual place.
+    P._bToastLift = function () {
+      const root = this.shadowRoot;
+      const el = root && root.querySelector(".btoast");
+      if (!el) return;
+      el.style.bottom = "";
+      if (!el.classList.contains("on")) return;
+      const t = el.getBoundingClientRect();
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      let top = Infinity;
+      root.querySelectorAll(".cs-bar:not(.cs-clean)").forEach((b) => {
+        const r = b.getBoundingClientRect();
+        if (!r.width || !r.height || r.bottom <= 0 || r.top >= vh) return;
+        // The bar slides in (translateY): measure where it comes to rest.
+        let dy = 0;
+        try { const m = new DOMMatrixReadOnly(getComputedStyle(b).transform); dy = m.m42 || 0; } catch (e) { dy = 0; }
+        const rt = r.top - dy, rb = r.bottom - dy;
+        if (r.left < t.right && t.left < r.right && rt < t.bottom && t.top < rb) top = Math.min(top, rt);
+      });
+      if (top < Infinity) el.style.bottom = Math.round(vh - top + 8) + "px";
+    };
+    // The bar appears or goes with the first or last unsaved setting – also while a toast is showing.
+    wrap("_csBar", (orig) => function () {
+      const r = orig.apply(this, arguments);
+      try { this._bToastLift(); } catch (e) { console.warn("Casora Studio:", e); }
+      return r;
+    });
     P._bToastLater = function (ms) {
       clearTimeout(this._bToastT);
       this._bToastT = setTimeout(() => this._bToastHide(), ms);
@@ -561,8 +591,14 @@
     });
 
     wrap("_load", (orig) => async function () {
+      // A load that starts while an earlier one winds down (the Studio's own start load, then another dashboard
+      // right after): the earlier load's timer must not clear the flag of the running one, or its reconcile
+      // was reported as an edit ("Room added: …" with Undo, gate 14.11.2026, rb15).
+      const n = this._bLoadN = (this._bLoadN || 0) + 1;
       this._bLoading = true;
-      try { return await orig.apply(this, arguments); } finally { setTimeout(() => { this._bLoading = false; }, 600); }
+      try { return await orig.apply(this, arguments); } finally {
+        setTimeout(() => { if (this._bLoadN === n) this._bLoading = false; }, 600);
+      }
     });
 
     P._bChanged = function (snap) {
