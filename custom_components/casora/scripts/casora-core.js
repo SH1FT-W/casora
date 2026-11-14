@@ -10249,10 +10249,27 @@ window.casoraMenuGlass = {
   // Auch eine feste Farbe (var(…)/#…), z. B. Schrift-Rot --casora-color-red-text für „Läuft“ (Frigate, 4,9 : 1).
   function alertTone(t) { return (t === 'warn' || t === 'bad') ? tone(t) : (typeof t === 'string' && /^(var\(|#)/.test(t) ? t : null); }
 
+  // Names people chose (a scene „Guten Morgen“, an update's name) inside a sentence stay as written (V24, owner
+  // 14.11.2026): o.lit lists them; each whole occurrence in the text (never in a tag or attribute) gets
+  // <span data-no-i18n>, so casora-i18n translates „Zuletzt … vor 49 T.“ around it but not the name.
+  function litWrap(html, names) {
+    var ns = (Array.isArray(names) ? names : [names]).filter(function (n) { return n != null && String(n).trim(); })
+      .map(function (n) { return esc(String(n).trim()); }).sort(function (a, b) { return b.length - a.length; });
+    if (!ns.length) return html;
+    var re = new RegExp('(^|[\\s(„“"])(' + ns.map(function (n) { return n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }).join('|')
+      + ')(?=$|[\\s.,;:!?)“"])', 'g');
+    var inStyle = false;
+    return String(html).split(/(<(?:[^>"']|"[^"]*"|'[^']*')*>)/).map(function (p) {
+      if (p.charAt(0) === '<') { inStyle = /^<style\b/i.test(p) || (inStyle && !/^<\/style/i.test(p)); return p; }
+      return inStyle ? p : p.replace(re, function (m, a, b) { return a + '<span data-no-i18n>' + b + '</span>'; });
+    }).join('');
+  }
+
   // Statuszeile: Zustand fett und dunkel, Rest gedämpft, dicht unter dem Titel.
-  // rest: Texte oder { text, tone } (Ton nur für Warnung/Fehler).
+  // rest: Texte oder { text, tone } (Ton nur für Warnung/Fehler). o.lit: Namen, die nicht übersetzt werden (litWrap).
   function softLine(main, rest, o) {
     o = o || {};
+    if (o.lit) return litWrap(softLine(main, rest, Object.assign({}, o, { lit: null })), o.lit);
     var bits = (Array.isArray(rest) ? rest : [rest]).filter(function (x) {
       return x != null && x !== '' && !(typeof x === 'object' && !x.text);
     });
@@ -10452,6 +10469,7 @@ window.casoraMenuGlass = {
 
   function hero(o) {
     o = o || {};
+    if (o.lit) return litWrap(hero(Object.assign({}, o, { lit: null })), o.lit);
     if (o.center && !o.compact && soft()) return softHero(o);
     if (o.compact) {
       var cInk = tone(o.subTone);
@@ -14528,7 +14546,7 @@ window.casoraMenuGlass = {
       + '>' + tiles + '</div></div>';
   }
 
-  window._casoraUI = { line: softLine, hero: hero, headline: headline, group: group, popupNames: popupNames, legend: legend, note: note, kiCard: kiCard, shelf: shelf, mediaRow: mediaRow, segments: segments, slider: slider, icon: icon, iconFill: iconFill, esc: esc, prime: prime, plantWater: plantWater, soft: soft, label: softLabel, tokens: T, v: 149 };
+  window._casoraUI = { line: softLine, hero: hero, lit: litWrap, headline: headline, group: group, popupNames: popupNames, legend: legend, note: note, kiCard: kiCard, shelf: shelf, mediaRow: mediaRow, segments: segments, slider: slider, icon: icon, iconFill: iconFill, esc: esc, prime: prime, plantWater: plantWater, soft: soft, label: softLabel, tokens: T, v: 149 };
   window._casoraUI.more = more;
   Object.assign(window._casoraUI, { section: section, row: row, settingsRow: settingsRow, settings: settings, actions: actions,
     empty: empty, width: width, switchHtml: switchHtml, page: page, SEC_ORDER: SEC_ORDER, WIDTH: WIDTH,

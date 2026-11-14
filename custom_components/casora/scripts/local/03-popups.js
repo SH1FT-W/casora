@@ -3895,7 +3895,8 @@
   // ── KI-Fazit bzw. letztes Update für die Statuskarte ──
   var lastLine = function (states) {
     var u = H.list && H.list[0];
-    return u ? 'Zuletzt ' + esc(nameOf(states, u.id)) + ' ' + agoMs(u.t) : '';
+    // The update's name stays as written (V24): only „Zuletzt … gestern“ around it is translated.
+    return u ? 'Zuletzt <span data-no-i18n>' + esc(nameOf(states, u.id)) + '</span> ' + agoMs(u.t) : '';
   };
   X.ov = function (states, hass, pend) {
     pend = pend || Object.keys(states).filter(function (id) { return id.indexOf('update.') === 0 && states[id].state === 'on'; });
@@ -5174,7 +5175,7 @@
       left += '<div class="lps-lbl' + (left ? ' lps-gap' : '') + '">' + esc(tr('Szenen')) + '</div>'
         + '<div class="lps-chips" style="margin-top:0">' + sc2.map(function (id) {
         return '<div class="lps-chip' + (id === last ? ' on' : '') + '" role="button" tabindex="0" data-lps-tap="' + attr({ a: 'scene', id: id }) + '">'
-          + esc(short(nameOf(id, states), room)) + '</div>';
+          + '<span data-no-i18n>' + esc(short(nameOf(id, states), room)) + '</span></div>';
       }).join('') + '</div>';
     }
     var lampList = sc.room ? S.keepOrder(sc.room.filter(function (id) { return states[id]; }), sc) : ids;
