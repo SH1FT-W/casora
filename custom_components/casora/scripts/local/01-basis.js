@@ -1871,6 +1871,15 @@ window._casoraColGap = window._casoraColGap || function (keys) {
         .map(function (p) { return p[0]; });
     };
     var top = function (states, ids) { var l = list(states, ids); return l.length ? l[0].level : 0; };
+    // The sensors a weather warning tile reads: its entity and its „Warnungs-Sensoren“ together, without doubles
+    // (#196: a filled list replaced the entity, so the tile's own warning went missing).
+    var sources = function (entityId, sensors) {
+      var out = [];
+      [].concat(entityId || [], Array.isArray(sensors) ? sensors : []).forEach(function (id) {
+        if (typeof id === 'string' && id && out.indexOf(id) < 0) out.push(id);
+      });
+      return out;
+    };
     // Warning area: DWD region_name, the region attribute of a combined integration, else nothing.
     var region = function (st) { var a = attrs(st); return str(a.region_name || a.region) || null; };
     // Kind of warning for the bell: a DWD event name ("SCHWERE STURMBÖEN" → "Schwere Sturmböen"), else the headline's
@@ -1889,8 +1898,8 @@ window._casoraColGap = window._casoraColGap || function (keys) {
         return /^\s+$/.test(p) || (i && SMALL.test(p)) ? p : p.charAt(0).toUpperCase() + p.slice(1);
       }).join('');
     };
-    return { list: list, of: of, top: top, active: active, isLevelSensor: isLevelSensor, isAdvance: isAdvance, level: level,
-      severity: severity, region: region, kind: kind };
+    return { list: list, of: of, top: top, sources: sources, active: active, isLevelSensor: isLevelSensor,
+      isAdvance: isAdvance, level: level, severity: severity, region: region, kind: kind };
   })();
 
   function cfg() {
