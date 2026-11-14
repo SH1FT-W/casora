@@ -1742,7 +1742,6 @@
     "The rooms stay empty – you add tiles yourself in the Studio.": "Pokoje pozostają puste – kafelki dodasz sam w Studio.",
     "AI setup needs a stronger AI – for example Claude Opus, Claude Sonnet 4.5 or GPT-5. Settings → AI tasks.": "Konfiguracja z AI wymaga silniejszej AI – np. Claude Opus, Claude Sonnet 4.5 lub GPT-5. Ustawienia → Zadania AI.",
     "AI setup needs an AI – for example Claude Opus. Settings → AI tasks.": "Konfiguracja z AI wymaga AI – np. Claude Opus. Ustawienia → Zadania AI.",
-    "Already have an assistant connected to Home Assistant over MCP? It can read the action casora.setup_overview and sort your devices into areas.": "Masz już asystenta połączonego z Home Assistant przez MCP? Może odczytać akcję casora.setup_overview i przypisać urządzenia do obszarów.",
     "How it works": "Jak to działa",
     "This is what Casora puts in. Tap a tile to leave it out – you can change everything later.": "To właśnie doda Casora. Dotknij kafelka, aby go pominąć – wszystko możesz zmienić później.",
     "AI is sorting your devices…": "AI sortuje twoje urządzenia…",
@@ -3118,7 +3117,8 @@
     "The tile only shows": "Kafelek tylko pokazuje",
     "view only": "tylko podgląd",
     "It only shows, nothing switches.": "Tylko pokazuje, nic się nie przełącza.",
-    "{room} has no area in Home Assistant, so Casora has nothing to suggest here. Search for a device above, or give an area in Home Assistant the name {room}.": "{room} nie ma obszaru w Home Assistant, więc Casora nie ma tu nic do zaproponowania. Wyszukaj urządzenie powyżej albo nadaj obszarowi w Home Assistant nazwę {room}."
+    "{room} has no area in Home Assistant, so Casora has nothing to suggest here. Search for a device above, or give an area in Home Assistant the name {room}.": "{room} nie ma obszaru w Home Assistant, więc Casora nie ma tu nic do zaproponowania. Wyszukaj urządzenie powyżej albo nadaj obszarowi w Home Assistant nazwę {room}.",
+    "Already have an assistant connected to Home Assistant over MCP? It can sort your devices into areas.": "Masz już asystenta połączonego z Home Assistant przez MCP? Może przypisać twoje urządzenia do obszarów."
   },
   "patterns": [
     [

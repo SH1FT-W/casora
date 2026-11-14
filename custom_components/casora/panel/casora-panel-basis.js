@@ -1046,6 +1046,8 @@
         + ".bs-foot{margin:14px 4px 0;font-size:var(--t-foot);line-height:1.45;color:var(--ink-3,rgba(255,255,255,.5));text-align:center}"
         + ".bs-foot.ai{color:#c77dff}"
         + ".bs-mcp a{color:inherit;text-decoration:underline}"
+        + ".bs-mcp summary{cursor:pointer;width:max-content;margin:0 auto 4px;list-style:none;text-decoration:underline;text-underline-offset:2px}"
+        + ".bs-mcp summary::-webkit-details-marker{display:none}.bs-mcp[open] summary{text-decoration:none}"
         + ":host(.is-light) .bs-item:hover:not(:disabled){background:rgba(0,0,0,.04)}"
         + ":host(.is-light) .bs-foot.ai{color:var(--casora-studio-ai, #8944ab)}";
       root.appendChild(st);
@@ -1094,8 +1096,10 @@
         window.casoraAiUpgrade(this, s.body, (b) => { best = b; aiCard.removeAttribute("aria-disabled"); showBest(); });
         // No ai_task at all: an assistant the user already has can do the setup through an MCP server (issue 131).
         if (noAiTask || mcpMode) {
-          const mcp = el("div", "bs-foot bs-mcp", s.body);
-          el("span", "", mcp, "Already have an assistant connected to Home Assistant over MCP? It can read the action casora.setup_overview and sort your devices into areas.");
+          // Behind "More" (V21): for a newcomer the MCP line drew the eye away from "Continue"; the action's name is in the guide.
+          const mcp = el("details", "bs-foot bs-mcp", s.body);
+          el("summary", "", mcp, "More");
+          el("span", "", mcp, "Already have an assistant connected to Home Assistant over MCP? It can sort your devices into areas.");
           mcp.appendChild(document.createTextNode(" "));
           const a = el("a", "", mcp, "How it works");
           a.href = "https://github.com/SH1FT-W/casora/blob/main/docs/guide.md#set-up-with-your-own-assistant-over-mcp";

@@ -144,6 +144,16 @@ const SRC = read('custom_components/casora/panel/casora-panel.js');
   console.log('ok setup: steps counted from the first screen');
 }
 
+// ── V21: "Fill Your Rooms" keeps the MCP note behind "More", without the action's technical name ──
+{
+  const B = read('custom_components/casora/panel/casora-panel-basis.js');
+  const i = B.indexOf('P._fillStep = async function (o) {');
+  const body = B.slice(i, B.indexOf('P._fillPreview = async function', i));
+  assert.ok(!body.includes('casora.setup_overview'), 'no action name on the screen');
+  assert.ok(/const mcp = el\("details", "bs-foot bs-mcp", s\.body\);\s*\n\s*el\("summary", "", mcp, "More"\);/.test(body), 'MCP note folded behind "More"');
+  console.log('ok setup: MCP note behind More');
+}
+
 // ── E22 in the YAML import: the name comes first and the screen still gets its Import button ─────────
 // (The import review moved its name group before an undefined "head": a ReferenceError left the screen
 // without name field and button – t07 found it.)
