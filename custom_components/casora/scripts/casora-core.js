@@ -1349,6 +1349,58 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
 })();
 // casora-cam-status:end
 
+// casora-offline:start
+// Offline tile (V2, 14.11.2026): a device that is unavailable looked exactly like „Aus“. casora_entity's state
+// casora_offline asks this helper; the tile then shows the warning colour, a dashed rim and „Offline · seit 2 Std.“.
+// Offline: the tile's entity is unavailable; unknown only for device domains (a scene, a button or a sensor without a
+// value yet is not a lost device); a camera also when its status entity says so (casoraCamOffline). Casora's own
+// entities never count. Returns { since: ms | null } or null.
+(function () {
+  if (window.casoraTileOffline) return;
+  var UNKNOWN_IS_OFFLINE = /^(light|switch|fan|cover|climate|lock|media_player|vacuum|lawn_mower|camera|humidifier|water_heater|valve|alarm_control_panel|siren|remote)\./;
+  var since = function (e) {
+    if (!e) return null;
+    if (typeof window.casoraSinceMs === 'function') return window.casoraSinceMs(e);
+    var t = Date.parse(e.last_changed || '');
+    return isFinite(t) ? t : null;
+  };
+  window.casoraTileOffline = function (entity, states, vars) {
+    var id = String((entity && entity.entity_id) || '');
+    if (!/^[a-z_]+\.[a-z0-9_]+$/.test(id) || /\.casora_/.test(id)) return null;
+    var s = String(entity.state == null ? '' : entity.state).toLowerCase();
+    if (s === 'unavailable' || (s === 'unknown' && UNKNOWN_IS_OFFLINE.test(id))) return { since: since(entity) };
+    if (id.indexOf('camera.') === 0 && typeof window.casoraCamOffline === 'function' && window.casoraCamOffline(id, states, vars)) {
+      var sid = window.casoraCamStatusOf ? window.casoraCamStatusOf(id, vars) : null;
+      return { since: since(sid && states ? states[sid] : null) };
+    }
+    return null;
+  };
+  // „seit 5 Min.“, „seit 3 Std.“, „seit 1 Tag“, „seit 2 Tagen“; under a minute „gerade eben“ (casoraAgoMin).
+  window.casoraSinceWord = function (ms) {
+    var d = Date.now() - Number(ms);
+    var m = typeof window.casoraAgoMin === 'function' ? window.casoraAgoMin(d) : Math.max(0, Math.round(d / 60000));
+    if (m < 1) return 'gerade eben';
+    if (m < 60) return 'seit ' + m + ' Min.';
+    var h = Math.round(m / 60);
+    if (h < 24) return 'seit ' + h + ' Std.';
+    var days = Math.round(h / 24);
+    return 'seit ' + days + (days === 1 ? ' Tag' : ' Tagen');
+  };
+  // The tile's state line: „Offline · seit 2 Std.“ (ticks every minute, casora-ago), where it does not fit only „Offline“.
+  window.casoraOfflineHtml = function (info) {
+    var at = info && info.since != null && isFinite(info.since) ? Math.round(info.since) : null;
+    if (at == null) return 'Offline';
+    var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+    var fullHtml = '<casora-ago data-since="' + at.toFixed(0) + '" data-pre="Offline ·" data-form="since">Offline · '
+      + esc(window.casoraSinceWord(at)) + '</casora-ago>';
+    return '<casora-statefit data-casora-clip style="display:inline-block;vertical-align:top;max-width:calc(100cqi - '
+      + 'var(--casora-tile-state-inset, 0px));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'
+      + '<span class="sf-f">' + fullHtml + '</span><span class="sf-s" style="display:none;max-width:100%">'
+      + '<span style="min-width:0;overflow:hidden;text-overflow:ellipsis">Offline</span></span></casora-statefit>';
+  };
+})();
+// casora-offline:end
+
 // casora-cam-still:start
 // Kamera „Standbild von: …“ (09.10.2026, 1.2.1): woher das Standbild der Kamera-Kachel kommt.
 // Manche Kameras liefern ihr Standbild über die Hauptkamera langsam (Reolink E1 Zoom 2–10 s), haben
@@ -6361,6 +6413,12 @@ window.casoraMenuGlass = {
           .bar.paged:not(.more-l-on) .scroller .more-l { opacity: 0; visibility: hidden;
             transition: opacity var(--casora-dur-feedback, 160ms) var(--casora-ease-feedback, ease), visibility 0s linear var(--casora-dur-feedback, 160ms); }
           .scroller .more:focus-visible { outline: 2px solid var(--casora-nav-focus-line, currentColor); outline-offset: 1px; }
+          /* Touch (V1, 14.11.2026): the 30 px arrows reach 44 to a finger through an invisible rim; the look stays. */
+          @media (pointer: coarse) {
+            .bar.paged .scroller .more::after { content: ""; position: absolute; inset: -7px; border-radius: 50%; }
+            /* The bar ends 4 px after the right arrow: its rim reaches further in instead. */
+            .bar.paged .scroller .more-r::after { left: -10px; right: -4px; }
+          }
         `;
       }
 
@@ -17444,7 +17502,10 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         +   'font:600 var(--casora-fs-sub,13px)/16px var(--primary-font-family, system-ui);letter-spacing:-0.01em;'
         +   'color:var(--casora-popup-tiles-text-primary, var(--primary-text-color));'
         +   'transition:transform var(--casora-dur-feedback,160ms) var(--casora-ease-feedback,ease);}'
-        + W + '.casora-notify-read:active{transform:scale(var(--casora-press-scale,.97));}';
+        + W + '.casora-notify-read:active{transform:scale(var(--casora-press-scale,.97));}'
+        /* Touch (V1, 14.11.2026): the pills are 32 high; an invisible rim makes them 44 to a finger, the look stays. */
+        + '@media (pointer:coarse){' + W + '.casora-notify-read{position:relative;}'
+        +   W + '.casora-notify-read::before{content:"";position:absolute;inset:-6px 0;border-radius:inherit;}}';
       (document.head || document.documentElement).appendChild(wst);
     }
 
@@ -18307,7 +18368,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         clearTimeout(this._t);
         var ms = Number(this.dataset.since);
         if (!isFinite(ms) || typeof window.casoraAgo !== 'function') return;
-        var de = (this.dataset.pre ? this.dataset.pre + ' ' : '') + window.casoraAgo(ms);
+        var rel = this.dataset.form === 'since' && typeof window.casoraSinceWord === 'function' ? window.casoraSinceWord(ms) : window.casoraAgo(ms);
+        var de = (this.dataset.pre ? this.dataset.pre + ' ' : '') + rel;
         var t = typeof window.casoraTr === 'function' ? window.casoraTr(de) : de;
         if (this.textContent !== t) {
           this.textContent = t;

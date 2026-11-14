@@ -1862,6 +1862,12 @@ class CasoraSmartRow extends HTMLElement {
       }
       #dots > button.on::before { width: 16px; opacity: 0.8; }
       #dots > button.on { width: 26px; }
+      /* Touch (V1, 14.11.2026): each dot is a 44 px target. The height grows invisibly past the row's bottom
+         padding; the width cannot without overlapping the neighbour, so the dots sit 44 apart on touch. */
+      @media (pointer: coarse) {
+        #dots { gap: 0; }
+        #dots > button, #dots > button.on { width: 44px; height: 44px; margin: -2px 0; }
+      }
       /* Variante „more“: Reihe blättert nicht frei, ausgeblendete Kacheln fehlen ganz. */
       :host([casora-row-mode="more"]) { overflow-x: hidden; scroll-snap-type: none; }
       .card-wrapper[data-casora-page-off] { display: none !important; }
