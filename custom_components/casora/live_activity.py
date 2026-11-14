@@ -938,6 +938,9 @@ class LiveActivity:
         if self._unsub_states:
             self._unsub_states()
             self._unsub_states = None
+        if not self.loaded:
+            # Stopped (reload/removal): a rescan still pending from this instance must not subscribe again.
+            return
         by_entity: dict[str, str] = {}
         for f in self.found:
             if self.enabled(f.device_id):

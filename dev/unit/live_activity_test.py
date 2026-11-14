@@ -999,5 +999,30 @@ S.clear(); S.update(_vorher)
 
 asyncio.run(flow())
 
+
+# After stop() (reload): a rescan still pending from the old instance must not subscribe to states again,
+# else its tracker stays until HA restarts.
+def _stopped_subscribe():
+    import homeassistant.helpers.event as ev
+
+    made: list = []
+    real = ev.async_track_state_change_event
+    ev.async_track_state_change_event = lambda hass, ids, cb: made.append(ids) or (lambda: None)
+    try:
+        L9, _ = make([washer()])
+        L9._subscribe = la.LiveActivity._subscribe.__get__(L9)
+        L9.cfg = {"targets": ["notify.mobile_app_handy"], "devices": {}}
+        L9.loaded = True
+        L9._subscribe()
+        check("läuft: Zustände abonniert", len(made) == 1, made)
+        L9.stop()
+        L9._subscribe()
+        check("nach stop(): kein neues Abo der alten Instanz", len(made) == 1 and L9._unsub_states is None, made)
+    finally:
+        ev.async_track_state_change_event = real
+
+
+_stopped_subscribe()
+
 print("\nALLES OK" if not fails else f"\n{len(fails)} FEHLER")
 sys.exit(1 if fails else 0)
