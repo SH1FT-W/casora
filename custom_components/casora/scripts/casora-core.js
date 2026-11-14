@@ -7715,7 +7715,11 @@ window.casoraMenuGlass = {
     var C = inkOn.c || (inkOn.c = { at: 0, m: {} });
     if (Date.now() - C.at > 2000) { C.m = {}; C.at = Date.now(); }
     if (C.m[key]) return C.m[key];
-    var see = true;
+    var see = true, rgbSeen = null;
+    var relLum = function (rgb) {
+      var g = function (c) { c = Number(c) / 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+      return 0.2126 * g(rgb[0]) + 0.7152 * g(rgb[1]) + 0.0722 * g(rgb[2]);
+    };
     var lum = function (col) {
       var h = /#([0-9a-f]{6}|[0-9a-f]{3})\b/i.exec(col || ''), rgb;
       if (h) { var x = h[1].length === 3 ? h[1].replace(/./g, '$&$&') : h[1]; rgb = [0, 2, 4].map(function (i) { return parseInt(x.substr(i, 2), 16); }); }
@@ -7729,8 +7733,8 @@ window.casoraMenuGlass = {
         if (m[4] != null && Number(m[4]) < 0.5) { see = false; return null; }
         rgb = [m[1], m[2], m[3]];
       }
-      var g = function (c) { c = Number(c) / 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
-      return 0.2126 * g(rgb[0]) + 0.7152 * g(rgb[1]) + 0.0722 * g(rgb[2]);
+      rgbSeen = rgb.map(Number);
+      return relLum(rgbSeen);
     };
     // The colour as the browser resolves it where the popup's tokens live; else the fallback written in the fill.
     var L = null;
@@ -7744,7 +7748,18 @@ window.casoraMenuGlass = {
       pr.remove();
     } catch (e) { L = null; }
     if (L == null && see) L = lum(f);
-    var out = !see ? 'var(--casora-soft-glyph-off, rgba(58,50,43,.7))' : L != null && 1.05 / (L + 0.05) < need ? dark : white;
+    // White unless it misses the contrast; then the dark glyph – but only where the dark one does better. When neither
+    // reaches it (mid red, sand), the better of the two wins instead of always the dark one.
+    var useDark = false;
+    if (L != null && 1.05 / (L + 0.05) < need) {
+      useDark = true;
+      if (rgbSeen) {
+        var Ld = relLum([0, 1, 2].map(function (n) { return [46, 34, 20][n] * 0.88 + rgbSeen[n] * 0.12; }));
+        var cd = (L + 0.05) / (Ld + 0.05);
+        if (cd < need && cd < 1.05 / (L + 0.05)) useDark = false;
+      }
+    }
+    var out = !see ? 'var(--casora-soft-glyph-off, rgba(58,50,43,.7))' : useDark ? dark : white;
     C.m[key] = out;
     return out;
   }
