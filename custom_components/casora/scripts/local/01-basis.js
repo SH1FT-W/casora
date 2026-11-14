@@ -1880,6 +1880,9 @@ window._casoraColGap = window._casoraColGap || function (keys) {
       });
       return out;
     };
+    // A warning slot of „Wetter & Warnungen“ (platform wetter, translation_key warning: binary_sensor
+    // „Warnung 1…5“, NINA's attributes, ids without the NINA prefix; #196). reg = hass.entities[id].
+    var isSlot = function (reg) { return !!reg && reg.platform === 'wetter' && reg.translation_key === 'warning'; };
     // Warning area: DWD region_name, the region attribute of a combined integration, else nothing.
     var region = function (st) { var a = attrs(st); return str(a.region_name || a.region) || null; };
     // Kind of warning for the bell: a DWD event name ("SCHWERE STURMBÖEN" → "Schwere Sturmböen"), else the headline's
@@ -1898,7 +1901,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
         return /^\s+$/.test(p) || (i && SMALL.test(p)) ? p : p.charAt(0).toUpperCase() + p.slice(1);
       }).join('');
     };
-    return { list: list, of: of, top: top, sources: sources, active: active, isLevelSensor: isLevelSensor,
+    return { list: list, of: of, top: top, sources: sources, isSlot: isSlot, active: active, isLevelSensor: isLevelSensor,
       isAdvance: isAdvance, level: level, severity: severity, region: region, kind: kind };
   })();
 
@@ -1933,12 +1936,18 @@ window._casoraColGap = window._casoraColGap || function (keys) {
   }
   window._casoraPickedWarnings = pickedWarnings;
 
-  // A warning source: the NINA/Meteoalarm prefix from the settings or a DWD level sensor (any name); with a weather
-  // warning tile on the dashboard only the source(s) it shows.
+  // A warning source: the NINA/Meteoalarm prefix from the settings, a DWD level sensor (any name), a warning slot of
+  // „Wetter & Warnungen“ or any sensor picked in a weather warning tile (#196: those kept HA's generic
+  // „Sicherheitswarnung“ row); isWarning: with a weather warning tile on the dashboard only the source(s) it shows.
+  var _hass = null;
   function isWarnSource(id, st) {
     var p = cfg().warn_prefix;
+    var reg = _hass && _hass.entities && _hass.entities[id];
+    var picked = pickedWarnings();
     return (!!p && id.indexOf(p) === 0)
-      || (window.casoraWarnings.isLevelSensor(st, id) && !window.casoraWarnings.isAdvance(st, id));
+      || (window.casoraWarnings.isLevelSensor(st, id) && !window.casoraWarnings.isAdvance(st, id))
+      || window.casoraWarnings.isSlot(reg)
+      || (!!picked && picked.indexOf(id) > -1);
   }
   function isWarning(id, st) {
     if (!isWarnSource(id, st)) return false;
@@ -2003,6 +2012,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
   var ext = {
     // Verlauf: welche Entitäten aus dem Logbuch gelesen werden.
     watch: function (hass) {
+      _hass = hass;
       var c = cfg();
       var out = [];
       Object.keys(hass.states).forEach(function (id) {
@@ -2065,6 +2075,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     // Live-Zeilen: NINA mit Details statt generischer "Sicherheitswarnung",
     // dazu Müllabfuhr heute/morgen.
     standing: function (hass, rows, api) {
+      _hass = hass;
       var c = cfg();
       var S = hass.states;
       rows = fixBattery(hass, rows, api, c);
