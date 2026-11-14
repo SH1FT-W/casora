@@ -3225,31 +3225,31 @@
       "« {1} Mobile » ajouté. Ouvre-le via « Choisir un tableau de bord »."
     ],
     [
-      "^(-?[\\d.]+°) · Cooling$",
+      "^(-?[\\d.,]+°) · Cooling$",
       "{1} · Refroidit"
     ],
     [
-      "^(-?[\\d.]+°) · Heating$",
+      "^(-?[\\d.,]+°) · Heating$",
       "{1} · Chauffe"
     ],
     [
-      "^(-?[\\d.]+°) · Off$",
+      "^(-?[\\d.,]+°) · Off$",
       "{1} · Éteint"
     ],
     [
-      "^(-?[\\d.]+°) · Ready$",
+      "^(-?[\\d.,]+°) · Ready$",
       "{1} · Prêt"
     ],
     [
-      "^(-?[\\d.]+°) · Automatic$",
+      "^(-?[\\d.,]+°) · Automatic$",
       "{1} · Auto"
     ],
     [
-      "^(-?[\\d.]+°) · Heating to (.+)$",
+      "^(-?[\\d.,]+°) · Heating to (.+)$",
       "{1} · Chauffe à {2}"
     ],
     [
-      "^(-?[\\d.]+°) · Cooling to (.+)$",
+      "^(-?[\\d.,]+°) · Cooling to (.+)$",
       "{1} · Refroidit à {2}"
     ],
     [

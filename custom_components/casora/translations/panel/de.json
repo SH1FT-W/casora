@@ -1850,7 +1850,7 @@
     "Clear and calm. Casora's standard.": "Klar und ruhig. Casoras Standard.",
     "A little rounder and friendlier.": "Etwas runder und freundlicher.",
     "SF Pro on Apple devices, the device's own elsewhere.": "SF Pro auf Apple-Geräten, sonst die Schrift des Geräts.",
-    "2 on": "2 An",
+    "2 on": "2 an",
     "Show when": "Anzeigen, wenn",
     "All conditions met": "Alle Bedingungen erfüllt",
     "Any condition met": "Eine davon erfüllt",
@@ -3225,31 +3225,31 @@
       "„{1} Mobile“ hinzugefügt. Öffnen über „Dashboard wählen“."
     ],
     [
-      "^(-?[\\d.]+°) · Cooling$",
+      "^(-?[\\d.,]+°) · Cooling$",
       "{1} · Kühlt"
     ],
     [
-      "^(-?[\\d.]+°) · Heating$",
+      "^(-?[\\d.,]+°) · Heating$",
       "{1} · Heizt"
     ],
     [
-      "^(-?[\\d.]+°) · Off$",
+      "^(-?[\\d.,]+°) · Off$",
       "{1} · Aus"
     ],
     [
-      "^(-?[\\d.]+°) · Ready$",
+      "^(-?[\\d.,]+°) · Ready$",
       "{1} · Bereit"
     ],
     [
-      "^(-?[\\d.]+°) · Automatic$",
+      "^(-?[\\d.,]+°) · Automatic$",
       "{1} · Automatik"
     ],
     [
-      "^(-?[\\d.]+°) · Heating to (.+)$",
+      "^(-?[\\d.,]+°) · Heating to (.+)$",
       "{1} · Heizt auf {2}"
     ],
     [
-      "^(-?[\\d.]+°) · Cooling to (.+)$",
+      "^(-?[\\d.,]+°) · Cooling to (.+)$",
       "{1} · Kühlt auf {2}"
     ],
     [

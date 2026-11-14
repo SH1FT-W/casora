@@ -6707,8 +6707,11 @@ const tileStateWord = (kind, tile, ent, states, hass) => {
       const rt = !V.temp_sensor && window.casoraRoomTempOf ? window.casoraRoomTempOf(ent.entity_id, states || {}) : null;
       const ct = parseFloat((ent.attributes || {}).current_temperature);
       const alt = rt != null ? rt : !V.temp_sensor && mode !== "unavailable" && Number.isFinite(ct) ? Math.round(ct * 10) / 10 : null;
+      // In the user's locale like the dashboard („21,4°“, not „21.4°“; design audit 14.11.2026).
+      const deg = (x) => (window.casoraNum ? window.casoraNum(Math.round(x * 10) / 10, 0, 1)
+        : (Math.round(x * 10) / 10).toLocaleString(window.casoraLocale ? window.casoraLocale() : "de-DE", { maximumFractionDigits: 1 })) + "° · ";
       const room = Number.isFinite(v) && (sa.device_class === "temperature" || /°|^K$/.test(String(sa.unit_of_measurement || "")))
-        ? Math.round(v * 10) / 10 + "° · " : alt != null ? alt + "° · " : "";
+        ? deg(v) : alt != null ? deg(alt) : "";
       // Same calm words as casora_thermostat: room · state, no target (owner, 02.11.2026).
       const act = (typeof window.casoraClimateActive === "function" && window.casoraClimateActive(ent)) || {};
       const action = (ent.attributes || {}).hvac_action;
