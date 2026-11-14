@@ -186,7 +186,12 @@ Kern-Integrationen (Schlüssel im Test geprüft):
   `…_warnung_1`), nach Schwere sortiert (Platz 1 = schwerste), Attribute wie NINA bis HA 2026.10 (`severity`,
   `headline`, `description`, `event`, `sent`, `expires`, immer `region`). Die Glocke zählt sie als Warnquelle
   (`01-basis.js` `casoraWarnings.isSlot`, `isWarnSource`; `00-finder.js` `notifySources`); ebenso jeden Sensor, der in
-  einer Wetterwarnungs-Kachel eingetragen ist. Test `dev/unit/bell_warning_slots.mjs`.
+  einer Wetterwarnungs-Kachel eingetragen ist. Test `dev/unit/bell_warning_slots.mjs`. Die übrigen Plätze eines
+  Geräts holt die Kachel selbst (Kachel, Popup, Glocke, Glocken-Ziel): Frontend-Entitäts-Registry `hass.entities[id]`
+  mit `device_id`, `platform`, `translation_key`; gleiches Gerät, gleiche Plattform, gleicher `translation_key`, nur
+  `binary_sensor` (andere Sensoren des Geräts bleiben draußen; ohne `device_id`/`translation_key` nichts dazu)
+  (`01-basis.js` `casoraWarnings.siblings`/`sources`, `pickedSources`; `casora-core.js` `wants`). Test
+  `dev/unit/warning_slots_same_device.mjs`, `dev/qa/regress/r821_warning_slots_auto.mjs`.
 - `cookidoo` (Rezept, `03-popups.js`, `ki.py`), `mealie` (Rezept als zweite Quelle, `03-popups.js`, `mealie_plan.py`, #140), `backup` (`03-popups.js`), `proximity` (`15-person.js`),
   `unifi` (Netzwerk, `00-finder.js`), `lamarzocco` (Kaffee, `25-coffee.js`), `tankerkoenig` (nur `platform`,
   `tanken.py`)

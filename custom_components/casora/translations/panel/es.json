@@ -1485,7 +1485,7 @@
     "Active program": "Programa activo",
     "Add a warning sensor": "Añadir un sensor de avisos",
     "Chamber light": "Luz interior",
-    "E.g. the NINA or Meteoalarm warnings or the DWD warning level for your town.": "P. ej. los avisos de NINA o Meteoalarm o el nivel de aviso del DWD para tu localidad.",
+    "E.g. the NINA or Meteoalarm warnings or the DWD warning level for your town. The other warnings of the same device come along by themselves.": "P. ej. los avisos de NINA o Meteoalarm o el nivel de aviso del DWD para tu localidad. Los demás avisos del mismo dispositivo se añaden solos.",
     "Electricity price per kWh": "Precio de la electricidad por kWh",
     "Leak sensor": "Sensor de fugas",
     "Leak sensor battery": "Batería del sensor de fugas",

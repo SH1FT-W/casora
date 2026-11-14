@@ -1871,13 +1871,27 @@ window._casoraColGap = window._casoraColGap || function (keys) {
         .map(function (p) { return p[0]; });
     };
     var top = function (states, ids) { var l = list(states, ids); return l.length ? l[0].level : 0; };
+    // The other warning slots of a warning sensor's device (#196: the tile on „Warnung 1“ alone missed Warnung 2–5).
+    // Siblings are binary_sensors of the same device with the same platform and translation_key, so a device's
+    // other binary_sensors (connectivity, problem) stay out; without device or translation_key: none.
+    // E = hass.entities (frontend entity registry); in slot order (…_2 before …_10).
+    var siblings = function (id, E) {
+      var r = E && typeof id === 'string' && id.indexOf('binary_sensor.') === 0 ? E[id] : null;
+      if (!r || !r.device_id || !r.translation_key) return [];
+      return Object.keys(E).filter(function (x) {
+        var e = E[x];
+        return x !== id && x.indexOf('binary_sensor.') === 0 && !!e && e.device_id === r.device_id
+          && e.platform === r.platform && e.translation_key === r.translation_key;
+      }).sort(function (a, b) { return a.localeCompare(b, 'en', { numeric: true }); });
+    };
     // The sensors a weather warning tile reads: its entity and its „Warnungs-Sensoren“ together, without doubles
-    // (#196: a filled list replaced the entity, so the tile's own warning went missing).
-    var sources = function (entityId, sensors) {
+    // (#196: a filled list replaced the entity, so the tile's own warning went missing), plus, with E
+    // (hass.entities), the other warning slots of their devices (siblings above).
+    var sources = function (entityId, sensors, E) {
       var out = [];
-      [].concat(entityId || [], Array.isArray(sensors) ? sensors : []).forEach(function (id) {
-        if (typeof id === 'string' && id && out.indexOf(id) < 0) out.push(id);
-      });
+      var put = function (id) { if (typeof id === 'string' && id && out.indexOf(id) < 0) out.push(id); };
+      [].concat(entityId || [], Array.isArray(sensors) ? sensors : []).forEach(put);
+      if (E && typeof E === 'object') out.slice().forEach(function (id) { siblings(id, E).forEach(put); });
       return out;
     };
     // A warning slot of „Wetter & Warnungen“ (platform wetter, translation_key warning: binary_sensor
@@ -1901,7 +1915,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
         return /^\s+$/.test(p) || (i && SMALL.test(p)) ? p : p.charAt(0).toUpperCase() + p.slice(1);
       }).join('');
     };
-    return { list: list, of: of, top: top, sources: sources, isSlot: isSlot, active: active, isLevelSensor: isLevelSensor,
+    return { list: list, of: of, top: top, sources: sources, siblings: siblings, isSlot: isSlot, active: active, isLevelSensor: isLevelSensor,
       isAdvance: isAdvance, level: level, severity: severity, region: region, kind: kind };
   })();
 
@@ -1940,10 +1954,21 @@ window._casoraColGap = window._casoraColGap || function (keys) {
   // „Wetter & Warnungen“ or any sensor picked in a weather warning tile (#196: those kept HA's generic
   // „Sicherheitswarnung“ row); isWarning: with a weather warning tile on the dashboard only the source(s) it shows.
   var _hass = null;
+  // The picked sources with the other warning slots of their devices (#196: a tile on „Warnung 1“ alone shows
+  // Warnung 2–5 too, so the bell does). Memo per picked list and entity registry.
+  function pickedSources() {
+    var picked = pickedWarnings();
+    var E = _hass && _hass.entities;
+    if (!picked || !E) return picked;
+    var M = pickedSources.m;
+    if (M && M.picked === picked && M.E === E) return M.ids;
+    pickedSources.m = { picked: picked, E: E, ids: window.casoraWarnings.sources(null, picked, E) };
+    return pickedSources.m.ids;
+  }
   function isWarnSource(id, st) {
     var p = cfg().warn_prefix;
     var reg = _hass && _hass.entities && _hass.entities[id];
-    var picked = pickedWarnings();
+    var picked = pickedSources();
     return (!!p && id.indexOf(p) === 0)
       || (window.casoraWarnings.isLevelSensor(st, id) && !window.casoraWarnings.isAdvance(st, id))
       || window.casoraWarnings.isSlot(reg)
@@ -1951,7 +1976,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
   }
   function isWarning(id, st) {
     if (!isWarnSource(id, st)) return false;
-    var picked = pickedWarnings();
+    var picked = pickedSources();
     return !picked || picked.indexOf(id) > -1;
   }
 
