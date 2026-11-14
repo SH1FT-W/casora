@@ -523,8 +523,8 @@
     var a = window.casoraClimateActive ? window.casoraClimateActive(e) : {};
     return !!(a && a.heating);
   };
-  /* Same words as the thermostat tile: Heizt/Kühlt auf, "Ziel" at the target ("An" next to a number said
-     nothing); with a range heating aims at its lower and cooling at its upper bound. */
+  /* Same words as the thermostat tile: Heizt/Kühlt auf, "Bereit" at the target ("An" next to a number said
+     nothing, "Ziel 22°" repeated the stage); with a range heating aims at its lower and cooling at its upper bound. */
   F.status = function (o, states) {
     var e = states[o.id]; if (!e) return '—';
     var at = e.attributes || {}, t = num(at.temperature), lo = num(at.target_temp_low), hi = num(at.target_temp_high);
@@ -536,7 +536,8 @@
     if (a.cooling) { var c = deg(t != null ? t : hi); return c ? 'Kühlt auf ' + c : 'Kühlt'; }
     if (F.heating(o, states)) { var h = deg(t != null ? t : lo); return h ? 'Heizt auf ' + h : 'Heizt'; }
     if (e.state === 'auto' || e.state === 'heat_cool') return tt ? 'Automatik · ' + tt : 'Automatik';
-    if (e.state === 'heat' || e.state === 'cool') return tt ? 'Ziel ' + tt : 'Bereit';
+    // At the target the tile's word „Bereit“; the target stands on the stage (V5, owner 14.11.2026).
+    if (e.state === 'heat' || e.state === 'cool') return 'Bereit';
     if (e.state === 'dry') return 'Entfeuchten';
     if (e.state === 'fan_only') return 'Nur Lüfter';
     return tt ? 'Bereit · ' + tt : 'Bereit';
