@@ -119,7 +119,9 @@ Listen-Überschrift („Lampen im Raum · 2 von 5 an“, Haus: „Räume · 4 vo
 Seite gleich hoch und das Rad springt beim Wechsel Raum ↔ Lampe nicht. Den Kopf rechnet das Licht-Modul
 (`_casoraLightSoft.headOf`, Raum aus dem Dashboard: `placeOf`); der Rahmen zeigt ihn unverändert (`head_fixed`:
 kein Raum-Etikett der Kachel, kein Etikett der Seite davor, nichts gekürzt, keine Rückfall-Statuszeile). Die Seite
-einer Lampe hat ihren eigenen Hauptschalter (nur diese Lampe). Eine Lichtgruppe im Raum („Spots“) ist überall **eine**
+einer Lampe hat ihren eigenen Hauptschalter (nur diese Lampe); das Haus hat den Hauptschalter „Alle aus“: er schaltet
+nur aus, nie ein, mit Rückfrage, und ist ausgegraut, solange alles aus ist (14.11.2026: am Handy fehlte er nach dem Laden,
+solange „Wer sieht das?“ noch lud; Test `r791_haus_licht_hauptschalter.mjs`). Eine Lichtgruppe im Raum („Spots“) ist überall **eine**
 Zeile. **Die Lampe ist das Ende der Kette** (Issue 126, Entscheidung 05.11.2026): Die Seite einer einzelnen Lampe ist
 immer eine Einzelgerät-Seite wie beim Thermostat, egal wie sie geöffnet wird (aus der Raum-Übersicht, aus den Lampen
 einer Licht-Kachel, Raum mit einer Lampe, eigene Kachel oder Chip der Lampe): nur die Bühne mit dem, was zu dieser

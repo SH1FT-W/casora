@@ -5317,6 +5317,19 @@
   /* Nur Lichter, nur was der Benutzer sieht („Wer sieht das?“; im Haus auch ohne ausgeblendete Räume). */
   S.headFor = function (cfg, hass) {
     var states = hass.states, sc = scopeOf(cfg);
+    /* V9 (14.11.2026): „Wer sieht das?“ needs the dashboard's config, which loads on first use (casoraVisibleIdsNow:
+       null until then). On the phone the house light popup was the first to ask after a page load: the lists came
+       back null, the hook threw, and no later sync came – the house's „Alle aus“ switch was missing. Until the config
+       is there: no switch yet, and the shown popup syncs its head again once it has arrived. */
+    if (window.casoraVisibleIdsNow && window.casoraVisibleIdsNow([]) === null) {
+      if (window.casoraVisibleIds && !S._visWait) S._visWait = window.casoraVisibleIds([]).then(function () {
+        S._visWait = null;
+        var p = window.casoraPopup && window.casoraPopup.shown;
+        // Only once the config is really there (no HA connection: it stays null – no endless round).
+        if (window.casoraVisibleIdsNow([]) !== null && p && p._syncHeadSwitch && p.hasAttribute('open')) p._syncHeadSwitch();
+      });
+      return null;
+    }
     var lights = function (l, house) {
       var ids = (l || []).filter(function (x, i, a) { return states[x] && String(x).indexOf('light.') === 0 && a.indexOf(x) === i; });
       return window.casoraVisibleIdsNow ? window.casoraVisibleIdsNow(ids, house ? { rooms: true } : undefined) : ids;
