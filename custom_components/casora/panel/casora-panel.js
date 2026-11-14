@@ -16109,7 +16109,19 @@ class CasoraPanel extends HTMLElement {
         try {
           const ha = f.contentDocument.querySelector("home-assistant");
           if (!(ha && ha.hass)) { if (Date.now() - t0 < 15000) setTimeout(tick, 200); else box.classList.add("ready"); return; }
-          if (typeof ha._updateHass === "function") ha._updateHass({ dockedSidebar: "always_hidden" });
+          if (typeof ha._updateHass === "function") {
+            // The frame shares the viewer's localStorage, and HA writes its whole state there again later (every
+            // profile change, e.g. the design step of the setup): the frame's "always hidden" then became the
+            // viewer's setting. The frame's own realm never writes the sidebar setting.
+            try {
+              const SP = f.contentWindow.Storage.prototype, set = SP.setItem;
+              if (!set._casoraPreview) {
+                SP.setItem = function (k, v) { if (k === "dockedSidebar") return undefined; return set.call(this, k, v); };
+                SP.setItem._casoraPreview = true;
+              }
+            } catch (e) { /* no access: HA keeps its sidebar in the frame below */ }
+            ha._updateHass({ dockedSidebar: "always_hidden" });
+          }
           setTimeout(() => box.classList.add("ready"), 1500);
           // T11 (test 2): right after creating, a badge whose card script was not there yet stayed HA's red
           // "Configuration error" in the preview (the dashboard itself was fine) – look once more and reload the frame once.
