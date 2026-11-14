@@ -119,7 +119,9 @@ Listen-Überschrift („Lampen im Raum · 2 von 5 an“, Haus: „Räume · 4 vo
 Seite gleich hoch und das Rad springt beim Wechsel Raum ↔ Lampe nicht. Den Kopf rechnet das Licht-Modul
 (`_casoraLightSoft.headOf`, Raum aus dem Dashboard: `placeOf`); der Rahmen zeigt ihn unverändert (`head_fixed`:
 kein Raum-Etikett der Kachel, kein Etikett der Seite davor, nichts gekürzt, keine Rückfall-Statuszeile). Die Seite
-einer Lampe hat ihren eigenen Hauptschalter (nur diese Lampe). Eine Lichtgruppe im Raum („Spots“) ist überall **eine**
+einer Lampe hat ihren eigenen Hauptschalter (nur diese Lampe); das Haus hat den Hauptschalter „Alle aus“: er schaltet
+nur aus, nie ein, mit Rückfrage, und ist ausgegraut, solange alles aus ist (14.11.2026: am Handy fehlte er nach dem Laden,
+solange „Wer sieht das?“ noch lud; Test `r791_haus_licht_hauptschalter.mjs`). Eine Lichtgruppe im Raum („Spots“) ist überall **eine**
 Zeile. **Die Lampe ist das Ende der Kette** (Issue 126, Entscheidung 05.11.2026): Die Seite einer einzelnen Lampe ist
 immer eine Einzelgerät-Seite wie beim Thermostat, egal wie sie geöffnet wird (aus der Raum-Übersicht, aus den Lampen
 einer Licht-Kachel, Raum mit einer Lampe, eigene Kachel oder Chip der Lampe): nur die Bühne mit dem, was zu dieser
@@ -138,7 +140,9 @@ keinem Raum zuordnet. Ein eigener Popup-Titel (`room_name`) gilt nur für die Se
 Satz in der Rad-Mitte („Aktiviert · Zuhause“). Sie sagt etwas anderes in Worten – Energie: woher der Strom kommt („Bezug
 aus dem Netz · Akku bereit“, „Solar deckt 80 %“, „Netz offline“); Alarm und andere S7 ohne eigenes Wort: seit wann
 („Seit 14:42“). Liest sich der erste Teil der Kopfzeile wie der Wert bzw. Satz der Bühne (auch HAs Zustandswort als Rückfall: „Aus“ im Kopf und im Rad, „Verriegelt“ zweimal), setzt der Rahmen „Seit 14:42“ dafür ein (`_dedupeHead`, Zeit der Kachel-Entität). Geprüft
-von `popup-geo.mjs` („doppelt“: erster Teil der Kopfzeile = Wert bzw. Satz der Bühne).
+von `popup-geo.mjs` („doppelt“: erster Teil der Kopfzeile = Wert bzw. Satz der Bühne). Umgekehrt nennt das Rad nicht noch
+einmal, was schon im Kopf steht: die Wetterwarnung zeigt ihr Gebiet nur in der Statuszeile, im Rad stehen Satz,
+„Bis …“ und bei mehreren die Zahl (14.11.2026, Test `warning_area_once.mjs`).
 
 ## 4. Bühne
 
@@ -244,7 +248,7 @@ die Typen S1–S8 und ihre Felder bleiben. `o.dial: false` behält die Platte (n
 
 | Regel | Wert |
 |---|---|
-| Form | rund, 76 (Handy ≥ 62), Fläche `--casora-soft-control-fill`, Symbol 22 in Text 2 über dem Wort 11/700 (höchstens 2 Zeilen, Umbruch nur an Leerzeichen; **nie ein Trennstrich, nie mitten im Wort** (01.11.2026): ein Wort ab 10 Zeichen wird so klein gesetzt, dass es in den Mond passt (10 bzw. ab 13 Zeichen 9 px, kleiner Mond bis 7 px), oder der Mond bekommt ein Kurzwort (`short`, z. B. „Alle“ für „Alle aktualisieren“; voller Name bleibt Tooltip und Sprachausgabe)). Monde mit gleichem Anfang („WZ Dreamview An/Aus“) zeigen nur den Unterschied, der volle Name ist Tooltip und Name für die Sprachausgabe |
+| Form | rund, 76 (Handy ≥ 62), Fläche `--casora-soft-control-fill`, Symbol 22 in Text 2 über dem Wort 11/700 (höchstens 2 Zeilen, Umbruch nur an Leerzeichen; **nie ein Trennstrich, nie mitten im Wort** (01.11.2026): ein Wort ab 10 Zeichen wird so klein gesetzt, dass es in den Mond passt (10 bzw. ab 13 Zeichen 9 px, kleiner Mond bis 7 px), oder der Mond bekommt ein Kurzwort (`short`, z. B. „Alle“ für „Alle aktualisieren“; voller Name bleibt Tooltip und Sprachausgabe)). Namen, die das Gerät mitbringt (Effekte und Profile einer Lampe, `fit`), werden nie kleiner als 11 px (14.11.2026): ab einem Wort mit 10 Zeichen zeigt der Mond das erste Wort, ist auch das zu lang, die ersten 7 Buchstaben mit „…“ (Test `moon_fit_word.mjs`). Monde mit gleichem Anfang („WZ Dreamview An/Aus“) zeigen nur den Unterschied, der volle Name ist Tooltip und Name für die Sprachausgabe |
 | Gewählt | Fläche `--casora-soft-seg-on`, Ring 3 in Gerätefarbe mit weichem Schatten, Symbol in Gerätefarbe (zur Schrift hin abgedunkelt, 3 : 1) |
 | Lage (Grad, 0 = rechts) | 1: 155 · 2: 155, 25 · 3: 155, 90, 25 · 4: −150, −30, 155, 25 – Abstand 53,5 % der Radbreite vom Mittelpunkt (außerhalb des Knopfwegs, nie am Ringende), unten (90°) 44 %; die Teilstriche unter einem seitlichen Mond fallen weg. Geprüft von `popup-geo.mjs` („rad“: Mond ≥ 6 px vom Knopfweg) |
 | Hauptaktion | S4/S7-Aktion („Jetzt starten“, „Alle verriegeln“) ist der Mond unten (90°; bei 1 oder 3 Monden rechts unten 25°), gefüllt in Gerätefarbe. **Gefährliches ist nie ein Mond** (Unscharf schalten, Alarm beenden, Alle entriegeln): ungefüllte Pille mit roter Schrift unter dem Rad, mit Rückfrage |
@@ -260,7 +264,10 @@ der Bühne. Das Feld „quick“ im Layout entfällt dann.
 Symbole: nur einfarbige MDI-Symbole (Outline, wo es sie gibt: `mdi:lock-outline`, `mdi:door-closed`,
 `mdi:window-closed-variant`, `mdi:speaker`, `mdi:spotify`, `mdi:radio`, `mdi:television`, `mdi:cast-audio`) bzw. die
 Casora-Symbole; keine Emojis. Ein Symbol aus einem anderen Satz (`ios:lamp-floor`) wird auf dem Mond auf MDI abgebildet.
-Medien: ein Fernseher hat keine Schallplatte (ruhige Scheibe mit `mdi:television`, aus ohne Lautstärke-Zeile). Farben nur aus Tokens (`--casora-color-*`, `--casora-soft-*`, `--casora-lps-knob`).
+Medien: ohne Quellen-Spalte und ohne Lautsprecher zum Gruppieren steht rechts nichts – das Popup ist einspaltig 552
+breit; am Handy schließen sich die leeren Plätze für Titel, Unterzeile und Fortschritt, solange nichts spielt (die Tasten
+rücken unter die Lautstärke; Tablet und Desktop behalten die Plätze, dort springen die Tasten bei „Play“ nicht; 14.11.2026,
+Tests `media_popup_one_column.mjs`, `r64`). Ein Fernseher hat keine Schallplatte (ruhige Scheibe mit `mdi:television`, aus ohne Lautstärke-Zeile). Farben nur aus Tokens (`--casora-color-*`, `--casora-soft-*`, `--casora-lps-knob`).
 
 ## 5. Schnellwahl
 
@@ -270,9 +277,9 @@ Kacheln für die 2–4 häufigsten **Wahlen** – Modi, Szenen, Programme, Vorga
 
 | Regel | Wert |
 |---|---|
-| Anzahl | 2 bis 4 in einer Reihe; Handy: 4 als 2 × 2, 3 bleiben eine Reihe |
+| Anzahl | 2 bis 4 in einer Reihe, die Kacheln füllen die Reihe (2 je halbe Breite, 14.11.2026); Handy: 4 als 2 × 2, 3 bleiben eine Reihe |
 | Kachel | gleich breit, mindestens 96 hoch, Radius 24, Innenabstand 14, Fläche `--casora-soft-control-fill` |
-| Inhalt | Symbol 24 oben links, unten Titel 14/700, optional Unterzeile 12/500 („ab 13:00“, „Aktiv“) |
+| Inhalt | Symbol 24 oben links, unten Titel 14/700, optional Unterzeile 12/500 („ab 13:00“, „Aktiv“); öffnet eine Kachel die Seite eines Werts, steht der Wert darunter (Energie: „620 W“, „1,8 kW“, Netz beim Einspeisen „↑ 520 W“, Akku „78 %“, 14.11.2026) |
 | Gewählt | Fläche `--casora-soft-row-active` mit `--casora-soft-row-active-shadow`, Symbol in Gerätefarbe, Unterzeile „Aktiv“ oder der Wert |
 | Überschrift | nur wenn die Kacheln sich nicht selbst erklären („Szenen“, „Modus“); Stil der Listen-Überschrift §6 |
 | Abstand | 16 unter der Bühne (mit Überschrift: 24 bis zur Überschrift), 10 zwischen den Kacheln |

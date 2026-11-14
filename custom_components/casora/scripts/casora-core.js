@@ -13769,6 +13769,16 @@ window.casoraMenuGlass = {
     if (lw < 10) return '';
     return ' style="font-size:max(7px, min(' + (lw >= 13 ? 9 : 10) + 'px, calc((clamp(62px, 20cqw, 76px) - 8px) / ' + dRound(lw * 0.56) + ')))"';
   }
+  // A name the lamp brings (effect, profile: „Thunderstorm“, „Daylight-simulation“) gets a short word instead of a
+  // smaller size (V16, owner 14.11.2026: never below 11 px): its first word, cut to 7 letters + „…“ when that one is
+  // long too. Moons that ask for it (it.fit) only – curated words („Beschatten“) keep their size rule. Full name: tooltip.
+  function moonFitWord(text) {
+    var t = String(text || '').trim(), lw = 0;
+    t.split(/\s+/).forEach(function (w) { lw = Math.max(lw, w.length); });
+    if (lw < 10) return null;
+    var first = t.split(/[\s\-_\/]+/).filter(Boolean)[0] || t;
+    return first.length < 10 ? first : first.slice(0, 7) + '\u2026';
+  }
   // Moons show one symbol set (§4.8: MDI, outline): a lamp's icon from another set („ios:lamp-floor“) is mapped.
   function moonIcon(ic) {
     var m = /^([a-z0-9_-]+):(.+)$/.exec(String(ic || ''));
@@ -13779,10 +13789,11 @@ window.casoraMenuGlass = {
   }
   function moonHtml(it, deg, cls) {
     var spec = it.svc ? (it.confirm ? Object.assign({}, it.svc, { confirm: it.confirm }) : it.svc) : null;
-    var shown = it.short || it.text;
+    var base = it.short || it.text, fitted = it.fit ? moonFitWord(base) : null;
+    var short = fitted || it.short, shown = short || it.text;
     if (it.menu) return moonMenuHtml(it, deg);
     return '<div class="hui-moon' + (it.active ? ' on' : '') + (it.dis ? ' dis' : '') + (it.busy ? ' busy' : '') + (cls ? ' ' + esc(cls) : '') + moonWordCls(shown) + '" role="button" aria-label="' + esc(it.text + (it.dis && it.sub ? ' – ' + it.sub : '')) + '"'
-      + (it.dis ? ' aria-disabled="true"' : '') + (it.busy ? ' aria-busy="true"' : '') + (it.short ? ' title="' + esc(it.text) + '"' : '')
+      + (it.dis ? ' aria-disabled="true"' : '') + (it.busy ? ' aria-busy="true"' : '') + (short ? ' title="' + esc(it.text) + '"' : '')
       + (cls ? '' : ' aria-pressed="' + (it.active ? 'true' : 'false') + '"')
       + (spec ? ' data-casora-svc="' + esc(JSON.stringify(spec)) + '"' : '')
       + (it.page ? ' data-casora-page="' + esc(it.page) + '"' : '') + (it.value != null ? ' data-v="' + esc(it.value) + '"' : '')
@@ -14550,7 +14561,8 @@ window.casoraMenuGlass = {
       ev.preventDefault(); stageZoom(f.z, true);
     });
   })();
-  // UI.quick(items, label): 2–4 equal tiles (§5); more than 4 → the first 3 and „Alle (n)“ (o.page).
+  // UI.quick(items, label): 2–4 equal tiles (§5) filling the row – two tiles take half each (V6, owner 14.11.2026; before
+  // they took two thirds and left a hole); more than 4 → the first 3 and „Alle (n)“ (o.page).
   //   items: [{ icon, text, sub, active, svc, confirm, attrs }] – never dangerous (rule test popup_v3.mjs).
   var QUICK_CSS = '.hui-quick{font-family:' + T.font + ';text-align:left;}'
     + '.hui-qk-g{display:grid;grid-template-columns:repeat(var(--n,4),minmax(0,1fr));gap:10px;}'
@@ -14604,7 +14616,7 @@ window.casoraMenuGlass = {
     }).join('');
     return '<style>' + QUICK_CSS + '</style><div class="hui-quick" data-casora-quick="' + list.length + '">'
       + (label ? softLabel(label) : '')
-      + '<div class="hui-qk-g' + (list.length === 4 ? ' n4' : '') + '" style="--n:' + Math.max(3, list.length) + '"'
+      + '<div class="hui-qk-g' + (list.length === 4 ? ' n4' : '') + '" style="--n:' + Math.max(2, list.length) + '"'
       + (lvq ? ' data-casora-live="seg" data-casora-ents="' + esc(JSON.stringify(lvq.entities)) + '" data-casora-attr="' + esc(lvq.attr || 'current_position') + '"' : '')
       + '>' + tiles + '</div></div>';
   }

@@ -630,8 +630,8 @@
       var f3 = { stage: { card: secCard(w3, 'return window._casoraSoftEnergy ? window._casoraSoftEnergy.stage3(' + JSON.stringify(C3) + ', states, hass, this) : "";', states) } };
       // Status line in words (lifted into the head), never the stage's watts (richtlinien §3).
       f3.hero = { card: secCard(w3, 'return window._casoraSoftEnergy ? window._casoraSoftEnergy.status3(' + JSON.stringify(C3) + ', states, hass) : "";', states) };
-      var q3 = E.quick3(C3, ctx.states);
-      if (q3) f3.quick = q3;
+      // The tiles carry live values (V6): a card that follows the flow's sensors, like the stage.
+      if (E.quick3(C3, ctx.states, ctx.hass)) f3.quick = { card: secCard(w3, 'return window._casoraSoftEnergy ? window._casoraSoftEnergy.quick3(' + JSON.stringify(C3) + ', states, hass) : "";', states) };
       // With the flow as the stage there is no chart for „Heute“/„Diesen Monat“ to switch (data-hp-metric did nothing,
       // r90 01.11.2026): the rows open the reading's own page like every other reading row.
       if (f.use) f3.use = fs && typeof f.use === 'string' ? f.use.replace(/data-hp-metric="/g, 'data-casora-mi="') : f.use;
@@ -862,13 +862,26 @@
     return html;
   };
   // Quick choice: Haus · Solar · Netz · Akku – only the parts the flow has; each opens its page in this popup.
-  E.quick3 = function (C, states) {
+  // V6 (owner, 14.11.2026): each tall tile carries its value as the sub line („620 W“, „1,8 kW“, „78 %“; the grid
+  // feeding in „↑ 520 W“) – the same numbers as the flow's circles (E.flowE1Model). Rendered live (secCard in the popup).
+  E.quick3Subs = function (F, states, hass) {
+    var n = E.flowE1Model(E.flowValues(F, states)).nodes, out = {};
+    out.home = n.home.w == null ? null : fW(n.home.w, hass);
+    out.solar = n.solar.w == null ? null : fW(n.solar.w, hass);
+    out.grid = n.grid.w == null ? (n.grid.off ? T('Offline') : null)
+      : (n.grid.label === 'Einspeisung' ? '\u2191\u00a0' : '') + fW(n.grid.w, hass);
+    out.battery = n.battery.soc != null ? Math.round(n.battery.soc) + '\u00a0%' : n.battery.w == null ? null : fW(n.battery.w, hass);
+    return out;
+  };
+  E.quick3 = function (C, states, hass) {
     var UI = window._casoraUI, F = C.fs;
     if (!F || !UI || !UI.quick) return '';
-    var items = [{ icon: 'mdi:home-lightning-bolt-outline', text: 'Haus', page: 'energy-focus|home' }];
-    if (F.solar) items.push({ icon: 'mdi:solar-power-variant', text: 'Solar', page: 'energy-focus|solar' });
-    if (F.grid || F.gridHa || F.exp) items.push({ icon: 'mdi:transmission-tower', text: 'Netz', page: 'energy-focus|grid' });
-    if (F.batHa || F.chg || F.dis || F.batTile || F.soc) items.push({ icon: 'mdi:home-battery-outline', text: 'Akku', page: 'energy-focus|battery' });
+    var sub = {};
+    try { sub = E.quick3Subs(F, states, hass); } catch (e) { sub = {}; }
+    var items = [{ icon: 'mdi:home-lightning-bolt-outline', text: 'Haus', sub: sub.home, page: 'energy-focus|home' }];
+    if (F.solar) items.push({ icon: 'mdi:solar-power-variant', text: 'Solar', sub: sub.solar, page: 'energy-focus|solar' });
+    if (F.grid || F.gridHa || F.exp) items.push({ icon: 'mdi:transmission-tower', text: 'Netz', sub: sub.grid, page: 'energy-focus|grid' });
+    if (F.batHa || F.chg || F.dis || F.batTile || F.soc) items.push({ icon: 'mdi:home-battery-outline', text: 'Akku', sub: sub.battery, page: 'energy-focus|battery' });
     return items.length > 1 ? UI.quick(items) : '';
   };
   (window._casoraPages || (window._casoraPages = {}))['energy-focus'] = function (focus) {
