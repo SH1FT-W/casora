@@ -1539,7 +1539,7 @@
     "Instead of fixed months": "In plaats van vaste maanden",
     "The “Push the evening before” switch in the popup": "De schakelaar “Push de avond ervoor” in het venster",
     "Calendars": "Agenda's",
-    "Without calendars here, the calendar tile shows all of them.": "Zonder agenda's hier toont de agendategel ze allemaal.",
+    "Without calendars here, the calendar tile, the greeting and the screensaver show all of them except holidays, working days and waste.": "Zonder agenda's hier tonen de agendategel, de begroeting en de schermbeveiliging ze allemaal, behalve feestdagen, werkdagen en afval.",
     "Calendar": "Agenda",
     "On tile": "Op tegel",
     "Add calendar": "Agenda toevoegen",

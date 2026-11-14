@@ -374,7 +374,7 @@
       if (want("calendars")) {
         // Calendar
         g = group("calendars", { header: "Calendars",
-          footer: "Without calendars here, the calendar tile shows all of them." });
+          footer: "Without calendars here, the calendar tile, the greeting and the screensaver show all of them except holidays, working days and waste." });
         S.calendars.forEach((c, i) => {
           const col = colorPick(c.color || CAL_DEFAULT, (v) => { c.color = v; });
           const tog = document.createElement("label");

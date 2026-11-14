@@ -1540,7 +1540,7 @@
     "Instead of fixed months": "I stedet for faste måneder",
     "The “Push the evening before” switch in the popup": "Bryteren «Push kvelden før» i popupen",
     "Calendars": "Kalendere",
-    "Without calendars here, the calendar tile shows all of them.": "Uten kalendere her viser kalenderflisen alle.",
+    "Without calendars here, the calendar tile, the greeting and the screensaver show all of them except holidays, working days and waste.": "Uten kalendere her viser kalenderflisen, hilsenen og skjermspareren alle unntatt helligdager, arbeidsdager og avfall.",
     "Calendar": "Kalender",
     "On tile": "På flisen",
     "Add calendar": "Legg til kalender",

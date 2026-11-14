@@ -1540,7 +1540,7 @@
     "Instead of fixed months": "Em vez de meses fixos",
     "The “Push the evening before” switch in the popup": "O interruptor “Aviso na véspera” na janela",
     "Calendars": "Calendários",
-    "Without calendars here, the calendar tile shows all of them.": "Sem calendários aqui, o cartão de calendário mostra-os todos.",
+    "Without calendars here, the calendar tile, the greeting and the screensaver show all of them except holidays, working days and waste.": "Sem calendários aqui, o cartão de calendário, a saudação e o protetor de ecrã mostram-nos todos, exceto feriados, dias úteis e resíduos.",
     "Calendar": "Calendário",
     "On tile": "No cartão",
     "Add calendar": "Adicionar calendário",

@@ -557,10 +557,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     // stays when nothing else is found, so the tile can still say the source is unreachable.
     var calGiven = V.trash_calendar || cfg.calendar || null;
     var calendar = (calGiven && S[calGiven] ? calGiven : null) || Object.keys(S).filter(function (eid) {
-      if (eid.indexOf('calendar.') !== 0) return false;
-      var e = reg(hass)[eid];
-      return (e && e.platform === 'waste_collection_schedule')
-        || /^waste collection schedule/i.test((S[eid].attributes || {}).friendly_name || '');
+      return eid.indexOf('calendar.') === 0 && isWasteCalendar(hass, eid, null);
     }).sort()[0] || calGiven;
     // Calendar only, no bin sensors (issue #27): one bin per event title from the preloaded
     // waste calendar, countdown from its next event. Ids are synthetic (no HA state behind them).
@@ -1534,6 +1531,56 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     });
     return Object.keys(out).sort().map(function (id) { return out[id]; });
   }
+  // casora-calendars:start
+  // The calendars that count (V26): one rule for the calendar tile, the line under the greeting and the screensaver.
+  // A list of the tile's own (vars.calendars), else the calendars picked under Settings › Home & devices › Calendars,
+  // else every calendar except holidays and working days (Workday, Holiday integrations), waste calendars (Casora's
+  // waste detection) and those disabled or hidden in Home Assistant. Returns [{ entity, name, color, tile }];
+  // tile: false = shown only in the calendar popup (callers that list appointments leave it out).
+  var CAL_PALETTE = ['#0A84FF', '#FF453A', '#30D158', '#BF5AF2', '#FF9F0A', '#64D2FF', '#FFD60A', '#FF375F'];
+  var calNormMemo = typeof WeakMap === 'function' ? new WeakMap() : null;
+  var calAutoMemo = { S: null, E: null, cfg: null, out: [] };
+  // Waste Collection Schedule's calendars (or the waste calendar Casora uses) are pickups, not appointments.
+  function isWasteCalendar(hass, id, wasteCal) {
+    var e = ((hass && hass.entities) || {})[id], st = ((hass && hass.states) || {})[id];
+    return id === wasteCal || !!(e && e.platform === 'waste_collection_schedule')
+      || /^waste collection schedule/i.test(((st && st.attributes) || {}).friendly_name || '');
+  }
+  function calNorm(list) {
+    var hit = calNormMemo && calNormMemo.get(list);
+    if (hit) return hit;
+    var out = list.map(function (c) { return typeof c === 'string' ? { entity: c } : c; })
+      .filter(function (c) { return c && typeof c.entity === 'string' && c.entity.indexOf('calendar.') === 0; });
+    if (calNormMemo) calNormMemo.set(list, out);
+    return out;
+  }
+  window.casoraCalendars = function (hass, vars) {
+    var v = vars && vars.calendars;
+    if (Array.isArray(v) && v.length) return calNorm(v);
+    var own = null;
+    try { own = window.casoraSettings ? window.casoraSettings().calendars : null; } catch (e) { own = null; }
+    if (Array.isArray(own) && own.length) {
+      var mine = calNorm(own);
+      if (mine.length) return mine;
+    }
+    var S = hass && hass.states;
+    if (!S) return calAutoMemo.out;
+    var E = hass.entities || {}, cfg = window.CASORA_SETTINGS || null;
+    if (calAutoMemo.S === S && calAutoMemo.E === E && calAutoMemo.cfg === cfg) return calAutoMemo.out;
+    var wasteCal = null;
+    try { wasteCal = window.casoraDevice && window.casoraDevice.waste ? window.casoraDevice.waste(hass, {}).calendar : null; } catch (e) { wasteCal = null; }
+    var out = Object.keys(S).filter(function (id) {
+      if (id.indexOf('calendar.') !== 0) return false;
+      var e = E[id];
+      if (e && (e.hidden || e.hidden_by || e.disabled_by || e.platform === 'workday' || e.platform === 'holiday')) return false;
+      return !isWasteCalendar(hass, id, wasteCal);
+    }).sort().map(function (id, n) {
+      return { entity: id, name: (S[id].attributes || {}).friendly_name || id, color: CAL_PALETTE[n % CAL_PALETTE.length] };
+    });
+    calAutoMemo = { S: S, E: E, cfg: cfg, out: out };
+    return out;
+  };
+  // casora-calendars:end
   // casora-home-next:start
   // The line under the Home greeting (#157, variables.casora_greeting_next): next calendar event and next waste pickup.
   window.casoraHomeNext = function (hass, vars, now) {
@@ -1549,22 +1596,13 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     };
     var W = null;
     try { W = window.casoraDevice && window.casoraDevice.waste ? window.casoraDevice.waste(hass, {}) : null; } catch (e) { W = null; }
-    var best = null, R = hass.entities || {};
-    // The calendars picked in the Studio (Settings › Home & devices › Calendars) count, as on the calendar tile (#189);
-    // one shown only in the popup (tile: false) is no appointment. Without a pick, all calendars.
-    var own = null;
-    try { own = window.casoraSettings ? window.casoraSettings().calendars : null; } catch (e) { own = null; }
-    var picked = null;
-    if (Array.isArray(own) && own.length) {
-      picked = {};
-      own.forEach(function (c) { var id = typeof c === 'string' ? c : c && c.tile !== false && c.entity; if (id) picked[id] = 1; });
-    }
-    Object.keys(S).forEach(function (id) {
-      if (id.indexOf('calendar.') !== 0 || (W && W.calendar === id) || (picked && !picked[id])) return;
-      // A calendar hidden or disabled in Home Assistant is not shown (reported in #157: the Workday sensor's calendar,
-      // hidden with its device); the Workday integration's calendar („Workday Sensor“ every working day) is no appointment.
-      var e = R[id];
-      if (e && (e.hidden || e.disabled_by || e.platform === 'workday')) return;
+    var best = null;
+    // The calendars that count, as on the calendar tile and the screensaver (V26, casoraCalendars); one shown only in
+    // the popup (tile: false) is no appointment.
+    var cals = window.casoraCalendars ? window.casoraCalendars(hass, null) : [];
+    cals.forEach(function (c) {
+      var id = c.entity;
+      if (c.tile === false || !S[id]) return;
       var a = S[id].attributes || {};
       if (!a.message || !a.start_time) return;
       var d = new Date(String(a.start_time).replace(' ', 'T'));

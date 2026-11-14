@@ -1539,7 +1539,7 @@
     "Instead of fixed months": "Au lieu de mois fixes",
     "The “Push the evening before” switch in the popup": "L'interrupteur « Notification la veille au soir » dans la fenêtre",
     "Calendars": "Calendriers",
-    "Without calendars here, the calendar tile shows all of them.": "Sans calendriers ici, la tuile calendrier les montre tous.",
+    "Without calendars here, the calendar tile, the greeting and the screensaver show all of them except holidays, working days and waste.": "Sans calendriers ici, la tuile calendrier, le message d'accueil et l'économiseur d'écran les montrent tous, sauf jours fériés, jours ouvrés et déchets.",
     "Calendar": "Calendrier",
     "On tile": "Sur la tuile",
     "Add calendar": "Ajouter un calendrier",

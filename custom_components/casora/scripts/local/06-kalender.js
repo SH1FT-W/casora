@@ -1,7 +1,7 @@
 // ── Calendar tile + popup (24.09.2026) ───────────────────────────────────────
 // Template casora_calendar (['casora_entity','casora_popup_calendar']) only calls
 // window._casoraCalendar.tile()/popup()/sec(). Calendars come from
-// variables.calendars ([{ entity, name, color, tile }]), else CASORA_SETTINGS.calendars or all calendars.
+// variables.calendars ([{ entity, name, color, tile }]), else window.casoraCalendars (Studio pick or all that count).
 // Tile: next event from the calendar states (no fetch). Popup
 // (info style): hero with today's date, left the month with dots and the
 // calendar legend (tap = show/hide), right the chosen day and
@@ -9,33 +9,9 @@
 (function () {
   if (window._casoraCalendar) return;
   var K = window._casoraCalendar = { ev: null, key: '', ts: 0, busy: false, hide: {}, sel: null, month: null };
-  // Calendars: variables.calendars, else CASORA_SETTINGS.calendars, else all
-  // calendars in the house (the waste calendar only in the popup, not on the tile).
-  var PALETTE = ['#0A84FF', '#FF453A', '#30D158', '#BF5AF2', '#FF9F0A', '#64D2FF', '#FFD60A', '#FF375F'];
-  var autoCache = { states: null, list: [] };
-  var autoCals = function () {
-    var own = window.casoraSettings && window.casoraSettings().calendars;
-    if (Array.isArray(own) && own.length) return own;
-    var ha = document.querySelector('home-assistant');
-    var hass = ha && ha.hass;
-    var S = hass && hass.states;
-    if (!S) return autoCache.list;
-    if (autoCache.states === S) return autoCache.list;
-    var wasteCal = window.casoraDevice && window.casoraDevice.waste ? window.casoraDevice.waste(hass).calendar : null;
-    // Calendars hidden in HA stay out, as in HA's own calendar (Workday, #38); a list of one's own still shows them.
-    var E = hass.entities || {};
-    var list = Object.keys(S).filter(function (id) {
-      var e = E[id];
-      return id.indexOf('calendar.') === 0 && !(e && (e.hidden || e.hidden_by));
-    }).sort()
-      .map(function (id, n) {
-        var c = { entity: id, name: (S[id].attributes || {}).friendly_name || id, color: PALETTE[n % PALETTE.length] };
-        if (id === wasteCal) { c.name = 'Abfall'; c.tile = false; }
-        return c;
-      });
-    autoCache = { states: S, list: list };
-    return list;
-  };
+  // Calendars: variables.calendars (the tile's own list), else the calendars picked in the Studio, else all that count
+  // (window.casoraCalendars, 00-finder.js: one rule for the tile, the greeting and the screensaver, V26).
+  var hassNow = function () { var ha = document.querySelector('home-assistant'); return ha && ha.hass; };
   var DAYL = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
   var DAYS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
   var MON = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
@@ -64,8 +40,7 @@
     '#8E8E93': 'var(--casora-color-sand, #9A8672)' };
   var softCache = { src: null, out: null };
   K.cals = function (variables) {
-    var v = variables && variables.calendars;
-    var list = Array.isArray(v) && v.length ? v : autoCals();
+    var list = window.casoraCalendars ? window.casoraCalendars(hassNow(), variables) : [];
     if (!(window._casoraSoft && window._casoraSoft())) return list;
     if (softCache.src === list) return softCache.out;
     var out = list.map(function (c) {

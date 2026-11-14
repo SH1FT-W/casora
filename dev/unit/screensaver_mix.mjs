@@ -6,11 +6,13 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import { loadCalendars } from './lib/calendars_block.mjs';
 
 const read = (p) => fs.readFileSync(new URL('../../' + p, import.meta.url), 'utf8');
 const win = { matchMedia: () => ({ matches: false }) };
 const box = { window: win, console, Intl, Date, Math, parseFloat, isFinite, isNaN, parseInt, String, Number, JSON, setInterval: () => 0, clearInterval() {}, location: { search: '', pathname: '/' } };
 vm.createContext(box);
+loadCalendars(win);
 vm.runInContext(read('custom_components/casora/scripts/local/46-screensaver.js'), box);
 const S = win._casoraSaver;
 const J = (x) => JSON.parse(JSON.stringify(x));

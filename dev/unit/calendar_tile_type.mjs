@@ -2,6 +2,7 @@
 // Settings → Calendar, the calendars have their own Settings page.
 //   node dev/unit/calendar_tile_type.mjs
 import fs from 'node:fs';
+import { loadCalendars } from './lib/calendars_block.mjs';
 import assert from 'node:assert/strict';
 
 const read = (p) => fs.readFileSync(new URL('../../' + p, import.meta.url), 'utf8');
@@ -78,6 +79,7 @@ const cw = { casoraSettings: () => ({ calendars: [{ entity: 'calendar.gone' }, {
 const cdoc = { querySelector: () => null, addEventListener() {} };
 // Its timers (midnight redraw) stay stubs, or the test would not end.
 const noTimer = () => 0;
+loadCalendars(cw);
 new Function('window', 'document', 'setTimeout', 'setInterval', read('custom_components/casora/scripts/local/06-kalender.js'))(cw, cdoc, noTimer, noTimer);
 const K = cw._casoraCalendar;
 assert.ok(K && K.popup, '06-kalender.js');
