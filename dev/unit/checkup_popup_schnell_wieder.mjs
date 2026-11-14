@@ -22,14 +22,15 @@ const env = {
   setTimeout: (fn) => { timers.push(fn); },
   CustomEvent: class { constructor(t) { this.type = t; } },
 };
-const Popup = new Function('document', 'window', 'setTimeout', 'CustomEvent',
-  'return class {' + core.slice(c0, c1) + '\n}')(env.document, env.window, env.setTimeout, env.CustomEvent);
+// deepFocus/focusBack: the focus helpers close() uses (module scope in casora-core.js), nothing focused here.
+const Popup = new Function('document', 'window', 'setTimeout', 'CustomEvent', 'deepFocus', 'focusBack',
+  'return class {' + core.slice(c0, c1) + '\n}')(env.document, env.window, env.setTimeout, env.CustomEvent, () => null, () => {});
 const p = new Popup();
 const attrs = new Set(['open']);
 const el = () => ({ textContent: 'x', hidden: false, style: { removeProperty() {} }, addEventListener() {} });
 Object.assign(p, {
   hasAttribute: (n) => attrs.has(n), setAttribute: (n) => attrs.add(n), removeAttribute: (n) => attrs.delete(n),
-  surface: el(), container: el(), _extra: el(), _dyn: el(), _bridge: {}, _headReset() {},
+  surface: el(), container: el(), _extra: el(), _dyn: el(), _bridge: {}, _headReset() {}, _owns: () => false,
   dispatchEvent() {},
 });
 p.close();

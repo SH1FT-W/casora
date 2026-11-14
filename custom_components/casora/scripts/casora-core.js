@@ -8187,6 +8187,31 @@ window.casoraMenuGlass = {
   }
   customElements.define('casora-popup-hass', CasoraPopupHass);
 
+  // The focused element through all shadow roots, with the chain of hosts above it (outer first).
+  function deepFocus() {
+    var a = document.activeElement;
+    while (a && a.shadowRoot && a.shadowRoot.activeElement) a = a.shadowRoot.activeElement;
+    return a;
+  }
+  // The element and the hosts above it, taken when the popup opens (a redrawn tile leaves the old element detached).
+  function focusChain(el) {
+    var chain = [];
+    if (!el || el === document.body || el === document.documentElement) return chain;
+    for (var n = el; n; n = n.parentNode || n.host) if (n.nodeType === 1 && n !== document.body && n !== document.documentElement) chain.push(n);
+    return chain;
+  }
+  // Give the focus back: the element itself, else the first focusable inside the nearest host still on the page.
+  function focusBack(chain) {
+    for (var i = 0; i < chain.length; i++) {
+      var c = chain[i];
+      if (!c.isConnected) continue;
+      var t = c.tabIndex >= 0 && (i === 0 || c.getAttribute('tabindex') !== null) ? c
+        : (c.shadowRoot && c.shadowRoot.querySelector('[tabindex="0"], button, [href]')) || null;
+      if (t) { try { t.focus({ preventScroll: true }); } catch (e) { /* not focusable */ } return; }
+      if (c.shadowRoot) return; // the nearest host (the tile) has nothing to focus: leave it, never jump further out
+    }
+  }
+
   class CasoraPopup extends HTMLElement {
     constructor() {
       super();
@@ -8195,7 +8220,7 @@ window.casoraMenuGlass = {
         '<style>' + BASE_CSS + '</style><style id="dyn"></style>' +
         '<div class="scrim" part="scrim"></div>' +
         '<div class="layer">' +
-          '<div class="surface" part="surface">' +
+          '<div class="surface" part="surface" role="dialog" aria-modal="true" aria-labelledby="casora-popup-title">' +
             '<div class="glass" part="glass"></div>' +
             '<div class="grab"><span></span></div>' +
             '<div class="header" hidden>' +
@@ -8221,7 +8246,7 @@ window.casoraMenuGlass = {
                   // die Kachel steht mittig dazu; sonst display: contents – Hemma 1/2 wie bisher).
                   '<div class="header-text">' +
                     '<div class="header-eyebrow"></div>' +
-                    '<div class="header-title"></div>' +
+                    '<div class="header-title" id="casora-popup-title"></div>' +
                     // 1.3 Kopfzeile A: Statuszeile des Popups (gespiegelt aus der ersten .hui-line im Inhalt).
                     '<div class="header-status hui-line" hidden></div>' +
                   '</div>' +
@@ -8284,6 +8309,7 @@ window.casoraMenuGlass = {
       this._dismissable = true;
 
       this._onKey = (e) => {
+        if (e.key === 'Tab') { this._trapTab(e); return; }
         if (e.key !== 'Escape' && e.key !== 'Esc') return;
         // Esc beendet zuerst das Ablesen eines Diagramms (casora-chart), erst danach das Popup.
         if ((e.composedPath ? e.composedPath() : []).some((n) => n.hasAttribute && n.hasAttribute('data-casora-esc'))) return;
@@ -8359,6 +8385,7 @@ window.casoraMenuGlass = {
       // offen, und das späte finish() räumte das neue Popup gleich wieder ab (Checkup 10/2026).
       if (this.hasAttribute('closing') && this._closeFinish) this._closeFinish();
       var wasOpen = this.hasAttribute('open');
+      var srcTile = this._src;
       // Jedes Öffnen eine neue Runde: späte Neuaufbauten der vorigen Runde verwerfen (_buildCard).
       this._openGen = (this._openGen || 0) + 1;
       // A page transition still running ends now (fast taps): its old page goes, sizes are released.
@@ -8561,6 +8588,9 @@ window.casoraMenuGlass = {
       this.removeAttribute('data-casora-charts-ready');
 
       if (!wasOpen) {
+        // Keyboard and screen readers (a11y round 14.11.2026): remember where the focus was (the tile), give it back on close.
+        this._focusBack = focusChain(deepFocus());
+        if (!this._focusBack.length && srcTile && srcTile.nodeType === 1) this._focusBack = focusChain(srcTile);
         this.setAttribute('open', '');
         requestAnimationFrame(() => { this.setAttribute('shown', ''); if (this._moreCheck) this._moreCheck(); });
         if (this._moreCheck) setTimeout(this._moreCheck, 700);
@@ -8583,6 +8613,7 @@ window.casoraMenuGlass = {
       await this._buildExtra(isCard ? cfg.extra : null);
 
       if (!wasOpen) this._replayChrome();
+      if (!wasOpen) this._focusIn();
       // ‹ back: the cards are in, the remembered place exists now (before the page slides in: no jump).
       if (scrollBack && this.content && !this.content._casoraUserScrolled) this.content.scrollTop = scrollBack;
       if (nav) nav.play();
@@ -9301,6 +9332,60 @@ window.casoraMenuGlass = {
       }
     }
 
+    // Focus into the sheet once it is open (not onto a control: a mouse/touch opening shows no focus ring), unless
+    // something inside already took it (a search field).
+    _focusIn() {
+      var self = this, gen = this._openGen;
+      // Again after the sheet is laid out (it is held invisible until then, and a hidden element takes no focus); only
+      // while nobody moved the focus elsewhere meanwhile.
+      [0, 120, 450, 1000].forEach(function (ms) {
+        setTimeout(function () {
+          if (self._openGen !== gen || !self.hasAttribute('open') || self.hasAttribute('closing')) return;
+          var a = deepFocus();
+          if (a && self._owns(a)) return;
+          if (a && a !== document.body && a !== document.documentElement && !(self._focusBack || []).includes(a)) return;
+          try { self.content.focus({ preventScroll: true }); } catch (e) { /* old browser */ }
+        }, ms);
+      });
+    }
+    _owns(n) {
+      for (; n; n = n.parentNode || n.host) if (n === this) return true;
+      return false;
+    }
+    // Focusable controls of the open popup in document order, through the shadow roots of its cards.
+    _focusables() {
+      var out = [];
+      var SEL = 'button, [href], input, select, textarea, [tabindex]';
+      (function walk(root) {
+        var all = root.querySelectorAll('*');
+        for (var i = 0; i < all.length; i++) {
+          var el = all[i];
+          if (el.matches(SEL) && !el.disabled && el.tabIndex >= 0 && !el.hidden) {
+            var r = el.getBoundingClientRect();
+            if (r.width > 0 && r.height > 0 && (!el.checkVisibility || el.checkVisibility({ checkVisibilityCSS: true }))) out.push(el);
+          }
+          if (el.shadowRoot) walk(el.shadowRoot);
+        }
+      })(this.shadowRoot);
+      return out;
+    }
+    _trapTab(e) {
+      if (!this.hasAttribute('open') || this.hasAttribute('closing')) return;
+      var a = deepFocus();
+      // Focus in another layer (HA's more-info dialog, a confirmation): that layer handles Tab.
+      if (a && a !== document.body && a !== document.documentElement && !this._owns(a)) return;
+      var f = this._focusables();
+      if (!f.length) { e.preventDefault(); return; }
+      var i = f.indexOf(a);
+      if (i < 0 && a && this._owns(a)) return; // inside, but not a stop of ours (e.g. inside a card's own widget)
+      var next = null;
+      if (e.shiftKey) { if (i <= 0) next = f[f.length - 1]; }
+      else if (i < 0 || i === f.length - 1) next = f[0];
+      if (!next) return;
+      e.preventDefault();
+      try { next.focus(); } catch (x) { /* gone */ }
+    }
+
     dismiss() {
       if (Date.now() < (window._casoraSuppressDismiss || 0)) return;
       if (this._dismissable) this.close();
@@ -9373,6 +9458,10 @@ window.casoraMenuGlass = {
       window.removeEventListener('location-changed', this._onNav, true);
       window.removeEventListener('popstate', this._onNav, true);
       document.documentElement.style.overflow = this._prevOverflow || '';
+      // Focus back to where it was before the popup opened (its tile), if it is still in the popup or nowhere.
+      var back = this._focusBack, now = deepFocus();
+      this._focusBack = null;
+      if ((!now || now === document.body || now === document.documentElement || this._owns(now)) && back && back.length) focusBack(back);
 
       this.removeAttribute('shown');
       this.setAttribute('closing', '');
