@@ -1411,7 +1411,8 @@
   R.next = function (states) {
     var c = states[cal()]; if (!c || !c.attributes || !c.attributes.message) return null;
     var t = new Date(String(c.attributes.start_time || '').replace(' ', 'T'));
-    if (isNaN(t) || dayStart(t) - dayStart(new Date()) > 6 * 86400000) return null;
+    // Six days ahead by the calendar (across 25.10. that is 145 hours).
+    if (isNaN(t) || Math.round((dayStart(t) - dayStart(new Date())) / 86400000) > 6) return null;
     return { name: c.attributes.message, when: t, min: parseMin(c.attributes.description) };
   };
   /* Kurzname für die Kachel (24.09.2026): nur der Kern des Gerichts, der volle Name steht im Popup.
@@ -1454,7 +1455,7 @@
   R.heroHtml = function (states) {
     var UI = window._casoraUI; if (!UI) return '';
     if (!states) { var ha0 = document.querySelector('home-assistant'); states = (ha0 && ha0.hass && ha0.hass.states) || {}; }
-    var nx = R.next(states) || ((R.cal.list || []).filter(function (x) { return dayStart(x.when) - dayStart(new Date()) <= 6 * 86400000; })[0] || null);
+    var nx = R.next(states) || ((R.cal.list || []).filter(function (x) { return Math.round((dayStart(x.when) - dayStart(new Date())) / 86400000) <= 6; })[0] || null);
     if (!nx) return UI.hero({ value: R.cal.list ? 'Nichts geplant' : '…', sub: R.cal.list ? 'Speiseplan der nächsten 7 Tage ist leer' : null, center: true });
     return UI.hero({ value: dayName(nx.when) + ': ' + R.short(nx.name), sub: nx.min ? mins(nx.min) : null, center: true });
   };

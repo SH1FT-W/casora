@@ -307,7 +307,8 @@
     if (!hass || !ids.length || typeof hass.callApi !== 'function') return DATA.ev[key] || [];
     if (!(DATA.at[key] && Date.now() - DATA.at[key] < 600000)) {
       DATA.at[key] = Date.now();
-      var b = new Date(a.getTime() + days * 86400000);
+      // Calendar days, not 24-hour steps: across a clock change the window still ends at midnight.
+      var b = new Date(a); b.setDate(b.getDate() + days);
       var q = '?start=' + encodeURIComponent(a.toISOString()) + '&end=' + encodeURIComponent(b.toISOString());
       Promise.all(ids.map(function (id) {
         return hass.callApi('GET', 'calendars/' + id + q).then(function (rows) { return rows || []; }, function () { return []; });
@@ -828,7 +829,8 @@
   // The day as one line from 6 to 24: what was, where now is, what comes; the next appointment big at the top.
   DRAW.linie = function (ctx) {
     var now = +ctx.now, d0 = new Date(ctx.now); d0.setHours(0, 0, 0, 0);
-    var from = +d0 + 6 * 3600000, to = +d0 + 24 * 3600000;
+    // 6 and 24 o'clock of that day by the calendar (on 29.03. and 25.10. the day is not 24 hours long).
+    var from = +new Date(d0.getFullYear(), d0.getMonth(), d0.getDate(), 6), to = +new Date(d0.getFullYear(), d0.getMonth(), d0.getDate() + 1);
     var pos = function (t) { return Math.max(0, Math.min(100, (t - from) / (to - from) * 100)); };
     var today = (ctx.events || []).filter(function (e) { return !e.allDay && sameDay(e.start, now) && e.start >= from; }).slice(0, 6);
     var next = (ctx.events || []).filter(function (e) { return !e.allDay && e.start > now; })[0] || null;
@@ -863,7 +865,8 @@
     var ev = ctx.events || [], bins = ctx.bins || [], daily = ctx.daily || [];
     var nEv = 0, nBin = 0, cols = '';
     for (var i = 0; i < 7; i++) {
-      var day = +d0 + i * 86400000, items = [];
+      // The i-th calendar day (24-hour steps showed the 25.10. twice).
+      var day = +new Date(d0.getFullYear(), d0.getMonth(), d0.getDate() + i), items = [];
       // A waste integration gives a pickup twice, as a calendar event and as a sensor (#171): the pickup line wins.
       var binNames = bins.filter(function (b) { return b.days === i; }).map(function (b) { return norm(b.label); });
       ev.filter(function (e) { return sameDay(e.start, day) && (i || e.allDay || (e.end || e.start) >= +ctx.now) && binNames.indexOf(norm(e.title)) < 0; }).slice(0, 4).forEach(function (e, j) {
@@ -1081,8 +1084,14 @@
       s2.textContent = CSS;
       root.appendChild(s2);
     }
-    var api = { kind: '' };
+    var api = { kind: '' }, shown = false, gone = false;
     var update = function () {
+      // A box that was in the page and left it (the Studio draws its page again and never calls destroy): stop, or
+      // every redraw would leave a timer and a repaint listener behind.
+      if (gone) return;
+      // A box not in the page yet (drawn before it is inserted) is drawn as before.
+      if (host.isConnected === false && shown) { api.destroy(); return; }
+      if (host.isConnected) shown = true;
       var want = typeof o.kind === 'function' ? o.kind() : kind;
       var base = (typeof o.context === 'function' ? o.context() : o.context) || {};
       var now = base.now || new Date();
@@ -1115,7 +1124,15 @@
     // Data that arrives later (forecast, calendar) repaints at once.
     listeners.push(update);
     api.update = update;
-    api.destroy = function () { clearInterval(timer); listeners.splice(listeners.indexOf(update), 1); host.innerHTML = ''; };
+    // Once only: a second call must not take another mount's listener (indexOf -1 would splice the last one).
+    api.destroy = function () {
+      if (gone) return;
+      gone = true;
+      clearInterval(timer);
+      var i = listeners.indexOf(update);
+      if (i > -1) listeners.splice(i, 1);
+      host.innerHTML = '';
+    };
     return api;
   };
 

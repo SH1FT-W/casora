@@ -83,7 +83,8 @@
     if (isNaN(t)) return null;
     var d0 = dayStart().getTime();
     if (t.getTime() >= d0) return hm(t);
-    if (t.getTime() >= d0 - 864e5) return 'gestern ' + hm(t);
+    // Yesterday's midnight by the calendar (the day after a clock change yesterday had 23 or 25 hours).
+    if (t.getTime() >= dayStart(d0 - 1).getTime()) return 'gestern ' + hm(t);
     return t.toLocaleDateString(loc(), { day: '2-digit', month: '2-digit' }) + '.';
   };
 
@@ -168,7 +169,7 @@
   L.fetch = function (id) {
     var h = hass();
     if (!h || !h.callWS) return Promise.resolve(null);
-    var start = new Date(dayStart().getTime() - 864e5).toISOString(), end = new Date(Date.now() + 60000).toISOString();
+    var start = dayStart(dayStart().getTime() - 1).toISOString(), end = new Date(Date.now() + 60000).toISOString();
     return h.callWS({ type: 'logbook/get_events', start_time: start, end_time: end, entity_ids: [id] }).then(function (r) {
       return Array.isArray(r) ? r : null;
     }, function () {
