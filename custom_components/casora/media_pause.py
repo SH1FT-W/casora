@@ -80,15 +80,26 @@ def next_entry(
     return {"since": changed_at, "title": key}
 
 
+def _shared_store(hass):
+    """One Store per HA run: after a reload the new tracker reads a still pending (delayed) save from it,
+    a new Store object would read the older file."""
+    from homeassistant.helpers.storage import Store
+
+    from .const import DOMAIN
+
+    data = hass.data.setdefault(DOMAIN, {})
+    if "media_pause_store" not in data:
+        data["media_pause_store"] = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+    return data["media_pause_store"]
+
+
 class PauseTracker:
     """Hält die Einträge, lädt/speichert sie und meldet Änderungen."""
 
     def __init__(self, hass, store=None) -> None:
         self.hass = hass
         if store is None:
-            from homeassistant.helpers.storage import Store
-
-            store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+            store = _shared_store(hass)
         self.store = store
         self.players: dict[str, dict[str, str]] = {}
         self.contacts: dict[str, dict[str, str]] = {}

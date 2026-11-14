@@ -183,6 +183,44 @@ async def main():
     check(mot not in tc3.contacts, "Bewegung nicht gemerkt")
     check(tc3.players == {}, "Kontakte berühren keine Player")
 
+    # Reload right after a pause (saving is delayed 5 s): the new tracker must see the pending entry. With a new
+    # Store object it read the old file and the pause started over at last_changed.
+    import homeassistant.helpers.storage as storage
+
+    class HAStore:
+        """Like HA's Store: a delayed save stays pending in this object; async_load returns it."""
+        disk: dict = {}
+
+        def __init__(self, hass, version, key):
+            self.key, self.pending = key, None
+
+        async def async_load(self):
+            return self.pending() if self.pending else HAStore.disk.get(self.key)
+
+        def async_delay_save(self, fn, delay):
+            self.pending = fn
+
+        async def async_save(self, data):
+            self.pending = None
+            HAStore.disk[self.key] = data
+
+    real_store, storage.Store = storage.Store, HAStore
+    try:
+        h5 = Hass([St(EID, "playing", "I'm On Fire", t0)])
+        h5.data = {}
+        tr5 = PauseTracker(h5)
+        await tr5.async_start()
+        h5.bus.cb(Ev({"entity_id": EID, "old_state": St(EID, "playing", "I'm On Fire", t0),
+                      "new_state": St(EID, "paused", "I'm On Fire", t0)}))
+        tr5.stop()
+        h5.states = States([St(EID, "paused", "I'm On Fire", t0 + timedelta(seconds=3))])
+        tr6 = PauseTracker(h5)
+        await tr6.async_start()
+        check(tr6.players.get(EID, {}).get("since") == t0.isoformat(),
+              f"Neuladen kurz nach der Pause: Zeitpunkt bleibt ({tr6.players.get(EID)})")
+    finally:
+        storage.Store = real_store
+
 
 # Reine Merklogik Kontakte
 check(next_open(None, "off", "on", T0) == {"since": T0}, "off → on merkt Zeitpunkt")
