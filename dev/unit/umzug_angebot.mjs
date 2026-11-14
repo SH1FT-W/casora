@@ -7,6 +7,8 @@ import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
 globalThis.window = globalThis;
+const store = new Map();
+globalThis.localStorage = { getItem: (k) => (store.has(k) ? store.get(k) : null), setItem: (k, v) => store.set(k, String(v)), removeItem: (k) => store.delete(k) };
 globalThis.customElements = { whenDefined: () => new Promise(() => {}), get: () => null };
 const src = fs.readFileSync(new URL('../../custom_components/casora/panel/casora-panel-umzug.js', import.meta.url), 'utf8')
   .replace('new URL("./hemma-originals.json", import.meta.url).href', '"x"');
@@ -21,3 +23,18 @@ assert.equal(await movedAny(hass(['hemma-zuhause']), [{ src: 'hemma-zuhause', ta
   'Ziel gelöscht → wieder anbieten');
 assert.equal(await movedAny({ callWS: async () => { throw new Error('x'); } }, [{ src: 'a', target: 'b' }]), false, 'Fehler → wie bisher');
 console.log('ok umzug_angebot');
+
+// V17 (newcomer round, 14.11.2026): "Start from Scratch" in the setup over a found Hemma dashboard counts like
+// "Later" – a week without the full-screen move offer on the next visit.
+assert.equal(typeof window.casoraUmzugSnooze, 'function', 'snooze reachable for the setup');
+window.casoraUmzugSnooze();
+assert.ok(Date.now() - Number(store.get('casora.umzug.snooze')) < 5000, 'snooze stored');
+{
+  const panel = fs.readFileSync(new URL('../../custom_components/casora/panel/casora-panel.js', import.meta.url), 'utf8');
+  const i = panel.indexOf('_setupFoundStep(f, pickIn, back) {');
+  const body = panel.slice(i, panel.indexOf('\n  }\n', i));
+  const go = body.slice(body.indexOf('this._flowButton(s.acts, "Continue"'));
+  assert.ok(/if \(moves\.length && window\.casoraUmzugSnooze\) window\.casoraUmzugSnooze\(\);\s*this\._createForm\(/.test(go),
+    'Start from Scratch snoozes the move offer before the room form');
+}
+console.log('ok umzug_angebot: Start from Scratch = Later');

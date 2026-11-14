@@ -6,6 +6,9 @@
         "description": "Dodaje Casora Studio do paska bocznego."
       }
     },
+    "create_entry": {
+      "default": "Otwórz teraz **Casora Studio** na pasku bocznym: tam skonfigurujesz swój pulpit."
+    },
     "abort": {
       "already_configured": "Casora jest już skonfigurowana."
     }

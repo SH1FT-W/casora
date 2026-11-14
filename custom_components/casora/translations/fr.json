@@ -6,6 +6,9 @@
         "description": "Ajoute le panneau de configuration de Casora à la barre latérale."
       }
     },
+    "create_entry": {
+      "default": "Ouvre maintenant **Casora Studio** dans la barre latérale : c'est là que tu configures ton tableau de bord."
+    },
     "abort": {
       "already_configured": "Casora est déjà configuré."
     }

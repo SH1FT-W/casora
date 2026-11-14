@@ -1744,7 +1744,6 @@
     "The rooms stay empty – you add tiles yourself in the Studio.": "Les pièces restent vides – tu ajoutes les tuiles toi-même dans le Studio.",
     "AI setup needs a stronger AI – for example Claude Opus, Claude Sonnet 4.5 or GPT-5. Settings → AI tasks.": "La configuration par IA nécessite une IA plus puissante – par exemple Claude Opus, Claude Sonnet 4.5 ou GPT-5. Paramètres → Tâches IA.",
     "AI setup needs an AI – for example Claude Opus. Settings → AI tasks.": "La configuration par IA nécessite une IA – par exemple Claude Opus. Paramètres → Tâches IA.",
-    "Already have an assistant connected to Home Assistant over MCP? It can read the action casora.setup_overview and sort your devices into areas.": "Tu as déjà un assistant connecté à Home Assistant via MCP ? Il peut lire l'action casora.setup_overview et ranger tes appareils dans des zones.",
     "How it works": "Comment ça marche",
     "This is what Casora puts in. Tap a tile to leave it out – you can change everything later.": "Voici ce que Casora met en place. Touche une tuile pour l'écarter – tout peut être changé plus tard.",
     "AI is sorting your devices…": "L'IA trie tes appareils…",
@@ -3119,7 +3118,9 @@
     "Only shows: neither the icon nor the popup switches anything. For devices others should only look at.": "Affiche seulement : ni l’icône ni le popup ne commandent quoi que ce soit. Pour les appareils que les autres doivent seulement voir.",
     "The tile only shows": "La tuile affiche seulement",
     "view only": "lecture seule",
-    "It only shows, nothing switches.": "Elle affiche seulement, rien n’est commandé."
+    "It only shows, nothing switches.": "Elle affiche seulement, rien n’est commandé.",
+    "{room} has no area in Home Assistant, so Casora has nothing to suggest here. Search for a device above, or give an area in Home Assistant the name {room}.": "{room} n'a aucune zone dans Home Assistant, Casora n'a donc rien à proposer ici. Cherche un appareil ci-dessus ou donne le nom {room} à une zone dans Home Assistant.",
+    "Already have an assistant connected to Home Assistant over MCP? It can sort your devices into areas.": "Tu as déjà un assistant connecté à Home Assistant via MCP ? Il peut ranger tes appareils dans des zones."
   },
   "patterns": [
     [

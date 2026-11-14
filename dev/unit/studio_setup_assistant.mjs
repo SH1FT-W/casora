@@ -92,6 +92,89 @@ const SRC = read('custom_components/casora/panel/casora-panel.js');
   console.log('ok setup: step 1');
 }
 
+// ── V19: the design choice shows at most four cards side by side ────────────
+// (newcomer round 14.11.2026: seven narrow cards next to HA's sidebar broke their text after every word)
+{
+  const props = {};
+  const p = Object.create(P);
+  p._hass = { states: {}, themes: { darkMode: false, themes: {} }, language: 'en' };
+  p._flowScreen = () => ({ box: { classList: { add: noop }, style: { setProperty: (k, v) => { props[k] = v; } } }, body: stub(), acts: stub() });
+  p._flowButton = noop;
+  const savedTheme = window.casoraTheme;
+  window.casoraTheme = { names: () => [], active: () => '' };
+  p._themeStep();
+  window.casoraTheme = savedTheme;
+  const n = Number(props['--fcols']);
+  assert.ok(n >= 1 && n <= 4, 'at most four columns, got ' + props['--fcols']);
+  const i = SRC.indexOf('_themeStep() {');
+  const body = SRC.slice(i, SRC.indexOf('\n  }\n', i));
+  assert.ok(/setProperty\("--fcols", Math\.min\(cards\.length, THEME_COLS\)\)/.test(body) && /const THEME_COLS = 4;/.test(SRC), 'capped at THEME_COLS = 4');
+  console.log('ok setup: design choice in four columns');
+}
+
+// ── V21: the assistant counts from its first screen ─────────────────────────
+// (newcomer round: "Step 1 of 3" came only after look, font and effects – it felt like step 5)
+{
+  const steps = {};
+  const grab = (k) => (o) => { steps[k] = o.step; throw new Error('stop'); };
+  const p = Object.create(P);
+  p._hass = { states: {}, themes: { darkMode: false, themes: {} }, language: 'en', callWS: async () => [] };
+  p._flowButton = noop;
+  const savedTheme = window.casoraTheme;
+  window.casoraTheme = { names: () => [], active: () => '' };
+  const run = async (k, f) => { p._flowScreen = grab(k); try { await f(); } catch (e) { if (e.message !== 'stop') throw e; } };
+  await run('look', () => p._themeStep());
+  await run('font', () => p._fontStep(noop));
+  await run('perf', () => p._perfStep(noop));
+  await run('rooms', () => p._createForm({ setup: true }));
+  await run('fill', () => p._fillStep({ setup: true }));
+  await run('preview', () => p._fillPreview({ setup: true }));
+  await run('roomsAlone', () => p._createForm({}));
+  await run('fillAlone', () => p._fillStep({}));
+  await run('previewAlone', () => p._fillPreview({}));
+  window.casoraTheme = savedTheme;
+  assert.deepEqual([steps.look, steps.font, steps.perf, steps.rooms, steps.fill, steps.preview],
+    [[1, 6], [2, 6], [3, 6], [4, 6], [5, 6], [6, 6]], 'one count through the whole assistant');
+  assert.deepEqual([steps.roomsAlone, steps.fillAlone, steps.previewAlone], [[1, 3], [2, 3], [3, 3]], 'a new dashboard on its own: 1-3 of 3');
+  // Every way from the assistant into the rooms keeps the count; the fill step hands it on.
+  const fr = SRC.slice(SRC.indexOf('  _firstRun(foundIn) {'), SRC.indexOf('  async _setupExisting() {'));
+  assert.ok(/this\._createForm\(\{ back: perf, setup: true \}\)/.test(fr), 'assistant → rooms counts on');
+  assert.ok(/this\._createForm\(\{ back: again, setup: true \}\)/.test(SRC), '"Start from Scratch" → rooms counts on');
+  assert.ok(/this\._fillStep\(\{ picked, setup: !!o\.setup,/.test(SRC), 'rooms → fill keeps it');
+  console.log('ok setup: steps counted from the first screen');
+}
+
+// ── V21: "Fill Your Rooms" keeps the MCP note behind "More", without the action's technical name ──
+{
+  const B = read('custom_components/casora/panel/casora-panel-basis.js');
+  const i = B.indexOf('P._fillStep = async function (o) {');
+  const body = B.slice(i, B.indexOf('P._fillPreview = async function', i));
+  assert.ok(!body.includes('casora.setup_overview'), 'no action name on the screen');
+  assert.ok(/const mcp = el\("details", "bs-foot bs-mcp", s\.body\);\s*\n\s*el\("summary", "", mcp, "More"\);/.test(body), 'MCP note folded behind "More"');
+  console.log('ok setup: MCP note behind More');
+}
+
+// ── V21: "Smooth on Every Screen" shows a close-up, so the three pictures differ visibly ──
+{
+  const m = SRC.match(/\.perfgrid \.pvshot \{ background-size:([\d.]+)%; background-position:[\d.]+% [\d.]+%; \}/);
+  assert.ok(m && Number(m[1]) >= 200, 'perf pictures zoomed in (blur vs. sharp shows at card size)');
+  assert.ok(SRC.indexOf(m[0]) < SRC.indexOf(':host(.phone) .perfgrid .pvshot {'), 'the phone layout keeps its own crop');
+  console.log('ok setup: effect pictures as close-ups');
+}
+
+// ── V21: "Your Rooms" names the kind only when it adds something ("Lock / Lock" read double) ──
+{
+  const k = window.casoraBasis.kindLine;
+  assert.equal(k('Schloss', 'Schloss', 0), '', 'name = kind: one line');
+  assert.equal(k('Abfall', 'abfall ', 0), '', 'case and spaces do not matter');
+  assert.equal(k('Wohnungstür', 'Schloss', 0), 'Schloss', 'a named lock keeps its kind');
+  assert.equal(k('Jalousien', 'Jalousie-Gruppe', 6), '6 × Jalousie-Gruppe', 'groups keep their count');
+  assert.equal(k('Beleuchtung', 'Licht', 14), '14 × Licht');
+  const B = read('custom_components/casora/panel/casora-panel-basis.js');
+  assert.ok(/const kind = kindLine\(x\.label, tr\(\(t && t\.label\) \|\| x\.type\), x\.group \? x\.group\.length : 0\);\s*\n\s*if \(kind\) el\("small", "", tx, kind\);/.test(B), 'preview uses it');
+  console.log('ok setup: no double name/kind lines');
+}
+
 // ── E22 in the YAML import: the name comes first and the screen still gets its Import button ─────────
 // (The import review moved its name group before an undefined "head": a ReferenceError left the screen
 // without name field and button – t07 found it.)

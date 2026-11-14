@@ -6,6 +6,9 @@
         "description": "Fügt Casora Studio zur Seitenleiste hinzu."
       }
     },
+    "create_entry": {
+      "default": "Öffne jetzt **Casora Studio** in der Seitenleiste: Dort richtest du dein Dashboard ein."
+    },
     "abort": {
       "already_configured": "Casora ist bereits eingerichtet."
     }

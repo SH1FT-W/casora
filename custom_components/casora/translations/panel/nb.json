@@ -1745,7 +1745,6 @@
     "The rooms stay empty – you add tiles yourself in the Studio.": "Rommene forblir tomme – du legger til fliser selv i Studio.",
     "AI setup needs a stronger AI – for example Claude Opus, Claude Sonnet 4.5 or GPT-5. Settings → AI tasks.": "KI-oppsett krever en sterkere KI – for eksempel Claude Opus, Claude Sonnet 4.5 eller GPT-5. Innstillinger → KI-oppgaver.",
     "AI setup needs an AI – for example Claude Opus. Settings → AI tasks.": "KI-oppsett krever en KI – for eksempel Claude Opus. Innstillinger → KI-oppgaver.",
-    "Already have an assistant connected to Home Assistant over MCP? It can read the action casora.setup_overview and sort your devices into areas.": "Har du allerede en assistent koblet til Home Assistant via MCP? Den kan lese handlingen casora.setup_overview og sortere enhetene dine i områder.",
     "How it works": "Slik fungerer det",
     "This is what Casora puts in. Tap a tile to leave it out – you can change everything later.": "Dette legger Casora inn. Trykk på en flis for å utelate den – du kan endre alt senere.",
     "AI is sorting your devices…": "KI sorterer enhetene dine…",
@@ -3119,7 +3118,9 @@
     "Only shows: neither the icon nor the popup switches anything. For devices others should only look at.": "Viser bare: verken symbolet eller popupen slår noe av eller på. For enheter andre bare skal se på.",
     "The tile only shows": "Flisen viser bare",
     "view only": "bare se",
-    "It only shows, nothing switches.": "Den viser bare, ingenting slås av eller på."
+    "It only shows, nothing switches.": "Den viser bare, ingenting slås av eller på.",
+    "{room} has no area in Home Assistant, so Casora has nothing to suggest here. Search for a device above, or give an area in Home Assistant the name {room}.": "{room} har ikke noe område i Home Assistant, så Casora har ingenting å foreslå her. Søk etter en enhet ovenfor, eller gi et område i Home Assistant navnet {room}.",
+    "Already have an assistant connected to Home Assistant over MCP? It can sort your devices into areas.": "Har du allerede en assistent koblet til Home Assistant via MCP? Den kan sortere enhetene dine i områder."
   },
   "patterns": [
     [

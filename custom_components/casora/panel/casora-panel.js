@@ -3885,6 +3885,14 @@ let firstRunFont = null;
 // E10 (test 2): the setup assistant remembers its step and choices in this browser (a reload started over at the
 // look, with "Casora" picked again). Kept a day; cleared when a dashboard is made or the assistant is restarted.
 const SETUP_KEY = "casora.setup.progress";
+// Design choice in the setup: cards per row on a wide screen (more designs wrap to a second row).
+const THEME_COLS = 4;
+// The setup assistant counts its steps from the first screen (V21): look, font, effects, rooms, fill, preview.
+// The "existing dashboard found" choice in between is a fork, not a step. Without it, rooms/fill/preview are 1-3 of 3.
+const SETUP_STEPS = 6;
+const SETUP_LEAD = 3;
+// Step n of the rooms part (1-3): inside the whole assistant it comes after the look, font and effects.
+const setupStep = (n, inSetup) => (inSetup ? [SETUP_LEAD + n, SETUP_STEPS] : [n, 3]);
 function setupLoad() {
   try {
     const v = JSON.parse(localStorage.getItem(SETUP_KEY) || "null");
@@ -12346,6 +12354,9 @@ class CasoraPanel extends HTMLElement {
         .conddel { width:28px; height:28px; border-radius:50%; border:none; padding:0; cursor:pointer; background:rgba(255,69,58,.16); color:var(--casora-studio-bad, #ff453a); display:grid; place-items:center; }
         .conddel svg { width:14px; height:14px; }
         .condadd { align-self:flex-start; border:none; background:none; color:var(--casora-studio-link, #0a84ff); font:500 var(--t-foot) var(--casora-font-studio, system-ui); cursor:pointer; padding:4px 2px; }
+        /* V21: the whole dashboard at card size looked the same three times. A close-up of badges and tiles over the
+           room photo shows the difference: blurred (all effects), sharp (reduced), half and half (automatic). */
+        .perfgrid .pvshot { background-size:266.7%; background-position:39% 71.6%; }
         :host(.phone) .perfgrid .pvshot { flex:0 0 96px; width:96px; aspect-ratio:auto; background-size:cover; background-position:82% 50%; }
         :host(.phone) .perfgrid { gap:10px; }
         .frec2 {
@@ -14714,7 +14725,7 @@ class CasoraPanel extends HTMLElement {
       if (go) go.disabled = false;
       if (this._flowTok !== tok) return;
       if (f.moves.length || f.yaml.length || (f.broken || []).length) return this._setupFoundStep(f, null, perf);
-      this._createForm({ back: perf });
+      this._createForm({ back: perf, setup: true });
     };
     // E10: back where the assistant was before a reload, with what was chosen.
     const sv = setupLoad();
@@ -14836,7 +14847,10 @@ class CasoraPanel extends HTMLElement {
     this._flowButton(s.acts, "Continue", () => {
       if (pick === "move") return this._casoraUmzug({ list: Object.assign(moves.slice(), { broken: f.broken }), back: again, hideNotNow: true });
       if (pick === "import") return this._importForm({ back: again });
-      this._createForm({ back: again });
+      // V17: starting from scratch over a found Hemma dashboard is a "not now" for the move: a week of quiet,
+      // like "Later", instead of the full-screen offer on the next visit.
+      if (moves.length && window.casoraUmzugSnooze) window.casoraUmzugSnooze();
+      this._createForm({ back: again, setup: true });
     });
   }
 
@@ -14845,7 +14859,7 @@ class CasoraPanel extends HTMLElement {
   _themeStep() {
     const t = (this._hass && this._hass.themes) || {};
     const themes = designsOnOffer();
-    const next = () => (this._firstRunGo ? this._firstRunGo() : this._createForm({ back: () => this._themeStep() }));
+    const next = () => (this._firstRunGo ? this._firstRunGo() : this._createForm({ back: () => this._themeStep(), setup: true }));
     if (!themes.length) return next();
     const CT = casoraThemeApi();
     const current = (CT && CT.active(this._hass)) || "";
@@ -14862,7 +14876,7 @@ class CasoraPanel extends HTMLElement {
 
     const s = this._flowScreen({
       full: true, icon: "palette",
-      title: "Choose Your Look",
+      title: "Choose Your Look", step: [1, SETUP_STEPS],
       lede: "Casora is designed around its theme. You can change it later in the Studio under Settings → Design.",
       // Erststart: zurück zur Begrüßung; aus dem Menü: Schließen zurück ins Studio.
       back: this._dashUrl ? null : () => this._welcomeScreen(),
@@ -14907,7 +14921,8 @@ class CasoraPanel extends HTMLElement {
     if (own) card(own, own, "Keep your current theme", null);
     s.body.appendChild(grid);
     s.box.classList.add("fwide");
-    s.box.style.setProperty("--fcols", cards.length);
+    // At most four side by side (V19): seven narrow cards broke every word of their text onto its own line.
+    s.box.style.setProperty("--fcols", Math.min(cards.length, THEME_COLS));
     paint();
 
     this._flowButton(s.acts, "Continue", async (ev) => {
@@ -14928,7 +14943,7 @@ class CasoraPanel extends HTMLElement {
     let pick = firstRunFont !== null ? firstRunFont : "";
     const s = this._flowScreen({
       full: true, icon: "font",
-      title: "Choose Your Font",
+      title: "Choose Your Font", step: [2, SETUP_STEPS],
       lede: "The lettering for titles, tiles and numbers. You can change it later in the Studio.",
       back: () => this._themeStep(),
     });
@@ -14991,7 +15006,7 @@ class CasoraPanel extends HTMLElement {
     let pick = firstRunPerf !== null ? firstRunPerf : "auto";
     const s = this._flowScreen({
       full: true, icon: "bolt",
-      title: "Smooth on Every Screen",
+      title: "Smooth on Every Screen", step: [3, SETUP_STEPS],
       lede: "Glass and blur look best but take power. Casora can choose for each device.",
       back: () => this._fontStep(() => this._perfStep(next)),
     });
@@ -15082,7 +15097,7 @@ class CasoraPanel extends HTMLElement {
         + "change rooms at any time.",
       back: o.back,
       // Mit dem Standardraum (casora-panel-basis.js) folgen „Räume füllen“ und die Vorschau.
-      step: typeof this._fillStep === "function" ? [1, 3] : null,
+      step: typeof this._fillStep === "function" ? setupStep(1, o.setup) : null,
     });
     if (failed) {
       this._flowError("Couldn't read your areas (" + failed.message
@@ -15194,7 +15209,7 @@ class CasoraPanel extends HTMLElement {
       setupSave({ rooms: picked, title, step: "rooms" });
       // Mit dem Standardraum-Modul (casora-panel-basis.js): erst fragen, ob Casora die Räume füllt.
       if (typeof this._fillStep === "function") {
-        return this._fillStep({ picked, back: () => this._createForm(o),
+        return this._fillStep({ picked, setup: !!o.setup, back: () => this._createForm(o),
           go: (filled) => this._create(url_path, title, picked, filled) });
       }
       this._create(url_path, title, picked);
@@ -30279,6 +30294,7 @@ function previewHasError(doc) {
 
 // Casora: Bausteine des Panels für Casora-Erweiterungen (Import-Assistent, Geräte-Assistent).
 window.__casoraPanelInternals = {
+  setupStep,
   blankRoom, roomPhoto, slug, translit, expandConfig, expandAny, extractAny, retargetRoutes, mobileFromRooms,
   applyScenePick, confirmEntities, confirmNames, entityUsers, wrapCustomCard, hostCard, FINGERPRINT_KEY, fingerprintOf, refreshTemplates, templatePrint, TILE_TYPES, USER_TILE_TYPES,
   fieldDefault, findType, tileTypeAny, newTile, previewHasError, isPetTracker, petName, isStatSensor, isPlantEntity, listCategory, TILE_MAIN_FIND, tileMissingEntity, tileEntityGone, iconUrl, studioIcon, roomGlyph, roomIconSrc, titleCase, clone, FLOW_TINT, isMobileConfig, applyKiosk,

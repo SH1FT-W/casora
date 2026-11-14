@@ -938,7 +938,14 @@
     return here.length === 1 ? here[0].id : pumps.length === 1 ? pumps[0].id : null;
   }
 
-  window.casoraBasis = { plan, tilesOf, rules, DEFAULTS, shortName, fillBadges, energyProbe, housePower, housePowerOk, housePowerWhy, homeEnergyWhy, oldHouseTotal, wrongHousePower, roomPowerIds, homeSumIds, prefsHouse, prefsHomeVars, energyPrefsReady, openings, isCombo, addLight, houseLights, homeLightsWhy, homeClimateWhy, topUnits,
+  // The kind under a tile's name in "Your Rooms" (V21, newcomer round): "Lock / Lock" or "Waste / Waste" read as a
+  // double line. The kind shows only when it says more than the name (or counts a group).
+  function kindLine(label, kind, n) {
+    const fold = (x) => String(x || "").trim().toLocaleLowerCase();
+    if (n > 1) return n + " × " + kind;
+    return fold(kind) === fold(label) ? "" : kind;
+  }
+  window.casoraBasis = { plan, kindLine, tilesOf, rules, DEFAULTS, shortName, fillBadges, energyProbe, housePower, housePowerOk, housePowerWhy, homeEnergyWhy, oldHouseTotal, wrongHousePower, roomPowerIds, homeSumIds, prefsHouse, prefsHomeVars, energyPrefsReady, openings, isCombo, addLight, houseLights, homeLightsWhy, homeClimateWhy, topUnits,
     dosingPumps, dosingFill, dosingSuggest, DOSE_MAPS };
 
   // KI kostet: Casora schätzt vor dem ersten Einsatz grob, was es über den API-Schlüssel
@@ -1054,6 +1061,8 @@
         + ".bs-foot{margin:14px 4px 0;font-size:var(--t-foot);line-height:1.45;color:var(--ink-3,rgba(255,255,255,.5));text-align:center}"
         + ".bs-foot.ai{color:#c77dff}"
         + ".bs-mcp a{color:inherit;text-decoration:underline}"
+        + ".bs-mcp summary{cursor:pointer;width:max-content;margin:0 auto 4px;list-style:none;text-decoration:underline;text-underline-offset:2px}"
+        + ".bs-mcp summary::-webkit-details-marker{display:none}.bs-mcp[open] summary{text-decoration:none}"
         + ":host(.is-light) .bs-item:hover:not(:disabled){background:rgba(0,0,0,.04)}"
         + ":host(.is-light) .bs-foot.ai{color:var(--casora-studio-ai, #8944ab)}";
       root.appendChild(st);
@@ -1065,7 +1074,7 @@
       let pick = o.pick || "auto";
       const s = this._flowScreen({
         full: true, icon: "rooms",
-        title: "Fill Your Rooms", step: [2, 3],
+        title: "Fill Your Rooms", step: ((I() || {}).setupStep || ((n) => [n, 3]))(2, o.setup),
         lede: "Casora can put your devices into the rooms right away – you check everything before it's created.",
         back: o.back,
       });
@@ -1102,8 +1111,10 @@
         window.casoraAiUpgrade(this, s.body, (b) => { best = b; aiCard.removeAttribute("aria-disabled"); showBest(); });
         // No ai_task at all: an assistant the user already has can do the setup through an MCP server (issue 131).
         if (noAiTask || mcpMode) {
-          const mcp = el("div", "bs-foot bs-mcp", s.body);
-          el("span", "", mcp, "Already have an assistant connected to Home Assistant over MCP? It can read the action casora.setup_overview and sort your devices into areas.");
+          // Behind "More" (V21): for a newcomer the MCP line drew the eye away from "Continue"; the action's name is in the guide.
+          const mcp = el("details", "bs-foot bs-mcp", s.body);
+          el("summary", "", mcp, "More");
+          el("span", "", mcp, "Already have an assistant connected to Home Assistant over MCP? It can sort your devices into areas.");
           mcp.appendChild(document.createTextNode(" "));
           const a = el("a", "", mcp, "How it works");
           a.href = "https://github.com/SH1FT-W/casora/blob/main/docs/guide.md#set-up-with-your-own-assistant-over-mcp";
@@ -1128,7 +1139,7 @@
     P._fillPreview = async function (o) {
       const s = this._flowScreen({
         icon: "rooms",
-        title: "Your Rooms", step: [3, 3],
+        title: "Your Rooms", step: ((I() || {}).setupStep || ((n) => [n, 3]))(3, o.setup),
         lede: "This is what Casora puts in. Tap a tile to leave it out – you can change everything later.",
         back: o.back,
       });
@@ -1176,7 +1187,8 @@
           const tx = el("span", "", b); tx.setAttribute("data-no-i18n", "");
           el("b", "", tx, x.label);
           const t = typeById(x.tile.template && [].concat(x.tile.template)[0] === "casora_cover" && x.group ? "cover_group" : x.type);
-          el("small", "", tx, (x.group && x.group.length > 1 ? x.group.length + " × " : "") + tr((t && t.label) || x.type));
+          const kind = kindLine(x.label, tr((t && t.label) || x.type), x.group ? x.group.length : 0);
+          if (kind) el("small", "", tx, kind);
           b.onclick = () => { x.on = !x.on; b.setAttribute("aria-checked", x.on ? "true" : "false"); upd(); sync(); };
         });
         upd();

@@ -6,6 +6,9 @@
         "description": "Añade el panel de configuración de Casora a la barra lateral."
       }
     },
+    "create_entry": {
+      "default": "Abre ahora **Casora Studio** en la barra lateral: ahí configuras tu panel."
+    },
     "abort": {
       "already_configured": "Casora ya está configurado."
     }

@@ -6,6 +6,9 @@
         "description": "Voegt Casora Studio toe aan de zijbalk."
       }
     },
+    "create_entry": {
+      "default": "Open nu **Casora Studio** in de zijbalk: daar richt je je dashboard in."
+    },
     "abort": {
       "already_configured": "Casora is al ingesteld."
     }

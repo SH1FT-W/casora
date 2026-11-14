@@ -498,7 +498,7 @@
     "Leave empty to use the weather entity's temperature.": "Vuoto: la temperatura dell'entità meteo.",
     "Leave Casora?": "Uscire da Casora?",
     "Light": "Luce",
-    "Lights": "Luci",
+    "Lights": "Illuminazione",
     "Lock": "Serratura",
     "Lock group": "Gruppo serrature",
     "Locked icon": "Icona bloccato",
@@ -1744,7 +1744,6 @@
     "The rooms stay empty – you add tiles yourself in the Studio.": "Le stanze restano vuote: aggiungi tu le schede nello Studio.",
     "AI setup needs a stronger AI – for example Claude Opus, Claude Sonnet 4.5 or GPT-5. Settings → AI tasks.": "La configurazione con l'IA richiede un'IA più potente, ad esempio Claude Opus, Claude Sonnet 4.5 o GPT-5. Impostazioni → Attività IA.",
     "AI setup needs an AI – for example Claude Opus. Settings → AI tasks.": "La configurazione con l'IA richiede un'IA, ad esempio Claude Opus. Impostazioni → Attività IA.",
-    "Already have an assistant connected to Home Assistant over MCP? It can read the action casora.setup_overview and sort your devices into areas.": "Hai già un assistente collegato a Home Assistant tramite MCP? Può leggere l'azione casora.setup_overview e assegnare i tuoi dispositivi alle aree.",
     "How it works": "Come funziona",
     "This is what Casora puts in. Tap a tile to leave it out – you can change everything later.": "Questo è ciò che inserisce Casora. Tocca una scheda per escluderla: puoi cambiare tutto dopo.",
     "AI is sorting your devices…": "L'IA sta ordinando i tuoi dispositivi…",
@@ -3119,7 +3118,9 @@
     "Only shows: neither the icon nor the popup switches anything. For devices others should only look at.": "Mostra soltanto: né l’icona né il popup azionano qualcosa. Per dispositivi che gli altri devono solo vedere.",
     "The tile only shows": "Il riquadro mostra soltanto",
     "view only": "solo visualizzazione",
-    "It only shows, nothing switches.": "Mostra soltanto, non si aziona nulla."
+    "It only shows, nothing switches.": "Mostra soltanto, non si aziona nulla.",
+    "{room} has no area in Home Assistant, so Casora has nothing to suggest here. Search for a device above, or give an area in Home Assistant the name {room}.": "{room} non ha un'area in Home Assistant, quindi Casora non ha nulla da suggerire qui. Cerca un dispositivo qui sopra o dai il nome {room} a un'area in Home Assistant.",
+    "Already have an assistant connected to Home Assistant over MCP? It can sort your devices into areas.": "Hai già un assistente collegato a Home Assistant tramite MCP? Può assegnare i tuoi dispositivi alle aree."
   },
   "patterns": [
     [

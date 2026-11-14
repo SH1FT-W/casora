@@ -1744,7 +1744,6 @@
     "The rooms stay empty – you add tiles yourself in the Studio.": "De kamers blijven leeg – je voegt zelf tegels toe in de Studio.",
     "AI setup needs a stronger AI – for example Claude Opus, Claude Sonnet 4.5 or GPT-5. Settings → AI tasks.": "Instellen met AI heeft een sterkere AI nodig – bijvoorbeeld Claude Opus, Claude Sonnet 4.5 of GPT-5. Instellingen → AI-taken.",
     "AI setup needs an AI – for example Claude Opus. Settings → AI tasks.": "Instellen met AI heeft een AI nodig – bijvoorbeeld Claude Opus. Instellingen → AI-taken.",
-    "Already have an assistant connected to Home Assistant over MCP? It can read the action casora.setup_overview and sort your devices into areas.": "Heb je al een assistent die via MCP met Home Assistant verbonden is? Die kan de actie casora.setup_overview lezen en je apparaten aan ruimtes toewijzen.",
     "How it works": "Zo werkt het",
     "This is what Casora puts in. Tap a tile to leave it out – you can change everything later.": "Dit zet Casora erin. Tik op een tegel om hem weg te laten – je kunt alles later wijzigen.",
     "AI is sorting your devices…": "AI sorteert je apparaten…",
@@ -3119,7 +3118,9 @@
     "Only shows: neither the icon nor the popup switches anything. For devices others should only look at.": "Toont alleen: pictogram en pop-up schakelen niets. Voor apparaten die alleen bekeken mogen worden.",
     "The tile only shows": "De tegel toont alleen",
     "view only": "alleen bekijken",
-    "It only shows, nothing switches.": "Ze toont alleen, er wordt niets geschakeld."
+    "It only shows, nothing switches.": "Ze toont alleen, er wordt niets geschakeld.",
+    "{room} has no area in Home Assistant, so Casora has nothing to suggest here. Search for a device above, or give an area in Home Assistant the name {room}.": "{room} heeft geen gebied in Home Assistant, dus Casora heeft hier niets voor te stellen. Zoek hierboven een apparaat of geef een gebied in Home Assistant de naam {room}.",
+    "Already have an assistant connected to Home Assistant over MCP? It can sort your devices into areas.": "Heb je al een assistent die via MCP met Home Assistant verbonden is? Die kan je apparaten in gebieden indelen."
   },
   "patterns": [
     [

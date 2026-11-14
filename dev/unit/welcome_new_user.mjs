@@ -6,16 +6,18 @@ import assert from 'node:assert/strict';
 
 const src = fs.readFileSync(new URL('../../custom_components/casora/panel/casora-panel-welcome.js', import.meta.url), 'utf8');
 
-function run(dashList) {
-  const store = new Map([['casora.some.flag', '1']]);
+function run(dashList, keys = ['casora.some.flag']) {
+  const store = new Map(keys.map((k) => [k, '1']));
   const storage = { getItem: (k) => (store.has(k) ? store.get(k) : null), setItem: (k, v) => store.set(k, v) };
   const timers = [];
   let shown = 0;
+  const html = [];
   const panel = { _hass: { language: 'en' }, _dashList: dashList, isConnected: true };
   const doc = {
     querySelector: (q) => (q === 'casora-panel' ? panel : null), querySelectorAll: () => [],
     addEventListener() {}, removeEventListener() {},
-    createElement: () => { shown++; return { setAttribute() {}, attachShadow: () => ({ querySelector: () => ({ addEventListener() {} }) }), remove() {} }; },
+    createElement: () => { shown++; return { setAttribute() {}, attachShadow: () => { const r = { querySelector: () => ({ addEventListener() {} }) };
+      Object.defineProperty(r, 'innerHTML', { set: (v) => html.push(v) }); return r; }, remove() {} }; },
     body: { appendChild() {} },
   };
   // Object.keys(localStorage) reads the stored keys.
@@ -23,13 +25,24 @@ function run(dashList) {
   new Function('window', 'document', 'localStorage', 'setTimeout',
     src.replace(/import\.meta\.url/g, JSON.stringify('http://x/casora-panel-welcome.js?v=26.11.1.1')))({}, doc, ls, (f) => timers.push(f));
   while (timers.length) timers.shift()();
-  return { shown, seen: store.get('casora.seenVersion') };
+  const welcome = html.some((h) => h.includes('Welcome to Casora'));
+  return { shown, welcome, news: html.some((h) => h.includes('26.11.1')) && !welcome, seen: store.get('casora.seenVersion') };
 }
 
 const fresh = run([]);
 assert.equal(fresh.shown, 0, 'no "New in Casora" for a new user');
 assert.ok(fresh.seen, 'marked as seen, so it does not come after the first dashboard either');
-assert.equal(run([{ url_path: 'casora' }]).shown, 1, 'an existing user still gets the news');
+assert.equal(run([{ url_path: 'casora' }]).shown, 1, 'a dashboard exists: one sheet');
+// V20 (newcomer round, 14.11.2026): a new device or browser where only the dashboard ran (its scripts write casora.*
+// keys) gets the short welcome, not "New in Casora <version>" with news the newcomer cannot place.
+{
+  const r = run([{ url_path: 'casora' }], ['casora_last_viewed_dashboard', 'casora_popup_variant', 'casora.some.flag']);
+  assert.ok(r.welcome && !r.news, 'new device: welcome, not the news');
+}
+// Someone who has been in the Studio here (intro or Studio welcome seen) or saw an older version gets the news as before.
+assert.ok(run([{ url_path: 'casora' }], ['casora.studio.intro']).news, 'Studio intro seen: news');
+assert.ok(run([{ url_path: 'casora' }], ['casora.welcomed']).news, 'Studio welcome seen: news');
+assert.ok(run([{ url_path: 'casora' }], []).welcome, 'empty browser: welcome');
 console.log('ok welcome: new users');
 
 // E13: the Hemma line of the Studio's welcome says what Hemma is and only comes when one was found.
