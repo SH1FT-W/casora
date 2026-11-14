@@ -218,6 +218,8 @@
     });
   }
   window.casoraUmzugBrokenNotes = brokenNotes;
+  // The setup's "Start from Scratch" over a found Hemma dashboard counts like "Later" (casora-panel.js _setupFoundStep).
+  window.casoraUmzugSnooze = snooze;
 
   // ── Angepasste Kacheln erkennen (reine Logik, auch für dev/unit/umzug_angepasst.mjs) ──────────
   // Kachel in bedingter Hülle: die eigentliche Karte.
@@ -815,7 +817,7 @@
         }, true);
       }
       if (!o.hideNotNow) this._flowButton(s.acts, o.notNowLabel || "Not Now", () => {
-        // Nur „Später“ merkt sich das: eine Woche Ruhe. „Neu beginnen“ im Erststart ist eine andere Entscheidung.
+        // „Später“ merkt sich das: eine Woche Ruhe („Neu beginnen“ im Erststart ebenso, über window.casoraUmzugSnooze).
         if (!o.notNowLabel) snooze();
         if (o.notNow) o.notNow(); else this._flowBack();
       }, true);

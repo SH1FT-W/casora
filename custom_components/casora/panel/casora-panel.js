@@ -14836,6 +14836,9 @@ class CasoraPanel extends HTMLElement {
     this._flowButton(s.acts, "Continue", () => {
       if (pick === "move") return this._casoraUmzug({ list: Object.assign(moves.slice(), { broken: f.broken }), back: again, hideNotNow: true });
       if (pick === "import") return this._importForm({ back: again });
+      // V17: starting from scratch over a found Hemma dashboard is a "not now" for the move: a week of quiet,
+      // like "Later", instead of the full-screen offer on the next visit.
+      if (moves.length && window.casoraUmzugSnooze) window.casoraUmzugSnooze();
       this._createForm({ back: again });
     });
   }
