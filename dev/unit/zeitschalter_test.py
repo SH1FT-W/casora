@@ -317,6 +317,53 @@ async def main():
 
 asyncio.run(main())
 
+
+# 3b. Reload right after set_timer: stop() saves at once, but HA writes in the executor; a new Store object of the
+# new tracker could read the file before that write landed and lose the timer. One Store per HA run: its load
+# returns the pending save.
+async def reload_right_after_set():
+    import homeassistant.helpers.storage as storage
+
+    class HAStore:
+        """Like HA's Store: a save is pending in this object until the (executor) write lands."""
+        disk: dict = {}
+
+        def __init__(self, hass, version, key):
+            self.key, self.pending = key, None
+
+        async def async_load(self):
+            return self.pending() if self.pending else HAStore.disk.get(self.key)
+
+        def async_delay_save(self, fn, delay):
+            self.pending = fn
+
+        async def async_save(self, data):
+            self.pending = lambda: data
+            await asyncio.sleep(0.05)  # executor write
+            HAStore.disk[self.key] = data
+            self.pending = None
+
+    real, storage.Store = storage.Store, HAStore
+    try:
+        L5 = "light.reload"
+        h = Hass([St(L5, "off")])
+        h.data = {}
+        tr = z.TimerTracker(h)
+        await tr.async_start()
+        tr._add(L5, dt_util.utcnow() + timedelta(minutes=30), "turn_on")
+        tr._save()
+        tr.stop()
+        tr2 = z.TimerTracker(h)
+        await tr2.async_start()
+        check(L5 in tr2.timers, f"Neuladen direkt nach set_timer: Timer bleibt ({tr2.timers})")
+        tr2.stop()
+        await asyncio.gather(*h.tasks)
+    finally:
+        storage.Store = real
+
+
+asyncio.run(reload_right_after_set())
+
 # 4. Übersetzungen der Fehlermeldungen (de/en) mit passenden Platzhaltern.
 import json  # noqa: E402
 import re  # noqa: E402
