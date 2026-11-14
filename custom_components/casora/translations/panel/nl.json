@@ -2593,7 +2593,7 @@
     "Own popup": "Eigen venster",
     "This badge's device": "Apparaat van deze badge",
     "Visible in the popup": "Zichtbaar in het venster",
-    "E.g. the NINA or Meteoalarm warnings or the DWD warning level for your town.": "Bijv. de NINA- of Meteoalarm-waarschuwingen of het DWD-waarschuwingsniveau voor je woonplaats.",
+    "E.g. the NINA or Meteoalarm warnings or the DWD warning level for your town. The other warnings of the same device come along by themselves.": "Bijv. de NINA- of Meteoalarm-waarschuwingen of het DWD-waarschuwingsniveau voor je woonplaats. De andere waarschuwingen van hetzelfde apparaat komen er vanzelf bij.",
     "A zone temperature, setpoint or door of the fridge": "Een zonetemperatuur, setpoint of deur van de koelkast",
     "Zone 1 temperature": "Temperatuur zone 1",
     "Zone 1 setpoint": "Setpoint zone 1",

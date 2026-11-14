@@ -1258,8 +1258,17 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
   };
   // Lange Begrüßung: eine Zeile, Schrift so weit kleiner, bis sie passt (nie größer als im Design).
   // area: Rasterplatz erzwingen (button-card setzt grid-area eigener Felder selbst).
-  window.casoraFitTitle = function (el, area) {
-    if (!el || !el.isConnected) return;
+  // avoid: function returning an element on the same line to the right (phone: the weather). The greeting ends 12 px
+  // before it starts; a fixed reserve was too small for long weather texts (#197, "Gedeeltelijk bewolkt").
+  window.casoraFitTitle = function (el, area, avoid) {
+    if (!el) return;
+    // First render: the card is not in the page yet. Try again shortly instead of waiting for the next render (#197).
+    if (!el.isConnected) {
+      el._casoraWait = (el._casoraWait || 0) + 1;
+      if (el._casoraWait <= 30) setTimeout(function () { window.casoraFitTitle(el, area, avoid); }, 100);
+      return;
+    }
+    el._casoraWait = 0;
     if (area) el.style.setProperty('grid-area', area, 'important');
     // Größe aus der Vorlage merken – zurückgesetzt wird auf sie, nicht auf leer.
     if (el._casoraFs === undefined) el._casoraFs = el.style.fontSize || '';
@@ -1267,15 +1276,41 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
     el.style.whiteSpace = 'nowrap';
     // Breite der Rasterzelle statt der Textbreite messen (Vorlage: justify-self start).
     el.style.justifySelf = 'stretch';
+    var head = el.firstElementChild && el.firstElementChild.tagName === 'SPAN' ? el.firstElementChild : null;
+    if (head) { head.style.display = ''; head.style.maxWidth = ''; head.style.overflow = ''; head.style.textOverflow = ''; head.style.verticalAlign = ''; }
     var room = el.clientWidth, need = el.scrollWidth;
+    var nb = typeof avoid === 'function' ? avoid() : null, min = 18;
+    if (nb && head) {
+      var a = el.getBoundingClientRect(), b = nb.getBoundingClientRect();
+      if (b.width > 0 && b.left > a.left) {
+        room = Math.min(room, Math.floor(b.left - a.left - 12));
+        need = Math.ceil(head.getBoundingClientRect().width);
+        // Next to the weather a narrow phone has little room: down to the row size (15 px), still above the weather text.
+        min = 15;
+      }
+    }
     if (room > 0 && need > room) {
       var px = parseFloat(getComputedStyle(el).fontSize) || 0;
-      if (px) el.style.fontSize = Math.max(18, Math.floor(px * room / need)) + 'px';
+      if (px) el.style.fontSize = Math.max(min, Math.floor(px * room / need)) + 'px';
+      if (nb && head) {
+        // Letter spacing does not scale with the size: measure again, one step smaller if needed.
+        var w = head.getBoundingClientRect().width, fs = parseFloat(el.style.fontSize);
+        if (w > room && fs > min) { el.style.fontSize = Math.max(min, Math.floor(fs * room / w)) + 'px'; w = head.getBoundingClientRect().width; }
+        // Still too long at the smallest size (greeting with names): one line with an ellipsis, never over the weather.
+        if (w > room) { head.style.display = 'inline-block'; head.style.maxWidth = room + 'px'; head.style.overflow = 'hidden'; head.style.textOverflow = 'ellipsis'; head.style.verticalAlign = 'top'; }
+      }
     }
     if (!el._casoraFit) {
       el._casoraFit = true;
-      try { new ResizeObserver(function () { window.casoraFitTitle(el, area); }).observe(el.parentElement || el); } catch (e) { /* ohne Nachmessen */ }
+      try {
+        var ro = new ResizeObserver(function () { window.casoraFitTitle(el, area, el._casoraAvoid); });
+        ro.observe(el.parentElement || el);
+        el._casoraRo = ro;
+      } catch (e) { /* ohne Nachmessen */ }
     }
+    // The weather changes its width with its text (another condition, temperature): measure again then.
+    el._casoraAvoid = avoid;
+    if (nb && el._casoraRo && el._casoraAvoidEl !== nb) { el._casoraAvoidEl = nb; try { el._casoraRo.observe(nb); } catch (e) { /* ohne Nachmessen */ } }
   };
 })();
 // casora-greeting:end
@@ -17011,8 +17046,12 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     if (!entityId) return true;
     var v = cfg.variables || {};
     // Auch Listen in Variablen (locks: [...] einer Schloss-Gruppe) zählen (B-NOTI).
-    return cfg.entity === entityId
-      || Object.keys(v).some(function (k) { return v[k] === entityId || (Array.isArray(v[k]) && v[k].indexOf(entityId) !== -1); });
+    if (cfg.entity === entityId
+      || Object.keys(v).some(function (k) { return v[k] === entityId || (Array.isArray(v[k]) && v[k].indexOf(entityId) !== -1); })) return true;
+    // A weather warning tile also shows the other warning slots of its device (#196, 01-basis.js casoraWarnings.sources):
+    // the bell's „Wetterwarnung: Frost“ of Warnung 2 opens the tile set to Warnung 1.
+    var W = typeof window !== 'undefined' ? window.casoraWarnings : null, h = W && W.sources && list.some(function (n) { return /^casora_(popup_)?weather_warning$/.test(n); }) ? hassOf() : null;
+    return !!(h && h.entities) && W.sources(cfg.entity, v.sensors, h.entities).indexOf(entityId) !== -1;
   }
 
   // ── „Wer sieht das?“ auch auf Umwegen (R-01) ─────────────────────────────

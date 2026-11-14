@@ -54,11 +54,14 @@ assert.deepEqual(warn.map((r) => [r.entity, r.label]).sort(),
   [[id(1), 'Wetterwarnung: Windböen'], [id(2), 'Wetterwarnung: Frost']], 'one row per active slot, named by its warning');
 warn.forEach((r) => assert.deepEqual(r.opens, WOPEN, r.entity + ' opens the warning popup'));
 
-// Tile with slot 1 only: slot 2 is no source of that tile (owner, 01.11.2026) – no row that leads nowhere.
+// Tile with slot 1 only: the tile reads the other slots of its device (#196 auto), so slot 2 has its row too.
 LC = tile(id(1), []);
 rows = bell();
 assert.deepEqual(rows.filter((r) => String(r.id).startsWith('casora:safety:')), [], 'slot 2 leaves no generic row either');
-assert.deepEqual(rows.filter((r) => String(r.id).startsWith('casora:warning:')).map((r) => r.entity), [id(1)], 'only the tile\'s slot');
+assert.deepEqual(rows.filter((r) => String(r.id).startsWith('casora:warning:')).map((r) => r.entity).sort(), [id(1), id(2)], 'the tile\'s slot and its device\'s other slot');
+// A tile on another source: the slots of this device stay out (owner, 01.11.2026: the bell shows the tile's sources).
+LC = tile('binary_sensor.other_warning', []);
+assert.deepEqual(bell().filter((r) => String(r.id).startsWith('casora:warning:')).map((r) => r.entity), [], 'slots of another tile\'s device stay out');
 
 // No warning tile on the dashboard: every slot is a source, as NINA.
 LC = { views: [{ cards: [] }] };
