@@ -974,7 +974,55 @@ check("Titel: Produktname → Geräteart (de)", la.LiveActivity._title(_ta, _f, 
 _f2 = Found("d", "vacuum", "x", "full", {}, name="Robbi", generic_name=False)
 check("Titel: eigener Name bleibt im Titel", la.LiveActivity._title(_ta, _f2, 0) == "Robbi")
 
+# Non-finite numbers ("nan", "inf" from MQTT/template sensors) count as no value: int() of them raised and every
+# evaluation of the device failed until the sensor changed again.
+_vorher = dict(S)
+for _bad in ("nan", "inf", "-inf"):
+    S.clear()
+    st("sensor.w_state", "running"); st("sensor.w_pct", _bad); st("sensor.w_rem", _bad, unit_of_measurement="min")
+    st("sensor.w_el", _bad, unit_of_measurement="s")
+    try:
+        _s = la.snapshot(washer(), S.get, NOW, 0)
+        la.build_payload(_s, "washer", "W", "t", "/", False)
+        check(f"Wäsche mit „{_bad}“: kein Fehler, keine Zahl", _s.pct is None and _s.end_ts is None and _s.start_ts is None, _s)
+    except (ValueError, OverflowError) as _err:
+        check(f"Wäsche mit „{_bad}“: kein Fehler, keine Zahl", False, repr(_err))
+    S.clear()
+    st("sensor.p_state", "running"); st("sensor.p_stage", "printing"); st("sensor.p_pct", "5"); st("sensor.p_rem", "10")
+    st("sensor.p_layer", _bad); st("sensor.p_layers", "100")
+    try:
+        _s = la.snapshot(printer(), S.get, NOW, 0)
+        check(f"Drucker mit Schicht „{_bad}“: kein Fehler, keine Schichtangabe", _s.extra is None and _s.pct == 5, _s)
+    except (ValueError, OverflowError) as _err:
+        check(f"Drucker mit Schicht „{_bad}“: kein Fehler, keine Schichtangabe", False, repr(_err))
+S.clear(); S.update(_vorher)
+
 asyncio.run(flow())
+
+
+# After stop() (reload): a rescan still pending from the old instance must not subscribe to states again,
+# else its tracker stays until HA restarts.
+def _stopped_subscribe():
+    import homeassistant.helpers.event as ev
+
+    made: list = []
+    real = ev.async_track_state_change_event
+    ev.async_track_state_change_event = lambda hass, ids, cb: made.append(ids) or (lambda: None)
+    try:
+        L9, _ = make([washer()])
+        L9._subscribe = la.LiveActivity._subscribe.__get__(L9)
+        L9.cfg = {"targets": ["notify.mobile_app_handy"], "devices": {}}
+        L9.loaded = True
+        L9._subscribe()
+        check("läuft: Zustände abonniert", len(made) == 1, made)
+        L9.stop()
+        L9._subscribe()
+        check("nach stop(): kein neues Abo der alten Instanz", len(made) == 1 and L9._unsub_states is None, made)
+    finally:
+        ev.async_track_state_change_event = real
+
+
+_stopped_subscribe()
 
 print("\nALLES OK" if not fails else f"\n{len(fails)} FEHLER")
 sys.exit(1 if fails else 0)

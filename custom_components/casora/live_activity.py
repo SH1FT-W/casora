@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import math
 import re
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
@@ -454,9 +455,11 @@ def _num(st) -> float | None:
     if st is None:
         return None
     try:
-        return float(st.state)
+        v = float(st.state)
     except (TypeError, ValueError):
         return None
+    # "nan"/"inf" parse as floats, but int() of them raises: no value.
+    return v if math.isfinite(v) else None
 
 
 def _unit(st) -> str:
@@ -935,6 +938,9 @@ class LiveActivity:
         if self._unsub_states:
             self._unsub_states()
             self._unsub_states = None
+        if not self.loaded:
+            # Stopped (reload/removal): a rescan still pending from this instance must not subscribe again.
+            return
         by_entity: dict[str, str] = {}
         for f in self.found:
             if self.enabled(f.device_id):

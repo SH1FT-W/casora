@@ -152,7 +152,8 @@ async def _sync_script_resources(hass: HomeAssistant, scripts_dir: str, keep_hem
         await _set_preload(hass, scripts_dir, None)
         _LOGGER.warning(
             "Casora: Lovelace resources are not writable (yaml mode). Add these "
-            "under lovelace: resources: as type module: %s",
+            "under lovelace: resources: as type module (from HA 2026.12 together with "
+            "lovelace: resource_mode: yaml): %s",
             ", ".join(wanted[n] for n in names),
         )
         return

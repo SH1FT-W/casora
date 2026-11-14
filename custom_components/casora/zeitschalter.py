@@ -130,15 +130,26 @@ def parse_start(value: Any) -> datetime | None:
     return start if start.tzinfo else None
 
 
+def _shared_store(hass):
+    """One Store per HA run: after a reload the new tracker reads a still pending save from it (also the
+    immediate one from stop(), which HA writes in the executor); a new Store object could read the older file."""
+    from homeassistant.helpers.storage import Store
+
+    from .const import DOMAIN
+
+    data = hass.data.setdefault(DOMAIN, {})
+    if "timers_store" not in data:
+        data["timers_store"] = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+    return data["timers_store"]
+
+
 class TimerTracker:
     """Hält die Timer, plant sie ein, speichert sie und meldet Änderungen."""
 
     def __init__(self, hass, store=None) -> None:
         self.hass = hass
         if store is None:
-            from homeassistant.helpers.storage import Store
-
-            store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+            store = _shared_store(hass)
         self.store = store
         self.timers: dict[str, dict[str, str]] = {}
         self.listeners: list[Callable[[], None]] = []
