@@ -184,16 +184,19 @@ When you open an [issue](https://github.com/SH1FT-W/casora/issues), add the diag
 <details>
 <summary>Thanks</summary>
 
-Casora gets better with every bug report and every idea. A big thank you to:
+Casora gets better with every bug report, every idea and every pull request. A big thank you to:
 
-- [**@srsly88**](https://github.com/srsly88): from the very first issue on. Fuel prices, plants, waste and the phone layout, and lately a sharp eye on every corner of the new popups.
-- [**@stalakerob**](https://github.com/stalakerob): the most reports of all. The chart card and its heatmap, the Universal tile, own badges with their own popups, the energy flow, entity lists, Frigate streams and the room search.
-- [**@Westerloer**](https://github.com/Westerloer): navigation, energy, blinds, climate, network and the history, always with clear steps to reproduce.
-- [**@vitidron**](https://github.com/vitidron): tireless testing of the Reolink doorbell, plus the Tractive, dishwasher and script button wishes.
+- [**@stalakerob**](https://github.com/stalakerob): the most reports of all. The chart card and its heatmap, the Universal tile, own badges with their own popups, the energy flow, entity lists, Frigate streams, the room search, the volume step and the room climate per room type.
+- [**@Westerloer**](https://github.com/Westerloer): navigation, energy, blinds, climate, network, the history and the weather warnings, always with clear steps to reproduce.
+- [**@srsly88**](https://github.com/srsly88): from the very first issue on. Fuel prices, plants, waste and the phone layout, and a sharp eye on every corner of the new popups.
+- [**@ejetzass**](https://github.com/ejetzass): the most pull requests of all. Camera alerts, the 12-hour clock in the Studio, doorbell times, the white tone in mixed rooms, faster tests and a sturdier test setup, each with a test that proves it.
+- [**@Birdy2019**](https://github.com/Birdy2019): the security badge, blinds and gates that count as closed, the update badge, the date under the clock and swiping between rooms.
+- [**@vitidron**](https://github.com/vitidron): tireless testing of the Reolink doorbell, plus the Tractive, dishwasher and script button wishes and the Blinds badge that stays on Home.
 - [**@andreasgoetzke**](https://github.com/andreasgoetzke): the feels-like temperature, the weather curves and the e-bike live battery.
-- [**@gekberlin**](https://github.com/gekberlin): the thermostat and Velair extensions, the calendar card and the wish for clear robot vacuum errors.
 - [**@chrischtili**](https://github.com/chrischtili): copying whole dashboards, scripts on a tile and the Bring! shopping list.
-- [**@customstudioyandexru**](https://github.com/customstudioyandexru), [**@dnestico**](https://github.com/dnestico): the kettle card, Cyrillic room names and the wish that started the Frigate card.
+- [**@gekberlin**](https://github.com/gekberlin): the thermostat and Velair extensions, the calendar card and the wish for clear robot vacuum errors.
+- [**@daxy01**](https://github.com/daxy01), [**@DarkWing982**](https://github.com/DarkWing982): finding the German words left in other languages.
+- [**@WhiteFawkes**](https://github.com/WhiteFawkes), [**@customstudioyandexru**](https://github.com/customstudioyandexru), [**@dnestico**](https://github.com/dnestico): the Studio undo, the kettle card, Cyrillic room names and the wish that started the Frigate card.
 
 </details>
 
