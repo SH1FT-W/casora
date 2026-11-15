@@ -1983,6 +1983,58 @@ window._casoraColGap = window._casoraColGap || function (keys) {
   // Active as a warning source: binary_sensor on, DWD level > 0 with warnings.
   function warnOn(s) { return s === 'on' || parseInt(s, 10) > 0; }
 
+  // Slot devices in the logbook (Warnung 1–5 of one device): the integration moves its warnings between the slots
+  // (a new warning pushes Frost from slot 1 to slot 2, Frost moves back when the other ends), so a slot going off is
+  // no all-clear and two slots were two stacks of one device („Terrasse Entwarnung“ and „Entwarnung“). The bell
+  // reads such a device as one source: „Wetterwarnung“ when the device's count of active slots rises, „Entwarnung“
+  // only when it drops to none, both under the device's first slot. Built per logbook fetch (prepare).
+  var _slotLog = null, _slotWatched = null;
+  // The watched slots of the device of id, sorted (first = the device's row), or null for a single sensor.
+  function slotFamily(id, st) {
+    var E = _hass && _hass.entities;
+    if (!E || id.indexOf('binary_sensor.') !== 0) return null;
+    var fam = [id].concat(window.casoraWarnings.siblings(id, E)).filter(function (x) {
+      return x === id || (isWarning(x, _hass.states[x]) && (!_slotWatched || _slotWatched.indexOf(x) > -1));
+    });
+    if (fam.length < 2) return null;
+    return fam.sort(function (a, b) { return a.localeCompare(b, 'en', { numeric: true }); });
+  }
+  function slotLog(entries) {
+    var S = (_hass && _hass.states) || {};
+    var out = {}, fams = {}, headOf = {};
+    (entries || []).forEach(function (e) {
+      var id = e && e.entity_id;
+      if (!id || e.state == null) return;
+      if (!(id in headOf)) {
+        var fam = isWarning(id, S[id]) ? slotFamily(id, S[id]) : null;
+        headOf[id] = fam ? fam[0] : null;
+        if (fam && !fams[fam[0]]) fams[fam[0]] = { slots: fam, rows: [] };
+      }
+      if (headOf[id]) fams[headOf[id]].rows.push(e);
+    });
+    Object.keys(fams).forEach(function (head) {
+      var F = fams[head];
+      var rows = F.rows.slice().sort(function (a, b) { return Number(a.when) - Number(b.when); });
+      // A slot's state before its first change in the window is the other one (the logbook lists changes);
+      // a slot without changes kept its current state throughout.
+      var on = {};
+      F.slots.forEach(function (x) {
+        var first = rows.filter(function (r) { return r.entity_id === x && !/^(unavailable|unknown)$/.test(String(r.state)); })[0];
+        on[x] = first ? !warnOn(String(first.state)) : !!(S[x] && warnOn(S[x].state));
+      });
+      var n = function () { return F.slots.filter(function (x) { return on[x]; }).length; };
+      rows.forEach(function (r) {
+        var s = String(r.state), key = r.entity_id + '@' + r.when;
+        if (/^(unavailable|unknown)$/.test(s)) { out[key] = { head: head, v: null }; return; }
+        var before = n();
+        on[r.entity_id] = warnOn(s);
+        var after = n();
+        out[key] = { head: head, v: after > before ? 'warn' : before && !after ? 'clear' : null };
+      });
+    });
+    return out;
+  }
+
   function hhmm(iso) {
     var t = Date.parse(iso || '');
     if (!isFinite(t)) return '';
@@ -2047,6 +2099,13 @@ window._casoraColGap = window._casoraColGap || function (keys) {
       return out;
     },
 
+    // History: the whole logbook of one fetch, before describe() reads it entry by entry (slot devices, slotLog).
+    prepare: function (entries, hass, api, ids) {
+      _hass = hass;
+      _slotWatched = Array.isArray(ids) ? ids : null;
+      _slotLog = slotLog(entries);
+    },
+
     // Verlauf: Logbuch-Eintrag -> Zeile. undefined = nicht unsere Entität.
     describe: function (entry, st, prev, api) {
       var c = cfg();
@@ -2082,6 +2141,19 @@ window._casoraColGap = window._casoraColGap || function (keys) {
         return { label: 'Neue Post im Briefkasten', icon: 'mdi:mailbox', tone: 'accent' };
       }
 
+      var slot = _slotLog && _slotLog[id + '@' + entry.when];
+      if (slot) {
+        // A slot device as one source (slotLog): a running warning of the device stands as a live row above.
+        var S = (_hass && _hass.states) || {};
+        var live = (slotFamily(slot.head, S[slot.head]) || [slot.head]).some(function (x) { return S[x] && warnOn(S[x].state); });
+        if (slot.v === 'warn' && !live) {
+          return { label: 'Wetterwarnung', sub: 'Amtliche Warnung', icon: 'exclamation', tone: 'warn', entity: slot.head };
+        }
+        if (slot.v === 'clear') {
+          return { label: 'Entwarnung', sub: 'Wetterwarnung aufgehoben', icon: 'exclamation', tone: 'good', entity: slot.head };
+        }
+        return null;
+      }
       if (isWarning(id, st)) {
         // Eine laufende Warnung steht schon als Live-Zeile mit Details oben.
         if (warnOn(s) && st && warnOn(st.state)) return null;
