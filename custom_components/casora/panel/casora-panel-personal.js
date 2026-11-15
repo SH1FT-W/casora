@@ -429,7 +429,11 @@
                 if (self._csBar) self._csBar();
               })]).setAttribute("data-no-i18n", "");
             });
-            row(list, "", [del(() => { cameras.splice(index, 1); self._csCameraOpen = null; if (self._csBar) self._csBar(); })]);
+            const removeCamera = del(() => { cameras.splice(index, 1); self._csCameraOpen = null; if (self._csBar) self._csBar(); });
+            const removeLabel = (window.casoraI18n ? window.casoraI18n.t("Remove") : "Remove") + ": " + (camera.name || nameOf(camera.entity_id));
+            removeCamera.title = removeLabel;
+            removeCamera.setAttribute("aria-label", removeLabel);
+            row(list, "Remove", [removeCamera]);
           }
           if (open) fold.classList.add("open");
           g.appendChild(fold);
