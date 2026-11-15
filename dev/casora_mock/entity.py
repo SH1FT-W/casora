@@ -689,6 +689,18 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
             self._count()
 
     class MCalendar(MockEntity, CalendarEntity):
+        @property
+        def _replaying(self):
+            return "events" in self.mock.entities[self._key]
+
+        @property
+        def should_poll(self):
+            # Refresh at week boundaries even when there is no event to schedule.
+            return self._replaying
+
+        async def async_update(self):
+            pass
+
         def _events(self, start: datetime, end: datetime):
             fixture = fixture_events(self.mock.entities[self._key], self.mock.fixture, start, end,
                                      local_tz=dt_util.get_default_time_zone())
@@ -710,8 +722,40 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
 
         @property
         def event(self):
-            ev = self._events(dt_util.now(), dt_util.now() + timedelta(days=14))
+            now = dt_util.now()
+            end = datetime(9998, 1, 1, tzinfo=now.tzinfo)
+            ev = self._events(now, end)
             return ev[0] if ev else None
+
+        @property
+        def state(self):
+            return CalendarEntity.state.fget(self) if self._replaying else super().state
+
+        @property
+        def state_attributes(self):
+            return CalendarEntity.state_attributes.fget(self) if self._replaying else super().state_attributes
+
+        @property
+        def extra_state_attributes(self):
+            attrs = super().extra_state_attributes
+            if not self._replaying:
+                return attrs
+            for key in ("message", "all_day", "start_time", "end_time", "location", "description"):
+                attrs.pop(key, None)
+            meta = attrs.get("casora_filter_match")
+            if isinstance(meta, dict):
+                meta = dict(meta)
+                meta.pop("message", None)
+                event = self.event
+                events = self.mock.entities[self._key]["events"]
+                uid = event.uid if event else None
+                decisions = meta.get("events")
+                if uid and sum(item.get("uid") == uid for item in events) == 1 and isinstance(decisions, dict):
+                    decision = decisions.get(uid)
+                    if isinstance(decision, dict) and decision.get("title") == event.summary:
+                        meta["message"] = decision
+                attrs["casora_filter_match"] = meta
+            return attrs
 
         async def async_get_events(self, hass, start_date, end_date):
             return self._events(start_date, end_date)
