@@ -134,8 +134,15 @@ const pick = (H) => H(() => { const rs = window.__panel()._state.compact.rooms;
   await page.waitForTimeout(700);
   const box = await H(() => { const e = window.__panel().shadowRoot.getElementById('pane'); const b = e.getBoundingClientRect(); return [b.x + b.width / 2, b.y + b.height / 2]; });
   await page.mouse.move(box[0], box[1]);
-  await page.mouse.wheel(0, 4000);
-  await page.waitForTimeout(700);
+  // The opened section can still grow while the first wheel runs (late render): scroll until the pane is at its
+  // end and its height stays the same, as a person would scroll again.
+  for (let k = 0, last = -1; k < 6; k++) {
+    await page.mouse.wheel(0, 4000);
+    await page.waitForTimeout(500);
+    const s = await H(() => { const e = window.__panel().shadowRoot.getElementById('pane'); return [Math.round(e.scrollTop + e.clientHeight), e.scrollHeight]; });
+    if (s[0] >= s[1] - 1 && s[1] === last) break;
+    last = s[1];
+  }
   const vis = await H(() => { const p = window.__panel().shadowRoot; const w = p.querySelector('#pane .tile.sel .mwho'); const i = p.querySelector('.inspector');
     if (!w) return 'fehlt'; const b = w.getBoundingClientRect(), c = i.getBoundingClientRect(); return b.top >= c.top && b.bottom <= c.bottom + 1; });
   await check('Tablet: „Wer sieht das?“ per Scrollen erreichbar', vis === true, vis);
