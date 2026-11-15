@@ -1512,7 +1512,8 @@
         if (!saverLoad) {
           const imp = window.casoraImportScript || ((p) => import("/casora_scripts/" + p));
           const quiet = (p) => imp(p).catch(() => {});
-          saverLoad = Promise.all([window.casoraTr ? null : quiet("casora-i18n.js"), window.casoraEnergyPrefs ? null : quiet("local/00-finder.js")])
+          saverLoad = Promise.all([window.casoraTr ? null : quiet("casora-i18n.js"), window.casoraEnergyPrefs ? null : quiet("local/00-finder.js"),
+            window.casoraCalendarAllows ? null : quiet("local/06a-kalender-filter.js")])
             .then(() => imp("local/46-screensaver.js"));
         }
         saverLoad.then(() => {
@@ -1546,7 +1547,7 @@
         return typeof window.casoraPhotoUrl === "function" ? window.casoraPhotoUrl(ref, this._hass) : "";
       };
       const live = SV.mount(stage, null, { kind: () => show, every: 30000, sample: true,
-        context: () => ({ config: draft(), photoUrl, vars: typeof SV.vars === "function" ? SV.vars(draft()) : {} }) });
+        context: () => ({ config: draft(), photoUrl, vars: typeof SV.vars === "function" ? SV.vars(draft()) : {}, settings: this._cs ? this._cs.S : null }) });
       if (typeof this._images === "function") this._images().then(() => { if (stage.isConnected) { live.update(); extra(); } }, () => {});
       this._csSaverLive = live;
       const chips = el("div", "cs-saver-chips");
