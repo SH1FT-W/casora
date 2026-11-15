@@ -378,13 +378,24 @@
   function _headBSticky(inst, on) {
     const w = inst?._badgeRowWrapper;
     if (!w) return;
+    // The badge card itself is sticky (top -200px) in its own stylesheet. Sticky inside the sticky wrapper makes
+    // iOS position two nested layers on its scrolling thread, and the badges shake while the page scrolls. While
+    // the head holds the wrapper the card sits still in it (relative, top 0). Through the template's variables:
+    // its :host rule is !important, which beats any inline style.
+    const el = inst._badgeRowEl;
     if (on) {
       // Checked on the style itself: the room overlay drops these values when it hands the row back.
-      if (w._casoraHeadB && w.style.position === 'sticky') return;
+      if (w._casoraHeadB && w.style.position === 'sticky'
+        && (!el || el.style.getPropertyValue('--casora-badge-row-pos') === 'relative')) return;
       w._casoraHeadB = true;
       w.style.setProperty('position', 'sticky');
       w.style.setProperty('top', `calc(${HEAD_B_TOP} + ${HEAD_B_ROW}px)`);
       w.style.setProperty('z-index', HEAD_B_Z);
+      if (el) {
+        el._casoraHeadB = true;
+        el.style.setProperty('--casora-badge-row-pos', 'relative');
+        el.style.setProperty('--casora-badge-row-top', '0px');
+      }
     } else if (w._casoraHeadB) {
       w._casoraHeadB = false;
       // The room overlay sets its own values with !important while it holds the row; leave those alone.
@@ -392,6 +403,11 @@
       w.style.removeProperty('position');
       w.style.removeProperty('top');
       w.style.removeProperty('z-index');
+      if (el?._casoraHeadB) {
+        el._casoraHeadB = false;
+        el.style.removeProperty('--casora-badge-row-pos'); // lets the stylesheet's sticky return
+        el.style.removeProperty('--casora-badge-row-top');
+      }
     }
   }
   function _headBText(headerEl, nameEl) {
@@ -2607,7 +2623,8 @@
         if (!bc) continue;
         try {
           const pos = window.getComputedStyle(bc).position;
-          if (pos === 'sticky' || pos === '-webkit-sticky') {
+          // A card the fixed head (1B) holds is relative for the time being, still the badge row.
+          if (pos === 'sticky' || pos === '-webkit-sticky' || bc._casoraHeadB) {
             this._badgeRowEl = bc; this._badgeRowWrapper = kids[i]; break;
           }
         } catch (_) {}
