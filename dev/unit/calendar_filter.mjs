@@ -12,6 +12,7 @@ class ClockDate extends Date {
 }
 const window = { casoraSettings: () => settings, addEventListener() {} };
 const context = vm.createContext({ window, document: { querySelector: () => null }, setTimeout: () => 0, console, Date: ClockDate });
+vm.runInContext(fs.readFileSync(new URL('../../custom_components/casora/scripts/local/06a-kalender-filter.js', import.meta.url), 'utf8'), context);
 vm.runInContext(fs.readFileSync(new URL('../../custom_components/casora/scripts/local/06-kalender.js', import.meta.url), 'utf8'), context);
 const calendar = window._casoraCalendar;
 

@@ -213,6 +213,7 @@ const MODULES = [
   '03-popups',
   '05-standard-medien',
   '05-weich-mehr',
+  '06a-kalender-filter',
   '06-kalender',
   '07-weich-spezial',
   '08-weich-kompakt',
