@@ -195,6 +195,7 @@
       const self = this;
       const hass = this._hass;
       const want = (k) => keys.includes(k);
+      const tr = (x) => (window.casoraI18n ? window.casoraI18n.t(x) : x);
       const group = (key, opts) => {
         const list = self._flowGroup(host, opts);
         list.parentElement.dataset.pkey = key;
@@ -431,7 +432,7 @@
               })]).setAttribute("data-no-i18n", "");
             });
             const removeCamera = del(() => { cameras.splice(index, 1); self._csCameraOpen = null; if (self._csBar) self._csBar(); });
-            const removeLabel = (window.casoraI18n ? window.casoraI18n.t("Remove") : "Remove") + ": " + (camera.name || nameOf(camera.entity_id));
+            const removeLabel = tr("Remove") + ": " + (camera.name || nameOf(camera.entity_id));
             removeCamera.title = removeLabel;
             removeCamera.setAttribute("aria-label", removeLabel);
             row(list, "Remove", [removeCamera]);

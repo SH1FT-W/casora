@@ -16023,7 +16023,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       if (on('locks') && id.indexOf('lock.') === 0) return void out.push(id);
       if (on('alarm') && id.indexOf('alarm_control_panel.') === 0) return void out.push(id);
       if (on('vacuum') && id.indexOf('vacuum.') === 0) return void out.push(id);
-      if (/^(binary_sensor|event)\./.test(id) && listedDetection(id)) return void out.push(id);
+      if ((id.indexOf('binary_sensor.') === 0 || id.indexOf('event.') === 0) && listedDetection(id)) return void out.push(id);
       if (on('doorbell') && isDoorbell(id, st)) return void out.push(id);
       if (on('people') && id.indexOf('person.') === 0) return void out.push(id);
       if (on('appliances') && appl.indexOf(id) !== -1) return void out.push(id);
