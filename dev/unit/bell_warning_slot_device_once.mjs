@@ -98,6 +98,11 @@ await check('after both warnings ended: one stack for the slot device, plain nam
   assert.equal(rows[0].entity, ID(1), 'under the device\'s first slot');
   assert.deepEqual(rows[0].members.map((m) => m.label), ['Entwarnung', 'Wetterwarnung', 'Wetterwarnung'],
     'Frost and Nebel arrived, one all-clear at the end');
+  // Owner, 15.11.2026: the all-clear is good news, green (its own hue wins over the red of the warning icon).
+  const clear = rows[0].members.find((m) => m.label === 'Entwarnung');
+  assert.match(String(clear.hue || rows[0].hue || ''), /security-ok-color/, 'all-clear in green: ' + JSON.stringify({ hue: clear.hue, row: rows[0].hue }));
+  const warn = rows[0].members.find((m) => m.label === 'Wetterwarnung');
+  assert.doesNotMatch(String(warn.hue || ''), /security-ok-color/, 'a warning is not green');
 });
 
 await check('Nebel ended, Frost still active (moved to slot 1): no „Entwarnung“', async () => {
