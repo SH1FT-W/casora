@@ -448,6 +448,14 @@
             if (v === false) sec.covers_night = false; else delete sec.covers_night;
           }, window.casoraI18n ? window.casoraI18n.t("Evening and night only") : "Evening and night only"));
         }
+        // #199: keep the "Blinds" badge on Home all the time, as a quick way to every picked cover (off by default,
+        // only "on" is stored). Security still counts open covers only as set above.
+        const alwaysRow = self._flowRow(g, { title: "Always show", sub: "The Blinds badge stays on Home, also by day and with all closed." });
+        if (typeof self._boolSwitch === "function") {
+          alwaysRow.row.appendChild(self._boolSwitch(sec.covers_always === true, false, (v) => {
+            if (v === true) sec.covers_always = true; else delete sec.covers_always;
+          }, window.casoraI18n ? window.casoraI18n.t("Always show") : "Always show"));
+        }
         // Issue 138: a cover at rest at or below this position counts as closed – gates and the picked covers
         // (window.casoraCoverOpen, 34-security-covers.js). Whole percent 0–20; empty or 0 = as before, not stored.
         // A draft like the rest: _csSave checks the range before anything is written.
