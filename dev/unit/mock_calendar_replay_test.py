@@ -107,15 +107,16 @@ class CalendarReplayTest(unittest.TestCase):
         self.assertEqual(result[0]["end"].isoformat(), "2026-07-06T10:30:00+02:00")
 
     def test_monday_stays_monday_on_every_test_house_weekday(self):
-        events = [{"summary": "Naam-ABCDEF", "start": "2026-11-09T09:30:00+01:00",
-                   "end": "2026-11-09T10:30:00+01:00"}]
+        events = [{"summary": "Naam-ABCDEF", "start": "2026-11-02T09:30:00+01:00",
+                   "end": "2026-11-02T10:30:00+01:00"}]
         for day in range(9, 16):
             with self.subTest(today=day):
                 result = replay.events_for_range(
-                    events, date(2026, 11, 9), date(2026, 11, day),
-                    datetime(2026, 11, 8, tzinfo=timezone.utc),
+                    events, date(2026, 11, 2), date(2026, 11, day),
+                    datetime(2026, 11, 1, tzinfo=timezone.utc),
                     datetime(2026, 11, 23, tzinfo=timezone.utc))
                 self.assertEqual(result[0]["start"].weekday(), 0)
+                self.assertEqual(result[0]["start"].date(), date(2026, 11, 9))
                 self.assertEqual(result[0]["start"].hour, 9)
 
     def test_missing_events_uses_legacy_calendar_but_empty_is_empty(self):
@@ -149,7 +150,7 @@ class CalendarReplayTest(unittest.TestCase):
         self.assertEqual(result[1]["description"], "Naam-CCCCCC")
         self.assertEqual(result[1]["location"], "Naam-DDDDDD")
 
-    def test_export_week_aligns_with_current_week_when_today_is_earlier(self):
+    def test_export_week_aligns_with_current_week_when_today_starts_earlier_in_the_week(self):
         events = [{"summary": "Naam-ABCDEF", "start": "2026-11-11", "end": "2026-11-12"}]
         result = replay.events_for_range(events, date(2026, 11, 11), date(2026, 11, 16),
                                          datetime(2026, 11, 16, tzinfo=timezone.utc),
