@@ -13,6 +13,7 @@
 // there: the same circles, lines and icons stay, the dot animations keep running (none starts anew), only texts,
 // opacity and speed change; feed-in turns the grid circle's label to "Einspeisung"; in the evening the solar line
 // stops and the battery discharges.
+// r872: the dots are elements inside the line's [data-e1-dot] wrapper (moved by transform), the animations are theirs.
 import { open, casoraDashboard, dashboard, fakeStates, check, need, finish, stable, plateLabels } from './lib.mjs';
 
 const dash = await casoraDashboard();
@@ -96,7 +97,7 @@ await page.evaluate((f) => {
   Q.obs.observe(root, { childList: true, subtree: true });
   Q.host = root.host;
   const find = new Function('return (' + f + ')()');
-  const anims = () => { const b = find(); return b ? [...b.querySelectorAll('.hpf, [data-e1-dot]')].flatMap((p) => p.getAnimations()) : []; };
+  const anims = () => { const b = find(); return b ? [...b.querySelectorAll('.hpf, [data-e1-dot], [data-e1-dot] > i')].flatMap((p) => p.getAnimations()) : []; };
   Q.anims = anims();
   Q.tick = setInterval(() => { anims().forEach((a) => { if (!Q.anims.includes(a)) { Q.restarts++; Q.anims.push(a); } }); }, 100);
 }, FIND.toString());
@@ -189,7 +190,7 @@ if (E1) {
   await page.waitForTimeout(300);
   const rm = await page.evaluate((f) => {
     const box = new Function('return (' + f + ')()')();
-    return [...box.querySelectorAll('[data-e1-dot]')].map((d) => getComputedStyle(d).display + ':' + d.getAnimations().length);
+    return [...box.querySelectorAll('[data-e1-dot]')].map((d) => getComputedStyle(d).display + ':' + (d.getAnimations().length + [...d.children].flatMap((c) => c.getAnimations()).length));
   }, FIND.toString());
   check('Reduzierte Bewegung: keine laufenden Punkte', rm.length > 0 && rm.every((x) => x === 'none:0'), rm);
 }
