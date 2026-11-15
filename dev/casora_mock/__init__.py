@@ -123,9 +123,8 @@ class _EntityRegistry:
     def __init__(self, ents) -> None:
         self._ents = ents
 
-    def platform_of(self, entity_id):
-        entry = self._ents.async_get(entity_id)
-        return entry.platform if entry else None
+    def entity_id_for(self, domain, platform, unique_id):
+        return self._ents.async_get_entity_id(domain, platform, unique_id)
 
     def remove(self, entity_id) -> None:
         self._ents.async_remove(entity_id)
@@ -172,6 +171,7 @@ class CasoraMock:
                 devices.async_update_device(dev_ids[d["key"]], via_device_id=dev_ids[d["via"]])
 
         ents = er.async_get(self.hass)
+        registry = _EntityRegistry(ents)
         for e in self.fixture["entities"]:
             domain, object_id = e["entity_id"].split(".", 1)
             if domain in ("input_boolean", "input_select", "input_number", "input_text",
@@ -180,7 +180,7 @@ class CasoraMock:
             # registry_platform: another integration's entity (Velair, velair.py) – state written directly, no object,
             # except calendars with fixture events (registry_rules.registry_platform_for).
             # A house that loaded the export before: free the exported entity_id from the old platform first.
-            clear_old_platform_entry(_EntityRegistry(ents), e, domain, DOMAIN)
+            clear_old_platform_entry(registry, e, domain, DOMAIN)
             entry = ents.async_get_or_create(
                 domain, registry_platform_for(e, domain, DOMAIN), e.get("unique_id") or e["entity_id"],
                 suggested_object_id=object_id,

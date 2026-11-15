@@ -88,6 +88,44 @@ class SensorOptionsTest(unittest.TestCase):
         self.assertEqual(current, {"display_precision": 2, "suggested_display_precision": 1})
 
 
+class FakeRegistry:
+    def __init__(self, entries):
+        self.entries = dict(entries)
+
+    def platform_of(self, entity_id):
+        entry = self.entries.get(entity_id)
+        return entry[0] if entry else None
+
+    def entity_id_for(self, domain, platform, unique_id):
+        return next((entity_id for entity_id, identity in self.entries.items()
+                     if (entity_id.split(".", 1)[0], *identity) == (domain, platform, unique_id)), None)
+
+    def remove(self, entity_id):
+        self.entries.pop(entity_id)
+
+
+class OldPlatformEntryTest(unittest.TestCase):
+    def test_foreign_entity_at_exported_id_survives(self):
+        entity = {"entity_id": "calendar.naam", "registry_platform": "local_calendar",
+                  "unique_id": "own", "events": []}
+        registry = FakeRegistry({"calendar.naam": ("local_calendar", "foreign")})
+        rules.clear_old_platform_entry(registry, entity, "calendar", "casora_mock")
+        self.assertEqual(registry.entries, {"calendar.naam": ("local_calendar", "foreign")})
+
+    def test_own_old_entry_is_removed_even_if_renamed(self):
+        entity = {"entity_id": "calendar.naam", "registry_platform": "local_calendar",
+                  "unique_id": "own", "events": []}
+        registry = FakeRegistry({"calendar.renamed": ("local_calendar", "own")})
+        rules.clear_old_platform_entry(registry, entity, "calendar", "casora_mock")
+        self.assertEqual(registry.entries, {})
+
+    def test_missing_unique_id_uses_entity_id(self):
+        entity = {"entity_id": "calendar.naam", "registry_platform": "local_calendar", "events": []}
+        registry = FakeRegistry({"calendar.naam": ("local_calendar", "calendar.naam")})
+        rules.clear_old_platform_entry(registry, entity, "calendar", "casora_mock")
+        self.assertEqual(registry.entries, {})
+
+
 class SnapshotHiddenTest(unittest.TestCase):
     """haus.py snapshot() is hass.entities as the frontend gets it: "hidden" follows the fixture."""
 

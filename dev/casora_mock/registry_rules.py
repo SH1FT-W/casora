@@ -64,18 +64,21 @@ def registry_platform_for(entity: Mapping, domain: str, default: str) -> str:
 
 
 def clear_old_platform_entry(registry, entity: Mapping, domain: str, default: str) -> None:
-    """Remove the entry under another platform that owns the entity_id of an entity the mock now gives an object.
+    """Remove the old-platform entry for an entity the mock now gives an object.
 
     A house that loaded the export before holds (calendar, <integration>, uid) and owns the exported entity_id.
     Removing that entry frees the id, so the mock's entry keeps the exported entity_id. Only entities with a
-    registry_platform and their own object are touched; the registry is any object with platform_of(entity_id)
-    and remove(entity_id).
+    registry_platform and their own object are touched; the registry resolves domain, platform and unique_id
+    with entity_id_for and removes entries with remove.
     """
     if not entity.get("registry_platform") or not has_own_object(entity, domain):
         return
-    current = registry.platform_of(entity["entity_id"])
-    if current is not None and current != default:
-        registry.remove(entity["entity_id"])
+    old_platform = entity["registry_platform"]
+    if old_platform == default:
+        return
+    entity_id = registry.entity_id_for(domain, old_platform, entity.get("unique_id") or entity["entity_id"])
+    if entity_id is not None:
+        registry.remove(entity_id)
 
 
 def writes_state_directly(entity: Mapping, domain: str, in_platforms: bool) -> bool:

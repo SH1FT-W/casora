@@ -250,6 +250,12 @@ class FakeRegistry:
     def platform_of(self, entity_id):
         return self.entries.get(entity_id)
 
+    def entity_id_for(self, domain, platform, unique_id):
+        if unique_id != "naam-kalender-uid":
+            return None
+        return next((entity_id for entity_id, entry_platform in self.entries.items()
+                     if entity_id.split(".", 1)[0] == domain and entry_platform == platform), None)
+
     def remove(self, entity_id):
         self.entries.pop(entity_id, None)
 
