@@ -186,6 +186,74 @@ class CalendarObjectTest(unittest.TestCase):
         self.assertTrue(rules.has_own_object(plain, "calendar"))
         self.assertEqual(rules.registry_platform_for(plain, "calendar", "casora_mock"), "casora_mock")
 
+    def test_empty_events_calendar_with_registry_platform_gets_own_object(self):
+        # "events": [] is a calendar with events (none): it keeps its object and shows no events.
+        empty = {"entity_id": "calendar.naam_leer", "registry_platform": "google", "events": []}
+        self.assertTrue(rules.has_own_object(empty, "calendar"))
+        self.assertEqual(rules.registry_platform_for(empty, "calendar", "casora_mock"), "casora_mock")
+        self.assertEqual(replay.fixture_events(empty, {"calendar_export_date": "2026-11-09"},
+                                               datetime(2026, 11, 8, tzinfo=timezone.utc),
+                                               datetime(2026, 11, 23, tzinfo=timezone.utc)), [])
+
+    def test_stale_entry_under_old_platform_is_removed_and_exported_id_stays(self):
+        # A house that loaded the export before still holds calendar.naam_kalender under local_calendar.
+        registry = FakeRegistry({"calendar.naam_kalender": "local_calendar"})
+        rules.clear_old_platform_entry(registry, self.REAL_SHAPE, "calendar", "casora_mock")
+        entity_id = registry.create("calendar", rules.registry_platform_for(self.REAL_SHAPE, "calendar",
+                                                                            "casora_mock"), "naam_kalender")
+        self.assertEqual(entity_id, "calendar.naam_kalender")
+        self.assertEqual(registry.entries, {"calendar.naam_kalender": "casora_mock"})
+
+    def test_entry_already_under_mock_platform_is_kept(self):
+        registry = FakeRegistry({"calendar.naam_kalender": "casora_mock"})
+        rules.clear_old_platform_entry(registry, self.REAL_SHAPE, "calendar", "casora_mock")
+        self.assertEqual(registry.entries, {"calendar.naam_kalender": "casora_mock"})
+
+    def test_legacy_calendar_old_entry_is_kept(self):
+        legacy = {"entity_id": "calendar.naam_alt", "registry_platform": "local_calendar"}
+        registry = FakeRegistry({"calendar.naam_alt": "local_calendar"})
+        rules.clear_old_platform_entry(registry, legacy, "calendar", "casora_mock")
+        self.assertEqual(registry.entries, {"calendar.naam_alt": "local_calendar"})
+
+    def test_other_domain_old_entry_is_kept(self):
+        sensor = {"entity_id": "sensor.naam_messwert", "registry_platform": "velair", "events": []}
+        registry = FakeRegistry({"sensor.naam_messwert": "velair"})
+        rules.clear_old_platform_entry(registry, sensor, "sensor", "casora_mock")
+        self.assertEqual(registry.entries, {"sensor.naam_messwert": "velair"})
+
+
+class FakeRegistry:
+    """Entity registry without HA: entity_id -> platform. create() suffixes a taken entity_id, as HA does."""
+
+    def __init__(self, entries):
+        self.entries = dict(entries)
+
+    def platform_of(self, entity_id):
+        return self.entries.get(entity_id)
+
+    def remove(self, entity_id):
+        self.entries.pop(entity_id, None)
+
+    def create(self, domain, platform, object_id):
+        entity_id, n = f"{domain}.{object_id}", 2
+        while entity_id in self.entries:
+            entity_id = f"{domain}.{object_id}_{n}"
+            n += 1
+        self.entries[entity_id] = platform
+        return entity_id
+
+
+class MockCalendarFeaturesTest(unittest.TestCase):
+    def test_event_bits_are_cleared_whatever_the_fixture_says(self):
+        # CREATE_EVENT 1, DELETE_EVENT 2, UPDATE_EVENT 4: the mock serves none of these services.
+        for features in (1, 2, 4, 7):
+            with self.subTest(features=features):
+                self.assertEqual(replay.served_features(features), 0)
+
+    def test_other_bits_are_kept(self):
+        self.assertEqual(replay.served_features(31), 24)
+        self.assertEqual(replay.served_features(0), 0)
+
 
 if __name__ == "__main__":
     unittest.main()

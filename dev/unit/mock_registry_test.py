@@ -105,5 +105,33 @@ class SnapshotHiddenTest(unittest.TestCase):
         self.assertIs(self.hidden_in_snapshot({}), False)
 
 
+
+class CalendarPlatformDriftTest(unittest.TestCase):
+    """haus.snapshot() repeats the calendar rule of registry_rules.registry_platform_for; this keeps them equal.
+
+    The shapes are those of CalendarObjectTest (dev/unit/mock_calendar_replay_test.py).
+    """
+
+    SHAPES = [
+        {"entity_id": "calendar.naam_kalender", "registry_platform": "local_calendar", "state": "off",
+         "events": [{"summary": "Naam-ABCDEF", "start": "2026-11-09T09:30:00+01:00",
+                     "end": "2026-11-09T10:30:00+01:00"}]},
+        {"entity_id": "calendar.naam_alt", "registry_platform": "local_calendar", "state": "off"},
+        {"entity_id": "calendar.naam_leer", "registry_platform": "google", "state": "off", "events": []},
+        {"entity_id": "calendar.naam_plain", "state": "off", "events": []},
+        {"entity_id": "sensor.naam_messwert", "registry_platform": "velair", "state": "1", "events": []},
+    ]
+
+    def test_snapshot_platform_equals_registry_platform_for(self):
+        fixture = {"areas": [], "devices": [], "entities": [dict(e) for e in self.SHAPES]}
+        entities = haus.snapshot(fixture)["entities"]
+        for shape in self.SHAPES:
+            eid = shape["entity_id"]
+            domain = eid.split(".", 1)[0]
+            with self.subTest(entity=eid):
+                expected = rules.registry_platform_for(shape, domain, "casora_mock")
+                self.assertEqual(entities[eid]["platform"], expected)
+
+
 if __name__ == "__main__":
     unittest.main()

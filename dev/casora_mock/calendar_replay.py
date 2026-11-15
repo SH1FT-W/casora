@@ -43,3 +43,15 @@ def events_for_range(events, export_date, today, start, end, local_tz=None):
         if instant(item["start"]) < instant(end) and instant(item["end"]) > instant(start):
             result.append(item)
     return sorted(result, key=lambda event: instant(event["start"]))
+
+
+CREATE_EVENT, DELETE_EVENT, UPDATE_EVENT = 1, 2, 4  # HA CalendarEntityFeature
+
+
+def served_features(features: int) -> int:
+    """supported_features the mock shows: the event bits are cleared, the mock serves no create/delete/update.
+
+    The exporter scrambles the fixture's numbers, so the bits come out at random; a shown "Add event" button
+    would fail in calendar.create_event (MCalendar has no create method).
+    """
+    return features & ~(CREATE_EVENT | DELETE_EVENT | UPDATE_EVENT)

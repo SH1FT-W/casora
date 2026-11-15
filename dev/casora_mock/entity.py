@@ -21,7 +21,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 
-from .calendar_replay import fixture_events
+from .calendar_replay import fixture_events, served_features
 from .registry_rules import has_own_object
 
 DOMAIN = "casora_mock"
@@ -702,6 +702,11 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
                 if start <= s <= end:
                     out.append(CalendarEvent(start=s, end=s + timedelta(hours=1), summary=titles[i % len(titles)]))
             return out
+
+        @property
+        def supported_features(self):
+            # The fixture's numbers are scrambled by the exporter; no event services are served (calendar_replay).
+            return served_features(int(self.a.get("supported_features") or 0))
 
         @property
         def event(self):

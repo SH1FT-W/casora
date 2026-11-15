@@ -26,7 +26,7 @@ from homeassistant.util import dt as dt_util
 
 from .entity import PLATFORMS, build_classes
 from .haus import compose
-from .registry_rules import hidden_by_for, registry_platform_for, sensor_options_for
+from .registry_rules import clear_old_platform_entry, hidden_by_for, registry_platform_for, sensor_options_for
 
 DOMAIN = "casora_mock"
 _LOGGER = logging.getLogger(__name__)
@@ -116,6 +116,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
+class _EntityRegistry:
+    """The Home Assistant entity registry as registry_rules.clear_old_platform_entry needs it."""
+
+    def __init__(self, ents) -> None:
+        self._ents = ents
+
+    def platform_of(self, entity_id):
+        entry = self._ents.async_get(entity_id)
+        return entry.platform if entry else None
+
+    def remove(self, entity_id) -> None:
+        self._ents.async_remove(entity_id)
+
+
 class CasoraMock:
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry, fixture: dict, scenarios: dict) -> None:
         self.hass = hass
@@ -164,6 +178,8 @@ class CasoraMock:
                 continue  # echte Helfer/Kern-Entitäten, siehe configuration.yaml
             # registry_platform: another integration's entity (Velair, velair.py) – state written directly, no object,
             # except calendars with fixture events (registry_rules.registry_platform_for).
+            # A house that loaded the export before: free the exported entity_id from the old platform first.
+            clear_old_platform_entry(_EntityRegistry(ents), e, domain, DOMAIN)
             entry = ents.async_get_or_create(
                 domain, registry_platform_for(e, domain, DOMAIN), e.get("unique_id") or e["entity_id"],
                 suggested_object_id=object_id,
