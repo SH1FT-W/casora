@@ -27251,11 +27251,12 @@ class CasoraPanel extends HTMLElement {
 
   // Studio: the settings the Agenda tile preview filters by. The open Settings draft first, then the saved
   // settings file (CASORA_SETTINGS, updated on Save), then the copy read once. Null until one is known.
-  // Request the title rule once per paint after a failure, and redraw only when it arrives.
+  // One initial request and one later-paint retry; redraw only when the rule arrives.
   _calendarSettings(kind) {
     if (kind !== "casora_calendar") return null;
-    if (!window.casoraCalendarAllows && !this._calRuleAsked) {
+    if (!window.casoraCalendarAllows && !this._calRuleAsked && (this._calRuleAttempts || 0) < 2) {
       this._calRuleAsked = true;
+      this._calRuleAttempts = (this._calRuleAttempts || 0) + 1;
       (window.casoraImportScript || ((p) => import("/casora_scripts/" + p)))("local/06a-kalender-filter.js")
         .then(() => {
           if (window.casoraCalendarAllows) this._rebuildPreview();
