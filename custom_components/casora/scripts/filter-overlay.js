@@ -3273,7 +3273,7 @@
 
     // ── Fixed head on the phone's room and badge pages (1B, 15.11.2026) ─────────
     // As on Home (_ensureDashboardHeader): portrait phone only, once the page's badge row reaches the top, a slim
-    // row (back, name) and that badge row stay there on the bar's material, 98 px below
+    // row (back, name, room status on the right) and that badge row stay there on the bar's material, 98 px below
     // the safe area; a tap on the row scrolls to the top. Room page: the room's badges (sub-badges), badge page:
     // the dashboard's badge row. Tablet, desktop and landscape keep the compact header. The row is held by its
     // wrapper (sticky in the page's scroller); the card's own sticky is turned off through
@@ -3310,7 +3310,7 @@
         grad.style.background = h ? 'color-mix(in srgb, var(--primary-background-color, #f4efe8) 14%, transparent)' : '';
         barEdge.style.top = h ? `calc(${HEAD_B_TOP} + ${h}px)` : look.et;
       };
-      let held = null, shown = false;
+      let held = null, shown = false, statusAt = 0;
       const rowOf = () => {
         const w = room ? this._subBadgesWrapper : this._badgeRowWrapper;
         if (!w || w.parentNode !== contentEl) return null;
@@ -3389,11 +3389,15 @@
           ? held.r.w.getBoundingClientRect().top <= top + held.top + 0.5
           : titleEl.getBoundingClientRect().bottom <= top + HEAD_B_ROW;
         if (on) {
-          // Name only: the badges held right below already say the room's state (owner, 15.11.2026).
           const g = el.firstChild, s = el.lastChild;
           const name = titleEl.textContent.trim();
           if (g.textContent !== name) g.textContent = name;
-          if (s && s !== g && s.textContent) s.textContent = '';
+          if (room && Date.now() - statusAt > 500) {
+            statusAt = Date.now();
+            const t = _roomStatusParts(this._hass, this._subBadgesWrapper,
+              this._roomLightIds || _lightIdsOf(this._config?.sections || [])).filter(Boolean).join(' · ');
+            if (s.textContent !== t) s.textContent = t;
+          }
           const col = getComputedStyle(titleEl).color;
           if (col && el.style.color !== col) el.style.color = col;
         }

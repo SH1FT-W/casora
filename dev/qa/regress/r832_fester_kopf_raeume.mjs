@@ -50,7 +50,7 @@ const measure = (pg) => pg.evaluate(new Function(`
   const grad = o._gradientBlurEl && o._gradientBlurEl.firstChild;
   return {
     st: o._overlayEl.scrollTop, sh: o._overlayEl.scrollHeight, ih: innerHeight,
-    head: head && { op: parseFloat(getComputedStyle(head).opacity), pe: getComputedStyle(head).pointerEvents, box: box(head), name: head.firstChild.textContent, rest: head.lastChild === head.firstChild ? '' : head.lastChild.textContent, inPage: head.isConnected },
+    head: head && { op: parseFloat(getComputedStyle(head).opacity), pe: getComputedStyle(head).pointerEvents, box: box(head), name: head.firstChild.textContent, inPage: head.isConnected },
     wrap: wrap && { box: box(wrap), pos: getComputedStyle(wrap).position, cardPos: getComputedStyle(card).position, mb: wrap.style.marginBottom, vars: card.style.getPropertyValue('--casora-badge-row-pos') },
     pills: pills.map(box), nested: [...new Set(nested)],
     grad: grad ? { op: parseFloat(getComputedStyle(grad).opacity), mask: grad.style.maskImage || grad.style.webkitMaskImage } : null,
@@ -114,7 +114,6 @@ for (const [key, spacer, label] of [[ROOM, true, `room page "${room.room}"`], ['
   await check(`${label} scrolled: slim head shown`, m.head && m.head.op === 1 && m.head.pe === 'auto', m.head);
   await check(`${label} scrolled: head row 44 px at the top`, m.head && Math.abs(m.head.box.t) < 1 && Math.abs(m.head.box.h - 44) < 1, m.head && m.head.box);
   await check(`${label} scrolled: name "${m.title}" in the head`, m.head && m.head.name === m.title && m.title.length > 0, m.head);
-  await check(`${label} scrolled: name only, no room status on the right (the badges say it)`, m.head && !m.head.rest, m.head);
   await check(`${label} scrolled: badge row held under the head`, m.wrap.pos === 'sticky' && m.wrap.box.t >= 44 - 0.5 && m.wrap.box.t < 50, m.wrap);
   await check(`${label} scrolled: badges inside the 98 px band`, m.pills.length >= 1 && m.pills.every((p) => p.t >= 40 && p.b <= 98 + 0.5), m.pills);
   await check(`${label} scrolled: the card itself is not sticky (no sticky in sticky)`, m.wrap.cardPos === 'relative' && m.nested.length === 0, [m.wrap, m.nested]);
