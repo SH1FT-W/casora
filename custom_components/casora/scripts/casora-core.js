@@ -16119,7 +16119,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     if (listedDetection(id)) {
       if (id.indexOf('binary_sensor.') === 0 && (prev !== 'off' || s !== 'on')) return null;
       if (id.indexOf('event.') === 0 && !isFinite(Date.parse(s))) return null;
-      return { label: name + ' erkannt', icon: 'camera', tone: 'accent', opens: 'casora:detection' };
+      return { label: name + ' erkannt', icon: 'camera', tone: 'accent', passive: true };
     }
 
     if (isDoorbell(id, st)) {
@@ -16670,7 +16670,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     var heads = [], byKey = {};
     (events || []).forEach(function (e) {
       if (!e) return;
-      if (e.opens === 'casora:detection') {
+      if (e.passive) {
         heads.push(Object.assign({}, e, { members: [e], count: 1, stackKey: e.id }));
         return;
       }
@@ -16910,6 +16910,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
           opens: d.opens || null,
           once: d.once || null,
           done: !!d.done,
+          passive: !!d.passive,
         });
       });
 
@@ -17170,10 +17171,10 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         // mit führendem „·“ in eine eigene Zeile.
         sub: r.ongoing ? r.sub : (r.sub ? (toned ? [r.sub, ago(r.when)].filter(Boolean).join(' · ') : [r.sub, ago(r.when)]) : ago(r.when)),
         value: r.value || null,
-        entity: r.opens === 'casora:detection' ? null : (r.entity || null),
+        entity: r.passive ? null : (r.entity || null),
         image: r.image,
         imageFit: r.imageFit,
-        tappable: r.opens !== 'casora:detection' && !!(r.entity || r.opens || many),
+        tappable: !r.passive && !!(r.entity || r.opens || many),
         // A stack: how many, and a chevron that points down (closed) or up (open). Tapping opens it.
         endHtml: many ? '<span class="casora-nst-n">' + Number(r.count) + '</span>' : null,
         noChev: many,
@@ -17237,7 +17238,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         }
         continue;
       }
-      if (list[i].opens === 'casora:detection') {
+      if (list[i].passive) {
         els[i].removeAttribute('data-casora-mi');
         continue;
       }
@@ -17573,7 +17574,6 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
           e.preventDefault();
           e.stopPropagation();
           var row = n._casoraRow;
-          if (n.dataset.casoraOpen === 'casora:detection') return;
           window.casoraHaptic('light');
           if (n.dataset.casoraOpen === 'casora:stack') {
             if (row && row.stackKey) _openStacks[row.stackKey] = !_openStacks[row.stackKey];
