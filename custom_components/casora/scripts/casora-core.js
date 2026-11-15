@@ -5565,18 +5565,20 @@ window.casoraMenuGlass = {
         { duration: 560, easing: 'ease-out' });
     }
 
-    // "Show names" of the dashboard (Studio, Look & feel › Room bar; variable nav_names on the room views): "rooms" =
-    // Home only as its house circle, always (the tight state does the same, but only when the row is very narrow).
-    // Read from the dashboard's config whenever it is a new object (saved in the Studio), at most once a second.
+    // "Show names" of the dashboard (Studio, Look & feel › Room bar; variable nav_names on the room views): by default
+    // the first view (Home) only as its house circle, always (the tight state does the same, but only when the row is
+    // very narrow); "all" = Home with its text. Read from the dashboard's config whenever it is a new object (saved in
+    // the Studio), at most once a second; without a config yet, the default, so Home does not flash its text.
     _syncNames(force) {
       const now = Date.now();
       if (!force && now - (this._namesAt || 0) < 1000) return;
       this._namesAt = now;
       const hr = huiRoot();
       const cfg = hr && hr.lovelace && hr.lovelace.config;
-      if (!cfg || cfg === this._namesCfg) return;
+      if (!cfg) { if (this._homeIcon === undefined) this._setHomeIcon(true); return; }
+      if (cfg === this._namesCfg) return;
       this._namesCfg = cfg;
-      this._setHomeIcon(navNamesOf(cfg) === 'rooms');
+      this._setHomeIcon(navNamesOf(cfg) !== 'all');
     }
 
     _setHomeIcon(on) {
@@ -6418,7 +6420,7 @@ window.casoraMenuGlass = {
           .bar.paged .rooms { flex: 1 1 auto; }
           .rooms { justify-content: center; }
           .bar.paged .rooms { justify-content: flex-start; }
-          /* tight: very narrow row (set in _layout); homeicon: "Show names: Without Home text" (nav_names). */
+          /* tight: very narrow row (set in _layout); homeicon: "Show names: Home page as icon" (nav_names). */
           :is(.bar.tight, .bar.homeicon) .route.home .htx { display: none; }
           :is(.bar.tight, .bar.homeicon) .route.home .label { padding-right: calc((var(--casora-nav-pill-height-tablet, 46px)
               - 2 * var(--casora-nav-pill-inset-y-tablet, 4px) - 30px) / 2); gap: 0; }
@@ -6557,15 +6559,16 @@ window.casoraMenuGlass = {
   customElements.define('casora-nav-bar', CasoraNavBar);
 
   // nav_names of a dashboard config: the first room view whose hero card (cards[0], casora_room) sets it, like
-  // swipe_rooms. Anything but "rooms" counts as the default (every name shown).
+  // swipe_rooms. "all" = every name, Home with its text; anything else, also the stored "rooms" of beta b4 and nothing
+  // at all, is the default "rooms" (Home only as its house circle, owner 15.11.2026).
   function navNamesOf(cfg) {
     const views = (cfg && cfg.views) || [];
     for (const v of views) {
       const hero = ((v || {}).cards || [])[0];
       const x = hero && hero.variables && hero.variables.nav_names;
-      if (x !== undefined && x !== null && x !== '') return x === 'rooms' ? 'rooms' : '';
+      if (x !== undefined && x !== null && x !== '') return x === 'all' ? 'all' : 'rooms';
     }
-    return '';
+    return 'rooms';
   }
 
   function walkFind(root, selector, out, depth) {

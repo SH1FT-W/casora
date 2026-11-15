@@ -2,14 +2,17 @@
 // @parallel: allein
 // @deckt: custom_components/casora/scripts/casora-core.js#navNamesOf,_syncNames,_setHomeIcon custom_components/casora/panel/casora-panel-settings.js custom_components/casora/panel/casora-panel.js#nav_names
 // Room bar "Show names" (owner, 14.11.2026): Settings › Look & feel gets a block "Room bar" (only this dashboard)
-// right before "Clock" with two segments, "All" (default, as before) and "Without Home text" (Home only as its round
-// house icon, the rooms keep their names). Expected:
-//  1. nothing stored: the bar as before (Home with its text)
-//  2. Studio: block before Clock, badge, exactly two choices, "All" chosen; picking the other draws the preview's
-//     Home as a house circle; "Save settings" stores nav_names "rooms" on this dashboard only
-//  3. desktop and tablet, light and dark: Home a round 38 px button without text, aria-label "Zuhause", the rooms
-//     with their names; the phone is unchanged; another dashboard keeps its text
-//  4. reloaded Studio shows the stored choice; "All" again removes the value and the text is back
+// right before "Clock" with two segments, "All" (Home with its text, stored as "all") and "Home page as icon" (the
+// first view only as its round house icon, the rooms keep their names). Since 15.11.2026 (owner) "Home page as icon"
+// is the default: nothing stored = icon; the icon keeps the first view's own name (renamed to "Start" in 4). Expected:
+//  1. nothing stored, desktop and tablet, light and dark: Home a round 38 px button without text, aria-label
+//     "Zuhause", the rooms with their names
+//  2. Studio: block before Clock, badge, "Alle" | "Startseite als Symbol", the latter chosen, preview Home as a house
+//     circle; picking "Alle" gives the preview's Home its text; "Save settings" stores nav_names "all" on every room
+//     view of this dashboard only
+//  3. Home with its text again (fewer rooms fit on desktop); the phone is unchanged; another dashboard untouched
+//  4. reloaded Studio shows "Alle"; a dashboard with the legacy value "rooms" (beta b4) shows "Startseite als Symbol"
+//     in the Studio and the icon, named "Start", on the dashboard
 process.env.CASORA_THEME = process.env.CASORA_THEME || 'Casora';
 import { open, usePage, studio, casoraDashboards, casoraDashboard, dashboard, cards, check, need, finish, atFinish, shot } from './lib.mjs';
 import { ws } from '../ws.mjs';
@@ -47,7 +50,7 @@ const measure = (pg) => pg.evaluate(() => {
   const rooms = [...sr.querySelectorAll('.rooms .route')].map((b) => ({ t: b.textContent.trim(), r: b.getBoundingClientRect() }))
     .filter((x) => x.r.width > 0 && x.r.left >= bar.left - 1 && x.r.right <= bar.right + 1);
   return { w: Math.round(r.width), h: Math.round(r.height), text: !!htx && getComputedStyle(htx).display !== 'none' && tr.width > 0,
-    aria: h.getAttribute('aria-label'), icon: sr.querySelector('.bar').classList.contains('homeicon'),
+    aria: h.getAttribute('aria-label'), title: h.getAttribute('title'), icon: sr.querySelector('.bar').classList.contains('homeicon'),
     rooms: rooms.length, named: rooms.filter((x) => x.t.length > 1 && x.r.width > 30).length };
 });
 const view = async (label, url, o, file) => {
@@ -71,14 +74,19 @@ const phoneTexts = async () => {
   return { t, bar };
 };
 
-// ── 1. default ────────────────────────────────────────────────────────────────
+// Home as the round icon: 38 px, no text, its name as aria-label, every room with its name.
+const iconChecks = async (label, m, name = 'Zuhause') => {
+  await check(`${label}: Home round (38 px), no text`, m && m.icon && !m.text && m.w >= 34 && m.w <= 42 && Math.abs(m.w - m.h) <= 4, m);
+  await check(`${label}: Home keeps its name "${name}" as aria-label and tooltip`, m && m.aria === name && m.title === name, m && [m.aria, m.title]);
+  await check(`${label}: rooms keep their names`, m && m.rooms >= 1 && m.named === m.rooms, m);
+};
+
+// ── 1. default: nothing stored = Home as the icon ─────────────────────────────
 const before = {};
 for (const [label, o] of DEVICES) {
-  const m = before[label] = await view(label, home(d), o, label === 'Desktop light' ? 'vorher_desktop_hell' : label === 'Tablet dark' ? 'vorher_tablet_dunkel' : null);
-  // A very narrow tablet row may already show Home as the circle (tight); the setting must not be needed there.
-  await check(`default ${label}: Home as before, no homeicon`, m && !m.icon && (m.text ? m.w > 60 : label.startsWith('Tablet')), m);
+  const m = before[label] = await view(label, home(d), o, label === 'Desktop light' ? 'standard_desktop_hell' : label === 'Tablet dark' ? 'standard_tablet_dunkel' : null);
+  await iconChecks(`default ${label}`, m);
 }
-await check('default Desktop: Home with its text', before['Desktop light'].text, before['Desktop light']);
 const phoneBefore = await phoneTexts();
 
 // ── 2. Studio ─────────────────────────────────────────────────────────────────
@@ -99,15 +107,18 @@ await page.evaluate(() => window.__panel()._csShow('n-look', 'nb-navbar'));
 await page.waitForTimeout(1500);
 let b = await block();
 await check('Studio: block "Raumleiste" right before "Uhr", only this dashboard', b && b.title === 'Raumleiste' && b.next === 'nb-time' && /Nur dieses Dashboard/.test(b.badge || ''), b);
-await check('Studio: "Namen zeigen" with exactly "Alle" and "Ohne Zuhause-Text", "Alle" chosen', b && b.label === 'Namen zeigen'
-  && JSON.stringify(b.opts) === JSON.stringify(['Alle', 'Ohne Zuhause-Text']) && JSON.stringify(b.on) === '[""]'
+// The chosen segment's label (data-v "" is the default "Startseite als Symbol", "all" is "Alle").
+const onLabel = () => page.evaluate(() => [...window.__panel().shadowRoot.querySelectorAll('[data-pkey="nb-navbar"] .segopt.on')].map((o) => o.textContent.trim()));
+await check('Studio: "Namen zeigen" with exactly "Alle" | "Startseite als Symbol", the latter chosen with nothing stored', b && b.label === 'Namen zeigen'
+  && JSON.stringify(b.opts) === JSON.stringify(['Alle', 'Startseite als Symbol']) && JSON.stringify(b.on) === '[""]'
+  && JSON.stringify(await onLabel()) === '["Startseite als Symbol"]'
   && /Ohne den Text passt ein Raum mehr in die Leiste/.test(b.hint), b);
-await check('Studio preview: Home with its text', b && b.mini && !b.mini.icon && b.mini.text.length > 1, b && b.mini);
-await page.evaluate(() => window.__panel().shadowRoot.querySelector('[data-pkey="nb-navbar"] .segopt[data-v="rooms"]').click());
+await check('Studio preview: Home as a house circle, name kept as aria-label', b && b.mini && b.mini.icon && !b.mini.text && /Zuhause|Home/.test(b.mini.aria || ''), b && b.mini);
+await page.evaluate(() => window.__panel().shadowRoot.querySelector('[data-pkey="nb-navbar"] .segopt[data-v="all"]').click());
 await page.waitForTimeout(1200);
 b = await block();
-await check('Studio preview follows: Home as a house circle, name kept as aria-label', b && b.mini && b.mini.icon && !b.mini.text && /Zuhause|Home/.test(b.mini.aria || ''), b && b.mini);
-await check('Studio: "Ohne Zuhause-Text" chosen', b && JSON.stringify(b.on) === '["rooms"]', b && b.on);
+await check('Studio preview follows: Home with its text', b && b.mini && !b.mini.icon && b.mini.text.length > 1, b && b.mini);
+await check('Studio: "Alle" chosen', b && JSON.stringify(b.on) === '["all"]', b && b.on);
 if (SHOT) {
   await page.evaluate(() => window.__panel().shadowRoot.querySelector('[data-pkey="nb-navbar"]').scrollIntoView({ block: 'center' }));
   await page.waitForTimeout(400);
@@ -123,43 +134,63 @@ const save = () => page.evaluate(async () => {
 await need('saved', (await save()) === 'ok');
 await page.waitForTimeout(1500);
 const desk1 = await cfg(d.url);
-await check('stored on every room view of this dashboard', heroes(desk1).every((x) => x === 'rooms'), heroes(desk1));
+await check('"all" stored on every room view of this dashboard', heroes(desk1).length > 0 && heroes(desk1).every((x) => x === 'all'), heroes(desk1));
 if (other) await check('another dashboard untouched', JSON.stringify(await cfg(other.url)) === other0, other.url);
 
 // ── 3. dashboards ─────────────────────────────────────────────────────────────
 for (const [label, o] of DEVICES) {
-  const file = label === 'Desktop light' ? 'nachher_desktop_hell' : label === 'Tablet dark' ? 'nachher_tablet_dunkel' : null;
+  const file = label === 'Desktop light' ? 'alle_desktop_hell' : label === 'Tablet dark' ? 'alle_tablet_dunkel' : null;
   const m = await view(label, home(d), o, file);
-  await check(`${label}: Home round (38 px), no text`, m && m.icon && !m.text && m.w >= 34 && m.w <= 42 && Math.abs(m.w - m.h) <= 4, m);
-  await check(`${label}: Home keeps its aria-label`, m && m.aria === 'Zuhause', m && m.aria);
-  await check(`${label}: rooms keep their names`, m && m.rooms >= 1 && m.named === m.rooms, m);
+  // A very narrow tablet row may still show Home as the circle (tight); that is not the setting.
+  await check(`"Alle" ${label}: no homeicon, Home with its text`, m && !m.icon && (m.text ? m.w > 60 : label.startsWith('Tablet')), m);
+  if (label.startsWith('Desktop')) await check(`"Alle" ${label}: Home with its text`, m && m.text, m);
   const b0 = before[label];
-  // Desktop: the 77 px of the text make room for another name; a tablet row that was tight already stays as it was.
-  await check(`${label}: ${b0 && b0.text ? 'more' : 'as many'} rooms fit`, m && b0 && (b0.text ? m.rooms > b0.rooms : m.rooms === b0.rooms),
+  // Desktop: the 77 px of the text take the place of a name; a tight tablet row stays as it was.
+  await check(`"Alle" ${label}: ${m && m.text ? 'fewer' : 'as many'} rooms fit`, m && b0 && (m.text ? m.rooms < b0.rooms : m.rooms === b0.rooms),
     { now: m && m.rooms, before: b0 && b0.rooms });
 }
 const phoneAfter = await phoneTexts();
 await check('phone unchanged (no room bar, same cards)', phoneAfter.bar === 0 && phoneAfter.t === phoneBefore.t, { before: phoneBefore, after: phoneAfter });
 if (other) {
   const m = await view('other dashboard', home(other), DEVICES[0][1]);
-  await check('another dashboard keeps Home with its text', m && (m.noHome || (m.text && !m.icon)), m);
+  await check('another dashboard (nothing stored) keeps the default icon', m && (m.noHome || (m.icon && !m.text)), m);
 }
 
-// ── 4. reload, back to default ────────────────────────────────────────────────
+// ── 4. reload; legacy "rooms" ─────────────────────────────────────────────────
 usePage(page);
 await page.reload();
 await studio(page, d.url);
 await page.evaluate(() => window.__panel()._csShow('n-look', 'nb-navbar'));
 await page.waitForTimeout(1500);
 b = await block();
-await check('after reload: "Ohne Zuhause-Text" still chosen, preview with the house circle', b && JSON.stringify(b.on) === '["rooms"]' && b.mini && b.mini.icon, b);
-await page.evaluate(() => window.__panel().shadowRoot.querySelector('[data-pkey="nb-navbar"] .segopt[data-v=""]').click());
-await page.waitForTimeout(800);
-await need('saved', (await save()) === 'ok');
+await check('after reload: "Alle" still chosen, preview with the text', b && JSON.stringify(b.on) === '["all"]' && b.mini && !b.mini.icon, b);
+// A dashboard set up with beta b4 carries "rooms" on its room views. Its first view is renamed to "Start": the
+// icon keeps that name, nothing hard-codes "Zuhause".
+const legacy = JSON.parse(JSON.stringify(desk1));
+for (const v of legacy.views || []) {
+  const vars = (((v.cards || [])[0] || {}).variables) || null;
+  if (vars && vars.nav_names === 'all') vars.nav_names = 'rooms';
+}
+let renamed = 0;
+const rename = (o) => {
+  if (!o || typeof o !== 'object') return;
+  if (Array.isArray(o.routes) && o.routes[0] && typeof o.routes[0].label === 'string') {
+    o.routes[0].label = 'Start'; delete o.routes[0].auto; o.routes[0].literal = true; renamed++;
+  }
+  Object.values(o).forEach(rename);
+};
+rename(legacy);
+await need('first view renamed in the room bar config', renamed > 0, renamed);
+await c.cmd({ type: 'lovelace/config/save', url_path: d.url, config: legacy });
+await need('legacy "rooms" stored', heroes(await cfg(d.url)).every((x) => x === 'rooms'));
+await page.reload();
+await studio(page, d.url);
+await page.evaluate(() => window.__panel()._csShow('n-look', 'nb-navbar'));
 await page.waitForTimeout(1500);
-const desk2 = await cfg(d.url);
-await check('"Alle" removes the value again', heroes(desk2).every((x) => x === undefined), heroes(desk2));
-const back = await view('Desktop light', home(d), DEVICES[0][1]);
-await check('"Alle": Home with its text again', back && back.text && !back.icon && back.w > 60, back);
+b = await block();
+await check('legacy "rooms": Studio shows "Startseite als Symbol", preview with the house circle', b && JSON.stringify(b.on) === '[""]'
+  && JSON.stringify(await onLabel()) === '["Startseite als Symbol"]' && b.mini && b.mini.icon, b);
+const leg = await view('Desktop light', home(d), DEVICES[0][1]);
+await iconChecks('legacy "rooms" Desktop light', leg, 'Start');
 c.close();
 await finish();
