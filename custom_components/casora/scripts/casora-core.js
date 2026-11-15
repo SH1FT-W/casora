@@ -16811,6 +16811,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
           image: d.image,
           imageFit: d.imageFit,
           entity: src,
+          // A colour of its own (toneOf: hue wins over the icon's), e.g. the weather all-clear in green.
+          hue: typeof d.hue === 'string' && d.hue ? d.hue : null,
           opens: d.opens || null,
           once: d.once || null,
           done: !!d.done,

@@ -2086,6 +2086,9 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     return (aid && hass.areas && hass.areas[aid] && hass.areas[aid].name) || '';
   }
 
+  // The all-clear is good news: green like the security ok colour, not the red of the warning icon (owner, 15.11.2026).
+  var ALL_CLEAR = 'var(--casora-security-ok-color, var(--casora-color-green, #6AAE78))';
+
   var ext = {
     // Verlauf: welche Entitäten aus dem Logbuch gelesen werden.
     watch: function (hass) {
@@ -2150,7 +2153,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
           return { label: 'Wetterwarnung', sub: 'Amtliche Warnung', icon: 'exclamation', tone: 'warn', entity: slot.head };
         }
         if (slot.v === 'clear') {
-          return { label: 'Entwarnung', sub: 'Wetterwarnung aufgehoben', icon: 'exclamation', tone: 'good', entity: slot.head };
+          return { label: 'Entwarnung', sub: 'Wetterwarnung aufgehoben', icon: 'exclamation', tone: 'good', hue: ALL_CLEAR, entity: slot.head };
         }
         return null;
       }
@@ -2161,7 +2164,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
           return { label: 'Wetterwarnung', sub: 'Amtliche Warnung', icon: 'exclamation', tone: 'warn' };
         }
         if (!warnOn(s) && s !== 'unavailable' && s !== 'unknown' && warnOn(prev)) {
-          return { label: 'Entwarnung', sub: 'Wetterwarnung aufgehoben', icon: 'exclamation', tone: 'good' };
+          return { label: 'Entwarnung', sub: 'Wetterwarnung aufgehoben', icon: 'exclamation', tone: 'good', hue: ALL_CLEAR };
         }
         return null;
       }

@@ -133,6 +133,21 @@ for (const [tag, o, url, view, mobile] of VIEWS) {
   const clear = (shown || []).filter((t) => /Entwarnung/.test(t));
   await check(tag + ': Glocke mit genau einer „Entwarnung“ für das Warngerät', clear.length === 1, shown);
   await check(tag + ': ohne Raum davor („QA Terrasse Entwarnung“)', !clear.some((t) => /QA Terrasse/.test(t)), clear);
+  // Owner, 15.11.2026: the all-clear is green (security ok colour), not the red of the warning icon.
+  const tone = await page.evaluate(() => {
+    const row = window.__pierce('.casora-notify-menu .hui-srow').find((r) => r.getBoundingClientRect().height > 0 && /Entwarnung/.test(r.textContent));
+    if (!row) return null;
+    const probe = document.createElement('i');
+    probe.style.color = 'var(--casora-security-ok-color, var(--casora-color-green))';
+    row.appendChild(probe);
+    const green = getComputedStyle(probe).color;
+    probe.remove();
+    const bgs = [row, ...row.querySelectorAll('*')].map((n) => getComputedStyle(n).backgroundColor).filter((c) => c && c !== 'rgba(0, 0, 0, 0)');
+    return { green, bgs };
+  });
+  // The bell shades its tones (_casoraNotifyTone), so the circle is a darker green: green leads, no red.
+  const greenish = (c) => { const m = String(c).match(/\d+(\.\d+)?/g) || []; const [r, g, b] = m.map(Number); return g > r + 30 && g > b + 20; };
+  await check(tag + ': „Entwarnung“ in Grün', tone && tone.bgs.some(greenish), tone);
   await page.context().browser().close().catch(() => {});
 }
 await finish();
