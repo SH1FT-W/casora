@@ -35,7 +35,8 @@ for (const [locale, expected] of Object.entries({
 const makeWindow = ({ withRule = true, waste = null } = {}) => {
   const w = {
     casoraI18n: { t: (s) => de[s] || s },
-    casoraDevice: { waste: () => ({ calendar: waste }) },
+    // Same contract as the finder: a configured trash_calendar wins over the detected one.
+    casoraDevice: { waste: (h, v) => ({ calendar: (v && v.trash_calendar) || waste }) },
   };
   if (withRule && rule) new Function('window', rule)(w);
   return w;
@@ -48,6 +49,18 @@ const states = {
   'calendar.b': { state: 'on', attributes: { message: 'Visible' } },
 };
 const calTile = { variables: {} };
+
+// Studio settings are not necessarily available through the finder's global settings.
+// @deckt: custom_components/casora/panel/casora-panel.js#tileStateWord
+{
+  const w = makeWindow();
+  delete w.casoraDevice;
+  new Function('window', 'document', read('custom_components/casora/scripts/local/00-finder.js'))(w, { querySelector: () => null });
+  const only = { 'calendar.bins': { state: 'on', attributes: { message: 'Pickup' } } };
+  const settings = { calendars: [], waste: { calendar: 'calendar.bins' } };
+  assert.equal(tileStateWord(w)('casora_calendar', calTile, null, only, { states: only }, settings),
+    'Keine Termine', 'the configured waste calendar is excluded with the real finder and Studio settings');
+}
 
 {
   const w = makeWindow({ waste: 'calendar.waste' });

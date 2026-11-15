@@ -83,6 +83,19 @@ const labels = (W) => W.bins.map((b) => b.label).sort();
 const binOf = (W, label) => W.bins.find((b) => b.label === label);
 window.CASORA_SETTINGS = {};
 
+// ── Finder contract: the calendar is only known through trash_calendar ─────────
+// @deckt: custom_components/casora/scripts/local/00-finder.js#waste
+{
+  // A calendar without a waste platform or name: only the configured id can name it.
+  const CAL = 'calendar.side_calendar';
+  const hc = { states: { [CAL]: { entity_id: CAL, state: 'off', attributes: { friendly_name: 'Side Calendar' } } },
+    entities: { [CAL]: { entity_id: CAL, platform: 'remote_calendar', name: 'Side Calendar' } }, devices: {} };
+  assert.equal(D.waste(hc, {}).calendar, null, 'no waste calendar detected by name or platform');
+  assert.equal(D.waste(hc, { trash_calendar: CAL }).calendar, CAL, 'the configured trash_calendar is taken');
+  assert.equal(D.waste(hc, {}).calendar, null, 'trash_calendar does not leak into the next call');
+  console.log('abfall_wcs: finder contract ok');
+}
+
 // ── A: names without the place ────────────────────────────────────────────────
 {
   let W = D.waste(wcs(), {});

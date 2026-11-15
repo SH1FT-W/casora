@@ -6722,7 +6722,7 @@ const tileStateWord = (kind, tile, ent, states, hass, settings) => {
     const allows = typeof window !== "undefined" && window.casoraCalendarAllows;
     if (!allows || !settings) return "";
     const S = states || {};
-    const waste = window.casoraDevice && window.casoraDevice.waste ? window.casoraDevice.waste(hass).calendar : null;
+    const waste = window.casoraDevice && window.casoraDevice.waste ? window.casoraDevice.waste(hass, settings && settings.waste && settings.waste.calendar ? { trash_calendar: settings.waste.calendar } : null).calendar : null;
     const list = Array.isArray(V.calendars) && V.calendars.length ? V.calendars : settings.calendars;
     const configured = Array.isArray(list) && list.length;
     const entities = (hass && hass.entities) || {};
