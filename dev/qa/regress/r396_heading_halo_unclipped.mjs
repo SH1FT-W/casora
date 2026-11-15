@@ -59,12 +59,10 @@ const measure = (page) => page.evaluate(() => {
       const c = e.getBoundingClientRect();
       // A scrolling box cuts what is scrolled out of it like the screen edge does (tiles too) – not a halo box.
       const scrollsY = /auto|scroll/.test(cs.overflowY);
-      // Each axis cuts only when it is not visible: the phone's views clip sideways only (overflow-x: clip, 1B).
-      const openY = scrollsY || cs.overflowY === 'visible', openX = cs.overflowX === 'visible';
       const g = {
-        top: openY ? 1e9 : tr.top - c.top, bottom: openY ? 1e9 : c.bottom - tr.bottom,
+        top: scrollsY ? 1e9 : tr.top - c.top, bottom: scrollsY ? 1e9 : c.bottom - tr.bottom,
         // At the screen edge the halo ends anyway.
-        left: openX || c.left <= 0.5 ? 1e9 : tr.left - c.left, right: openX || c.right >= vw - 0.5 ? 1e9 : c.right - tr.right,
+        left: c.left <= 0.5 ? 1e9 : tr.left - c.left, right: c.right >= vw - 0.5 ? 1e9 : c.right - tr.right,
       };
       let hit = false;
       for (const k of Object.keys(gap)) if (g[k] < gap[k]) { gap[k] = g[k]; if (g[k] < ext) hit = true; }

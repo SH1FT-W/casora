@@ -2,10 +2,12 @@
 // @parallel: ui
 // Gewünscht (07.10.2026, 1.1.0): Die Kopfleiste am Handy beim Scrollen wird im Casora-Look eine
 // schwebende Pille mit Mini-Status. Raumseite: statt des Vollbreiten-Balkens mit Zurück-Pfeil oben
-// mittig „Raum · 21° · Licht aus“. Startseite: seit 1B (14.11.2026) fester Kopf statt Pille, siehe r830.
+// mittig „Raum · 21° · Licht aus“; Startseite: statt einer deckenden Fläche mit harter Unterkante ein
+// weicher Verlauf und links die Pille „Zuhause“, die Glocke/Menü nie überlappt.
 // Erwartet (iPhone 393×852, Theme „Casora“ hell und „Casora Nebel“ dunkel): Raum gescrollt = Pille
 // sichtbar mit Raumnamen, schmaler als der Bildschirm, kein Vollbreiten-Balken, Zurück-Pfeil
-// ausgeblendet; Startseite gescrollt = keine Pille „Zuhause“ (fester Kopf, r830). Ohne Casora-Theme (bis 1.6.0 „Hemma 2“): alter Balken unverändert (Vollbreite, keine Pille).
+// ausgeblendet; Startseite gescrollt = weicher Verlauf statt Glasbalken mit Kante, Pille endet vor
+// Glocke/Menü. Ohne Casora-Theme (bis 1.6.0 „Hemma 2“): alter Balken unverändert (Vollbreite, keine Pille).
 import { open, casoraDashboards, dashboard, check, need, finish, usePage } from './lib.mjs';
 
 const all = await casoraDashboards();
@@ -77,20 +79,45 @@ for (const [theme, dark] of [['Casora', false], ['Casora Nebel', true]]) {
   await dashboard(page, phone.url, 3);
   await page.waitForTimeout(1500);
 
-  // Startseite: seit dem festen Kopf (1B, 14.11.2026) zeigt das Handy hochkant statt der Pille „Zuhause“ eine schmale
-  // Zeile mit Begrüßung und Wetter über der festen Badge-Reihe (geprüft in r830_fester_kopf_handy). Die Pille bleibt
-  // dort aus.
+  // Startseite
   let h = null;
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 12 && !(h && h.op > 0.9); i++) {
     await scrollHome(page);
     await page.waitForTimeout(400);
     h = await page.evaluate(() => {
       const pill = window.__pierce('.casora-head-pill').find((p) => !p.closest?.('casora-filter-overlay'));
-      return pill ? { op: parseFloat(pill.style.opacity || '0'), head: !!window.__pierce('.casora-head-b').length } : null;
+      const fade = window.__pierce('.casora-head-fade')[0];
+      if (!pill) return null;
+      // Alter Glasbalken: fest oben, über die ganze Breite, mit Unschärfe – muss unsichtbar bleiben.
+      const hard = window.__pierce('div').filter((d) => {
+        const cs = getComputedStyle(d);
+        return cs.position === 'fixed' && d.getBoundingClientRect().top <= 0 && d.getBoundingClientRect().width >= window.innerWidth - 1
+          && /blur\(22px\)/.test(cs.backdropFilter || cs.webkitBackdropFilter || '') && parseFloat(cs.opacity) > 0.05;
+      }).length;
+      // Halter von Glocke/Menü (fest oben rechts, über der Pille).
+      const chrome = window.__pierce('div').find((d) => {
+        const cs = getComputedStyle(d);
+        return cs.position === 'fixed' && cs.zIndex === '113' && d.getBoundingClientRect().width > 0;
+      });
+      const pr = pill.getBoundingClientRect(), cr = chrome?.getBoundingClientRect();
+      // 1.3 (Handy-Leiste B): Glocke/Menü sitzen unten in der Navigationsleiste – oben nichts zu überlappen.
+      const docked = !!document.querySelector('.hmn-dock button-card');
+      return {
+        op: parseFloat(pill.style.opacity || '0'), text: pill.textContent.trim(),
+        right: pr.right, chromeLeft: cr ? cr.left : null, top: pr.top, docked, vw: innerWidth,
+        fadeOp: fade ? parseFloat(fade.style.opacity || '0') : null,
+        fadeBg: fade ? getComputedStyle(fade).maskImage || getComputedStyle(fade).webkitMaskImage : null,
+        hard,
+      };
     });
   }
   console.log(tag, 'Startseite', JSON.stringify(h));
-  await check(`${tag}: Startseite – feste Kopfzeile statt Pille „Zuhause“`, h && h.head && h.op === 0, h);
+  await need(`${tag}: Startseite – Pille erscheint beim Scrollen`, h && h.op > 0.9, h);
+  await check(`${tag}: Startseite – Pille sagt nur „Zuhause“`, /^(Zuhause|Home)$/.test(h.text), h.text);
+  if (h.docked) await check(`${tag}: Startseite – Pille im Bild (Glocke/Menü unten in der Leiste)`, h.right <= h.vw - 16, h);
+  else await check(`${tag}: Startseite – Pille endet vor Glocke/Menü`, h.chromeLeft != null && h.right <= h.chromeLeft - 4, h);
+  await check(`${tag}: Startseite – weicher Verlauf sichtbar`, h.fadeOp > 0.9 && /gradient/.test(h.fadeBg || ''), h);
+  await check(`${tag}: Startseite – keine deckende Fläche mit harter Kante`, h.hard === 0, h);
 
   // Raumseite
   await page.evaluate(() => window.scrollTo(0, 0));

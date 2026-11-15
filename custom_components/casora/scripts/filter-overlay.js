@@ -333,102 +333,6 @@
   let _dashBarOn  = false; // frosted bar visible (hysteresis state)
   let _dashTitleStyle = null;
 
-  // ── Fixed head on the phone's Home (1B, 14.11.2026) ─────────────────────────
-  // Portrait phone only: once the big greeting has scrolled away, a slim row (greeting left, weather right)
-  // and the badge row stay at the top on the dashboard bar's material. Fixed part: row 44 + badges 46 + edge 8,
-  // below the status bar (safe area). Tablet, desktop and landscape keep the collapsing header as before.
-  const HEAD_B_ROW = 44;
-  const HEAD_B_H = 98;
-  const HEAD_B_TOP = 'env(safe-area-inset-top, 0px)';
-  // Above the bar's material (110–112), below the bottom bar's menu scrim (150) and every popup.
-  const HEAD_B_Z = '113';
-  const HEAD_B_PAD_R = 'max(env(safe-area-inset-right, 0px), var(--casora-rail-left, 16px))';
-  function _headBWanted(inst) {
-    const w = window.innerWidth || 0, h = window.innerHeight || 0;
-    if (!(w <= 600 && w < h)) return false;
-    const bw = inst?._badgeRowWrapper;
-    if (!(bw?.isConnected && bw.parentNode === inst._container && !_movedBadgeRow)) return false;
-    // With HA's own toolbar above the view (no Casora bar, not kiosk) the head would sit on the toolbar: keep
-    // the collapsing header there.
-    let vc = inst._casoraViewEl;
-    if (!vc?.isConnected) {
-      vc = null;
-      for (let n = inst._container, i = 0; n && i < 30 && !vc; i++) {
-        if (n.tagName === 'HUI-VIEW-CONTAINER') vc = n;
-        n = n.parentNode || n.host || null;
-      }
-      inst._casoraViewEl = vc;
-    }
-    return !vc || vc.getBoundingClientRect().top + (window.scrollY || 0) <= 8;
-  }
-  // HA gives hui-view and hui-view-container overflow-x: hidden, which turns both into scroll containers that
-  // never scroll (the window does), so position: sticky inside them never sticks. clip cuts the sides the same
-  // way without making a scroll container (docs/ha-annahmen.md). Older browsers without clip: no sticking,
-  // the head never shows and the page looks as before.
-  function _headBClip(inst, on) {
-    let n = inst?._container;
-    for (let i = 0; n && i < 30; i++) {
-      if (n.nodeType === 1 && (n.tagName === 'HUI-VIEW' || n.tagName === 'HUI-VIEW-CONTAINER')) {
-        if (on && !n._casoraClipX) { n._casoraClipX = true; n.style.setProperty('overflow-x', 'clip', 'important'); }
-        else if (!on && n._casoraClipX) { n._casoraClipX = false; n.style.removeProperty('overflow-x'); }
-      }
-      n = n.parentNode || n.host || null;
-    }
-  }
-  function _headBSticky(inst, on) {
-    const w = inst?._badgeRowWrapper;
-    if (!w) return;
-    if (on) {
-      // Checked on the style itself: the room overlay drops these values when it hands the row back.
-      if (w._casoraHeadB && w.style.position === 'sticky') return;
-      w._casoraHeadB = true;
-      w.style.setProperty('position', 'sticky');
-      w.style.setProperty('top', `calc(${HEAD_B_TOP} + ${HEAD_B_ROW}px)`);
-      w.style.setProperty('z-index', HEAD_B_Z);
-    } else if (w._casoraHeadB) {
-      w._casoraHeadB = false;
-      // The room overlay sets its own values with !important while it holds the row; leave those alone.
-      if (_movedBadgeRow?.wrapper === w) return;
-      w.style.removeProperty('position');
-      w.style.removeProperty('top');
-      w.style.removeProperty('z-index');
-    }
-  }
-  function _headBText(headerEl, nameEl) {
-    const span = nameEl && nameEl.querySelector('span');
-    let g = span ? span.textContent : '';
-    if (!g && nameEl) {
-      for (const c of nameEl.childNodes) { if (c.nodeType === 3 && c.data.trim()) { g = c.data; break; } }
-    }
-    const wc = headerEl?.shadowRoot?.querySelector('#weather button-card');
-    const parts = wc?.shadowRoot ? ['#name', '#label'].map((s) => wc.shadowRoot.querySelector(s))
-      .filter((e) => e && e.getBoundingClientRect().width > 0).map((e) => e.textContent.trim()).filter(Boolean) : [];
-    return { greet: String(g || '').trim(), weather: parts.join(' · ') };
-  }
-  function _makeHeadB() {
-    const el = document.createElement('div');
-    el.className = 'casora-head-b';
-    el.setAttribute('data-no-i18n', '');
-    el.style.cssText = [
-      'position:fixed', 'left:0', 'right:0', `top:${HEAD_B_TOP}`, `height:${HEAD_B_ROW}px`, 'z-index:112',
-      'box-sizing:border-box', 'display:flex', 'align-items:center', 'gap:12px',
-      'padding-left:max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px))',
-      `padding-right:${HEAD_B_PAD_R}`,
-      'opacity:0', 'pointer-events:none', 'cursor:pointer', 'transition:opacity 220ms ease-in-out',
-      '-webkit-tap-highlight-color:transparent',
-    ].join(';');
-    const g = document.createElement('span');
-    g.className = 'casora-head-b-greet';
-    g.style.cssText = 'flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'
-      + 'font-size:20px;font-weight:700;letter-spacing:-0.3px;';
-    const w = document.createElement('span');
-    w.className = 'casora-head-b-weather';
-    w.style.cssText = 'flex:0 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'
-      + 'font-size:var(--casora-fs-row, 15px);font-weight:500;opacity:0.8;';
-    el.append(g, w);
-    return el;
-  }
-
   // ── Kopf beim Scrollen im Casora-Look (Weich/Nebel, Handy; 1.1.0) ─────────────
   // Statt Vollbreiten-Balken mit harter Unterkante: weicher Verlauf oben (schützt die
   // Statusleiste) und eine schwebende Pille mit Mini-Status („Schlafzimmer · 21° · Licht aus“,
@@ -920,8 +824,6 @@
       // The view was torn down; detach the stale listener before rebuilding.
       try {
         _dashHeader.scrollEl?.removeEventListener('scroll', _dashHeader.onScroll);
-        window.removeEventListener('resize', _dashHeader.onScroll);
-        window.removeEventListener('scroll', _dashHeader.onScroll);
         document.removeEventListener('touchmove', _dashHeader.onScroll, true);
       } catch (_) {}
       _dashHeader.grad?.remove();
@@ -930,8 +832,6 @@
       _dashHeader.title?.remove();
       _dashHeader.pill?.remove();
       _dashHeader.fade?.remove();
-      _dashHeader.headB?.remove();
-      if (_dashHeader.inst) { _headBSticky(_dashHeader.inst, false); _headBClip(_dashHeader.inst, false); }
       _unpinChromePill();
       _dashHeader = null;
     }
@@ -1151,44 +1051,13 @@
     target.appendChild(fade);
     target.appendChild(title);
     target.appendChild(pill);
-    const headB = _makeHeadB();
-    headB.addEventListener('click', () => {
-      if (headB.style.pointerEvents !== 'auto') return;
-      try { headB.dispatchEvent(new CustomEvent('haptic', { detail: 'light', bubbles: true, composed: true })); } catch (_) {}
-      toTop();
-    });
-    target.appendChild(headB);
     target.appendChild(pillHost);
     requestAnimationFrame(() => {
       _pinChromePill(pillHost, inst._container || document);
     });
 
-    // The bar's material for the fixed head (1B): the same blur and veil, reaching down to the edge under the
-    // badges, with a light tint of the page colour.
-    const bStop = (maxA = 1) => {
-      const c = maxA >= 1 ? 'black' : `rgba(0,0,0,${maxA})`;
-      const y = `calc(${HEAD_B_TOP} + ${HEAD_B_H}px)`;
-      return `linear-gradient(to bottom, ${c} 0px, ${c} ${y}, transparent ${y})`;
-    };
-    const look = { gm: grad.style.maskImage, vm: veil.style.maskImage, et: edge.style.top };
-    let bLook = false;
-    const setLook = (b) => {
-      if (b === bLook) return;
-      bLook = b;
-      const gm2 = b ? bStop() : look.gm, vm2 = b ? bStop(0.5) : look.vm;
-      grad.style.maskImage = gm2; grad.style.webkitMaskImage = gm2;
-      veil.style.maskImage = vm2; veil.style.webkitMaskImage = vm2;
-      grad.style.background = b ? 'color-mix(in srgb, var(--primary-background-color, #f4efe8) 14%, transparent)' : '';
-      edge.style.top = b ? `calc(${HEAD_B_TOP} + ${HEAD_B_H}px)` : look.et;
-    };
-    const headBOff = () => {
-      headB.style.opacity = '0';
-      headB.style.pointerEvents = 'none';
-    };
-
     const hide = () => {
       _dashBarOn                = false;
-      headBOff();
       grad.style.opacity        = '0';
       veil.style.opacity        = '0';
       edge.style.opacity        = '0';
@@ -1229,44 +1098,6 @@
       const nameText = nameEl?.textContent?.trim();
       if (nameText && title.textContent !== nameText) title.textContent = nameText;
       const cp = Math.max(0, (p - 0.55) / 0.45);
-      if (_headBWanted(inst)) {
-        // Fixed head (1B): the badge row sticks under the slim row; the material and the row show once it sticks.
-        _headBClip(inst, true);
-        _headBSticky(inst, true);
-        setLook(true);
-        if (title.style.opacity !== '0') { title.style.opacity = '0'; title.style.pointerEvents = 'none'; }
-        if (pill.style.opacity !== '0') { pill.style.opacity = '0'; pill.style.pointerEvents = 'none'; }
-        fade.style.opacity = '0';
-        const wr = inst._badgeRowWrapper.getBoundingClientRect();
-        const stick = headB.getBoundingClientRect().top + HEAD_B_ROW;
-        const on = wr.height > 0 && wr.top <= stick + 0.5;
-        _dashBarOn = on;
-        if (on) {
-          const t = _headBText(headerEl, nameEl);
-          const g = headB.firstChild, w = headB.lastChild;
-          if (g.textContent !== t.greet) g.textContent = t.greet;
-          if (w.textContent !== t.weather) w.textContent = t.weather;
-          const col = getComputedStyle(nameEl || headerEl).color;
-          if (col && headB.style.color !== col) headB.style.color = col;
-          // Bell and menu at the top (no bottom bar): the weather ends 8 px before them.
-          const pr = pillHost.getBoundingClientRect();
-          const free = !_docked(pillHost) && pr.width && pillHost.style.visibility !== 'hidden'
-            ? Math.max(0, Math.round((window.innerWidth || 0) - pr.left + 8)) : 0;
-          headB.style.paddingRight = free ? `${free}px` : HEAD_B_PAD_R;
-          syncVeilBg();
-        }
-        const o = on ? '1' : '0';
-        if (grad.style.opacity !== o) { grad.style.opacity = o; veil.style.opacity = o; edge.style.opacity = o; }
-        headB.style.opacity = o;
-        headB.style.pointerEvents = on ? 'auto' : 'none';
-        return;
-      }
-      if (bLook) {
-        setLook(false);
-        headBOff();
-        _headBSticky(inst, false);
-        _headBClip(inst, false);
-      }
       if (_softHeadOn()) {
         if (title.style.opacity !== '0') { title.style.opacity = '0'; title.style.pointerEvents = 'none'; }
         if (grad.style.opacity !== '0') { grad.style.opacity = '0'; veil.style.opacity = '0'; edge.style.opacity = '0'; }
@@ -1316,11 +1147,7 @@
     scrollEl.addEventListener('scroll', onScroll, { passive: true });
     document.addEventListener('touchmove', onScroll, { passive: true, capture: true });
 
-    // Turning the phone changes portrait/landscape, and with it the fixed head. The window scroll too: with the
-    // fixed head the views stop being scroll containers (see _headBClip), the scroll found above may be theirs.
-    window.addEventListener('resize', onScroll, { passive: true });
-    if (scrollEl !== window) window.addEventListener('scroll', onScroll, { passive: true });
-    _dashHeader = { grad, veil, edge, title, pill, fade, headB, pillHost, scrollEl, onScroll, update, hide, inst, bgCard: null };
+    _dashHeader = { grad, veil, edge, title, pill, fade, pillHost, scrollEl, onScroll, update, hide, inst, bgCard: null };
     update();
   }
 
