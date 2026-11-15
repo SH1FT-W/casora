@@ -65,17 +65,17 @@ class CalendarReplayTest(unittest.TestCase):
         self.assertEqual(result[0]["end"].isoformat(), "2026-10-25T02:45:00+01:00")
 
     def test_all_day_overlap_uses_local_midnights_for_utc_query(self):
-        events = [{"summary": "Naam-ABCDEF", "start": "2026-11-09", "end": "2026-11-10"}]
+        events = [{"summary": "Naam-ABCDEF", "start": "2054-11-09", "end": "2054-11-10"}]
         zone = ZoneInfo("Europe/Amsterdam")
         for start, end, expected in [
-            (datetime(2026, 11, 8, 23, tzinfo=timezone.utc),
-             datetime(2026, 11, 8, 23, 30, tzinfo=timezone.utc), True),
-            (datetime(2026, 11, 9, 23, tzinfo=timezone.utc),
-             datetime(2026, 11, 9, 23, 30, tzinfo=timezone.utc), False),
+            (datetime(2054, 11, 8, 23, tzinfo=timezone.utc),
+             datetime(2054, 11, 8, 23, 30, tzinfo=timezone.utc), True),
+            (datetime(2054, 11, 9, 23, tzinfo=timezone.utc),
+             datetime(2054, 11, 9, 23, 30, tzinfo=timezone.utc), False),
         ]:
             with self.subTest(start=start):
                 result = replay.events_for_range(
-                    events, date(2026, 11, 9), date(2026, 11, 9),
+                    events, date(2054, 11, 9), date(2054, 11, 9),
                     start, end, local_tz=zone)
                 self.assertEqual(bool(result), expected)
 
@@ -83,17 +83,17 @@ class CalendarReplayTest(unittest.TestCase):
         class Clock(datetime):
             @classmethod
             def now(cls, tz=None):
-                return datetime(2026, 11, 15, 23, 30, tzinfo=timezone.utc).astimezone(tz)
+                return datetime(2054, 11, 15, 23, 30, tzinfo=timezone.utc).astimezone(tz)
 
-        entity = {"events": [{"summary": "Naam-ABCDEF", "start": "2026-11-09",
-                              "end": "2026-11-10"}]}
+        entity = {"events": [{"summary": "Naam-ABCDEF", "start": "2054-11-09",
+                              "end": "2054-11-10"}]}
         with patch.object(replay, "datetime", Clock):
             result = replay.fixture_events(
-                entity, {"calendar_export_date": "2026-11-09"},
-                datetime(2026, 11, 15, tzinfo=timezone.utc),
-                datetime(2026, 11, 23, tzinfo=timezone.utc),
+                entity, {"calendar_export_date": "2054-11-09"},
+                datetime(2054, 11, 15, tzinfo=timezone.utc),
+                datetime(2054, 11, 23, tzinfo=timezone.utc),
                 local_tz=ZoneInfo("Europe/Amsterdam"))
-        self.assertEqual(result[0]["start"], date(2026, 11, 16))
+        self.assertEqual(result[0]["start"], date(2054, 11, 16))
 
     def test_timed_event_keeps_clock_and_duration_in_another_season(self):
         events = [{"summary": "Naam-ABCDEF", "start": "2026-01-05T09:30:00+01:00",
@@ -107,55 +107,55 @@ class CalendarReplayTest(unittest.TestCase):
         self.assertEqual(result[0]["end"].isoformat(), "2026-07-06T10:30:00+02:00")
 
     def test_monday_stays_monday_on_every_test_house_weekday(self):
-        events = [{"summary": "Naam-ABCDEF", "start": "2026-11-02T09:30:00+01:00",
-                   "end": "2026-11-02T10:30:00+01:00"}]
+        events = [{"summary": "Naam-ABCDEF", "start": "2054-11-02T09:30:00+01:00",
+                   "end": "2054-11-02T10:30:00+01:00"}]
         for day in range(9, 16):
             with self.subTest(today=day):
                 result = replay.events_for_range(
-                    events, date(2026, 11, 2), date(2026, 11, day),
-                    datetime(2026, 11, 1, tzinfo=timezone.utc),
-                    datetime(2026, 11, 23, tzinfo=timezone.utc))
+                    events, date(2054, 11, 2), date(2054, 11, day),
+                    datetime(2054, 11, 1, tzinfo=timezone.utc),
+                    datetime(2054, 11, 23, tzinfo=timezone.utc))
                 self.assertEqual(result[0]["start"].weekday(), 0)
-                self.assertEqual(result[0]["start"].date(), date(2026, 11, 9))
+                self.assertEqual(result[0]["start"].date(), date(2054, 11, 9))
                 self.assertEqual(result[0]["start"].hour, 9)
 
     def test_missing_events_uses_legacy_calendar_but_empty_is_empty(self):
-        start = datetime(2026, 11, 9, tzinfo=timezone.utc)
-        end = datetime(2026, 11, 10, tzinfo=timezone.utc)
-        fixture = {"calendar_export_date": "2026-11-09"}
+        start = datetime(2054, 11, 9, tzinfo=timezone.utc)
+        end = datetime(2054, 11, 10, tzinfo=timezone.utc)
+        fixture = {"calendar_export_date": "2054-11-09"}
         self.assertIsNone(replay.fixture_events({}, fixture, start, end))
         self.assertEqual(replay.fixture_events({"events": []}, fixture, start, end), [])
 
     def test_events_without_export_date_name_the_missing_key(self):
-        start = datetime(2026, 11, 9, tzinfo=timezone.utc)
-        end = datetime(2026, 11, 10, tzinfo=timezone.utc)
-        entity = {"events": [{"start": "2026-11-09", "end": "2026-11-10", "summary": "Naam vrij"}]}
+        start = datetime(2054, 11, 9, tzinfo=timezone.utc)
+        end = datetime(2054, 11, 10, tzinfo=timezone.utc)
+        entity = {"events": [{"start": "2054-11-09", "end": "2054-11-10", "summary": "Naam-bbbbbb"}]}
         with self.assertRaisesRegex(ValueError, "calendar_export_date"):
             replay.fixture_events(entity, {}, start, end)
 
     def test_all_day_and_midnight_crossing_events_overlap_query(self):
         events = [
-            {"summary": "Naam-AAAAAA", "start": "2026-11-09", "end": "2026-11-12"},
-            {"summary": "Naam-BBBBBB", "start": "2026-11-09T23:30:00+00:00",
-             "end": "2026-11-10T01:15:00+00:00", "description": "Naam-CCCCCC",
+            {"summary": "Naam-AAAAAA", "start": "2054-11-09", "end": "2054-11-12"},
+            {"summary": "Naam-BBBBBB", "start": "2054-11-09T23:30:00+00:00",
+             "end": "2054-11-10T01:15:00+00:00", "description": "Naam-CCCCCC",
              "location": "Naam-DDDDDD"},
         ]
-        result = replay.events_for_range(events, date(2026, 11, 9), date(2026, 11, 16),
-                                         datetime(2026, 11, 17, tzinfo=timezone.utc),
-                                         datetime(2026, 11, 18, tzinfo=timezone.utc))
-        self.assertEqual(result[0]["start"], date(2026, 11, 16))
-        self.assertEqual(result[0]["end"], date(2026, 11, 19))
-        self.assertEqual(result[1]["start"], datetime(2026, 11, 16, 23, 30, tzinfo=timezone.utc))
-        self.assertEqual(result[1]["end"], datetime(2026, 11, 17, 1, 15, tzinfo=timezone.utc))
+        result = replay.events_for_range(events, date(2054, 11, 9), date(2054, 11, 16),
+                                         datetime(2054, 11, 17, tzinfo=timezone.utc),
+                                         datetime(2054, 11, 18, tzinfo=timezone.utc))
+        self.assertEqual(result[0]["start"], date(2054, 11, 16))
+        self.assertEqual(result[0]["end"], date(2054, 11, 19))
+        self.assertEqual(result[1]["start"], datetime(2054, 11, 16, 23, 30, tzinfo=timezone.utc))
+        self.assertEqual(result[1]["end"], datetime(2054, 11, 17, 1, 15, tzinfo=timezone.utc))
         self.assertEqual(result[1]["description"], "Naam-CCCCCC")
         self.assertEqual(result[1]["location"], "Naam-DDDDDD")
 
     def test_export_week_aligns_with_current_week_when_today_starts_earlier_in_the_week(self):
-        events = [{"summary": "Naam-ABCDEF", "start": "2026-11-11", "end": "2026-11-12"}]
-        result = replay.events_for_range(events, date(2026, 11, 11), date(2026, 11, 16),
-                                         datetime(2026, 11, 16, tzinfo=timezone.utc),
-                                         datetime(2026, 11, 23, tzinfo=timezone.utc))
-        self.assertEqual(result[0]["start"], date(2026, 11, 18))
+        events = [{"summary": "Naam-ABCDEF", "start": "2054-11-11", "end": "2054-11-12"}]
+        result = replay.events_for_range(events, date(2054, 11, 11), date(2054, 11, 16),
+                                         datetime(2054, 11, 16, tzinfo=timezone.utc),
+                                         datetime(2054, 11, 23, tzinfo=timezone.utc))
+        self.assertEqual(result[0]["start"], date(2054, 11, 18))
 
 
 class CalendarObjectTest(unittest.TestCase):
@@ -163,14 +163,14 @@ class CalendarObjectTest(unittest.TestCase):
 
     REAL_SHAPE = {"entity_id": "calendar.naam_kalender", "registry_platform": "local_calendar",
                   "unique_id": "naam-kalender-uid",
-                  "events": [{"summary": "Naam-ABCDEF", "start": "2026-11-09T09:30:00+01:00",
-                              "end": "2026-11-09T10:30:00+01:00"}]}
+                  "events": [{"summary": "Naam-ABCDEF", "start": "2054-11-09T09:30:00+01:00",
+                              "end": "2054-11-09T10:30:00+01:00"}]}
 
     def test_replay_serves_events_of_calendar_with_registry_platform(self):
-        start = datetime(2026, 11, 8, tzinfo=timezone.utc)
-        end = datetime(2026, 11, 23, tzinfo=timezone.utc)
-        result = replay.fixture_events(self.REAL_SHAPE, {"calendar_export_date": "2026-11-09"}, start, end,
-                                       today=date(2026, 11, 9), local_tz=ZoneInfo("Europe/Amsterdam"))
+        start = datetime(2054, 11, 8, tzinfo=timezone.utc)
+        end = datetime(2054, 11, 23, tzinfo=timezone.utc)
+        result = replay.fixture_events(self.REAL_SHAPE, {"calendar_export_date": "2054-11-09"}, start, end,
+                                       today=date(2054, 11, 9), local_tz=ZoneInfo("Europe/Amsterdam"))
         self.assertEqual(len(result), 1)
 
     def test_calendar_with_registry_platform_and_events_gets_own_object(self):
@@ -211,9 +211,9 @@ class CalendarObjectTest(unittest.TestCase):
         empty = {"entity_id": "calendar.naam_leer", "registry_platform": "google", "events": []}
         self.assertTrue(rules.has_own_object(empty, "calendar"))
         self.assertEqual(rules.registry_platform_for(empty, "calendar", "casora_mock"), "casora_mock")
-        self.assertEqual(replay.fixture_events(empty, {"calendar_export_date": "2026-11-09"},
-                                               datetime(2026, 11, 8, tzinfo=timezone.utc),
-                                               datetime(2026, 11, 23, tzinfo=timezone.utc)), [])
+        self.assertEqual(replay.fixture_events(empty, {"calendar_export_date": "2054-11-09"},
+                                               datetime(2054, 11, 8, tzinfo=timezone.utc),
+                                               datetime(2054, 11, 23, tzinfo=timezone.utc)), [])
 
     def test_stale_entry_under_old_platform_is_removed_and_exported_id_stays(self):
         # A house that loaded the export before still holds calendar.naam_kalender under local_calendar.

@@ -152,8 +152,8 @@ class CalendarPlatformDriftTest(unittest.TestCase):
 
     SHAPES = [
         {"entity_id": "calendar.naam_kalender", "registry_platform": "local_calendar", "state": "off",
-         "events": [{"summary": "Naam-ABCDEF", "start": "2026-11-09T09:30:00+01:00",
-                     "end": "2026-11-09T10:30:00+01:00"}]},
+         "events": [{"summary": "Naam-ABCDEF", "start": "2054-11-09T09:30:00+01:00",
+                     "end": "2054-11-09T10:30:00+01:00"}]},
         {"entity_id": "calendar.naam_alt", "registry_platform": "local_calendar", "state": "off"},
         {"entity_id": "calendar.naam_leer", "registry_platform": "google", "state": "off", "events": []},
         {"entity_id": "calendar.naam_plain", "state": "off", "events": []},
