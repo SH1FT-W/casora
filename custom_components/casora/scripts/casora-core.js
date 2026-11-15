@@ -16843,8 +16843,23 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       ? hass.callWS({ type: 'logbook/get_events', start_time: from, entity_ids: ids })
       : Promise.resolve([]);
 
-    _busy = fetch.catch(function () { return []; }).then(function (entries) {
+    var binaryDetections = ids.filter(function (id) {
+      return id.indexOf('binary_sensor.') === 0 && listedDetection(id);
+    });
+    var history = (binaryDetections.length && hass.callWS)
+      ? hass.callWS({ type: 'history/history_during_period', start_time: from,
+          entity_ids: binaryDetections, include_start_time_state: true,
+          significant_changes_only: false, minimal_response: true, no_attributes: true })
+      : Promise.resolve({});
+
+    _busy = Promise.all([fetch.catch(function () { return []; }), history.catch(function () { return {}; })]).then(function (result) {
+      var entries = result[0];
       var prev = {};
+      binaryDetections.forEach(function (id) {
+        var first = result[1] && result[1][id] && result[1][id][0];
+        // Only a state at or before the window proves the missing predecessor.
+        if (first && typeof first.s === 'string' && Number(first.lu) * 1000 <= Date.parse(from)) prev[id] = first.s;
+      });
       var real = {};
       var events = [];
       var asked = {};

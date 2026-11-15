@@ -388,9 +388,9 @@
       if (want("cameras")) {
         g = group("cameras", { header: "Cameras" });
         const cameras = S.cameras;
-        const registry = hass.entities || {}, states = hass.states || {}, devices = hass.devices || {};
-        const nameOf = (id) => (states[id] && states[id].attributes && states[id].attributes.friendly_name) || id;
-        const ids = Object.keys(states).filter((id) => {
+        const registry = hass.entities || {}, devices = hass.devices || {};
+        const nameOf = (id) => self._prettyEntity(id) || id;
+        const ids = self._entityList(["camera"], null).filter((id) => {
           const meta = registry[id] || {};
           return id.startsWith("camera.") && !meta.hidden && !meta.hidden_by && !meta.disabled_by && !meta.entity_category;
         });
@@ -412,15 +412,15 @@
           if (open) {
             const list = self._flowGroup(fold, { header: "Camera detections" });
             const values = () => Array.isArray(camera.detection_triggers) ? camera.detection_triggers : [];
-            const choices = () => Object.keys((self._hass || hass).states || {})
-              .filter((id) => /^(binary_sensor|event)\./.test(id) && !values().includes(id))
+            const choices = () => self._entityList(["binary_sensor", "event"], null)
+              .filter((id) => !values().includes(id))
               .sort((a, b) => nameOf(a).localeCompare(nameOf(b)));
             const picker = self._combo("", choices(), "Add sensor or event", (id) => {
               if (!choices().includes(id)) return;
               if (!Array.isArray(camera.detection_triggers)) camera.detection_triggers = [];
               camera.detection_triggers.push(id);
               changed();
-            }, { entity: true, source: choices, preserveOrder: true });
+            }, { entity: true, source: choices });
             row(list, "Detection from", [picker.wrap],
               "Sensors or events that count as a detection at this camera. The name comes from Home Assistant.");
             values().forEach((id, triggerIndex) => {

@@ -33,6 +33,19 @@ assert.equal(window.casoraCameraAlert(hass, states, [camera], 5), '', 'unknown t
 states[event].state = new Date(now).toISOString();
 assert.equal(window.casoraCameraAlert(hass, states, [camera], 5), 'Motion');
 for (const name of ['casora_camera', 'casora_reolink_doorbell', 'casora_frigate']) {
+  delete window.casoraCameraAlert;
+  const inheritedHelper = (template) => {
+    const own = templates[template]?.variables?.casora_camera_alert_helper;
+    if (own) return own.value;
+    for (const parent of templates[template]?.template || []) {
+      const value = inheritedHelper(parent);
+      if (value) return value;
+    }
+    return null;
+  };
+  const helper = inheritedHelper(name);
+  assert.ok(helper, `${name} inherits the helper without a badge`);
+  new Function('hass', 'states', 'entity', 'variables', helper.trim().slice(3, -3))({}, {}, {}, {});
   const render = new Function('hass', 'states', 'entity', 'variables', templates[name].state_display.trim().slice(3, -3));
   const result = render.call({}, hass, states, { entity_id: camera, state: 'idle' }, {});
   assert.equal(result, 'Motion', `${name} shows the trigger's name`);
