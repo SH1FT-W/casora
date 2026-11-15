@@ -74,27 +74,64 @@ const calTile = { variables: {} };
   console.log('ok Studio Agenda preview waits for the title rule');
 }
 
-// Settings source: the Settings draft first, then the saved settings, read once when neither is known.
+// Waste: left out when casoraDevice knows the waste calendar (the Studio loads 00-finder at start).
 {
-  const make = (ctx) => new Function('window', 'return {' + methodSrc() + '}')({})._calendarSettings.bind(ctx);
+  const w = makeWindow({ waste: 'calendar.waste' });
+  delete w.casoraDevice;
+  const word = tileStateWord(w)('casora_calendar', calTile, null, { 'calendar.waste': states['calendar.waste'] }, {}, { calendar_filter: '' });
+  assert.equal(word, 'Bins out', 'without casoraDevice the waste calendar is not known and stays');
+  console.log('ok Studio Agenda preview leaves the waste calendar in only when it is not known');
+}
+
+// Settings source: the open Settings draft, then the saved settings file (CASORA_SETTINGS, updated on Save),
+// then the copy read once.
+const tick = () => new Promise((r) => setTimeout(r));
+const make = (ctx, win) => new Function('window', 'return {' + methodSrc() + '}')(win)._calendarSettings.bind(ctx);
+{
   const draft = { calendar_filter: 'Naam-' };
-  const saved = { calendar_filter: '' };
+  const file = { calendar_filter: 'Old-' };
+  const once = { calendar_filter: '' };
+  const ready = { casoraCalendarAllows: () => true };
 
-  const withDraft = { _cs: { S: draft }, _casoraSettingsNow: saved };
-  assert.equal(make(withDraft)('casora_calendar'), draft, 'an open Settings draft is used first');
+  assert.equal(make({ _cs: { S: draft }, _casoraSettingsNow: once }, { ...ready, CASORA_SETTINGS: file })('casora_calendar'), draft,
+    'an open Settings draft is used first');
+  assert.equal(make({ _casoraSettingsNow: once }, { ...ready, CASORA_SETTINGS: file })('casora_calendar'), file,
+    'then the saved settings file, which Save updates');
+  assert.equal(make({ _casoraSettingsNow: once }, ready)('casora_calendar'), once, 'then the copy read once');
+  assert.equal(make({ _cs: {} }, ready)('other_tile'), null, 'other tiles take no calendar settings');
+  console.log('ok Studio Agenda preview takes the Settings draft, then the saved settings');
+}
 
-  const savedOnly = { _casoraSettingsNow: saved };
-  assert.equal(make(savedOnly)('casora_calendar'), saved, 'then the saved settings');
+// The title rule is requested once, the settings read once; the preview is drawn again when they arrive.
+{
+  let imports = 0, rebuilt = 0;
+  const win = { casoraImportScript: (path) => { imports++; assert.equal(path, 'local/06a-kalender-filter.js');
+    return Promise.resolve().then(() => { win.casoraCalendarAllows = () => true; }); } };
+  const ctx = { _hass: {}, _settingsOnce: () => Promise.resolve({ calendar_filter: '' }), _rebuildPreview: () => { rebuilt++; } };
+  const pick = make(ctx, win);
+  assert.equal(pick('casora_calendar'), null, 'nothing known yet');
+  pick('casora_calendar');
+  await tick();
+  assert.equal(imports, 1, 'the title rule is requested once');
+  assert.equal(rebuilt, 2, 'drawn again for the settings and for the title rule');
+  console.log('ok Studio Agenda preview loads the title rule once and draws again');
+}
 
-  assert.equal(make({ _cs: {} })('other_tile'), null, 'other tiles take no calendar settings');
-
-  let read = 0, rebuilt = 0;
-  const pending = { _hass: {}, _settingsOnce: () => { read++; return Promise.resolve(saved); }, _rebuildPreview: () => { rebuilt++; } };
-  assert.equal(make(pending)('casora_calendar'), null, 'nothing known yet: null while the saved settings are read');
-  await new Promise((r) => setTimeout(r));
-  assert.equal(read, 1, 'the saved settings are read once');
-  assert.equal(rebuilt, 1, 'the preview is drawn again when they arrive');
-  console.log('ok Studio Agenda preview takes the Settings draft, else the saved settings');
+// A failed settings read leaves nothing (no unfiltered titles), and the next paint asks again.
+{
+  let reads = 0, rebuilt = 0;
+  const win = { casoraCalendarAllows: () => true };
+  const ctx = { _hass: {}, _settingsOnce: () => { reads++; return Promise.resolve(null); }, _rebuildPreview: () => { rebuilt++; } };
+  const pick = make(ctx, win);
+  assert.equal(pick('casora_calendar'), null);
+  await tick();
+  assert.equal(ctx._casoraSettingsNow, undefined, 'a failed read does not become an empty copy');
+  assert.equal(ctx._calSettingsAsked, false, 'the next paint may ask again');
+  assert.equal(rebuilt, 0, 'nothing to draw');
+  pick('casora_calendar');
+  await tick();
+  assert.equal(reads, 2, 'asked again on the next paint');
+  console.log('ok Studio Agenda preview retries a failed settings read');
 }
 
 // The preview passes its settings to tileStateWord.
