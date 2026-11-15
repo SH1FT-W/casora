@@ -69,6 +69,11 @@ assert.equal(S.inHead([inShadow('badges_climate', card('casora_room'))]), true, 
 assert.equal(S.inHead([inShadow('name', card(['casora_room']))]), true, 'hero room title');
 assert.equal(S.inHead([inShadow('name', card(['casora_light']))]), false, 'a tile name is no head');
 assert.equal(S.inHead([card(['casora_light']), { nodeType: 1, localName: 'casora-smart-row' }]), false, 'a tile row is no head');
+// The fixed head's slim row on the portrait phone (1B): a swipe on it changed the room (it replaced the collapsed
+// title bar, which was head by its box).
+const cls = (...names) => ({ nodeType: 1, classList: { contains: (n) => names.includes(n) } });
+assert.equal(S.inHead([cls('casora-head-b-greet'), cls('casora-head-b'), { nodeType: 1 }]), true, 'the fixed head row');
+assert.equal(S.inHead([cls('card-wrapper'), { nodeType: 1 }]), false, 'any other element with classes is no head');
 assert.equal(S.inHead([]), false);
 
 // Studio: ONE dashboard field under Controls › Screen for every touch device (owner, 03.11.2026), off by default; the

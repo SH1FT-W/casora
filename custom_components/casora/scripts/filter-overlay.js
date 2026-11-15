@@ -302,6 +302,7 @@
     if (m.owner?._headBO) { m.owner._headBO.drop(); m.owner._headBO = null; }
     _movedBadgeRow = null;
     const { wrapper, el, parent, sibling } = m;
+    _headBFix(wrapper, null, null);
     wrapper.style.removeProperty('position');
     wrapper.style.removeProperty('top');
     wrapper.style.removeProperty('left');
@@ -346,10 +347,17 @@
   const HEAD_B_Z = '113';
   const HEAD_B_PAD_R = 'max(env(safe-area-inset-right, 0px), var(--casora-rail-left, 16px))';
   function _headBWanted(inst) {
+    return _headBRowFree(inst) && _headBScreen(inst);
+  }
+  // The row is in the dashboard (no badge page has taken it). Asked on every scroll frame: no layout read.
+  function _headBRowFree(inst) {
+    const bw = inst?._badgeRowWrapper;
+    return !!(bw?.isConnected && bw.parentNode === inst._container && !_movedBadgeRow);
+  }
+  // Portrait phone without HA's toolbar. Measures; the scroll handler keeps the answer until the window resizes.
+  function _headBScreen(inst) {
     const w = window.innerWidth || 0, h = window.innerHeight || 0;
     if (!(w <= 600 && w < h)) return false;
-    const bw = inst?._badgeRowWrapper;
-    if (!(bw?.isConnected && bw.parentNode === inst._container && !_movedBadgeRow)) return false;
     // With HA's own toolbar above the view (no Casora bar, not kiosk) the head would sit on the toolbar: keep
     // the collapsing header there.
     let vc = inst._casoraViewEl;
@@ -363,35 +371,85 @@
     }
     return !vc || vc.getBoundingClientRect().top + (window.scrollY || 0) <= 8;
   }
-  // HA gives hui-view and hui-view-container overflow-x: hidden, which turns both into scroll containers that
-  // never scroll (the window does), so position: sticky inside them never sticks. clip cuts the sides the same
-  // way without making a scroll container (docs/ha-annahmen.md). Older browsers without clip: no sticking,
-  // the head never shows and the page looks as before.
-  function _headBClip(inst, on) {
-    let n = inst?._container;
-    for (let i = 0; n && i < 30; i++) {
-      if (n.nodeType === 1 && (n.tagName === 'HUI-VIEW' || n.tagName === 'HUI-VIEW-CONTAINER')) {
-        if (on && !n._casoraClipX) { n._casoraClipX = true; n.style.setProperty('overflow-x', 'clip', 'important'); }
-        else if (!on && n._casoraClipX) { n._casoraClipX = false; n.style.removeProperty('overflow-x'); }
+  // The badge row under the fixed head is held without any sticky layer (15.11.2026). A sticky row shook on the
+  // owner's iPhone while the page scrolled (HA app, WKWebView), worse when scrolling up: iOS places a sticky layer
+  // it cannot hand to its scrolling thread one frame late. The head row itself (position: fixed) stood still, so
+  // the badges are held the same way: while the row's place in the flow is above the stick line, the card is
+  // position: fixed at the line; its wrapper stays in the flow with the row's height (the placeholder), so the
+  // page keeps its length. Below the line the card is back in the wrapper. Fixed through the template's
+  // variables (--casora-badge-row-pos/-top): its :host rule is !important, which beats any inline style.
+  //   top: CSS length of the stick line (where the wrapper's top edge is held), null = back in the flow. The
+  //        callers pass the measured line in px (the head's own place), not env(): the same number decides the swap
+  //   wr:  the wrapper's rect, if the caller has just read it
+  function _headBFix(w, el, top, wr) {
+    let st = w?._casoraHeld || null;
+    if (!top || !el) {
+      if (!st) return;
+      w._casoraHeld = null;
+      st.ro?.disconnect();
+      if (st.el.style.getPropertyValue('--casora-badge-row-pos') === 'fixed') {
+        st.el.style.setProperty('--casora-badge-row-pos', 'relative');
+        st.el.style.setProperty('--casora-badge-row-top', '0px');
       }
-      n = n.parentNode || n.host || null;
+      st.el.style.removeProperty('left');
+      st.el.style.removeProperty('width');
+      w.style.removeProperty('min-height');
+      return;
     }
+    if (st && st.el !== el) { _headBFix(w, null, null); st = null; wr = null; }
+    if (!wr) wr = w.getBoundingClientRect();
+    if (!st) {
+      // The swap: measured in the flow, then the same box fixed. The wrapper keeps the row's height.
+      const er = el.getBoundingClientRect();
+      st = w._casoraHeld = {
+        el, dl: er.left - wr.left, dw: wr.width - er.width, dt: er.top - wr.top, dh: wr.height - er.height,
+        l: null, wd: null, top: null, mh: wr.height, mhOff: 0, ro: null,
+      };
+      w.style.setProperty('min-height', `${wr.height.toFixed(2)}px`, 'important');
+      el.style.setProperty('--casora-badge-row-pos', 'fixed');
+      _headBFixPlace(st, top, wr);
+      // Padding or a border on the wrapper: min-height counts without them.
+      const off = w.getBoundingClientRect().height - wr.height;
+      if (Math.abs(off) > 0.05) {
+        st.mhOff = off;
+        w.style.setProperty('min-height', `${Math.max(0, wr.height - off).toFixed(2)}px`, 'important');
+      }
+      // The row's height changes while it is held (a badge appears, text wraps): the placeholder follows.
+      if (window.ResizeObserver) {
+        st.ro = new ResizeObserver(() => {
+          if (w._casoraHeld !== st) return;
+          const h = el.getBoundingClientRect().height + st.dh;
+          if (!(h > 0) || Math.abs(h - st.mh) < 0.05) return;
+          st.mh = h;
+          w.style.setProperty('min-height', `${Math.max(0, h - st.mhOff).toFixed(2)}px`, 'important');
+        });
+        st.ro.observe(el);
+      }
+      return;
+    }
+    _headBFixPlace(st, top, wr);
   }
-  function _headBSticky(inst, on) {
+  // Writes only what changed: nothing at all while the page just scrolls.
+  function _headBFixPlace(st, top, wr) {
+    const l = wr.left + st.dl, wd = wr.width - st.dw;
+    if (st.l == null || Math.abs(l - st.l) > 0.01) { st.l = l; st.el.style.setProperty('left', `${l.toFixed(2)}px`); }
+    if (st.wd == null || Math.abs(wd - st.wd) > 0.01) { st.wd = wd; st.el.style.setProperty('width', `${wd.toFixed(2)}px`); }
+    const t = Math.abs(st.dt) > 0.01 ? `calc(${top} + ${st.dt.toFixed(2)}px)` : top;
+    if (st.top !== t) { st.top = t; st.el.style.setProperty('--casora-badge-row-top', t); }
+  }
+  // Home: readies the row for the head (on) or gives it back to the page (off). Ready: the wrapper lies above the
+  // head's material (its own stacking layer, still in the flow) and the card's own sticky (top -200px in its
+  // stylesheet) is off, so nothing in the row is sticky; _headBFix then holds or frees the card as the page scrolls.
+  function _headBRow(inst, on) {
     const w = inst?._badgeRowWrapper;
     if (!w) return;
-    // The badge card itself is sticky (top -200px) in its own stylesheet. Sticky inside the sticky wrapper makes
-    // iOS position two nested layers on its scrolling thread, and the badges shake while the page scrolls. While
-    // the head holds the wrapper the card sits still in it (relative, top 0). Through the template's variables:
-    // its :host rule is !important, which beats any inline style.
     const el = inst._badgeRowEl;
     if (on) {
-      // Checked on the style itself: the room overlay drops these values when it hands the row back.
-      if (w._casoraHeadB && w.style.position === 'sticky'
-        && (!el || el.style.getPropertyValue('--casora-badge-row-pos') === 'relative')) return;
+      // Checked on the style itself: the badge page drops these values when it hands the row back.
+      if (w._casoraHeadB && w.style.position === 'relative'
+        && (!el || el.style.getPropertyValue('--casora-badge-row-pos'))) return;
       w._casoraHeadB = true;
-      w.style.setProperty('position', 'sticky');
-      w.style.setProperty('top', `calc(${HEAD_B_TOP} + ${HEAD_B_ROW}px)`);
+      w.style.setProperty('position', 'relative');
       w.style.setProperty('z-index', HEAD_B_Z);
       if (el) {
         el._casoraHeadB = true;
@@ -400,10 +458,10 @@
       }
     } else if (w._casoraHeadB) {
       w._casoraHeadB = false;
-      // The room overlay sets its own values with !important while it holds the row; leave those alone.
+      // The badge page sets its own values with !important while it holds the row; leave those alone.
       if (_movedBadgeRow?.wrapper === w) return;
+      _headBFix(w, null, null);
       w.style.removeProperty('position');
-      w.style.removeProperty('top');
       w.style.removeProperty('z-index');
       if (el?._casoraHeadB) {
         el._casoraHeadB = false;
@@ -949,7 +1007,7 @@
       _dashHeader.pill?.remove();
       _dashHeader.fade?.remove();
       _dashHeader.headB?.remove();
-      if (_dashHeader.inst) { _headBSticky(_dashHeader.inst, false); _headBClip(_dashHeader.inst, false); }
+      if (_dashHeader.inst) _headBRow(_dashHeader.inst, false);
       _unpinChromePill();
       _dashHeader = null;
     }
@@ -1217,9 +1275,51 @@
       pill.style.pointerEvents  = 'none';
     };
 
+    // Fixed head (1B): what only changes with the window is measured once and kept (geo) until the window
+    // resizes, at most a second; the scroll frames in between read one rect (the row's place in the flow).
+    let geo = null; // { at, screen, stick, stickCss }
+    let nameOp = null; // the big greeting's last written opacity
+    // Holds the row at the stick line or frees it, by its place in the flow. Returns the wrapper's rect.
+    const holdRow = () => {
+      const w = inst._badgeRowWrapper;
+      const wr = w.getBoundingClientRect();
+      if (geo.stick == null) {
+        geo.stick = headB.getBoundingClientRect().top + HEAD_B_ROW;
+        geo.stickCss = `${geo.stick.toFixed(2)}px`;
+      }
+      _headBFix(w, inst._badgeRowEl, wr.height > 0 && wr.top <= geo.stick ? geo.stickCss : null, wr);
+      return wr;
+    };
+    // Greeting, weather, colour, room for bell and menu, the veil's picture: when the head shows up and then
+    // about once a second, not on every scroll frame.
+    const syncHeadB = (headerEl) => {
+      const nameEl = headerEl.shadowRoot?.querySelector('#name');
+      const t = _headBText(headerEl, nameEl);
+      const g = headB.firstChild, w = headB.lastChild;
+      if (g.textContent !== t.greet) g.textContent = t.greet;
+      if (w.textContent !== t.weather) w.textContent = t.weather;
+      const col = getComputedStyle(nameEl || headerEl).color;
+      if (col && headB.style.color !== col) headB.style.color = col;
+      // Bell and menu at the top (no bottom bar): the weather ends 8 px before them.
+      const pr = pillHost.getBoundingClientRect();
+      const free = !_docked(pillHost) && pr.width && pillHost.style.visibility !== 'hidden'
+        ? Math.max(0, Math.round((window.innerWidth || 0) - pr.left + 8)) : 0;
+      const padR = free ? `${free}px` : HEAD_B_PAD_R;
+      if (headB._casoraPadR !== padR) { headB._casoraPadR = padR; headB.style.paddingRight = padR; }
+      syncVeilBg();
+    };
+
     const update = () => {
       if (!grad.isConnected) return;
-      if (_activeOverlay) { hide(); return; }
+      const now = performance.now();
+      const fresh = !geo || now - geo.at > 1000;
+      if (fresh) geo = { at: now, screen: _headBScreen(inst), stick: null, stickCss: '' };
+      if (_activeOverlay) {
+        // A room page lies over Home; the row under it keeps its place for the way back.
+        if (bLook && geo.screen && _headBRowFree(inst)) holdRow();
+        hide();
+        return;
+      }
       if (_pinnedPill && _pinnedPill.host.style.opacity === '0') _showChromePill();
       let headerEl = inst._headerEl;
       if (!headerEl?.isConnected || !inst._container?.isConnected) {
@@ -1227,6 +1327,19 @@
         inst._discoverElements();
         headerEl = inst._headerEl;
         if (!headerEl?.isConnected) { hide(); return; }
+      }
+      const headBOn = geo.screen && _headBRowFree(inst);
+      let wr = null;
+      if (headBOn) {
+        // The badge row is held under the slim row; the material and the row show once it is held.
+        _headBRow(inst, true);
+        setLook(true);
+        wr = holdRow();
+        if (inst._badgeRowWrapper._casoraHeld && _dashBarOn && headB.style.opacity === '1') {
+          // Held and shown: the big greeting is far above the head, nothing else moves with the page.
+          if (fresh) syncHeadB(headerEl);
+          return;
+        }
       }
       const nameEl = headerEl.shadowRoot?.querySelector('#name');
       const src    = nameEl || headerEl;
@@ -1241,49 +1354,32 @@
         (barBottom + 24 - rect.bottom - lift) / (barBottom + 24 - safeTop)));
       const tp = Math.min(1, p / 0.45);
       if (nameEl) {
-        nameEl.style.animation  = 'none'; // titleFadeIn's fill:both beats inline opacity
-        nameEl.style.opacity    = String(1 - tp); // full white at rest, like Apple's large titles
+        const op = String(1 - tp); // full white at rest, like Apple's large titles
+        if (nameOp !== op || nameEl.style.opacity !== op) {
+          nameOp = op;
+          nameEl.style.animation = 'none'; // titleFadeIn's fill:both beats inline opacity
+          nameEl.style.opacity   = op;
+        }
       }
       const nameText = nameEl?.textContent?.trim();
       if (nameText && title.textContent !== nameText) title.textContent = nameText;
       const cp = Math.max(0, (p - 0.55) / 0.45);
-      if (_headBWanted(inst)) {
-        // Fixed head (1B): the badge row sticks under the slim row; the material and the row show once it sticks.
-        _headBClip(inst, true);
-        _headBSticky(inst, true);
-        setLook(true);
+      if (headBOn) {
         if (title.style.opacity !== '0') { title.style.opacity = '0'; title.style.pointerEvents = 'none'; }
         if (pill.style.opacity !== '0') { pill.style.opacity = '0'; pill.style.pointerEvents = 'none'; }
-        fade.style.opacity = '0';
-        const wr = inst._badgeRowWrapper.getBoundingClientRect();
-        const stick = headB.getBoundingClientRect().top + HEAD_B_ROW;
-        const on = wr.height > 0 && wr.top <= stick + 0.5;
+        if (fade.style.opacity !== '0') fade.style.opacity = '0';
+        const on = wr.height > 0 && wr.top <= geo.stick + 0.5;
+        if (on && (fresh || !_dashBarOn || headB.style.opacity !== '1')) syncHeadB(headerEl);
         _dashBarOn = on;
-        if (on) {
-          const t = _headBText(headerEl, nameEl);
-          const g = headB.firstChild, w = headB.lastChild;
-          if (g.textContent !== t.greet) g.textContent = t.greet;
-          if (w.textContent !== t.weather) w.textContent = t.weather;
-          const col = getComputedStyle(nameEl || headerEl).color;
-          if (col && headB.style.color !== col) headB.style.color = col;
-          // Bell and menu at the top (no bottom bar): the weather ends 8 px before them.
-          const pr = pillHost.getBoundingClientRect();
-          const free = !_docked(pillHost) && pr.width && pillHost.style.visibility !== 'hidden'
-            ? Math.max(0, Math.round((window.innerWidth || 0) - pr.left + 8)) : 0;
-          headB.style.paddingRight = free ? `${free}px` : HEAD_B_PAD_R;
-          syncVeilBg();
-        }
         const o = on ? '1' : '0';
         if (grad.style.opacity !== o) { grad.style.opacity = o; veil.style.opacity = o; edge.style.opacity = o; }
-        headB.style.opacity = o;
-        headB.style.pointerEvents = on ? 'auto' : 'none';
+        if (headB.style.opacity !== o) { headB.style.opacity = o; headB.style.pointerEvents = on ? 'auto' : 'none'; }
         return;
       }
       if (bLook) {
         setLook(false);
         headBOff();
-        _headBSticky(inst, false);
-        _headBClip(inst, false);
+        _headBRow(inst, false);
       }
       if (_softHeadOn()) {
         if (title.style.opacity !== '0') { title.style.opacity = '0'; title.style.pointerEvents = 'none'; }
@@ -1325,7 +1421,8 @@
     };
 
     let ticking = false;
-    const onScroll = () => {
+    const onScroll = (ev) => {
+      if (ev && ev.type === 'resize') geo = null; // portrait/landscape, safe area: measure again
       if (ticking) return;
       ticking = true;
       requestAnimationFrame(() => { ticking = false; update(); });
@@ -1334,8 +1431,8 @@
     scrollEl.addEventListener('scroll', onScroll, { passive: true });
     document.addEventListener('touchmove', onScroll, { passive: true, capture: true });
 
-    // Turning the phone changes portrait/landscape, and with it the fixed head. The window scroll too: with the
-    // fixed head the views stop being scroll containers (see _headBClip), the scroll found above may be theirs.
+    // Turning the phone changes portrait/landscape, and with it the fixed head. The window scroll too: the
+    // scroll container found above may be a view that never scrolls (the window does).
     window.addEventListener('resize', onScroll, { passive: true });
     if (scrollEl !== window) window.addEventListener('scroll', onScroll, { passive: true });
     _dashHeader = { grad, veil, edge, title, pill, fade, headB, pillHost, scrollEl, onScroll, update, hide, inst, bgCard: null };
@@ -3075,6 +3172,8 @@
           const lockTop = hdrRect.bottom + BADGE_LOCK_GAP;
           const pillBf  = window.getComputedStyle(badgeEl)
             .getPropertyValue('--ha-card-backdrop-filter').trim();
+          // Home's fixed head may hold the row right now: back into its wrapper before the page takes it.
+          _headBFix(badgeW, null, null);
           _movedBadgeRow = {
             owner: this, wrapper: badgeW, el: badgeEl,
             parent: badgeW.parentNode, sibling: badgeW.nextSibling,
@@ -3275,9 +3374,9 @@
     // As on Home (_ensureDashboardHeader): portrait phone only, once the page's badge row reaches the top, a slim
     // row (back, name) and that badge row stay there on the bar's material, 98 px below
     // the safe area; a tap on the row scrolls to the top. Room page: the room's badges (sub-badges), badge page:
-    // the dashboard's badge row. Tablet, desktop and landscape keep the compact header. The row is held by its
-    // wrapper (sticky in the page's scroller); the card's own sticky is turned off through
-    // --casora-badge-row-pos/-top while the head holds it, sticky inside sticky shakes on iOS (see _headBSticky).
+    // the dashboard's badge row. Tablet, desktop and landscape keep the compact header. No sticky layer holds the
+    // row (it shook on iOS, see _headBFix): its wrapper stays in the page's flow as the placeholder, and while that
+    // is above the stick line the card is position: fixed at the line (--casora-badge-row-pos/-top).
     // Returns { update, drop }: update() is false outside the portrait phone (the caller runs its own header).
     _overlayHeadB({ overlayEl, contentEl, titleEl, hdr, grad, veil, barEdge }) {
       const look = { gm: grad.style.maskImage, vm: veil ? veil.style.maskImage : '', et: barEdge.style.top };
@@ -3298,6 +3397,10 @@
       const ROW_VARS = ['--casora-badge-row-pos', '--casora-badge-row-top',
         '--casora-room-badges-gap-mobile', '--casora-badge-subrow-gap-mobile'];
       const W_PROPS = ['position', 'top', 'z-index', 'margin-bottom'];
+      // Measured and kept until the window resizes, at most a second: the head row's top (below the safe area)
+      // and with it the stick line in px.
+      let headTop = null, stickCss = '';
+      let synced = 0; // last name/colour sync
       const bStop = (h, maxA = 1) => {
         const c = maxA >= 1 ? 'black' : `rgba(0,0,0,${maxA})`;
         const y = `calc(${HEAD_B_TOP} + ${h}px)`;
@@ -3333,6 +3436,7 @@
       const hold = () => {
         const r = rowOf();
         held = { r, h: HEAD_B_H, top: HEAD_B_ROW, saved: null };
+        headTop = null; // the stick line follows held.top
         if (r) {
           const { w, e } = r;
           held.saved = W_PROPS.map((p) => [p, w.style.getPropertyValue(p), w.style.getPropertyPriority(p)]);
@@ -3351,8 +3455,9 @@
           // Centred in Home's band (row 44 + badges 46 + edge 8); a taller row makes the band taller.
           held.top = HEAD_B_ROW + Math.max(0, (HEAD_B_H - HEAD_B_ROW - 8 - h1) / 2);
           held.h = Math.max(HEAD_B_H, Math.ceil(held.top + h1 + 8));
-          w.style.setProperty('position', 'sticky', 'important');
-          w.style.setProperty('top', `calc(${HEAD_B_TOP} + ${held.top}px)`, 'important');
+          // In the flow, above the tiles (z-index); the badge page's own sticky values are put back on release.
+          w.style.setProperty('position', 'relative', 'important');
+          w.style.setProperty('top', '0px', 'important');
           w.style.setProperty('z-index', '30', 'important');
         }
         setLook(held.h);
@@ -3363,6 +3468,7 @@
         const { r, saved } = held;
         held = null;
         if (r) {
+          _headBFix(r.w, null, null);
           for (const p of ROW_VARS) r.e.style.removeProperty(p);
           // Back in the dashboard already: nothing of the page's values to restore there.
           const home = r.w.parentNode !== contentEl;
@@ -3384,11 +3490,21 @@
         if (hdr.style.opacity !== '0') { hdr.style.opacity = '0'; hdr.style.pointerEvents = 'none'; }
         if (this._headFillEl && this._headFillEl.style.opacity !== '0') this._headFillEl.style.opacity = '0';
         if (back && back.style.opacity !== '1') { back.style.opacity = '1'; back.style.pointerEvents = ''; }
-        const top = el.getBoundingClientRect().top;
-        const on = held.r
-          ? held.r.w.getBoundingClientRect().top <= top + held.top + 0.5
-          : titleEl.getBoundingClientRect().bottom <= top + HEAD_B_ROW;
-        if (on) {
+        const now = performance.now();
+        if (headTop == null || now - synced > 1000) {
+          headTop = el.getBoundingClientRect().top;
+          stickCss = `${(headTop + held.top).toFixed(2)}px`;
+        }
+        const top = headTop;
+        let on;
+        if (held.r) {
+          // One layout read per scroll frame: the row's place in the flow. At or above the line: held fixed.
+          const wr = held.r.w.getBoundingClientRect();
+          _headBFix(held.r.w, held.r.e, wr.top <= top + held.top ? stickCss : null, wr);
+          on = wr.top <= top + held.top + 0.5;
+        } else on = titleEl.getBoundingClientRect().bottom <= top + HEAD_B_ROW;
+        if (!shown || now - synced > 1000) synced = now;
+        if (on && synced === now) {
           // Name only: the badges held right below already say the room's state (owner, 15.11.2026).
           const g = el.firstChild, s = el.lastChild;
           const name = titleEl.textContent.trim();
@@ -3400,7 +3516,7 @@
         if (on !== shown) show(on);
         return true;
       };
-      const onResize = () => this._scrollHandler?.();
+      const onResize = () => { headTop = null; this._scrollHandler?.(); };
       window.addEventListener('resize', onResize, { passive: true });
       const drop = () => {
         dead = true;
@@ -3448,6 +3564,8 @@
 
         if (!preMoved) {
           // Fallback for a discovery failure at rAF1: the same sticky adoption.
+          // Home's fixed head may hold the row right now: back into its wrapper before the page takes it.
+          _headBFix(badgeW, null, null);
           _movedBadgeRow = {
             owner: this, wrapper: badgeW, el: badgeEl,
             parent: badgeW.parentNode, sibling: badgeW.nextSibling,
@@ -3568,6 +3686,7 @@
       const fadeEnd   = Math.max(fadeStart + 1,
         titleBottomDoc - (hdrRect.bottom - COMPACT_BAR_HEIGHT));
       let popupBarOn = false; // bar hysteresis state (per engage)
+      let lastTp = null; // the big title's last written fade
       this._pillAt = 0;
       this._headBO?.drop();
       const headB = this._headBO = this._overlayHeadB({ overlayEl, contentEl, titleEl, hdr, grad, veil, barEdge });
@@ -3575,8 +3694,11 @@
         const p = Math.max(0, Math.min(1,
           (overlayEl.scrollTop - fadeStart) / (fadeEnd - fadeStart)));
         const tp = Math.min(1, p / 0.45);
-        titleEl.style.opacity   = String(1 - tp);
-        titleEl.style.transform = `scale(${1 - tp * 0.04})`;
+        if (tp !== lastTp) {
+          lastTp = tp;
+          titleEl.style.opacity   = String(1 - tp);
+          titleEl.style.transform = `scale(${1 - tp * 0.04})`;
+        }
         if (headB.update()) return;
         const cp = Math.max(0, (p - 0.55) / 0.45);
         hdr.style.opacity     = String(cp);
