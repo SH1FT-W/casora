@@ -3,7 +3,8 @@
 // Gewünscht (07.10.2026, 1.1.0): Die Kopfleiste am Handy beim Scrollen wird im Casora-Look eine
 // schwebende Pille mit Mini-Status. Raumseite: statt des Vollbreiten-Balkens mit Zurück-Pfeil oben
 // mittig „Raum · 21° · Licht aus“; Startseite: statt einer deckenden Fläche mit harter Unterkante ein
-// weicher Verlauf und links die Pille „Zuhause“, die Glocke/Menü nie überlappt.
+// weicher Verlauf und links die Pille „Zuhause“, die Glocke/Menü nie überlappt. Seit 15.11.2026 (Owner): am
+// Handy auf der Startseite keine Pille mehr, nur der weiche Verlauf; Raumseiten unverändert.
 // Erwartet (iPhone 393×852, Theme „Casora“ hell und „Casora Nebel“ dunkel): Raum gescrollt = Pille
 // sichtbar mit Raumnamen, schmaler als der Bildschirm, kein Vollbreiten-Balken, Zurück-Pfeil
 // ausgeblendet; Startseite gescrollt = weicher Verlauf statt Glasbalken mit Kante, Pille endet vor
@@ -81,7 +82,7 @@ for (const [theme, dark] of [['Casora', false], ['Casora Nebel', true]]) {
 
   // Startseite
   let h = null;
-  for (let i = 0; i < 12 && !(h && h.op > 0.9); i++) {
+  for (let i = 0; i < 12 && !(h && h.fadeOp > 0.9); i++) {
     await scrollHome(page);
     await page.waitForTimeout(400);
     h = await page.evaluate(() => {
@@ -112,10 +113,9 @@ for (const [theme, dark] of [['Casora', false], ['Casora Nebel', true]]) {
     });
   }
   console.log(tag, 'Startseite', JSON.stringify(h));
-  await need(`${tag}: Startseite – Pille erscheint beim Scrollen`, h && h.op > 0.9, h);
-  await check(`${tag}: Startseite – Pille sagt nur „Zuhause“`, /^(Zuhause|Home)$/.test(h.text), h.text);
-  if (h.docked) await check(`${tag}: Startseite – Pille im Bild (Glocke/Menü unten in der Leiste)`, h.right <= h.vw - 16, h);
-  else await check(`${tag}: Startseite – Pille endet vor Glocke/Menü`, h.chromeLeft != null && h.right <= h.chromeLeft - 4, h);
+  await need(`${tag}: Startseite – gescrollt (weicher Verlauf da)`, h && h.fadeOp > 0.9, h);
+  // Owner, 15.11.2026: on the phone Home no pill appears when scrolled; the greeting just scrolls away.
+  await check(`${tag}: Startseite – keine Pille beim Scrollen`, h.op <= 0.05, h);
   await check(`${tag}: Startseite – weicher Verlauf sichtbar`, h.fadeOp > 0.9 && /gradient/.test(h.fadeBg || ''), h);
   await check(`${tag}: Startseite – keine deckende Fläche mit harter Kante`, h.hard === 0, h);
 
