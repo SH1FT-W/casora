@@ -1291,7 +1291,8 @@
       return { datetime: new Date(at(i, 12)).toISOString(), condition: c, temperature: [11, 9, 8, 12, 13, 10, 9][i], templow: [4, 5, 3, 2, 4, 6, 5][i] };
     });
     if (!ctx.events.length) ctx.events = [[0, 8, 30, 45, 'Arzttermin'], [0, 12, 30, 60, 'Mittagessen'], [0, 18, 30, 90, 'Einkaufen'], [0, 20, 45, 75, 'Kino'], [1, 10, 0, 120, 'Einkaufen'], [4, 20, 15, 135, 'Kino'], [5, 10, 30, 150, 'Mittagessen']]
-      .map(function (e) { return { title: T(e[4]), start: at(e[0], e[1], e[2]), end: at(e[0], e[1], e[2]) + e[3] * 60000, allDay: false }; });
+      .map(function (e) { return { title: T(e[4]), start: at(e[0], e[1], e[2]), end: at(e[0], e[1], e[2]) + e[3] * 60000, allDay: false }; })
+      .filter(function (e) { return !window.casoraCalendarAllows || window.casoraCalendarAllows(e.title, ctx.settings); });
     if (!ctx.media) ctx.media = { title: 'Golden Hour', artist: 'Casora', where: T('Wohnzimmer'), cover: '', dur: 228, pos: 87 };
     if (!ctx.energy) ctx.energy = { solar: 3240, grid: -1180, battery: -640, soc: 72, hasSolar: true, hasBattery: true, house: 1420 };
     if (!ctx.cams || !ctx.cams.length) ctx.cams = ['Eingang', 'Garten', 'Garage', 'Terrasse'].map(function (n, i) { return { id: 'camera.sample_' + i, name: T(n), url: '', stream: false }; });
@@ -1309,11 +1310,11 @@
     // The calendar asks for its whole grid (the month, or two weeks), the others for the coming eight days.
     var grid = kind === 'kalender' ? S.calGrid(now, hass, vars) : null;
     var events = (o.events !== undefined ? o.events : !cals.length ? [] : grid ? S.events(hass, cals, grid.weeks * 7, grid.start) : S.events(hass, cals, 8)).filter(function (e) {
-      return !window._casoraCalendar || window._casoraCalendar.allowsTitle(e.title);
+      return !window.casoraCalendarAllows || window.casoraCalendarAllows(e.title, o.settings);
     });
     var media = o.media !== undefined ? o.media : need(['musik']) || (S.on(vars.casora_screensaver_tint) && TINT_KINDS.indexOf(kind) > -1) ? S.playing(hass) : null;
     var cams = o.cams !== undefined ? o.cams : need(['kameras']) ? S.cameras(hass, vars.casora_screensaver_cameras).map(function (c) { c.shot = S.shot(c, now); return c; }) : [];
-    return { now: now, hass: hass, vars: vars, dark: dark, sun: o.sun !== undefined ? o.sun : S.sunTimes(hass, now), cals: o.cals || cals, cams: cams,
+    return { now: now, hass: hass, vars: vars, settings: o.settings, dark: dark, sun: o.sun !== undefined ? o.sun : S.sunTimes(hass, now), cals: o.cals || cals, cams: cams,
       tint: o.tint !== undefined ? o.tint : S.on(vars.casora_screensaver_tint) && media && media.cover ? S.coverColor(media.cover) : null,
       wx: o.wx !== undefined ? o.wx : S.weather(hass, vars.weather_entity), rooms: o.rooms || S.rooms(o.config, hass, dark, { url: o.photoUrl, only: vars.casora_screensaver_photos }),
       // Asked for only when the screensaver on show needs it.
