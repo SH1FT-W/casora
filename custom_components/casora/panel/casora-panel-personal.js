@@ -30,6 +30,9 @@
     + ".frow.casora-prow .casora-pctl .combo.hasface:not(.typing)>input{color:transparent}"
     + ".casora-pctl input[type=checkbox]{accent-color:var(--accent)}"
     + ".casora-chips{display:flex;flex-wrap:wrap;gap:6px}"
+    // Room climate (#202): short number fields with their words („bis“, „unter“) in one line.
+    + ".casora-pctl>input.fin.casora-pnum{flex:0 0 64px;width:64px;text-align:center;padding:0 6px}"
+    + ".casora-pword{flex:0 0 auto;font-size:var(--t-foot);color:var(--ink-2)}"
     + ".casora-chip{border:none;border-radius:999px;padding:6px 11px;cursor:pointer;font:500 var(--t-foot) var(--casora-font-studio, system-ui);"
     + "background:var(--casora-studio-chip-hi, rgba(118,118,128,.24));color:inherit}"
     + ".casora-chip.on{background:var(--casora-studio-done, #0a84ff);color:#fff}"
@@ -67,6 +70,11 @@
   // New calendars: Casora blue as in the color menu (formerly fixed #0A84FF, which stays readable).
   const CAL_DEFAULT = "var(--casora-color-blue, #0088FF)";
   const ICONS = ["", "tv", "apple_tv", "homepod", "playstation", "speaker"];
+  // #202: room types of the room climate (keys of casoraComfortTable, 01-basis.js) and its fields.
+  const TYPE_LABELS = { wohnen: "Living", schlafen: "Sleeping", bad: "Bath", kueche: "Kitchen", nebenraum: "Hallway and utility",
+    keller: "Cellar and storage", aussen: "Outdoor and unheated", standard: "Standard" };
+  const FIELD_LABELS = { temp_ideal_min: "Ideal from", temp_ideal_max: "Ideal to", temp_low: "Warning below", temp_high: "Warning above",
+    hum_ideal_min: "Ideal from", hum_ideal_max: "Ideal to", hum_low: "Warning below", hum_high: "Warning above" };
   const ICON_LABELS = { "": "Icon: Automatic", tv: "TV", apple_tv: "Apple TV", homepod: "HomePod",
     playstation: "PlayStation", speaker: "Speaker" };
 
@@ -96,6 +104,10 @@
     s.media.hidden = Array.isArray(s.media.hidden) ? s.media.hidden : [];
     s.ebike = s.ebike || {};
     s.basis = s.basis || {};
+    // #202: room types and changed recommended values (climate.rooms: name → type, climate.types: type → fields).
+    const c = s.climate = s.climate && typeof s.climate === "object" ? s.climate : {};
+    c.rooms = c.rooms && typeof c.rooms === "object" ? c.rooms : {};
+    c.types = c.types && typeof c.types === "object" ? c.types : {};
     return s;
   }
 
@@ -691,6 +703,116 @@
           && ((reg[id] && reg[id].translation_key === "days_since_last_ride") || /_days_since_last_ride$/.test(id)));
         self._flowRow(g, { title: "E-bike", sub: "Bosch Smart System",
           detail: bike ? "Detected" : "Not detected" });
+      }
+
+      if (want("climate")) {
+        // #202: room climate by room type – each room's type (automatic from its name) and the recommended values of
+        // each type (casoraComfortTable, 01-basis.js). Only what differs from automatic and the defaults is stored.
+        const C = S.climate;
+        const tr = (x) => (window.casoraI18n ? window.casoraI18n.t(x) : x);
+        const TBL = window.casoraComfortTable, TYPES = window.casoraComfortTypes || [];
+        const autoOf = window.casoraComfortAutoType || (() => "standard");
+        const areaOf = window.casoraComfortAreaOf || (() => null);
+        const noI18n = (r) => r.querySelectorAll(".rtext > b").forEach((x) => x.setAttribute("data-no-i18n", ""));
+        g = group("climate", { header: "Rooms",
+          footer: "Automatic picks the type from the room's name. Outdoor rooms show their values without a rating." });
+        if (!TBL) {
+          row(g, "Room climate", [], "Open a dashboard in the Studio to change this.");
+        } else {
+          // The rooms of this dashboard, then the HA areas of their climate sensors that are not a room of their own,
+          // then names set earlier that are gone now (so they can be set back to automatic).
+          const all = (self._state && self._state.compact && self._state.compact.rooms) || [];
+          const isHome = (r) => (I().isHomeRoom ? I().isHomeRoom(r, all) : r.path === "home");
+          const names = [], seen = new Set(), sensorOf = {};
+          const add = (n, sensor) => {
+            const k = String(n || "").trim();
+            if (!k || seen.has(k.toLowerCase())) return;
+            seen.add(k.toLowerCase());
+            names.push(k);
+            if (sensor) sensorOf[k] = sensor;
+          };
+          const sensors = (V) => ["temp_sensor_1", "temp_sensor_2", "temp_sensor_3", "temp_sensor_4", "temp_sensor_5", "humidity_sensor"]
+            .map((f) => V && V[f]).filter((x) => typeof x === "string" && x);
+          all.filter((r) => !isHome(r)).forEach((r) => add(typeof self._roomShown === "function" ? self._roomShown(r) : r.name, sensors(r.variables)[0]));
+          all.forEach((r) => sensors(r.variables).forEach((id) => { const a = areaOf(hass, id); if (a) add(a.name, id); }));
+          Object.keys(C.rooms).forEach((n) => add(n));
+          if (!names.length) row(g, "Room climate", [], "Open a dashboard in the Studio to change this.");
+          names.forEach((n, i) => {
+            // Automatic as the dashboard does it: the name, else the HA area of the room's sensor (name or icon).
+            let auto = autoOf(n);
+            const a = auto === "standard" && sensorOf[n] ? areaOf(hass, sensorOf[n]) : null;
+            if (a) auto = autoOf(a.name, a.icon);
+            const key = Object.keys(C.rooms).find((k) => k.trim().toLowerCase() === n.toLowerCase());
+            const labels = { "": tr("Automatic") + " (" + tr(TYPE_LABELS[auto] || auto) + ")" };
+            TYPES.forEach((t) => { labels[t] = tr(TYPE_LABELS[t] || t); });
+            const sel = pick(key ? C.rooms[key] : "", [""].concat(TYPES), labels, (v) => {
+              if (key && key !== n) delete C.rooms[key];
+              if (v) C.rooms[n] = v; else delete C.rooms[n];
+            });
+            sel.classList.add("casora-pclimtype");
+            sel.dataset.room = n;
+            const r = row(g, n, [sel], i ? undefined : "Rated by the recommended values of its type.");
+            r.classList.add("casora-pclimroom");
+            noI18n(r);
+          });
+
+          // Recommended values: one type at a time (chips), its four ranges as numbers, a reset when changed.
+          const EDIT = TYPES.filter((t) => TBL[t]);
+          let cur = EDIT.includes(self._casoraClimType) ? self._casoraClimType : EDIT[0];
+          g = group("climate_values", { header: "Recommended values",
+            footer: "The values follow the recommendations of the German Environment Agency (UBA) and DIN EN 16798-1." });
+          const chips = document.createElement("div");
+          chips.className = "casora-chips casora-pclimchips";
+          chips.setAttribute("role", "radiogroup");
+          chips.setAttribute("aria-label", tr("Room type"));
+          EDIT.forEach((t) => {
+            const b = document.createElement("button");
+            b.type = "button";
+            b.className = "casora-chip" + (t === cur ? " on" : "");
+            b.dataset.type = t;
+            b.textContent = tr(TYPE_LABELS[t] || t);
+            b.setAttribute("data-no-i18n", "");
+            b.setAttribute("role", "radio");
+            b.setAttribute("aria-checked", String(t === cur));
+            b.onclick = () => { self._casoraClimType = t; render(); };
+            chips.appendChild(b);
+          });
+          row(g, "Room type", [chips], "Pick a type to see and change its values.");
+          const D = TBL[cur], own = () => (C.types[cur] = C.types[cur] || {});
+          const num = (f, unit) => {
+            const i = document.createElement("input");
+            i.className = "fin casora-short casora-pnum";
+            i.inputMode = "decimal";
+            i.dataset.field = f;
+            i.setAttribute("data-no-i18n", "");
+            const v = C.types[cur] && C.types[cur][f] != null ? C.types[cur][f] : D[f];
+            i.value = window.casoraNum ? window.casoraNum(v, 0, 1) : String(v);
+            i.setAttribute("aria-label", tr(FIELD_LABELS[f]) + " (" + unit + ")");
+            i.oninput = () => {
+              const n = parseFloat(String(i.value).replace(",", "."));
+              if (!isFinite(n) || n === D[f]) delete own()[f]; else own()[f] = n;
+              if (!Object.keys(own()).length) delete C.types[cur];
+            };
+            return i;
+          };
+          const word = (x) => {
+            const s = document.createElement("span");
+            s.className = "casora-pword";
+            s.textContent = /^(°C|%)$/.test(x) ? x : tr(x);
+            s.setAttribute("data-no-i18n", "");
+            return s;
+          };
+          row(g, "Ideal temperature", [num("temp_ideal_min", "°C"), word("to"), num("temp_ideal_max", "°C"), word("°C")],
+            "Green and comfortable in between.");
+          row(g, "Temperature warning", [word("below"), num("temp_low", "°C"), word("above"), num("temp_high", "°C"), word("°C")],
+            "Red below and above, orange in between.");
+          row(g, "Ideal humidity", [num("hum_ideal_min", "%"), word("to"), num("hum_ideal_max", "%"), word("%")],
+            "Green and good in between.");
+          row(g, "Humidity warning", [word("below"), num("hum_low", "%"), word("above"), num("hum_high", "%"), word("%")],
+            D.hum_sustain ? "Above it only turns red after an hour: after a shower or cooking humid air is normal."
+              : "Red below and above, orange in between.");
+          if (C.types[cur] && Object.keys(C.types[cur]).length) addRow(g, "Use recommended values", () => { delete C.types[cur]; });
+        }
       }
 
       if (want("battery")) {

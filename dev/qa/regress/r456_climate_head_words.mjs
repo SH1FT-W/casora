@@ -40,12 +40,13 @@ const badgeAt = (page, t) => page.evaluate((t) => {
 }, t);
 const close = async (page) => { await page.evaluate(() => window.casoraPopup && window.casoraPopup.close()); await page.waitForTimeout(900); };
 
-// Invented readings in the browser: 21.2 °C (comfortable) and 62 % (slightly humid).
+// Invented readings in the browser: 21.2 °C (comfortable) and 67 % (slightly humid). #202: Home's humidity sensor
+// lies in the bathroom, rated by that room's type (good up to 65 %), so 67 % is slightly humid in every room type.
 const pin = async (page) => {
   const ids = await page.evaluate(() => { const st = document.querySelector('home-assistant').hass.states;
     return Object.keys(st).filter((k) => /^sensor\./.test(k) && ['temperature', 'humidity'].includes(st[k].attributes.device_class)).map((k) => [k, st[k].attributes.device_class]); });
   const patch = {};
-  ids.forEach(([k, dc]) => { patch[k] = { state: dc === 'temperature' ? '21.2' : '62' }; });
+  ids.forEach(([k, dc]) => { patch[k] = { state: dc === 'temperature' ? '21.2' : '67' }; });
   await fakeStates(page, patch, { sticky: true });
 };
 const verify = async (label, p, kind) => {

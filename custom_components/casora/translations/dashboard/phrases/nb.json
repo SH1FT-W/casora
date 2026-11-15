@@ -2961,7 +2961,9 @@
     "Sonstige": "Andre",
     "pro Stunde": "per time",
     "pro Tag": "per dag",
-    "Nicht erfasst": "Ikke målt"
+    "Nicht erfasst": "Ikke målt",
+    "Wohlfühlbereich": "Komfortområde",
+    "feucht": "fuktig"
   },
   "patterns": [
     [
@@ -5355,6 +5357,10 @@
     [
       "^Geräte · (\\d+)$",
       "Enheter · {1}"
+    ],
+    [
+      "^Wohlfühlbereich (\\d+)–(\\d+) %$",
+      "Komfortområde {1}–{2}%"
     ]
   ]
 }
