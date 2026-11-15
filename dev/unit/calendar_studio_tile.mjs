@@ -51,7 +51,6 @@ const states = {
 const calTile = { variables: {} };
 
 // Studio settings are not necessarily available through the finder's global settings.
-// @deckt: custom_components/casora/panel/casora-panel.js#tileStateWord
 {
   const w = makeWindow();
   delete w.casoraDevice;
