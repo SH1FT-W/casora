@@ -2280,6 +2280,8 @@ window._casoraColGap = window._casoraColGap || function (keys) {
         });
         var day0 = new Date(now);
         day0.setHours(0, 0, 0, 0);
+        // Tap opens the waste tile's popup, like tapping the tile (without opens or entity the row was not tappable).
+        var WASTE_OPENS = ['casora_trash'];
         var dutyText = W.duty === null ? null
           : (W.duty ? 'Du bist diesen Monat dran' : 'Du bist diesen Monat nicht dran');
 
@@ -2291,6 +2293,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
             sub: today.join(', '),
             icon: 'trash',
             tone: 'accent',
+            opens: WASTE_OPENS,
           });
         }
         if (tomorrow.length && now.getHours() >= c.waste_from_hour) {
@@ -2303,6 +2306,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
             sub: tomorrow.join(', ') + (dutyText ? ' · ' + dutyText : ''),
             icon: 'trash',
             tone: 'accent',
+            opens: WASTE_OPENS,
           });
         }
       }
