@@ -26174,6 +26174,11 @@ class CasoraPanel extends HTMLElement {
         if (twin) {
           el.dataset.mk = "t:" + this._tileKey(twin.tile);
           el.dataset.mproom = String(twin.roomIndex);
+        } else if ((tile.variables || {}).casora_derived === "cameras") {
+          // #204: Casora builds this tile from Home › Security › Cameras (syncCamerasMobile); that is where it is edited.
+          const wide = (this._state && this._state.compact.rooms) || [];
+          el.dataset.mk = "b:security";
+          el.dataset.mproom = String(Math.max(0, wide.findIndex((r) => r.path === "home")));
         } else {
           // Phone-only, so there is nothing in the form to open.
           delete el.dataset.mk;
