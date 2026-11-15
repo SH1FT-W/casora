@@ -123,12 +123,13 @@ start() {
   if curl -s -o /dev/null --max-time 1 "http://127.0.0.1:$port/"; then fehler "Port $port ist belegt"; fi
   d="$(install "${3:-}")"
   port_setzen "$cfg" "$port"
-  # Im Hintergrund und abgekoppelt, damit das HA das aufrufende Skript überlebt.
+  # In the background and in its own session, so the HA outlives the calling script, also when a runner ends that
+  # script by killing its whole process group (nohup alone only ignores SIGHUP). Python, because macOS has no setsid.
   # Restart like a container with "unless-stopped": homeassistant.restart only exits (code 100, on macOS
   # often a segfault in the final write) and leaves the restart to the container. stop() leaves a marker;
   # a run shorter than 20 s ends the loop so a broken config does not restart forever.
   rm -f "$cfg/.ha-venv-stop"
-  (cd "$cfg" || exit 1; nohup bash -c 'while :; do t=$SECONDS; "$1/bin/hass" -c "$2"; [ -e "$2/.ha-venv-stop" ] && exit; [ $((SECONDS - t)) -lt 20 ] && exit 1; done' \
+  (cd "$cfg" || exit 1; python3 -c 'import os, sys; os.setsid(); os.execvp(sys.argv[1], sys.argv[1:])' nohup bash -c 'while :; do t=$SECONDS; "$1/bin/hass" -c "$2"; [ -e "$2/.ha-venv-stop" ] && exit; [ $((SECONDS - t)) -lt 20 ] && exit 1; done' \
     ha-venv "$d" "$cfg" > "$cfg/.ha-venv.out" 2>&1 < /dev/null &)
   sleep 1
   pid="$(pid_von "$cfg")"
