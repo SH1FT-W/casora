@@ -64,7 +64,8 @@
     + ":host(.is-light) .frow.casora-pmore .rtext b{color:var(--casora-studio-link, #0071e3)}"
 
     + ":host(.is-light) .casora-chip{background:var(--casora-studio-chip, rgba(118,118,128,.12))}:host(.is-light) .casora-chip.on{background:var(--casora-studio-link, #0071e3)}"
-    + ":host(.is-light) .fgroup.casora-pfocus .flist{box-shadow:0 0 0 2px var(--casora-studio-link, #0071e3)}";
+    + ":host(.is-light) .fgroup.casora-pfocus .flist{box-shadow:0 0 0 2px var(--casora-studio-link, #0071e3)}"
+    + ".camera-fold>.cn-bhead{width:100%;border:0;color:var(--ink);font:inherit;text-align:left}";
 
   const clone = (x) => JSON.parse(JSON.stringify(x || {}));
   // New calendars: Casora blue as in the color menu (formerly fixed #0A84FF, which stays readable).
@@ -397,7 +398,7 @@
         if (!cameras.length && !ids.length) self._flowRow(g, { title: "No Cameras", sub: "Nothing found in Home Assistant." });
         cameras.forEach((camera, index) => {
           const fold = document.createElement("div");
-          fold.className = "cn-fold";
+          fold.className = "cn-fold camera-fold";
           const toggle = document.createElement("button");
           toggle.type = "button";
           toggle.className = "cn-bhead";

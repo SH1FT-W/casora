@@ -16670,6 +16670,10 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     var heads = [], byKey = {};
     (events || []).forEach(function (e) {
       if (!e) return;
+      if (e.opens === 'casora:detection') {
+        heads.push(Object.assign({}, e, { members: [e], count: 1, stackKey: e.id }));
+        return;
+      }
       var k = e.entity ? 'e:' + e.entity : 'l:' + e.label;
       var h = byKey[k];
       if (!h) {

@@ -26,6 +26,10 @@ states[sensor].state = 'unavailable';
 assert.equal(window.casoraCameraAlert(hass, states, [camera], 5), '');
 states[sensor].state = 'on';
 assert.equal(window.casoraCameraAlert(hass, states, [camera], 5), '', 'restart is not a detection');
+states[sensor].state = 'unknown';
+window.casoraCameraAlert(hass, states, [camera], 5);
+states[sensor].state = 'on';
+assert.equal(window.casoraCameraAlert(hass, states, [camera], 5), '', 'unknown to on is not a detection');
 states[event].state = new Date(now).toISOString();
 assert.equal(window.casoraCameraAlert(hass, states, [camera], 5), 'Motion');
 for (const name of ['casora_camera', 'casora_reolink_doorbell', 'casora_frigate']) {

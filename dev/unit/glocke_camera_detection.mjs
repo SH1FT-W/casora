@@ -14,6 +14,8 @@ const entries = [
   { entity_id: id, state: 'unavailable', when: now - 80 },
   { entity_id: id, state: 'on', name: 'Person', when: now - 70 },
   { entity_id: event, state: new Date((now - 60) * 1000).toISOString(), name: 'Motion', when: now - 60 },
+  { entity_id: id, state: 'off', when: now - 50 },
+  { entity_id: id, state: 'on', name: 'Person', when: now - 40 },
 ];
 const calls = [];
 const hass = {
@@ -40,7 +42,8 @@ new Function(mod)();
 const rows = await window._casoraNotify.refresh();
 assert.ok(calls.some(c => c.type === 'logbook/get_events' && c.entity_ids.includes(id)), 'listed detection is watched');
 const detections = rows.filter(row => row.entity === id);
-assert.equal(detections.length, 1, 'only off to on is a detection');
+assert.equal(detections.length, 2, 'each off-to-on detection has its own non-opening row');
+assert.ok(detections.every(row => row.count === 1), 'detection rows do not become expandable stacks');
 assert.equal(detections[0].label, 'Person erkannt');
 assert.equal(detections[0].opens, 'casora:detection', 'detection row uses the non-opening target');
 assert.equal(rows.find(row => row.entity === event)?.label, 'Motion erkannt', 'event detection uses its own name');
