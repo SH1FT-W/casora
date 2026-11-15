@@ -193,6 +193,12 @@ Kern-Integrationen (Schlüssel im Test geprüft):
   `binary_sensor` (andere Sensoren des Geräts bleiben draußen; ohne `device_id`/`translation_key` nichts dazu)
   (`01-basis.js` `casoraWarnings.siblings`/`sources`, `pickedSources`; `casora-core.js` `wants`). Test
   `dev/unit/warning_slots_same_device.mjs`, `dev/qa/regress/r821_warning_slots_auto.mjs`.
+  Die Plätze sind Positionen, keine Warnungen: kommt eine schwerere dazu oder endet eine, rücken die übrigen um (Frost
+  wandert von Platz 1 auf 2 und zurück, Platz 2 geht aus, obwohl Frost weiter gilt). Die Glocke liest den Verlauf der
+  Plätze eines Geräts deshalb als eine Quelle („Wetterwarnung“, wenn die Zahl aktiver Plätze steigt, „Entwarnung“ erst
+  bei null); dafür liefert `logbook/get_events` nur Zustandswechsel (keine reinen Attribut-Änderungen), zeitlich
+  sortiert (`01-basis.js` `slotLog`, `casora-core.js` Erweiterung `prepare`). Test
+  `dev/unit/bell_warning_slot_device_once.mjs`, `dev/qa/regress/r822_warning_slot_device_bell_once.mjs`.
 - `cookidoo` (Rezept, `03-popups.js`, `ki.py`), `mealie` (Rezept als zweite Quelle, `03-popups.js`, `mealie_plan.py`, #140), `backup` (`03-popups.js`), `proximity` (`15-person.js`),
   `unifi` (Netzwerk, `00-finder.js`), `lamarzocco` (Kaffee, `25-coffee.js`), `tankerkoenig` (nur `platform`,
   `tanken.py`)

@@ -16771,6 +16771,9 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       var asked = {};
       var vacLine = {};
       ids.forEach(function (id) { asked[id] = 1; });
+      // An extension may read the whole logbook first (warning slot devices as one source, 01-basis.js slotLog);
+      // ids: the watched entities (without the excluded ones).
+      eachExt('prepare', function (x) { x.prepare(entries || [], hass, extApi(), ids.slice()); });
       (entries || []).forEach(function (e) {
         var id = e.entity_id;
         if (!id || !asked[id]) return;
@@ -16795,6 +16798,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         if (when < sinceMs) return;
         var d = describe(e, st, was);
         if (!d || excluded(id)) return;
+        // d.entity: the source the row stands for when it is not the logbook's entity (one row per slot device).
+        var src = typeof d.entity === 'string' && d.entity ? d.entity : id;
         events.push({
           id: id + '@' + when,
           when: when,
@@ -16805,7 +16810,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
           sec: !!d.sec,
           image: d.image,
           imageFit: d.imageFit,
-          entity: id,
+          entity: src,
           opens: d.opens || null,
           once: d.once || null,
           done: !!d.done,
