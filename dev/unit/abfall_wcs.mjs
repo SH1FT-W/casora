@@ -8,6 +8,8 @@
 //     is not repeated on every render (5 s, 15 s, then every minute; opening the popup tries at once)
 //   - Studio: a bin picked without a name keeps its name, a corrected pick takes the new name, an
 //     emptied name gets it back; the waste tile mirrors the global "Calendar in the waste popup" switch
+//   Also pins the finder contract (00-finder.js#waste) for the Studio's trash_calendar.
+// @deckt: custom_components/casora/scripts/local/00-finder.js#waste
 //   node dev/unit/abfall_wcs.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -83,8 +85,7 @@ const labels = (W) => W.bins.map((b) => b.label).sort();
 const binOf = (W, label) => W.bins.find((b) => b.label === label);
 window.CASORA_SETTINGS = {};
 
-// ── Finder contract: the calendar is only known through trash_calendar ─────────
-// @deckt: custom_components/casora/scripts/local/00-finder.js#waste
+// ── Finder contract, pinned here (not a regression test): the calendar is only known through trash_calendar ─
 {
   // A calendar without a waste platform or name: only the configured id can name it.
   const CAL = 'calendar.side_calendar';
