@@ -1,12 +1,10 @@
 // @zustand: arbeit
 // @parallel: allein
-// @deckt: custom_components/casora/scripts/filter-overlay.js#_ensureDashboardHeader,_headBWanted,_headBRowFree,_headBScreen,_headBFix,_headBFixPlace,_headBRow,_headBText,_makeHeadB,_restoreBadgeRow
+// @deckt: custom_components/casora/scripts/filter-overlay.js#_ensureDashboardHeader,_headBWanted,_headBClip,_headBSticky,_headBText,_makeHeadB,_restoreBadgeRow
 // Fixed head on the phone's Home (1B, owner 14.11.2026): at the top the page looks as before; once the big
 // greeting has scrolled away, a slim row (greeting left, weather right) and the badge row stay at the top on the
 // bar's material (row 44 + badges 46 + edge 8 below the safe area). Badges stay tappable, nothing overlaps, the
 // page never scrolls sideways, popups, the bell and the room page lie above it, tablet and desktop are unchanged.
-// The row is held without a sticky layer (15.11.2026, r831): the card is position: fixed at the line, its wrapper
-// stays in the flow as the placeholder, and HA's views keep their own overflow.
 import { open, usePage, studio, casoraDashboard, dashboard, cards, check, need, finish, atFinish } from './lib.mjs';
 import { ws } from '../ws.mjs';
 
@@ -69,7 +67,6 @@ const measure = (pg) => pg.evaluate(() => {
     head: head && { op: parseFloat(getComputedStyle(head).opacity), pe: getComputedStyle(head).pointerEvents, box: box(head),
       greet: head.firstChild.textContent, weather: head.lastChild.textContent, g: box(head.firstChild), w: box(head.lastChild) },
     wrap: wrap && { box: box(wrap), pos: getComputedStyle(wrap).position, z: getComputedStyle(wrap).zIndex },
-    row: badge && { box: box(badge), pos: getComputedStyle(badge).position },
     pills: pills.map((p) => ({ ...box(p), text: (p.shadowRoot && p.shadowRoot.querySelector('ha-card') || p).innerText.replace(/\s+/g, ' ').trim() })),
     grad: grad ? parseFloat(getComputedStyle(grad).opacity) : null,
     views, nameOp: name ? parseFloat(getComputedStyle(name).opacity) : null, nameText: name ? name.textContent.trim() : '',
@@ -117,9 +114,8 @@ for (const width of [360, 390, 393]) {
       await check(`${t2}: greeting "${top.nameText}" on the left`, m.head && m.head.greet === top.nameText && m.head.g.w > 20 && m.head.g.l < 30, m.head);
       await check(`${t2}: weather on the right ("${m.head && m.head.weather}")`, m.head && /\d°/.test(m.head.weather) && m.head.weather.includes(' · ') && m.head.w.r > width - 30 && m.head.w.r <= width - 12, m.head);
       await check(`${t2}: greeting and weather do not overlap`, m.head && m.head.g.r <= m.head.w.l + 0.5, m.head && [m.head.g, m.head.w]);
-      await check(`${t2}: badge row fixed under the head`, m.row && Math.abs(m.row.box.t - 44) < 1 && m.row.pos === 'fixed' && m.wrap.pos !== 'sticky', [m.row, m.wrap]);
-      await check(`${t2}: fixed part ends at 98 px`, m.row && m.row.box.b <= 98 + 0.5, m.row && m.row.box);
-      await check(`${t2}: the row's place in the flow keeps its height and has scrolled on`, m.wrap && Math.abs(m.wrap.box.h - top.wrap.box.h) < 0.5 && m.wrap.box.t < 44 && m.sh === top.sh, [m.wrap, top.wrap, m.sh, top.sh]);
+      await check(`${t2}: badge row fixed under the head`, m.wrap && Math.abs(m.wrap.box.t - 44) < 1 && m.wrap.pos === 'sticky', m.wrap);
+      await check(`${t2}: fixed part ends at 98 px`, m.wrap && m.wrap.box.b <= 98 + 0.5, m.wrap && m.wrap.box);
       await check(`${t2}: material shown`, m.grad === 1, m.grad);
       await check(`${t2}: no sideways scrolling`, m.x === 0 && m.sw <= m.iw, { x: m.x, sw: m.sw, iw: m.iw });
       await check(`${t2}: badges inside the fixed part`, m.pills.length >= 2 && m.pills.every((p) => p.t >= 44 - 4 && p.b <= 98), m.pills);
@@ -133,13 +129,13 @@ for (const width of [360, 390, 393]) {
       await check(`${t2}: head row takes the tap, not the tile under it`, hh.head && !hh.tile, hh);
       if (SHOT && width === 393 && y === 500) await pg.screenshot({ path: `${SHOT}/500_${dark ? 'dunkel' : 'hell'}.png` });
     }
-    await check(`${tag}: HA's views keep their own overflow (nothing sticky needs clip)`, (await measure(pg)).views.every((v) => v === 'hidden'), (await measure(pg)).views);
+    await check(`${tag}: views clip sideways instead of scrolling`, (await measure(pg)).views.every((v) => v === 'clip'), (await measure(pg)).views);
 
     // Back to the top: as before.
     await scrollTo(pg, 0);
     const back = await measure(pg);
     await check(`${tag}: back at the top: head hidden again`, back.head && back.head.op === 0 && back.grad === 0, back.head);
-    await check(`${tag}: back at the top: badge row where it was, in the flow`, back.wrap && Math.abs(back.wrap.box.t - top.wrap.box.t) < 1 && Math.abs(back.row.box.t - top.row.box.t) < 1 && back.row.pos === 'relative', [back.wrap, top.wrap, back.row, top.row]);
+    await check(`${tag}: back at the top: badge row where it was`, back.wrap && Math.abs(back.wrap.box.t - top.wrap.box.t) < 1, [back.wrap, top.wrap]);
 
     if (width === 393) {
       // Popup over the fixed head.
@@ -221,7 +217,7 @@ for (const width of [360, 390, 393]) {
         await back();
         await scrollTo(pg, 600);
         const home = await measure(pg);
-        await check(`${tag}: back on Home: head and badges fixed again`, home.head && home.head.op === 1 && home.row && Math.abs(home.row.box.t - 44) < 1 && home.row.pos === 'fixed' && home.wrap.z === '113', home);
+        await check(`${tag}: back on Home: head and badges fixed again`, home.head && home.head.op === 1 && home.wrap && Math.abs(home.wrap.box.t - 44) < 1 && home.wrap.z === '113', home);
       }
     }
     await browser.close();

@@ -161,59 +161,9 @@ const toRight = (s, w) => [s.x, s.y, Math.min(w - 8, s.x + w * 0.6), s.y - 4];
     await swipe(cdp, page, 40, title.y, 330, title.y - 4);
     await check('Handy an: Wischen auf dem Raumtitel nach rechts wechselt den Raum nicht', (await cur()) === keys[1] && (await last()) === 'head', { cur: await cur(), last: await last() });
   } else await check('Handy: Raumtitel des offenen Raums gefunden', false);
-  // The fixed head of a scrolled room page (portrait phone, 1B 15.11.2026; filter-overlay _overlayHeadB) is head as
-  // well: the slim row (back, name) and the room's badge row held under it. A swipe on the slim row changed the room
-  // (it replaced the collapsed title bar, which was head by its box). The test house's rooms fit the phone: a spacer
-  // at the page's end makes the room long enough to scroll.
-  // A room with badges of its own (the first in the menu's order that has some).
-  let hk = keys[1];
-  for (const k of keys.slice(1)) {
-    await go(k);
-    const has = await page.evaluate((k) => { let ok = false;
-      Array.from(window._casoraSmartRows || []).forEach((x) => x.shadowRoot && x.shadowRoot.querySelectorAll('casora-filter-overlay')
-        .forEach((f) => { if (f._config && f._config.filter_category === k && f._showing && f._subBadgesWrapper && f._subBadgesWrapper.parentNode === f._contentEl
-          && f._subBadgesWrapper.getBoundingClientRect().height > 0) ok = true; }));
-      return ok; }, k);
-    if (has) { hk = k; break; }
-  }
-  await go(hk);
-  const fixedHead = await page.evaluate(async (k) => {
-    let fo = null;
-    Array.from(window._casoraSmartRows || []).forEach((x) => x.shadowRoot && x.shadowRoot.querySelectorAll('casora-filter-overlay')
-      .forEach((f) => { if (f._config && f._config.filter_category === k && f._overlayEl) fo = f; }));
-    const o = fo && fo._overlayEl, content = fo && fo._contentEl;
-    if (!o || !content) return null;
-    const sp = document.createElement('div'); sp.id = 'qa-r532-spacer'; sp.style.height = '1600px'; content.appendChild(sp);
-    o.scrollTop = 500;
-    o.dispatchEvent(new Event('scroll'));
-    await new Promise((r) => setTimeout(r, 900));
-    const h = fo._headBO && fo._headBO.el;
-    if (!h) return { k, none: true };
-    const r = h.getBoundingClientRect();
-    const w = fo._subBadgesWrapper, card = w && w.parentNode === content ? fo._getBC(w) : null;
-    const c = card ? card.getBoundingClientRect() : null;
-    return { k, x: r.left + r.width * 0.75, y: r.top + r.height / 2, h: r.height, op: Number(getComputedStyle(h).opacity), top: o.scrollTop,
-      row: c && c.height > 0 ? { x: c.left + c.width * 0.75, y: c.top + c.height / 2, pos: getComputedStyle(card).position, top: c.top } : null };
-  }, hk);
-  if (fixedHead && !fixedHead.none && fixedHead.op > 0.5 && fixedHead.h > 0) {
-    await swipe(cdp, page, fixedHead.x, fixedHead.y, fixedHead.x - 220, fixedHead.y + 2);
-    await check('Phone on: a swipe to the left on the fixed head row does not change the room', (await cur()) === fixedHead.k && (await last()) === 'head', { cur: await cur(), last: await last(), at: fixedHead });
-    await swipe(cdp, page, 80, fixedHead.y, 300, fixedHead.y - 2);
-    await check('Phone on: a swipe to the right on the fixed head row does not change the room', (await cur()) === fixedHead.k && (await last()) === 'head', { cur: await cur(), last: await last(), at: fixedHead });
-    if (fixedHead.row && fixedHead.row.pos === 'fixed') {
-      // The row is head by its card, or blocked by its id (a row that takes sideways touches itself): never a swipe.
-      await swipe(cdp, page, fixedHead.row.x, fixedHead.row.y, fixedHead.row.x - 220, fixedHead.row.y + 2);
-      await check('Phone on: a swipe to the left on the held badge row does not change the room', (await cur()) === fixedHead.k && ['head', 'blocked'].includes(await last()), { cur: await cur(), last: await last(), at: fixedHead.row });
-      await swipe(cdp, page, 80, fixedHead.row.y, 300, fixedHead.row.y - 2);
-      await check('Phone on: a swipe to the right on the held badge row does not change the room', (await cur()) === fixedHead.k && ['head', 'blocked'].includes(await last()), { cur: await cur(), last: await last(), at: fixedHead.row });
-    } else await check('Phone: the room\'s badge row is held fixed under the head', false, fixedHead);
-  } else await check('Phone: fixed head of a scrolled room found', false, fixedHead);
-  await page.evaluate(() => { const sp = window.__pierce('#qa-r532-spacer')[0]; if (sp) sp.remove(); });
   // The collapsed title bar (fixed at the top once a room page is scrolled up; filter-overlay _compactHeaderEl) is head
-  // as well. It shows where the fixed head does not apply: the phone in landscape.
+  // as well. The test house's rooms fit the phone: a spacer at the page's end makes the room long enough to scroll.
   await go(keys[1]);
-  await page.setViewportSize({ width: 852, height: 393 });
-  await page.waitForTimeout(900);
   const bar = await page.evaluate(async (k) => {
     let fo = null;
     Array.from(window._casoraSmartRows || []).forEach((x) => x.shadowRoot && x.shadowRoot.querySelectorAll('casora-filter-overlay')
@@ -233,8 +183,6 @@ const toRight = (s, w) => [s.x, s.y, Math.min(w - 8, s.x + w * 0.6), s.y - 4];
     await check('Handy an: Wischen auf der eingeklappten Titelleiste wechselt den Raum nicht', (await cur()) === bar.k && (await last()) === 'head', { cur: await cur(), last: await last(), at: bar });
   } else await check('Handy: eingeklappte Titelleiste eines gescrollten Raums gefunden', false, bar);
   await page.evaluate(() => { const sp = window.__pierce('#qa-r532-spacer')[0]; if (sp) sp.remove(); });
-  await page.setViewportSize({ width: 393, height: 852 });
-  await page.waitForTimeout(900);
 
   // A Casora popup is open: no room change.
   await go(keys[1]);

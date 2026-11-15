@@ -6,9 +6,6 @@
 // Erwartet (iPhone 393×852, Theme „Casora“ hell und „Casora Nebel“ dunkel): Raum gescrollt = Pille
 // sichtbar mit Raumnamen, schmaler als der Bildschirm, kein Vollbreiten-Balken, Zurück-Pfeil
 // ausgeblendet; Startseite gescrollt = keine Pille „Zuhause“ (fester Kopf, r830). Ohne Casora-Theme (bis 1.6.0 „Hemma 2“): alter Balken unverändert (Vollbreite, keine Pille).
-// Since the fixed head on room pages (1B, 15.11.2026, r832) the portrait phone shows the slim head row (back, room
-// name) with the room's badges held under it instead of the pill or the bar, in every theme. The pill and the old bar
-// stay where the fixed head does not apply: the phone in landscape (checked here after turning the phone).
 import { open, casoraDashboards, dashboard, check, need, finish, usePage } from './lib.mjs';
 
 const all = await casoraDashboards();
@@ -57,55 +54,6 @@ const scrollRoom = (page) => page.evaluate(() => {
   return true;
 });
 
-// The fixed head of the open room page (portrait phone): slim row, name, back button, the held badge row.
-const headState = (page) => page.evaluate(() => {
-  const ov = window.__pierce('casora-filter-overlay').find((o) => o._showing);
-  const el = ov?._headBO?.el;
-  if (!el) return null;
-  const r = el.getBoundingClientRect();
-  const w = ov._subBadgesWrapper, card = w && w.parentNode === ov._contentEl ? ov._getBC(w) : null;
-  const b = ov._backBtn ? ov._backBtn.getBoundingClientRect() : null;
-  const hdr = ov._compactHeaderEl;
-  return {
-    op: parseFloat(getComputedStyle(el).opacity), name: el.firstChild.textContent.trim(), title: ov._titleEl?.textContent.trim(),
-    top: r.top, h: r.height, w: r.width, vw: window.innerWidth,
-    row: card ? { pos: getComputedStyle(card).position, top: card.getBoundingClientRect().top - r.top, bottom: card.getBoundingClientRect().bottom - r.top } : null,
-    back: ov._backBtn ? parseFloat(getComputedStyle(ov._backBtn).opacity) : null, backMid: b ? (b.top + b.bottom) / 2 - r.top : null,
-    old: hdr ? parseFloat(getComputedStyle(hdr).opacity) : null,
-  };
-});
-// Portrait phone, room scrolled: the fixed head instead of the pill / the bar.
-// band: where the fixed part ends (98 px; a taller badge row makes it taller, as without a Casora theme).
-const checkHead = async (page, tag, band = 98) => {
-  let s = null;
-  for (let i = 0; i < 12 && !(s && s.op > 0.9); i++) {
-    await page.waitForTimeout(500);
-    await scrollRoom(page);
-    await page.waitForTimeout(300);
-    s = await headState(page);
-  }
-  console.log(tag, 'room, portrait', JSON.stringify(s));
-  await need(`${tag}: room, portrait – the fixed head shows when the page scrolls`, s && s.op > 0.9, s);
-  await check(`${tag}: room, portrait – slim head row at the top, full width`, Math.abs(s.top) < 1 && Math.abs(s.h - 44) < 1 && s.w >= s.vw - 1, s);
-  await check(`${tag}: room, portrait – the head names the room`, s.title && s.name === s.title, s);
-  await check(`${tag}: room, portrait – the room's badges are held under the head (fixed, inside ${band} px)`, s.row && s.row.pos === 'fixed' && s.row.top >= 44 - 0.5 && s.row.bottom <= band + 0.5, s);
-  await check(`${tag}: room, portrait – back button stays, on the head row's centre line`, s.back !== null && s.back > 0.9 && Math.abs(s.backMid - 22) < 1.5, s);
-  await check(`${tag}: room, portrait – no pill and no old bar next to the head`, s.old === 0, s);
-};
-// Turns the phone to landscape with the room open: the fixed head lets go, pill / bar as before.
-const landscape = async (page) => {
-  await page.setViewportSize({ width: 852, height: 393 });
-  await page.waitForTimeout(900);
-  let r = null;
-  for (let i = 0; i < 12 && !(r && r.op > 0.9); i++) {
-    await page.waitForTimeout(500);
-    await scrollRoom(page);
-    await page.waitForTimeout(300);
-    r = await roomState(page);
-  }
-  return { r, head: await headState(page) };
-};
-
 const roomState = (page) => page.evaluate(() => {
   const ov = window.__pierce('casora-filter-overlay').find((o) => o._showing);
   const hdr = ov?._compactHeaderEl;
@@ -148,12 +96,15 @@ for (const [theme, dark] of [['Casora', false], ['Casora Nebel', true]]) {
   await page.evaluate(() => window.scrollTo(0, 0));
   const label = await openRoom(page);
   await need(`${tag}: Raum öffnen`, label);
-  await checkHead(page, tag);
-  // Landscape: the floating pill with the room's mini status, as before the fixed head.
-  const { r, head } = await landscape(page);
-  console.log(tag, 'Raum quer', JSON.stringify(r), JSON.stringify(head));
+  let r = null;
+  for (let i = 0; i < 12 && !(r && r.op > 0.9); i++) {
+    await page.waitForTimeout(500);
+    await scrollRoom(page);
+    await page.waitForTimeout(300);
+    r = await roomState(page);
+  }
+  console.log(tag, 'Raum', JSON.stringify(r));
   await need(`${tag}: Raum – Kopf erscheint beim Scrollen`, r && r.op > 0.9, r);
-  await check(`${tag}: Raum quer – keine feste Kopfzeile, Badges nicht gehalten`, head && head.op === 0 && (!head.row || head.row.pos !== 'fixed'), head);
   await check(`${tag}: Raum – Pille statt Balken`, r.pill && r.w < r.vw - 40, r);
   await check(`${tag}: Raum – Pille nennt den Raum`, r.title && r.text.startsWith(r.title), r);
   await check(`${tag}: Raum – Zurück-Pfeil ausgeblendet`, r.back === null || r.back < 0.1, r);
@@ -177,11 +128,14 @@ for (const [theme, dark] of [['Casora', false], ['Casora Nebel', true]]) {
   }
   const label = await openRoom(page);
   await need('Ohne Casora-Theme: Raum öffnen', label);
-  await checkHead(page, 'Ohne Casora-Theme', 108);
-  // Landscape: the old full-width bar, unchanged.
-  const { r, head } = await landscape(page);
-  console.log('Ohne Casora-Theme Raum quer', JSON.stringify(r), JSON.stringify(head));
-  await check('Ohne Casora-Theme: Raum quer – keine feste Kopfzeile', head && head.op === 0 && (!head.row || head.row.pos !== 'fixed'), head);
+  let r = null;
+  for (let i = 0; i < 12 && !(r && r.op > 0.9); i++) {
+    await page.waitForTimeout(500);
+    await scrollRoom(page);
+    await page.waitForTimeout(300);
+    r = await roomState(page);
+  }
+  console.log('Ohne Casora-Theme Raum', JSON.stringify(r));
   await need('Ohne Casora-Theme: Raum – Kopf erscheint beim Scrollen', r && r.op > 0.9, r);
   await check('Ohne Casora-Theme: Raum – Vollbreiten-Balken wie bisher, keine Pille', !r.pill && r.w >= r.vw - 1, r);
   await check('Ohne Casora-Theme: Raum – Zurück-Pfeil bleibt', r.back !== null && r.back > 0.9, r);
