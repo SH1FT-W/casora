@@ -2864,22 +2864,198 @@ window.casoraAvgState = function (hass, ids, entity) {
   var sum = vals.reduce(function (t, n) { return t + n; }, 0);
   return (Math.round(sum / vals.length * 10) / 10).toFixed(1);
 };
-window.casoraComfortLevel = function (kind, v, unit) {
+/* #202: the bands depend on the room's type (window.casoraComfortBands below). Without a room (ctx missing) the
+   standard scale above applies unchanged. ctx: a room name, or { room, entity, hass, state, type, since }. A type
+   without a rating (outdoor) gives null like a missing reading. dev/unit/comfort_room_types.mjs */
+window.casoraComfortLevel = function (kind, v, unit, ctx) {
   var n = parseFloat(v);
   if (!isFinite(n)) return null;
+  var b = window.casoraComfortBands(ctx);
+  if (!b) return null;
   if (kind === 'temp') {
     var c = /F/i.test(String(unit || '')) ? (n - 32) * 5 / 9 : n;
-    if (c >= 19 && c <= 24) return 0;
-    if (c >= 17 && c <= 26) return 1;
+    if (c >= b.temp_ideal_min && c <= b.temp_ideal_max) return 0;
+    if (c >= b.temp_low && c <= b.temp_high) return 1;
     return 2;
   }
   if (kind === 'humidity') {
-    if (n >= 40 && n <= 60) return 0;
-    if (n >= 30 && n <= 70) return 1;
+    // Bathroom and kitchen: humid air after a shower or cooking is normal – red only once it stayed high a while
+    // (asked on every reading, so a drop below the limit ends the run).
+    var since = b.hum_sustain ? window.casoraComfortHighSince(ctx, b.hum_high) : null;
+    if (n >= b.hum_ideal_min && n <= b.hum_ideal_max) return 0;
+    if (n >= b.hum_low && n <= b.hum_high) return 1;
+    if (n > b.hum_high && b.hum_sustain) return since != null && Date.now() - since >= b.hum_sustain * 60000 ? 2 : 1;
     return 2;
   }
   return null;
 };
+/* Room types (#202, maintainer 15.11.2026): recommended values per type, °C and % relative humidity. Basis: the
+   German Environment Agency (UBA) recommendations for indoor climate and DIN EN 16798-1 category II (living rooms at
+   least 20 °C in winter, at most 26 °C in summer); mould risk on cold walls below 16–18 °C and from 60–70 % humidity.
+   Per type: ideal min/max (green), warning limits low/high (outside red, in between orange). Optional, words only:
+   temp_soft_low (orange below it says „Kalt“), hum_soft_high (orange above it says „Feucht“); hum_sustain: minutes
+   above hum_high before red. standard is the scale before #202. aussen (outdoor/unheated): no rating at all.
+   The Studio (Settings › Home & devices › Room climate) shows and overrides these; only changed values are stored
+   (settings section climate: { rooms: { <room name>: <type> }, types: { <type>: { <field>: number } } }). */
+(function () {
+  var T = {
+    standard: { temp_ideal_min: 19, temp_ideal_max: 24, temp_low: 17, temp_high: 26, hum_ideal_min: 40, hum_ideal_max: 60, hum_low: 30, hum_high: 70 },
+    wohnen: { temp_ideal_min: 20, temp_ideal_max: 23, temp_low: 17, temp_high: 26, hum_ideal_min: 40, hum_ideal_max: 60, hum_low: 30, hum_high: 70 },
+    schlafen: { temp_ideal_min: 17, temp_ideal_max: 20, temp_low: 16, temp_high: 26, hum_ideal_min: 40, hum_ideal_max: 60, hum_low: 30, hum_high: 70 },
+    bad: { temp_ideal_min: 21, temp_ideal_max: 24, temp_low: 18, temp_high: 26, hum_ideal_min: 40, hum_ideal_max: 65, hum_low: 30, hum_high: 70,
+      hum_soft_high: 75, hum_sustain: 60 },
+    kueche: { temp_ideal_min: 19, temp_ideal_max: 22, temp_low: 17, temp_high: 26, hum_ideal_min: 40, hum_ideal_max: 60, hum_low: 30, hum_high: 70,
+      hum_soft_high: 75, hum_sustain: 60 },
+    nebenraum: { temp_ideal_min: 16, temp_ideal_max: 21, temp_low: 15, temp_high: 26, hum_ideal_min: 40, hum_ideal_max: 60, hum_low: 30, hum_high: 70 },
+    keller: { temp_ideal_min: 10, temp_ideal_max: 18, temp_low: 3, temp_high: 26, hum_ideal_min: 45, hum_ideal_max: 60, hum_low: 0, hum_high: 70,
+      temp_soft_low: 8 },
+    aussen: null,
+  };
+  window.casoraComfortTable = T;
+  // The Studio's order and the editable fields (the words-only and duration keys stay in the table).
+  window.casoraComfortTypes = ['wohnen', 'schlafen', 'bad', 'kueche', 'nebenraum', 'keller', 'aussen', 'standard'];
+  window.casoraComfortFields = ['temp_ideal_min', 'temp_ideal_max', 'temp_low', 'temp_high', 'hum_ideal_min', 'hum_ideal_max', 'hum_low', 'hum_high'];
+  var fold = function (s) {
+    return String(s == null ? '' : s).toLowerCase().replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue')
+      .replace(/ß/g, 'ss').replace(/[_\-\/]+/g, ' ').trim();
+  };
+  // Room name → type, first match wins (German and English, umlauts folded: „Küche“ → „kueche“).
+  var RULES = [
+    ['aussen', /garten|garden|balkon|balcon|terrass|terrace|garage|carport|aussen|draussen|outdoor|outside|patio|veranda|loggia|yard/],
+    ['keller', /keller|basement|cellar|lager/],
+    ['nebenraum', /\bwc\b|toilet|\bklo\b|waschkueche|laundry/],
+    ['bad', /\bbad|bad\b|bath|dusch|shower|baeder/],
+    ['schlafen', /schlaf|bedroom|\bbed\b|sleep/],
+    ['kueche', /kueche|kitchen|\bkochen/],
+    ['nebenraum', /flur|diele|\bgang\b|hall|treppe|stair|abstell|hauswirtschaft|\bhwr\b|storage|vorrat|windfang|eingang|entrance|corridor|utility|ankleide|closet|dressing/],
+    ['wohnen', /wohn|\bess|arbeit|buero|office|kinder|living|dining|kids|study|lounge|spielzimmer|playroom|gaestezimmer|guest|nursery|child/],
+  ];
+  // The HA area's icon when its name says nothing (mdi names).
+  var ICONS = [
+    ['schlafen', /\bbed/], ['bad', /shower|bathtub|\bbath/], ['nebenraum', /toilet|stairs|hanger|washing-machine|shoe/],
+    ['kueche', /stove|fridge|silverware|chef-hat|pot-steam|countertop/], ['keller', /wine/],
+    ['aussen', /tree|flower|garage|grill|pool|nature|balcony|fence|pine|sprout|outdoor|home-roof/],
+    ['wohnen', /sofa|television|desk|monitor|teddy|toy|human-child|baby|bookshelf|table-chair|chair-rolling|lamp/],
+  ];
+  window.casoraComfortAutoType = function (name, icon) {
+    var s = fold(name);
+    for (var i = 0; i < RULES.length; i++) if (s && RULES[i][1].test(s)) return RULES[i][0];
+    var ic = String(icon || '').toLowerCase();
+    for (var j = 0; j < ICONS.length; j++) if (ic && ICONS[j][1].test(ic)) return ICONS[j][0];
+    return 'standard';
+  };
+  var own = function () {
+    try {
+      var c = window.casoraSettings ? window.casoraSettings('climate') : ((window.CASORA_SETTINGS || {}).climate || {});
+      return c && typeof c === 'object' ? c : {};
+    } catch (e) { return {}; }
+  };
+  var known = function (k) { return Object.prototype.hasOwnProperty.call(T, k); };
+  // The type the Studio set for a room (or HA area) of this name, case-insensitive; null = automatic.
+  var chosen = function (name) {
+    var R = own().rooms, s = String(name == null ? '' : name).trim().toLowerCase();
+    if (!R || typeof R !== 'object' || !s) return null;
+    for (var k in R) if (Object.prototype.hasOwnProperty.call(R, k) && k.trim().toLowerCase() === s && known(R[k])) return R[k];
+    return null;
+  };
+  window.casoraComfortChosen = chosen;
+  var hassOf = function (ctx) {
+    if (ctx && ctx.hass && ctx.hass.states) return ctx.hass;
+    var ha = typeof document !== 'undefined' && document.querySelector ? document.querySelector('home-assistant') : null;
+    return (ha && ha.hass) || null;
+  };
+  // The HA area of a sensor: its own, else its device's (entity and device registry in hass).
+  var areaOf = function (hass, id) {
+    var H = hass || {}, reg = (H.entities || {})[id];
+    if (!reg) return null;
+    var aid = reg.area_id || (reg.device_id ? ((H.devices || {})[reg.device_id] || {}).area_id : null);
+    var a = aid ? (H.areas || {})[aid] : null;
+    return a && a.name ? { name: a.name, icon: a.icon || '' } : null;
+  };
+  window.casoraComfortAreaOf = areaOf;
+  /* The room's type: the Studio's choice for the room, else from its name; a room whose name says nothing (and
+     Home) takes its sensor's HA area – the Studio's choice for that area, else its name or icon. */
+  window.casoraComfortType = function (ctx) {
+    if (!ctx) return 'standard';
+    if (typeof ctx === 'string') ctx = { room: ctx };
+    if (ctx.type && known(ctx.type)) return ctx.type;
+    var c = ctx.room ? chosen(ctx.room) : null;
+    if (c) return c;
+    var a = ctx.room ? window.casoraComfortAutoType(ctx.room) : 'standard';
+    if (a !== 'standard' || !ctx.entity) return a;
+    var ar = areaOf(hassOf(ctx), ctx.entity);
+    if (!ar) return 'standard';
+    return chosen(ar.name) || window.casoraComfortAutoType(ar.name, ar.icon);
+  };
+  // The bands of the room's type with the Studio's values over the defaults; null for a type without a rating.
+  window.casoraComfortBands = function (ctx) {
+    var k = window.casoraComfortType(ctx), d = T[k];
+    if (!d) return null;
+    var o = (own().types || {})[k] || {}, out = { type: k };
+    for (var f in d) if (Object.prototype.hasOwnProperty.call(d, f)) out[f] = d[f];
+    window.casoraComfortFields.forEach(function (f) { var n = Number(o[f]); if (o[f] !== '' && o[f] != null && isFinite(n)) out[f] = n; });
+    return out;
+  };
+  /* Since when a sensor reads above limit (ms), for the bathroom's duration rule: the reading's last change at the
+     latest; one history look back (90 min) moves the start to where the run above limit began. Kept per sensor while
+     it stays above. ctx.since (tests) wins. null: unknown. */
+  var HIGH = {};
+  window.casoraComfortHighSince = function (ctx, limit) {
+    if (!ctx || typeof ctx !== 'object') return null;
+    if (ctx.since != null) return Number(ctx.since);
+    var hass = hassOf(ctx), id = ctx.entity, st = ctx.state || (hass && hass.states && hass.states[id]);
+    if (!id || !st) return null;
+    if (!(parseFloat(st.state) > limit)) { delete HIGH[id]; return null; }
+    var h = HIGH[id];
+    if (h && h.limit === limit) return h.since;
+    h = HIGH[id] = { limit: limit, since: Date.parse(st.last_changed) || Date.now() };
+    if (hass && hass.callApi) {
+      var start = new Date(Date.now() - 90 * 60000);
+      hass.callApi('GET', 'history/period/' + start.toISOString() + '?filter_entity_id=' + encodeURIComponent(id)
+        + '&end_time=' + encodeURIComponent(new Date().toISOString()) + '&minimal_response&no_attributes')
+        .then(function (r) {
+          var list = (r && r[0]) || [], s = null;
+          for (var i = list.length - 1; i >= 0; i--) {
+            if (!(parseFloat(list[i].state) > limit)) break;
+            s = Math.max(Date.parse(list[i].last_changed) || start.getTime(), start.getTime());
+          }
+          if (s != null && HIGH[id] === h) h.since = Math.min(h.since, s);
+        }).catch(function () { /* keep last_changed */ });
+    }
+    return h.since;
+  };
+  /* A badge's rating (#202): { level, word, type, none }. The room's own type rates the badge's reading (the average
+     of its sensors); a badge that sums up several rooms (Home: sensors in different HA areas, the room itself without
+     a type) rates each sensor by its own area's type and shows the worst. none: a type without a rating (outdoor). */
+  window.casoraComfortOf = function (kind, hass, entity, vars) {
+    var V = vars || {}, S = (hass && hass.states) || {};
+    var uOf = function (st) {
+      return kind === 'temp' ? ((st && st.attributes && st.attributes.unit_of_measurement) || V.temp_unit
+        || (hass && hass.config && hass.config.unit_system && hass.config.unit_system.temperature) || '') : '';
+    };
+    var rate = function (val, st, ctx) {
+      if (!window.casoraComfortBands(ctx)) return { level: null, word: null, type: 'aussen', none: true };
+      return { level: window.casoraComfortLevel(kind, val, uOf(st), ctx), word: window.casoraComfortWord(kind, val, uOf(st), ctx),
+        type: window.casoraComfortType(ctx), none: false };
+    };
+    var ids = (Array.isArray(V.avg_sensors) ? V.avg_sensors : []).filter(function (x, i, a) {
+      return x && a.indexOf(x) === i && S[x] && isFinite(parseFloat(S[x].state));
+    });
+    if (ids.length >= 2 && window.casoraComfortType({ room: V.room_name }) === 'standard' && !chosen(V.room_name)) {
+      var per = ids.map(function (x) { return { id: x, t: window.casoraComfortType({ entity: x, hass: hass }) }; });
+      if (per.some(function (p) { return p.t !== 'standard'; })) {
+        var worst = null;
+        per.forEach(function (p) {
+          var r = rate(S[p.id].state, S[p.id], { type: p.t, entity: p.id, hass: hass, state: S[p.id] });
+          if (r.level !== null && (!worst || r.level > worst.level)) worst = r;
+        });
+        return worst || { level: null, word: null, type: 'aussen', none: true };
+      }
+    }
+    var v = window.casoraAvgState ? window.casoraAvgState(hass, V.avg_sensors, entity) : entity && entity.state;
+    return rate(v, entity, { room: V.room_name || '', entity: entity && entity.entity_id, hass: hass, state: entity });
+  };
+})();
 window.casoraComfortColor = function (lv) {
   return lv === 0 ? 'var(--casora-badge-air-quality-good-color, var(--casora-color-green, #34C759))'
     : lv === 1 ? 'var(--casora-badge-air-quality-poor-color, var(--casora-color-orange, #FF9F0A))'
@@ -2888,16 +3064,24 @@ window.casoraComfortColor = function (lv) {
 };
 /* The word to a reading on the same bands (owner, 27.10.2026): temperature „Angenehm“ / „Kühl“ (17–19 °C) /
    „Warm“ (24–26 °C) / „Kalt“ (< 17) / „Heiß“ (> 26); humidity „Gut“ / „Etwas trocken“ (30–40) / „Etwas feucht“
-   (60–70) / „Sehr trocken“ (< 30) / „Sehr feucht“ (> 70). null: no reading. */
-window.casoraComfortWord = function (kind, v, unit) {
-  var lv = window.casoraComfortLevel(kind, v, unit);
+   (60–70) / „Sehr trocken“ (< 30) / „Sehr feucht“ (> 70). null: no reading. #202: the numbers come from the room's
+   type (ctx as for casoraComfortLevel); orange below temp_soft_low says „Kalt“, above hum_soft_high „Feucht“. */
+window.casoraComfortWord = function (kind, v, unit, ctx) {
+  var lv = window.casoraComfortLevel(kind, v, unit, ctx);
   if (lv === null) return null;
-  var n = parseFloat(v);
+  var n = parseFloat(v), b = window.casoraComfortBands(ctx);
   if (kind === 'temp') {
-    var c = /F/i.test(String(unit || '')) ? (n - 32) * 5 / 9 : n;
-    return lv === 0 ? 'Angenehm' : lv === 1 ? (c < 19 ? 'Kühl' : 'Warm') : (c < 19 ? 'Kalt' : 'Heiß');
+    var c = /F/i.test(String(unit || '')) ? (n - 32) * 5 / 9 : n, low = c < b.temp_ideal_min;
+    if (lv === 0) return 'Angenehm';
+    if (lv === 1) return low ? (b.temp_soft_low != null && c < b.temp_soft_low ? 'Kalt' : 'Kühl') : 'Warm';
+    return low ? 'Kalt' : 'Heiß';
   }
-  if (kind === 'humidity') return lv === 0 ? 'Gut' : lv === 1 ? (n < 40 ? 'Etwas trocken' : 'Etwas feucht') : (n < 40 ? 'Sehr trocken' : 'Sehr feucht');
+  if (kind === 'humidity') {
+    var dry = n < b.hum_ideal_min;
+    if (lv === 0) return 'Gut';
+    if (lv === 1) return dry ? 'Etwas trocken' : (b.hum_soft_high != null && n > b.hum_soft_high ? 'Feucht' : 'Etwas feucht');
+    return dry ? 'Sehr trocken' : 'Sehr feucht';
+  }
   return null;
 };
 /* Sub-badges with a sensor that is unavailable/unknown stay visible, muted, with their kind's icon and „Offline“

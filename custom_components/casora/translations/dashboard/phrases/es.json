@@ -2968,7 +2968,9 @@
     "Sonstige": "Otros",
     "pro Stunde": "por hora",
     "pro Tag": "por día",
-    "Nicht erfasst": "No medido"
+    "Nicht erfasst": "No medido",
+    "Wohlfühlbereich": "Rango de confort",
+    "feucht": "húmedo"
   },
   "patterns": [
     [
@@ -5362,6 +5364,10 @@
     [
       "^Geräte · (\\d+)$",
       "Dispositivos · {1}"
+    ],
+    [
+      "^Wohlfühlbereich (\\d+)–(\\d+) %$",
+      "Rango de confort {1}–{2} %"
     ]
   ]
 }

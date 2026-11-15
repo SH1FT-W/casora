@@ -2968,7 +2968,9 @@
     "Sonstige": "Pozostałe",
     "pro Stunde": "na godzinę",
     "pro Tag": "dziennie",
-    "Nicht erfasst": "Niezmierzone"
+    "Nicht erfasst": "Niezmierzone",
+    "Wohlfühlbereich": "Zakres komfortu",
+    "feucht": "wilgotno"
   },
   "patterns": [
     [
@@ -5362,6 +5364,10 @@
     [
       "^Geräte · (\\d+)$",
       "Urządzenia · {1}"
+    ],
+    [
+      "^Wohlfühlbereich (\\d+)–(\\d+) %$",
+      "Zakres komfortu {1}–{2} %"
     ]
   ]
 }

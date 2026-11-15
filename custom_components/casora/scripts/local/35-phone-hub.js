@@ -412,7 +412,13 @@
       var Cb = window._casoraSecCovers, sc = Cb && hass ? Cb.scan(hass.states, hass, hass.user) : null;
       return sc && sc.count && sc.open.some(function (id) { return item.blinds.indexOf(id) >= 0; }) ? 'warn' : 'ok';
     }
-    if (cat === 'climate') return item.kind === 'c' ? (CLIMATE_BAD.test(item.sub) ? 'alarm' : CLIMATE_WARN.test(item.sub) ? 'warn' : 'ok') : 'ok';
+    if (cat === 'climate' && item.kind === 'c') {
+      // Temperature and humidity: the badge's own rating by the room's type (#202, casoraComfortOf, 01-basis.js).
+      var cf = comfortOf(item, hass);
+      if (cf) return cf.level === 2 ? 'alarm' : cf.level === 1 ? 'warn' : 'ok';
+      return CLIMATE_BAD.test(item.sub) ? 'alarm' : CLIMATE_WARN.test(item.sub) ? 'warn' : 'ok';
+    }
+    if (cat === 'climate') return 'ok';
     if (cat !== 'security' || !hass) return 'ok';
     if (/casora_badge_security_covers/.test(item.tpl || '')) {
       var C = window._casoraSecCovers;
@@ -422,10 +428,19 @@
     return ids.length && window.casoraSecurityLevel ? window.casoraSecurityLevel(hass, ids) : 'ok';
   };
   // Klima readings in the air quality badge's tones, like their sub-badges (casoraComfortLevel, 01-basis.js).
+  // #202: the same rating as the badge – the room's type, Home by each room's own (window.casoraComfortOf).
+  function comfortOf(item, hass) {
+    var tpl = item.tpl || '', st = item.el && item.el._stateObj;
+    var kind = /casora_badge_temp/.test(tpl) ? 'temp' : /casora_badge_humidity/.test(tpl) ? 'humidity' : null;
+    if (!kind || !st || !window.casoraComfortOf) return null;
+    return window.casoraComfortOf(kind, hass, st, (item.el && item.el._evaledVariables) || {});
+  }
   var AQ_WORD = { 'Ausgezeichnet': 0, 'Gut': 0, 'Mäßig': 1, 'Schlecht': 1, 'Sehr schlecht': 2 };
   var climateTone = function (item, hass) {
     var tpl = item.tpl || '', st = item.el && item.el._stateObj, C = window.casoraComfortColor, Lv = window.casoraComfortLevel;
     if (!C || !Lv) return null;
+    var cf = comfortOf(item, hass);
+    if (cf) return cf.none ? null : cf.level === null ? null : C(cf.level);
     // The badge's own reading: the average of its sensors when it has several (casoraAvgState, 01-basis.js).
     var ev = (item.el && item.el._evaledVariables) || {};
     var val = st && window.casoraAvgState ? window.casoraAvgState(hass, ev.avg_sensors, st) : st && st.state;

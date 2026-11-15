@@ -37,7 +37,8 @@ from .const import DOMAIN
 STORAGE_KEY = f"{DOMAIN}.settings"
 STORAGE_VERSION = 1
 # Only these sections are known to Casora; anything else is not stored. security: covers in security (#76).
-SECTIONS = ("waste", "calendars", "notify", "scenes", "contacts", "security", "media", "night_entity", "ebike", "umzug", "basis", "welcome", "community")
+# climate: room types and changed recommended values of the room climate (#202).
+SECTIONS = ("waste", "calendars", "notify", "scenes", "contacts", "security", "media", "night_entity", "ebike", "umzug", "basis", "welcome", "community", "climate")
 
 
 def ai_text_language(hass: HomeAssistant) -> str:

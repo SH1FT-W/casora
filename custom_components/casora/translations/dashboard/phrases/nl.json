@@ -2968,7 +2968,9 @@
     "Sonstige": "Overige",
     "pro Stunde": "per uur",
     "pro Tag": "per dag",
-    "Nicht erfasst": "Niet gemeten"
+    "Nicht erfasst": "Niet gemeten",
+    "Wohlfühlbereich": "Comfortbereik",
+    "feucht": "vochtig"
   },
   "patterns": [
     [
@@ -5362,6 +5364,10 @@
     [
       "^Geräte · (\\d+)$",
       "Apparaten · {1}"
+    ],
+    [
+      "^Wohlfühlbereich (\\d+)–(\\d+) %$",
+      "Comfortbereik {1}–{2} %"
     ]
   ]
 }

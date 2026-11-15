@@ -2950,7 +2950,9 @@
     "Sonstige": "Other",
     "pro Stunde": "per hour",
     "pro Tag": "per day",
-    "Nicht erfasst": "Untracked"
+    "Nicht erfasst": "Untracked",
+    "Wohlfühlbereich": "Comfort range",
+    "feucht": "humid"
   },
   "patterns": [
     [
@@ -5344,6 +5346,10 @@
     [
       "^Geräte · (\\d+)$",
       "Devices · {1}"
+    ],
+    [
+      "^Wohlfühlbereich (\\d+)–(\\d+) %$",
+      "Comfort range {1}–{2}%"
     ]
   ]
 }

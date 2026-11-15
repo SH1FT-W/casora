@@ -27,7 +27,7 @@
   };
   // A focus inside an earlier page (a group of casora-panel-personal.js) → its block.
   const FOCUS_BLOCK = { waste: "waste", contacts: "contacts", security: "security", scenes: "scenes", media: "media",
-    devices: "devices", calendars: "calendars", notify: "notify", notify_exclude: "notify", battery: "battery", basis: "basis", umzug: "umzug" };
+    devices: "devices", calendars: "calendars", notify: "notify", notify_exclude: "notify", battery: "battery", basis: "basis", umzug: "umzug", climate: "climate" };
   const route = (pageId, focus) => {
     const id = String(pageId || "n-start");
     if (/^n-/.test(id)) return [id, focus];
@@ -147,6 +147,10 @@
         { k: "devices", personal: ["devices"], title: "Other devices",
           plain: "Devices Casora found that have no place of their own, e.g. an e-bike.",
           kw: "geräte ebike e-bike fahrrad" },
+        // #202: comfort rating by room type (casora-panel-personal.js, group "climate").
+        { k: "climate", personal: ["climate"], title: "Room climate",
+          plain: "How Casora rates temperature and humidity in each room: bedroom cooler, cellar damper, outdoor not at all.",
+          kw: "raumklima klima temperatur luftfeuchte luftfeuchtigkeit feuchte schimmel schlafzimmer keller bad küche flur außen komfort raumtyp wohlfühl room climate humidity mould mold comfort bedroom" },
       ] },
     { id: "wx", label: "Weather, power & fuel", icon: "temp-medium", tone: "set-outdoor",
       sub: "Weather source, outdoor values, electricity price and fuel nearby.",
