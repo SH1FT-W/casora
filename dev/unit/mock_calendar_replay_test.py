@@ -276,8 +276,8 @@ class MockCalendarFeaturesTest(unittest.TestCase):
             with self.subTest(features=features):
                 self.assertEqual(replay.served_features(features), 0)
 
-    def test_other_bits_are_kept(self):
-        self.assertEqual(replay.served_features(31), 24)
+    def test_undefined_bits_are_not_advertised(self):
+        self.assertEqual(replay.served_features(31), 0)
         self.assertEqual(replay.served_features(0), 0)
 
 
