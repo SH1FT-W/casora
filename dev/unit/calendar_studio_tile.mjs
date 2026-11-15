@@ -1,10 +1,10 @@
 // Studio Agenda tile preview (#151): the calendar filter, the waste exclusion and the translated
 // "No events" apply in the Studio, as on the dashboard. The Studio has no calendar module; the
 // title rule comes alone from scripts/local/06a-kalender-filter.js.
-// @deckt: custom_components/casora/panel/casora-panel.js#tileStateWord,_calendarSettings
+// @deckt: custom_components/casora/panel/casora-panel.js#tileStateWord,_calendarSettings,_paintTile,custom_components/casora/panel/casora-panel-personal.js#_casoraPersonalGroups,custom_components/casora/panel/casora-panel-settings.js#_csDiscardAll
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
-import vm from 'node:vm';
+import { loadPanel } from './lib/testhaus.mjs';
 
 const read = (p) => fs.readFileSync(new URL('../../' + p, import.meta.url), 'utf8');
 const panel = read('custom_components/casora/panel/casora-panel.js');
@@ -59,6 +59,9 @@ const calTile = { variables: {} };
   const hass = { entities: { 'calendar.a': { hidden_by: 'user' } } };
   assert.equal(word('casora_calendar', calTile, null, states, hass, { calendars: [] }), 'Visible', 'automatic selection excludes hidden calendars');
   assert.equal(word('casora_calendar', calTile, null, states, hass, { calendars: [{ entity: 'calendar.a' }] }), 'Naam-cccccc', 'explicit selection includes hidden calendars');
+  const ownTile = { variables: { calendars: [{ entity: 'calendar.b' }, { entity: 'calendar.waste' }] } };
+  assert.equal(word('casora_calendar', ownTile, null, states, hass, { calendars: [{ entity: 'calendar.a' }] }), 'Visible', 'tile list overrides configured calendars and excludes waste');
+  assert.equal(word('casora_calendar', { variables: { calendars: [{ entity: 'calendar.waste' }] } }, null, states, hass, chosen), 'Keine Termine', 'tile list cannot include waste');
 }
 
 // Saved filter words hide the first title; the next calendar's title shows.
@@ -108,21 +111,22 @@ const calTile = { variables: {} };
 const tick = () => new Promise((r) => setTimeout(r));
 const make = (ctx, win) => new Function('window', 'return {' + methodSrc() + '}')(win)._calendarSettings.bind(ctx);
 {
-  class Panel {}
+  const originalTimeout = globalThis.setTimeout;
+  const { P } = await loadPanel();
+  globalThis.setTimeout = originalTimeout;
   const elements = [];
   const element = () => {
     const children = {};
     return { dataset: {}, classList: { add() {}, toggle() {} }, style: { setProperty() {} },
       appendChild() {}, setAttribute() {}, querySelector: selector => children[selector] || (children[selector] = element()) };
   };
-  const document = { createElement: tag => { const el = element(); elements.push({ tag, el }); return el; } };
-  const win = makeWindow({ waste: 'calendar.waste' });
-  const context = { window: win, document, customElements: { whenDefined: () => Promise.resolve(), get: () => Panel } };
-  vm.runInNewContext(read('custom_components/casora/panel/casora-panel-personal.js'), context);
-  vm.runInNewContext(read('custom_components/casora/panel/casora-panel-settings.js'), context);
+  globalThis.document = { createElement: tag => { const el = element(); elements.push({ tag, el }); return el; } };
+  Object.assign(globalThis, makeWindow({ waste: 'calendar.waste' }));
+  new Function(read('custom_components/casora/panel/casora-panel-personal.js'))();
+  new Function(read('custom_components/casora/panel/casora-panel-settings.js'))();
   await Promise.resolve();
   const mounted = { tile: null };
-  const instance = new Panel();
+  const instance = Object.create(P);
   instance._hass = { states, callWS: async (msg) => {
     if (msg.type === 'casora/settings/get') return { settings: { calendar_filter: 'Naam-' }, stored: true };
     throw { code: 'unknown_command' };
@@ -130,21 +134,13 @@ const make = (ctx, win) => new Function('window', 'return {' + methodSrc() + '}'
   instance.shadowRoot = { getElementById: () => ({}), querySelectorAll: () => [] };
   instance._flowGroup = () => ({ parentElement: element() });
   instance._flowRow = () => ({ row: element() });
-  instance._cs = { S: win.casoraPersonal.normalize({ calendar_filter: 'Naam-' }) };
-  instance._calendarSettings = make(instance, win);
-  const start = panel.indexOf('\n  _paintTile(tile, ti, room) {');
-  const end = panel.indexOf('\n  _roomMap() {', start);
-  const paintSrc = panel.slice(start, end);
-  const paintContext = vm.createContext({ window: win, document, tileStateWord: tileStateWord(win),
-    tileTypeOf: () => ({ id: 'casora_calendar' }), tileActive: () => false, tileHidesNow: () => false,
-    tileEntityGone: () => false, tileMissingEntity: () => false, tileProgressOn: () => false,
-    tileToggleOn: () => false, iconUrl: () => '', TILE_ICON: {}, TILE_COLOR: {}, TILE_TINT: '' });
-  instance._paintTile = vm.runInContext('({' + paintSrc + '})._paintTile', paintContext);
+  instance._cs = { S: window.casoraPersonal.normalize({ calendar_filter: 'Naam-' }) };
   instance._tileEnt = () => null;
   instance._tileKey = () => 'calendar';
   instance._inactiveIconColor = () => '';
   instance._smartSortOn = () => false;
-  instance._rebuildPreview = () => { mounted.tile = instance._paintTile(calTile, 0, { tiles: [calTile] }); };
+  const previewTile = { template: 'casora_calendar', variables: {} };
+  instance._rebuildPreview = () => { mounted.tile = instance._paintTile(previewTile, 0, { tiles: [previewTile] }); };
   const previewText = () => mounted.tile.querySelector('.mstate').textContent;
   instance._csRepaint = () => {};
   instance._rebuildPreview();
@@ -192,7 +188,7 @@ const make = (ctx, win) => new Function('window', 'return {' + methodSrc() + '}'
   let imports = 0, rebuilt = 0;
   const win = { casoraImportScript: () => {
     imports++;
-    if (imports < 3) return Promise.reject(new Error('offline'));
+    if (imports === 1) return Promise.reject(new Error('offline'));
     win.casoraCalendarAllows = () => true;
     return Promise.resolve();
   } };
@@ -206,11 +202,18 @@ const make = (ctx, win) => new Function('window', 'return {' + methodSrc() + '}'
   pick('casora_calendar');
   await tick();
   assert.equal(imports, 2, 'later paint retries');
-  assert.equal(rebuilt, 0, 'repeated failure still does not trigger a loop');
-  pick('casora_calendar');
-  await tick();
-  assert.equal(imports, 3);
   assert.equal(rebuilt, 1, 'recovery redraws once');
+}
+
+{
+  let imports = 0, rebuilt = 0;
+  const win = { casoraImportScript: () => { imports++; return Promise.reject(new Error('offline')); } };
+  const ctx = { _cs: { S: {} }, _rebuildPreview: () => { rebuilt++; } };
+  const pick = make(ctx, win);
+  for (let i = 0; i < 6; i++) { pick('casora_calendar'); await tick(); }
+  assert.equal(imports, 2, 'only the initial import and one later retry are allowed');
+  assert.equal(rebuilt, 0, 'repeated failures never schedule a redraw');
+  assert.equal(tileStateWord(win)('casora_calendar', calTile, null, states, {}, ctx._cs.S), '', 'exhaustion remains fail-closed');
 }
 
 {
