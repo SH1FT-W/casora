@@ -1257,9 +1257,78 @@
     }
     return P;
   };
-  var E1_CSS = '@keyframes casora-flow-dot{from{stroke-dashoffset:' + DOT_GAP + ';}to{stroke-dashoffset:0;}}'
-    + '[data-e1-dot]{animation:casora-flow-dot 2s linear infinite;transition:opacity var(--casora-dur-feedback, 160ms) ease;}'
-    + '@media (prefers-reduced-motion:reduce){[data-e1-dot]{animation:none;display:none;}}';
+  // The dots of a line, pure for dev/unit/energy_flow_e1.mjs: one dot every DOT_GAP px along the path d (M, V, H and
+  // Q, absolute), each walking one gap per cycle. Returns { L, dots: [[{ p, x, y, o }, …], …] } with p = 0…1 inside
+  // the cycle, x/y in stage px and o = 0 where the dot has left the line's end.
+  // The dots are elements moved by transform (not a dashed stroke moved by stroke-dashoffset): a transform animation
+  // runs in the browser's compositor, so it stays smooth while a state update keeps the page busy.
+  E.flowE1Dots = function (d) {
+    var t = String(d || '').match(/[MVHQ]|-?[\d.]+/g) || [], pts = [], x = 0, y = 0, i = 0;
+    var add = function (nx, ny) {
+      var q = pts[pts.length - 1];
+      pts.push({ x: nx, y: ny, s: q ? q.s + Math.sqrt((nx - q.x) * (nx - q.x) + (ny - q.y) * (ny - q.y)) : 0 });
+      x = nx; y = ny;
+    };
+    while (i < t.length) {
+      var c = t[i++];
+      if (c === 'M') add(+t[i++], +t[i++]);
+      else if (c === 'V') add(x, +t[i++]);
+      else if (c === 'H') add(+t[i++], y);
+      else if (c === 'Q') {
+        var x0 = x, y0 = y, cx = +t[i++], cy = +t[i++], ex = +t[i++], ey = +t[i++];
+        for (var j = 1; j <= 12; j++) {
+          var u = j / 12, v = 1 - u;
+          add(v * v * x0 + 2 * v * u * cx + u * u * ex, v * v * y0 + 2 * v * u * cy + u * u * ey);
+        }
+      }
+    }
+    var L = pts.length ? pts[pts.length - 1].s : 0, dots = [];
+    var at = function (s) {
+      for (var k = 1; k < pts.length; k++) {
+        if (s <= pts[k].s) {
+          var a = pts[k - 1], b = pts[k], f = b.s > a.s ? (s - a.s) / (b.s - a.s) : 0;
+          return { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f };
+        }
+      }
+      return pts.length ? { x: pts[pts.length - 1].x, y: pts[pts.length - 1].y } : { x: 0, y: 0 };
+    };
+    var track = function (a0) {
+      var end = Math.min(a0 + DOT_GAP, L), fr = [];
+      var put = function (s, o) { var q = at(s); fr.push({ p: (s - a0) / DOT_GAP, x: q.x, y: q.y, o: o }); };
+      put(a0, 1);
+      pts.forEach(function (q) { if (q.s > a0 + 0.01 && q.s < end - 0.01) put(q.s, 1); });
+      if (end > a0) put(end, 1);
+      // Past the line's end the dot is gone at once, as a dash past its path's end was.
+      if (end < a0 + DOT_GAP) {
+        var last = fr[fr.length - 1];
+        fr.push({ p: Math.min(1, last.p + 0.0001), x: last.x, y: last.y, o: 0 });
+        if (fr[fr.length - 1].p < 1) fr.push({ p: 1, x: last.x, y: last.y, o: 0 });
+      }
+      return fr;
+    };
+    for (var a0 = 0; pts.length > 1 && a0 < L - 0.01; a0 += DOT_GAP) dots.push(track(a0));
+    return { L: L, dots: dots };
+  };
+  var DOT = 6;
+  var e1DotName = function (tag, k, i) { return 'casora-flow-dot-' + tag + '-' + k + '-' + i; };
+  // translate() in percent of the dot's own size, so the dots scale with the stage like the lines do.
+  // Plain CSS without &, <, >, quotes: it passes esc() unchanged (a <style> is raw text).
+  var e1Css = function (P, keys, tag) {
+    var n = function (v) { return String(Math.round(v * 100) / 100); };
+    var css = '[data-e1-dot]{position:absolute;inset:0;pointer-events:none;transition:opacity var(--casora-dur-feedback, 160ms) ease;}'
+      + '[data-e1-dot] i{position:absolute;left:0;top:0;width:' + n(DOT / E1.W * 100) + '%;aspect-ratio:1;margin:-' + n(DOT / E1.W * 50) + '% 0 0 -' + n(DOT / E1.W * 50) + '%;'
+      + 'border-radius:50%;background:currentColor;animation-duration:inherit;animation-direction:inherit;animation-timing-function:linear;animation-iteration-count:infinite;}'
+      + '@media (prefers-reduced-motion:reduce){[data-e1-dot]{display:none;}[data-e1-dot] i{animation:none;}}';
+    keys.forEach(function (k) {
+      E.flowE1Dots(P[k]).dots.forEach(function (fr, i) {
+        var fade = fr.some(function (f) { return !f.o; });
+        css += '@keyframes ' + e1DotName(tag, k, i) + '{' + fr.map(function (f) {
+          return n(f.p * 100) + '%{transform:translate(' + n(f.x / DOT * 100) + '%,' + n(f.y / DOT * 100) + '%);' + (fade ? 'opacity:' + f.o + ';' : '') + '}';
+        }).join('') + '}';
+      });
+    });
+    return css;
+  };
   var e1Html = function (F, m, FK) {
     var INK = 'var(--casora-popup-tiles-text-primary, #3A322B)', INK2 = 'var(--casora-popup-tiles-text-secondary, rgba(58,50,43,.62))';
     var FILL = 'var(--casora-popup-row-fill, #FEFCF7)';
@@ -1268,13 +1337,17 @@
     var miOf = { grid: first(F.gridHa) || F.grid || F.exp, solar: first(F.solar), battery: F.soc || F.batTile || first(F.batHa) || F.chg || F.dis,
       home: F.home, co2: F.co2 };
     var svg = '<svg viewBox="0 0 ' + esc(c.W) + ' ' + esc(g.H) + '" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible;" aria-hidden="true">';
+    var dotKeys = [], dotsHtml = '', tag = (m.top ? 't' : 'n') + (m.bottom ? 'b' : 'n');
     Object.keys(m.edges).forEach(function (k) {
       if (!m.edges[k].show || !P[k]) return;
       var col = E1_COL[E1_FROM[k]];
       svg += '<path data-e1-line="' + esc(k) + '" d="' + esc(P[k]) + '" fill="none" stroke="' + esc(col) + '" stroke-width="2" stroke-linecap="round" style="opacity:.35;"></path>';
-      if (k !== 'co2') svg += '<path data-e1-dot="' + esc(k) + '" d="' + esc(P[k]) + '" fill="none" stroke="' + esc(col) + '" stroke-width="6" stroke-linecap="round" stroke-dasharray="0 ' + esc(DOT_GAP) + '" style="opacity:0;"></path>';
+      if (k === 'co2') return;
+      dotKeys.push(k);
+      dotsHtml += '<div data-e1-dot="' + esc(k) + '" aria-hidden="true" style="color:' + esc(col) + ';opacity:0;">'
+        + E.flowE1Dots(P[k]).dots.map(function (fr, i) { return '<i style="animation-name:' + esc(e1DotName(tag, k, i)) + ';"></i>'; }).join('') + '</div>';
     });
-    svg += '</svg>';
+    svg += '</svg>' + dotsHtml;
     var pos = { grid: [c.xL, g.y1], solar: [c.xC, g.y0], battery: [c.xC, g.y2], home: [c.xR, g.y1], co2: [c.xL, g.y0] };
     var node = function (k) {
       var n = m.nodes[k];
@@ -1313,7 +1386,7 @@
       + 'font-family:var(--primary-font-family, Inter, system-ui);color:' + INK + ';text-align:left;">'
       + (e1Lbl ? '' : '<div style="font-size:var(--casora-h15-fs,17px);font-weight:var(--casora-h15-fw,700);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary, var(--primary-text-color)));">Energiefluss</div>')
       + '<div data-e1-stage style="position:relative;width:100%;max-width:' + esc(c.W) + 'px;aspect-ratio:' + esc(c.W) + ' / ' + esc(g.H) + ';margin:' + (e1Lbl ? 0 : 14) + 'px auto 0;">'
-      + svg + nodesHtml + '</div><style>' + E1_CSS + '</style></div>';
+      + svg + nodesHtml + '</div><style>' + esc(e1Css(P, dotKeys, tag)) + '</style></div>';
   };
   // Writes the model into the existing nodes; text only when it really changes (the translation swaps it afterwards).
   var e1Apply = function (box, m, hass) {
@@ -1335,16 +1408,18 @@
       set(line, 'opacity', e.on ? '0.9' : '0.35');
       // The dots keep running while hidden: switching them on never starts a new animation.
       set(dot, 'opacity', e.on ? '1' : '0');
-      // A running dot changes speed through its playback rate: a new animation-duration would make it jump.
-      var an = dot && dot.isConnected && dot.getAnimations ? dot.getAnimations()[0] : null;
-      if (an && an.updatePlaybackRate && dot.style.animationDuration) {
+      // Running dots change speed through their playback rate: a new animation-duration would make them jump.
+      // (Duration and direction sit on the line's wrapper, its dots inherit them.)
+      var ans = dot && dot.isConnected ? [].slice.call(dot.children).map(function (c) { return c.getAnimations ? c.getAnimations()[0] : null; }).filter(Boolean) : [];
+      if (ans.length && ans[0].updatePlaybackRate && dot.style.animationDuration) {
         var rate = (parseFloat(dot.style.animationDuration) || 2) / e.dur;
-        if (Math.abs((an.playbackRate || 1) - rate) > 0.01) an.updatePlaybackRate(rate);
+        ans.forEach(function (an) { if (Math.abs((an.playbackRate || 1) - rate) > 0.01) an.updatePlaybackRate(rate); });
       } else set(dot, 'animationDuration', e.dur + 's');
       set(dot, 'animationDirection', e.rev ? 'reverse' : 'normal');
       if (k === 'gb' && line) {
         var col = E1_COL[e.rev ? 'battery' : 'grid'];
-        if (line.getAttribute('stroke') !== col) { line.setAttribute('stroke', col); if (dot) dot.setAttribute('stroke', col); }
+        if (line.getAttribute('stroke') !== col) line.setAttribute('stroke', col);
+        set(dot, 'color', col);
       }
     });
     // Home ring: one segment per source in its share, clockwise from the top; the plain ring without any flow.

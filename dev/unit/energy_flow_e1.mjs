@@ -12,7 +12,7 @@ globalThis.window = globalThis;
 new Function(src)();
 const E = window._casoraSoftEnergy;
 const M = E.flowE1Model;
-for (const f of ['flowE1Model', 'flowSources', 'flowValues', 'flowDur', 'flowE1Geo', 'consSplit']) assert.equal(typeof E[f], 'function', f + ' missing');
+for (const f of ['flowE1Model', 'flowSources', 'flowValues', 'flowDur', 'flowE1Geo', 'flowE1Dots', 'consSplit']) assert.equal(typeof E[f], 'function', f + ' missing');
 
 const ALL = { solar: true, grid: true, battery: true, co2: false };
 const on = (m) => Object.keys(m.edges).filter((k) => m.edges[k].on).sort();
@@ -168,5 +168,44 @@ window.casoraEnergyConsumers = () => L.slice(0, 5);
 more.length = 0;
 assert.equal(E.sec('auto', { auto: { ha: true }, home: 'sensor.home' }, states, hass), '[Verbraucher]G5');
 assert.equal(more.length, 0);
+
+// 15. The dots of a line (r872: elements moved by transform instead of a dashed stroke): one dot every 44 px, each
+// walking exactly one gap per cycle at an even pace along the line, around the corner too, and gone past the end.
+{
+  const P = E.flowE1Paths(E.flowE1Geo(true, true));
+  // Straight line: M82 168 H218 is 136 px, so dots start at 0, 44, 88 and 132.
+  const gh = E.flowE1Dots(P.gh);
+  assert.equal(gh.L, 136);
+  assert.deepEqual(gh.dots.map((fr) => [fr[0].p, fr[0].x, fr[0].y]), [[0, 82, 168], [0, 126, 168], [0, 170, 168], [0, 214, 168]]);
+  assert.deepEqual(gh.dots[0].map((f) => [f.p, f.x, f.o]), [[0, 82, 1], [1, 126, 1]]);
+  // The last dot leaves at the line's end (218) after 4 of its 44 px and stays hidden for the rest of the cycle.
+  const lastDot = gh.dots[3];
+  assert.deepEqual([lastDot[1].x, lastDot[1].o, lastDot[2].x, lastDot[2].o, lastDot[lastDot.length - 1].p, lastDot[lastDot.length - 1].o], [218, 1, 218, 0, 1, 0]);
+  assert.ok(Math.abs(lastDot[1].p - 4 / 44) < 1e-9 && lastDot[2].p - lastDot[1].p <= 0.0002);
+  // A line as long as a whole number of gaps (132 px) has no dot that would only flash at its end.
+  assert.equal(E.flowE1Dots(P.sb).dots.length, 3);
+  // Every line: each dot continues where the one before ends, and the pace is even (path px per share of the cycle).
+  for (const k of ['sh', 'sg', 'sb', 'gh', 'gb', 'bh']) {
+    const r = E.flowE1Dots(P[k]);
+    assert.equal(r.dots.length, Math.ceil((r.L - 0.01) / 44), k + ': one dot per gap');
+    r.dots.forEach((fr, i) => {
+      const vis = fr.filter((f) => f.o);
+      assert.equal(fr[0].p, 0, k);
+      if (i) { const prev = r.dots[i - 1].filter((f) => f.o).pop(); assert.ok(Math.hypot(prev.x - fr[0].x, prev.y - fr[0].y) < 0.01, k + ': dot ' + i + ' starts where dot ' + (i - 1) + ' ends'); }
+      for (let j = 1; j < vis.length; j++) {
+        const px = Math.hypot(vis[j].x - vis[j - 1].x, vis[j].y - vis[j - 1].y), dp = vis[j].p - vis[j - 1].p;
+        assert.ok(dp > 0 && Math.abs(px - dp * 44) < 0.02, k + ': even pace, got ' + px + ' px for ' + dp);
+      }
+      if (i < r.dots.length - 1) assert.ok(fr.every((f) => f.o === 1) && fr[fr.length - 1].p === 1, k + ': inner dots stay visible');
+    });
+  }
+  // The corner (Q) is followed, not cut: the dot passing it gets points on the curve.
+  const sh = E.flowE1Dots(P.sh);
+  assert.ok(sh.dots.some((fr) => fr.some((f) => f.x > 160.5 && f.x < 181.5 && f.y > 138.5 && f.y < 159.5)), 'sh: points on the corner');
+  assert.deepEqual([sh.dots[0][0].x, sh.dots[0][0].y], [160, 100.7]);
+  // Nothing to walk: no dots.
+  assert.deepEqual(E.flowE1Dots('').dots, []);
+  assert.deepEqual(E.flowE1Dots(undefined).dots, []);
+}
 
 console.log('energy_flow_e1: ok');
