@@ -1,4 +1,9 @@
-"""Replay calendar state through HA's calendar getters and Casora's greeting."""
+"""Replay calendar state through HA's calendar getters and Casora's greeting.
+
+  uv run --python 3.14 --with homeassistant python dev/unit/mock_calendar_state_test.py
+
+@ha-venv: the gate runs this with the Python of tools/ha-venv.sh.
+"""
 import asyncio
 import json
 from datetime import timedelta
@@ -11,20 +16,14 @@ import unittest
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-try:
-    from homeassistant.util import dt as dt_util
-    from dev.casora_mock.entity import build_classes
-except ModuleNotFoundError as exc:
-    if exc.name != "homeassistant":
-        raise
-    dt_util = None
+from homeassistant.util import dt as dt_util
+from dev.casora_mock.entity import build_calendar_class
 
 
-@unittest.skipIf(dt_util is None, "Home Assistant is not installed")
 class CalendarStateTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.calendar_class = build_classes(None)["calendar"]
+        cls.calendar_class = build_calendar_class()
 
     def calendar(self, events, attrs=None):
         eid = "calendar.mock"
@@ -72,6 +71,7 @@ vm.runInContext(fs.readFileSync('custom_components/casora/scripts/local/00-finde
 const hass = {states: {'calendar.mock': state}};
 const result = window.casoraHomeNext(hass, {casora_greeting_next: true}, new Date(now));
 if (!result.includes('Naam-cccccc')) throw Error('missing greeting: ' + result);
+// Only the filter branch has the shared predicate; both branches check the metadata above.
 if (window.casoraCalendarAllows) {
   window.casoraSettings = () => ({calendar_filter: 'Naam-aaaaaa'});
   if (window.casoraHomeNext(hass, {casora_greeting_next: true}, new Date(now)) !== '') throw Error('filter ignored');
@@ -100,6 +100,20 @@ process.exit(0);
         calendar = self.calendar(None, {"message": "Naam-old", "start_time": "Naam-start"})
         self.assertEqual(self.served(calendar), {"state": "on", "attributes": {
             "message": "Naam-old", "start_time": "Naam-start"}})
+
+    def test_only_replay_calendars_request_polling(self):
+        self.assertTrue(self.calendar([]).should_poll)
+        self.assertTrue(self.calendar([self.event(dt_util.now(), dt_util.now() + timedelta(hours=1))]).should_poll)
+        self.assertFalse(self.calendar(None).should_poll)
+
+    def test_next_event_more_than_two_weeks_away_is_served(self):
+        now = dt_util.now().replace(microsecond=0)
+        start = now + timedelta(days=21)
+        calendar = self.calendar([self.event(start, start + timedelta(hours=1))])
+        api = asyncio.run(calendar.async_get_events(None, now, start + timedelta(hours=2)))
+        state = self.served(calendar)
+        self.assertEqual(state["attributes"]["message"], api[0].summary)
+        self.assertEqual(state["attributes"]["start_time"], api[0].start_datetime_local.strftime("%Y-%m-%d %H:%M:%S"))
 
     def test_running_multiday_all_day_event_precedes_future_event(self):
         now = dt_util.now()
