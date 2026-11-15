@@ -67,6 +67,7 @@ const window = { addEventListener() {}, casoraSettings: () => ({}) };
 const ctx = vm.createContext({window, document: {querySelector: () => null}, console, setTimeout});
 const filter = 'custom_components/casora/scripts/local/06a-kalender-filter.js';
 if (fs.existsSync(filter)) vm.runInContext(fs.readFileSync(filter, 'utf8'), ctx);
+vm.runInContext(fs.readFileSync('custom_components/casora/scripts/local/06-kalender.js', 'utf8'), ctx);
 vm.runInContext(fs.readFileSync('custom_components/casora/scripts/local/00-finder.js', 'utf8'), ctx);
 const hass = {states: {'calendar.mock': state}};
 const result = window.casoraHomeNext(hass, {casora_greeting_next: true}, new Date(now));
@@ -80,6 +81,7 @@ if (window.casoraCalendarAllows) {
   window.casoraSettings = () => ({calendar_filter: 'cccc'});
   if (window.casoraHomeNext(hass, {casora_greeting_next: true}, new Date(now)) !== '') throw Error('fallback ignored');
 }
+process.exit(0);
 """
         subprocess.run(["node", "-e", script], input=json.dumps([state, now.isoformat()]),
                        text=True, cwd=ROOT, check=True)
