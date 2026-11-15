@@ -15,7 +15,9 @@
 // touch that starts on the title / header or a badge row stays there – at the row's end and when the row fits alike.
 // Head = phone: the Home header card (casora_mobile_weather), the badge row (casora_mobile_filter_badges), the sub-badge
 // row (casora_mobile_sensor_chips), the open room's title and its collapsed title bar once the page scrolls up (both
-// pointer-events: none, so hit by their box while they show); tablet: the
+// pointer-events: none, so hit by their box while they show), the fixed head's slim row on the portrait phone
+// (.casora-head-b on Home and on room / badge pages, filter-overlay.js; it takes the touch itself while it shows, the
+// badge row held under it is the badge card as before); tablet: the
 // casora_room hero's head fields (#name, #n, #temperature, #weather, #time, #navigation, #badges*). Scroll chaining at a
 // row's end is left for the tile rows. A copy of a touch that button-card sends from further out is no new touch.
 // prefers-reduced-motion: the room changes without the slide.
@@ -80,6 +82,8 @@
     for (var i = 0; i < (path || []).length; i++) {
       var el = path[i];
       if (!el || el.nodeType !== 1) continue;
+      // The fixed head's slim row (1B, 15.11.2026): it replaced the collapsed title bar on the portrait phone.
+      if (el.classList && el.classList.contains('casora-head-b')) return true;
       var tpl = tplOf(el);
       for (var k = 0; k < tpl.length; k++) if (HEAD_TPL[tpl[k]]) return true;
       if (el.id && ROOM_HEAD.test(el.id)) {
