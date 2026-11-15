@@ -15977,6 +15977,13 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   var APPLIANCE_DONE = /^(off|idle|finished|complete|completed|standby|end|ready)$/i;
   var APPLIANCE_BUSY = /^(on|run|running|active|washing|rinsing|spinning|drying|printing|busy)$/i;
 
+  function listedDetection(id) {
+    var cameras = (window.CASORA_SETTINGS || {}).cameras;
+    return Array.isArray(cameras) && cameras.some(function (camera) {
+      return camera && Array.isArray(camera.detection_triggers) && camera.detection_triggers.indexOf(id) !== -1;
+    });
+  }
+
   function isDoorbell(id, st) {
     if (id.indexOf('event.') === 0) return dc(st) === 'doorbell';
     if (id.indexOf('binary_sensor.') === 0) {
@@ -16016,6 +16023,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       if (on('locks') && id.indexOf('lock.') === 0) return void out.push(id);
       if (on('alarm') && id.indexOf('alarm_control_panel.') === 0) return void out.push(id);
       if (on('vacuum') && id.indexOf('vacuum.') === 0) return void out.push(id);
+      if (/^(binary_sensor|event)\./.test(id) && listedDetection(id)) return void out.push(id);
       if (on('doorbell') && isDoorbell(id, st)) return void out.push(id);
       if (on('people') && id.indexOf('person.') === 0) return void out.push(id);
       if (on('appliances') && appl.indexOf(id) !== -1) return void out.push(id);
@@ -16106,6 +16114,12 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       // Fertig entscheidet vacuumRuns() über den ganzen Ablauf (Zwischenstopps), nicht das Andocken.
       if (s === 'error') return { label: name + ' braucht Aufmerksamkeit', icon: 'vacuum', tone: 'bad' };
       return null;
+    }
+
+    if (listedDetection(id)) {
+      if (id.indexOf('binary_sensor.') === 0 && (prev !== 'off' || s !== 'on')) return null;
+      if (id.indexOf('event.') === 0 && !isFinite(Date.parse(s))) return null;
+      return { label: name + ' erkannt', icon: 'camera', tone: 'accent', opens: 'casora:detection' };
     }
 
     if (isDoorbell(id, st)) {
@@ -16848,7 +16862,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         // Kurzer Ausfall (unavailable/unknown) mitten im Ablauf: der letzte echte Zustand zählt.
         // Gleich wie vorher = Neustart, keine Neuigkeit; anders = echter Wechsel im Ausfall
         // (Sauger „returning → unavailable → docked“ ist fertig).
-        if (was !== undefined && DEAD.test(was) && real[id] !== undefined && !DEAD.test(cur)) {
+        if (!listedDetection(id) && was !== undefined && DEAD.test(was) && real[id] !== undefined && !DEAD.test(cur)) {
           was = real[id];
         }
         if (!DEAD.test(cur)) real[id] = cur;
@@ -17536,6 +17550,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
           e.preventDefault();
           e.stopPropagation();
           var row = n._casoraRow;
+          if (n.dataset.casoraOpen === 'casora:detection') return;
           window.casoraHaptic('light');
           if (n.dataset.casoraOpen === 'casora:stack') {
             if (row && row.stackKey) _openStacks[row.stackKey] = !_openStacks[row.stackKey];
