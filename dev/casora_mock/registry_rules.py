@@ -37,3 +37,27 @@ def sensor_options_for(entity: Mapping, current: Mapping | None) -> dict | None:
     if precision is not None:
         opts["suggested_display_precision"] = precision
     return opts or None
+
+
+def has_own_object(entity: Mapping, domain: str) -> bool:
+    """Whether setup_domain() gives the fixture entity its own entity object.
+
+    An entity registered under another integration (registry_platform, velair.py) has none: its state is
+    written directly. The exception is a calendar with "events": the replay serves its events through its
+    object, and the calendar websocket and REST reads need one. Every other entity keeps the skip.
+    """
+    if not entity.get("registry_platform"):
+        return True
+    return domain == "calendar" and "events" in entity
+
+
+def registry_platform_for(entity: Mapping, domain: str, default: str) -> str:
+    """Platform the registry entry is written under.
+
+    HA files an entity object under the config entry's platform (default), so an object needs its registry
+    entry under that platform too: otherwise HA creates a second entry and the entity_id gets a suffix
+    (calendar.x_2). Entities without an object keep their registry_platform.
+    """
+    if has_own_object(entity, domain):
+        return default
+    return entity["registry_platform"]

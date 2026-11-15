@@ -10,6 +10,10 @@ PATH = Path(__file__).resolve().parents[1] / "casora_mock" / "calendar_replay.py
 spec = importlib.util.spec_from_file_location("calendar_replay", PATH)
 replay = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(replay)
+RULES_PATH = Path(__file__).resolve().parents[1] / "casora_mock" / "registry_rules.py"
+rules_spec = importlib.util.spec_from_file_location("registry_rules", RULES_PATH)
+rules = importlib.util.module_from_spec(rules_spec)
+rules_spec.loader.exec_module(rules)
 
 
 class CalendarReplayTest(unittest.TestCase):
@@ -144,6 +148,43 @@ class CalendarReplayTest(unittest.TestCase):
                                          datetime(2026, 11, 16, tzinfo=timezone.utc),
                                          datetime(2026, 11, 23, tzinfo=timezone.utc))
         self.assertEqual(result[0]["start"], date(2026, 11, 18))
+
+
+class CalendarObjectTest(unittest.TestCase):
+    """A calendar from a real export carries registry_platform; its events must still be served."""
+
+    REAL_SHAPE = {"entity_id": "calendar.naam_kalender", "registry_platform": "local_calendar",
+                  "unique_id": "naam-kalender-uid",
+                  "events": [{"summary": "Naam-ABCDEF", "start": "2026-11-09T09:30:00+01:00",
+                              "end": "2026-11-09T10:30:00+01:00"}]}
+
+    def test_replay_serves_events_of_calendar_with_registry_platform(self):
+        start = datetime(2026, 11, 8, tzinfo=timezone.utc)
+        end = datetime(2026, 11, 23, tzinfo=timezone.utc)
+        result = replay.fixture_events(self.REAL_SHAPE, {"calendar_export_date": "2026-11-09"}, start, end,
+                                       today=date(2026, 11, 9), local_tz=ZoneInfo("Europe/Amsterdam"))
+        self.assertEqual(len(result), 1)
+
+    def test_calendar_with_registry_platform_and_events_gets_own_object(self):
+        self.assertTrue(rules.has_own_object(self.REAL_SHAPE, "calendar"))
+
+    def test_calendar_with_own_object_is_registered_under_mock_platform(self):
+        self.assertEqual(rules.registry_platform_for(self.REAL_SHAPE, "calendar", "casora_mock"), "casora_mock")
+
+    def test_legacy_calendar_with_registry_platform_keeps_skip(self):
+        legacy = {"entity_id": "calendar.naam_alt", "registry_platform": "local_calendar"}
+        self.assertFalse(rules.has_own_object(legacy, "calendar"))
+        self.assertEqual(rules.registry_platform_for(legacy, "calendar", "casora_mock"), "local_calendar")
+
+    def test_other_domain_with_registry_platform_keeps_skip(self):
+        sensor = {"entity_id": "sensor.naam_messwert", "registry_platform": "velair", "events": []}
+        self.assertFalse(rules.has_own_object(sensor, "sensor"))
+        self.assertEqual(rules.registry_platform_for(sensor, "sensor", "casora_mock"), "velair")
+
+    def test_calendar_without_registry_platform_gets_own_object(self):
+        plain = {"entity_id": "calendar.naam_plain", "events": []}
+        self.assertTrue(rules.has_own_object(plain, "calendar"))
+        self.assertEqual(rules.registry_platform_for(plain, "calendar", "casora_mock"), "casora_mock")
 
 
 if __name__ == "__main__":

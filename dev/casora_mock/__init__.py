@@ -26,7 +26,7 @@ from homeassistant.util import dt as dt_util
 
 from .entity import PLATFORMS, build_classes
 from .haus import compose
-from .registry_rules import hidden_by_for, sensor_options_for
+from .registry_rules import hidden_by_for, registry_platform_for, sensor_options_for
 
 DOMAIN = "casora_mock"
 _LOGGER = logging.getLogger(__name__)
@@ -162,9 +162,10 @@ class CasoraMock:
             if domain in ("input_boolean", "input_select", "input_number", "input_text",
                           "input_datetime", "sun", "automation"):
                 continue  # echte Helfer/Kern-Entitäten, siehe configuration.yaml
-            # registry_platform: another integration's entity (Velair, velair.py) – state written directly, no object.
+            # registry_platform: another integration's entity (Velair, velair.py) – state written directly, no object,
+            # except calendars with fixture events (registry_rules.registry_platform_for).
             entry = ents.async_get_or_create(
-                domain, e.get("registry_platform") or DOMAIN, e.get("unique_id") or e["entity_id"],
+                domain, registry_platform_for(e, domain, DOMAIN), e.get("unique_id") or e["entity_id"],
                 suggested_object_id=object_id,
                 config_entry=self.entry,
                 device_id=dev_ids.get(e.get("device")),

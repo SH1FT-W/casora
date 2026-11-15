@@ -22,6 +22,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 
 from .calendar_replay import fixture_events
+from .registry_rules import has_own_object
 
 DOMAIN = "casora_mock"
 HIDE_ATTRS = {"friendly_name", "icon", "unit_of_measurement", "device_class", "supported_features"}
@@ -890,9 +891,10 @@ PLATFORMS = [
 async def setup_domain(hass: HomeAssistant, entry, async_add_entities, domain: str) -> None:
     mock = hass.data[DOMAIN]
     cls = mock.classes[domain]
-    # Entities registered under another integration (registry_platform, velair.py) have no object of their own.
+    # Entities registered under another integration (registry_platform, velair.py) have no object of their own,
+    # except calendars with fixture events (registry_rules.has_own_object).
     async_add_entities(cls(mock, eid) for eid in mock.store if eid.split(".")[0] == domain
-                       and not (mock.entities.get(eid) or {}).get("registry_platform"))
+                       and has_own_object(mock.entities.get(eid) or {}, domain))
 
 
 def _png(w: int, h: int, rgb: tuple[int, int, int]) -> bytes:
