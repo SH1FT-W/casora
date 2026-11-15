@@ -75,7 +75,10 @@ const sec = await stable(page, () => window.__pierce('button-card')
   .map((b) => b.shadowRoot.querySelector('ha-card').innerText.replace(/\s+/g, ' ').trim()));
 await check('Dashboard: Sicherheit „All secure“', sec && sec.length && sec.every((t) => /All secure/.test(t)), sec);
 await page.waitForFunction(() => window.__pierce('.route .label').length > 0, null, { timeout: 15000 }).catch(() => {});
-const navNames = await stable(page, () => window.__pierce('.route .label').map((l) => l.textContent.trim()));
+// Home as an icon (default since 26.11.28b8): the dashboard keeps the hidden name for the tooltip, the
+// preview shows no text. Both show the same: compare the visible names.
+const navNames = await stable(page, () => window.__pierce('.route .label')
+  .map((l) => (l.closest('.route.home') && l.closest('.homeicon') ? '' : l.textContent.trim())));
 await check('Raumnamen: Vorschau-Leiste = Dashboard-Leiste', navNames && navNames.length && prev
   && navNames.join('|') === prev.tabs.join('|'), { dashboard: navNames, vorschau: prev && prev.tabs });
 await finish();
