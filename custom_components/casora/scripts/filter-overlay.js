@@ -298,8 +298,6 @@
   function _restoreBadgeRow() {
     const m = _movedBadgeRow;
     if (!m) return;
-    // The badge page's fixed head (1B) lets go of the row first.
-    if (m.owner?._headBO) { m.owner._headBO.drop(); m.owner._headBO = null; }
     _movedBadgeRow = null;
     const { wrapper, el, parent, sibling } = m;
     wrapper.style.removeProperty('position');
@@ -1401,9 +1399,6 @@
     }
 
     disconnectedCallback() {
-      // The fixed head (1B) lets go of the row first.
-      this._headBO?.drop();
-      this._headBO = null;
       // casora-local-patch (03.10.2026): Die Reihe hängt ihre Karten beim Sortieren um – das
       // Overlay wird dabei ab- und angehängt. Lag die Badge-Reihe des Raums (Unter-Badges) da
       // noch im Overlay-Inhalt, ging sie mit ihm verloren; beim Neuaufbau nahm das Overlay die
@@ -2275,8 +2270,6 @@
         this._overlayEl?.removeEventListener('scroll', this._scrollHandler);
         this._scrollHandler = null;
       }
-      this._headBO?.drop();
-      this._headBO = null;
       if (this._titleEl) { this._titleEl.remove(); this._titleEl = null; }
       this._backBtn?.remove();
       this._backBtn = null;
@@ -2673,8 +2666,6 @@
     }
 
     _restoreMovedWrappers() {
-      this._headBO?.drop();
-      this._headBO = null;
       // Now Playing first: the sub-badges' saved sibling is its wrapper.
       if (this._npSaved) {
         const { parent, sibling } = this._npSaved;
@@ -3271,150 +3262,6 @@
       });
     }
 
-    // ── Fixed head on the phone's room and badge pages (1B, 15.11.2026) ─────────
-    // As on Home (_ensureDashboardHeader): portrait phone only, once the page's badge row reaches the top, a slim
-    // row (back, name, room status on the right) and that badge row stay there on the bar's material, 98 px below
-    // the safe area; a tap on the row scrolls to the top. Room page: the room's badges (sub-badges), badge page:
-    // the dashboard's badge row. Tablet, desktop and landscape keep the compact header. The row is held by its
-    // wrapper (sticky in the page's scroller); the card's own sticky is turned off through
-    // --casora-badge-row-pos/-top while the head holds it, sticky inside sticky shakes on iOS (see _headBSticky).
-    // Returns { update, drop }: update() is false outside the portrait phone (the caller runs its own header).
-    _overlayHeadB({ overlayEl, contentEl, titleEl, hdr, grad, veil, barEdge }) {
-      const look = { gm: grad.style.maskImage, vm: veil ? veil.style.maskImage : '', et: barEdge.style.top };
-      const room = !!this._config?.room;
-      const back = this._backBtn;
-      const backLook = back ? { top: back.style.top, tr: back.style.transition } : null;
-      const el = _makeHeadB();
-      el.style.zIndex = '60'; // the page's layer, under the back button (61)
-      el.style.paddingLeft = 'calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px))'
-        + ' + var(--casora-back-size, 40px) + 12px)';
-      el.addEventListener('click', () => {
-        if (el.style.pointerEvents !== 'auto') return;
-        try { el.dispatchEvent(new CustomEvent('haptic', { detail: 'light', bubbles: true, composed: true })); } catch (_) {}
-        overlayEl.scrollTo({ top: 0, behavior: 'smooth' });
-      });
-      overlayEl.appendChild(el);
-
-      const ROW_VARS = ['--casora-badge-row-pos', '--casora-badge-row-top',
-        '--casora-room-badges-gap-mobile', '--casora-badge-subrow-gap-mobile'];
-      const W_PROPS = ['position', 'top', 'z-index', 'margin-bottom'];
-      const bStop = (h, maxA = 1) => {
-        const c = maxA >= 1 ? 'black' : `rgba(0,0,0,${maxA})`;
-        const y = `calc(${HEAD_B_TOP} + ${h}px)`;
-        return `linear-gradient(to bottom, ${c} 0px, ${c} ${y}, transparent ${y})`;
-      };
-      const setLook = (h) => {
-        const gm = h ? bStop(h) : look.gm, vm = h ? bStop(h, 0.5) : look.vm;
-        grad.style.maskImage = gm; grad.style.webkitMaskImage = gm;
-        if (veil) { veil.style.maskImage = vm; veil.style.webkitMaskImage = vm; }
-        grad.style.background = h ? 'color-mix(in srgb, var(--primary-background-color, #f4efe8) 14%, transparent)' : '';
-        barEdge.style.top = h ? `calc(${HEAD_B_TOP} + ${h}px)` : look.et;
-      };
-      let held = null, shown = false, statusAt = 0;
-      const rowOf = () => {
-        const w = room ? this._subBadgesWrapper : this._badgeRowWrapper;
-        if (!w || w.parentNode !== contentEl) return null;
-        const e = room ? this._getBC(w) : this._badgeRowEl;
-        return e ? { w, e } : null;
-      };
-      const show = (on) => {
-        shown = on;
-        const o = on ? '1' : '0';
-        grad.style.opacity = o; barEdge.style.opacity = o;
-        if (veil) veil.style.opacity = o;
-        el.style.opacity = o;
-        el.style.pointerEvents = on ? 'auto' : 'none';
-        if (back) {
-          // In the slim row the back button sits on its centre line.
-          back.style.transition = 'transform 0.15s ease, top 220ms ease-in-out';
-          back.style.top = on ? `calc(${HEAD_B_TOP} + (${HEAD_B_ROW}px - var(--casora-back-size, 40px)) / 2)` : backLook.top;
-        }
-      };
-      const hold = () => {
-        const r = rowOf();
-        held = { r, h: HEAD_B_H, top: HEAD_B_ROW, saved: null };
-        if (r) {
-          const { w, e } = r;
-          held.saved = W_PROPS.map((p) => [p, w.style.getPropertyValue(p), w.style.getPropertyPriority(p)]);
-          const h0 = w.getBoundingClientRect().height;
-          e.style.setProperty('--casora-badge-row-pos', 'relative');
-          e.style.setProperty('--casora-badge-row-top', '0px');
-          // The room row keeps its gap to the tiles inside the card: moved to the wrapper's margin (layout
-          // unchanged), so the held box ends with the badges and covers no tile under the head.
-          e.style.setProperty('--casora-room-badges-gap-mobile', '0px');
-          e.style.setProperty('--casora-badge-subrow-gap-mobile', '0px');
-          const h1 = w.getBoundingClientRect().height;
-          if (h0 - h1 > 0.5) {
-            const mb = parseFloat(getComputedStyle(w).marginBottom) || 0;
-            w.style.setProperty('margin-bottom', `${(mb + h0 - h1).toFixed(2)}px`, 'important');
-          }
-          // Centred in Home's band (row 44 + badges 46 + edge 8); a taller row makes the band taller.
-          held.top = HEAD_B_ROW + Math.max(0, (HEAD_B_H - HEAD_B_ROW - 8 - h1) / 2);
-          held.h = Math.max(HEAD_B_H, Math.ceil(held.top + h1 + 8));
-          w.style.setProperty('position', 'sticky', 'important');
-          w.style.setProperty('top', `calc(${HEAD_B_TOP} + ${held.top}px)`, 'important');
-          w.style.setProperty('z-index', '30', 'important');
-        }
-        setLook(held.h);
-        show(false);
-      };
-      const release = () => {
-        if (!held) return;
-        const { r, saved } = held;
-        held = null;
-        if (r) {
-          for (const p of ROW_VARS) r.e.style.removeProperty(p);
-          // Back in the dashboard already: nothing of the page's values to restore there.
-          const home = r.w.parentNode !== contentEl;
-          for (const [p, v, pr] of saved) { if (v && !home) r.w.style.setProperty(p, v, pr); else r.w.style.removeProperty(p); }
-        }
-        setLook(0);
-        show(false);
-        if (back) { back.style.transition = backLook.tr; back.style.top = backLook.top; }
-        // The caller's header takes over on its next pass.
-        grad.style.opacity = '0'; barEdge.style.opacity = '0';
-        if (veil) veil.style.opacity = '0';
-      };
-      let dead = false;
-      const update = () => {
-        if (dead) return false;
-        const vw = window.innerWidth || 0, vh = window.innerHeight || 0;
-        if (!(vw <= 600 && vw < vh)) { release(); return false; }
-        if (!held || (held.r && held.r.w.parentNode !== contentEl) || (!held.r && rowOf())) { release(); hold(); }
-        if (hdr.style.opacity !== '0') { hdr.style.opacity = '0'; hdr.style.pointerEvents = 'none'; }
-        if (this._headFillEl && this._headFillEl.style.opacity !== '0') this._headFillEl.style.opacity = '0';
-        if (back && back.style.opacity !== '1') { back.style.opacity = '1'; back.style.pointerEvents = ''; }
-        const top = el.getBoundingClientRect().top;
-        const on = held.r
-          ? held.r.w.getBoundingClientRect().top <= top + held.top + 0.5
-          : titleEl.getBoundingClientRect().bottom <= top + HEAD_B_ROW;
-        if (on) {
-          const g = el.firstChild, s = el.lastChild;
-          const name = titleEl.textContent.trim();
-          if (g.textContent !== name) g.textContent = name;
-          if (room && Date.now() - statusAt > 500) {
-            statusAt = Date.now();
-            const t = _roomStatusParts(this._hass, this._subBadgesWrapper,
-              this._roomLightIds || _lightIdsOf(this._config?.sections || [])).filter(Boolean).join(' · ');
-            if (s.textContent !== t) s.textContent = t;
-          }
-          const col = getComputedStyle(titleEl).color;
-          if (col && el.style.color !== col) el.style.color = col;
-        }
-        if (on !== shown) show(on);
-        return true;
-      };
-      const onResize = () => this._scrollHandler?.();
-      window.addEventListener('resize', onResize, { passive: true });
-      const drop = () => {
-        dead = true;
-        window.removeEventListener('resize', onResize);
-        release();
-        el.remove();
-      };
-      return { update, drop, el };
-    }
-
     // ── Scroll-header mode ─────────────────────────────────────────────────────
     _engageScrollHeader() {
       const overlayEl = this._overlayEl;
@@ -3573,15 +3420,12 @@
         titleBottomDoc - (hdrRect.bottom - COMPACT_BAR_HEIGHT));
       let popupBarOn = false; // bar hysteresis state (per engage)
       this._pillAt = 0;
-      this._headBO?.drop();
-      const headB = this._headBO = this._overlayHeadB({ overlayEl, contentEl, titleEl, hdr, grad, veil, barEdge });
       this._scrollHandler = () => {
         const p = Math.max(0, Math.min(1,
           (overlayEl.scrollTop - fadeStart) / (fadeEnd - fadeStart)));
         const tp = Math.min(1, p / 0.45);
         titleEl.style.opacity   = String(1 - tp);
         titleEl.style.transform = `scale(${1 - tp * 0.04})`;
-        if (headB.update()) return;
         const cp = Math.max(0, (p - 0.55) / 0.45);
         hdr.style.opacity     = String(cp);
         // Rises gently into place from below.
@@ -3678,8 +3522,6 @@
         this._overlayEl?.removeEventListener('scroll', this._scrollHandler);
         this._scrollHandler = null;
       }
-      this._headBO?.drop();
-      this._headBO = null;
       if (this._titleEl) { this._titleEl.remove(); this._titleEl = null; }
       this._backBtn?.remove();
       this._backBtn = null;
