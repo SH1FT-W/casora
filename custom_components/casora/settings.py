@@ -147,6 +147,24 @@ async def ws_get(hass: HomeAssistant, connection: websocket_api.ActiveConnection
                                        **(await price_info(hass))})
 
 
+def camera_records(value: Any) -> list[dict[str, Any]]:
+    """Cameras of the Studio: identity (entity, device, name) and detection triggers, nothing else.
+
+    A camera without a string entity_id is dropped; the trigger list keeps only non-empty strings.
+    """
+    out: list[dict[str, Any]] = []
+    for camera in value if isinstance(value, list) else []:
+        if not isinstance(camera, dict) or not isinstance(camera.get("entity_id"), str):
+            continue
+        clean: dict[str, Any] = {k: camera[k] for k in ("entity_id", "device_id", "name") if isinstance(camera.get(k), str)}
+        triggers = camera.get("detection_triggers")
+        kept = [t for t in triggers if isinstance(t, str) and t] if isinstance(triggers, list) else []
+        if kept:
+            clean["detection_triggers"] = kept
+        out.append(clean)
+    return out
+
+
 @websocket_api.require_admin
 @websocket_api.websocket_command({
     vol.Required("type"): "casora/settings/set",
@@ -154,7 +172,10 @@ async def ws_get(hass: HomeAssistant, connection: websocket_api.ActiveConnection
 })
 @websocket_api.async_response
 async def ws_set(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
-    clean = {k: v for k, v in msg["settings"].items() if k in SECTIONS and v not in (None, "", [], {})}
+    settings = dict(msg["settings"])
+    if "cameras" in settings:
+        settings["cameras"] = camera_records(settings["cameras"])
+    clean = {k: v for k, v in settings.items() if k in SECTIONS and v not in (None, "", [], {})}
     await _store(hass).async_save(clean)
     connection.send_result(msg["id"], {"settings": clean, "stored": True})
 

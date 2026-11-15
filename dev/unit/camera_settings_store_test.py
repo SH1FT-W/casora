@@ -73,5 +73,46 @@ class CameraSettingsStoreTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(connection.results, [(1, {"settings": expected, "stored": True})])
 
 
+    async def test_camera_record_keeps_identity_and_triggers_only(self):
+        store = FakeStore()
+        connection = Connection()
+        hass = SimpleNamespace(data={})
+        settings_store = settings._store
+        settings._store = lambda _hass: store
+        try:
+            message = {
+                "id": 2,
+                "type": "casora/settings/set",
+                "settings": {
+                    "cameras": [
+                        {
+                            "device_id": "garden",
+                            "entity_id": "camera.garden",
+                            "name": "Garden",
+                            "detection_triggers": ["binary_sensor.garden_person", 7, "", None],
+                            "stream_url": "rtsp://mock.invalid/stream",
+                            "snapshot": {"path": "/config/www/garden.jpg"},
+                        },
+                        {"entity_id": None, "name": "No identity"},
+                        "camera.loose",
+                    ],
+                },
+            }
+            await inspect.unwrap(settings.ws_set)(hass, connection, message)
+        finally:
+            settings._store = settings_store
+
+        expected = {
+            "cameras": [{
+                "device_id": "garden",
+                "entity_id": "camera.garden",
+                "name": "Garden",
+                "detection_triggers": ["binary_sensor.garden_person"],
+            }],
+        }
+        self.assertEqual(store.saved, expected)
+        self.assertEqual(connection.results, [(2, {"settings": expected, "stored": True})])
+
+
 if __name__ == "__main__":
     unittest.main()
