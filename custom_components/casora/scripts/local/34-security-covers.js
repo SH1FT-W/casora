@@ -6,14 +6,17 @@
 // current_position above 0 – or above security.closed_up_to while at rest (issue 138, also for gates). Unavailable/unknown covers are left out of the count (as the cover badge
 // hides itself then) and listed in the popup as unavailable. Garage doors, gates and doors (device_class
 // garage/gate/door) already count as "Tor offen" in the security badge and are left out here.
-//   C.cfg()                                   → { ids, night }
+// "Always show" (#199, covers_always: true, off by default) keeps the sub badge on Home by day and with every cover
+// closed; it counts nothing more for security.
+//   C.cfg()                                   → { ids, night, always }
 //   C.closedUpTo(id)                          → security.closed_up_to_by[id] (0–99), else closed_up_to (0–20), else 0
 //   C.coverOpen(st, kind)                     → window.casoraCoverOpen: kind 'gate' or a picked cover; true | false | null
 //   C.isOpen(st)                              → true | false | null (null = unavailable/unknown)
 //   C.isNight(states)                         → true from sunset to sunrise, true without sun.sun
 //   C.scan(states, hass, user)                → { on, active, ids, open, closed, dead, count }
 //   C.count(states, hass, user, v, where)     → open covers that count now on Home (0 elsewhere/by day/off)
-//   C.show(states, hass, user, v, where)      → sub-badge "Jalousien" visible (Home, counting, ≥ 1 open)
+//   C.show(states, hass, user, v, where)      → sub-badge "Jalousien" visible (Home, counting, ≥ 1 open; always with covers_always)
+//   C.badge(states, hass, user)               → { shown, warn, sub } for casora_badge_security_covers
 //   C.popup(states, hass, variables)          – popup casora_popup_security_covers
 //   C.sec(part, cfg, states, hass)            – live parts (hero, list, contacts)
 //   C.contactsCard(states, hass, user)        – section „Jalousien“ for the house's „Türen & Fenster“ popup (#76)
@@ -31,7 +34,9 @@
     var ids = (Array.isArray(s.covers) ? s.covers : []).filter(function (x, i, a) {
       return typeof x === 'string' && x.indexOf('cover.') === 0 && a.indexOf(x) === i;
     });
-    return { ids: ids, night: s.covers_night !== false };
+    // "Always show" (#199, off by default, stored only as covers_always: true): the sub badge stays on Home also
+    // by day and with every cover closed, as a quick way to all picked covers. Security still counts as before.
+    return { ids: ids, night: s.covers_night !== false, always: s.covers_always === true };
   };
 
   // Issue 138: security.closed_up_to, whole percent 0–20 (Studio „Gilt als geschlossen bis“). A cover at rest whose
@@ -157,8 +162,9 @@
     });
     var on = ids.length > 0;
     var active = on && (!cfg.night || C.isNight(S));
-    return { on: on, active: active, night: cfg.night, ids: ids, open: open, closed: closed, dead: dead,
-      count: active ? open.length : 0 };
+    var count = active ? open.length : 0;
+    return { on: on, active: active, night: cfg.night, always: cfg.always, ids: ids, open: open, closed: closed, dead: dead,
+      count: count, shown: on && (count > 0 || cfg.always) };
   };
 
   // Home only: the setting is for the whole house, a room's security badge stays as it is.
@@ -176,7 +182,16 @@
     if (!onHome(v, where)) return 0;
     return C.scan(states, hass, user).count;
   };
-  C.show = function (states, hass, user, v, where) { return C.count(states, hass, user, v, where) > 0; };
+  C.show = function (states, hass, user, v, where) { return onHome(v, where) && C.scan(states, hass, user).shown; };
+  // Sub line of the „Jalousien“ badge: open covers while they count; with „Immer zeigen“ the open ones also by day,
+  // else „Alle geschlossen“ (left out while a cover is unavailable, the popup lists it). Colour as the other security sub
+  // badges: warn while a cover is open, ok (green in Soft) when all are closed.
+  C.badge = function (states, hass, user) {
+    var s = C.scan(states, hass, user);
+    var n = s.count || (s.always ? s.open.length : 0);
+    return { shown: s.shown, warn: n > 0,
+      sub: n ? n + ' geöffnet' : (s.shown && s.always && !s.dead.length ? 'Alle geschlossen' : '') };
+  };
 
   // ── Popup ──────────────────────────────────────────────────────────────────────────────
   var nameOf = function (id, s) { return String((s && s.attributes && s.attributes.friendly_name) || id); };

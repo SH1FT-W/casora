@@ -60,7 +60,7 @@ assert.equal(C.isOpen(undefined), null);
 
 // ── off when nothing is picked: no count, no badge, nothing in the security badge ──
 set(undefined);
-assert.deepEqual(C.cfg(), { ids: [], night: true });
+assert.deepEqual(C.cfg(), { ids: [], night: true, always: false });
 let r = C.scan(states, hass);
 assert.equal(r.on, false); assert.equal(r.active, false); assert.equal(r.count, 0);
 assert.equal(C.count(states, hass, null, { place: 'home' }), 0);
@@ -210,4 +210,34 @@ const pers = read('custom_components/casora/panel/casora-panel-personal.js');
 assert.match(pers, /want\("security"\)/);
 assert.match(pers, /covers_night = false/);
 
+// ── #199 "Always show": the sub badge stays on Home by day and with every cover closed; security counts as before ──
+const SB = T.casora_badge_security_covers;
+const shown = (st, sec) => { set(sec); return evalT(SB.styles.card[0].display, { enabled: true }, st) !== 'none'; };
+const sub = (st, sec) => { set(sec); return evalT(SB.name, {}, st); };
+const tone = (st, sec) => { set(sec); return evalT(SB.styles.card[1]['--casora-badge-icon-color'], {}, st); };
+const closedOnly = ['cover.bed', 'cover.office'];
+assert.equal(shown(states, { covers: closedOnly }), false, 'without the switch: all closed hides the badge');
+assert.equal(shown(day, { covers: ALL }), false, 'without the switch: hidden by day');
+assert.equal(shown(states, { covers: closedOnly, covers_always: true }), true, 'always: all closed at night');
+assert.equal(shown(day, { covers: closedOnly, covers_always: true }), true, 'always: all closed by day');
+assert.equal(shown(day, { covers: ALL, covers_always: true }), true, 'always: open by day');
+assert.equal(shown(states, { covers_always: true }), false, 'always without picked covers: nothing');
+assert.match(sub(day, { covers: closedOnly, covers_always: true }), /badge-sub">Alle geschlossen</);
+assert.match(sub(day, { covers: ['cover.living', 'cover.bed'], covers_always: true }), /badge-sub">1 geöffnet</, 'by day the open ones are still named');
+assert.doesNotMatch(sub(day, { covers: ['cover.bed', 'cover.gone'], covers_always: true }), /Alle geschlossen/, 'an unavailable cover: no "all closed"');
+assert.match(sub(states, { covers: ['cover.living', 'cover.bed'] }), /badge-sub">1 geöffnet</, 'night, as before');
+assert.match(tone(states, { covers: ['cover.living'], covers_always: true }), /security-warn-color/, 'counting at night: warn');
+assert.match(tone(day, { covers: ['cover.living'], covers_always: true }), /security-warn-color/, 'by day open: warn colour like an open window');
+assert.match(tone(states, { covers: closedOnly, covers_always: true }), /^var\(--casora-security-ok-color/, 'all closed: ok colour');
+set({ covers: closedOnly, covers_always: true });
+assert.match(evalT(SB.extra_styles, { enabled: true }, day), /\/i\/cover_closed\.svg/, 'all closed: the closed blind icon');
+set({ covers: ['cover.living'], covers_always: true });
+assert.match(evalT(SB.extra_styles, { enabled: true }, day), /\/i\/cover_open\.svg/, 'one open: the open blind icon');
+set({ covers: ['cover.living'], covers_always: true });
+assert.equal(C.scan(day, hass).count, 0, 'always does not count more for security');
+assert.equal(evalT(G.icon, { place: 'home' }, day), 'mdi:shield-check', 'security badge stays secure by day');
+assert.equal(C.show(day, hass, null, { place: 'home' }), true);
+assert.equal(C.show(day, hass, null, { place: 'room' }), false, 'Home only, also with always');
+assert.match(pers, /sec\.covers_always = true; else delete sec\.covers_always/);
+set(undefined);
 console.log('security_covers: ok');
