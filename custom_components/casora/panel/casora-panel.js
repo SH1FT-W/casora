@@ -6738,7 +6738,12 @@ const tileStateWord = (kind, tile, ent, states, hass, settings) => {
     if (!allows || !settings) return "";
     const S = states || {};
     const waste = window.casoraDevice && window.casoraDevice.waste ? window.casoraDevice.waste(hass).calendar : null;
-    const cal = Object.keys(S).sort().find((id) => id !== waste && id.startsWith("calendar.")
+    const list = Array.isArray(V.calendars) && V.calendars.length ? V.calendars : settings.calendars;
+    const configured = Array.isArray(list) && list.length;
+    const entities = (hass && hass.entities) || {};
+    const ids = configured ? list.filter((c) => c && c.entity && c.tile !== false).map((c) => c.entity)
+      : Object.keys(S).filter((id) => !(entities[id] && (entities[id].hidden || entities[id].hidden_by)));
+    const cal = ids.sort().find((id) => id !== waste && id.startsWith("calendar.") && S[id]
       && S[id].attributes && S[id].attributes.message && allows(S[id].attributes.message, settings));
     if (cal) return String(S[cal].attributes.message);
     return window.casoraI18n && window.casoraI18n.t ? window.casoraI18n.t("No events") : "No events";
@@ -26810,13 +26815,16 @@ class CasoraPanel extends HTMLElement {
 
   // Studio: the settings the Agenda tile preview filters by. The open Settings draft first, then the saved
   // settings file (CASORA_SETTINGS, updated on Save), then the copy read once. Null until one is known.
-  // The title rule (06a-kalender-filter.js) is requested once here, so the preview can be drawn again when it arrives.
+  // Request the title rule once per paint after a failure, and redraw only when it arrives.
   _calendarSettings(kind) {
     if (kind !== "casora_calendar") return null;
     if (!window.casoraCalendarAllows && !this._calRuleAsked) {
       this._calRuleAsked = true;
       (window.casoraImportScript || ((p) => import("/casora_scripts/" + p)))("local/06a-kalender-filter.js")
-        .then(() => this._rebuildPreview(), () => {});
+        .then(() => {
+          if (window.casoraCalendarAllows) this._rebuildPreview();
+          else this._calRuleAsked = false;
+        }, () => { this._calRuleAsked = false; });
     }
     if (this._cs && this._cs.S) return this._cs.S;
     if (window.CASORA_SETTINGS) return window.CASORA_SETTINGS;
