@@ -6905,15 +6905,22 @@ const updateCount = (ent) => {
   return Number.isInteger(n) && n >= 0 ? n : null;
 };
 
-const tileStateWord = (kind, tile, ent, states, hass) => {
+const tileStateWord = (kind, tile, ent, states, hass, settings) => {
   const V = (tile && tile.variables) || {};
   // Calendar: no entity of its own (issue #31) – the next event across its calendars (06-kalender.js when loaded).
   if (kind === "casora_calendar" && !ent) {
     const K = typeof window !== "undefined" && window._casoraCalendar;
     if (K && K.tile) return K.tile(states || {}, V);
+    // Studio: no calendar module. The same title rule as the dashboard (06a-kalender-filter.js), the waste
+    // calendar left out. Nothing is shown until the rule and the settings are there (no unfiltered titles).
+    const allows = typeof window !== "undefined" && window.casoraCalendarAllows;
+    if (!allows || !settings) return "";
     const S = states || {};
-    const cal = Object.keys(S).sort().find((id) => id.startsWith("calendar.") && S[id].attributes && S[id].attributes.message);
-    return cal ? String(S[cal].attributes.message) : "No events";
+    const waste = window.casoraDevice && window.casoraDevice.waste ? window.casoraDevice.waste(hass).calendar : null;
+    const cal = Object.keys(S).sort().find((id) => id !== waste && id.startsWith("calendar.")
+      && S[id].attributes && S[id].attributes.message && allows(S[id].attributes.message, settings));
+    if (cal) return String(S[cal].attributes.message);
+    return window.casoraI18n && window.casoraI18n.t ? window.casoraI18n.t("No events") : "No events";
   }
   if (kind === "casora_map") return "";
   if (kind === "casora_tasks") {
@@ -27237,6 +27244,23 @@ class CasoraPanel extends HTMLElement {
     return null;
   }
 
+  // Studio: the settings the Agenda tile preview filters by. An open Settings draft first, else the saved
+  // settings, read once (the preview is drawn again when they arrive). Null until they are known.
+  _calendarSettings(kind) {
+    if (kind !== "casora_calendar") return null;
+    if (this._cs && this._cs.S) return this._cs.S;
+    const saved = this._casoraSettingsNow || window.CASORA_SETTINGS;
+    if (saved) return saved;
+    if (!this._calSettingsAsked && this._hass && typeof this._settingsOnce === "function") {
+      this._calSettingsAsked = true;
+      this._settingsOnce().then((S) => {
+        this._casoraSettingsNow = S || {};
+        this._rebuildPreview();
+      });
+    }
+    return null;
+  }
+
   _paintTile(tile, ti, room) {
       this._dashHelpersLoad();
       // Casora: bedingte Karten wie im Dashboard (panel/casora-panel-types.js).
@@ -27396,7 +27420,7 @@ class CasoraPanel extends HTMLElement {
       el.querySelector(".mstate").textContent = (window.casoraWithStudioRooms || ((r, f) => f()))(tempRooms, () =>
         // Casora: Zustandstext wie im Dashboard (state_display der Vorlage).
         (window.casoraTileState && window.casoraTileState(tile, ent, this._hass, this._state && this._state.templates, editRooms))
-        || tileStateWord(kind, tile, ent, this._hass.states, this._hass));
+        || tileStateWord(kind, tile, ent, this._hass.states, this._hass, this._calendarSettings(kind)));
       // Wie in der Kachelliste: ohne Gerät zeigt das Dashboard nur den Namen.
       // Gerät fehlt in HA: wie die Dashboard-Kachel (casora_entity, Zustand casora_missing).
       const gone = tileEntityGone(tile, this._hass.states);

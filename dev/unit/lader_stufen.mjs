@@ -43,7 +43,7 @@ const settle = async (p) => {
 const SRC = fs.readFileSync(new URL('../../custom_components/casora/scripts/casora-local.js', import.meta.url), 'utf8');
 const ROW = fs.readFileSync(new URL('../../custom_components/casora/scripts/smart-row.js', import.meta.url), 'utf8');
 // Number of local modules in the loader's list (one per '00-name' entry), not a fixed number.
-const NMOD = (SRC.match(/^\s*'\d\d-[a-z0-9-]+',?\s*$/gm) || []).length;
+const NMOD = (SRC.match(/^\s*'\d\d[a-z]?-[a-z0-9-]+',?\s*$/gm) || []).length;
 const BASE = 'http://ha.test/casora_scripts/casora-local.js?v=123';
 
 // The loader as a function: import() and import.meta.url replaced, run with top-level await inside.

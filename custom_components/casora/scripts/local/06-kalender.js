@@ -71,13 +71,9 @@
   var calOf = function (cals, id) { for (var i = 0; i < cals.length; i++) if (cals[i].entity === id) return cals[i]; return { entity: id, name: id, color: '#8E8E93' }; };
 
   // The calendar popup keeps every event; Home, the screensavers and the Agenda tile use this filter.
+  // The rule lives in 06a-kalender-filter.js, shared with the Studio's Agenda tile preview.
   K.allowsTitle = function (title) {
-    var settings = window.casoraSettings ? window.casoraSettings() : {};
-    var text = String(title || '').toLowerCase();
-    return !String(settings.calendar_filter || '').split(',').some(function (entry) {
-      entry = entry.trim().toLowerCase();
-      return entry && text.indexOf(entry) !== -1;
-    });
+    return window.casoraCalendarAllows ? window.casoraCalendarAllows(title) : true;
   };
 
   // HA states expose only one event per calendar; use the shared API cache when ready.
