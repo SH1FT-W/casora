@@ -6911,8 +6911,8 @@ const tileStateWord = (kind, tile, ent, states, hass, settings) => {
   if (kind === "casora_calendar" && !ent) {
     const K = typeof window !== "undefined" && window._casoraCalendar;
     if (K && K.tile) return K.tile(states || {}, V);
-    // Studio: no calendar module. The same title rule as the dashboard (06a-kalender-filter.js), the waste
-    // calendar left out. Nothing is shown until the rule and the settings are there (no unfiltered titles).
+    // Studio: no calendar module. The same title rule as the dashboard (06a-kalender-filter.js); the waste
+    // calendar is left out when casoraDevice knows it. Nothing is shown until the rule and the settings are there.
     const allows = typeof window !== "undefined" && window.casoraCalendarAllows;
     if (!allows || !settings) return "";
     const S = states || {};
@@ -27244,17 +27244,25 @@ class CasoraPanel extends HTMLElement {
     return null;
   }
 
-  // Studio: the settings the Agenda tile preview filters by. An open Settings draft first, else the saved
-  // settings, read once (the preview is drawn again when they arrive). Null until they are known.
+  // Studio: the settings the Agenda tile preview filters by. The open Settings draft first, then the saved
+  // settings file (CASORA_SETTINGS, updated on Save), then the copy read once. Null until one is known.
+  // The title rule (06a-kalender-filter.js) is requested once here, so the preview can be drawn again when it arrives.
   _calendarSettings(kind) {
     if (kind !== "casora_calendar") return null;
+    if (!window.casoraCalendarAllows && !this._calRuleAsked) {
+      this._calRuleAsked = true;
+      (window.casoraImportScript || ((p) => import("/casora_scripts/" + p)))("local/06a-kalender-filter.js")
+        .then(() => this._rebuildPreview(), () => {});
+    }
     if (this._cs && this._cs.S) return this._cs.S;
-    const saved = this._casoraSettingsNow || window.CASORA_SETTINGS;
-    if (saved) return saved;
+    if (window.CASORA_SETTINGS) return window.CASORA_SETTINGS;
+    if (this._casoraSettingsNow) return this._casoraSettingsNow;
     if (!this._calSettingsAsked && this._hass && typeof this._settingsOnce === "function") {
       this._calSettingsAsked = true;
       this._settingsOnce().then((S) => {
-        this._casoraSettingsNow = S || {};
+        // A failed read stays unset: nothing is shown, and the next paint asks again.
+        if (!S) { this._calSettingsAsked = false; return; }
+        this._casoraSettingsNow = S;
         this._rebuildPreview();
       });
     }

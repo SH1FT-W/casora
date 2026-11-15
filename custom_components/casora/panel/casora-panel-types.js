@@ -941,10 +941,6 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
       finder = true;
       (window.casoraImportScript || ((p) => import("/casora_scripts/" + p)))("local/00-finder.js").catch(() => {});
     }
-    // Agenda tile: its title rule (Calendar filter) without the calendar module, see tileStateWord in casora-panel.js.
-    if (!window.casoraCalendarAllows && tn.includes("casora_calendar")) {
-      (window.casoraImportScript || ((p) => import("/casora_scripts/" + p)))("local/06a-kalender-filter.js").catch(() => {});
-    }
     // Fridge: state ("7 °C · −18 °C", "Tür offen") via window._casoraFridge (scripts/local/30-fridge.js).
     if (!fridge && !window._casoraFridge && tn.includes("casora_fridge")) {
       fridge = true;
