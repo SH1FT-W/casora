@@ -69,7 +69,9 @@
 // button-card renders a plain name or label (text from the card config, the entity's friendly_name as fallback)
 // and its default state text as HTML. For Casora's cards these are text: escape them – only characters that are
 // not escaped yet, so a value Casora code already escaped stays as it is. Names, labels and states from a
-// [[[ … ]]] template are left alone (the templates escape their own values).
+// [[[ … ]]] template are left alone (the templates escape their own values). A button-card inside a custom_fields card
+// gets its config evaluated by the outer card, so its name/label template arrives as the finished markup: such a card
+// says so with casora_html: ['name'] (#204: the phone's motion badge showed „<div class="badge-wrap">…“ as text).
 (function () {
   if (!window.customElements || window.__casoraPlainEsc) return;
   window.__casoraPlainEsc = true;
@@ -89,17 +91,20 @@
     var P = C && C.prototype;
     if (!P || P.__casoraPlainEsc) return;
     P.__casoraPlainEsc = true;
-    var wrap = function (fn, src) {
+    var fromParent = function (cfg, cs, key) {
+      return !(cs && cs[key]) && Array.isArray(cfg.casora_html) && cfg.casora_html.indexOf(key) > -1;
+    };
+    var wrap = function (fn, src, key) {
       if (typeof P[fn] !== 'function') return;
       var orig = P[fn];
       P[fn] = function (st, cs) {
         var out = orig.apply(this, arguments);
         if (typeof out !== 'string' || !casoraCard(this._config)) return out;
-        return src && isTpl(src(this._config, cs)) ? out : once(out);
+        return (src && isTpl(src(this._config, cs))) || (key && fromParent(this._config, cs, key)) ? out : once(out);
       };
     };
-    wrap('_buildName', function (cfg, cs) { return (cs && cs.name) || cfg.name; });
-    wrap('_buildLabel', function (cfg, cs) { return (cs && cs.label) || cfg.label; });
+    wrap('_buildName', function (cfg, cs) { return (cs && cs.name) || cfg.name; }, 'name');
+    wrap('_buildLabel', function (cfg, cs) { return (cs && cs.label) || cfg.label; }, 'label');
     wrap('_buildStateString', null);
     // button-card bumps _updateTimerMS on every reconnect, which redraws the whole card although nothing changed.
     // Rows, overlays and sorting move tiles around the DOM, so a load drew each tile about twice (≈40 % of all
