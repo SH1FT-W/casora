@@ -5,7 +5,7 @@ import vm from 'node:vm';
 import assert from 'node:assert/strict';
 
 let settings = { calendar_filter: 'Naam-bbbbbb ffffff' };
-const now = new Date(2026, 10, 13, 10).getTime();
+const now = new Date(2054, 10, 13, 10).getTime();
 class ClockDate extends Date {
   constructor(...args) { super(...(args.length ? args : [now])); }
   static now() { return now; }
@@ -30,15 +30,15 @@ settings = { calendar_filter: ' Naam-bbbbbb ffffff, Naam-hhhhhh ' };
 assert.equal(calendar.allowsTitle('naam-hhhhhh'), false, 'entries are trimmed');
 
 const states = {
-  'calendar.mock_day': { state: 'on', attributes: { message: 'Naam-bbbbbb ffffff', start_time: '2026-11-13 00:00:00', end_time: '2026-11-14 00:00:00', all_day: true } },
-  'calendar.mock_meeting': { state: 'off', attributes: { message: 'Naam-gggggg', start_time: '2026-11-13 14:00:00', end_time: '2026-11-13 15:00:00', all_day: false } },
+  'calendar.mock_day': { state: 'on', attributes: { message: 'Naam-bbbbbb ffffff', start_time: '2054-11-13 00:00:00', end_time: '2054-11-14 00:00:00', all_day: true } },
+  'calendar.mock_meeting': { state: 'off', attributes: { message: 'Naam-gggggg', start_time: '2054-11-13 14:00:00', end_time: '2054-11-13 15:00:00', all_day: false } },
 };
 const variables = { calendars: Object.keys(states).map(entity => ({ entity })) };
 assert.equal(calendar.tile(states, variables), 'Heute 14:00 · Naam-gggggg', 'a filtered all-day event never wins the Agenda tile');
 settings = {};
 assert.equal(calendar.tile(states, variables), 'Heute 14:00 · Naam-gggggg', 'a timed event later today wins over a running all-day event without a filter');
-states['calendar.mock_meeting'].attributes.start_time = '2026-11-14 09:00:00';
-states['calendar.mock_meeting'].attributes.end_time = '2026-11-14 10:00:00';
+states['calendar.mock_meeting'].attributes.start_time = '2054-11-14 09:00:00';
+states['calendar.mock_meeting'].attributes.end_time = '2054-11-14 10:00:00';
 assert.equal(calendar.tile(states, variables), 'Heute · Naam-bbbbbb ffffff', 'the running all-day event wins when no timed event remains today');
 settings = { calendar_filter: 'Naam-bbbbbb ffffff' };
 assert.equal(calendar.tile(states, variables), 'Morgen 09:00 · Naam-gggggg', 'without a visible event today the tile shows the next event');
@@ -46,12 +46,12 @@ assert.equal(calendar.tile(states, variables), 'Morgen 09:00 · Naam-gggggg', 'w
 {
   const order = {
     'calendar.mock_day': states['calendar.mock_day'],
-    'calendar.mock_later': { state: 'off', attributes: { message: 'Naam-gggggg', start_time: '2026-11-13 14:00:00', end_time: '2026-11-13 15:00:00', all_day: false } },
-    'calendar.mock_now': { state: 'on', attributes: { message: 'Tandarts', start_time: '2026-11-13 09:30:00', end_time: '2026-11-13 10:30:00', all_day: false } },
+    'calendar.mock_later': { state: 'off', attributes: { message: 'Naam-gggggg', start_time: '2054-11-13 14:00:00', end_time: '2054-11-13 15:00:00', all_day: false } },
+    'calendar.mock_now': { state: 'on', attributes: { message: 'Appointment A', start_time: '2054-11-13 09:15:00', end_time: '2054-11-13 11:00:00', all_day: false } },
   };
   const orderVars = { calendars: Object.keys(order).map(entity => ({ entity })) };
-  assert.ok(calendar.tile(order, orderVars).includes('Tandarts'), 'a running timed event comes before the next timed event today');
-  order['calendar.mock_now'].attributes.end_time = '2026-11-13 09:45:00';
+  assert.ok(calendar.tile(order, orderVars).includes('Appointment A'), 'a running timed event comes before the next timed event today');
+  order['calendar.mock_now'].attributes.end_time = '2054-11-13 09:45:00';
   order['calendar.mock_now'].state = 'off';
   assert.equal(calendar.tile(order, orderVars), 'Heute 14:00 · Naam-gggggg', 'with no timed event running, the next timed event today comes before the all-day event');
 }
@@ -62,9 +62,9 @@ const localStates = { 'calendar.mock_local': states['calendar.mock_day'] };
 const localVariables = { calendars: [{ entity: 'calendar.mock_local' }] };
 let calls = 0, updates = 0;
 let response = [
-  { summary: 'Naam-bbbbbb ffffff', start: { date: '2026-11-13' }, end: { date: '2026-11-14' } },
-  { summary: 'Naam-gggggg', start: { dateTime: '2026-11-13T14:00:00' }, end: { dateTime: '2026-11-13T15:00:00' } },
-  { summary: 'Tandarts', start: { dateTime: '2026-11-14T09:00:00' }, end: { dateTime: '2026-11-14T10:00:00' } },
+  { summary: 'Naam-bbbbbb ffffff', start: { date: '2054-11-13' }, end: { date: '2054-11-14' } },
+  { summary: 'Naam-gggggg', start: { dateTime: '2054-11-13T14:00:00' }, end: { dateTime: '2054-11-13T15:00:00' } },
+  { summary: 'Appointment A', start: { dateTime: '2054-11-14T11:00:00' }, end: { dateTime: '2054-11-14T12:00:00' } },
 ];
 const card = { _config: { state_display: 'window._casoraCalendar.tile(states, variables)' } };
 const ha = { hass: { states: localStates, callApi: async () => { calls++; return response; } },
@@ -82,11 +82,11 @@ assert.equal(calendar.tile(localStates, localVariables), 'Heute 14:00 · Naam-gg
 settings = { calendar_filter: 'Naam-gggggg' };
 assert.equal(calendar.tile(localStates, localVariables), 'Heute · Naam-bbbbbb ffffff', 'filtering the timed event leaves the current all-day event');
 settings = { calendar_filter: 'Naam-gggggg, Naam-bbbbbb ffffff' };
-assert.equal(calendar.tile(localStates, localVariables), 'Morgen 09:00 · Tandarts', 'filtered same-calendar events never win');
+assert.equal(calendar.tile(localStates, localVariables), 'Morgen 11:00 · Appointment A', 'filtered same-calendar events never win');
 assert.equal(calls, 1, 'filter changes reuse the popup event cache');
 assert.ok(calendar.html('day', localVariables).includes('Naam-bbbbbb ffffff'), 'the shared cache keeps filtered titles for the popup');
 response = [];
-localStates['calendar.mock_local'] = { ...localStates['calendar.mock_local'], last_updated: '2026-11-13T10:01:00' };
+localStates['calendar.mock_local'] = { ...localStates['calendar.mock_local'], last_updated: '2054-11-13T10:01:00' };
 ha.hass.states = localStates;
 calendar.tile(localStates, localVariables);
 await settle();
@@ -94,20 +94,20 @@ assert.equal(calendar.tile(localStates, localVariables), 'Keine Termine', 'a fre
 assert.equal(calls, 2, 'calendar state changes refresh the shared event cache');
 settings = {};
 ha.hass.callApi = async () => { calls++; throw new Error('Calendar unavailable'); };
-localStates['calendar.mock_local'] = { ...localStates['calendar.mock_local'], last_updated: '2026-11-13T10:02:00' };
+localStates['calendar.mock_local'] = { ...localStates['calendar.mock_local'], last_updated: '2054-11-13T10:02:00' };
 assert.equal(calendar.tile(localStates, localVariables), 'Heute · Naam-bbbbbb ffffff', 'loading a changed calendar uses its current state, not stale cached events');
 await settle();
 assert.equal(calendar.tile(localStates, localVariables), 'Heute · Naam-bbbbbb ffffff', 'an API error falls back to the entity instead of claiming the calendar is empty');
 assert.equal(calls, 3, 'an API error does not start a fetch loop');
 let finish;
 ha.hass.callApi = () => { calls++; return new Promise(resolve => { finish = resolve; }); };
-localStates['calendar.mock_local'] = { ...localStates['calendar.mock_local'], last_updated: '2026-11-13T10:03:00' };
+localStates['calendar.mock_local'] = { ...localStates['calendar.mock_local'], last_updated: '2054-11-13T10:03:00' };
 calendar.tile(localStates, localVariables);
 calendar.tile(localStates, localVariables);
 assert.equal(calls, 4, 'repeated tile renders share the in-flight calendar request');
-localStates['calendar.mock_local'] = { ...localStates['calendar.mock_local'], last_updated: '2026-11-13T10:04:00' };
+localStates['calendar.mock_local'] = { ...localStates['calendar.mock_local'], last_updated: '2054-11-13T10:04:00' };
 calendar.tile(localStates, localVariables);
-finish([{ summary: 'Old event', start: { dateTime: '2026-11-13T14:00:00' }, end: { dateTime: '2026-11-13T15:00:00' } }]);
+finish([{ summary: 'Old event', start: { dateTime: '2054-11-13T14:00:00' }, end: { dateTime: '2054-11-13T15:00:00' } }]);
 await settle();
 assert.equal(calls, 5, 'a change during loading queues a fresh request on the same cache');
 assert.equal(calendar.tile(localStates, localVariables), 'Heute · Naam-bbbbbb ffffff', 'a response for an older state cannot win while its replacement loads');
@@ -134,7 +134,7 @@ for (const kind of ['linie', 'woche']) {
   assert.ok(!html.includes('Naam-bbbbbb ffffff') && html.includes('Naam-gggggg'), `${kind} applies the shared Calendar filter`);
 }
 
-calendar.load({ callApi: async () => [{ summary: 'Naam-bbbbbb ffffff', start: { date: '2026-11-13' }, end: { date: '2026-11-14' } }] }, { calendars: [{ entity: 'calendar.mock_day', name: 'Mock calendar' }] });
+calendar.load({ callApi: async () => [{ summary: 'Naam-bbbbbb ffffff', start: { date: '2054-11-13' }, end: { date: '2054-11-14' } }] }, { calendars: [{ entity: 'calendar.mock_day', name: 'Mock calendar' }] });
 await new Promise(resolve => setImmediate(resolve));
 assert.ok(calendar.html('day', { calendars: [{ entity: 'calendar.mock_day', name: 'Mock calendar' }] }).includes('Naam-bbbbbb ffffff'), 'the popup still shows a title hidden from Home');
 console.log('ok shared filter in greeting and screensavers, unfiltered popup');
