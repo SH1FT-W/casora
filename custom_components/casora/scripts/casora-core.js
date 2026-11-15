@@ -17170,10 +17170,10 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         // mit führendem „·“ in eine eigene Zeile.
         sub: r.ongoing ? r.sub : (r.sub ? (toned ? [r.sub, ago(r.when)].filter(Boolean).join(' · ') : [r.sub, ago(r.when)]) : ago(r.when)),
         value: r.value || null,
-        entity: r.entity || null,
+        entity: r.opens === 'casora:detection' ? null : (r.entity || null),
         image: r.image,
         imageFit: r.imageFit,
-        tappable: !!(r.entity || r.opens || many),
+        tappable: r.opens !== 'casora:detection' && !!(r.entity || r.opens || many),
         // A stack: how many, and a chevron that points down (closed) or up (open). Tapping opens it.
         endHtml: many ? '<span class="casora-nst-n">' + Number(r.count) + '</span>' : null,
         noChev: many,
@@ -17235,6 +17235,10 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
             if (e && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); e.click(); }
           });
         }
+        continue;
+      }
+      if (list[i].opens === 'casora:detection') {
+        els[i].removeAttribute('data-casora-mi');
         continue;
       }
       if (!list[i].opens) continue;
