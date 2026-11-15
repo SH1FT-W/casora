@@ -8063,7 +8063,10 @@
               },
               "template": "casora_badge_base",
               "type": "custom:button-card",
-              "triggers_update": "all"
+              "triggers_update": "all",
+              "casora_html": [
+                "name"
+              ]
             }
           ],
           "layout": {
@@ -8668,7 +8671,10 @@
                 "type": "custom:button-card",
                 "variables": {
                   "enabled": "[[[ const _rv = variables.casora_rv || {}; \n  const P = window._casoraPCSources?.(states, _rv);\n  return !!P?.discord;\n]]]\n"
-                }
+                },
+                "casora_html": [
+                  "name"
+                ]
               }
             },
             "activity_steam": {
@@ -8693,7 +8699,10 @@
                 "type": "custom:button-card",
                 "variables": {
                   "enabled": "[[[ const _rv = variables.casora_rv || {}; \n  const P = window._casoraPCSources?.(states, _rv);\n  return !!P?.steam;\n]]]\n"
-                }
+                },
+                "casora_html": [
+                  "name"
+                ]
               }
             },
             "mp1": {
@@ -14310,7 +14319,10 @@
                 "type": "custom:button-card",
                 "variables": {
                   "enabled": "[[[\n  const P = window._casoraPCSources?.(states, variables);\n  return !!P?.discord;\n]]]\n"
-                }
+                },
+                "casora_html": [
+                  "name"
+                ]
               }
             },
             "activity_steam": {
@@ -14335,7 +14347,10 @@
                 "type": "custom:button-card",
                 "variables": {
                   "enabled": "[[[\n  const P = window._casoraPCSources?.(states, variables);\n  return !!P?.steam;\n]]]\n"
-                }
+                },
+                "casora_html": [
+                  "name"
+                ]
               }
             },
             "mp1": {
