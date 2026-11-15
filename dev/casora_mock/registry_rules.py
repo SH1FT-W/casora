@@ -76,3 +76,15 @@ def clear_old_platform_entry(registry, entity: Mapping, domain: str, default: st
     current = registry.platform_of(entity["entity_id"])
     if current is not None and current != default:
         registry.remove(entity["entity_id"])
+
+
+def writes_state_directly(entity: Mapping, domain: str, in_platforms: bool) -> bool:
+    """Whether apply_fixture() writes the state itself, because no entity object will.
+
+    Outside the platforms there is no object. Inside them the object writes it, except an entity registered
+    under another integration without an own object (Velair's sensors). apply_fixture() runs before the
+    platforms load, so a direct write of an entity that gets an object makes HA drop that object.
+    """
+    if not in_platforms:
+        return True
+    return bool(entity.get("registry_platform")) and not has_own_object(entity, domain)

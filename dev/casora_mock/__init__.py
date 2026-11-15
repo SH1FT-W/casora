@@ -26,7 +26,8 @@ from homeassistant.util import dt as dt_util
 
 from .entity import PLATFORMS, build_classes
 from .haus import compose
-from .registry_rules import clear_old_platform_entry, hidden_by_for, registry_platform_for, sensor_options_for
+from .registry_rules import (clear_old_platform_entry, hidden_by_for, registry_platform_for, sensor_options_for,
+                             writes_state_directly)
 
 DOMAIN = "casora_mock"
 _LOGGER = logging.getLogger(__name__)
@@ -227,9 +228,10 @@ class CasoraMock:
                                      "input_text", "input_datetime", "sun", "automation"):
                 continue
             self.store[eid] = [e["state"], dict(e["attributes"])]
+            domain = eid.split(".")[0]
             if eid in self.objs:
                 self.objs[eid].async_write_ha_state()
-            elif eid.split(".")[0] not in PLATFORMS or e.get("registry_platform"):
+            elif writes_state_directly(e, domain, domain in PLATFORMS):
                 self.hass.states.async_set(eid, e["state"], dict(e["attributes"]))
 
     def set(self, eid: str, state: str | None = None, **attrs) -> None:

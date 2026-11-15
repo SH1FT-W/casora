@@ -186,6 +186,18 @@ class CalendarObjectTest(unittest.TestCase):
         self.assertTrue(rules.has_own_object(plain, "calendar"))
         self.assertEqual(rules.registry_platform_for(plain, "calendar", "casora_mock"), "casora_mock")
 
+    def test_calendar_with_own_object_gets_no_direct_state_write(self):
+        # apply_fixture() runs before the platforms load: a direct write would make HA drop the object
+        # ("ID calendar.x is already used"), so the object writes the state itself.
+        self.assertFalse(rules.writes_state_directly(self.REAL_SHAPE, "calendar", in_platforms=True))
+
+    def test_other_registry_platform_entity_keeps_direct_state_write(self):
+        velair = {"entity_id": "sensor.naam_messwert", "registry_platform": "velair", "state": "1"}
+        self.assertTrue(rules.writes_state_directly(velair, "sensor", in_platforms=True))
+
+    def test_entity_outside_platforms_keeps_direct_state_write(self):
+        self.assertTrue(rules.writes_state_directly({"entity_id": "sun.naam"}, "sun", in_platforms=False))
+
     def test_empty_events_calendar_with_registry_platform_gets_own_object(self):
         # "events": [] is a calendar with events (none): it keeps its object and shows no events.
         empty = {"entity_id": "calendar.naam_leer", "registry_platform": "google", "events": []}
