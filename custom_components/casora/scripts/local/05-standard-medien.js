@@ -94,7 +94,7 @@
     var lt = x.t != null ? L('temp', x.t, tU(), tc) : null, lh = x.rh != null ? L('humidity', x.rh, '', hc) : null;
     var useH = lh != null && (lt == null || lh >= lt), lv = useH ? lh : lt;
     if (lv == null) return null;
-    return { level: lv, word: !lv ? 'Gut' : useH ? W('humidity', x.rh, '', hc) : W('temp', x.t, tU(), tc), tone: lv === 2 ? 'bad' : lv === 1 ? 'warn' : null,
+    return { level: lv, word: !lv ? 'Optimal' : useH ? W('humidity', x.rh, '', hc) : W('temp', x.t, tU(), tc), tone: lv === 2 ? 'bad' : lv === 1 ? 'warn' : null,
       humid: lh === 2 && x.rh > b.hum_ideal_max, type: b.type };
   };
   var rate = function (hass) {
@@ -463,7 +463,8 @@
         var g = x.grund || null;
         if (x.status === 'lange' && g) g = String(g).replace(/\s*·\s*Schließen\?$/, '').replace(/^Fenster offen\s+/, '') || null;
         var sb = [g, vals(x) || null].filter(Boolean);
-        // #202: no airing need → the room type's word („Etwas trocken“, „Warm“) in its tone; outdoor type: no word.
+        // #202: no airing need → the room type's word („Optimal“, „Etwas trocken“, „Warm“) in its tone; outdoor type: no word
+        // („Optimal“ instead of „Gut“ when both fit: reporter's wish, owner OK 16.11.2026).
         var cw = x.status === 'ok' && x.comfort ? x.comfort : null;
         return { id: x.k, icon: icon, iconTone: tone, label: x.n, sub: x.status === 'lange' ? sb.join(' · ') : sb,
           value: cw ? (cw.none ? null : cw.word) : st.t, valueTone: cw ? cw.tone || null : st.tone === 'accent' ? null : st.tone,

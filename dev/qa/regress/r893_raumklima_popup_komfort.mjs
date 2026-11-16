@@ -3,7 +3,7 @@
 // #202 („Popup angleichen“): the Raumklima popup said „Gut“ for every room without an airing need – a bathroom at
 // 33 % · 24 °C too – while the climate badges rate by room type. Expected on Home (desktop, dark, readings faked in
 // this browser only): a bathroom at 33 % says „Etwas trocken“ (orange), the bedroom at 22 °C „Warm“ (orange), the
-// bathroom at 72 % for over an hour „Zu feucht“ (red), the living room „Gut“, the kitchen keeps „Jetzt lüften“, and
+// bathroom at 72 % for over an hour „Zu feucht“ (red), the living room „Optimal“ (owner 16.11.2026, was „Gut“), the kitchen keeps „Jetzt lüften“, and
 // the stage says „Lüften empfohlen“ (with the airing hint) or „Lüften nicht nötig“ (without it) instead of
 // „Raumluft gut“. A copy of qa-arbeit with a room climate tile on Home (deleted at the end). Screenshots with
 // R893_SHOT=<folder>. The Verlauf: temperature and humidity of the room picked by a tap on its row, the range switch
@@ -92,7 +92,7 @@ await check('Bad OG: orange', val(p, 'Bad OG').color === val(p, 'Bad OG').orange
 await check(`Schlafzimmer 22 °C: „Warm“ (${val(p, 'Schlafzimmer').value})`, val(p, 'Schlafzimmer').value === 'Warm', val(p, 'Schlafzimmer'));
 await check(`Badezimmer 72 % for 70 min: „Zu feucht“ (${val(p, 'Badezimmer').value})`, val(p, 'Badezimmer').value === 'Zu feucht', val(p, 'Badezimmer'));
 await check('bathroom sensors without the plant in it', !bath.rh.some((id) => /efeutute/.test(id)), bath);
-await check(`Wohnzimmer: „Gut“ (${val(p, 'Wohnzimmer').value})`, val(p, 'Wohnzimmer').value === 'Gut', val(p, 'Wohnzimmer'));
+await check(`Wohnzimmer: „Optimal“ (${val(p, 'Wohnzimmer').value})`, val(p, 'Wohnzimmer').value === 'Optimal', val(p, 'Wohnzimmer'));
 await check(`Küche: the airing hint stays (${val(p, 'Küche').value})`, val(p, 'Küche').value === 'Jetzt lüften', val(p, 'Küche'));
 await check(`stage with the airing hint: „Lüften empfohlen“ (${p.stage})`, /^Lüften empfohlen/.test(p.stage), p.stage);
 if (SHOT) await page.screenshot({ path: SHOT + '/' + (process.env.R893_TAG || 'after') + '-desktop.png' });

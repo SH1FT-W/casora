@@ -74,7 +74,7 @@ let st = house(five, 70);
 let rows = rowsOf(st);
 eq('rows: words by room type, airing hint first', byName(rows), {
   'Küche': ['Jetzt lüften', 'warn'], 'Bad EG': ['Zu feucht', 'bad'], 'Bad OG': ['Etwas trocken', 'warn'],
-  'Schlafzimmer': ['Warm', 'warn'], 'Wohnzimmer': ['Gut', null] });
+  'Schlafzimmer': ['Warm', 'warn'], 'Wohnzimmer': ['Optimal', null] });
 eq('order: airing hint, too humid, off by comfort, fine last', rows.map((r) => r.label), ['Küche', 'Bad EG', 'Bad OG', 'Schlafzimmer', 'Wohnzimmer']);
 eq('too humid keeps the backend reason', rows.find((r) => r.label === 'Bad EG').sub[0], 'Feuchte 72 % · draußen feuchter');
 eq('airing hint: the house says to air', V.sec('stage', st, { hide: [] }).text, 'Lüften empfohlen');
