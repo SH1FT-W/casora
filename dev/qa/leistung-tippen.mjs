@@ -180,15 +180,21 @@ export function makeTippen({ BASE, DASH, PHONE, POPDASH, POPPHONE, SNAP, diff, H
     const { page } = o; const found = {}; const tried = new Set();
     for (const place of await placesFor(o, phone, cfgs)) {
       await goPlace(o, place);
-      for (const m of await candidates(page)) {
-        if ((found[m] && found[m].art) || tried.has(m)) continue; tried.add(m);
-        const at = await findMain(page, m); if (!at) { tried.delete(m); continue; }
+      // Tiles first, badges last (a group badge may expand a row and shift the tiles); a miss gets a second try.
+      const cand = (await candidates(page)).sort((a, b) => /badge/.test(a) - /badge/.test(b));
+      for (const m of cand.concat(cand.map((x) => '\u0000' + x))) {
+        const again = m.startsWith('\u0000'); const mm = again ? m.slice(1) : m;
+        if (again ? !(found[mm] && found[mm].art === null && found[mm].dash === place.dash && found[mm].view === place.view && found[mm].filter === place.filter) : ((found[mm] && found[mm].art) || tried.has(mm))) continue;
+        if (again) { await page.keyboard.press('Escape').catch(() => {}); await quietWait(page, 600, 6000); }
+        tried.add(mm);
+        const m2 = mm;
+        const at = await findMain(page, m2); if (!at) { tried.delete(m2); continue; }
         const path0 = await page.evaluate(() => location.pathname + location.search);
         await tap(page, at, touch);
         let kind = null; for (let i = 0; i < 20 && !kind; i++) { await sleep(page, 100); kind = await popupOpen(page); }
         const path1 = await page.evaluate(() => location.pathname + location.search);
         // No popup (opens a page, switches, expands a row, or does nothing here): listed with art null, not measured.
-        found[m] = { ...place, art: kind || (path1 !== path0 ? 'seite:' + path1 : null) };
+        found[m2] = { ...place, art: kind || (path1 !== path0 ? 'seite:' + path1 : null) };
         await closePopup(page);
         if (path1 !== path0) { await gotoFull(page, path0); if (place.filter && place.filter !== 'all') await goPlace(o, place); }
         else await page.evaluate(() => window.__lp && document.activeElement && document.activeElement.blur && document.activeElement.blur());
