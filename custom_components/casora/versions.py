@@ -41,6 +41,8 @@ from .const import DOMAIN
 
 FOLDER = "casora_versionen"
 KEEP = 30
+# Versions for entity ID changes (entity_renames.py) kept besides the KEEP others.
+RENAME_KEEP = 3
 PIN_MAX = 20
 NAME_MAX = 80
 # Zusammenfassung (JSON aus dem Studio): abgeschnitten wäre sie unlesbar und fiele ganz weg.
@@ -142,6 +144,18 @@ class _Store:
         if meta.get("kind") == "initial" and versions:
             # Nicht der allererste Stand, aber neu: jemand hat außerhalb des Studios geändert.
             meta = {**meta, "kind": "outside"}
+        # Entity ID changes (entity_renames.py): one version for a run of them – the newest rename version is
+        # replaced (its changes merged), so renames never stack up.
+        renamed = _renamed(meta)
+        gone: list[dict] = []
+        if renamed is not None and versions and not versions[0].get("pinned") and not versions[0].get("name"):
+            prev = _renamed(versions[0])
+            if prev is not None:
+                merged = {k: renamed.get(v, v) for k, v in prev.items()}
+                merged.update({k: v for k, v in renamed.items() if k not in merged})
+                meta = {**meta, "summary": json.dumps({"origin": "rename",
+                                                       "renamed": {k: v for k, v in merged.items() if k != v}})}
+                gone.append(versions.pop(0))  # its file goes once the new version and the index are written
         now = dt_util.now()
         vid = now.strftime("%Y%m%d-%H%M%S-%f")
         c, crefs = self._split(cfg)
@@ -153,12 +167,12 @@ class _Store:
         versions.insert(0, {"id": vid, "ts": now.isoformat(), "hash": h, "mobile_url": mobile_url,
                             "rooms": _rooms(cfg), **meta})
         versions, dropped = _trim(versions)
-        for old in dropped:
+        self._write_json(self.index_path, {"url_path": url_path, "versions": versions})
+        for old in dropped + gone:
             try:
                 os.remove(os.path.join(self.dir, old["id"] + ".json"))
             except OSError:
                 pass
-        self._write_json(self.index_path, {"url_path": url_path, "versions": versions})
         if dropped or len(versions) >= KEEP:
             self._gc()
         return vid
@@ -227,12 +241,32 @@ class _Store:
                     pass
 
 
+def _renamed(v: dict) -> dict | None:
+    """The renames of a version written by entity_renames.py (summary origin "rename"), else None."""
+    try:
+        s = json.loads(v.get("summary") or "")
+    except (TypeError, ValueError):
+        return None
+    if not isinstance(s, dict) or s.get("origin") != "rename":
+        return None
+    r = s.get("renamed")
+    return {str(k): str(x) for k, x in r.items()} if isinstance(r, dict) else {}
+
+
 def _trim(versions: list[dict]) -> tuple[list[dict], list[dict]]:
-    """Die neuesten KEEP nicht angehefteten Stände behalten, angeheftete immer."""
-    keep, dropped, loose = [], [], 0
+    """Die neuesten KEEP nicht angehefteten Stände behalten, angeheftete immer. Versions written for entity ID
+    changes do not count towards KEEP (they never push out the user's saves); of them the newest RENAME_KEEP stay.
+    A named one counts like any other version."""
+    keep, dropped, loose, ren = [], [], 0, 0
     for v in versions:
         if v.get("pinned"):
             keep.append(v)
+        elif _renamed(v) is not None and not v.get("name"):
+            if ren < RENAME_KEEP:
+                keep.append(v)
+                ren += 1
+            else:
+                dropped.append(v)
         elif loose < KEEP:
             keep.append(v)
             loose += 1

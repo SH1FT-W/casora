@@ -30,6 +30,7 @@ from .frontend_version import async_setup_frontend_version, set_frontend_stamp
 from .dashboard_kinds import async_setup_dashboard_kinds
 from .updates import async_setup_updates
 from .options import async_setup_options
+from .entity_renames import async_setup_entity_renames, async_unload_entity_renames
 from .template_refresh import async_setup_template_refresh
 from .phone_badges import async_setup_phone_badges
 from .mealie_plan import CasoraMealieImageView, async_setup_mealie_plan
@@ -372,6 +373,8 @@ async def _async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async_setup_hemma_cleanup(hass)
     # Nach einem Update: unveränderte Vorlagen der Dashboards erneuern (template_refresh.py).
     async_setup_template_refresh(hass)
+    # An entity ID changed in HA: the dashboards and settings follow it (entity_renames.py, #206).
+    async_setup_entity_renames(hass)
     # Handy-Raumseite: Raum-Badges wie am Desktop, Variablen zur Laufzeit (phone_badges.py).
     async_setup_phone_badges(hass)
     # Recipe tile with Mealie: week plan and today's recipe through mealie's actions (mealie_plan.py, issue #140).
@@ -484,6 +487,7 @@ async def _async_teardown(hass: HomeAssistant, entry: ConfigEntry, *, remove_pan
     async_unload_helfer(hass)
     async_unload_theme(hass)
     async_unload_preload(hass)
+    async_unload_entity_renames(hass)
     # Otherwise they stay callable until the restart, even after removing Casora.
     for name in ("einrichten", "umstellen", "setup_overview", "setup_plan", *ACTION_SERVICES):
         hass.services.async_remove(DOMAIN, name)

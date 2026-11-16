@@ -392,6 +392,7 @@
     "Imported": "Importert",
     "Moved from Hemma": "Flyttet fra Hemma",
     "Templates refreshed after a Casora update": "Maler fornyet etter en Casora-oppdatering",
+    "Entity IDs changed in Home Assistant": "Entitets-ID-er endret i Home Assistant",
     "1 dashboard brought up to the new templates": "1 dashbord oppdatert til de nye malene",
     "{n} dashboards brought up to the new templates": "{n} dashbord oppdatert til de nye malene",
     "see Rewind to undo": "se Tidsreise for å angre",

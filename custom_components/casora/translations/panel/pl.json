@@ -392,6 +392,7 @@
     "Imported": "Zaimportowany",
     "Moved from Hemma": "Przeniesiony z Hemma",
     "Templates refreshed after a Casora update": "Szablony odświeżone po aktualizacji Casora",
+    "Entity IDs changed in Home Assistant": "Zmieniono identyfikatory encji w Home Assistant",
     "1 dashboard brought up to the new templates": "1 pulpit przeniesiony na nowe szablony",
     "{n} dashboards brought up to the new templates": "Pulpity przeniesione na nowe szablony: {n}",
     "see Rewind to undo": "cofnięcie w „Podróży w czasie”",
