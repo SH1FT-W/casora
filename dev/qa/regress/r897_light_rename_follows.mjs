@@ -57,7 +57,9 @@ try {
   }
   for (const u of URLS) {
     await check(u + ': the old entity ID is gone', !has(cfg[u], OLD));
-    await check(u + ': the new entity ID is there wherever the old one was', has(saved[u], OLD) === has(cfg[u], NEW));
+    // Exactly the old ID replaced, nothing else changed (templates and fingerprint hold no lamp IDs here).
+    const want = JSON.stringify(saved[u]).split(JSON.stringify(OLD)).join(JSON.stringify(NEW));
+    await check(u + ': the new entity ID is there wherever the old one was, nothing else changed', JSON.stringify(cfg[u]) === want);
   }
 
   const o = await open({ width: 1440, height: 900 });
