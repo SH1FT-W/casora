@@ -123,7 +123,8 @@ def replace_scene_picks(templates: Any, mapping: dict[str, str], prints: Any = N
     count). The nav's and the scene row's picks are outside the fingerprint; an overlay's are inside, so a template
     whose stored print matched before gets its new print (it stays Casora's for template_refresh), any other print
     stays as it is (the template was the user's already)."""
-    from .template_print import FILTER_OVERLAY, NAV, SCENE_KEYS, SCENE_LIST_KEYS, SCENE_ROW, _each, template_print
+    from .template_print import (_MISSING, FILTER_OVERLAY, NAV, SCENE_KEYS, SCENE_LIST_KEYS, SCENE_ROW, _each,
+                                 print_matches, template_print)
 
     if not isinstance(templates, dict) or not mapping:
         return templates, prints, 0
@@ -153,9 +154,9 @@ def replace_scene_picks(templates: Any, mapping: dict[str, str], prints: Any = N
         _each(t, fn)
         if not n:
             continue
-        before, after = template_print(tpl, name), template_print(t, name)
-        if before != after and isinstance(fp, dict) and fp.get(name) == before:
-            fp[name] = after
+        # Casora's before (any print form template_refresh accepts): Casora's after.
+        if isinstance(fp, dict) and print_matches(fp.get(name, _MISSING), tpl, _MISSING, name):
+            fp[name] = template_print(t, name)
         out[name] = t
         total += n
     return (out, fp, total) if total else (templates, prints, 0)

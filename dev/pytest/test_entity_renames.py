@@ -326,3 +326,63 @@ async def test_settings_backups_unique_and_few(hass: HomeAssistant, setup) -> No
     folder = hass.config.path("casora_sicherungen")
     assert len([f for f in os.listdir(folder) if f.startswith("rename_")]) == BACKUPS_KEEP
     assert await _store(hass).async_load() == {"night_entity": f"light.n{BACKUPS_KEEP + 3}"}
+
+
+async def test_scene_rename_keeps_old_form_print_casora(hass: HomeAssistant, setup) -> None:
+    from custom_components.casora.template_print import hash_str, refresh_dashboard, stable  # noqa: PLC0415
+
+    old, new = "scene.night_old", "scene.night_new"
+    tpl = {"casora_overlays": {"cards": [{"type": "custom:casora-filter-overlay", "room": "Living", "scenes": [old]}]},
+           "casora_header": {"card": {"type": "custom:casora-nav", "scene_order": [old]}}}
+    # Prints in the old whole-hash form (template_refresh still accepts them as Casora's).
+    fp = {k: hash_str(stable(v)) for k, v in tpl.items()}
+    dash = FakeDash({"casora_template_fingerprint": fp, "button_card_templates": copy.deepcopy(tpl), "views": []})
+    _dashes(hass, **{"d": dash})
+    reg = er.async_get(hass)
+    reg.async_get_or_create("scene", "test", "night", suggested_object_id="night_old")
+    reg.async_update_entity(old, new_entity_id=new)
+    await _settle(hass)
+    assert dash.cfg["button_card_templates"]["casora_overlays"]["cards"][0]["scenes"] == [new]
+    assert dash.cfg["button_card_templates"]["casora_header"]["card"]["scene_order"] == [new]
+    # The shipped templates carry no scene picks (the Studio adds them per dashboard).
+    ship = {"casora_overlays": {"cards": [{"type": "custom:casora-filter-overlay", "room": "Living"}], "new_var": 1},
+            "casora_header": {"card": {"type": "custom:casora-nav"}, "new_var": 1}}
+    _cfg, res = refresh_dashboard(dash.cfg, ship, mobile=True, home_vars={})
+    assert res["updated"] == 2 and res["kept"] == 0, res
+
+
+def test_named_rename_versions_count_like_others() -> None:
+    import json as _json  # noqa: PLC0415
+
+    from custom_components.casora.versions import KEEP, RENAME_KEEP, _trim  # noqa: PLC0415
+
+    ren = _json.dumps({"origin": "rename", "renamed": {"a": "b"}})
+    named = [{"id": f"n{i}", "summary": ren, "name": f"mine {i}"} for i in range(RENAME_KEEP + 2)]
+    keep, dropped = _trim(named + [{"id": f"r{i}", "summary": ren} for i in range(RENAME_KEEP + 2)])
+    assert not [v for v in dropped if v.get("name")] and len([v for v in keep if not v.get("name")]) == RENAME_KEEP
+    plain = [{"id": f"p{i}", "summary": ""} for i in range(KEEP)]
+    keep, dropped = _trim(named + plain)
+    assert len(keep) == KEEP and len(dropped) == len(named)  # named rename versions take normal slots
+
+
+def test_merged_rename_version_removed_after_index(tmp_path) -> None:
+    import json as _json  # noqa: PLC0415
+
+    from custom_components.casora.versions import _Store  # noqa: PLC0415
+
+    st = _Store(str(tmp_path), "d")
+    ren = lambda m: {"kind": "save", "summary": _json.dumps({"origin": "rename", "renamed": m})}  # noqa: E731
+    first = st.add("d", None, {"views": [{"path": "one"}]}, None, ren({"a": "b"}))
+    path = os.path.join(st.dir, first + ".json")
+    seen = []
+    real = st._write_json
+
+    def spy(p, data):
+        real(p, data)
+        if p == st.index_path:
+            seen.append(os.path.exists(path))
+
+    st._write_json = spy
+    second = st.add("d", None, {"views": [{"path": "two"}]}, None, ren({"b": "c"}))
+    assert seen == [True] and not os.path.exists(path)
+    assert [v["id"] for v in st.index()] == [second]
