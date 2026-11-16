@@ -15423,16 +15423,24 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     var when = Date.parse(n.created_at || '');
     var stamp = when ? new Date(when).toLocaleString(document.documentElement.lang || undefined, { dateStyle: 'medium', timeStyle: 'short' }) : '';
     // Inline handlers do not survive the card's rendering: one listener on the page, found by the attribute.
+    // touchend as well as click: the popup's button-card cancels touchend, so on a phone no click follows a finger
+    // tap and „Löschen“ did nothing (owner, iPhone, 16.11.2026). Same pattern as the other popup rows.
     if (!window._casoraPnDel) {
       window._casoraPnDel = true;
-      document.addEventListener('click', function (ev) {
+      var pnTouchAt = 0;
+      var pnDel = function (ev) {
         var path = (ev.composedPath && ev.composedPath()) || [];
         for (var i = 0; i < path.length; i++) {
           var n = path[i];
           if (!n || !n.getAttribute) continue;
           var id = n.getAttribute('data-casora-pn-del');
           if (id == null) continue;
-          ev.preventDefault(); ev.stopPropagation();
+          if (ev.type === 'touchend') {
+            if (Date.now() - (window._casoraLastScrollTs || 0) < 400) return;   // a scroll, not a tap
+            pnTouchAt = Date.now();
+          } else if (Date.now() - pnTouchAt < 700) { ev.preventDefault(); ev.stopPropagation(); return; }   // click echo
+          if (ev.cancelable) ev.preventDefault();
+          ev.stopPropagation();
           var h = hassOf();
           // Not an admin: gone from this user's bell only (dismissing would remove it for everyone, fam-23).
           if (!isAdmin(h)) hideRows(_rows.filter(function (r) { return r.pn === id; }));
@@ -15441,7 +15449,9 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
           window.casoraPopup.close();
           return;
         }
-      }, true);
+      };
+      document.addEventListener('touchend', pnDel, true);
+      document.addEventListener('click', pnDel, true);
     }
     var T = window.casoraTr || function (x) { return x; };
     var own = PN_OWN[k], admin = isAdmin(hassOf());
