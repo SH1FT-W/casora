@@ -581,7 +581,8 @@ for (const [g, r] of Object.entries(R.geraete)) {
   if (r.tippen) for (const [k, arr] of Object.entries(r.tippen)) {
     const ok = arr.filter((x) => x && x.inhalt != null);
     s['tipp_' + k] = ok.length ? { inhalt: median(ok.map((x) => x.inhalt)), steht: median(ok.map((x) => x.steht)), renderMs: median(ok.map((x) => x.renderMs)),
-      evalMs: median(ok.map((x) => x.evalMs)), longMs: median(ok.map((x) => x.longMs)), stateMs: median(ok.map((x) => x.stateMs)), n: ok.length }
+      evalMs: median(ok.map((x) => x.evalMs)), longMs: median(ok.map((x) => x.longMs)), stateMs: median(ok.map((x) => x.stateMs)),
+      bc: median(ok.map((x) => x.bc)), stil: median(ok.map((x) => x.stil)), layout: median(ok.map((x) => x.layout)), n: ok.length }
       : { fehler: (arr.find((x) => x && x.fehler) || {}).fehler || 'keine Messung' };
   }
   if (r.timer) { s.intervalle = r.timer.intervalle; s.mutationObserver = r.timer.mutationObserver.observing; }

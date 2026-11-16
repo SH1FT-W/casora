@@ -8,12 +8,15 @@
 // Parts (leistung.mjs --teile …):
 //   popups     every popup found on the test dashboards (one row per tile template that opens one)
 //   raumtipp   desktop: room bar tap (casora-nav-bar); phone: „Räume“ in the bottom bar, then a room in its menu
+//              (three first visits, then raum2:… = back to the first room, its overlay already built)
 //   wischen    phone: swipe to the next room (swipe_rooms switched on in the browser only)
 //   glocke     the bell (notification centre)
 //   chips      phone: the badge row's group chips (security, climate) open/close their sub row
 //   schalter   a tile's switch and the light popup's head switch until the tile/switch shows the new state
 //   schoner    screensaver started by hand (like the ⋯ menu) until it covers the page, and a tap back
 //   studiotipp Studio (desktop): open from the dashboard, switch room, sections, a settings group, preview device
+// LEISTUNG_WER=1: each result also lists which elements/templates re-rendered (wer).
+// LEISTUNG_PROF_INHALT=1: with --profil, the profile ends when the content is there (tap → content only).
 // Writes nothing into dashboards; screensaver and swipe settings are set in the browser only.
 
 export function makeTippen({ BASE, DASH, PHONE, POPDASH, POPPHONE, SNAP, diff, H }) {
@@ -49,6 +52,11 @@ export function makeTippen({ BASE, DASH, PHONE, POPDASH, POPPHONE, SNAP, diff, H
     const { page, cdp } = o;
     await page.evaluate((b) => { const L = window.__lp; L.down = null; L.up = null; L.bcHits = []; L.bcWatch = b ? new RegExp(b) : null; }, before);
     const s0 = await page.evaluate(SNAP);
+    // Chromium: style recalculations and layouts in the window (CDP counters) – forced ones show up here.
+    const pm = async () => { if (!cdp) return null; const { metrics } = await cdp.send('Performance.getMetrics'); const m = Object.fromEntries(metrics.map((x) => [x.name, x.value])); return { stil: m.RecalcStyleCount, layout: m.LayoutCount }; };
+    const m0 = await pm();
+    // LEISTUNG_WER=1: which elements/templates re-rendered during the interaction (out.wer, top 20).
+    if (process.env.LEISTUNG_WER) await page.evaluate(() => { window.__lp.renderLog = []; });
     if (prof && cdp) { await cdp.send('Profiler.enable'); await cdp.send('Profiler.setSamplingInterval', { interval: 250 }); await cdp.send('Profiler.start'); }
     const waiting = page.evaluate(async ({ src, arg, from, max }) => {
       const L = window.__lp; const ok = new Function('L', 'arg', src);
@@ -66,6 +74,9 @@ export function makeTippen({ BASE, DASH, PHONE, POPDASH, POPPHONE, SNAP, diff, H
     waiting.catch(() => {});
     await act();
     const r = await waiting;
+    // LEISTUNG_PROF_INHALT=1: the profile covers only tap → content (what decides „Inhalt da“), not the settle phase.
+    let profil;
+    if (prof && cdp && process.env.LEISTUNG_PROF_INHALT) { const { profile } = await cdp.send('Profiler.stop'); profil = summarise(profile); prof = false; }
     if (r.start == null) { if (prof && cdp) await cdp.send('Profiler.stop').catch(() => {}); return { fehler: 'keine Eingabe' }; }
     const st = await page.evaluate(async ({ start, quietMs, max }) => {
       const L = window.__lp; const t0 = performance.now();
@@ -75,16 +86,19 @@ export function makeTippen({ BASE, DASH, PHONE, POPDASH, POPPHONE, SNAP, diff, H
       const lt = L.longtasks.filter((x) => x[0] + x[1] >= start - 2 && x[0] <= last());
       return { steht: last() - start, capped, longN: lt.length, longMs: lt.reduce((s, x) => s + x[1], 0), longMax: Math.max(0, ...lt.map((x) => x[1])) };
     }, { start: r.start, quietMs, max });
-    let profil;
     if (prof && cdp) { const { profile } = await cdp.send('Profiler.stop'); profil = summarise(profile); }
     const s1 = await page.evaluate(SNAP);
+    const m1 = await pm();
     const d = diff(s0, s1);
     await page.evaluate(() => { window.__lp.bcWatch = null; window.__lp.bcHits = []; });
     const out = { inhalt: r.hit == null ? null : +(r.hit - r.start).toFixed(0), steht: +Math.max(st.steht, r.hit == null ? 0 : r.hit - r.start).toFixed(0), renders: d.n, bc: d.bc, renderMs: d.ms, evalMs: d.evalMs,
       longN: o.cdp ? st.longN : null, longMs: o.cdp ? st.longMs : null, longMax: o.cdp ? st.longMax : null };
+    if (m0 && m1) { out.stil = m1.stil - m0.stil; out.layout = m1.layout - m0.layout; }
     if (st.capped) out.unruhig = true;
     if (r.hit == null) out.fehler = 'Inhalt kam nicht';
     if (profil) out.profil = profil;
+    if (process.env.LEISTUNG_WER) out.wer = await page.evaluate(() => { const l = window.__lp.renderLog || []; window.__lp.renderLog = null;
+      const c = {}; for (const x of l) c[x] = (c[x] || 0) + 1; return Object.entries(c).sort((a, b) => b[1] - a[1]).slice(0, 20); });
     return out;
   }
 
@@ -236,7 +250,8 @@ export function makeTippen({ BASE, DASH, PHONE, POPDASH, POPPHONE, SNAP, diff, H
       return out;
     }
     await goPlace(o, { dash: POPPHONE || PHONE, view: 'home', filter: 'all' });
-    for (const [key, label] of [['room_wohnzimmer', 'Wohnzimmer'], ['room_bro', 'Büro'], ['room_kche', 'Küche']]) {
+    // The last pass goes back to a room seen before (raum2:…): its overlay is built already.
+    for (const [key, label, again] of [['room_wohnzimmer', 'Wohnzimmer'], ['room_bro', 'Büro'], ['room_kche', 'Küche'], ['room_wohnzimmer', 'Wohnzimmer', true]]) {
       const bar = await page.evaluate(() => { const b = [...document.querySelectorAll('.hmn-bar .hmn-btn')].find((x) => /Räume|Rooms/.test(x.getAttribute('aria-label') || x.textContent)); if (!b) return null;
         const r = b.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
       if (!bar) { out.raummenue = { fehler: 'Räume-Knopf fehlt' }; break; }
@@ -249,7 +264,7 @@ export function makeTippen({ BASE, DASH, PHONE, POPDASH, POPPHONE, SNAP, diff, H
         const r = (t && t !== m ? t : el); if (!r) return null; r.scrollIntoView({ block: 'center' }); const b = r.getBoundingClientRect(); return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; }, label);
       if (!item) { out['raum:' + key] = { fehler: 'Raum im Menü fehlt' }; await page.keyboard.press('Escape'); continue; }
       await sleep(page, 400);
-      out['raum:' + key] = await messen(o, { act: () => tap(page, item, touch), arg: key, ready: PHONE_ROOM_READY, prof });
+      out[(again ? 'raum2:' : 'raum:') + key] = await messen(o, { act: () => tap(page, item, touch), arg: key, ready: PHONE_ROOM_READY, prof });
       await page.evaluate(() => window._casoraFilter.set('all')); await quietWait(page, 600, 8000);
     }
     // raummenue: median over the three opens
