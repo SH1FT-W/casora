@@ -2952,7 +2952,8 @@
     "pro Tag": "per day",
     "Nicht erfasst": "Untracked",
     "Wohlfühlbereich": "Comfort range",
-    "feucht": "humid"
+    "feucht": "humid",
+    "Lüften nicht nötig": "No need to ventilate"
   },
   "patterns": [
     [

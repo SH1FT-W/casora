@@ -25,7 +25,8 @@
     jetzt: { t: 'Jetzt lüften', tone: 'warn', r: 5 },
     draussen: { t: 'Außenluft belastet', tone: 'bad', r: 4 },
     bald: { t: 'Bald lüften', tone: 'accent', r: 3 },
-    feucht: { t: 'Zu feucht', tone: 'warn', r: 2 },
+    // #202: by the room's type (V.comfort) – red like the humidity badge: bathroom and kitchen after an hour above 70 %.
+    feucht: { t: 'Zu feucht', tone: 'bad', r: 2 },
     // A window open for half a day or longer is no airing any more: a hint to close it (review 2, fam-05).
     lange: { t: 'Lange offen', tone: 'warn', r: 4.5 },
     lueftet: { t: 'Lüftet', tone: 'good', r: 1 },
@@ -39,9 +40,80 @@
     var g = String(x.grund || '');
     return Object.assign({}, x, { status: 'lange', grund: g ? g + ' · Schließen?' : 'Fenster schließen?' });
   };
-  V.read = function (states) {
+  /* Room-type comfort (#202, owner 16.11.2026 „Popup angleichen“): the backend rates humidity alike in every room
+     (≥ 65 % „feucht“) and says „Gut“ for the rest. A room without an airing need now gets the words of its climate
+     badges (01-basis.js casoraComfortLevel/Word: the room's type from its name or HA area, the Studio's values, the
+     bathroom's hour above 70 %), and „Zu feucht“ only where its type says so. Airing hints keep their status. The
+     backend's own status stays for alerts and automations (raumklima.py), this is the popup's reading only. */
+  var haHass = function () { var ha = document.querySelector && document.querySelector('home-assistant'); return (ha && ha.hass) || null; };
+  // Temperature and humidity sensors of an HA area (as find_rooms: own area, else the device's; no plant's readings),
+  // one index per registry.
+  var IDX = { ents: null, map: null };
+  V.sensorsOf = function (hass, k) {
+    var H = hass || {}, E = H.entities;
+    if (!E || !k) return { rh: [], t: [] };
+    if (IDX.ents !== E) {
+      var D = H.devices || {}, S = H.states || {}, map = {}, plants = {};
+      if (typeof window.casoraIsPlant === 'function') Object.keys(E).forEach(function (id) {
+        var e = E[id];
+        if (e && e.device_id && window.casoraIsPlant(H, id)) plants[e.device_id] = true;
+      });
+      Object.keys(E).forEach(function (id) {
+        var e = E[id], st = S[id], dc = st && st.attributes && st.attributes.device_class;
+        var key = dc === 'humidity' ? 'rh' : dc === 'temperature' ? 't' : null;
+        if (!key || id.indexOf('sensor.') !== 0 || !e || e.hidden || e.entity_category || plants[e.device_id]) return;
+        if (OUTDOOR.test(id + ' ' + (st.attributes.friendly_name || ''))) return;
+        var aid = e.area_id || (e.device_id && D[e.device_id] ? D[e.device_id].area_id : null);
+        if (!aid) return;
+        var m = map[aid] || (map[aid] = { rh: [], t: [] });
+        m[key].push(id);
+      });
+      IDX = { ents: E, map: map };
+    }
+    var r = IDX.map[k] || { rh: [], t: [] };
+    return { rh: r.rh.slice().sort(), t: r.t.slice().sort() };
+  };
+  // The sensor whose reading is closest to the room's (the backend takes the median of several).
+  var nearest = function (hass, ids, v) {
+    var S = (hass && hass.states) || {}, best = null, d = Infinity;
+    ids.forEach(function (id) { var n = parseFloat((S[id] || {}).state); if (isFinite(n) && Math.abs(n - v) < d) { d = Math.abs(n - v); best = id; } });
+    return best || ids[0] || null;
+  };
+  /* { level, word, tone, humid, type } of a room row; { none: true } for a type without a rating (outdoor); null without
+     the comfort functions or readings. The worse of temperature and humidity speaks, humidity on a tie (the popup
+     is about the air); both fine: „Gut“. humid: humidity red on the humid side → „Zu feucht“. */
+  V.comfort = function (x, hass) {
+    var L = window.casoraComfortLevel, W = window.casoraComfortWord, B = window.casoraComfortBands;
+    if (!x || typeof L !== 'function' || typeof W !== 'function' || typeof B !== 'function' || (x.t == null && x.rh == null)) return null;
+    hass = hass || haHass();
+    var ids = V.sensorsOf(hass, x.k), rhId = x.rh != null ? nearest(hass, ids.rh, x.rh) : null;
+    var ctx = { room: x.n || '', entity: rhId || (x.t != null ? nearest(hass, ids.t, x.t) : null) || undefined, hass: hass || undefined };
+    var b = B(ctx);
+    if (!b) return { none: true };
+    var tc = { type: b.type, room: ctx.room }, hc = { type: b.type, room: ctx.room, entity: rhId || undefined, hass: hass || undefined };
+    var lt = x.t != null ? L('temp', x.t, tU(), tc) : null, lh = x.rh != null ? L('humidity', x.rh, '', hc) : null;
+    var useH = lh != null && (lt == null || lh >= lt), lv = useH ? lh : lt;
+    if (lv == null) return null;
+    return { level: lv, word: !lv ? 'Gut' : useH ? W('humidity', x.rh, '', hc) : W('temp', x.t, tU(), tc), tone: lv === 2 ? 'bad' : lv === 1 ? 'warn' : null,
+      humid: lh === 2 && x.rh > b.hum_ideal_max, type: b.type };
+  };
+  var rate = function (hass) {
+    return function (x) {
+      if (!x || (x.status !== 'ok' && x.status !== 'feucht')) return x;
+      var c = V.comfort(x, hass);
+      if (!c) return x;
+      if (c.none) return Object.assign({}, x, { comfort: c });
+      if (c.humid) return Object.assign({}, x, { status: 'feucht', grund: x.status === 'feucht' && x.grund ? x.grund : 'Feuchte ' + fmt(x.rh) + ' %', comfort: c });
+      return Object.assign({}, x, { status: 'ok', grund: x.status === 'feucht' ? '' : x.grund, comfort: c });
+    };
+  };
+  // A room off by comfort (no airing need): orange/red word instead of „Gut“.
+  var off = function (x) { return !!(x && x.status === 'ok' && x.comfort && x.comfort.level); };
+  V.off = off;
+  V.read = function (states, hass) {
     var s = states[V.sensor(states)], a = (s && s.attributes) || {};
-    var rooms = (a.rooms || []).map(longOpen).sort(function (x, y) { return (ST[y.status] || ST.ok).r - (ST[x.status] || ST.ok).r; });
+    var rk = function (x) { return (ST[x.status] || ST.ok).r + (off(x) ? x.comfort.level / 10 : 0); };
+    var rooms = (a.rooms || []).map(longOpen).map(rate(hass)).sort(function (x, y) { return rk(y) - rk(x); });
     return { rooms: rooms, out: a.aussen || {}, coach: states[COACH] };
   };
 
@@ -247,21 +319,24 @@
       if (mode === 'empty') return UI.hero({ label: SF ? null : 'Raumluft', value: 'Keine Sensoren', sub: null, center: true });
       /* One room: its own status and reason („Lüftet · Fenster offen seit 12 Min.“), not the house words. */
       if (mode === 'room' && rooms.length === 1) {
-        var r1 = rooms[0], st1 = ST[r1.status] || ST.ok;
-        return UI.hero({ label: SF ? null : 'Raumluft', value: r1.status === 'ok' ? (SF ? 'Raumluft gut' : 'Gut') : st1.t, sub: r1.grund || null,
-          subTone: st1.tone === 'accent' ? null : st1.tone, center: true });
+        var r1 = rooms[0], st1 = ST[r1.status] || ST.ok, o1 = off(r1);
+        return UI.hero({ label: SF ? null : 'Raumluft', value: o1 ? r1.comfort.word : r1.status === 'ok' ? (SF ? 'Raumluft gut' : 'Gut') : st1.t, sub: r1.grund || null,
+          subTone: o1 ? r1.comfort.tone : st1.tone === 'accent' ? null : st1.tone, center: true });
       }
       var lv = V.level(states, { popup_hide: (C && C.hide) || [] }, m.scope);
       var need = rooms.filter(function (x) { return x.status === 'jetzt' || x.status === 'schliessen' || x.status === 'lange'; });
-      var value = lv === 2 ? 'Schließen' : lv === 1 ? 'Lüften' : 'Gut';
+      // #202: no airing need, but a room is off by its type („Warm“, „Zu feucht“): no blanket „Gut“.
+      var odd = lv ? [] : rooms.filter(function (x) { return off(x) || x.status === 'feucht'; });
+      var value = lv === 2 ? 'Schließen' : lv === 1 ? 'Lüften' : odd.length ? 'Lüften nicht nötig' : 'Gut';
       /* One room: its reason instead of its own name. */
-      var sub = need.length ? (mode === 'room' && rooms.length === 1 ? (need[0].grund || null) : need.length <= 2 ? need.map(function (x) { return x.n; }).join(', ') : need.length + ' Räume')
+      var named = need.length ? need : odd;
+      var sub = named.length ? (mode === 'room' && rooms.length === 1 ? (named[0].grund || null) : named.length <= 2 ? named.map(function (x) { return x.n; }).join(', ') : named.length + ' Räume')
         : (helps === true ? 'Außenluft ist trockener' : helps === false ? 'Außenluft ist feuchter' : null);
       /* Kurz halten: die Hero-Unterzeile bricht nicht um und wird auf dem Handy sonst beidseitig abgeschnitten.
          "Feuchter draußen" ist kein Grün-Zustand → neutral. */
       /* Weich (Entschlacken): „Raumluft gut“ als eine Aussage, ohne Etikett darüber. */
-      if (SF) value = lv === 2 ? 'Fenster schließen' : lv === 1 ? 'Lüften empfohlen' : 'Raumluft gut';
-      return UI.hero({ label: SF ? null : 'Raumluft', value: value, sub: sub, subTone: lv ? 'warn' : helps === false ? null : 'good', center: true });
+      if (SF) value = lv === 2 ? 'Fenster schließen' : lv === 1 ? 'Lüften empfohlen' : odd.length ? 'Lüften nicht nötig' : 'Raumluft gut';
+      return UI.hero({ label: SF ? null : 'Raumluft', value: value, sub: sub, subTone: lv || odd.length ? 'warn' : helps === false ? null : 'good', center: true });
     }
     // Popup v3 stage S7 (richtlinien §4): the hero's statement as the sentence, outdoor air and the airing time as facts.
     if (name === 'stage') {
@@ -274,13 +349,17 @@
       if (mode === 'empty') return UI.stage('status', { tone: 'off', icon: 'mdi:home-thermometer-outline', text: 'Keine Sensoren', facts: f7 });
       var lv7 = V.level(states, { popup_hide: (C && C.hide) || [] }, m.scope);
       var t7, st7 = null;
-      if (mode === 'room' && rooms.length === 1) { st7 = ST[rooms[0].status] || ST.ok; t7 = rooms[0].status === 'ok' ? 'Raumluft gut' : st7.t; }
-      else t7 = lv7 === 2 ? 'Fenster schließen' : lv7 === 1 ? 'Lüften empfohlen' : 'Raumluft gut';
-      var tone7 = st7 ? (st7.tone === 'bad' ? 'bad' : st7.tone === 'warn' ? 'warn' : 'good') : lv7 ? 'warn' : 'good';
-      // Dial (richtlinien §4.8): one segment per room in its coach colour.
+      // #202: a room off by its type speaks with its comfort word (one room) or keeps the house from „Raumluft gut“.
+      var odd7 = lv7 ? [] : rooms.filter(function (x) { return off(x) || x.status === 'feucht'; });
+      if (mode === 'room' && rooms.length === 1) {
+        st7 = off(rooms[0]) ? { tone: rooms[0].comfort.tone } : ST[rooms[0].status] || ST.ok;
+        t7 = off(rooms[0]) ? rooms[0].comfort.word : rooms[0].status === 'ok' ? 'Raumluft gut' : st7.t;
+      } else t7 = lv7 === 2 ? 'Fenster schließen' : lv7 === 1 ? 'Lüften empfohlen' : odd7.length ? 'Lüften nicht nötig' : 'Raumluft gut';
+      var tone7 = st7 ? (st7.tone === 'bad' ? 'bad' : st7.tone === 'warn' ? 'warn' : 'good') : lv7 || odd7.length ? 'warn' : 'good';
+      // Dial (richtlinien §4.8): one segment per room in its coach colour (#202: a room off by comfort in its colour).
       var segs7 = rooms.length > 1 ? rooms.map(function (x) {
-        var sx = ST[x.status] || ST.ok;
-        return { ok: x.status === 'ok', tone: sx.tone === 'bad' ? 'bad' : sx.tone === 'warn' ? 'warn' : 'good', label: x.n || x.name || '' };
+        var sx = off(x) ? { tone: x.comfort.tone } : ST[x.status] || ST.ok;
+        return { ok: x.status === 'ok' && !off(x), tone: sx.tone === 'bad' ? 'bad' : sx.tone === 'warn' ? 'warn' : 'good', label: x.n || x.name || '' };
       }) : null;
       return UI.stage('status', { tone: tone7, icon: lv7 === 2 ? 'mdi:window-closed-variant' : lv7 === 1 ? 'mdi:window-open-variant' : 'mdi:home-thermometer-outline',
         text: t7, facts: f7, segs: segs7 });
@@ -295,7 +374,10 @@
         var g = x.grund || null;
         if (x.status === 'lange' && g) g = String(g).replace(/\s*·\s*Schließen\?$/, '').replace(/^Fenster offen\s+/, '') || null;
         var sb = [g, vals(x) || null].filter(Boolean);
-        return { id: x.k, icon: icon, iconTone: tone, label: x.n, sub: x.status === 'lange' ? sb.join(' · ') : sb, value: st.t, valueTone: st.tone === 'accent' ? null : st.tone,
+        // #202: no airing need → the room type's word („Etwas trocken“, „Warm“) in its tone; outdoor type: no word.
+        var cw = x.status === 'ok' && x.comfort ? x.comfort : null;
+        return { id: x.k, icon: icon, iconTone: tone, label: x.n, sub: x.status === 'lange' ? sb.join(' · ') : sb,
+          value: cw ? (cw.none ? null : cw.word) : st.t, valueTone: cw ? cw.tone || null : st.tone === 'accent' ? null : st.tone,
           /* Weich: Raum mit Handlungsbedarf (lüften, schließen, zu feucht) oder der gerade lüftet als aktive Zeile. */
           active: ['schliessen', 'lange', 'jetzt', 'feucht', 'lueftet'].indexOf(x.status) > -1 };
       });
