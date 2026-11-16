@@ -296,13 +296,99 @@
       + btn + '</div></div>';
   };
 
+  // ── Verlauf (#202, owner 16.11.2026): temperature and humidity of one room over 24 h / 7 / 30 days ──────────
+  // A section under the stage (richtlinien §7.1) with Casora's chart (casora-chart: 24 h from the history, 7/30 days
+  // from the long-term statistics, as the chart tile 27-chart.js) and the range switch under it. Temperature and
+  // humidity are two series with their own units: the chart's own switch picks one. The room type's comfort range
+  // (casoraComfortBands) stands as two dotted lines. On Home a tap on a room row picks the room; the choice and the
+  // range hold for the session (not saved).
+  var SPANS = ['24h', '7d', '30d'], SPAN_LABEL = { '24h': '24 Std.', '7d': '7 Tage', '30d': '30 Tage' };
+  var SEL = { room: null, span: '24h' }, PARTS = [];
+  V.SEL = SEL;
+  V.chartKey = function (k, span) { return 'casora_vent:' + k + '|' + span; };
+  var unitOf = function (hass, id) { var st = hass && hass.states && hass.states[id]; return (st && st.attributes && st.attributes.unit_of_measurement) || ''; };
+  // The room's sensors the rating reads, with the comfort range of its type (°F sensors in °F).
+  V.series = function (x, hass) {
+    hass = hass || haHass();
+    if (!x || !hass) return [];
+    var ids = V.sensorsOf(hass, x.k);
+    var t = x.t != null ? nearest(hass, ids.t, x.t) : ids.t[0], h = x.rh != null ? nearest(hass, ids.rh, x.rh) : ids.rh[0];
+    var B = window.casoraComfortBands;
+    var b = typeof B === 'function' ? B(x.comfort && x.comfort.type ? { type: x.comfort.type } : { room: x.n || '', entity: h || t || undefined, hass: hass }) : null;
+    var out = [];
+    if (t) {
+      var F = /F/i.test(unitOf(hass, t)), cv = function (c) { return F ? Math.round((c * 9 / 5 + 32) * 10) / 10 : c; };
+      out.push({ entity: t, name: 'Temperatur', color: 'var(--casora-color-orange, #DE8A4E)', guides: b ? [cv(b.temp_ideal_min), cv(b.temp_ideal_max)] : null });
+    }
+    if (h) out.push({ entity: h, name: 'Luftfeuchtigkeit', color: 'var(--casora-color-blue, #5B8FC9)', guides: b ? [b.hum_ideal_min, b.hum_ideal_max] : null });
+    return out;
+  };
+  V.chartCfg = function (series, span) {
+    var noEval = function (v) { return window.casoraNoEval ? window.casoraNoEval(v) : (typeof v === 'string' && /^\s*\[\[\[/.test(v) ? '\u200b' + v : v); };
+    return { type: 'custom:casora-chart', kind: 'line', span: span, height: window.innerWidth <= 760 ? 130 : 150, readout: 'own', plate: false,
+      source: span === '24h' ? 'history' : 'stats', bucket: span === '24h' ? '15min' : span === '7d' ? '6h' : '1d',
+      series: series.map(function (x) { return { entity: x.entity, name: noEval(x.name), color: x.color, guides: Array.isArray(x.guides) ? x.guides.map(Number) : undefined }; }) };
+  };
+  // The room the chart shows: the one picked, else the first row with a sensor (the most urgent).
+  var chartRoom = function (rooms, hass) {
+    var ok = rooms.filter(function (x) { return V.series(x, hass).length; });
+    return ok.filter(function (x) { return x.k === SEL.room; })[0] || ok[0] || null;
+  };
+  var remember = function (el) {
+    PARTS = PARTS.filter(function (e) { return e && e.isConnected; });
+    if (el && PARTS.indexOf(el) < 0) PARTS.push(el);
+  };
+  var redraw = function () {
+    PARTS = PARTS.filter(function (e) { return e && e.isConnected; });
+    PARTS.forEach(function (e) { try { if (window.casoraKick) window.casoraKick(e); } catch (er) { /* popup closed */ } });
+  };
+  // Tap on a room row or a range segment. A finger tap counts on touchend (the popup's button-cards cancel the touch,
+  // no click follows on a phone, as 27-chart.js #58); a touch that moved is scrolling.
+  var vHit = function (ev) {
+    var p = (ev.composedPath && ev.composedPath()) || [];
+    for (var i = 0; i < p.length; i++) {
+      var n = p[i];
+      if (n && n.hasAttribute && (n.hasAttribute('data-casora-vroom') || n.hasAttribute('data-casora-vspan'))) return n;
+    }
+    return null;
+  };
+  var vTouch = null, vTouchAt = 0;
+  V.pick = function (ev) {
+    var n = vHit(ev);
+    if (!n) return false;
+    ev.preventDefault(); ev.stopPropagation();
+    if (ev.type === 'touchend') vTouchAt = Date.now();
+    else if (Date.now() - vTouchAt < 700) return false;
+    var sp = n.getAttribute('data-casora-vspan'), rm = n.getAttribute('data-casora-vroom');
+    if (sp && SPAN_LABEL[sp]) SEL.span = sp;
+    if (rm) SEL.room = rm;
+    if (window.casoraHaptic) window.casoraHaptic('selection');
+    window._casoraSuppressDismiss = Date.now() + 600;
+    redraw();
+    return true;
+  };
+  if (document.addEventListener) {
+    document.addEventListener('touchstart', function (ev) {
+      var t = ev.touches && ev.touches.length === 1 && ev.touches[0];
+      if (t && vHit(ev)) vTouch = { x: t.clientX, y: t.clientY, id: t.identifier };
+      else if (!t || !vTouch || vTouch.id !== t.identifier) vTouch = null;
+    }, { capture: true, passive: true });
+    document.addEventListener('touchend', function (ev) {
+      var s0 = vTouch, t = ev.changedTouches && ev.changedTouches[0];
+      vTouch = null;
+      if (!s0 || !t || Math.abs(t.clientX - s0.x) > 10 || Math.abs(t.clientY - s0.y) > 10) return;
+      V.pick(ev);
+    }, true);
+    document.addEventListener('click', V.pick, true);
+  }
+
   /* C (from V.popup, carried into the live cards): { hide: [area ids], scope: null | { key, name, outdoor } }.
      Without C (older callers) the house. */
   var modelOf = function (states, C) {
     var c = C || {};
     return V.model(states, { popup_hide: c.hide || [] }, c.scope === undefined ? null : c.scope);
   };
-  V.sec = function (name, states, C) {
+  V.sec = function (name, states, C, hass, el) {
     var UI = window._casoraUI; if (!UI) return '';
     /* Raumzeilen: Grund und Messwerte als eigene sub-Teile (UI.group rendert sie inline-block),
        damit die Messwerte in die nächste Zeile rutschen statt mit … abgeschnitten zu werden. */
@@ -365,6 +451,9 @@
         text: t7, facts: f7, segs: segs7 });
     }
     if (name === 'rooms') {
+      // #202: with the Verlauf (several rooms) a row picks the chart's room; the picked one is lit.
+      var pickable = !!(C && C.chart) && mode === 'house' && rooms.length > 1, cur = pickable ? chartRoom(rooms, hass) : null;
+      if (pickable) remember(el);
       var rows = rooms.map(function (x) {
         var st = ST[x.status] || ST.ok;
         var icon = x.fenster ? 'mdi:window-open-variant' : x.fenster === false ? 'mdi:window-closed-variant' : 'mdi:home-thermometer-outline';
@@ -379,9 +468,32 @@
         return { id: x.k, icon: icon, iconTone: tone, label: x.n, sub: x.status === 'lange' ? sb.join(' · ') : sb,
           value: cw ? (cw.none ? null : cw.word) : st.t, valueTone: cw ? cw.tone || null : st.tone === 'accent' ? null : st.tone,
           /* Weich: Raum mit Handlungsbedarf (lüften, schließen, zu feucht) oder der gerade lüftet als aktive Zeile. */
-          active: ['schliessen', 'lange', 'jetzt', 'feucht', 'lueftet'].indexOf(x.status) > -1 };
+          active: ['schliessen', 'lange', 'jetzt', 'feucht', 'lueftet'].indexOf(x.status) > -1,
+          entity: pickable && V.series(x, hass).length ? x.k : undefined, noChev: true, selected: !!cur && cur.k === x.k };
       });
-      return rows.length ? UI.group(rows, mode === 'room' ? 'Raumluft' : 'Räume') : '';
+      if (!rows.length) return '';
+      var gh = UI.group(rows, mode === 'room' ? 'Raumluft' : 'Räume');
+      // The row's tap target (data-casora-mi of UI.group) becomes the room pick, not HA's more-info.
+      return pickable && typeof gh === 'string' ? gh.replace(/data-casora-mi="/g, 'data-casora-vroom="') : gh;
+    }
+    if (name === 'chart') {
+      if (mode !== 'house' && mode !== 'room') return '';
+      var cr = chartRoom(rooms, hass), ser = cr ? V.series(cr, hass) : [];
+      if (!ser.length || !window._hpPlantCfg) return '';
+      var key = V.chartKey(cr.k, SEL.span);
+      window._hpPlantCfg[key] = V.chartCfg(ser, SEL.span);
+      if (window._hpPlantMeta) window._hpPlantMeta[key] = [ser[0].name, SEL.span, ser[0].color];
+      if (el) { remember(el); if (window._hpStageChart) window._hpStageChart(el, key); }
+      var segHtml = UI.segments ? UI.segments(SPANS.map(function (sp) { return { label: SPAN_LABEL[sp], active: sp === SEL.span, attrs: { 'data-casora-vspan': sp } }; }), null) : '';
+      var title = mode === 'house' && rooms.length > 1 ? 'Verlauf · ' + cr.n : 'Verlauf';
+      return '<div style="font-family:var(--primary-font-family, system-ui);text-align:left;background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));'
+        + 'border-radius:var(--casora-popup-row-radius, 20px);padding:16px;box-shadow:var(--casora-popup-plate-shadow, none);'
+        + 'backdrop-filter:var(--casora-popup-plate-backdrop, none);-webkit-backdrop-filter:var(--casora-popup-plate-backdrop, none);">'
+        + '<div style="font-size:var(--casora-h15-fs,17px);font-weight:var(--casora-h15-fw,700);letter-spacing:var(--casora-h15-ls,-0.01em);'
+        + 'text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary, var(--primary-text-color)));padding:0 2px;">'
+        + esc(title) + '</div>'
+        + '<div class="hp-chart-slot" style="min-height:' + (window.innerWidth <= 760 ? 170 : 190) + 'px;margin:8px 0 0;pointer-events:auto;"></div>'
+        + '<div style="margin-top:16px;">' + segHtml + '</div></div>';
     }
     if (name === 'empty') {
       /* DP-09: a hint row instead of an empty sheet – and never the other rooms (issue #54). */
@@ -466,9 +578,12 @@
     /* Popup v3 (richtlinien §4 S7): the status stage on top of the left column, the same sections below (soft kit layout). */
     var K = window._casoraSoftKit, UIv = window._casoraUI;
     if (K && K.layout && UIv.v3 && UIv.v3() && UIv.stage) {
-      var cardOf = function (n) { return { card: K.secCard(watch, 'return window._casoraVent ? window._casoraVent.sec(' + JSON.stringify(n) + ', states, ' + JSON.stringify(C) + ') : "";', states) }; };
+      // #202: the Verlauf under the stage; it watches nothing (a redraw would drop the chart), picks redraw it (V.pick).
+      C.chart = !!(window._hpPlantCfg && (m.mode === 'house' || m.mode === 'room'));
+      var cardOf = function (n) { return { card: K.secCard(n === 'chart' ? [] : watch, 'return window._casoraVent ? window._casoraVent.sec(' + JSON.stringify(n) + ', states, ' + JSON.stringify(C) + ', hass, this) : "";', states) }; };
       var fv = { stage: cardOf('stage') };
       var Lv = m.mode === 'outdoor' ? ['out'] : m.mode === 'empty' ? ['empty'] : ['rooms'];
+      if (C.chart && V.sec('chart', states, C)) Lv = ['chart'].concat(Lv);
       var Rv = m.mode === 'outdoor' || m.mode === 'empty' ? [] : ['out', 'coach'];
       // Sections that are empty now (no fine dust, no coach) stay out, as in the old columns.
       Rv = Rv.filter(function (n) { return !!V.sec(n, states, C); });

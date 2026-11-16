@@ -60,6 +60,7 @@ const house = (rooms, bathMin) => {
   return states;
 };
 const rowsOf = (states, here) => V.sec('rooms', states, { hide: [], scope: here === undefined ? null : here }).rows;
+const rowsOf2 = (states, C) => V.sec('rooms', states, C, hass).rows;
 const byName = (rows) => Object.fromEntries(rows.map((r) => [r.label, [r.value, r.valueTone]]));
 let n = 0;
 const eq = (label, got, want) => { n++; assert.deepEqual(got, want, label); };
@@ -128,5 +129,27 @@ st = house(five, 70);
 eq('fallback: backend words', byName(rowsOf(st)), { 'Küche': ['Jetzt lüften', 'warn'], 'Bad EG': ['Zu feucht', 'bad'], 'Bad OG': ['Gut', null],
   'Schlafzimmer': ['Gut', null], 'Wohnzimmer': ['Gut', null] });
 window.casoraComfortLevel = keep;
+
+// ── Verlauf: the room's sensors with its type's comfort range, 24 h from the history, 7/30 days from the statistics ──
+window._hpPlantCfg = {};
+window._hpPlantMeta = {};
+window._casoraUI.segments = (items) => ({ segs: items });
+st = house(five, 70);
+const bad = V.read(st).rooms.find((x) => x.k === 'bad_eg');
+const ser = V.series(bad, hass);
+eq('series: temperature orange, humidity blue, the bathroom range', ser.map((x) => [x.entity, x.name, x.guides]),
+  [['sensor.bad_eg_temperatur', 'Temperatur', [21, 24]], ['sensor.bad_eg_feuchte_70', 'Luftfeuchtigkeit', [40, 65]]]);
+eq('series: theme colours', ser.map((x) => /--casora-color-(orange|blue)/.exec(x.color)[1]), ['orange', 'blue']);
+eq('series: a room with a humidity sensor only: one line', V.series(V.read(st).rooms.find((x) => x.k === 'bad_og'), hass).map((x) => x.name), ['Luftfeuchtigkeit']);
+eq('series: a room without sensors in its area: none', V.series(V.read(st).rooms.find((x) => x.k === 'wohnzimmer'), hass), []);
+eq('chart config per range', ['24h', '7d', '30d'].map((sp) => { const c = V.chartCfg(ser, sp); return [c.kind, c.source, c.bucket, c.readout, c.series[1].guides]; }),
+  [['line', 'history', '15min', 'own', [40, 65]], ['line', 'stats', '6h', 'own', [40, 65]], ['line', 'stats', '1d', 'own', [40, 65]]]);
+const C = { hide: [], scope: null, chart: true };
+eq('rows: rooms with sensors pick the chart, the first one lit', rowsOf2(st, C).map((r) => [r.label, r.entity || null, r.selected]),
+  [['Küche', null, false], ['Bad EG', 'bad_eg', true], ['Bad OG', 'bad_og', false], ['Schlafzimmer', null, false], ['Wohnzimmer', null, false]]);
+V.SEL.room = 'nichts'; V.SEL.span = '7d';
+eq('unknown pick: the first room with sensors', V.sec('chart', st, C, hass).includes('Verlauf · Bad EG'), true);
+eq('the chart is registered for the room and range', window._hpPlantCfg[V.chartKey('bad_eg', '7d')].source, 'stats');
+eq('no chart outdoors', V.sec('chart', st, { hide: [], scope: { key: 'garten', name: 'Garten' }, chart: true }, hass), '');
 
 console.log(`raumklima_popup_komfort: ${n} checks ok`);

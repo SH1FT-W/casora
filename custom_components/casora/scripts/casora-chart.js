@@ -3,7 +3,7 @@
 // 2 px line, area 12 % → 0, dotted guide lines, scale on the right, reading through the
 // big number (own or the popup's hero number) instead of a floating tooltip.
 //   { type: 'custom:casora-chart', kind: 'line'|'bar'|'heat'|'spark', mini (heat on a tile), span: '48h' | '7d' | '1y',
-//     series: [{ entity, name, color, unit, decimals, map }], source: 'auto'|'history'|'stats'|'change',
+//     series: [{ entity, name, color, unit, decimals, map, guides: [low, high] (dotted reference lines, line only) }], source: 'auto'|'history'|'stats'|'change',
 //     agg: 'mean'|'max', bucket: '1h', period: 'hour'|'day'|'month' (statistics period = bar bucket),
 //     height, y: { min, max, labels, span (smallest range shown) }, step, readout: 'own'|'hero'|'none', legend,
 //     selected: index or entity of the series shown first (switch),
@@ -606,6 +606,10 @@
       var lab = y.labels, fmt = function (v) { return lab ? C.tr(lab[Math.round(v)] || '') : C.nf(v, v % 1 ? 1 : 0); };
       if (lab && !spark) padR = 12 + 6.5 * Math.max.apply(null, lab.map(function (l) { return C.tr(l).length; }));
       var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+      // guides (#202): a series' reference band [low, high] (the room type's comfort range) as two dotted lines; the
+      // scale takes them in, so the line reads against the band.
+      var gd = !spark && vals.length && Array.isArray(s0.guides) ? s0.guides.filter(function (g) { return g != null && isFinite(g); }) : [];
+      gd.forEach(function (g) { lo = Math.min(lo, +g); hi = Math.max(hi, +g); });
       // y.span: the smallest range the scale shows (water temperature 2 °C, 26.11.9) – a sensor stepping 0.2 °C
       // filled the whole height (25.1 ↔ 25.3 drawn as a zigzag from top to bottom). Centred on the values.
       var ys = C.minSpan(y, this._unit(s0));
@@ -635,6 +639,10 @@
           svg.appendChild(el('text', { x: x, y: Hh - 6, 'text-anchor': 'middle' }, k.mon ? C.mon(k.t) : k.day ? (span > 8 * DAY ? C.dm(k.t) : C.wd(k.t)) : C.hm(k.t, me._h12())));
         });
       }
+      gd.forEach(function (g) {
+        svg.appendChild(el('line', { x1: padL, x2: W - padR, y1: Y(+g), y2: Y(+g), class: 'gd',
+          style: 'stroke:' + C.color(s0.color) + ';stroke-opacity:.55;stroke-width:1.25;stroke-dasharray:1 4;stroke-linecap:round' }));
+      });
       var P = B.map(function (b) { return b.map(function (p) { return [X(p[0]), Y(p[1])]; }); });
       var uid = 'g' + Math.random().toString(36).slice(2, 8), defs = el('defs');
       svg.appendChild(defs);
