@@ -10,20 +10,23 @@ Now every string that is exactly an old ID becomes the new one: values, list ite
 longer texts (templates "[[[ … ]]]" a user wrote stay as they are). Left alone:
   - button_card_templates and casora_template_fingerprint: shipped templates hold IDs of their own (sensor.time,
     input_select.casora_*); a changed template no longer matches its fingerprint and template_refresh would keep it
-    as the user's forever,
+    as the user's forever. Only the scene picks the Studio copies into them follow (replace_scene_picks; a template
+    that was Casora's stays Casora's: its stored print moves along),
   - values under service / perform_action / action: renaming the entity script.foo does not rename its action.
 A list (or dict) that already holds the new ID loses the old one instead of getting it twice.
 
 Renames are collected for a second (renaming a device renames all its entities, one event each) into one mapping –
 a→b then b→c is a→c, a swap through a temporary ID stays a swap – and applied in one pass: one save per dashboard,
-with a version before and after (Studio › Versions, as template_refresh.py), the settings with a copy in
-/config/casora_sicherungen first. Only Casora dashboards in storage mode (casora_template_fingerprint); the locked
+with a version before and after (Studio › Versions, origin "rename"; a run of renames shares one version and
+they never push the user's own saves out, versions.py), the settings with a copy in /config/casora_sicherungen
+first (the newest BACKUPS_KEEP stay). Only Casora dashboards in storage mode (casora_template_fingerprint); the locked
 comparison dashboards of the test HAs stay. Renaming back undoes it. Not followed: renames while Casora is not
 loaded, YAML dashboards, www/casora/einstellungen.js, stored versions.
 """
 
 from __future__ import annotations
 
+import copy
 import json
 import logging
 import os
@@ -42,6 +45,8 @@ DELAY = 1.0
 # Keys whose values are never rewritten (anywhere in the tree), and top-level keys of a dashboard left out.
 SKIP_KEYS = frozenset({"service", "perform_action", "action"})
 SKIP_TOP = frozenset({"button_card_templates", "casora_template_fingerprint"})
+# Settings backups (casora_sicherungen/rename_*_settings.json) kept.
+BACKUPS_KEEP = 5
 
 
 def compose(mapping: dict[str, str], old: str, new: str) -> dict[str, str]:
@@ -92,15 +97,84 @@ def replace_ids(obj: Any, mapping: dict[str, str], skip_top: frozenset = frozens
             y, k = replace_ids(val, mapping)
             n += k
             res[key] = y
-        # Keys: renamed unless the new one is there already (then the old entry stays as it is).
-        for key in list(res):
-            if isinstance(key, str) and key in mapping and mapping[key] not in res and mapping[key] not in new_keys.values():
-                new_keys[key] = mapping[key]
-        if new_keys:
-            res = {new_keys.get(k, k): v for k, v in res.items()}
-            n += len(new_keys)
+        # Keys: renamed unless two would end up the same (then the renamed one keeps its old key).
+        keys = list(res)
+        target = {k: (mapping[k] if isinstance(k, str) and k in mapping else k) for k in keys}
+        while True:
+            count: dict = {}
+            for k in keys:
+                count[target[k]] = count.get(target[k], 0) + 1
+            clash = [k for k in keys if target[k] != k and count[target[k]] > 1]
+            if not clash:
+                break
+            for k in clash:
+                target[k] = k
+        moved = sum(1 for k in keys if target[k] != k)
+        if moved:
+            res = {target[k]: v for k, v in res.items()}
+            n += moved
         return (res, n) if n else (obj, 0)
     return obj, 0
+
+
+def replace_scene_picks(templates: Any, mapping: dict[str, str], prints: Any = None) -> tuple[Any, Any, int]:
+    """Inside button_card_templates only the scene picks the Studio copies there (template_print.apply_scene_pick:
+    casora_scene_row's variables, the nav's and room filter overlays' scene keys). Returns (templates, fingerprint,
+    count). The nav's and the scene row's picks are outside the fingerprint; an overlay's are inside, so a template
+    whose stored print matched before gets its new print (it stays Casora's for template_refresh), any other print
+    stays as it is (the template was the user's already)."""
+    from .template_print import FILTER_OVERLAY, NAV, SCENE_KEYS, SCENE_LIST_KEYS, SCENE_ROW, _each, template_print
+
+    if not isinstance(templates, dict) or not mapping:
+        return templates, prints, 0
+    out = dict(templates)
+    fp = dict(prints) if isinstance(prints, dict) else prints
+    total = 0
+    for name, tpl in templates.items():
+        t = copy.deepcopy(tpl)
+        n = 0
+
+        def put(o: dict, keys: tuple) -> None:
+            nonlocal n
+            for k in keys:
+                if k in o:
+                    o[k], c = replace_ids(o[k], mapping)
+                    n += c
+
+        if name == SCENE_ROW and isinstance(t, dict) and isinstance(t.get("variables"), dict):
+            put(t["variables"], SCENE_KEYS)
+
+        def fn(o: dict) -> None:
+            if o.get("type") == NAV:
+                put(o, SCENE_KEYS)
+            elif o.get("type") == FILTER_OVERLAY and o.get("room"):
+                put(o, SCENE_LIST_KEYS)
+
+        _each(t, fn)
+        if not n:
+            continue
+        before, after = template_print(tpl, name), template_print(t, name)
+        if before != after and isinstance(fp, dict) and fp.get(name) == before:
+            fp[name] = after
+        out[name] = t
+        total += n
+    return (out, fp, total) if total else (templates, prints, 0)
+
+
+def replace_dashboard(cfg: Any, mapping: dict[str, str]) -> tuple[Any, int]:
+    """A Casora dashboard: everything but the templates and their fingerprint, in the templates the scene picks."""
+    from .template_print import FINGERPRINT_KEY
+
+    new_cfg, n = replace_ids(cfg, mapping, SKIP_TOP)
+    if isinstance(cfg, dict) and "button_card_templates" in cfg:
+        tpl, fp, k = replace_scene_picks(cfg["button_card_templates"], mapping, cfg.get(FINGERPRINT_KEY))
+        if k:
+            new_cfg = dict(new_cfg)
+            new_cfg["button_card_templates"] = tpl
+            if FINGERPRINT_KEY in cfg:
+                new_cfg[FINGERPRINT_KEY] = fp
+            n += k
+    return new_cfg, n
 
 
 def replace_entity_id(obj: Any, old: str, new: str) -> tuple[Any, int]:
@@ -124,7 +198,7 @@ async def async_follow_renames(hass: HomeAssistant, mapping: dict[str, str]) -> 
         for url, (_dash, cfg) in dashes.items():
             if test_ha and LOCKED.match(url):
                 continue
-            new_cfg, n = replace_ids(cfg, mapping, SKIP_TOP)
+            new_cfg, n = replace_dashboard(cfg, mapping)
             if n:
                 todo[url] = new_cfg
         # Desktop and its phone layout together (one version for both), as template_refresh.py.
@@ -141,7 +215,7 @@ async def async_follow_renames(hass: HomeAssistant, mapping: dict[str, str]) -> 
                 await _snap(hass, head, mob, {"kind": "initial"})
                 for u in urls:
                     await dashes[u][0].async_save(todo[u])
-                await _snap(hass, head, mob, {"kind": "save", "summary": ""})
+                await _snap(hass, head, mob, {"kind": "save", "summary": json.dumps({"origin": "rename", "renamed": mapping})})
             except Exception:  # noqa: BLE001 - one dashboard must not stop the others
                 _LOGGER.exception("Casora: %s not updated to the new entity IDs", ", ".join(urls))
                 continue
@@ -153,12 +227,19 @@ async def async_follow_renames(hass: HomeAssistant, mapping: dict[str, str]) -> 
             new_data, n = replace_ids(data, mapping) if isinstance(data, dict) else (data, 0)
             if n:
                 folder = hass.config.path("casora_sicherungen")
-                path = os.path.join(folder, f"rename_{dt_util.now().strftime('%Y-%m-%d_%H%M%S')}_settings.json")
+                path = os.path.join(folder, f"rename_{dt_util.now().strftime('%Y-%m-%d_%H%M%S_%f')}_settings.json")
 
                 def _backup() -> None:
                     os.makedirs(folder, exist_ok=True)
-                    with open(path, "w", encoding="utf-8") as fh:
+                    with open(path, "x", encoding="utf-8") as fh:
                         json.dump(data, fh, ensure_ascii=False, indent=1)
+                    # Only the newest few (the names sort by time).
+                    old = sorted(f for f in os.listdir(folder) if f.startswith("rename_") and f.endswith("_settings.json"))
+                    for f in old[:-BACKUPS_KEEP]:
+                        try:
+                            os.remove(os.path.join(folder, f))
+                        except OSError:
+                            pass
 
                 await hass.async_add_executor_job(_backup)
                 await store.async_save(new_data)

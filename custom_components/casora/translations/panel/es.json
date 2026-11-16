@@ -392,6 +392,7 @@
     "Imported": "Importado",
     "Moved from Hemma": "Trasladado desde Hemma",
     "Templates refreshed after a Casora update": "Plantillas renovadas tras una actualización de Casora",
+    "Entity IDs changed in Home Assistant": "ID de entidad cambiados en Home Assistant",
     "1 dashboard brought up to the new templates": "1 panel actualizado a las nuevas plantillas",
     "{n} dashboards brought up to the new templates": "{n} paneles actualizados a las nuevas plantillas",
     "see Rewind to undo": "ver Rebobinar para deshacer",

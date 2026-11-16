@@ -295,7 +295,9 @@
     // Erster Stand aus Anlegen, Import oder Umzug (_flowDone).
     // update: nach einem Casora-Update von der Integration erneuerte Vorlagen (template_refresh.py).
     const ORIGIN = { created: "Created", imported: "Imported", moved: "Moved from Hemma",
-      update: "Templates refreshed after a Casora update" };
+      update: "Templates refreshed after a Casora update",
+      // rename: entity IDs changed in HA, followed by the integration (entity_renames.py, #206).
+      rename: "Entity IDs changed in Home Assistant" };
     if (s.origin && ORIGIN[s.origin]) bits.push(t(ORIGIN[s.origin]));
     ["added", "removed", "changed"].forEach((k) => { if (!Array.isArray(s[k])) s[k] = []; });
     const all = sentences(s);

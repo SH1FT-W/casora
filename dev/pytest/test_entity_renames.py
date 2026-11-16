@@ -202,10 +202,13 @@ async def test_reload_one_listener_and_bad_settings(hass: HomeAssistant, setup) 
 
     dash = FakeDash({"casora_template_fingerprint": {}, "views": [{"cards": [{"entity": OLD}]}]})
     _dashes(hass, **{"d": dash})
+    listeners = hass.bus.async_listeners().get(er.EVENT_ENTITY_REGISTRY_UPDATED)
     with patch("custom_components.casora.async_register_built_in_panel"), patch("custom_components.casora.async_remove_panel"):
         assert await hass.config_entries.async_reload(setup.entry_id)
         await hass.async_block_till_done()
     store = _store(hass)
+    # One listener after the reload, as before it.
+    assert hass.bus.async_listeners().get(er.EVENT_ENTITY_REGISTRY_UPDATED) == listeners
     reg = er.async_get(hass)
     reg.async_get_or_create("light", "test", "lamp-1", suggested_object_id="lamp_old")
     # A settings store that cannot be read: logged, the dashboards still follow.
@@ -213,13 +216,17 @@ async def test_reload_one_listener_and_bad_settings(hass: HomeAssistant, setup) 
         reg.async_update_entity(OLD, new_entity_id=NEW)
         await _settle(hass)
     assert dash.saves == 1 and dash.cfg["views"][0]["cards"][0]["entity"] == NEW
-    # Unloaded: nothing follows any more.
+    # Unloaded right after a rename: the collected change still goes through, exactly once.
+    reg.async_update_entity(NEW, new_entity_id=OLD)
     with patch("custom_components.casora.async_remove_panel"):
         assert await hass.config_entries.async_unload(setup.entry_id)
         await hass.async_block_till_done()
-    reg.async_update_entity(NEW, new_entity_id=OLD)
     await _settle(hass)
-    assert dash.saves == 1
+    assert dash.saves == 2 and dash.cfg["views"][0]["cards"][0]["entity"] == OLD
+    # Unloaded: nothing follows any more.
+    reg.async_update_entity(OLD, new_entity_id=NEW)
+    await _settle(hass)
+    assert dash.saves == 2
 
 
 def test_replace_ids_exact_only() -> None:
@@ -234,4 +241,88 @@ def test_replace_ids_exact_only() -> None:
     # A key that exists in its new form already stays.
     assert replace_entity_id({OLD: 1, NEW: 2}, OLD, NEW) == ({OLD: 1, NEW: 2}, 0)
     assert compose(compose(compose({}, "a", "t"), "b", "a"), "t", "b") == {"a": "b", "b": "a", "t": "b"}
+    # Keys swap too; two keys that would end up the same keep theirs.
+    from custom_components.casora.entity_renames import replace_ids  # noqa: PLC0415
+
+    assert replace_ids({"a": 1, "b": 2}, {"a": "b", "b": "a"}) == ({"b": 1, "a": 2}, 2)
+    assert replace_ids({"a": 1, "b": 2}, {"a": "c", "b": "c"}) == ({"a": 1, "b": 2}, 0)
     assert compose(compose({}, "a", "b"), "b", "a") == {"b": "a"}
+
+
+async def test_scene_picks_in_templates(hass: HomeAssistant, setup) -> None:
+    from custom_components.casora.template_print import fingerprint_of  # noqa: PLC0415
+
+    old, new = "scene.evening_old", "scene.evening_new"
+    tpl = {
+        "casora_scene_row": {"variables": {"scenes": [old, "scene.b"], "scene_exclude": None, "scene_order": [old],
+                                           "scene_colors": {old: "#f00"}, "other": old}},
+        "casora_header": {"custom_fields": {"nav": {"card": {"type": "custom:casora-nav", "scenes": [old],
+                                                             "scene_colors": {old: "#f00"}, "label": old}}},
+                          "variables": {"x": old}},
+        "casora_overlays": {"cards": [{"type": "custom:casora-filter-overlay", "room": "Living", "scene_exclude": [old]}]},
+    }
+    fp = fingerprint_of(tpl)
+    dash = FakeDash({"casora_template_fingerprint": fp, "button_card_templates": copy.deepcopy(tpl), "views": []})
+    _dashes(hass, **{"d": dash})
+    reg = er.async_get(hass)
+    reg.async_get_or_create("scene", "test", "ev", suggested_object_id="evening_old")
+    reg.async_update_entity(old, new_entity_id=new)
+    await _settle(hass)
+    t = dash.cfg["button_card_templates"]
+    row = t["casora_scene_row"]["variables"]
+    nav = t["casora_header"]["custom_fields"]["nav"]["card"]
+    assert row["scenes"] == [new, "scene.b"] and row["scene_order"] == [new] and row["scene_colors"] == {new: "#f00"}
+    assert nav["scenes"] == [new] and nav["scene_colors"] == {new: "#f00"}
+    assert t["casora_overlays"]["cards"][0]["scene_exclude"] == [new]
+    # Everything else in the templates stays; the templates stay Casora's (stored prints match), so the next
+    # Casora update still refreshes all three.
+    assert row["other"] == old and nav["label"] == old and t["casora_header"]["variables"]["x"] == old
+    assert dash.cfg["casora_template_fingerprint"] == fingerprint_of(t)
+    assert {k: v for k, v in fingerprint_of(t).items() if k != "casora_overlays"} == \
+        {k: v for k, v in fp.items() if k != "casora_overlays"}
+    from custom_components.casora.template_print import refresh_dashboard  # noqa: PLC0415
+
+    ship = {k: {**copy.deepcopy(v), "new_var": 1} for k, v in tpl.items()}
+    _cfg, res = refresh_dashboard(dash.cfg, ship, mobile=True, home_vars={})
+    assert res["updated"] == 3 and res["kept"] == 0, res
+
+
+async def test_renames_do_not_push_out_user_versions(hass: HomeAssistant, setup) -> None:
+    from custom_components.casora.versions import KEEP, _snap, _renamed  # noqa: PLC0415
+
+    dash = FakeDash({"casora_template_fingerprint": {}, "views": [{"cards": [{"entity": "light.l0"}]}]})
+    _dashes(hass, **{"d": dash})
+    reg = er.async_get(hass)
+    reg.async_get_or_create("light", "test", "l", suggested_object_id="l0")
+    for i in range(KEEP + 5):
+        # The user saves in the Studio, then renames the lamp.
+        dash.cfg["n"] = i
+        await _snap(hass, "d", None, {"kind": "save", "summary": ""})
+        reg.async_update_entity(f"light.l{i}", new_entity_id=f"light.l{i + 1}")
+        await _settle(hass)
+    assert dash.cfg["views"][0]["cards"][0]["entity"] == f"light.l{KEEP + 5}"
+    vs = _versions(hass, "d")
+    ren = [v for v in vs if _renamed(v) is not None]
+    assert len(ren) <= 3 and _renamed(vs[0]) == {f"light.l{KEEP + 4}": f"light.l{KEEP + 5}"}
+    assert len([v for v in vs if _renamed(v) is None]) == KEEP
+
+    # Renames one after the other share one version.
+    for i in range(KEEP + 5, KEEP + 10):
+        reg.async_update_entity(f"light.l{i}", new_entity_id=f"light.l{i + 1}")
+        await _settle(hass)
+    vs2 = _versions(hass, "d")
+    assert len([v for v in vs2 if _renamed(v) is not None]) == len(ren)
+    assert _renamed(vs2[0])[f"light.l{KEEP + 4}"] == f"light.l{KEEP + 10}"
+
+
+async def test_settings_backups_unique_and_few(hass: HomeAssistant, setup) -> None:
+    from custom_components.casora.entity_renames import BACKUPS_KEEP, async_follow_renames  # noqa: PLC0415
+    from custom_components.casora.settings import _store  # noqa: PLC0415
+
+    _dashes(hass)
+    await _store(hass).async_save({"night_entity": "light.n0"})
+    for i in range(BACKUPS_KEEP + 3):
+        await async_follow_renames(hass, {f"light.n{i}": f"light.n{i + 1}"})
+    folder = hass.config.path("casora_sicherungen")
+    assert len([f for f in os.listdir(folder) if f.startswith("rename_")]) == BACKUPS_KEEP
+    assert await _store(hass).async_load() == {"night_entity": f"light.n{BACKUPS_KEEP + 3}"}
