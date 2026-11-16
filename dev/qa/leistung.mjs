@@ -5,7 +5,10 @@
 //   CASORA_URL=http://localhost:<port> node dev/qa/leistung.mjs [Optionen]
 //     --runs 3                  Läufe je Messung (Median)
 //     --dash <url_path>         Desktop-Dashboard (Standard: test-neu bzw. erstes Casora-Dashboard); Handy: <url>-mobile
-//     --geraete desktop,handy   desktop = Chromium 1440×900, handy = WebKit 393×852 (iPhone)
+//     --geraete desktop,handy   desktop = Chromium 1440×900, handy = WebKit 393×852 (iPhone), handy4x = Chromium 393×852 with CPU 4× slower
+//     --teile …,popups,raumtipp,wischen,glocke,chips,schalter,schoner,studiotipp   interactions (leistung-tippen.mjs, not in the default)
+//     --profil                  one more run per interaction under the CDP profiler (Chromium): top self times by function/file
+//     --popdash <url_path>      dashboard with real device tiles for the interactions (default qa-arbeit)
 //     --teile laden,popup,raum,studio,update,leck   Messungen (Standard alle; Studio nur am Desktop)
 //     --speicher <min>          zusätzlich: Speicher nach <min> Minuten Leerlauf mit Zustandsänderungen (Chromium)
 //     --json <datei>            Ergebnis schreiben
@@ -26,6 +29,7 @@
 // (sensor.casora_leistung_test) und den Wert eines gezeigten Leistungssensors (nur Wegwerf-HA!).
 import fs from 'node:fs';
 import { tokens, ws } from './ws.mjs';
+import { makeTippen } from './leistung-tippen.mjs';
 
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ? process.argv[i + 1] : d; };
 process.env.CASORA_THEME = process.env.CASORA_THEME || 'Casora';
@@ -41,7 +45,10 @@ const SPEICHER = Number(arg('speicher', 0));
 const VIEWS = {
   desktop: { width: 1440, height: 900 },
   handy: { width: 393, height: 852, mobile: true, safari: true, scale: 3 },
+  // Phone in Chromium with the CPU slowed down 4× (CDP): closer to a real phone in the HA app than the Mac's WebKit.
+  handy4x: { width: 393, height: 852, mobile: true, scale: 3, cpu: 4 },
 };
+const PROFIL = process.argv.includes('--profil');
 
 // ── Dashboard wählen ────────────────────────────────────────────────────────
 const c = await ws();
@@ -56,6 +63,9 @@ const isCasora = (u) => cfgs[u] && /casora_room|casora_mobile/.test(JSON.stringi
 const DASH = arg('dash') || (isCasora('test-neu') ? 'test-neu' : Object.keys(cfgs).find((u) => !/-mobile$/.test(u) && isCasora(u)));
 if (!DASH) { console.log('FAIL leistung – kein Casora-Dashboard'); process.exit(1); }
 const PHONE = cfgs[DASH + '-mobile'] ? DASH + '-mobile' : DASH;
+// Interactions: tiles with real devices are on qa-arbeit (stress-setup.mjs); test-neu has the special tiles.
+const POPDASH = arg('popdash', cfgs['qa-arbeit'] ? 'qa-arbeit' : null);
+const POPPHONE = POPDASH && cfgs[POPDASH + '-mobile'] ? POPDASH + '-mobile' : PHONE;
 const views = (cfgs[DASH].views || []).map((v, i) => ({ path: v.path || String(i), json: JSON.stringify(v) }));
 const HOME = views[0].path;
 const TOKEN = (await tokens()).access_token;
@@ -81,6 +91,7 @@ const INSTR = (opt) => {
   // Voll-Durchläufe: querySelectorAll('*') auf Dokument, Elementen und Shadow-Roots.
   for (const P of [Document.prototype, Element.prototype, DocumentFragment.prototype]) {
     const q = P.querySelectorAll;
+    (L.qsaOrig = L.qsaOrig || new Map()).set(P, q);
     P.querySelectorAll = function (sel) {
       if (sel === '*') {
         L.qsaStar++;
@@ -91,6 +102,23 @@ const INSTR = (opt) => {
     };
   }
   const MO = window.MutationObserver;
+  // Interactions (leistung-tippen.mjs): last DOM change in watched roots (document, popup, Studio panel …), the time
+  // of the last pointer/touch release, and button-cards drawn since a mark (L.bcHits, only while L.bcWatch is set).
+  L.lastMut = 0; L.up = null; L.bcWatch = null; L.bcHits = [];
+  const watched = new WeakSet();
+  L.watch = (root) => { if (!root || watched.has(root)) return; watched.add(root);
+    new MO(() => { L.lastMut = now(); }).observe(root, { subtree: true, childList: true, attributes: true, characterData: true }); };
+  // First element matching sel below root, through shadow roots (stops at the first hit).
+  L.deep = (root, sel) => { const st = [root]; while (st.length) { const r = st.pop(); if (!r) continue;
+    const hit = r.querySelector && r.querySelector(sel); if (hit) return hit;
+    const qo = L.qsaOrig.get(r.nodeType === 9 ? Document.prototype : r.nodeType === 11 ? DocumentFragment.prototype : Element.prototype);
+    // Unwrapped querySelectorAll: a measuring walk is no full walk of the dashboard.
+    const all = qo ? qo.call(r, '*') : []; for (const e of all) if (e.shadowRoot) st.push(e.shadowRoot); } return null; };
+  L.vis = (el, minW = 20, minH = 20) => { if (!el || !el.isConnected) return false; const r = el.getBoundingClientRect();
+    return r.width >= minW && r.height >= minH && r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth
+      && (!el.checkVisibility || el.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true })); };
+  document.addEventListener('DOMContentLoaded', () => L.watch(document.documentElement));
+  for (const t of ['pointerup', 'touchend', 'mouseup']) window.addEventListener(t, () => { if (L.up === null) L.up = now(); }, true);
   window.MutationObserver = class extends MO {
     constructor(cb) { super(cb); L.mo.created++; }
     observe(...a) { if (!this.__lpo) { this.__lpo = 1; L.mo.observing++; } return super.observe(...a); }
@@ -120,6 +148,7 @@ const INSTR = (opt) => {
         const e = now();
         L.renders[name] = (L.renders[name] || 0) + 1; L.rtime[name] = (L.rtime[name] || 0) + (e - t); L.lastRender = e;
         if (L.renderLog) L.renderLog.push(name === 'button-card' ? 'bc:' + [].concat((this._config || {}).template || []).join('+') : name);
+        if (L.bcWatch && name === 'button-card' && L.bcWatch.test([].concat((this._config || {}).template || []).join('+'))) L.bcHits.push([this, e]);
         if (name === 'button-card' && L.firstTile === null) {
           const self = this;
           requestAnimationFrame(() => {
@@ -193,7 +222,8 @@ async function openBrowser(name) {
   // LEISTUNG_INIT=<datei.js>: zusätzliches Skript vor allem anderen (A/B-Versuch ohne HA-Änderung).
   if (process.env.LEISTUNG_INIT) await o.context.addInitScript({ path: process.env.LEISTUNG_INIT });
   let cdp = null;
-  if (!VIEWS[name].safari) { cdp = await o.context.newCDPSession(o.page); await cdp.send('Performance.enable'); }
+  if (!VIEWS[name].safari) { cdp = await o.context.newCDPSession(o.page); await cdp.send('Performance.enable');
+    if (VIEWS[name].cpu) await cdp.send('Emulation.setCPUThrottlingRate', { rate: VIEWS[name].cpu }); }
   return { ...o, cdp };
 }
 
@@ -386,16 +416,19 @@ async function timers(page) {
 }
 
 // ── Ablauf ──────────────────────────────────────────────────────────────────
+const KATALOG = {};
+const T = makeTippen({ BASE, DASH, PHONE, POPDASH, POPPHONE, SNAP, diff, H });
 const R = { meta: { base: BASE, dash: DASH, phone: PHONE, runs: RUNS, theme: process.env.CASORA_THEME, at: new Date().toISOString(), power: POWER, light: LIGHT }, geraete: {} };
 const roomViews = views.slice(1).map((v) => v.path);
 const pulseView = (views.find((v) => /casora_popup_battery|pulse/.test(v.json)) || {}).path;
 
 for (const g of GERAETE) {
-  const phone = g === 'handy'; const touch = !!VIEWS[g].mobile;
+  const phone = !!VIEWS[g].mobile; const touch = !!VIEWS[g].mobile;
   const url = '/' + (phone ? PHONE : DASH) + '/' + HOME;
   const res = R.geraete[g] = { kalt: [], warm: [], popup: {}, raum: [], studio: [], update: null, timer: null, leck: null, netz: null };
   console.log(`── ${g} (${url})`);
-  for (let i = 0; i < RUNS; i++) {
+  const ALT = ['laden', 'popup', 'raum', 'update', 'leck'].some((t) => TEILE.has(t));
+  for (let i = 0; ALT && i < RUNS; i++) {
     const o = await openBrowser(g);
     const rows = netRecorder(o.page);
     try {
@@ -446,6 +479,34 @@ for (const g of GERAETE) {
         res.leck = { geoeffnet: opened, ...alive, vorher: a, nach10Popups: b, nach65s: c, intervalleDanach: t.intervalle, moDanach: t.mutationObserver };
       }
     } finally { await o.browser.close(); }
+  }
+  // Interactions (leistung-tippen.mjs): each run in a fresh browser; --profil adds one profiled run (Chromium).
+  const TIPP = ['popups', 'raumtipp', 'wischen', 'glocke', 'chips', 'schalter', 'schoner', 'studiotipp'].filter((t) => TEILE.has(t)
+    && !(phone && t === 'studiotipp') && !(!phone && (t === 'wischen' || t === 'chips')));
+  if (TIPP.length) {
+    res.tippen = {}; res.tippenProfil = {}; res.katalog = null;
+    const reps = RUNS + (PROFIL && !VIEWS[g].safari ? 1 : 0);
+    for (let i = 0; i < reps; i++) {
+      const prof = i === RUNS;
+      const o = await openBrowser(g);
+      const add = (obj) => { for (const [k, v] of Object.entries(obj || {})) for (const x of [].concat(v)) {
+        if (prof) { if (!res.tippenProfil[k]) res.tippenProfil[k] = x; } else (res.tippen[k] = res.tippen[k] || []).push(x); } };
+      try {
+        await T.gotoFull(o.page, url);
+        const ctx = { phone, touch, cfgs, prof };
+        for (const t of TIPP) {
+          const t0 = Date.now();
+          try {
+            if (t === 'popups') {
+              if (!KATALOG[phone ? 'handy' : 'desktop']) KATALOG[phone ? 'handy' : 'desktop'] = await T.discover(o, phone, touch, cfgs);
+              res.katalog = KATALOG[phone ? 'handy' : 'desktop'];
+              add(Object.fromEntries(Object.entries(await T.popups(o, { ...ctx, katalog: res.katalog })).map(([k, v]) => ['popup:' + k, v])));
+            } else add(await T[t](o, ctx));
+          } catch (e) { add({ [t + ':abbruch']: { fehler: String(e.message || e).slice(0, 160) } }); }
+          console.log(`  ${g} ${prof ? 'Profil' : 'Lauf ' + (i + 1)}: ${t} ${((Date.now() - t0) / 1000).toFixed(0)} s`);
+        }
+      } finally { await o.browser.close(); }
+    }
   }
   // Studio-Start (Desktop): bis _state geladen, Vorschau steht.
   if (!phone && TEILE.has('studio')) {
@@ -517,6 +578,12 @@ for (const [g, r] of Object.entries(R.geraete)) {
   }
   if (r.update && r.update.ruhe60s) { s.ruhe60s_renders = r.update.ruhe60s.bc; s.ruhe60s_vollDurchlaeufe = r.update.ruhe60s.qsaStar; s.ruhe60s_requestUpdateLeer = r.update.ruhe60s.ruLeer; s.ruhe60s_timeouts = r.update.ruhe60s.timeouts; }
   if (r.update) for (const k of ['fremd', 'leistung', 'licht']) if (r.update[k]) { s['update_' + k + '_renders'] = r.update[k].bc; s['update_' + k + '_renderMs'] = r.update[k].renderMs; s['update_' + k + '_vollDurchlaeufe'] = r.update[k].qsaStar; }
+  if (r.tippen) for (const [k, arr] of Object.entries(r.tippen)) {
+    const ok = arr.filter((x) => x && x.inhalt != null);
+    s['tipp_' + k] = ok.length ? { inhalt: median(ok.map((x) => x.inhalt)), steht: median(ok.map((x) => x.steht)), renderMs: median(ok.map((x) => x.renderMs)),
+      evalMs: median(ok.map((x) => x.evalMs)), longMs: median(ok.map((x) => x.longMs)), stateMs: median(ok.map((x) => x.stateMs)), n: ok.length }
+      : { fehler: (arr.find((x) => x && x.fehler) || {}).fehler || 'keine Messung' };
+  }
   if (r.timer) { s.intervalle = r.timer.intervalle; s.mutationObserver = r.timer.mutationObserver.observing; }
   if (r.leck) { s.leck_popupKartenLebendig = r.leck.made ? `${r.leck.alive}/${r.leck.made}` : null; s.leck_listener = r.leck.nach65s.listeners - r.leck.vorher.listeners; s.leck_knoten = r.leck.nach65s.nodes - r.leck.vorher.nodes; s.leck_heapMB = +(r.leck.nach65s.heapMB - r.leck.vorher.heapMB).toFixed(1); }
   if (r.netz) {
