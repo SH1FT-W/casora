@@ -43,6 +43,23 @@ assert.equal(picked([{ entity: 'calendar.familie', name: 'Familie' }])(both), 'M
 assert.equal(picked([{ entity: 'calendar.familie' }, { entity: 'calendar.arbeit', tile: false }])(both), 'Morgen 15:00 Zahnarzt', 'a calendar picked only for the popup (tile: false) is no appointment either');
 assert.equal(picked([])(both), 'Heute 11:00 Meeting', 'an empty pick means all calendars');
 assert.equal(picked(['calendar.arbeit'])(both), 'Heute 11:00 Meeting', 'a pick given as plain ids works too');
+// #205: the waste calendar picked in the Studio next to an own calendar put the next pickup in the line twice
+// („Mittwoch Restmüll · Mittwoch Restmüll“) once the own calendar had nothing before it. The waste part already shows
+// the pickup, so a waste calendar is no next event while it does; the next own event stands there, else only the waste.
+{
+  const line = (list, entities, S, W) => { window.casoraDevice = { waste: () => W }; window.casoraSettings = () => ({ calendars: list }); try { return window.casoraHomeNext({ states: S, entities, locale: { language: 'de' } }, on, now); } finally { delete window.casoraSettings; } };
+  const wcs = { 'calendar.familie': { platform: 'google' }, 'calendar.abfall': { platform: 'waste_collection_schedule' } };
+  const pick = ['calendar.familie', 'calendar.abfall'];
+  const bin = { bins: [{ label: 'Restmüll', days: 2 }] };
+  const pickup = cal('Restmüll', '2026-11-11 00:00:00', { all_day: true });
+  assert.equal(line(pick, wcs, { 'calendar.abfall': pickup, 'calendar.familie': { state: 'off', attributes: {} } }, bin), 'Mittwoch Restmüll', '#205: only the pickup, once');
+  assert.equal(line(pick, wcs, { 'calendar.abfall': pickup, 'calendar.familie': cal('Zahnarzt', '2026-11-12 15:00:00') }, bin), 'Donnerstag 15:00 Zahnarzt · Mittwoch Restmüll', '#205: the next own event, even after the pickup');
+  assert.equal(line(pick, { 'calendar.familie': { platform: 'google' } }, { 'calendar.abfall': pickup }, { calendar: 'calendar.abfall', ...bin }), 'Mittwoch Restmüll', '#205: the waste calendar set in the settings too');
+  assert.equal(line(pick, { 'calendar.familie': { platform: 'google' }, 'calendar.abfall': { platform: 'local_calendar' } }, { 'calendar.abfall': pickup }, bin), 'Mittwoch Restmüll', '#205: an own calendar with the same pickup (same day, same bin)');
+  assert.equal(line(pick, wcs, { 'calendar.abfall': pickup }, { bins: [] }), 'Mittwoch Restmüll', '#205: without a pickup in the waste part the picked waste calendar still shows');
+  assert.equal(line(pick, wcs, { 'calendar.familie': cal('Restmüll rausstellen', '2026-11-10 19:00:00') }, bin), 'Morgen 19:00 Restmüll rausstellen · Mittwoch Restmüll', '#205: an own event on another day stays');
+  assert.equal(line(pick, wcs, { 'calendar.familie': cal('Bio-Markt', '2026-11-11 09:00:00') }, { bins: [{ label: 'Bio', days: 2, re: /bio/i }] }), 'Mittwoch 09:00 Bio-Markt · Mittwoch Bio', '#205: an own event on the pickup day with another name stays');
+}
 // #189 (r68, English Studio preview): the line stands in a data-no-i18n block, so the bin name went in untranslated
 // („Restmüll“ under an English title). It is translated as on the waste tile (casoraTr, a joined name „Bio + Restmüll“
 // part by part); the calendar title is the user's own text and stays as it is.

@@ -207,7 +207,10 @@ Kern-Integrationen (Schlüssel im Test geprüft):
   an jedem Arbeitstag wie der Sensor heißt; `holiday` (HA core) einen Feiertagskalender mit `platform: holiday`. Beide
   zählen ohne Studio-Auswahl nicht als Termin-Kalender, ebenso Kalender von `waste_collection_schedule` (V26,
   `00-finder.js` `casoraCalendars` für Kalender-Kachel, Begrüßungszeile und Bildschirmschoner; versteckte Kalender über
-  `hass.entities[id].hidden`; Tests `dev/unit/kalender_regel_v26.mjs`, `dev/unit/begruessung_naechstes.mjs`).
+  `hass.entities[id].hidden`; Tests `dev/unit/kalender_regel_v26.mjs`, `dev/unit/begruessung_naechstes.mjs`). In der
+  Begrüßungszeile gilt ein Abfall-Kalender (`platform: waste_collection_schedule` oder der Abfall-Kalender aus den
+  Einstellungen) auch mit Studio-Auswahl nicht als nächster Termin, solange der Abfall-Teil eine Abholung zeigt (#205,
+  `casoraHomeNext`); Kalender-Kachel und -Popup listen ihn weiter.
 - Ladesäulen in der Nähe (#168, `charging.py`): Standort des Autos aus dem `device_tracker` seines Geräts (Zustand
   nicht `home`, Attribute `latitude`/`longitude`), sonst `hass.config.latitude/longitude`. Daten von Open Charge Map
   (`/v3/poi`, Schlüssel im Kopf `X-API-Key`, `compact=false&verbose=false`): `AddressInfo.Title/AddressLine1/Town/

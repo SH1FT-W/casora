@@ -1607,16 +1607,25 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     var W = null;
     try { W = window.casoraDevice && window.casoraDevice.waste ? window.casoraDevice.waste(hass, {}) : null; } catch (e) { W = null; }
     var best = null;
+    var bins = W && Array.isArray(W.bins) ? W.bins.filter(function (b) { return b && b.days != null && isFinite(b.days) && b.days >= 0; }).sort(function (a, b) { return a.days - b.days; }) : [];
+    // #205: while the waste part shows a pickup, a waste calendar picked in the Studio is no next event (the pickup
+    // stood in the line twice), nor is an event of another calendar named exactly like a bin on its pickup day.
+    var sameBin = function (title, d) {
+      var n = Math.round((new Date(d.getFullYear(), d.getMonth(), d.getDate()) - day0) / 86400000), m = String(title).trim().toLowerCase();
+      return bins.some(function (b) { return b.days === n && String(b.label || '').trim().toLowerCase() === m; });
+    };
     // The calendars that count, as on the calendar tile and the screensaver (V26, casoraCalendars); one shown only in
     // the popup (tile: false) is no appointment.
     var cals = window.casoraCalendars ? window.casoraCalendars(hass, null) : [];
     cals.forEach(function (c) {
       var id = c.entity;
       if (c.tile === false || !S[id]) return;
+      if (bins.length && isWasteCalendar(hass, id, W && W.calendar)) return;
       var a = S[id].attributes || {};
       if (!a.message || !a.start_time) return;
       var d = new Date(String(a.start_time).replace(' ', 'T'));
-      if (!isNaN(d) && (!best || d < best.d)) best = { d: d, title: a.message, allDay: !!a.all_day, on: S[id].state === 'on' };
+      if (isNaN(d) || (bins.length && sameBin(a.message, d))) return;
+      if (!best || d < best.d) best = { d: d, title: a.message, allDay: !!a.all_day, on: S[id].state === 'on' };
     });
     var parts = [];
     if (best) {
@@ -1624,7 +1633,6 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
       parts.push((best.on && !best.allDay ? tr('Jetzt') : word(best.d) + hm) + ' ' + best.title);
     }
     // The line is no-i18n (the calendar title is the user's own): the bin name is translated here, as on the waste tile.
-    var bins = W && Array.isArray(W.bins) ? W.bins.filter(function (b) { return b && b.days != null && isFinite(b.days) && b.days >= 0; }).sort(function (a, b) { return a.days - b.days; }) : [];
     if (bins.length) parts.push(word(new Date(day0.getFullYear(), day0.getMonth(), day0.getDate() + bins[0].days)) + ' ' + tr(bins[0].label));
     return parts.join(' · ');
   };
