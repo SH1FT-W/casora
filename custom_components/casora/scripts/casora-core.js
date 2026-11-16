@@ -9520,8 +9520,9 @@ window.casoraMenuGlass = {
         if (!el) continue;
         el.style.animationName = 'none';
         el.style.opacity = '';
-        // Read it back, or the two writes coalesce and nothing restarts.
-        void el.offsetWidth;
+        // Read it back, or the two writes coalesce and nothing restarts. A style read is enough to restart the
+        // animation (Chromium and WebKit); offsetWidth forced a layout of the freshly built popup as well.
+        void getComputedStyle(el).animationName;
         el.style.animationName = '';
       }
     }

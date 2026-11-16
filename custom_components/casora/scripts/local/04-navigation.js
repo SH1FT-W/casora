@@ -302,6 +302,9 @@
         var root = document.documentElement;
         window._hmnResvObs = new MutationObserver(function () {
           if (!(window._casoraSoft && window._casoraSoft()) || !document.querySelector('.hmn-dock button-card')) return;
+          // Already 8px inline: setting it again changes nothing. Skips a forced style recalculation on every
+          // style change of <html> (popups lock the page scroll there on each open).
+          if (root.style.getPropertyValue('--casora-mhead-reserve').trim() === '8px') return;
           if (getComputedStyle(root).getPropertyValue('--casora-mhead-reserve').trim() !== '8px') root.style.setProperty('--casora-mhead-reserve', '8px');
         });
         window._hmnResvObs.observe(root, { attributes: true, attributeFilter: ['style'] });
