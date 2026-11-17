@@ -1,8 +1,7 @@
 // @deckt: custom_components/casora/panel/casora-panel-i18n.js#ready, custom_components/casora/panel/casora-panel-versions.js#hass
 // Template-update toast in Studio: waits for the language table (window.casoraI18n.ready) before it
-// builds the text, so a Dutch user gets Dutch even when nl.json arrives after the WebSocket reply.
-// Loads the real Studio modules against a fake casora-panel. Checks: Dutch for count 1 and 2,
-// English locale resolves at once without a fetch, a missing nl.json gives English after at most 3 s.
+// builds the toast text and the log line, so a Dutch user gets Dutch even when nl.json arrives after
+// the WebSocket reply. Loads the real Studio modules against a fake casora-panel.
 // Node 22, no HA:  node dev/unit/i18n_toast_ready.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -15,17 +14,21 @@ const NL = JSON.parse(read('i18n/nl.json'));
 const DUTCH1 = '1 dashboard naar de nieuwe sjablonen gebracht – ongedaan maken via Tijdreis';
 const DUTCH2 = '2 dashboards naar de nieuwe sjablonen gebracht – ongedaan maken via Tijdreis';
 const ENGLISH1 = '1 dashboard brought up to the new templates – see Rewind to undo';
+// The log line is the toast text, then the dashboard names.
+const DUTCH1_LOG = DUTCH1 + ': Mock';
+const ENGLISH1_LOG = ENGLISH1 + ': Mock';
 const tick = () => new Promise((r) => setTimeout(r, 0));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// nl: 'slow' (ms) | 'never' | 'fail'. Returns the window, the requested URLs and a fresh panel factory.
+// nl: 'slow' (ms until nl.json arrives) | 'never' (fetch hangs) | 'fail' (network error).
 function studio(nl) {
   const win = {};
   class Panel {
-    constructor() { this._hass = null; this.style = {}; this.shadowRoot = null; this.events = []; }
+    constructor() { this._hass = null; this.style = {}; this.shadowRoot = null; this.events = []; this.logs = []; }
     get hass() { return this._hass; }
     set hass(h) { this._hass = h; }
     dispatchEvent(e) { this.events.push(e); }
+    _log(msg) { this.logs.push(msg); }
   }
   let resolveDefined;
   const defined = new Promise((r) => { resolveDefined = r; });
@@ -52,13 +55,18 @@ function studio(nl) {
   return { win, requested, Panel };
 }
 
-// Sets hass on a new panel and waits until a toast arrives (or until the deadline).
-async function toastFor(env, { locale, count }, deadlineMs = 4000) {
+// A panel that gets hass in the given language (the setter also sets the Studio language).
+function panelFor(env, locale, { admin = false, count = 1 } = {}) {
   const p = new env.Panel();
   p.hass = {
-    locale: { language: locale }, user: { is_admin: true },
+    locale: { language: locale }, user: { is_admin: admin },
     callWS: async () => ({ notice: { count, dashboards: ['Mock'] } }),
   };
+  return p;
+}
+
+// Waits until a toast arrives on the panel (or until the deadline); returns its message.
+async function toastOf(p, deadlineMs = 4000) {
   const until = Date.now() + deadlineMs;
   for (;;) {
     const ev = p.events.find((e) => e.type === 'hass-notification');
@@ -68,52 +76,84 @@ async function toastFor(env, { locale, count }, deadlineMs = 4000) {
   }
 }
 
+// ready() must resolve within 50 ms (no waiting for a fetch).
+async function assertReadyAtOnce(env, why) {
+  assert.equal(typeof env.win.casoraI18n.ready, 'function', 'casoraI18n.ready exists');
+  const r = await Promise.race([env.win.casoraI18n.ready().then(() => 'resolved'), sleep(50).then(() => 'late')]);
+  assert.equal(r, 'resolved', why);
+}
+
+const nlFetches = (env) => env.requested.filter((u) => /\/i18n\/nl\.json/.test(u)).length;
+
 const results = [];
 async function check(name, fn) {
   try { await fn(); results.push(['ok', name]); } catch (e) { results.push(['FAIL', name + ': ' + e.message.split('\n')[0]]); }
 }
 
-await check('slow nl.json, count 1: toast is Dutch', async () => {
+await check('slow nl.json, count 1: toast and log line are Dutch, one fetch', async () => {
   const env = studio(30);
   await tick(); await tick();
-  assert.equal(await toastFor(env, { locale: 'nl', count: 1 }), DUTCH1);
+  const p = panelFor(env, 'nl', { admin: true, count: 1 });
+  assert.equal(await toastOf(p), DUTCH1);
+  assert.equal(p.logs[0], DUTCH1_LOG);
+  assert.equal(nlFetches(env), 1, 'nl.json fetched once');
 });
 
 await check('slow nl.json, count 2: Dutch with n = 2', async () => {
   const env = studio(30);
   await tick(); await tick();
-  assert.equal(await toastFor(env, { locale: 'nl', count: 2 }), DUTCH2);
+  const p = panelFor(env, 'nl', { admin: true, count: 2 });
+  assert.equal(await toastOf(p), DUTCH2);
 });
 
 await check('English locale: ready() resolves at once, no fetch', async () => {
   const env = studio(30);
   await tick(); await tick();
-  const p = new env.Panel();
-  p.hass = { locale: { language: 'en' }, user: { is_admin: false } };
-  assert.equal(typeof env.win.casoraI18n.ready, 'function', 'casoraI18n.ready exists');
-  const winner = await Promise.race([env.win.casoraI18n.ready().then(() => 'resolved'), sleep(50).then(() => 'late')]);
-  assert.equal(winner, 'resolved');
+  panelFor(env, 'en');
+  await assertReadyAtOnce(env, 'ready() resolves at once for English');
   assert.deepEqual(env.requested, [], 'nothing fetched for English');
 });
 
-await check('nl.json never arrives: ready() resolves within 3 s, toast is English', async () => {
-  const env = studio('never');
+await check('language without a table (xx): ready() resolves at once, no fetch', async () => {
+  const env = studio(30);
   await tick(); await tick();
-  const p = new env.Panel();
-  p.hass = { locale: { language: 'nl' }, user: { is_admin: false } };
-  const t0 = Date.now();
-  const res = await Promise.race([env.win.casoraI18n.ready().then(() => Date.now() - t0), sleep(3500).then(() => -1)]);
-  assert.ok(res >= 0 && res < 3500, 'ready() resolved in time: ' + res + ' ms');
-  assert.equal(await toastFor(env, { locale: 'nl', count: 1 }), ENGLISH1);
+  panelFor(env, 'xx');
+  await assertReadyAtOnce(env, 'ready() resolves at once without a table');
+  assert.deepEqual(env.requested, [], 'nothing fetched for a language without a table');
 });
 
-await check('nl.json fails to load: ready() never rejects, toast is English', async () => {
+await check('table already loaded: a second ready() resolves at once, no second fetch', async () => {
+  const env = studio(30);
+  await tick(); await tick();
+  panelFor(env, 'nl');
+  await env.win.casoraI18n.ready();
+  assert.equal(nlFetches(env), 1, 'first load fetched nl.json once');
+  panelFor(env, 'nl');
+  await assertReadyAtOnce(env, 'ready() resolves at once when the table is loaded');
+  assert.equal(nlFetches(env), 1, 'no second fetch');
+});
+
+await check('nl.json hangs: toast after one 3 s window, English toast and log line', async () => {
+  const env = studio('never');
+  await tick(); await tick();
+  const p = panelFor(env, 'nl', { admin: true, count: 1 });
+  const t0 = Date.now();
+  const msg = await toastOf(p, 4000);
+  const elapsed = Date.now() - t0;
+  assert.equal(msg, ENGLISH1);
+  assert.equal(p.logs[0], ENGLISH1_LOG);
+  assert.ok(elapsed >= 2900 && elapsed < 3500, 'toast after about 3 s, not at once: ' + elapsed + ' ms');
+});
+
+await check('nl.json network error: toast English at once, ready() never rejects', async () => {
   const env = studio('fail');
   await tick(); await tick();
-  const p = new env.Panel();
-  p.hass = { locale: { language: 'nl' }, user: { is_admin: false } };
+  const p = panelFor(env, 'nl', { admin: true, count: 1 });
+  const t0 = Date.now();
+  assert.equal(await toastOf(p), ENGLISH1);
+  assert.ok(Date.now() - t0 < 1000, 'failed load does not wait for the 3 s window');
+  assert.equal(p.logs[0], ENGLISH1_LOG);
   await env.win.casoraI18n.ready();
-  assert.equal(await toastFor(env, { locale: 'nl', count: 1 }), ENGLISH1);
 });
 
 for (const [s, n] of results) console.log(s, n);
