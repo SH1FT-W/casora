@@ -791,6 +791,30 @@ class CasoraSmartRow extends HTMLElement {
     return hidden;
   }
 
+  // _isCardHidden for every card with a single style recalculation. Asking card by card while the loop
+  // also writes wrapper styles (or opens a hidden wrapper to probe it) forced one recalculation per card,
+  // the largest cost of a room switch on the phone. Reads first, writes after.
+  _hiddenFlags() {
+    const wrappers = this._wrappers || [], cards = this._cards || [];
+    const n = Math.max(wrappers.length, cards.length);
+    const out = new Array(n).fill(false);
+    const probe = [], opened = [];
+    for (let i = 0; i < n; i++) {
+      const wrapper = wrappers[i], card = cards[i];
+      if (wrapper && wrapper.dataset && wrapper.dataset.off === '1') out[i] = true;
+      else if (!card) out[i] = false;
+      else if (card.hidden || card.style.display === 'none') out[i] = true;
+      else probe.push(i);
+    }
+    for (const i of probe) {
+      const wrapper = wrappers[i];
+      if (wrapper && wrapper.style.display === 'none') { wrapper.style.display = ''; opened.push(wrapper); }
+    }
+    for (const i of probe) out[i] = getComputedStyle(cards[i]).display === 'none';
+    for (const wrapper of opened) wrapper.style.display = 'none';
+    return out;
+  }
+
   _updateWrapperVisibility() {
     if (!this._initialized) return;
 
@@ -814,10 +838,11 @@ class CasoraSmartRow extends HTMLElement {
     if (!this._sortEnabled) {
       // Repeat at intervals to catch both quick and slow card renders.
       const sync = () => {
+        const hiddenNow = this._hiddenFlags();
         this._wrappers.forEach((wrapper, i) => {
           const card = this._cards[i];
           if (!card) return;
-          const hide = isFilterHidden(card) || this._isCardHidden(card, wrapper)
+          const hide = isFilterHidden(card) || hiddenNow[i]
             || this._heldClosed(i);
           if (!hide) delete wrapper.dataset.showWhen;
           wrapper.style.display = hide ? 'none' : '';
@@ -947,6 +972,7 @@ class CasoraSmartRow extends HTMLElement {
     const snap = !!window._casoraNoFilterAnim;
 
     const show = (firstCall) => {
+      const hiddenNow = this._hiddenFlags();
       this._wrappers.forEach((wrapper, i) => {
         const card = this._cards[i];
         if (!card) return;
@@ -955,7 +981,7 @@ class CasoraSmartRow extends HTMLElement {
           this._hiddenState[i] = true;
           return;
         }
-        const hidden = this._isCardHidden(card, wrapper);
+        const hidden = hiddenNow[i];
         const was    = this._hiddenState[i];
         this._hiddenState[i] = hidden;
 
@@ -994,10 +1020,11 @@ class CasoraSmartRow extends HTMLElement {
       // A room without tiles that shows its empty hint stays visible; otherwise every state change
       // showed the row (show() above) and this sweep hid it again 500 ms later: the hint flickered.
       let anyVisible = this._emptyHintShown();
+      const hiddenNow = this._hiddenFlags();
       this._wrappers.forEach((wrapper, i) => {
         const card = this._cards[i];
         if (!card) return;
-        if (isFilterHidden(card) || this._isCardHidden(card, wrapper)) {
+        if (isFilterHidden(card) || hiddenNow[i]) {
           this._hiddenState[i] = true;
           if (!this._animHiding.has(wrapper)) hideWrapper(wrapper, false);
         } else {
@@ -1370,16 +1397,18 @@ class CasoraSmartRow extends HTMLElement {
     }, { passive: true });
 
     setTimeout(() => {
+      const hiddenNow = this._hiddenFlags();
       this._wrappers.forEach((wrapper, i) => {
-        if (!this._isCardHidden(this._cards[i], wrapper)) return;
+        if (!hiddenNow[i]) return;
         wrapper.style.display = 'none';
         // Seeded so the first reveal reads as a transition and animates open.
         this._hiddenState[i] = true;
       });
 
       const active = [], inactive = [];
+      const hiddenAll = this._hiddenFlags();
       this._config.cards.forEach((_, i) => {
-        (this._isActive(i) ? active : inactive).push(i);
+        (this._isActive(i, hiddenAll[i]) ? active : inactive).push(i);
       });
       const order = [...active, ...inactive];
 
@@ -1491,9 +1520,10 @@ class CasoraSmartRow extends HTMLElement {
       || getComputedStyle(ha).getPropertyValue('--casora-active-overlay-opacity').trim()) === '1');
   }
 
-  _isActive(index) {
+  // hidden: the card's _isCardHidden answer when the caller already has it (_hiddenFlags).
+  _isActive(index, hidden) {
     if (this._heldClosed(index)) return false;
-    if (this._isCardHidden(this._cards[index], this._wrappers[index])) return false;
+    if (hidden === undefined ? this._isCardHidden(this._cards[index], this._wrappers[index]) : hidden) return false;
     // casora-local-patch: always_active verankert eine Karte vorne in der Aktiv-Gruppe (Kamera-Karussell).
     if (cardFlag(resolveCardConfig(this._config.cards[index]), 'always_active')) return true;
     const tiles = this._isActiveByTiles(index);
@@ -1558,7 +1588,8 @@ class CasoraSmartRow extends HTMLElement {
     if (Date.now() - (this._builtAt || 0) > SETTLE_MS || (window.casoraPopup && window.casoraPopup.surface)) return this._updateSort();
     if (!this._sortEnabled || !this._wrappers.length) return;
     const now = new Set();
-    this._config.cards.forEach((_, i) => { if (this._isActive(i)) now.add(i); });
+    const hiddenNow = this._hiddenFlags();
+    this._config.cards.forEach((_, i) => { if (this._isActive(i, hiddenNow[i])) now.add(i); });
     if (now.size === this._activeSet.size && [...now].every((i) => this._activeSet.has(i))) return;
     this._activeSet = now;
     this._activationOrder = [...now].sort((a, b) => a - b);
@@ -1574,8 +1605,9 @@ class CasoraSmartRow extends HTMLElement {
     if (this._sortSettled() && sortMode() === 'open') return;
 
     const newActive = new Set();
+    const hiddenNow = this._hiddenFlags();
     this._config.cards.forEach((_, i) => {
-      if (this._isActive(i)) newActive.add(i);
+      if (this._isActive(i, hiddenNow[i])) newActive.add(i);
     });
 
     let changed = false;

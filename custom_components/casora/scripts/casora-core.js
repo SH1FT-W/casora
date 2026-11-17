@@ -21,6 +21,34 @@
   };
 })();
 // casora-esc:end
+// casora-rootvar:begin
+// casoraRootVar(name): a custom property of <html> (design switches such as --casora-tile-fallback-name), as
+// getComputedStyle(document.documentElement).getPropertyValue(name) would return it. Tile templates read a few of these
+// per tile; while a room or the page is being built, every such read forced a style recalculation of the page. The
+// values are kept until the next frame, and dropped at once when <html>'s attributes (HA themes are inline styles
+// there) or a stylesheet in <head> change, or the window is resized (media queries).
+(function () {
+  if (window.casoraRootVar) return;
+  var cache = null, cs = null;
+  var drop = function () { cache = null; cs = null; };
+  window.casoraRootVar = function (name) {
+    if (!cache) {
+      cs = getComputedStyle(document.documentElement);
+      cache = new Map();
+      requestAnimationFrame(drop);
+    }
+    var v = cache.get(name);
+    if (v === undefined) { v = cs.getPropertyValue(name); cache.set(name, v); }
+    return v;
+  };
+  try {
+    new MutationObserver(drop).observe(document.documentElement, { attributes: true });
+    if (document.head) new MutationObserver(drop).observe(document.head, { childList: true, subtree: true, characterData: true, attributes: true });
+  } catch (e) { /* no observer: frame cache only */ }
+  window.addEventListener('resize', drop, true);
+  document.addEventListener('load', drop, true);
+})();
+// casora-rootvar:end
 // casora-noeval:begin – the same block in every file that loads on its own (checked by dev/unit/no_eval.mjs).
 // button-card runs every config string that is "[[[ … ]]]" after trim() as JavaScript (name, label, variables,
 // nested cards …). Card configs carry keys and look the text up at render time (tools/noeval-check.mjs); where a
@@ -9492,8 +9520,9 @@ window.casoraMenuGlass = {
         if (!el) continue;
         el.style.animationName = 'none';
         el.style.opacity = '';
-        // Read it back, or the two writes coalesce and nothing restarts.
-        void el.offsetWidth;
+        // Read it back, or the two writes coalesce and nothing restarts. A style read is enough to restart the
+        // animation (Chromium and WebKit); offsetWidth forced a layout of the freshly built popup as well.
+        void getComputedStyle(el).animationName;
         el.style.animationName = '';
       }
     }
