@@ -16723,15 +16723,17 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   function tlEntries(head, now) {
     now = now || Date.now();
     var texts = tlTexts(head), today = dayStartOf(now), ms = (head.members || []);
+    // The timeline is built outside UI.group, which translates the rows: translate here (#175).
+    var tr = window.casoraTr || function (x) { return x; };
     var out = [];
     ms.forEach(function (m, i) {
       if (!i) return;
       var d = dayStartOf(m.when), prev = ms[i - 1];
       var dayLine = d !== today && dayStartOf(prev.when) !== d;
       var dd = Math.round((today - d) / 86400000);
-      out.push({ m: m, text: texts[i], time: hmOf(m.when),
-        day: dayLine ? (dd === 1 ? 'Gestern' : new Date(m.when).toLocaleDateString(window.casoraLocale ? window.casoraLocale() : 'de-DE', { weekday: 'long' })) : '',
-        rel: i <= TL_REL && now - m.when < 864e5 ? ago(m.when) : '' });
+      out.push({ m: m, text: tr(texts[i]), time: hmOf(m.when),
+        day: dayLine ? (dd === 1 ? tr('Gestern') : new Date(m.when).toLocaleDateString(window.casoraLocale ? window.casoraLocale() : 'de-DE', { weekday: 'long' })) : '',
+        rel: i <= TL_REL && now - m.when < 864e5 ? tr(ago(m.when)) : '' });
     });
     return out;
   }
@@ -17925,6 +17927,9 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     }
     menu.appendChild(inner);
     document.body.appendChild(menu);
+    // The bell hangs on <body>, outside the tiles and popups the dashboard translation watches: watch it too,
+    // so a text that skips tr (the timeline, #175) is still translated. Own names stay (data-no-i18n).
+    if (typeof window.casoraTrWatch === 'function') window.casoraTrWatch(menu);
     fade();
     paint(body);
     bindOpens(body, null);
