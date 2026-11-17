@@ -35,7 +35,7 @@ const w = { addEventListener: () => {} };
 const doc = { querySelector: () => ({ hass: { user: { id: 'kind' }, states: { 'switch.pumpe': { state: 'on', attributes: { friendly_name: 'Pumpe' } } } } }),
   addEventListener: () => {}, removeEventListener: () => {}, body: { appendChild: (h) => asked.push(h) },
   createElement: () => { const el = { classList: { add() {} }, addEventListener() {}, remove() {},
-    attachShadow: () => ({ set innerHTML(v) {}, querySelector: (s) => (el[s] = el[s] || { focus() { asked.push('focus' + s); } }) }) }; return el; } };
+    setAttribute() {}, attachShadow: () => ({ set innerHTML(v) {}, querySelector: (s) => (el[s] = el[s] || { focus() { asked.push('focus' + s); } }) }) }; return el; } };
 new Function('window', 'document', 'WeakSet', 'CustomEvent', 'setTimeout',
   block('(function () {\n  var hassUser', '})();\n') + block('(function () {\n  if (window.__casoraAskFirst)', '})();\n'))(w, doc, WeakSet, class {}, (f) => f());
 const V = { show_security: true, security_lock_entity: 'lock.tuer', casora_entity_users: { 'lock.tuer': ['admin'] }, casora_confirm_entities: ['switch.pumpe'] };

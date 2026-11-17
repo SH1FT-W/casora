@@ -1481,7 +1481,7 @@
             _tw.setAttribute('data-casora-room-bg-twin', this._config.room);
             _tw.style.cssText = blurLayer.style.cssText;
             Object.assign(_tw.style, { position: 'fixed', zIndex: '-1', width: 'calc(100vw + 192px)', height: 'calc(100lvh + 192px)' });
-            document.body.appendChild(_tw);
+            document.body.appendChild(_tw);  // casora-window: none, the room background twin, no text
             const _sync = () => {
               _tw.style.display = blurLayer.style.display;
               _tw.style.opacity = blurLayer.style.opacity;
@@ -1678,7 +1678,7 @@
       const b = this._blurLayerEl;
       if (!this._showing || _activeOverlay !== this || !b) return;
       if (!b.isConnected && this._appendTarget) { this._appendTarget.appendChild(b); _blurLayers.add(b); }
-      if (this._blurTwinEl && !this._blurTwinEl.isConnected) document.body.appendChild(this._blurTwinEl);
+      if (this._blurTwinEl && !this._blurTwinEl.isConnected) document.body.appendChild(this._blurTwinEl);  // casora-window: none, the room background twin, no text
       if (b.style.display === 'none' || b.style.opacity !== '1') {
         b.style.transition = 'none';
         b.style.display = 'block';
@@ -1860,7 +1860,7 @@
       box.setAttribute('aria-hidden', 'true');
       box.style.cssText = 'position:fixed;left:-10000px;top:0;width:360px;height:1px;overflow:hidden;opacity:0;pointer-events:none;contain:strict;';
       box.appendChild(el);
-      document.body.appendChild(box);
+      document.body.appendChild(box);  // casora-window: none, an off-screen scene row primer, translated as a button-card
       _scenePrimer = box;
       if (this._hass) { try { el.hass = this._hass; } catch (_) {} }
       const done = () => {

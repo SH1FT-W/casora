@@ -695,7 +695,7 @@
     root.querySelector('.no').onclick = api.close;
     root.querySelector('.yes').onclick = save;
     document.addEventListener('keydown', key, true);
-    document.body.appendChild(host);
+    host.setAttribute('data-casora-window', ''); document.body.appendChild(host);
     // Only a popup open behind it: the element stays around after a popup has closed.
     if (pop && pop.hasAttribute('open')) popWatch = setInterval(function () { if (!pop.isConnected || !pop.hasAttribute('open') || pop.hasAttribute('closing')) api.close(); }, 250);
     setTimeout(function () { var n = o.first && $(o.first); if (n) n.focus(); }, 30);

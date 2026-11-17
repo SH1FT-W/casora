@@ -1100,7 +1100,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
       if (hint) el._casoraTitleHint = hint;
       el.hass = h;
       el.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;pointer-events:none;';
-      document.body.appendChild(el);
+      document.body.appendChild(el);  // casora-window: none, an off-screen button-card, translated as a button-card
       setTimeout(function () {
         var settled = false;
         var fin = function (ok) {
@@ -2056,7 +2056,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
         el.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;'
           + 'opacity:0;pointer-events:none;';
         el.setAttribute('aria-hidden', 'true');
-        document.body.appendChild(el);
+        document.body.appendChild(el);  // casora-window: none, an off-screen button-card, translated as a button-card
         _contactCard = el;
       } catch (e) {
         return false;

@@ -929,7 +929,7 @@
     var mask = holeMask(r, rad);
     veil.style.webkitMaskImage = mask; veil.style.maskImage = mask;
     lift.style.cssText = 'left:' + r.left + 'px;top:' + r.top + 'px;width:' + r.width + 'px;height:' + r.height + 'px;border-radius:' + rad + 'px;';
-    document.body.appendChild(host);
+    host.setAttribute('data-casora-window', ''); document.body.appendChild(host);
     paint();
     var pane = host.shadowRoot.querySelector('.pane');
     place(pane, r, phone);

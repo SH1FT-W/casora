@@ -14,7 +14,7 @@ const NO_CARD_INSIDE = new Set(['ha-card', 'ha-ripple', 'ha-svg-icon', 'ha-state
     probe.style.cssText = 'position:fixed;top:0;left:0;right:0;width:0;height:0;pointer-events:none;visibility:hidden;';
     probe.style.paddingLeft  = 'env(safe-area-inset-left, 0px)';
     probe.style.paddingRight = 'env(safe-area-inset-right, 0px)';
-    document.body.appendChild(probe);
+    document.body.appendChild(probe);  // casora-window: none, a hidden probe that measures the safe area, no text
     const cs = getComputedStyle(probe);
     const l = cs.paddingLeft, r = cs.paddingRight;
     probe.remove();
@@ -655,7 +655,7 @@ class CasoraSmartRow extends HTMLElement {
     const unit = (u) => {
       const d = document.createElement('div');
       d.style.cssText = `position:fixed;top:0;left:0;width:0;height:100${u};visibility:hidden;`;
-      document.body.appendChild(d);
+      document.body.appendChild(d);  // casora-window: none, a hidden probe that measures a CSS unit, no text
       const h = Math.round(d.getBoundingClientRect().height);
       d.remove();
       return h;
@@ -681,7 +681,7 @@ class CasoraSmartRow extends HTMLElement {
       + 'padding:10px;white-space:pre-wrap;');
     out.textContent = 'CASORA ROW PROBE  (tap to dismiss)\n\n' + rows.join('\n');
     out.addEventListener('click', () => out.remove());
-    document.body.appendChild(out);
+    document.body.appendChild(out);  // casora-window: none, developer probe output, stays literal
   }
 
   disconnectedCallback() {

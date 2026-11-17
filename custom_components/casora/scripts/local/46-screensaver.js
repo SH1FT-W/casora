@@ -1254,7 +1254,7 @@
       endSoon(/down|start/.test(ev.type) ? 1500 : 300);
     };
     ['pointerdown', 'touchstart', 'pointerup', 'touchend', 'mousedown', 'mouseup', 'click', 'contextmenu'].forEach(function (t) { layer.addEventListener(t, wake, { passive: false }); });
-    document.body.appendChild(layer);
+    layer.setAttribute('data-casora-window', ''); document.body.appendChild(layer);
     // Every five seconds: the cameras' pictures stay fresh (everything else only repaints when it changed).
     live = S.mount(stage, null, { drift: true, every: 5000, kind: function () { return S.vars(config() || cfg).casora_screensaver_kind || 'mix'; },
       context: function () { var c = config() || cfg; return { config: c, vars: S.vars(c) }; } });

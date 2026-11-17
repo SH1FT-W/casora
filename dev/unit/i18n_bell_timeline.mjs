@@ -92,8 +92,8 @@ for (const soft of [false, true]) {
   console.log('ok   bell timeline in English, ' + (soft ? 'Weich' : 'classic') + ': ' + texts);
 }
 
-// The bell window hangs on <body>, outside the watched tiles and popups: it is watched itself, so a text that
-// skips tr is still translated.
+// The bell window hangs on <body>, outside the watched tiles and popups: it carries the window mark, so a text
+// that skips tr is still translated (casora-i18n.js, dev/unit/i18n_body_windows.mjs).
 const om = core.slice(core.indexOf('  function openMenu(anchor) {'), core.indexOf('    fade();\n    paint(body);'));
-assert.match(om, /document\.body\.appendChild\(menu\);[\s\S]*window\.casoraTrWatch\(menu\)/, 'bell window watched by the translation');
-console.log('ok   bell window watched by the dashboard translation');
+assert.match(om, /menu\.setAttribute\('data-casora-window', ''\); document\.body\.appendChild\(menu\);/, 'bell window marked');
+console.log('ok   bell window marked for the dashboard translation');

@@ -284,7 +284,7 @@
     body.appendChild(host);
     inner.appendChild(body);
     menu.appendChild(inner);
-    document.body.appendChild(menu);
+    menu.setAttribute('data-casora-window', ''); document.body.appendChild(menu);
     GLASS.lockScroll && GLASS.lockScroll(menu, body);
 
     paint(true);

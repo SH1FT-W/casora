@@ -445,7 +445,7 @@
       ta.value = text;
       ta.setAttribute('readonly', '');
       ta.style.cssText = 'position:fixed;top:0;left:-9999px;opacity:0;font-size:12pt;';
-      document.body.appendChild(ta);
+      document.body.appendChild(ta);  // casora-window: none, the hidden copy field, the diagnosis is copied literally
       ta.select();
       ta.setSelectionRange(0, text.length);
       ok = !!(document.execCommand && document.execCommand('copy'));

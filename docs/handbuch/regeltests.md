@@ -18,6 +18,7 @@ für Fehler, die wirklich wiederkehren.
 | Vorlagen-JS kompiliert mit den echten Parametern (kein `let html`) | `dev/qa/check-templates.mjs` | statisch (Gate) |
 | Badges gleich hoch, lange Namen mit `…`, Jalousie-Badge in Casora-Teal | `badge_summe_hoehe.mjs`, `badge_langer_name.mjs`, `badge_jalousie_farbe.mjs` | statisch |
 | Wortlaut: du-Form, nie „Studio B“, gleiche Schlüssel/Platzhalter, Muster kompilieren | `wortlaut_regeln.mjs`, `wortlaut.mjs`, `phrasen_en.mjs`, `schloss_zustaende.mjs`, `oeffnungen.mjs`, `tools/i18ncheck.py`, `tools/phrase-gaps.py` | statisch |
+| Eigene Fenster an `document.body` (Glocke, Menüs, Dialoge, Suche, Schoner) tragen `data-casora-window` und werden so übersetzt; sonst Grund in derselben Zeile (`// casora-window: none, …`). Glocken-Zeitleiste englisch | `dev/unit/i18n_body_windows.mjs`, `dev/unit/i18n_bell_timeline.mjs`, `dev/qa/regress/r898_body_windows_english.mjs` | statisch + Laufzeit |
 | Werte in HTML-Strings escaped, jeder `esc` voll (& < > " '), Vorlagen mit feindlichen Namen ohne eingeschleustes Markup | `dev/unit/html_escape.mjs` (+ `tools/html-escape-check.mjs`), `dev/qa/regress/r330_html_escape.mjs` | statisch + Laufzeit |
 | Keine persönlichen Daten | `tools/privacy-check.py` (pre-commit + Gate) | statisch |
 | Studio-Meldung im Dunkeln lesbar | `studio_toast_dunkel.mjs` | statisch |

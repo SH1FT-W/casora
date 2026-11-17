@@ -693,7 +693,7 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
       host.addEventListener('click', function (e) { if (e.composedPath()[0] === host) done(false); });
       root.querySelector('.no').onclick = function () { done(false); };
       root.querySelector('.yes').onclick = function () { window.casoraHaptic('medium'); done(true); };
-      document.body.appendChild(host);
+      host.setAttribute('data-casora-window', ''); document.body.appendChild(host);
       var pop = w.withPopup && window.casoraPopup && window.casoraPopup.element;
       if (pop) popWatch = setInterval(function () { if (!pop.isConnected || !pop.hasAttribute('open') || pop.hasAttribute('closing')) done(false); }, 250);
       // Fokus auf „Abbrechen“: ein versehentliches Enter schaltet nicht (Nutzertest). Mit Textfeld dorthin.
@@ -6037,7 +6037,7 @@ window.casoraMenuGlass = {
       ensureMenuCss();
       build();
       menu._refresh = build;
-      document.body.appendChild(menu);
+      menu.setAttribute('data-casora-window', ''); document.body.appendChild(menu);
 
       const place = () => {
         const r = btn.getBoundingClientRect();
@@ -9450,7 +9450,7 @@ window.casoraMenuGlass = {
       box.textContent = 'CASORA PROBE  (' + rows.length + ' painting elements, tap to dismiss)\n\n'
         + rows.join('\n');
       box.addEventListener('click', function () { box.remove(); });
-      document.body.appendChild(box);
+      document.body.appendChild(box);  // casora-window: none, developer probe output, stays literal
     }
 
     // Positional, not path-based: composedPath fails on a retargeted event.
@@ -10304,7 +10304,7 @@ window.casoraMenuGlass = {
           + 'z-index:0;pointer-events:none;'
           + 'backdrop-filter:var(' + f + ');'
           + '-webkit-backdrop-filter:var(' + f + ');';
-        document.body.appendChild(w);
+        document.body.appendChild(w);  // casora-window: none, a 1 px blur warm-up, no text
         w.getBoundingClientRect();
         requestAnimationFrame(function () {
           requestAnimationFrame(function () { w.remove(); });
@@ -14033,7 +14033,7 @@ window.casoraMenuGlass = {
         return '<div class="row' + (x.on ? ' on' : '') + '" role="menuitemradio" aria-checked="' + (x.on ? 'true' : 'false') + '" tabindex="-1" data-k="' + esc(k) + '">'
           + '<span class="ic">' + stGlyph(x.icon, 'g') + '</span><span class="t">' + esc(x.text) + '</span></div>';
       }).join('') + '</div>';
-    document.body.appendChild(host);
+    host.setAttribute('data-casora-window', ''); document.body.appendChild(host);
     var pane = sr.querySelector('.pane'), mr = moon.getBoundingClientRect();
     var pl = moonMenuPlace(mr, pane.offsetWidth, pane.offsetHeight, moonMenuBounds(moon));
     pane.style.left = pl.left + 'px'; pane.style.top = pl.top + 'px';
@@ -17414,7 +17414,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       el.hass = h;
       el.style.cssText = 'position:fixed;left:-9999px;top:0;'
         + 'width:1px;height:1px;opacity:0;pointer-events:none;';
-      document.body.appendChild(el);
+      document.body.appendChild(el);  // casora-window: none, an off-screen button-card, translated as a button-card
       return el;
     }).catch(function () { return null; });
   }
@@ -17428,7 +17428,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     el.hass = h;
     el.style.cssText = 'position:fixed;left:-9999px;top:0;'
       + 'width:1px;height:1px;opacity:0;pointer-events:none;';
-    document.body.appendChild(el);
+    document.body.appendChild(el);  // casora-window: none, an off-screen button-card, translated as a button-card
     return el;
   }
 
@@ -17926,10 +17926,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       inner.appendChild(acts);
     }
     menu.appendChild(inner);
-    document.body.appendChild(menu);
-    // The bell hangs on <body>, outside the tiles and popups the dashboard translation watches: watch it too,
-    // so a text that skips tr (the timeline, #175) is still translated. Own names stay (data-no-i18n).
-    if (typeof window.casoraTrWatch === 'function') window.casoraTrWatch(menu);
+    menu.setAttribute('data-casora-window', ''); document.body.appendChild(menu);
     fade();
     paint(body);
     bindOpens(body, null);
@@ -18917,7 +18914,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     };
 
     el.appendChild(txt); el.appendChild(btn); el.appendChild(x);
-    document.body.appendChild(el);
+    el.setAttribute('data-casora-window', ''); document.body.appendChild(el);
     requestAnimationFrame(function () {
       el.style.transition = 'opacity 220ms cubic-bezier(0.32,0.72,0,1), transform 260ms cubic-bezier(0.32,0.72,0,1)';
       el.style.opacity = '1';

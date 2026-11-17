@@ -52,7 +52,7 @@ const doc = {
   createElement: () => {
     const parts = {};
     const el = { classList: { add() {} }, addEventListener() {}, remove() { host = null; },
-      attachShadow: () => ({ set innerHTML(v) {}, querySelector: (s) => (parts[s] = parts[s] || { focus() {}, set textContent(v) { shown.push(s + '=' + v); } }) }),
+      setAttribute() {}, attachShadow: () => ({ set innerHTML(v) {}, querySelector: (s) => (parts[s] = parts[s] || { focus() {}, set textContent(v) { shown.push(s + '=' + v); } }) }),
       parts };
     return el;
   },

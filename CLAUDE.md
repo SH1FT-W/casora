@@ -10,6 +10,8 @@ Adressen, Zugangsdaten) in Code, Tests, Commits oder PR-Texten.
 - Texte, die Nutzer sehen, schreibt der Code auf Deutsch; die englische Fassung steht in
   `custom_components/casora/translations/dashboard/phrases/en.json` (Dashboard) bzw.
   `custom_components/casora/translations/panel/` (Studio). Danach `python3 tools/i18ncheck.py`.
+- Ein eigenes Fenster an `document.body` bekommt `el.setAttribute('data-casora-window', '')` in derselben Zeile wie das
+  `appendChild`, sonst übersetzt es niemand (#175). `casora-i18n.js` ist gebaut: Quelle `tools/build-i18n.py`.
 
 ## Bau-Handbuch
 - Vor neuen Kacheln, Popups oder Studio-Flächen die passende Datei aus `docs/handbuch/README.md` lesen. Was dort

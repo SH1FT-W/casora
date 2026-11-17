@@ -28,7 +28,7 @@ const doc = {
   createElement: () => {
     const parts = {};
     const el = { classList: { add() {} }, addEventListener() {}, remove() { host = null; },
-      attachShadow: () => ({ set innerHTML(v) {}, querySelector: (s) => (parts[s] = parts[s] || {
+      setAttribute() {}, attachShadow: () => ({ set innerHTML(v) {}, querySelector: (s) => (parts[s] = parts[s] || {
         focus() {}, classList: { add: (c) => { shown[s + '.class'] = c; } },
         set textContent(v) { shown[s] = v; } }) }),
       parts };

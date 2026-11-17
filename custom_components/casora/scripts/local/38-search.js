@@ -876,7 +876,7 @@
       if (window.casoraMenuGlass.frame) window.casoraMenuGlass.frame(pane);
       if (o.desk) { u.panel.style.background = 'transparent'; u.panel.style.boxShadow = 'none'; u.panel.style.backdropFilter = 'none'; u.panel.style.webkitBackdropFilter = 'none'; }
     }
-    if (!u.root.isConnected) document.body.appendChild(u.root);
+    if (!u.root.isConnected) { u.root.setAttribute('data-casora-window', ''); document.body.appendChild(u.root); }
     solidify(o.desk ? u.wrap : u.panel);
     render();
     fitViewport();
