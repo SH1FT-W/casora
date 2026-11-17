@@ -65,7 +65,8 @@ function connect() {
       const m = JSON.parse(ev.data);
       if (m.type === 'auth_required') sock.send(JSON.stringify({ type: 'auth', access_token: tok.access_token }));
       else if (m.type === 'auth_ok') resolve(api);
-      else if (m.type === 'auth_invalid') reject(new Error('auth_invalid'));
+      // A token from just before a restart can be lost (HA had not saved its auth store yet): log in again.
+      else if (m.type === 'auth_invalid') { tok = null; reject(new Error('auth_invalid')); }
       else if (m.type === 'result' && wait.has(m.id)) {
         const w = wait.get(m.id); wait.delete(m.id);
         m.success ? w.res(m.result) : w.rej(Object.assign(new Error(JSON.stringify(m.error)), { code: m.error && m.error.code }));
@@ -80,7 +81,7 @@ let last = Date.now(), builds = 0;
 async function open() {
   c = null;
   while (!c) {
-    try { c = await connect(); } catch (e) {
+    try { if (!tok) tok = await login(); c = await connect(); } catch (e) {
       if (Date.now() - t0 > MAX) { console.log('bereit: WebSocket nicht erreichbar: ' + e.message); process.exit(1); }
       await sleep(500);
     }
