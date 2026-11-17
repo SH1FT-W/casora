@@ -12,7 +12,7 @@ const dash = await casoraDashboard();
 await need('Casora-Dashboard mit Handy-Fassung', dash && dash.phone, dash && dash.url);
 const view = (d) => d.url + '/' + (d.config.views[0].path || '0');
 
-const force = (pg) => pg.evaluate(() => {
+const force = (pg) => pg.evaluate(async () => {
   window.CASORA_NOTIFY_LOCAL = Object.assign({}, window.CASORA_NOTIFY_LOCAL || {}, { waste: true, waste_from_hour: 0, waste_until_hour: 24 });
   const D = window.casoraDevice;
   if (D && D.waste && !D.__qa873) {
@@ -24,7 +24,9 @@ const force = (pg) => pg.evaluate(() => {
       return W;
     };
   }
-  if (window._casoraNotify && window._casoraNotify.refresh) window._casoraNotify.refresh();
+  // Wait for the rows: an open bell does not redraw when a later collect adds one (it shows the new rows on the next
+  // open), so a bell tapped before this refresh ended missed the forced row (red at random, phone or desktop).
+  if (window._casoraNotify && window._casoraNotify.refresh) await window._casoraNotify.refresh();
   const W = D && D.waste ? D.waste(document.querySelector('home-assistant').hass) : null;
   return { bins: W && W.bins ? W.bins.length : 0 };
 });
