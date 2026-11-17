@@ -79,6 +79,17 @@ FORMAL = {"es": re.compile(r"\b(usted|Usted|ustedes|Ustedes)\b"),
           "fr": re.compile(r"\b(vous|Vous|votre|Votre|vos|Vos|veuillez|Veuillez)\b")}
 
 
+# Same text in several languages: names, data-source credits, drink names, formats. Not a copied sentence.
+SAME_TEXT = {"Bosch Smart System", "Café au lait", "Café con leche", "Caffè crema doppio",
+             "Data: Deutscher Wetterdienst (DWD)", "Data: Open Charge Map, CC BY 4.0", "Data: Tankerkönig, CC BY 4.0",
+             "Latte macchiato extra", "Latte macchiato triple", "Tankerkönig in Home Assistant",
+             "Team (Team Tracker)", "YYYY-MM-DD"}
+# Per language: normal words there, but the same text as English or German (no native speaker has read them yet).
+SAME_TEXT_LANG = {"nb": {"Casora Kamera-KI", "Start café au lait", "Start café au lait?", "via Wi-Fi"},
+                  "nl": {"AI: 1 breaking change", "AI: {1} breaking changes", "Mbit/s download", "Mbit/s upload"},
+                  "pt": {"Mbit/s download", "Mbit/s upload"}}
+
+
 def _load(path):
     with open(path, encoding="utf-8") as fh:
         return json.load(fh)
@@ -117,6 +128,31 @@ def _leftovers(lang, value, german, reference):
     return sorted(set(bad))
 
 
+def _regex_english(rx):
+    """English text of a Studio pattern (its key is English): capture groups become {1}, {2}, …"""
+    n = [0]
+
+    def slot(_m):
+        n[0] += 1
+        return "{%d}" % n[0]
+
+    s = re.sub(r"\((?!\?)[^()]*\)", slot, rx).replace("^", "").replace("$", "")
+    return re.sub(r"\\(.)", r"\1", s)
+
+
+def same_text(where, lang, value, english, german, err):
+    """A translation copied unchanged from the English or German text: 3 or more words, not in the
+    allowlist. Entries whose text is HA's own [%key:…%] reference are skipped."""
+    if value.startswith("[%key:") or len(WORD.findall(value)) < 3:
+        return
+    if value in SAME_TEXT or value in SAME_TEXT_LANG.get(lang, set()):
+        return
+    for label, text in (("English", english), ("German", german)):
+        if text and value == text:
+            err(where, "%r same as the %s text %r" % (value, label, text))
+            return
+
+
 def _pattern_text(patterns, text):
     """English text of the first pattern matching text (None without a match)."""
     for rx, rep, *_ in patterns:
@@ -135,10 +171,11 @@ def check_language(lang, errors):
     err = lambda where, msg: errors.append("%s/%s.json: %s" % (where, lang, msg))  # noqa: E731
     formal = FORMAL.get(lang)
 
-    def common(where, key, value, ref, german, source_for_words):
+    def common(where, key, value, ref, german, source_for_words, english=None):
         if not isinstance(value, str) or not value.strip():
             err(where, "%r is empty" % key)
             return
+        same_text(where, lang, value, ref if english is None else english, german, err)
         if _marks(value) != _marks(ref):
             err(where, "%r placeholders/markup %s != %s" % (key, _marks(value), _marks(ref)))
         bad = _leftovers(lang, value, german, source_for_words)
@@ -163,6 +200,7 @@ def check_language(lang, errors):
             if k in de_extra and k not in en["exact"]:
                 if not v.strip():
                     err("phrases", "%r is empty" % k)
+                same_text("phrases", lang, v, k, de_extra[k], err)
                 continue
             if k not in en["exact"]:
                 # Grammar refinement: an exact text an English pattern covers, e.g. the singular
@@ -215,7 +253,7 @@ def check_language(lang, errors):
         demap = {p[0]: p[1] for p in dp}
         for rx, rep, *_ in tp:
             if rx in demap:
-                common("panel", rx, rep, demap[rx], demap[rx], _regex_words(rx))
+                common("panel", rx, rep, demap[rx], demap[rx], _regex_words(rx), _regex_english(rx))
 
     # Dashboard keys and Home Assistant setup: same keys and placeholders as en.json.
     for where, ref_path, de_path in (("dashboard", os.path.join(SRC, "en.json"), os.path.join(SRC, "de.json")),
