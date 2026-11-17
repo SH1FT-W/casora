@@ -4,7 +4,7 @@
 //   1. Studio "Display: Heatmap": the tile shows the last 7 days as a small grid instead of the sparkline (desktop; the
 //      phone pill hides both like before).
 //   2. Popup: shape switch "Linie · Balken · Heatmap" with Heatmap active; the chart is a grid of days × 24 hours from
-//      the hourly statistics with a scale (lowest … highest) below; 24 Std. = yesterday and today, 7 Tage = 7 rows,
+//      the hourly statistics with a scale (lowest … highest) below; 24 Std. = yesterday and today, 7 Tage = 7 rows (one less shortly after midnight: the mock has no hours of today yet),
 //      Jahr = 12 rows of days; switching to "Linie" and back works.
 //   3. Pointing at a cell reads its value and time in the popup head ("… Uhr"); letting go restores it.
 //   4. Phone 393 px: the grid fits, the page does not scroll sideways.
@@ -49,13 +49,23 @@ const run = async (view, dark) => {
   await dashboard(page, dash.url, 3);
   await need('Testserver in the test house (mock)', await page.evaluate((ids) => ids.every((id) => !!document.querySelector('home-assistant').hass.states[id]), [ID, CPU, ENERGY]));
   // The mock writes its hourly statistics shortly after HA starts (like r90): wait up to 60 s for a day of hours.
+  // The mock's statistics end at the hour the test HA started: shortly after midnight "today" has no hours yet,
+  // so the expected rows come from the local days that really have data (24 Std.: 2 or 1, 7 Tage: 7 or 6).
   let statsOk = false;
+  let days = null;
   for (let i = 0; i < 30 && !statsOk; i++) {
-    statsOk = await page.evaluate(async (id) => {
+    days = await page.evaluate(async (id) => {
       const r = await document.querySelector('home-assistant').hass.callWS({ type: 'recorder/statistics_during_period',
-        start_time: new Date(Date.now() - 2 * 864e5).toISOString(), statistic_ids: [id], period: 'hour', types: ['mean'] });
-      return (r[id] || []).length >= 12;
-    }, ID).catch(() => false);
+        start_time: new Date(Date.now() - 8 * 864e5).toISOString(), statistic_ids: [id], period: 'hour', types: ['mean'] });
+      const rows = r[id] || [];
+      const day = (t) => { const d = new Date(t); return d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate(); };
+      const since = (ms) => new Set(rows.filter((x) => +new Date(x.start) >= ms).map((x) => day(x.start))).size;
+      const now = new Date();
+      const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      return { n: rows.filter((x) => +new Date(x.start) >= Date.now() - 2 * 864e5).length,
+        d24: since(+midnight - 864e5), d7: since(+midnight - 6 * 864e5) };
+    }, ID).catch(() => null);
+    statsOk = !!days && days.n >= 12;
     if (!statsOk) await page.waitForTimeout(2000);
   }
   await need('hourly statistics of the test server (mock)', statsOk, ID);
@@ -106,12 +116,12 @@ const run = async (view, dark) => {
   await tapTile('qa-r372');
   let p = await stable(page, popupInfo, null, { max: 15000, quiet: 2000, until: (x) => x && x.kind === 'heat' && x.cells > 0 });
   await check(tag + ': shape switch Linie · Balken · Heatmap (active)', p && p.shapes.join('|') === 'Linie|Balken|*Heatmap', p && p.shapes);
-  await check(tag + ': 24 Std. as a heatmap – yesterday and today, filled cells', p && p.span === '24h' && p.rows === 2 && p.filled >= 12, p && [p.span, p.rows, p.filled]);
+  await check(tag + ': 24 Std. as a heatmap – yesterday and today, filled cells', p && p.span === '24h' && p.rows === days.d24 && p.filled >= 12, p && [p.span, p.rows, p.filled, days]);
   await check(tag + ': scale with lowest and highest value', p && /[\d,]+\s?°C [\d,]+\s?°C/.test(p.txt), p && p.txt);
   await check(tag + ': no sideways scrolling, grid inside the window', p && p.docW <= p.vw && p.svgRight <= p.vw, p && [p.docW, p.vw, p.svgRight]);
   await shot('2-popup-24h');
-  p = await seg('data-casora-cspan', '7d', (x) => x && x.span === '7d' && x.kind === 'heat' && x.rows === 7);
-  await check(tag + ': 7 Tage – seven rows of hours', p && p.rows === 7 && p.filled >= 100 && p.docW <= p.vw, p && [p.rows, p.filled, p.docW, p.vw]);
+  p = await seg('data-casora-cspan', '7d', (x) => x && x.span === '7d' && x.kind === 'heat' && x.rows === days.d7);
+  await check(tag + ': 7 Tage – one row per day with hours', p && p.rows === days.d7 && days.d7 >= 6 && p.filled >= 100 && p.docW <= p.vw, p && [p.rows, p.filled, p.docW, p.vw, days]);
   // Point at a cell in the middle of the grid: the head reads value and time.
   const pt = await page.evaluate(() => {
     const pop = window.__pierce('casora-popup').find((x) => x.hasAttribute('open'));
@@ -150,7 +160,7 @@ const run = async (view, dark) => {
     await tapTile('qa-r372e');
     p = await stable(page, popupInfo, null, { max: 15000, quiet: 2000, until: (x) => x && x.kind === 'heat' && x.cells > 0 });
     await check(tag + ': meter heatmap – consumption per hour (change)', p && p.src === 'change' && p.filled >= 12 && /kWh/.test(p.txt), p && [p.src, p.filled]);
-    p = await seg('data-casora-cspan', '7d', (x) => x && x.span === '7d' && x.rows === 7);
+    p = await seg('data-casora-cspan', '7d', (x) => x && x.span === '7d' && x.rows === days.d7);
     await shot('6-meter-7d');
     await close();
   }
