@@ -60,7 +60,7 @@ def vacuum_map(fixture: dict) -> None:
 
 def compose(fixture: dict, now: datetime, stress: dict | None = None, hacs: dict | None = None) -> dict:
     """Fixture plus the made-up devices, in the order async_setup_entry always used."""
-    from . import (aquarium, befeuchter, co, coffee, dishwasher, ebike, energie, frigate, fussball, game_account, haustier,
+    from . import (aquarium, befeuchter, binklingel, co, coffee, dishwasher, ebike, energie, frigate, fussball, game_account, haustier,
                    halten, hubs, klingel, fridge, medien, kettle, live, maeher, mixed_lights, oven, shopping, smartmeter,
                    smart_heating, testlimousine, testserver, testwagen, tumble, velair, waesche, wetter)
     if stress:
@@ -92,6 +92,9 @@ def compose(fixture: dict, now: datetime, stress: dict | None = None, hacs: dict
     merge(fixture, frigate.extra(now), "Frigate-Testhof")
     # A made-up Reolink doorbell with presses in the history (community card), see klingel.py.
     merge(fixture, klingel.extra(now), "Testklingel")
+    # A made-up Reolink-style doorbell with the press as a binary sensor (device class doorbell,
+    # no Reolink translation keys), see binklingel.py.
+    merge(fixture, binklingel.extra(now), "Testbinklingel")
     # A made-up TV with remote, groupable speakers and a garden camera with motion (media/camera popups), see medien.py.
     merge(fixture, medien.extra(now, demo), "Testfernseher/Testlautsprecher/Testgarten")
     from . import ring_probe

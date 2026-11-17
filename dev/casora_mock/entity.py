@@ -652,7 +652,9 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
             self._klingel = bool(mock.entities[eid].get("klingel"))
             # A map camera (halten.py, camera.testkehrer_karte): the vacuum map picture.
             self._karte = bool(mock.entities[eid].get("karte"))
-            if self._frigate or self._klingel:
+            # Binary-sensor doorbell (binklingel.py): the door view as a still image, without a person overlay.
+            self._tuer = bool(mock.entities[eid].get("tuer"))
+            if self._frigate or self._klingel or self._tuer:
                 self.content_type = "image/jpeg"
 
         async def async_camera_image(self, width=None, height=None) -> bytes:
@@ -673,6 +675,14 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
                     return img
             if self._karte:
                 return MAP_PNG
+            if self._tuer:
+                # Binary-sensor doorbell (binklingel.py): the door view, mood after the sun (kamerabild.py).
+                from .kamerabild import bild, stimmung
+                stamp = dt_util.now().strftime("%d.%m.%Y %H:%M:%S")
+                img = await self.hass.async_add_executor_job(
+                    bild, stimmung(self.hass), "tuer", "tuer", 1280, 960, stamp)
+                if img:
+                    return img
             return PLACEHOLDER_PNG
 
         async def handle_async_mjpeg_stream(self, request):
@@ -680,7 +690,7 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
             # connections per server; with several camera tiles the test dashboard
             # hung while loading. A still image is enough.
             from aiohttp import web
-            if self._frigate or self._klingel:
+            if self._frigate or self._klingel or self._tuer:
                 img = await self.async_camera_image()
                 return web.Response(body=img, content_type=self.content_type)
             return web.Response(body=PLACEHOLDER_PNG, content_type="image/png")
