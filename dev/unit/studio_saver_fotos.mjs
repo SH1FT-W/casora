@@ -27,18 +27,21 @@ class Element {
   }
   setAttribute(key, value) { this.attrs[key] = String(value); }
   getAttribute(key) { return this.attrs[key]; }
-  getRootNode() { return null; }
+  getRootNode() { return this.parentNode ? this.parentNode.getRootNode() : this.rootNode || null; }
+  querySelectorAll(selector) { return byClass(this, selector.slice(1)); }
+  focus() { (this.getRootNode() || document).activeElement = this; }
 }
 const all = (root, predicate) => root.children.flatMap((c) => [ ...(predicate(c) ? [c] : []), ...all(c, predicate) ]);
 const byClass = (root, name) => all(root, (e) => e.className.split(/\s+/).includes(name));
 const timers = new Map();
+const document = { createElement: (tag) => new Element(tag), activeElement: null };
 class Panel {
   _markDirty() {}
 }
 const win = { matchMedia: () => ({ matches: false }) };
 const context = vm.createContext({
   window: win, console, Intl, Date, Math, JSON,
-  document: { createElement: (tag) => new Element(tag) },
+  document,
   customElements: { whenDefined: () => Promise.resolve(), get: () => Panel },
   setInterval: (fn) => { const id = timers.size + 1; timers.set(id, fn); return id; },
   clearInterval: (id) => timers.delete(id),
@@ -58,6 +61,8 @@ function studio(variables = {}, images = ['room-a', 'room-b']) {
   if (!images.length) saved.compact.rooms.push({ name: 'Room', variables: copy(variables) });
   const p = new Panel();
   p._state = copy(saved); p._hass = { states: {} }; p._cs = {};
+  const mirrors = [];
+  p._mirrorToPair = (key, value) => { mirrors.push([key, copy(value === undefined ? null : value)]); };
   let writes = 0;
   p._isDirty = () => JSON.stringify(p._state) !== JSON.stringify(saved);
   p._csRepaint = () => {}; p._status = () => {};
@@ -71,13 +76,14 @@ function studio(variables = {}, images = ['room-a', 'room-b']) {
   const render = () => {
     timers.clear();
     root = new Element('section');
+    root.rootNode = { activeElement: null };
     const card = new Element('article'); root.appendChild(card);
     p._csSaverPreview(root, card);
   };
   p._csRender = render;
   render();
   return {
-    p, render, root: () => root, saved: () => copy(saved), writes: () => writes,
+    p, mirrors, render, root: () => root, saved: () => copy(saved), writes: () => writes,
     photos: () => byClass(root, 'cs-saver-photo'),
     chip: (id) => byClass(root, 'cs-saver-chip').find((e) => e.dataset.kind === id).onclick(),
     participation: (id) => byClass(root, 'cs-saver-row').find((e) => e.dataset.id === id).onclick(),
@@ -93,13 +99,17 @@ assert.ok(order.indexOf(byClass(wrap, 'cs-saver-list')[0]) < order.indexOf(byCla
 assert.equal(byClass(s.root(), 'cs-saver-grid').length, 1, 'only one grid');
 assert.ok(s.photos().every((e) => e.tagName === 'BUTTON' && e.type === 'button'), 'native keyboard controls');
 assert.deepEqual(s.photos().map((e) => e.getAttribute('aria-pressed')), ['true', 'true'], 'all photos initially selected');
+s.photos()[0].focus();
 s.photos()[0].onclick();
+assert.ok(s.root().rootNode.activeElement === s.photos()[0], 'photo activation retains shadow-root keyboard focus on the redrawn choice');
 assert.deepEqual(copy(s.p._state.compact.rooms[0].variables.casora_screensaver_photos), ['room-a'], 'first tap selects one');
+assert.deepEqual(s.mirrors.at(-1), ['casora_screensaver_photos', ['room-a']], 'photo selection delegates paired-dashboard mirroring');
 assert.deepEqual(s.photos().map((e) => e.getAttribute('aria-pressed')), ['true', 'false']);
 assert.equal(s.writes(), 0, 'editing photo choices does not save');
 assert.equal(s.saved().compact.rooms[0].variables.casora_screensaver_photos, undefined, 'saved Dashboard stays unchanged');
 s.participation('fotos');
 assert.equal(s.photos().length, 0, 'excluded Photos hides the grid');
+assert.equal(s.mirrors.at(-1)[0], 'casora_screensaver_mix', 'participation delegates paired-dashboard mirroring');
 assert.deepEqual(copy(s.p._state.compact.rooms[0].variables.casora_screensaver_photos), ['room-a'], 'exclusion retains selection');
 s.participation('fotos');
 assert.deepEqual(s.photos().map((e) => e.getAttribute('aria-pressed')), ['true', 'false'], 're-inclusion restores selection');
@@ -153,6 +163,10 @@ excluded.chip('fotos');
 assert.deepEqual(excluded.photos().map((e) => e.getAttribute('aria-pressed')), ['false', 'true'], 'single Photos ignores rotation exclusions');
 const duplicate = studio({}, ['room-a', 'room-a']);
 assert.equal(duplicate.photos().length, 1, 'shared room photos are not duplicated');
+const elsewhere = new Element('button');
+duplicate.root().rootNode.activeElement = elsewhere;
+duplicate.photos()[0].onclick();
+assert.equal(duplicate.root().rootNode.activeElement, elsewhere, 'photo redraw does not steal unrelated focus');
 const approved = {
   de: 'Keine Raumfotos vorhanden. Füge einem Raum ein Foto hinzu.',
   en: emptyText,

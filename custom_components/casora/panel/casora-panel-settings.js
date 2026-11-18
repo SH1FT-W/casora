@@ -1692,6 +1692,7 @@
             + "background:linear-gradient(transparent, rgba(0,0,0,0.55));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;";
           b.appendChild(cap);
           b.onclick = () => {
+            const focused = (b.getRootNode() || document).activeElement === b;
             // From „all“ the first tap picks that one photo; the last one switched off means all again.
             let next = cur.length ? (cur.includes(p.ref) ? cur.filter((x) => x !== p.ref) : cur.concat([p.ref])) : [p.ref];
             next = list.map((x) => x.ref).filter((x) => next.includes(x));
@@ -1700,6 +1701,10 @@
             if (typeof this._mirrorToPair === "function") this._mirrorToPair("casora_screensaver_photos", next.length ? next.slice() : undefined, all);
             if (typeof this._markDirty === "function") this._markDirty();
             live.update(); photos();
+            if (focused) {
+              const nextButton = Array.from(pick.querySelectorAll(".cs-saver-photo")).find((x) => x.dataset.ref === p.ref);
+              if (nextButton) nextButton.focus({ preventScroll: true });
+            }
           };
           grid.appendChild(b);
         });
