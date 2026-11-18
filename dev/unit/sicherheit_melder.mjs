@@ -79,6 +79,8 @@ d = window.casoraSecDetectors(hassOf(S), { room_name: 'Bad' }, 'room', null);
 assert.deepEqual(d.safety, ['binary_sensor.leck_bad'], 'room by its area (the device\'s area)');
 d = window.casoraSecDetectors(hassOf(S), { room_name: 'kueche' }, 'room', null);
 assert.deepEqual(d.safety, ['binary_sensor.rauch_kueche'], 'umlauts folded');
+d = window.casoraSecDetectors(hassOf(S), { _name: 'Küche' }, 'room', null);
+assert.deepEqual(d.safety, ['binary_sensor.rauch_kueche'], 'the room card\'s own name (casora_room, phone _rv._name)');
 d = window.casoraSecDetectors(hassOf(S), { room_name: 'Wohnzimmer', security_entity_1: 'binary_sensor.rauch_flur' }, 'room', null);
 assert.deepEqual(d.safety, ['binary_sensor.rauch_flur'], 'a room\'s own entry counts too');
 
