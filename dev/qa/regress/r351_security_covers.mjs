@@ -183,8 +183,9 @@ await dk.page.locator('.cs-hubsearch input').fill('Rollladen');
 await dk.page.waitForTimeout(500);
 const hits = await H(() => [...window.__panel().shadowRoot.querySelectorAll('#pane .frow b')].filter((b) => b.getClientRects().length).map((b) => b.textContent.trim()));
 // Since 03.11.2026 a block of the tile „Haus & Geräte“ : the search finds it by its title.
-await check('Studio: search „Rollladen“ finds „Jalousien und Tore“', hits[0] === 'Jalousien und Tore', hits);
-await dk.page.locator('.frow').filter({ has: dk.page.locator('b', { hasText: /^Jalousien und Tore$/ }) }).first().click();
+// #209: the block is „Sicherheit“ now (detectors first, then the group „Jalousien und Tore“).
+await check('Studio: search „Rollladen“ finds „Sicherheit“', hits[0] === 'Sicherheit', hits);
+await dk.page.locator('.frow').filter({ has: dk.page.locator('b', { hasText: /^Sicherheit$/ }) }).first().click();
 await dk.page.waitForTimeout(2200);
 const st = await H((ids) => {
   const r = window.__panel().shadowRoot;
@@ -197,7 +198,7 @@ const st = await H((ids) => {
     rows: rows.length, checked: rows.filter((x) => x.getAttribute('aria-checked') === 'true').length, inView: !!box && box.top < innerHeight && box.bottom > 0,
     areas: [...r.querySelectorAll('#pane .casora-psec-covers .fhead')].map((x) => x.textContent), ids };
 }, IDS);
-await check('Studio: block „Jalousien und Tore“ (no second heading), opened at it', st.group && st.head === 'Jalousien und Tore' && st.ownHead === false && st.inView, st);
+await check('Studio: block „Sicherheit“ with the covers (no old heading), opened at it', st.group && st.head === 'Sicherheit' && st.ownHead === false && st.inView, st);
 await check('Studio: „Nur abends und nachts“ on by default', st.night === 'true', st);
 await check('Studio: covers listed by area with check marks, the four picked ones checked', st.rows >= 4 && st.checked === 4 && st.areas.length >= 1, st);
 await dk.page.evaluate(() => { const r = window.__panel().shadowRoot; const g = r.querySelector('#pane [data-pkey="security"]'); if (g) g.scrollIntoView({ block: 'start' }); });

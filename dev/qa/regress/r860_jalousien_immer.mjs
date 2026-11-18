@@ -89,7 +89,7 @@ await dk.page.evaluate(() => window.__panel()._bOpenSettings && window.__panel()
 await dk.page.waitForTimeout(1000);
 await dk.page.locator('.cs-hubsearch input').fill('Rollladen');
 await dk.page.waitForTimeout(500);
-await dk.page.locator('.frow').filter({ has: dk.page.locator('b', { hasText: /^Jalousien und Tore$/ }) }).first().click();
+await dk.page.locator('.frow').filter({ has: dk.page.locator('b', { hasText: /^Sicherheit$/ }) }).first().click();
 await dk.page.waitForTimeout(2200);
 const sw = await dk.page.evaluate(() => {
   const g = window.__panel().shadowRoot.querySelector('#pane [data-pkey="security"]');

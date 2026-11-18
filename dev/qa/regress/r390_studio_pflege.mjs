@@ -62,7 +62,8 @@ await need('Casora-Dashboard fürs Studio', dash);
     await new Promise((r) => setTimeout(r, 300));
     return { sum, block: !!(box && box.classList.contains('open')) };
   });
-  await check('sp-03 „Jalousien und Tore“ als eigener Abschnitt in Haus & Geräte', /Jalousien und Tore/.test(adv.sum) && adv.block, adv);
+  // #209: the block is „Sicherheit“ (detectors, then „Jalousien und Tore“).
+  await check('sp-03 „Sicherheit“ als eigener Abschnitt in Haus & Geräte', /Sicherheit/.test(adv.sum) && adv.block, adv);
   const gap = await page.evaluate(() => {
     const R = window.__panel().shadowRoot;
     const h = R.querySelector('.insphead .cs-head h3'), b = R.querySelector('#pane .cs-hubback');
