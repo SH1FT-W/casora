@@ -4,6 +4,51 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.11.28 – 18.11.2026
+
+Raumklima nach Raumart, ein klareres Sicherheits-Badge, Casora folgt umbenannten Entitäten, Rückgängig in der Glocke und eine durchgehend übersetzte Oberfläche. Dazu viele kleine Korrekturen aus dreizehn Betas.
+
+### Neu
+- **Raumklima nach Raumart (#202):** Temperatur und Luftfeuchte werden je Raum bewertet, ein Schlafzimmer mit 21 °C ist „Warm“, ein Wohnzimmer mit 21 °C angenehm. Casora erkennt die Art am Raumnamen oder am Home-Assistant-Bereich (Wohnen, Schlafen, Bad, Küche, Flur, Keller, draußen); ändern lassen sich Art und Richtwerte unter Studio › Einstellungen › Haus & Geräte › Raumklima. Die Werte folgen dem Umweltbundesamt (UBA) und DIN EN 16798-1. In Bad und Küche wird hohe Feuchte erst nach mehr als einer Stunde über 70 % rot. Das Raumklima-Popup nutzt dieselben Wörter („Optimal“, wenn beide Werte passen) und zeigt je Raum den Verlauf über 24 Stunden, 7 oder 30 Tage mit dem Wohlfühlbereich. Danke an Robert für die Idee.
+
+  ![Das Raumklima-Popup bewertet jeden Raum nach seiner Art](https://raw.githubusercontent.com/SH1FT-W/casora/main/docs/images/news-26.11.28-room-climate.webp)
+
+- **Umbenannte Entitäts-IDs (#206):** Änderst du eine Entitäts-ID in Home Assistant, zieht Casora sie in allen Dashboards und Einstellungen nach, auch bei Szenen. Vorher legt es eine Version an, die sich unter Studio › Versionen zurückholen lässt. Danke an Niels für die Meldung.
+- **Sicherheits-Badge:** Bei mehreren Funden steht der wichtigste ausgeschrieben da („Tür offen“, „Schloss blockiert“), der Rest bleibt als Symbol. Ein blockiertes Schloss steht vorn und färbt das Badge rot. Eine ausgeschaltete Alarmanlage erscheint als kleines Schild hinter den echten Funden.
+- **Rückgängig in der Glocke:** Nach „Alle entfernen“ bleibt die Glocke offen mit „Alle Meldungen entfernt“, einem Rückgängig-Knopf und einem 10-Sekunden-Balken.
+- **Wetterwarnungen (#196):** Eine Wetterwarnungs-Kachel sammelt alle Warnplätze ihres Geräts selbst ein, das Popup listet jede aktive Warnung, und die Glocke zeigt eine Zeile je Warnung mit einer grünen Entwarnung, wenn keine mehr übrig ist. Danke an Niels.
+- **Lautstärke-Schritt (#194):** Studio › Einstellungen › Haus & Geräte › Aktuelle Wiedergabe › Lautstärke-Schritt bietet 1, 2, 5 oder 10 %. Danke an Robert.
+- **Energie-Diagramme (#195):** Die Seiten Solar, Haus, Netz und Akku bekommen einen Umschalter 4 h / 24 h. Danke an Niels.
+- **Jalousien-Badge immer auf Home (#199):** Der neue Schalter „Immer zeigen“ unter Sicherheit lässt das Jalousien-Badge auch tagsüber auf Home stehen. Danke an @vitidron.
+- **Raumleiste:** Deine Startseite steht auf Desktop und Tablet als kleines rundes Symbol da, so passt ein Raum mehr hinein. „Alle“ unter Studio › Einstellungen › Aussehen › Raumleiste bringt den Namen zurück.
+- **Nächster Termin und Müll beim Raumnamen (#189):** Die Zeile unter dem Home-Titel geht auch, wenn der Titel der Raumname ist.
+- **Kamera-Schoner:** Saugroboter-Karten und 3D-Drucker-Kameras bleiben standardmäßig draußen; wähle Automatisch oder eine eigene Liste.
+- **Offline-Kacheln:** Ein nicht erreichbares Gerät zeigt die Warnfarbe, einen gestrichelten Rand und „Offline · seit 2 Std.“.
+- **Diagnose:** Der Casora-Eintrag in Home Assistant bietet einen Diagnose-Download für Fehlermeldungen, ohne private Daten.
+
+### Geändert
+- **Eine Kalender-Regel:** Kalender-Kachel, Zeile unter der Begrüßung und Bildschirmschoner nehmen dieselben Kalender. Der Müllkalender zählt in der Begrüßung nicht mehr als nächster Termin, eine Abholung steht also nur einmal da (#205).
+- **Verbrauch je Gerät:** Messen die Geräte mehr als der Hauszähler, zählt das Haus als der größere Wert, die Summen gehen immer auf.
+- **Bedienung per Finger:** Badges, die Knöpfe der Glocke, die Pfeile der Raumleiste und die Seitenpunkte sind auf Handy und Tablet 44 px groß.
+- **Home auf dem Handy:** Die Begrüßung scrollt einfach weg; keine Pille rutscht mehr über die Badges.
+- **Popups und Wortlaut:** schmales Medien-Popup für einfache Player, „Alle aus“ im Haus-Licht-Popup auf dem Handy, „Bereit“ und „Ziel“ im Thermostat-Popup, Warnring bei Pflanzen, kurze Effektnamen, Zähler-Pille beim Müll, lesbare Rohwerte und eigene Szenennamen so, wie du sie geschrieben hast.
+- **Einrichtung:** „Schritt n von 6“ von Anfang an, klarere Vorschauen, und eine abgebrochene Einrichtung räumt ihre Schritte wieder ab.
+- **Schneller:** Karten zeichnen beim bloßen Verschieben nicht neu, Design-Schalter werden einmal pro Bild gelesen. Home steht am Desktop etwa 20 % früher, Raumwechsel sind etwa ein Viertel schneller.
+
+### Behoben
+- **Übersetzungen (#175):** Zeitleiste der Glocke, Menüs, Suche, Dialoge, Hinweise und Bildschirmschoner werden als Ganzes übersetzt, wie Kacheln und Popups. Danke an @daxy01.
+- **Badges mit Markup (#204):** Bewegungs-, Discord- und Steam-Badges auf Handy-Raumseiten zeigten rohes Markup. Danke an Robert.
+- **Glocke per Finger:** „Löschen“ und „Für mich ausblenden“ bei Home-Assistant-Mitteilungen gehen per Tipp; der Müll-Eintrag öffnet das Müll-Popup.
+- **Begrüßung auf dem Handy (#197):** Sie wird kleiner, statt in den Wettertext zu laufen. Danke an @ejetzass.
+- **Rückgängig im Studio (#149):** Strg+Z nach „Karussell teilen“ und in der Handy-Vorschau macht, was es soll. Danke an WhiteFawkes.
+- **Handy-Vorschau im Studio:** Die Kameras-Kachel aus Home › Sicherheit öffnet Home › Sicherheit (#204).
+- **Weißton in gemischten Räumen (#183):** Warm, Neutral und Kalt erreichen jede Lampe, die es kann. Danke an @ejetzass.
+- **Kamera-Hinweise (#190), 12-Stunden-Uhr (#191), Klingel-Zeiten (#180):** Die Klingel- und Bewegungszeile verschwindet auch ohne „Uhrzeit & Datum“, Studio- und Schoner-Uhr folgen der 12/24-Stunden-Einstellung, Klingel-Zeiten bleiben aktuell. Danke an @ejetzass.
+- **Energiefluss:** Die Punkte stocken nicht mehr, wenn neue Werte kommen.
+- **Müllnamen** für zwei Tonnen am selben Tag werden übersetzt.
+- **Home Assistant:** keine Nutzung der Geräteregistrierung mehr, vor der Home Assistant warnt.
+- **Härtung:** strengere Prüfung von Symbolnamen, Bildadressen und weitergeleiteten Bildern.
+
 ## 26.11.27 – 13.11.2026
 
 Mehr Bildschirmschoner, Verbrauch je Gerät, ruhigere Mitteilungen und Kacheln, die nur zeigen. Dazu Tumble für Waschmaschine und Trockner.

@@ -4,6 +4,51 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.11.28 – 18.11.2026
+
+Room climate rated by room type, a clearer security badge, Casora follows renamed entities, undo in the bell and a fully translated interface. Plus many smaller fixes from thirteen betas.
+
+### New
+- **Room climate by room type (#202):** temperature and humidity are rated per room, so a bedroom at 21 °C reads "Warm" while a living room at 21 °C is comfortable. Casora detects the type from the room name or the Home Assistant area (living, bedroom, bathroom, kitchen, hallway, cellar, outdoor); change it or the recommended values under Studio › Settings › Home & devices › Room climate. The values follow the German Environment Agency (UBA) and DIN EN 16798-1. In bathrooms and kitchens high humidity only turns red after more than an hour above 70 %. The Room climate popup uses the same words ("Optimal" when both values fit) and shows each room's history over 24 hours, 7 or 30 days with its comfort range. Thanks to Robert for the idea.
+
+  ![The Room climate popup rates each room by its type](https://raw.githubusercontent.com/SH1FT-W/casora/main/docs/images/news-26.11.28-room-climate.webp)
+
+- **Renamed entity IDs (#206):** when you change an entity ID in Home Assistant, Casora follows it in all its dashboards and settings, including scene picks. Before it writes, it saves a version you can restore in Studio › Versions. Thanks to Niels for the report.
+- **Security badge:** with several findings, the most important one is written out ("Door open", "Lock jammed") and the rest stay as icons. A jammed lock leads and turns the badge red. A disarmed alarm shows as a small shield after the real findings.
+- **Undo in the bell:** after "Remove all" the bell stays open with "All notifications removed", an Undo button and a 10 second bar.
+- **Weather warnings (#196):** a weather warning tile collects every warning slot of its device on its own ("Gusts · 2 more"), the popup lists every active warning, and the bell shows one line per warning with a green all clear once none is left. Thanks to Niels.
+- **Volume step (#194):** Studio › Settings › Home & devices › Now Playing › Volume step offers 1, 2, 5 or 10 %. Thanks to Robert.
+- **Energy charts (#195):** the solar, house, grid and battery pages get a 4 h / 24 h switch. Thanks to Niels.
+- **Blinds badge always on Home (#199):** a new switch "Always show" under Security keeps the Blinds badge on Home by day too. Thanks to @vitidron.
+- **Room bar:** your home page shows as a compact round icon on desktop and tablet, so one more room fits. "All" under Studio › Settings › Look & feel › Room bar brings its name back.
+- **Next event and waste with the room name (#189):** the line under the home title also works when the title is the room name.
+- **Camera screensaver:** vacuum maps and 3D printer cameras are left out by default; choose Automatic or your own list.
+- **Offline tiles:** an unavailable device shows the warning colour, a dashed rim and "Offline · for 2 h".
+- **Diagnostics:** the Casora entry in Home Assistant offers a diagnostics download for bug reports, with private data left out.
+
+### Changed
+- **One calendar rule:** the calendar tile, the line under the greeting and the screensaver pick the same calendars. The waste calendar no longer counts as the next event in the greeting, so a pickup shows once (#205).
+- **Consumption per device:** when the devices measure more than the house meter, the house counts as the larger of the two, so the totals always add up.
+- **Touch:** badges, the bell's buttons, the room bar arrows and the page dots reach 44 px on phones and tablets.
+- **Home on the phone:** the greeting simply scrolls away; no pill slides over the badges.
+- **Popups and wording:** a narrow media popup for simple players, "All off" in the house light popup on the phone, "Ready" and "Target" in the thermostat popup, a warning ring for plants, short effect names, a waste count pill, readable raw values, and your own scene names left as written.
+- **Setup:** "Step n of 6" from the start, clearer previews, and a failed setup rolls back its steps so a retry starts clean.
+- **Faster:** cards no longer redraw when only moved, and design switches are read once per frame. Home settles about 20 % sooner on a desktop, room changes are about a quarter faster.
+
+### Fixed
+- **Translations (#175):** the bell's timeline, menus, search, dialogs, notices and the screensaver are now translated as a whole, the same way tiles and popups are. Thanks to @daxy01.
+- **Badges showing markup (#204):** the motion, Discord and Steam badges on phone room pages showed raw markup. Thanks to Robert.
+- **Bell on touch:** "Delete" and "Hide for me" in a Home Assistant notification work by tap; the waste entry opens the waste popup.
+- **Greeting on the phone (#197):** it gets smaller instead of running into the weather text. Thanks to @ejetzass.
+- **Studio undo (#149):** Ctrl+Z after "Split carousel" and in the phone preview undoes as expected. Thanks to WhiteFawkes.
+- **Studio phone preview:** the Cameras tile from Home › Security opens Home › Security (#204).
+- **White tone in mixed rooms (#183):** Warm, Neutral and Cold reach every lamp that accepts them. Thanks to @ejetzass.
+- **Camera alerts (#190), 12-hour clock (#191), doorbell times (#180):** the doorbell and motion line clears without Time & Date, the Studio and screensaver clocks follow the user's 12/24-hour setting, and doorbell times stay current. Thanks to @ejetzass.
+- **Energy flow:** the dots no longer pause when new values arrive.
+- **Waste names** for two bins on one day are translated.
+- **Home Assistant:** no more device registry use that Home Assistant warns about.
+- **Hardening:** stricter checks for icon names, picture addresses and proxied images.
+
 ## 26.11.27 – 13.11.2026
 
 More screensavers, consumption per device, calmer notifications and tiles that only show. Plus Tumble for washers and dryers.
