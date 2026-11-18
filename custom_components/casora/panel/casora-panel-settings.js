@@ -1664,10 +1664,17 @@
         const rooms = (this._state && this._state.compact && this._state.compact.rooms) || [];
         const seen = new Set(), list = [];
         rooms.forEach((r) => { const ref = r.variables && r.variables.image; if (ref && !seen.has(String(ref))) { seen.add(String(ref)); list.push({ ref: String(ref), title: typeof this._roomShown === "function" ? this._roomShown(r) : r.name || "" }); } });
-        if (show !== "fotos" || !list.length) return;
+        pick.hidden = show !== "fotos" && !(show === "mix" && SV.selected(SV.vars(draft())).includes("fotos"));
+        if (pick.hidden) return;
+        if (show === "mix") lists.appendChild(pick);
+        else wrap.insertBefore(pick, lists);
+        pick.appendChild(el("div", "fhead", t("Photos")));
+        if (!list.length) {
+          pick.appendChild(el("p", "cs-lede", t("No room photos available. Add a photo to a room.")));
+          return;
+        }
         const cur = (rooms.map((r) => (r.variables || {}).casora_screensaver_photos).find((v) => Array.isArray(v) && v.length) || []).map(String);
         const on = (ref) => !cur.length || cur.includes(ref);
-        pick.appendChild(el("div", "fhead", t("Photos")));
         pick.appendChild(el("p", "cs-lede", t(cur.length ? "Only the photos picked here." : "All room photos. Tap a photo to show only the ones you pick.")));
         const grid = el("div", "cs-saver-grid");
         grid.style.cssText = "display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px;margin:8px 0 0;";
@@ -1816,7 +1823,7 @@
             "No calendar found. The preview shows an example.");
         }
       };
-      const extra = () => { photos(); drawLists(); };
+      const extra = () => { drawLists(); photos(); };
       extra();
       // The kind of the draft changes: the preview follows it (looked at while the preview is on the page).
       // A setting the picture depends on changes in the draft (the calendar's range, the cover colour): drawn again.

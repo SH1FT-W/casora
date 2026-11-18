@@ -3119,6 +3119,7 @@
     "Shows only while updates are waiting, with their number by kind. A tap opens the list of updates.": "Vises bare mens oppdateringer venter, med antallet etter type. Et trykk åpner listen over oppdateringer.",
     "None waiting": "Ingen venter",
     "Only the photos picked here.": "Bare bildene som er valgt her.",
+    "No room photos available. Add a photo to a room.": "Ingen rombilder tilgjengelig. Legg til et bilde i et rom.",
     "All room photos. Tap a photo to show only the ones you pick.": "Alle rombilder. Trykk på et bilde for å vise bare de du velger.",
     "Screensaver photos": "Bilder for skjermspareren",
     "Show date": "Vis dato",
