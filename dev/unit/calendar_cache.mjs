@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
+import { loadCalendars } from './lib/calendars_block.mjs';
 
 let now = new Date(2026, 10, 13, 10).getTime();
 class ClockDate extends Date {
@@ -25,6 +26,7 @@ const window = { casoraSettings: () => ({}), addEventListener() {}, casoraKick: 
   redraws++;
   card.event = window._casoraCalendar.next(states, card.variables);
 } };
+loadCalendars(window);
 vm.runInNewContext(source, { window, document: { querySelector: () => ha }, Date: ClockDate, setTimeout: () => 0, console });
 const calendar = window._casoraCalendar;
 const settle = () => new Promise(resolve => setImmediate(resolve));
@@ -110,6 +112,7 @@ console.log('ok queued stale completions preserve the selected popup');
     renders++;
     card.event = manyWindow._casoraCalendar.next(manyStates, card.variables);
   } };
+  loadCalendars(manyWindow);
   vm.runInNewContext(source, { window: manyWindow, document: { querySelector: () => manyHa },
     Date: ClockDate, setTimeout: () => 0, console });
   const renderAll = () => manyCards.forEach(card => { card.event = manyWindow._casoraCalendar.next(manyStates, card.variables); });

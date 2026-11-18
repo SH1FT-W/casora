@@ -18,17 +18,17 @@ assert.ok(S && win.casoraCalendarAllows, 'the screensaver and the title rule loa
 assert.equal(win._casoraCalendar, undefined, 'the Studio has no calendar module');
 
 const now = new Date(2026, 10, 15, 10, 0);
-const events = [{ title: 'Naam-aaaaaa (a)' }, { title: 'Visible' }];
+const events = [{ title: 'Termin-aaaaaa (a)' }, { title: 'Visible' }];
 const titles = (settings) => S.context({ hass: { states: {} }, now, vars: {}, kind: 'woche', events, settings,
   rooms: [], sun: null, wx: null, daily: [], hourly: [], cams: [], media: null, cals: [] }).events.map((e) => e.title);
 
-assert.deepEqual(titles({ calendar_filter: 'Naam-aaaaaa' }), ['Visible'],
+assert.deepEqual(titles({ calendar_filter: 'Termin-aaaaaa' }), ['Visible'],
   'the filter in the settings draft hides the matching title in the Studio preview');
-assert.deepEqual(titles({ calendar_filter: 'visible' }), ['Naam-aaaaaa (a)'],
+assert.deepEqual(titles({ calendar_filter: 'visible' }), ['Termin-aaaaaa (a)'],
   'plain title matching ignores case');
-assert.deepEqual(titles({ calendar_filter: '' }), ['Naam-aaaaaa (a)', 'Visible'],
+assert.deepEqual(titles({ calendar_filter: '' }), ['Termin-aaaaaa (a)', 'Visible'],
   'an empty draft filter hides nothing');
-assert.deepEqual(titles({}), ['Naam-aaaaaa (a)', 'Visible'],
+assert.deepEqual(titles({}), ['Termin-aaaaaa (a)', 'Visible'],
   'a draft without a filter hides nothing');
 // With no calendar events, the Studio preview draws sample events; the filter hides them too.
 const sampled = (settings) => S.sample(S.context({ hass: { states: {} }, now, vars: {}, kind: 'woche', events: [], settings,
