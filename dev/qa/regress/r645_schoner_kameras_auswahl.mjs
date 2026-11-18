@@ -65,8 +65,10 @@ const list = () => P(`const r = p.shadowRoot; return { rows: [...r.querySelector
 const row = (l, id) => l.rows.find((x) => x[0] === id) || [];
 let l = await list();
 await check('„Automatisch“ oben und gewählt', l.rows[0] && l.rows[0][0] === 'auto' && l.rows[0][1] === 'true', JSON.stringify(l.rows.slice(0, 2)));
+const reasons = await P(`const t = (s) => window.casoraI18n ? window.casoraI18n.t(s) : s; return {
+  map: t('Map or robot vacuum, not taken automatically'), printer: t('3D printer, not taken automatically') };`);
 await check('echte Kamera an, Karte und Drucker grau mit Grund', row(l, REAL)[1] === 'true' && row(l, MAP)[1] === 'false' && row(l, PRINTER)[1] === 'false'
-  && /Karte|Map/.test(row(l, MAP)[2]) && /Drucker|printer/.test(row(l, PRINTER)[2]), JSON.stringify([row(l, REAL), row(l, MAP), row(l, PRINTER)]));
+  && row(l, MAP)[2] === reasons.map && row(l, PRINTER)[2] === reasons.printer, JSON.stringify([row(l, REAL), row(l, MAP), row(l, PRINTER)]));
 await P(`p.shadowRoot.querySelector('.cs-saver-list[data-key="casora_screensaver_cameras"] .cs-saver-row[data-id="${PRINTER}"]').click();`);
 await wait(500);
 l = await list();
@@ -102,15 +104,23 @@ await check('Switching modes retains choices and starts collapsed', JSON.stringi
 
 // Save through Settings, edit again, then discard through the real leave guard.
 await P(`p.shadowRoot.querySelector('.cs-save').click()`);
-await page.waitForFunction(() => !window.__panel()._isDirty() && !window.__panel()._csDirty());
+await page.waitForFunction(() => {
+  const p = window.__panel();
+  return !p._cs?.busy && !p._saving && !p._isDirty() && !p._csDirty();
+});
 const saved = await c.cmd({ type: 'lovelace/config', url_path: dash });
 const cameraPicks = (value) => !value || typeof value !== 'object' ? [] : [
   ...(Array.isArray(value.casora_screensaver_cameras) ? [value.casora_screensaver_cameras] : []),
   ...Object.values(value).flatMap(cameraPicks),
 ];
-const persisted = cameraPicks(saved);
-await check('Settings save persists the rotation camera choice', persisted.length > 0 && persisted.every((ids) => ids.includes(PRINTER)));
+const persisted = (saved.views || []).map((v) => v.cards?.[0]?.variables).filter(Boolean).map((v) => v.casora_screensaver_cameras);
+await check('Settings save persists the rotation camera choice', persisted.length > 0 && persisted.every((ids) => Array.isArray(ids) && ids.includes(PRINTER)));
+if (mobileBefore) {
+  const phoneSaved = await c.cmd({ type: 'lovelace/config', url_path: mobileUrl });
+  await check('Tablet camera selection preserves the phone dashboard scope', JSON.stringify(cameraPicks(phoneSaved)) === JSON.stringify(cameraPicks(mobileBefore)));
+}
 await P(`p.shadowRoot.querySelector('.cs-saver-camera-choose').click(); p.shadowRoot.querySelector('.cs-saver-list[data-key="casora_screensaver_cameras"] [data-id="auto"]').click()`);
+await check('The next camera edit marks the draft dirty', await P(`return p._isDirty() && p._csDirty()`));
 await check('The next camera edit remains a draft', JSON.stringify(await c.cmd({ type: 'lovelace/config', url_path: dash })) === JSON.stringify(saved));
 await page.emulateMedia({ reducedMotion: 'reduce' });
 await P(`p.shadowRoot.querySelector('#donebtn').click()`);

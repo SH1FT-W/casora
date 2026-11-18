@@ -77,8 +77,9 @@ for (const v of noTime.views || []) { const h = (v.cards || [])[0]; if (h && h.v
 await c.cmd({ type: 'lovelace/config/save', url_path: dash, config: noTime });
 await dashboard(page, dash + '?casora_saver=1');
 const items = await menu();
-await check('ohne Startzeit: „Bildschirmschoner starten“ im ⋯-Menü', items.some((t) => /Bildschirmschoner starten|Start screensaver/.test(t)), items.join(' | '));
-await page.evaluate(() => { const b = [...document.querySelectorAll('.casora-settings-menu button')].find((x) => /Bildschirmschoner|Screensaver/.test(x.textContent)); b && b.click(); });
+const startLabel = await page.evaluate(() => window.casoraTr ? window.casoraTr('Bildschirmschoner starten') : 'Bildschirmschoner starten');
+await check('ohne Startzeit: „Bildschirmschoner starten“ im ⋯-Menü', items.includes(startLabel), items.join(' | '));
+await page.evaluate((label) => { const b = [...document.querySelectorAll('.casora-settings-menu button')].find((x) => x.textContent.trim() === label); b && b.click(); }, startLabel);
 await wait(2000);
 const on = await page.evaluate(() => ({ shown: window._casoraSaver.shown(), kind: (document.querySelector('.cs-sv-layer .cs-sv') || {}).dataset?.kind || '' }));
 await check('Eintrag startet den Bildschirmschoner (Kalender)', on.shown && on.kind === 'kalender', JSON.stringify(on));
