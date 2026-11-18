@@ -62,7 +62,8 @@ const save = (cfg) => H(async ([u, c]) => {
   await h.callWS({ type: 'lovelace/config/save', url_path: u, config: c });
 }, [URL_PATH, cfg]);
 
-const SECT = /^casora_badge_(security_group|security|lock_group|camera_group|contact_group)$/;
+// #209: the detectors and motion sub-badges belong to Security too.
+const SECT = /^casora_badge_(security_group|security|lock_group|camera_group|contact_group|security_covers|security_detectors|security_motion)$/;
 const row = async () => {
   const all = await cards(page);
   const top = all.filter((c) => c.t.some((t) => /^casora_badge_/.test(t)));
@@ -91,7 +92,7 @@ await check('einzeln: Fenster · Geschlossen', anSec.some((b) => b.t === 'casora
   && /Geschlossen/.test(b.text)), anSec);
 await check('einzeln: Terrassentür · Geöffnet', anSec.some((b) => /Terrassentür/.test(b.text) && /Geöffnet|Offen/.test(b.text)), anSec);
 await check('einzeln: Kamera', anSec.some((b) => b.t === 'casora_badge_camera_group'), anSec);
-await check('einzeln: Reihenfolge Kontakte vor Kameras', anSec.map((b) => b.t).join(',')
+await check('einzeln: Reihenfolge Kontakte vor Kameras', anSec.map((b) => b.t).filter((t) => !/security_(covers|detectors|motion)$/.test(t)).join(',')
   === 'casora_badge_contact_group,casora_badge_contact_group,casora_badge_camera_group', anSec.map((b) => b.t));
 const first = an.findIndex((b) => SECT.test(b.t));
 const last = an.length - 1 - [...an].reverse().findIndex((b) => SECT.test(b.t));

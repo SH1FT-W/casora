@@ -24729,7 +24729,13 @@ class CasoraPanel extends HTMLElement {
       && isHomeRoom(room, ((this._state || {}).compact || {}).rooms) ? "home" : "room");
     const house = secPlace === "home" && typeof window.casoraHouseContacts === "function"
       ? window.casoraHouseContacts(this._hass).filter(sees) : [];
-    if (on("show_security") && (secEntities.length || locks.length || cams.length || house.length)) {
+    // #209: smoke, water (and with its switch motion) detectors of the room's area, Home's of the house – as
+    // casoraHasSec on the dashboard: a room with only detectors has the security badge too.
+    const det = typeof window.casoraSecDetectors === "function" && this._hass
+      ? window.casoraSecDetectors(this._hass, { ...V, _name: V._name || (room && room.name) }, secPlace, asUser ? { id: asUser } : (this._hass || {}).user)
+      : { safety: [], motion: [] };
+    const detIds = det.safety.concat(det.motion).filter(sees);
+    if (on("show_security") && (secEntities.length || locks.length || cams.length || house.length || detIds.length)) {
       // Text wie casora_badge_security_group (Wortlaut des Produktiv-Dashboards): Schlösser,
       // Alarm, Türen, Tore, Fenster, Kipp-Stellung, Geräte offline. Kontakt + Kippsensor
       // (+ Kombi-Sensor) einer Tür zählen einmal (casoraBasis.openings), Gruppen über ihre Mitglieder.

@@ -151,7 +151,7 @@ const sel = () => H(async () => {
 });
 const rows0 = await sel();
 await need('Studio: "Order" list in the security badge', rows0 && rows0.length >= 3, rows0);
-await check('Studio: without an order the usual one (alarm, doors, windows, gates, locks, covers, cameras)',
+await check('Studio: without an order the usual one (alarm, doors, windows, gates, locks, covers, detectors, motion, cameras)',
   JSON.stringify(rows0) === JSON.stringify(window_keys(rows0)), rows0);
 const listClip = () => H(() => {
   const box = window.__pierce('.suborder').find((x) => x.getBoundingClientRect().height > 0);
@@ -261,6 +261,7 @@ await finish();
 
 // The Studio's usual order: casoraSecSub.KEYS filtered to what is there.
 function window_keys(rows) {
-  const K = ['alarm', 'doors', 'windows', 'gates', 'locks', 'covers', 'cameras', 'other'];
+  // #209: detectors and motion between blinds and cameras.
+  const K = ['alarm', 'doors', 'windows', 'gates', 'locks', 'covers', 'detectors', 'motion', 'cameras', 'other'];
   return (rows || []).slice().sort((a, b) => (K.indexOf(a) < 0 ? 99 : K.indexOf(a)) - (K.indexOf(b) < 0 ? 99 : K.indexOf(b)));
 }
