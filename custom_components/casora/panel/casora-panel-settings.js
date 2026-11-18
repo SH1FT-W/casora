@@ -121,11 +121,11 @@
       ] },
     // fold: every block is a section that opens on its heading; a jump from a tile or the search opens the right one.
     { id: "house", label: "Home & devices", icon: "home", tone: "set-home", fold: true,
-      sub: "Blinds, doors and windows, batteries, scenes, music, waste and calendars.",
+      sub: "Security, doors and windows, batteries, scenes, music, waste and calendars.",
       blocks: [
-        { k: "security", personal: ["security"], title: "Blinds and gates",
-          plain: "Which blinds and gates count as open when the house is checked at night.",
-          kw: "rollo rollos rollladen jalousie jalousien tor tore garage garagentor sicherheit abends nachts geschlossen covers shutters gates" },
+        { k: "security", personal: ["security"], title: "Security",
+          plain: "Smoke, water and motion detectors, and which blinds and gates count as open at night.",
+          kw: "sicherheit security melder rauchmelder rauch wassermelder wasser leck leckage gas kohlenmonoxid bewegungsmelder bewegung präsenz detectors smoke water leak motion rollo rollos rollladen jalousie jalousien tor tore garage garagentor abends nachts geschlossen covers shutters gates" },
         { k: "contacts", personal: ["contacts"], title: "Doors and windows",
           plain: "Group, rename or hide doors and windows in the security overview.",
           kw: "türen tueren fenster kontakte ausblenden umbenennen gruppen abwesenheit abwesend lüften lueften zuhause" },

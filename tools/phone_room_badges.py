@@ -64,6 +64,8 @@ def _tx(s):
     body = re.sub(r"(casoraHouseContactsOf\(hass,variables,'(?:door|window)',user),this\)", r"\1)", body)
     # Covers in security (#76): Home only, so never on a phone room page.
     body = body.replace("_casoraSecCovers.show(states,hass,user,variables,this)", "_casoraSecCovers.show(states,hass,user,variables)")
+    # Detectors in security (#209): a phone room page is a room, though it sits in the home view.
+    body = body.replace("(window.casoraOnHomeView && window.casoraOnHomeView(this) ? 'home' : 'room')", "'room'")
     body = re.sub(r"(?<![\w.$])variables(?![\w$])", "_rv", body)
     return "[[[ " + RV + body.lstrip(" ")
 

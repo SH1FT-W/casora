@@ -348,6 +348,15 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
     for (var i = 1; i <= 8; i++) if (sees(v['security_entity_' + i])) return true;
     if ((v.security_locks || []).some(sees)) return true;
     if ((v.security_cameras || []).some(sees)) return true;
+    // #209: smoke, water (and with its switch motion) detectors of the room's area, or the house's on Home.
+    if (typeof window.casoraSecDetectors === 'function') {
+      var hd = el && (el.hass || el._hass);
+      if (!hd) { try { var hr = document.querySelector('home-assistant'); hd = hr && hr.hass; } catch (e) { hd = null; } }
+      if (hd) {
+        var dt = window.casoraSecDetectors(hd, v, el || 'room', user);
+        if (dt.safety.length || dt.motion.length) return true;
+      }
+    }
     if (!el || typeof window.casoraHouseContacts !== 'function' || typeof window.casoraOnHomeView !== 'function'
       || window.casoraOnHomeView(el) !== true) return false;
     var h = el.hass || el._hass;

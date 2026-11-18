@@ -2972,9 +2972,28 @@
     "Wohlfühlbereich": "Rango de confort",
     "feucht": "húmedo",
     "Lüften nicht nötig": "No hace falta ventilar",
-    "Optimal": "Óptimo"
+    "Optimal": "Óptimo",
+    "Melder offline": "Detector sin conexión",
+    "Gas": "Gas",
+    "Rauchmelder": "Detectores de humo",
+    "Wassermelder": "Detectores de agua",
+    "Keine Bewegungsmelder gefunden": "No se encontraron sensores de movimiento",
+    "Keine Melder gefunden": "No se encontraron detectores",
+    "Wenn niemand zuhause ist": "Cuando no hay nadie en casa",
+    "Bewegungsmelder": "Sensores de movimiento",
+    "Meldet": "Avisando",
+    "Alles trocken": "Todo seco",
+    "Alles normal": "Todo normal"
   },
   "patterns": [
+    [
+      "^(\\d+) Melder offline$",
+      "{1} detectores sin conexión"
+    ],
+    [
+      "^(\\d+) Melder$",
+      "{1} detectores"
+    ],
     [
       "^Teilweise geschlossen · Ø (\\d+) %$",
       "Parcialmente cerrado · Ø {1} %"

@@ -2954,9 +2954,28 @@
     "Wohlfühlbereich": "Comfort range",
     "feucht": "humid",
     "Lüften nicht nötig": "No need to ventilate",
-    "Optimal": "Optimal"
+    "Optimal": "Optimal",
+    "Melder offline": "Detector offline",
+    "Gas": "Gas",
+    "Rauchmelder": "Smoke detectors",
+    "Wassermelder": "Water detectors",
+    "Keine Bewegungsmelder gefunden": "No motion sensors found",
+    "Keine Melder gefunden": "No detectors found",
+    "Wenn niemand zuhause ist": "When nobody is home",
+    "Bewegungsmelder": "Motion sensors",
+    "Meldet": "Reporting",
+    "Alles trocken": "All dry",
+    "Alles normal": "All normal"
   },
   "patterns": [
+    [
+      "^(\\d+) Melder offline$",
+      "{1} detectors offline"
+    ],
+    [
+      "^(\\d+) Melder$",
+      "{1} detectors"
+    ],
     [
       "^Teilweise geschlossen · Ø (\\d+) %$",
       "Partly closed · Ø {1}%"

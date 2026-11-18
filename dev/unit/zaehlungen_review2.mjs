@@ -39,7 +39,9 @@ const T = JSON.parse(read('dashboards/casora/button_card_templates.json'));
   assert.ok(lp.includes("bits.unshift('Offline')") && !lp.includes("bits.unshift('Nicht erreichbar')"), 'lock row: „Offline“');
   assert.ok(lp.includes("off === tot ? 'mdi:lock-question'"), 'offline: a neutral lock, never an open one');
   assert.ok(lp.includes("? { text: 'Verriegeln', icon: 'mdi:lock', primary: true, svc: svc('lock') }"), 'the round stage button holds one word');
-  assert.ok(T.casora_badge_security_group.name.includes("else if (s === 'jammed') r.lockJammed++;"));
+  // #209: the security badge counts in window.casoraSecCount (00-finder.js), jammed apart.
+  assert.ok(T.casora_badge_security_group.name.includes('window.casoraSecCount(states, hass, variables, user, this)'));
+  assert.ok(read('custom_components/casora/scripts/local/00-finder.js').includes("else if (s === 'jammed') r.lockJammed++;"));
   // Security line: jammed apart; the short form leads with a word (E31: icons and numbers only).
   const sec = (o) => ({ triggered: false, disarmed: false, locks: 0, lockJammed: 0, lockDead: 0, doors: 0, windows: 0, doorsTilted: 0,
     windowsTilted: 0, gates: 0, camDead: 0, covers: 0, insecure: true, problem: false, ...o });

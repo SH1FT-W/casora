@@ -57,8 +57,8 @@ assert.equal(sum({ disarmed: true, windows: 2 }, { summary: 'detailed', order: [
 // Classic template line (without Soft/Fog): long list and short form put the alarm last too.
 const T = JSON.parse(read('dashboards/casora/button_card_templates.json')).casora_badge_security_group;
 const body = String(T.name).replace(/^\s*\[\[\[/, '').replace(/\]\]\]\s*$/, '');
-const run = (states, variables) => new Function('entity', 'states', 'variables', 'hass', body)
-  .call({}, null, states, { place: 'room', ...variables }, { states });
+const run = (states, variables) => new Function('entity', 'states', 'variables', 'hass', 'user', body)
+  .call({}, null, states, { place: 'room', ...variables }, { states }, null);
 const saved = { opens: window.casoraOpenings, soft: window._casoraSoft };
 window.casoraOpenings = undefined; window._casoraSoft = undefined;
 globalThis.requestAnimationFrame = () => 0;

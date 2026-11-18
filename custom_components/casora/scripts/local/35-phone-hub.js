@@ -424,6 +424,12 @@
       var C = window._casoraSecCovers;
       return C && C.count(hass.states, hass, hass.user, { place: 'home' }) > 0 ? 'warn' : 'ok';
     }
+    // #209: the detectors' and motion sub-badges rate themselves (49-security-detectors.js) – motion only while away.
+    var dk = /casora_badge_security_detectors/.test(item.tpl || '') ? 'detectors' : /casora_badge_security_motion/.test(item.tpl || '') ? 'motion' : null;
+    if (dk) {
+      var Dt = window._casoraSecDet, ev = (item.el && (item.el._evaledVariables || item.el._config && item.el._config.variables)) || {};
+      return Dt ? Dt.badge(hass.states, hass, hass.user, ev, item.el, dk).level : 'ok';
+    }
     var ids = (item.kind === 't' && item.main ? [item.main] : item.ids || []).filter(function (id) { return SEC_DOM.test(id); });
     return ids.length && window.casoraSecurityLevel ? window.casoraSecurityLevel(hass, ids) : 'ok';
   };
@@ -479,6 +485,11 @@
     var o = { icon: STAGE_ICON[cat], text: s.sub || TITLE[cat] || '' };
     // Two findings in the dial, the rest counted – a long list ended in „· T…“ there (review 2, T03).
     var parts = String(o.text).split(' · ');
+    // #209: a detector's word and its room („Rauch · Küche“) are one finding, also in the reader's language.
+    var trw = function (w) { return typeof window.casoraTr === 'function' ? window.casoraTr(w) : w; };
+    if (parts.length > 1 && ['Rauch', 'Wasser', 'Gas', 'Kohlenmonoxid', 'Bewegung'].some(function (w) { return parts[0] === w || parts[0] === trw(w); })) {
+      parts.splice(0, 2, parts[0] + ' · ' + parts[1]);
+    }
     if (parts.length > 3) o.text = parts.slice(0, 2).join(' · ') + ' · und ' + (parts.length - 2) + ' weitere';
     if (cat === 'presence') {
       var home = rows.filter(function (c) { return c.home; }).length;

@@ -65,7 +65,9 @@ assert.equal(off('camera.proxy_flur', states, { casora_camera_status: {} }), fal
 const tpl = JSON.parse(fs.readFileSync(new URL('dashboards/casora/button_card_templates.json', root), 'utf8'));
 const has = (k, re) => re.test(JSON.stringify(tpl[k]));
 assert.ok(has('casora_camera', /casoraCamOffline\?\.\(entity\?\.entity_id, states, variables\)\) return \\"Offline\\"/), 'Kachel: „Offline“');
-assert.ok(has('casora_badge_security_group', /casoraCamOffline\?\.\(id, states\)\) r\.camDead\+\+/), 'Sicherheits-Badge: „Kamera offline“');
+// #209: the security badge counts in window.casoraSecCount (00-finder.js).
+assert.ok(has('casora_badge_security_group', /window\.casoraSecCount\(/) && /window\.casoraCamOffline\(id, S\)\)\) r\.camDead\+\+/.test(
+  fs.readFileSync(new URL('custom_components/casora/scripts/local/00-finder.js', root), 'utf8')), 'Sicherheits-Badge: „Kamera offline“');
 assert.ok(has('casora_badge_camera_group', /casoraCamOffline/), 'Kamera-Badge');
 assert.ok(has('casora_popup_camera', /casoraCamOffline/), 'Kamera-Popup');
 const finden = fs.readFileSync(new URL('custom_components/casora/scripts/local/00-finder.js', root), 'utf8');

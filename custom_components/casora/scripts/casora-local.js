@@ -258,6 +258,7 @@ const MODULES = [
   '46-screensaver',
   '47-media-extra',
   '48-energie-verlauf',
+  '49-security-detectors',
 ];
 
 const START_MODULES = MODULES.slice(0, 5);

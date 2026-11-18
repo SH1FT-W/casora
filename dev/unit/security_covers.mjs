@@ -117,8 +117,10 @@ assert.ok(short.includes('/i/cover_open.svg') && short.includes('>2</span>'), 'c
 // ── Security group badge: counts covers on Home (all four _sec copies), insecure in the night window ──
 const G = T.casora_badge_security_group;
 const body = (s) => s.trim().replace(/^\[\[\[/, '').replace(/\]\]\]$/, '');
-for (const k of ['extra_styles', 'icon', 'name']) assert.match(G[k], /_casoraSecCovers\.count\(states, hass, user, variables, this\)/, k);
-assert.match(G.styles.card.find((e) => e['--casora-badge-icon-color'])['--casora-badge-icon-color'], /_casoraSecCovers\.count/);
+// #209: one count (window.casoraSecCount, 00-finder.js) for name, icon and colours; it counts the covers.
+for (const k of ['extra_styles', 'icon', 'name']) assert.match(G[k], /window\.casoraSecCount\(states, hass, variables, user, this\)/, k);
+assert.match(G.styles.card.find((e) => e['--casora-badge-icon-color'])['--casora-badge-icon-color'], /window\.casoraSecCount\(/);
+assert.ok(read('custom_components/casora/scripts/local/00-finder.js').includes('window._casoraSecCovers.count(S, hass, user, v, el)'), 'the count asks the covers');
 const evalT = (src, vars, st) => new Function('states', 'hass', 'variables', 'user', 'entity', body(src))
   .call({}, st, Object.assign({}, hass, { states: st }), vars, null, null);
 set({ covers: ['cover.living', 'cover.kitchen', 'cover.bed'] });
@@ -204,7 +206,8 @@ assert.equal(C.sec('hero', null, day, hass), '<div class="hui-line" data-tone=""
 // "Home & devices" (under "Advanced"), found by everyday words, and the earlier jump (page "home", focus) lands there ──
 assert.match(read('custom_components/casora/settings.py'), /SECTIONS = \([^)]*"security"/);
 const st = read('custom_components/casora/panel/casora-panel-settings.js');
-assert.match(st, /\{ k: "security", personal: \["security"\], title: "Blinds and gates",[^}]*kw: "[^"]*rollo[^"]*rollladen[^"]*jalousie/);
+// #209: the block is "Security" now; the covers keep their group "Blinds and gates" inside it.
+assert.match(st, /\{ k: "security", personal: \["security"\], title: "Security",[^}]*kw: "[^"]*rollo[^"]*rollladen[^"]*jalousie/);
 assert.match(st, /security: "security"/);
 const pers = read('custom_components/casora/panel/casora-panel-personal.js');
 assert.match(pers, /want\("security"\)/);

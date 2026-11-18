@@ -53,10 +53,11 @@ assert.match(badge(gate('open', '')), /Tor offen/, 'empty position: open');
 assert.doesNotMatch(badge(gate('closed', 0)), /Tor offen/);
 assert.doesNotMatch(badge(gate('closing', 1)), /Tor offen/, 'closing gate: not open, as before');
 
-// All four _sec copies of the group badge go through the helper.
+// The group badge counts in one place (#209: window.casoraSecCount, 00-finder.js), through the helper.
 for (const src of [G.extra_styles, G.icon, G.name, G.styles.card.find((e) => e['--casora-badge-icon-color'])['--casora-badge-icon-color']]) {
-  assert.match(src, /casoraCoverOpen\(states\[id\], 'gate'\)/);
+  assert.match(src, /window\.casoraSecCount\(states, hass, variables, user, this\)/);
 }
+assert.match(fs.readFileSync(new URL('../../custom_components/casora/scripts/local/00-finder.js', import.meta.url), 'utf8'), /casoraCoverOpen\(S\[id\], 'gate'\)/);
 const ic = (st) => new Function('states', 'hass', 'variables', 'user', 'entity', body(G.icon))
   .call({}, { 'cover.garage': st }, { states: { 'cover.garage': st }, entities: {} }, { place: 'room', entities: ['cover.garage'] }, null, null);
 assert.equal(ic(gate('open', 1)), 'mdi:shield-check', 'icon: secure at 1 % with threshold 1');

@@ -2972,9 +2972,28 @@
     "Wohlfühlbereich": "Zakres komfortu",
     "feucht": "wilgotno",
     "Lüften nicht nötig": "Wietrzenie niepotrzebne",
-    "Optimal": "Optymalnie"
+    "Optimal": "Optymalnie",
+    "Melder offline": "Czujnik offline",
+    "Gas": "Gaz",
+    "Rauchmelder": "Czujniki dymu",
+    "Wassermelder": "Czujniki wody",
+    "Keine Bewegungsmelder gefunden": "Nie znaleziono czujników ruchu",
+    "Keine Melder gefunden": "Nie znaleziono czujników",
+    "Wenn niemand zuhause ist": "Gdy nikogo nie ma w domu",
+    "Bewegungsmelder": "Czujniki ruchu",
+    "Meldet": "Zgłasza",
+    "Alles trocken": "Wszędzie sucho",
+    "Alles normal": "Wszystko w normie"
   },
   "patterns": [
+    [
+      "^(\\d+) Melder offline$",
+      "Czujniki offline: {1}"
+    ],
+    [
+      "^(\\d+) Melder$",
+      "Czujniki: {1}"
+    ],
     [
       "^Teilweise geschlossen · Ø (\\d+) %$",
       "Częściowo zamknięte · Ø {1}%"

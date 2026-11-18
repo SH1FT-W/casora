@@ -2965,9 +2965,28 @@
     "Wohlfühlbereich": "Komfortområde",
     "feucht": "fuktig",
     "Lüften nicht nötig": "Ingen lufting nødvendig",
-    "Optimal": "Optimalt"
+    "Optimal": "Optimalt",
+    "Melder offline": "Detektor frakoblet",
+    "Gas": "Gass",
+    "Rauchmelder": "Røykvarslere",
+    "Wassermelder": "Vannvarslere",
+    "Keine Bewegungsmelder gefunden": "Fant ingen bevegelsessensorer",
+    "Keine Melder gefunden": "Fant ingen detektorer",
+    "Wenn niemand zuhause ist": "Når ingen er hjemme",
+    "Bewegungsmelder": "Bevegelsessensorer",
+    "Meldet": "Varsler",
+    "Alles trocken": "Alt tørt",
+    "Alles normal": "Alt normalt"
   },
   "patterns": [
+    [
+      "^(\\d+) Melder offline$",
+      "{1} detektorer frakoblet"
+    ],
+    [
+      "^(\\d+) Melder$",
+      "{1} detektorer"
+    ],
     [
       "^Teilweise geschlossen · Ø (\\d+) %$",
       "Delvis lukket · Ø {1}%"

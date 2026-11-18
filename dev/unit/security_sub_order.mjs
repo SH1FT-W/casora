@@ -36,7 +36,7 @@ assert.equal(K('camera.example'), 'cameras');
 assert.equal(K('binary_sensor.front_door'), 'doors');
 assert.equal(K('binary_sensor.kitchen_window'), 'windows');
 assert.equal(K('binary_sensor.fenster_gruppe'), 'windows', 'group helper: its member\'s class');
-assert.equal(K('binary_sensor.smoke'), 'other');
+assert.equal(K('binary_sensor.smoke'), 'detectors', '#209: a smoke detector is a detector');
 assert.equal(K('cover.garage'), 'gates');
 assert.equal(K('cover.living_blind'), 'covers');
 assert.equal(K(null), null);

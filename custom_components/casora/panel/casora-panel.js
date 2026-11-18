@@ -692,10 +692,12 @@ function badgeOrderOf(saved) {
 // Security badge: the kinds of entries it has (security_sub_order list in the Studio), in the usual order
 // (casoraSecSub.KEYS, 00-finder.js). houseIds: Home's doors and windows (#39), covers: Home's covers (#76) count.
 const SEC_SUB_LABEL = { alarm: "Alarm", doors: "Doors", gates: "Gates", locks: "Locks", windows: "Windows",
-  covers: "Blinds", cameras: "Cameras", other: "Other sensors" };
+  covers: "Blinds", detectors: "Detectors", motion: "Motion", cameras: "Cameras", other: "Other sensors" };
 const SEC_SUB_ICON = { alarm: "mdi:shield-home", doors: "mdi:door", gates: "mdi:garage", locks: "mdi:lock",
-  windows: "mdi:window-closed-variant", covers: "mdi:blinds-horizontal", cameras: "mdi:cctv", other: "mdi:motion-sensor" };
-function secSubPresent(V, states, houseIds, covers) {
+  windows: "mdi:window-closed-variant", covers: "mdi:blinds-horizontal", detectors: "mdi:smoke-detector-variant",
+  motion: "mdi:motion-sensor", cameras: "mdi:cctv", other: "mdi:motion-sensor" };
+// det: { safety, motion } of the room or Home (casoraSecDetectors, #209) – the „Detectors“ and „Motion“ sub-badges.
+function secSubPresent(V, states, houseIds, covers, det) {
   const S = window.casoraSecSub;
   if (!S || !V) return [];
   const have = new Set();
@@ -705,6 +707,8 @@ function secSubPresent(V, states, houseIds, covers) {
   for (let n = 1; n <= 8; n++) { const k = S.keyOf(V["security_entity_" + n], states); if (k) have.add(k); }
   (houseIds || []).forEach((id) => { const k = S.keyOf(id, states); if (k) have.add(k); });
   if (covers) have.add("covers");
+  if (det && (det.safety || []).length) have.add("detectors");
+  if (det && (det.motion || []).length) have.add("motion");
   return S.KEYS.filter((k) => have.has(k));
 }
 // Climate badge: its sub-badges (climate_sub_order list in the Studio) in the usual order (casoraClimSub.KEYS,
@@ -28018,7 +28022,9 @@ class CasoraPanel extends HTMLElement {
       const house = home && typeof window.casoraHouseContacts === "function" ? window.casoraHouseContacts(this._hass) : [];
       const SC = window._casoraSecCovers;
       const covers = home && !!(SC && SC.cfg && SC.cfg().ids.length);
-      present = secSubPresent(V, (this._hass || {}).states || {}, house, covers);
+      const det = typeof window.casoraSecDetectors === "function" && this._hass
+        ? window.casoraSecDetectors(this._hass, V, home ? "home" : "room", (this._hass || {}).user) : null;
+      present = secSubPresent(V, (this._hass || {}).states || {}, house, covers, det);
       LABEL = SEC_SUB_LABEL; ICON = SEC_SUB_ICON; dotIcon = "badge-security";
     }
     if (present.length < 2) return;

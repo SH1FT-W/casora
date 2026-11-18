@@ -2972,9 +2972,28 @@
     "Wohlfühlbereich": "Comfortbereik",
     "feucht": "vochtig",
     "Lüften nicht nötig": "Luchten niet nodig",
-    "Optimal": "Optimaal"
+    "Optimal": "Optimaal",
+    "Melder offline": "Detector offline",
+    "Gas": "Gas",
+    "Rauchmelder": "Rookmelders",
+    "Wassermelder": "Watermelders",
+    "Keine Bewegungsmelder gefunden": "Geen bewegingssensoren gevonden",
+    "Keine Melder gefunden": "Geen melders gevonden",
+    "Wenn niemand zuhause ist": "Als niemand thuis is",
+    "Bewegungsmelder": "Bewegingssensoren",
+    "Meldet": "Meldt",
+    "Alles trocken": "Alles droog",
+    "Alles normal": "Alles normaal"
   },
   "patterns": [
+    [
+      "^(\\d+) Melder offline$",
+      "{1} melders offline"
+    ],
+    [
+      "^(\\d+) Melder$",
+      "{1} melders"
+    ],
     [
       "^Teilweise geschlossen · Ø (\\d+) %$",
       "Deels gesloten · Ø {1}%"

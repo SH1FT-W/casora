@@ -57,7 +57,13 @@ assert.deepEqual(stdOpts.full, ['grp1'], 'one group: full width');
 contacts(states, ent('binary_sensor.door_a'), {}, hass, {});
 assert.equal(stdOpts.full, undefined, 'doors and windows: two columns as before');
 
-// 3. Home counts every door and window; a room only what it lists.
+// 3. Home counts every door and window; a room only what it lists. The count is window.casoraSecCount (00-finder.js,
+// #209), here in a sandbox of its own with the stubbed house contacts.
+const cnt = {};
+new Function('window', 'document', 'customElements', fs.readFileSync(new URL('../../custom_components/casora/scripts/local/00-finder.js', import.meta.url), 'utf8'))(
+  cnt, { querySelector: () => null }, { whenDefined: () => new Promise(() => {}), get: () => null });
+cnt.casoraContacts = window.casoraContacts;
+window.casoraSecCount = cnt.casoraSecCount;
 let seen = null;
 window.casoraSecuritySummary = (sec) => { seen = sec; return { text: '', parts: [] }; };
 window.casoraSecurityMode = () => 'short';

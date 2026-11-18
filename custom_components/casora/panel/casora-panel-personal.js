@@ -452,7 +452,24 @@
         // Covers in security (#76, scripts/local/34-security-covers.js): which covers count on Home, and whether
         // only from sunset to sunrise (on by default; only "off" is stored). No cover picked = feature off.
         const sec = S.security;
-        g = group("security", { header: "Security: covers",
+        // #209: detectors in Security (00-finder.js casoraSecDetectors). Smoke and water detectors count by default
+        // (only "off" is stored, detectors: false), motion sensors only when switched on (motion: true) and then
+        // only while nobody is home.
+        const det = group("security_detectors", { header: "Detectors",
+          footer: "Smoke and water detectors show under Security on Home and in their room; one that reports leads the badge in red. Motion counts only while nobody is home." });
+        const detRow = self._flowRow(det, { title: "Smoke and water detectors", sub: "Also gas and carbon monoxide" });
+        if (typeof self._boolSwitch === "function") {
+          detRow.row.appendChild(self._boolSwitch(sec.detectors !== false, true, (v) => {
+            if (v === false) sec.detectors = false; else delete sec.detectors;
+          }, window.casoraI18n ? window.casoraI18n.t("Smoke and water detectors") : "Smoke and water detectors"));
+        }
+        const motRow = self._flowRow(det, { title: "Motion sensors", sub: "Count only while nobody is home" });
+        if (typeof self._boolSwitch === "function") {
+          motRow.row.appendChild(self._boolSwitch(sec.motion === true, false, (v) => {
+            if (v === true) sec.motion = true; else delete sec.motion;
+          }, window.casoraI18n ? window.casoraI18n.t("Motion sensors") : "Motion sensors"));
+        }
+        g = group("security", { header: "Blinds and gates",
           footer: "Picked covers that are not fully closed show on Home in the security row as “Blinds” and count as not secure. Nothing picked: nothing changes." });
         const nightRow = self._flowRow(g, { title: "Evening and night only", sub: "From sunset to sunrise" });
         if (typeof self._boolSwitch === "function") {

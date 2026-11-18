@@ -2972,9 +2972,28 @@
     "Wohlfühlbereich": "Intervallo di comfort",
     "feucht": "umido",
     "Lüften nicht nötig": "Non serve arieggiare",
-    "Optimal": "Ottimale"
+    "Optimal": "Ottimale",
+    "Melder offline": "Rilevatore offline",
+    "Gas": "Gas",
+    "Rauchmelder": "Rilevatori di fumo",
+    "Wassermelder": "Rilevatori d’acqua",
+    "Keine Bewegungsmelder gefunden": "Nessun sensore di movimento trovato",
+    "Keine Melder gefunden": "Nessun rilevatore trovato",
+    "Wenn niemand zuhause ist": "Quando non c’è nessuno in casa",
+    "Bewegungsmelder": "Sensori di movimento",
+    "Meldet": "In allarme",
+    "Alles trocken": "Tutto asciutto",
+    "Alles normal": "Tutto normale"
   },
   "patterns": [
+    [
+      "^(\\d+) Melder offline$",
+      "{1} rilevatori offline"
+    ],
+    [
+      "^(\\d+) Melder$",
+      "{1} rilevatori"
+    ],
     [
       "^Teilweise geschlossen · Ø (\\d+) %$",
       "Parzialmente chiuso · Ø {1}%"

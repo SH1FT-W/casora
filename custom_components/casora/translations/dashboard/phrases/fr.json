@@ -2972,9 +2972,28 @@
     "Wohlfühlbereich": "Zone de confort",
     "feucht": "humide",
     "Lüften nicht nötig": "Pas besoin d’aérer",
-    "Optimal": "Optimal"
+    "Optimal": "Optimal",
+    "Melder offline": "Détecteur hors ligne",
+    "Gas": "Gaz",
+    "Rauchmelder": "Détecteurs de fumée",
+    "Wassermelder": "Détecteurs d’eau",
+    "Keine Bewegungsmelder gefunden": "Aucun détecteur de mouvement trouvé",
+    "Keine Melder gefunden": "Aucun détecteur trouvé",
+    "Wenn niemand zuhause ist": "Quand personne n’est à la maison",
+    "Bewegungsmelder": "Détecteurs de mouvement",
+    "Meldet": "En alerte",
+    "Alles trocken": "Tout est sec",
+    "Alles normal": "Tout est normal"
   },
   "patterns": [
+    [
+      "^(\\d+) Melder offline$",
+      "{1} détecteurs hors ligne"
+    ],
+    [
+      "^(\\d+) Melder$",
+      "{1} détecteurs"
+    ],
     [
       "^Teilweise geschlossen · Ø (\\d+) %$",
       "Partiellement fermé · Ø {1} %"

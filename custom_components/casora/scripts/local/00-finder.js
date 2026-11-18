@@ -1701,6 +1701,9 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
         || (dom === 'camera' && !!(window.casoraCamOffline && window.casoraCamOffline(id, S)));
       if (dom === 'binary_sensor') {
         if (dc === 'motion' || dc === 'occupancy' || dc === 'presence') { if (s === 'on' && isAway()) up('alarm'); }
+        // #209: smoke, gas, CO or water detected is danger; an offline detector a notice (switch „Rauch- und
+        // Wassermelder“, on by default; off: as before, only offline counts).
+        else if (DET_SAFE[dc] && detCfg().detectors) { if (dead) up('warn'); else if (s === 'on') up('alarm'); }
         else if (dc === 'door' || dc === 'window' || dc === 'garage_door' || dc === 'opening' || !dc) contacts.push(id);
         else if (dead) up('warn');
         return;
@@ -1754,6 +1757,211 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
   };
   window.casoraSecurityAway = securityAway;
   window.casoraSecurityLevel = securityLevel;
+
+  // ── Detectors in security (#209) ──────────────────────────────────────────────────────────
+  // Smoke, gas, CO and water detectors (binary_sensor device_class smoke/gas/carbon_monoxide/moisture) count under
+  // Security: one that reports is danger and leads the badge („Rauch · Küche“), an offline one a notice. Motion,
+  // occupancy and presence sensors count only while nobody is home (securityAway) – „Bewegung · Flur“. Settings ›
+  // Home & devices › Security: security.detectors (on by default, stored only as false) and security.motion (off by
+  // default, stored only as true). Switched off, nothing of this counts (as before #209). Home takes the whole house,
+  // a room the detectors of its Home Assistant area (by the room's name) plus its own security entries.
+  //   casoraSecDetCfg()                                → { detectors, motion }
+  //   casoraSecDetKind(id, states)                     → 'smoke'|'gas'|'co'|'water'|'motion'|null
+  //   casoraSecDetectors(hass, v, where, user, own)    → { safety: [ids], motion: [ids], kind: {id}, area: {id} }
+  //   casoraSecCount(states, hass, v, user, el)        → the security group badge's count (casora_badge_security_group)
+  // device_class safety stays out: integrations use it for many things that are no danger to the house.
+  var DET_SAFE = { smoke: 'smoke', gas: 'gas', carbon_monoxide: 'co', moisture: 'water' };
+  var DET_MOVE = { motion: 1, occupancy: 1, presence: 1 };
+  function detCfg() {
+    var s = (window.CASORA_SETTINGS || {}).security;
+    s = s && typeof s === 'object' ? s : {};
+    return { detectors: s.detectors !== false, motion: s.motion === true };
+  }
+  window.casoraSecDetCfg = detCfg;
+  function detKind(S, id) {
+    if (typeof id !== 'string' || id.indexOf('binary_sensor.') !== 0) return null;
+    var dc = String((((S || {})[id] || {}).attributes || {}).device_class || '').toLowerCase();
+    return DET_SAFE[dc] || (DET_MOVE[dc] ? 'motion' : null);
+  }
+  window.casoraSecDetKind = function (id, states) { return detKind(states, id); };
+  var foldName = function (s) {
+    return String(s == null ? '' : s).trim().toLowerCase().replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss');
+  };
+  // The house's detectors, once per states object of HA's root element (as casoraContacts): hidden, disabled,
+  // diagnostic/config entities, groups, vehicles and sensors with a location (a shop, a station) are left out.
+  function detHouse(hass) {
+    var S = (hass && hass.states) || {}, R = reg(hass), D = devs(hass), A = (hass && hass.areas) || {};
+    var ids = [], kind = {}, area = {};
+    // Motion of things that move or watch on their own is no motion in the house: an e-bike's „in motion“ (a device
+    // with a tracker or an odometer) and a camera's object detection (person, car, pet … – the camera tiles report it).
+    var odd = null;
+    var oddDev = function (dev) {
+      if (!odd) {
+        odd = {};
+        Object.keys(R).forEach(function (k) {
+          var d = R[k] && R[k].device_id;
+          if (!d) return;
+          if (k.indexOf('device_tracker.') === 0 || k.indexOf('camera.') === 0
+            || (k.indexOf('sensor.') === 0 && VEHICLE_KEYS.test(String(R[k].translation_key || '')))) odd[d] = true;
+        });
+      }
+      return !!odd[dev];
+    };
+    Object.keys(S).forEach(function (id) {
+      var k = detKind(S, id);
+      if (!k) return;
+      var e = R[id] || {}, a = (S[id] && S[id].attributes) || {};
+      if (e.hidden || e.hidden_by || e.disabled_by || e.entity_category) return;
+      if (Array.isArray(a.entity_id) || (a.latitude != null && a.longitude != null) || isVehicle(hass, id)) return;
+      if (k === 'motion' && e.device_id && oddDev(e.device_id)) return;
+      var aid = e.area_id || (e.device_id && D[e.device_id] ? D[e.device_id].area_id : null);
+      ids.push(id); kind[id] = k; area[id] = aid && A[aid] ? String(A[aid].name || '') : '';
+    });
+    return { ids: ids, kind: kind, area: area };
+  }
+  var detShared = { S: null, R: null, A: null, v: null };
+  var detHouseShared = function (hass) {
+    var root = rootHass(), raw = root && root.states;
+    if (!raw || !hass || reg(hass) !== reg(root)) return detHouse(hass);
+    if (detShared.S !== raw || detShared.R !== reg(root) || detShared.A !== root.areas) {
+      detShared = { S: raw, R: reg(root), A: root.areas, v: detHouse(raw === hass.states ? hass : Object.assign({}, hass, { states: raw })) };
+    }
+    return detShared.v;
+  };
+  // Home or a room? v.place wins (phone templates), else where: 'home' | 'room' | the card (casoraOnHomeView).
+  var detOnHome = function (v, where) {
+    if (v && v.place) return v.place === 'home';
+    if (where === 'home') return true;
+    return !!where && typeof where === 'object' && typeof window.casoraOnHomeView === 'function' && window.casoraOnHomeView(where) === true;
+  };
+  window.casoraSecDetOnHome = detOnHome;
+  window.casoraSecDetectors = function (hass, v, where, user, own) {
+    var cfg = detCfg(), out = { safety: [], motion: [], kind: {}, area: {}, cfg: cfg };
+    if (!cfg.detectors && !cfg.motion) return out;
+    v = v || {};
+    var S = (hass && hass.states) || {}, house = detHouseShared(hass);
+    var home = detOnHome(v, where);
+    var room = foldName(v.room_name || v.aqi_room_name || v._name || '');
+    var list = home ? house.ids.slice() : room ? house.ids.filter(function (id) { return foldName(house.area[id]) === room; }) : [];
+    // The badge's own entries (security_entity_1…8, or the badge's entities): groups through their members.
+    var mine = own;
+    if (!Array.isArray(mine)) {
+      mine = Array.isArray(v.entities) ? v.entities.slice() : [];
+      for (var i = 1; i <= 8; i++) if (v['security_entity_' + i]) mine.push(v['security_entity_' + i]);
+    }
+    mine.forEach(function (x) {
+      if (typeof x !== 'string' || x.indexOf('binary_sensor.') !== 0) return;
+      var m = ((S[x] || {}).attributes || {}).entity_id;
+      (Array.isArray(m) ? m : [x]).forEach(function (y) { if (list.indexOf(y) < 0 && detKind(S, y)) list.push(y); });
+    });
+    var sees = function (x) { return typeof window.casoraSeesEntity !== 'function' || window.casoraSeesEntity(x, user); };
+    list.forEach(function (id) {
+      if (!sees(id)) return;
+      var k = house.kind[id] || detKind(S, id);
+      if (k === 'motion') { if (!cfg.motion) return; out.motion.push(id); }
+      else if (k) { if (!cfg.detectors) return; out.safety.push(id); }
+      else return;
+      out.kind[id] = k;
+      out.area[id] = house.area[id] != null ? house.area[id] : '';
+    });
+    return out;
+  };
+  // Words for what reports (German, phrases/en.json): with the room on Home when all of one kind are in one room
+  // („Rauch · Küche“), else „Rauch erkannt“. hits: [{ id, kind, area }].
+  var DET_WORD = { smoke: 'Rauch', gas: 'Gas', co: 'Kohlenmonoxid', water: 'Wasser', motion: 'Bewegung' };
+  var DET_ICON = { smoke: 'attention2', gas: 'attention2', co: 'co', water: 'humidity', motion: 'motion' };
+  var DET_ORDER = ['smoke', 'gas', 'co', 'water', 'motion'];
+  window.casoraSecDetWords = function (hits, home) {
+    var out = [];
+    DET_ORDER.forEach(function (k) {
+      var mine = (hits || []).filter(function (h) { return h.kind === k; });
+      if (!mine.length) return;
+      var areas = mine.map(function (h) { return h.area || ''; }).filter(function (a, i, l) { return l.indexOf(a) === i; });
+      var word = home && areas.length === 1 && areas[0] ? DET_WORD[k] + ' · ' + areas[0] : DET_WORD[k] + ' erkannt';
+      out.push({ kind: k, n: mine.length, word: word, icon: DET_ICON[k], ids: mine.map(function (h) { return h.id; }) });
+    });
+    return out;
+  };
+
+  // ── The security group badge's count (casora_badge_security_group: name, icon, styles; #209 one place) ─────────
+  // r: triggered, disarmed, locks, lockJammed, lockDead, doors, windows, doorsTilted, windowsTilted, gates, camDead,
+  // covers, danger (detectors reporting), dangerWords, detDead, motion (only while away), motionWords, insecure,
+  // problem, level ('ok'|'warn'|'alarm'), ids. el: the card (Home view?), as `this` in the template.
+  window.casoraSecCount = function (states, hass, v, user, el) {
+    var S = states || (hass && hass.states) || {};
+    v = v || {};
+    var arr = function (x) { return Array.isArray(x) ? x : (x ? [x] : []); };
+    var st = function (id) { var e = S[id]; return String(e && e.state != null ? e.state : '').toLowerCase(); };
+    var cams = arr(v.cameras);
+    // Group helpers (e.g. „Fenster“ without a device class) count through their members.
+    var flat = function (id) {
+      var m = id.indexOf('binary_sensor.') === 0 && S[id] && S[id].attributes && S[id].attributes.entity_id;
+      return Array.isArray(m) ? m : [id];
+    };
+    // Home: every door and window of the house counts, also without entries of its own (#39).
+    var home = v.place ? v.place === 'home' : !!(window.casoraOnHomeView && window.casoraOnHomeView(el));
+    var cc = home && window.casoraContacts ? window.casoraContacts(hass) : null;
+    var house = [];
+    if (cc) (cc.groups || []).forEach(function (g) {
+      (g.members || []).forEach(function (x) { if ((cc.excl || []).indexOf(x) < 0) house.push(x); });
+    });
+    var ids = [];
+    [v.alarm_entity, v.doors_entity, v.windows_entity, v.lock_entity, v.lock_entity_2].concat(arr(v.locks), arr(v.entities), cams, house)
+      .filter(function (x) { return typeof x === 'string' && x.indexOf('.') >= 0; })
+      .forEach(function (x) { flat(x).forEach(function (y) { if (ids.indexOf(y) < 0) ids.push(y); }); });
+    // „Wer sieht das?“ of the tiles (casora-core.js): what is hidden does not count.
+    ids = ids.filter(function (x) { return !window.casoraSeesEntity || window.casoraSeesEntity(x, user); });
+    var r = { triggered: false, disarmed: false, locks: 0, lockJammed: 0, lockDead: 0, doors: 0, windows: 0, doorsTilted: 0,
+      windowsTilted: 0, gates: 0, camDead: 0 };
+    ids.forEach(function (id) {
+      var dom = id.split('.')[0], s = st(id), a = (S[id] && S[id].attributes) || {};
+      var dc = String(a.device_class || '').toLowerCase();
+      var dead = !s || s === 'unavailable' || s === 'unknown';
+      if (dom === 'alarm_control_panel') { if (s === 'triggered') r.triggered = true; else if (s === 'disarmed') r.disarmed = true; }
+      // Unlocked, jammed and offline apart, as everywhere (window.casoraLockTally, review 2 T03).
+      else if (dom === 'lock') { if (dead) r.lockDead++; else if (s === 'jammed') r.lockJammed++; else if (s !== 'locked' && s !== 'locking') r.locks++; }
+      else if (dom === 'camera') { if (dead || (window._casoraCamDead || {})[id] || (window.casoraCamOffline && window.casoraCamOffline(id, S))) r.camDead++; }
+      else if (dom === 'cover') {
+        if (['garage', 'gate', 'door'].indexOf(dc) >= 0 && (window.casoraCoverOpen ? window.casoraCoverOpen(S[id], 'gate') : (s === 'open' || s === 'opening'))) r.gates++;
+      }
+    });
+    // Doors/windows: contact + tilt sensor (+ combined sensor) are one opening.
+    openings(hass, ids.filter(function (id) { return id.indexOf('binary_sensor.') === 0; })).forEach(function (u) {
+      var win = u.kind === 'window' || (u.main && u.main === v.windows_entity);
+      if (u.state === 'tilted') { if (win) r.windowsTilted++; else r.doorsTilted++; }
+      else if (u.state === 'open') { if (win) r.windows++; else r.doors++; }
+    });
+    // Home: selected covers open in the evening and at night (#76, scripts/local/34-security-covers.js).
+    r.covers = window._casoraSecCovers ? window._casoraSecCovers.count(S, hass, user, v, el) : 0;
+    // #209: detectors of the house (Home) or the room's area, and the badge's own ones.
+    var det = window.casoraSecDetectors(hass, v, home ? 'home' : 'room', user, ids);
+    var hits = [], moves = [];
+    r.detDead = 0;
+    det.safety.forEach(function (id) {
+      var s = st(id);
+      if (!s || s === 'unavailable' || s === 'unknown') r.detDead++;
+      else if (s === 'on') hits.push({ id: id, kind: det.kind[id], area: det.area[id] });
+    });
+    // Motion reads its sensors only while away: at home it never counts, and the badge need not redraw on it.
+    if (det.motion.length && securityAway(hass)) det.motion.forEach(function (id) {
+      if (st(id) === 'on') moves.push({ id: id, kind: 'motion', area: det.area[id] });
+    });
+    r.danger = hits.length;
+    r.dangerWords = window.casoraSecDetWords(hits, home);
+    r.motion = moves.length;
+    r.motionWords = window.casoraSecDetWords(moves, home);
+    r.detectors = det.safety.length;
+    r.insecure = r.triggered || r.disarmed || !!(r.locks || r.lockJammed || r.doors || r.windows || r.doorsTilted || r.windowsTilted
+      || r.gates || r.covers || r.danger || r.motion);
+    r.problem = !!(r.camDead || r.lockDead || r.detDead);
+    // Level = worst state: triggered, a detector reporting or motion while away = danger; else a notice for everything
+    // the line names, danger too for a jammed lock or something open while away (securityLevel).
+    if (r.triggered || r.danger || r.motion) r.level = 'alarm';
+    else if (r.insecure || r.problem) r.level = securityLevel(hass, ids) === 'alarm' ? 'alarm' : 'warn';
+    else r.level = 'ok';
+    r.ids = ids.concat(det.safety.filter(function (x) { return ids.indexOf(x) < 0; }));
+    return r;
+  };
 
   // ── Security: one word and one colour per state (Soft, 05.10.2026) ────────
   // In the Soft look tile, badges, popups and notifications say the same word for the same
@@ -1835,8 +2043,8 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
         return undefined;
       };
 
-      // Security: alarm, doors, windows, gates, locks, blinds, cameras, other (the sub-line's order; doors and windows
-      // side by side, owner 08.11.2026).
+      // Security: alarm, doors, windows, gates, locks, blinds, detectors, motion (#209), cameras, other (the sub-line's
+      // order; doors and windows side by side, owner 08.11.2026).
       var GATE = ['garage', 'gate', 'door'];
       var low = function (x) { return String(x == null ? '' : x).toLowerCase(); };
       var keyOf = function (id, states) {
@@ -1850,12 +2058,16 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
         if (dom !== 'binary_sensor') return 'other';
         // A group helper without a class of its own: its first member's class.
         if (!dc && Array.isArray(a.entity_id) && a.entity_id.length) dc = low(((S[a.entity_id[0]] || {}).attributes || {}).device_class);
+        // #209: smoke, gas, CO and water detectors; motion, occupancy and presence sensors.
+        if (DET_SAFE[dc]) return 'detectors';
+        if (DET_MOVE[dc]) return 'motion';
         var nm = id + ' ' + (a.friendly_name || '');
         if (dc === 'window' || (dc !== 'door' && dc !== 'garage_door' && /fenster|window/i.test(nm))) return 'windows';
         if (['door', 'garage_door', 'opening', ''].indexOf(dc) >= 0) return 'doors';
         return 'other';
       };
       var SEC_TPL = { casora_badge_lock_group: 'locks', casora_badge_camera_group: 'cameras', casora_badge_security_covers: 'covers',
+        casora_badge_security_detectors: 'detectors', casora_badge_security_motion: 'motion',
         casora_badge_contact_group: null, casora_badge_security: null };
       var secCard = function (cfg, states) {
         var hit = tplHit(cfg, SEC_TPL);
@@ -1865,7 +2077,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
         if (kind === 'door' || kind === 'window') return kind + 's';
         return keyOf(cfg.entity, states);
       };
-      window.casoraSecSub = make(['alarm', 'doors', 'windows', 'gates', 'locks', 'covers', 'cameras', 'other'], secCard);
+      window.casoraSecSub = make(['alarm', 'doors', 'windows', 'gates', 'locks', 'covers', 'detectors', 'motion', 'cameras', 'other'], secCard);
       window.casoraSecSub.keyOf = keyOf;
 
       // Climate: temperature, humidity, air quality, blinds (the sub-row's order in button_card_templates.json).
@@ -1919,12 +2131,14 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
   // that is off is normal by day and must not push the real findings aside (owner, 14.11.2026, „2B“). Within one rank
   // the line's own order decides (the usual one or the Studio's security_sub_order). L = the list of
   // casoraSecuritySummary ([word, icon, number, offline?, key, kind]); returns the index of the lead, -1 if empty.
-  var SEC_LEAD_RANK = { jammed: 0, open: 1, tilted: 2, offline: 3, disarmed: 4 };
+  // #209: a smoke, gas, CO or water detector that reports leads everything, motion while away comes right after a
+  // jammed lock.
+  var SEC_LEAD_RANK = { danger: 0, jammed: 1, motion: 2, open: 3, tilted: 4, offline: 5, disarmed: 6 };
   window.casoraSecLead = function (L) {
     var best = -1, r = 99;
     (L || []).forEach(function (x, i) {
       var k = SEC_LEAD_RANK[x && x[5]];
-      if (k === undefined) k = 5;
+      if (k === undefined) k = 7;
       if (k < r) { r = k; best = i; }
     });
     return best;
@@ -1950,6 +2164,9 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     }
     // [word, icon, number, offline?, key, kind]; kind ranks the lead (casoraSecLead); words with a number are in phrases/en.json.
     var L = [];
+    // #209: detectors that report („Rauch · Küche“) and motion while away („Bewegung · Flur“), casoraSecCount.
+    (S.dangerWords || []).forEach(function (d) { L.push([d.word, d.icon, d.n, false, 'detectors', 'danger']); });
+    (S.motionWords || []).forEach(function (d) { L.push([d.word, d.icon, d.n, false, 'motion', 'motion']); });
     if (S.doors) L.push([n(S.doors, 'Tür offen', 'Türen offen'), 'door-open', S.doors, false, 'doors', 'open']);
     if (S.windows) L.push([n(S.windows, 'Fenster offen', 'Fenster offen'), 'window-open', S.windows, false, 'windows', 'open']);
     if (S.windowsTilted) L.push([n(S.windowsTilted, 'Fenster gekippt', 'Fenster gekippt'), 'window-tilt', S.windowsTilted, false, 'windows', 'tilted']);
@@ -1961,6 +2178,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     if (S.covers) L.push([n(S.covers, 'Jalousie offen', 'Jalousien offen'), 'cover_open', S.covers, false, 'covers', 'open']);
     if (S.lockDead) L.push([n(S.lockDead, 'Schloss offline', 'Schlösser offline'), 'lock', S.lockDead, true, 'locks', 'offline']);
     if (S.camDead) L.push([n(S.camDead, 'Kamera offline', 'Kameras offline'), 'camera', S.camDead, true, 'cameras', 'offline']);
+    if (S.detDead) L.push([n(S.detDead, 'Melder offline', 'Melder offline'), 'attention2', S.detDead, true, 'detectors', 'offline']);
     // Alarm off: a sign behind the findings (icon, no number); alone it stays in words like any single finding.
     if (S.disarmed) L.push(['Alarm aus', 'shield_off', 0, false, 'alarm', 'disarmed']);
     // Own order from the Studio (security_sub_order): by kind; the lead (most important finding) still goes first.
