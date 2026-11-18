@@ -19,7 +19,7 @@ class CalendarSettingsTest(unittest.IsolatedAsyncioTestCase):
     def test_dashboard_export_leaves_calendar_filter_out(self):
         data = share.build_export(
             title="Mock home", url_path="casora-mock", config={"views": []}, mobile_url=None, mobile=None,
-            settings={"calendar_filter": "Naam-bbbbbb ffffff, Naam-hhhhhh", "calendars": [{"entity": "calendar.mock_day"}]}, photos={},
+            settings={"calendar_filter": "Termin-bbbbbb ffffff, Termin-hhhhhh", "calendars": [{"entity": "calendar.mock_day"}]}, photos={},
             version="26.11.26", exported="2026-11-13T10:00:00Z",
         )
         self.assertEqual(share.read_file(data)["settings"], {"calendars": [{"entity": "calendar.mock_day"}]})
@@ -37,10 +37,10 @@ class CalendarSettingsTest(unittest.IsolatedAsyncioTestCase):
         connection = SimpleNamespace(send_result=lambda mid, result: results.append(result))
         command = inspect.unwrap(settings.ws_set)
         await command(hass, connection, {"id": 1, "settings": {
-            "calendar_filter": "Naam-bbbbbb ffffff, Naam-hhhhhh", "calendars": [{"entity": "calendar.mock_day"}],
+            "calendar_filter": "Termin-bbbbbb ffffff, Termin-hhhhhh", "calendars": [{"entity": "calendar.mock_day"}],
         }})
-        self.assertEqual(results[-1]["settings"]["calendar_filter"], "Naam-bbbbbb ffffff, Naam-hhhhhh")
-        self.assertEqual((await settings.async_load_settings(hass))["calendar_filter"], "Naam-bbbbbb ffffff, Naam-hhhhhh")
+        self.assertEqual(results[-1]["settings"]["calendar_filter"], "Termin-bbbbbb ffffff, Termin-hhhhhh")
+        self.assertEqual((await settings.async_load_settings(hass))["calendar_filter"], "Termin-bbbbbb ffffff, Termin-hhhhhh")
         await command(hass, connection, {"id": 2, "settings": {"calendar_filter": ""}})
         self.assertNotIn("calendar_filter", await settings.async_load_settings(hass))
 

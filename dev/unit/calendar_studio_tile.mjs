@@ -45,7 +45,7 @@ const tileStateWord = (w) => new Function('window', tileStateWordSrc)(w);
 
 const states = {
   'calendar.waste': { state: 'on', attributes: { message: 'Bins out' } },
-  'calendar.a': { state: 'on', attributes: { message: 'Naam-cccccc' } },
+  'calendar.a': { state: 'on', attributes: { message: 'Termin-cccccc' } },
   'calendar.b': { state: 'on', attributes: { message: 'Visible' } },
 };
 const calTile = { variables: {} };
@@ -70,7 +70,7 @@ const calTile = { variables: {} };
   assert.equal(word('casora_calendar', calTile, null, states, {}, { calendars: [{ entity: 'calendar.a', tile: false }] }), 'Keine Termine', 'disabled tile calendar stays excluded');
   const hass = { entities: { 'calendar.a': { hidden_by: 'user' } } };
   assert.equal(word('casora_calendar', calTile, null, states, hass, { calendars: [] }), 'Visible', 'automatic selection excludes hidden calendars');
-  assert.equal(word('casora_calendar', calTile, null, states, hass, { calendars: [{ entity: 'calendar.a' }] }), 'Naam-cccccc', 'explicit selection includes hidden calendars');
+  assert.equal(word('casora_calendar', calTile, null, states, hass, { calendars: [{ entity: 'calendar.a' }] }), 'Termin-cccccc', 'explicit selection includes hidden calendars');
   const ownTile = { variables: { calendars: [{ entity: 'calendar.b' }, { entity: 'calendar.waste' }] } };
   assert.equal(word('casora_calendar', ownTile, null, states, hass, { calendars: [{ entity: 'calendar.a' }] }), 'Visible', 'tile list overrides configured calendars and excludes waste');
   assert.equal(word('casora_calendar', { variables: { calendars: [{ entity: 'calendar.waste' }] } }, null, states, hass, chosen), 'Keine Termine', 'tile list cannot include waste');
@@ -79,7 +79,7 @@ const calTile = { variables: {} };
 // Saved filter words hide the first title; the next calendar's title shows.
 {
   const w = makeWindow({ waste: 'calendar.waste' });
-  const word = tileStateWord(w)('casora_calendar', calTile, null, states, {}, { calendar_filter: 'Naam-' });
+  const word = tileStateWord(w)('casora_calendar', calTile, null, states, {}, { calendar_filter: 'Termin-' });
   assert.equal(word, 'Visible', 'the Studio Agenda preview hides a title that contains a filter entry');
   console.log('ok Studio Agenda preview applies the calendar filter');
 }
@@ -104,7 +104,7 @@ const calTile = { variables: {} };
 // Until the title rule has loaded, nothing is shown (no unfiltered text).
 {
   const w = makeWindow({ withRule: false });
-  const word = tileStateWord(w)('casora_calendar', calTile, null, states, {}, { calendar_filter: 'Naam-' });
+  const word = tileStateWord(w)('casora_calendar', calTile, null, states, {}, { calendar_filter: 'Termin-' });
   assert.equal(word, '', 'no unfiltered calendar title before the rule has loaded');
   console.log('ok Studio Agenda preview waits for the title rule');
 }
@@ -140,13 +140,13 @@ const make = (ctx, win) => new Function('window', 'return {' + methodSrc() + '}'
   const mounted = { tile: null };
   const instance = Object.create(P);
   instance._hass = { states, callWS: async (msg) => {
-    if (msg.type === 'casora/settings/get') return { settings: { calendar_filter: 'Naam-' }, stored: true };
+    if (msg.type === 'casora/settings/get') return { settings: { calendar_filter: 'Termin-' }, stored: true };
     throw { code: 'unknown_command' };
   } };
   instance.shadowRoot = { getElementById: () => ({}), querySelectorAll: () => [] };
   instance._flowGroup = () => ({ parentElement: element() });
   instance._flowRow = () => ({ row: element() });
-  instance._cs = { S: window.casoraPersonal.normalize({ calendar_filter: 'Naam-' }) };
+  instance._cs = { S: window.casoraPersonal.normalize({ calendar_filter: 'Termin-' }) };
   instance._tileEnt = () => null;
   instance._tileKey = () => 'calendar';
   instance._inactiveIconColor = () => '';
@@ -158,15 +158,15 @@ const make = (ctx, win) => new Function('window', 'return {' + methodSrc() + '}'
   instance._rebuildPreview();
   assert.equal(previewText(), 'Visible');
   instance._casoraPersonalGroups(element(), instance._cs.S, ['calendars'], () => {});
-  const field = elements.find(({ tag, el }) => tag === 'input' && el.value === 'Naam-').el;
+  const field = elements.find(({ tag, el }) => tag === 'input' && el.value === 'Termin-').el;
   field.value = 'Visible';
   field.oninput();
-  assert.equal(previewText(), 'Naam-cccccc', 'editing the draft redraws the mounted preview');
+  assert.equal(previewText(), 'Termin-cccccc', 'editing the draft redraws the mounted preview');
   await instance._csDiscardAll();
   assert.equal(previewText(), 'Visible', 'discard restores the mounted preview');
 }
 {
-  const draft = { calendar_filter: 'Naam-' };
+  const draft = { calendar_filter: 'Termin-' };
   const file = { calendar_filter: 'Old-' };
   const once = { calendar_filter: '' };
   const ready = { casoraCalendarAllows: () => true };
