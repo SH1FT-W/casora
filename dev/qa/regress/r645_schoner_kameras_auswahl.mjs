@@ -51,6 +51,8 @@ const P = (src, a) => page.evaluate(([src, a]) => new Function('p', 'arg', 'retu
 await P(`for (const r of p._state.compact.rooms) { r.variables.casora_screensaver = '5'; r.variables.casora_screensaver_kind = 'kameras'; delete r.variables.casora_screensaver_cameras; }`);
 await P(`p._csShow('n-saver')`);
 await wait(2000);
+await check('Camera picker starts collapsed', await P(`return p.shadowRoot.querySelector('.cs-saver-camera-choose')?.getAttribute('aria-expanded') === 'false'`));
+await P(`p.shadowRoot.querySelector('.cs-saver-camera-choose').click()`);
 const list = () => P(`const r = p.shadowRoot; return { rows: [...r.querySelectorAll('.cs-saver-list[data-key="casora_screensaver_cameras"] .cs-saver-row')].map((x) => [x.dataset.id, x.getAttribute('aria-pressed'), (x.querySelector('.cs-saver-tx span') || {}).textContent || '']),
   vars: [...new Set(p._state.compact.rooms.map((x) => JSON.stringify(x.variables.casora_screensaver_cameras ?? null)))] };`);
 const row = (l, id) => l.rows.find((x) => x[0] === id) || [];

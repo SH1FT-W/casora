@@ -28,7 +28,7 @@ const wait = (ms) => page.waitForTimeout(ms);
 await P(`for (const r of p._state.compact.rooms) { r.variables.casora_screensaver = '5'; delete r.variables.casora_screensaver_kind; delete r.variables.casora_screensaver_mix; }`);
 await P(`p._csShow('n-saver')`);
 await wait(2000);
-const list = () => P(`const r = p.shadowRoot; return { rows: [...r.querySelectorAll('.cs-saver-list[data-key="casora_screensaver_mix"] .cs-saver-row')].map((x) => [x.dataset.id, x.getAttribute('aria-pressed')]),
+const list = () => P(`const r = p.shadowRoot; return { rows: [...r.querySelectorAll('.cs-saver-list[data-key="casora_screensaver_mix"] .cs-saver-row')].filter((x) => x.closest('.cs-saver-list').dataset.key === 'casora_screensaver_mix').map((x) => [x.dataset.id, x.getAttribute('aria-pressed')]),
   ticks: r.querySelectorAll('.cs-saver-list .rcheck').length,
   vars: [...new Set(p._state.compact.rooms.map((x) => JSON.stringify(x.variables.casora_screensaver_mix ?? null)))] };`);
 let l = await list();
