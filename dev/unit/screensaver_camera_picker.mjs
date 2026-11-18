@@ -57,6 +57,7 @@ function render(variables = {}) {
   panel._markDirty = () => { panel.dirtyCalls++; };
   panel._mirrorToPair = () => {};
   const root = new Element('div');
+  panel._csRender = () => { root.textContent = ''; panel._csSaverPreview(root, new Element('div')); };
   panel._csSaverPreview(root, new Element('div'));
   return { panel, root };
 }
@@ -71,10 +72,15 @@ for (const [name, variables] of [
   assert.equal(action(root).getAttribute('aria-expanded'), 'false', name + ' starts collapsed');
   assert.equal(picker(root).hidden, true);
   if (variables.casora_screensaver_kind === 'kameras') {
-    assert.equal(action(root).parentElement, nodes(root).find((node) => node.className === 'cs-saver-lists'),
+    const lists = nodes(root).find((node) => node.className === 'cs-saver-lists');
+    const chips = nodes(root).find((node) => node.className === 'cs-saver-chips');
+    assert.equal(action(root).parentElement, lists,
       'single-mode action is below the mode choices');
+    assert.ok(lists.parentElement.children.indexOf(chips) < lists.parentElement.children.indexOf(lists));
   } else {
     assert.equal(action(root).parentElement, rotationRow(root).parentElement, 'rotation action is beside Cameras');
+    assert.equal(nodes(picker(root)).filter((node) => node.className === 'fhead').length, 0,
+      'rotation reuses its Cameras row as the picker heading');
   }
   const before = JSON.stringify(panel._state);
   action(root).click();
@@ -116,6 +122,18 @@ for (const variables of [
   assert.equal(panel._state.compact.rooms[0].variables.casora_screensaver_kind, undefined,
     'choosing cameras keeps rotation mode');
   assert.equal(picker(root).hidden, false, 'selection keeps the inline picker open');
+}
+{
+  const { panel, root } = render({ casora_screensaver_cameras: ['camera.example_door'] });
+  action(root).click();
+  nodes(root).find((node) => node.dataset.kind === 'kameras').click();
+  assert.equal(panel._state.compact.rooms[0].variables.casora_screensaver_kind, 'kameras');
+  assert.equal(picker(root).hidden, true, 'switching to cameras-only starts collapsed');
+  nodes(root).find((node) => node.dataset.kind === 'mix').click();
+  assert.equal(panel._state.compact.rooms[0].variables.casora_screensaver_kind, undefined);
+  assert.equal(picker(root).hidden, true, 'switching back to rotation starts collapsed');
+  assert.deepEqual(Array.from(panel._state.compact.rooms[0].variables.casora_screensaver_cameras),
+    ['camera.example_door'], 'switching modes retains camera choices');
 }
 {
   const { panel, root } = render();

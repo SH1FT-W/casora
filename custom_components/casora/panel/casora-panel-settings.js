@@ -1721,9 +1721,10 @@
           + ".cs-saver-tx{flex:1;min-width:0;display:flex;flex-direction:column;}"
           + ".cs-saver-tx b{font-size:var(--t-callout, 15px);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}"
           + ".cs-saver-tx span{font-size:var(--t-foot, 13px);color:var(--ink-3, rgba(127,127,127,.8));}"
-          + ".cs-saver-camera-kind{display:flex;flex-wrap:wrap;align-items:center;gap:4px;}"
+          + ".cs-saver-camera-kind{display:flex;flex-wrap:wrap;align-items:center;gap:8px;}"
           + ".cs-saver-camera-kind>.cs-saver-row{flex:1 1 140px;width:auto;}"
           + ".cs-saver-camera-kind>.cs-saver-camera-picker{flex:1 0 100%;min-width:0;}"
+          + ".cs-saver-camera-kind .cs-saver-list{background:none;padding:0;}"
           + ".cs-saver-camera-choose{min-height:44px;white-space:normal;}";
         root.appendChild(st);
       }
@@ -1737,7 +1738,7 @@
       // items: { id, label, icon, tone, sub, raw, auto }. With auto on the items (cameras) none picked means
       // „Automatic“: the items with auto true, the others grey; a row „Automatic“ on top goes back to it.
       let camerasOpen = false;
-      const cameraPicker = (host) => {
+      const cameraPicker = (host, inRotation = false) => {
         const picker = el("div", "cs-saver-camera-picker");
         picker.hidden = !camerasOpen;
         const choose = btn(t("Choose cameras"), () => {
@@ -1750,14 +1751,14 @@
         host.append(choose, picker);
         const why = { map: "Map or robot vacuum, not taken automatically", printer: "3D printer, not taken automatically" };
         pickList("casora_screensaver_cameras", SV.cameraChoices(this._hass).map((c) => ({ id: c.id, label: c.name, raw: true, icon: "mdi:cctv", tone: "#5B8FC9",
-          auto: c.auto, sub: why[c.why] || "" })), "Cameras",
+          auto: c.auto, sub: why[c.why] || "" })), inRotation ? "" : "Cameras",
           "Automatic: every camera with a real picture; robot vacuum maps and 3D printer cameras stay out. Tap a camera to choose them yourself. On the tablet a tap on a camera shows its live picture.",
           "Only the cameras picked here. “Automatic” takes every camera with a real picture again.",
           "No camera found. The preview shows an example.",
           { id: "auto", label: "Automatic", sub: "Every camera with a real picture", icon: "mdi:auto-fix", tone: "#5B8FC9" }, picker);
       };
       const pickList = (key, items, title, ledeAll, ledeSome, none, autoRow, host = lists) => {
-        host.appendChild(el("div", "fhead", t(title)));
+        if (title) host.appendChild(el("div", "fhead", t(title)));
         if (!items.length) { host.appendChild(el("p", "cs-lede", t(none))); return; }
         const ids = items.map((x) => x.id);
         const auto = items.some((x) => x.auto !== undefined) ? items.filter((x) => x.auto).map((x) => x.id) : null;
@@ -1785,7 +1786,7 @@
           if (key === "casora_screensaver_mix" && it.id === "kameras" && on && typeof SV.cameraChoices === "function") {
             const group = el("div", "cs-saver-camera-kind");
             group.appendChild(r);
-            cameraPicker(group);
+            cameraPicker(group, true);
             list.appendChild(group);
           } else {
             list.appendChild(r);
