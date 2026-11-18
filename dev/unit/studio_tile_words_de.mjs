@@ -19,7 +19,7 @@ assert.equal((de.exact || de)['2 on'], '2 an', 'de.json: „2 on“ → „2 an�
 
 // 2. The thermostat preview writes its room reading in the locale.
 const src = read('custom_components/casora/panel/casora-panel.js');
-const a = src.indexOf('const tileStateWord = (kind, tile, ent, states, hass) => {');
+const a = src.indexOf('const tileStateWord = (kind, tile, ent, states, hass, settings) => {');
 assert.ok(a > 0, 'tileStateWord found');
 const b = src.indexOf('\n};', a) + 3;
 const n0 = src.indexOf('const numText = ');

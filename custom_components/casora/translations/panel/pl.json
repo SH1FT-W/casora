@@ -1,6 +1,8 @@
 {
   "_comment": "Tłumaczenie panelu Casora na polski. Klucz = oryginalny angielski tekst panelu. Nowy język: utwórz plik <kod>.json, potem uruchom tools/build-panel-i18n.py.",
   "exact": {
+    "Hide when the title contains": "Ukryj, gdy tytuł zawiera",
+    "Separate entries with commas; an entry may have several words. The calendar popup still shows them.": "Oddziel wpisy przecinkami; wpis może zawierać kilka słów. Okno kalendarza nadal je pokazuje.",
     "Copy diagnostics…": "Kopiuj diagnostykę…",
     "Diagnostics": "Diagnostyka",
     "Paste it into your GitHub issue. It contains only counts, versions and integrations – no names of devices, rooms or people, no addresses.": "Wklej ją do swojego zgłoszenia na GitHubie. Zawiera tylko liczby, wersje i integracje – żadnych nazw urządzeń, pokoi ani osób, żadnych adresów.",
