@@ -28023,7 +28023,7 @@ class CasoraPanel extends HTMLElement {
       const SC = window._casoraSecCovers;
       const covers = home && !!(SC && SC.cfg && SC.cfg().ids.length);
       const det = typeof window.casoraSecDetectors === "function" && this._hass
-        ? window.casoraSecDetectors(this._hass, V, home ? "home" : "room", (this._hass || {}).user) : null;
+        ? window.casoraSecDetectors(this._hass, { ...V, _name: V._name || room.name }, home ? "home" : "room", (this._hass || {}).user) : null;
       present = secSubPresent(V, (this._hass || {}).states || {}, house, covers, det);
       LABEL = SEC_SUB_LABEL; ICON = SEC_SUB_ICON; dotIcon = "badge-security";
     }

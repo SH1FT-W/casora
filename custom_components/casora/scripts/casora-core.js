@@ -353,7 +353,9 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
       var hd = el && (el.hass || el._hass);
       if (!hd) { try { var hr = document.querySelector('home-assistant'); hd = hr && hr.hass; } catch (e) { hd = null; } }
       if (hd) {
-        var dt = window.casoraSecDetectors(hd, v, el || 'room', user);
+        // The desktop room's name is its card's name (casora_room), the phone's _rv._name.
+        var nm = el && el._config && typeof el._config.name === 'string' && el._config.name.indexOf('[[[') < 0 ? el._config.name : null;
+        var dt = window.casoraSecDetectors(hd, nm && !v.room_name ? Object.assign({}, v, { _name: v._name || nm }) : v, el || 'room', user);
         if (dt.safety.length || dt.motion.length) return true;
       }
     }
