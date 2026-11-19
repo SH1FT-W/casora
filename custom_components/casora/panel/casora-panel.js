@@ -67,6 +67,10 @@ function clock12(hass) {
 // The preview clock, drawn exactly like the dashboard clock (#179): a small local copy of the dashboard rule
 // in casora-core.js (casoraClockText, casoraClockDate, the casora-clock element's line), so the preview needs
 // no script for the time. The parity test dev/unit/studio_clock_parity.mjs fails when the two rules drift apart.
+// Three names, one line each:
+//   studioClockText: the time text only (24-hour or 12-hour), in the profile's zone.
+//   studioClockLine: studioClockText plus the suffix, uppercased, as the casora-clock element draws it.
+//   studioTimeText: the tile's time line; it also reads a time sensor, like the template (dev/unit/studio_clock_sensor.mjs).
 function studioClockText(hass, use12, now) {
   const d = now || new Date();
   const tz = hass && hass.locale && hass.locale.time_zone === "server" && hass.config && hass.config.time_zone;
@@ -79,6 +83,10 @@ function studioClockText(hass, use12, now) {
   }
   const mm = String(m).padStart(2, "0");
   if (!use12) return String(h).padStart(2, "0") + ":" + mm;
+  return studioTwelveHour(h, mm);
+}
+// The 12-hour form, shared by studioClockText and studioTimeText: "12:05 AM", "6:05 PM".
+function studioTwelveHour(h, mm) {
   return ((h % 12) || 12) + ":" + mm + " " + (h >= 12 ? "PM" : "AM");
 }
 // The date needs the dashboard's language (casoraLocale from casora-i18n.js); until that file is there the
@@ -96,7 +104,7 @@ function studioClockLine(hass, use12, suffix, now) {
   const t = studioClockText(hass, use12, now);
   return (suffix ? t + " " + suffix : t).toUpperCase();
 }
-// #223: the time text as the dashboard's casora_time tile draws it (the time-sensor rule of the template, same
+// The time text as the dashboard's casora_time tile draws it (the time-sensor rule of the template, same
 // order). A time sensor with a usable value shows its own time, the profile does not matter. Automatic
 // (sensor.time) with no usable value (unavailable, unknown, empty, or no entry) shows the device clock. A
 // sensor chosen in the Studio that is gone shows nothing, and one that is there shows its state as it is.
@@ -113,7 +121,7 @@ function studioTimeText(hass, V, use12, now) {
   const m = display.match(/^(\d{1,2}):(\d{2})$/);
   if (use12 && m) {
     const h = parseInt(m[1], 10);
-    display = ((h % 12) || 12) + ":" + m[2] + " " + (h >= 12 ? "PM" : "AM");
+    display = studioTwelveHour(h, m[2]);
   }
   if (suffix) display = display + " " + suffix;
   return display.toUpperCase();
