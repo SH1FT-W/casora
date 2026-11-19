@@ -2935,7 +2935,7 @@
     "Open updates": "Apri aggiornamenti",
     "Which calendars the calendar tiles show, with name and color.": "Quali calendari mostrano i riquadri calendario, con nome e colore.",
     "Push to your phone when it is time to open or close the windows.": "Notifica sul telefono quando è ora di aprire o chiudere le finestre.",
-    "Go back to Home and close popups after a while without use.": "Torna a Casa e chiude i popup dopo un po' senza uso.",
+    "Go back to Home and close popups after a while without use.": "Tornare alla Home e chiudere le finestre dopo un po’ di inattività.",
     "Waste days, doors and windows, scenes, music and calendars.": "Giorni di raccolta rifiuti, porte e finestre, scene, musica e calendari.",
     "Whether Casora looks for old Hemma dashboards to take over.": "Se Casora cerca vecchie dashboard Hemma da riprendere.",
     "Open a dashboard in the Studio to change this.": "Apri una dashboard nello Studio per modificarlo.",
@@ -3166,8 +3166,8 @@
     "Use recommended values": "Usa i valori consigliati",
     "Smoke detectors": "Rilevatori di fumo",
     "Water detectors": "Rilevatori d’acqua",
-    "Close popups when idle": "Chiudi i popup se inattivo",
-    "Tablets only. Closes an open popup after a while without use.": "Solo tablet. Chiude un popup aperto dopo un po' senza uso."
+    "Close popups when idle": "Chiudi le finestre se inattivo",
+    "Tablets only. Closes an open popup after a while without use.": "Solo tablet. Chiude una finestra aperta dopo un po' senza uso."
   },
   "patterns": [
     [

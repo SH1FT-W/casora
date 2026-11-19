@@ -2898,7 +2898,7 @@
     "Household": "Casa",
     "Name or entity": "Nome ou entidade",
     "No device matches the filter.": "Nenhum dispositivo corresponde ao filtro.",
-    "Go back to Home and close popups after a while without use.": "Volta a Casa e fecha os pop-ups após algum tempo sem uso.",
+    "Go back to Home and close popups after a while without use.": "Voltar ao Início e fechar as janelas após algum tempo sem uso.",
     "Whether Casora looks for old Hemma dashboards to take over.": "Se o Casora procura painéis antigos do Hemma para os adotar.",
     "Outdoor temperature and humidity, and what a kWh costs – for ventilation, heating and energy tips.": "Temperatura e humidade exteriores, e quanto custa um kWh – para ventilação, aquecimento e dicas de energia.",
     "Speed": "Velocidade",
@@ -3166,8 +3166,8 @@
     "Use recommended values": "Usar valores recomendados",
     "Smoke detectors": "Detetores de fumo",
     "Water detectors": "Detetores de inundação",
-    "Close popups when idle": "Fechar pop-ups quando inativo",
-    "Tablets only. Closes an open popup after a while without use.": "Só em tablets. Fecha um pop-up aberto após algum tempo sem uso."
+    "Close popups when idle": "Fechar janelas quando inativo",
+    "Tablets only. Closes an open popup after a while without use.": "Só em tablets. Fecha uma janela aberta após algum tempo sem uso."
   },
   "patterns": [
     [
