@@ -16110,6 +16110,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     }
 
     if (isDoorbell(id, st)) {
+      // A binary doorbell going back to „off“ is the release of the press, not a second ring.
+      if (id.indexOf('binary_sensor.') === 0 && s !== 'on') return null;
       // "Front Door Ding" is the entity, "Front Door" is the thing that rang.
       var who = name.replace(/\s+(ding|doorbell|chime|button)$/i, '');
       return { label: (who || name) + ' hat geklingelt', icon: 'doorbell', tone: 'accent' };
