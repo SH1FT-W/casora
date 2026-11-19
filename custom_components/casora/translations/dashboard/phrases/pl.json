@@ -2986,7 +2986,8 @@
     "Alles normal": "Wszystko w normie",
     "Rauchmelder offline": "Czujnik dymu offline",
     "Wassermelder offline": "Czujnik wody offline",
-    "Gasmelder": "Czujniki gazu"
+    "Gasmelder": "Czujniki gazu",
+    "Solarerzeugung": "Produkcja solarna"
   },
   "patterns": [
     [

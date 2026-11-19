@@ -14,7 +14,11 @@
 //   EV.shares(sums)                    → whole percentages adding up to 100
 //   EV.average(vals, plan)             → mean of the whole buckets before the running one, or null
 //   EV.load(hass, range, el)           → aggregate (cached), 'wait' while the first answer is out, null on an error
-//   EV.sec(part, C, states, hass, el)  → live parts: 'entry' (row in the energy popup), 'hero', 'stage', 'list'
+//   EV.sources(prefs)                  → { house, imp, exp, solar } meters of the settings' sources (#210), or null
+//   EV.flows(rows, src, plan, agg)     → { house, imp, exp, solar, any } the range's kWh of house, grid and solar
+//   EV.flowRows(flows, src)            → the rows of the energy popup's section „Energie“ (#210)
+//   EV.sec(part, C, states, hass, el)  → live parts: 'entry' (row in the energy popup), 'flows' (its section
+//                                        „Energie“ with house, grid and solar over the same range), 'hero', 'stage', 'list'
 // Pure parts are tested in dev/unit/energy_history.mjs.
 (function () {
   if (window._casoraEnergyHistory) return;
@@ -110,6 +114,23 @@
       }
     });
     return grid && whole ? { plus: plus, minus: minus } : null;
+  };
+  // #210: the sources' own meters for the energy popup's section „Energie“: grid import and export (the grid's own
+  // meters or its legacy flow lists, as EV.house reads them), solar production, and the house when EV.house has it.
+  // null without any grid or solar meter.
+  EV.sources = function (p) {
+    var imp = [], exp = [], solar = [];
+    var add = function (list, id) { if (typeof id === 'string' && id && list.indexOf(id) < 0) list.push(id); };
+    ((p && p.energy_sources) || []).forEach(function (s) {
+      if (!s) return;
+      if (s.type === 'grid') {
+        add(imp, s.stat_energy_from); add(exp, s.stat_energy_to);
+        (Array.isArray(s.flow_from) ? s.flow_from : []).forEach(function (f) { add(imp, f && f.stat_energy_from); });
+        (Array.isArray(s.flow_to) ? s.flow_to : []).forEach(function (f) { add(exp, f && f.stat_energy_to); });
+      } else if (s.type === 'solar') add(solar, s.stat_energy_from);
+    });
+    if (!imp.length && !exp.length && !solar.length) return null;
+    return { house: EV.house(p), imp: imp, exp: exp, solar: solar };
   };
   var UNTRACKED = '__untracked';
   EV.UNTRACKED = UNTRACKED;
@@ -228,6 +249,40 @@
     }
     return out;
   };
+  // #210: the range's kWh of the house, the grid (import, export) and solar. The house is the one of the page
+  // „Verbrauch je Gerät“ (EV.aggregate: its meters, per bucket never below the devices), so both read the same number.
+  // A meter without a row in the range: null (the row shows „—“); a negative change (a reset) counts as 0.
+  EV.flows = function (rows, src, plan, agg) {
+    var sum = function (ids) {
+      var s = null;
+      (ids || []).forEach(function (id) {
+        (((rows || {})[id]) || []).forEach(function (p) {
+          var v = Number(p && p.change);
+          if (!p || p.change == null || !isFinite(v) || indexOf(plan, tOf(p)) < 0) return;
+          s = (s || 0) + Math.max(0, v);
+        });
+      });
+      return s;
+    };
+    var out = { house: agg && agg.house ? agg.house.sum : null, imp: sum(src && src.imp), exp: sum(src && src.exp), solar: sum(src && src.solar) };
+    out.any = ['house', 'imp', 'exp', 'solar'].some(function (k) { return out[k] != null; });
+    return out;
+  };
+  // The rows: only what the settings have (no export meter, no export row). Colours of the energy (richtlinien §7.3):
+  // the house in the popup's colour, the grid neutral both ways (export green read like the house), solar yellow.
+  var FLOW_ROWS = [
+    ['house', 'Hausverbrauch', 'mdi:home-lightning-bolt-outline', 'var(--casora-popup-accent)'],
+    ['imp', 'Netzbezug', 'mdi:transmission-tower-import', 'var(--casora-color-neutral)'],
+    ['exp', 'Einspeisung', 'mdi:transmission-tower-export', 'var(--casora-color-neutral)'],
+    ['solar', 'Solarerzeugung', 'mdi:solar-power-variant', 'var(--casora-color-yellow)'],
+  ];
+  // flows null: still loading („…“, the rows keep their place); a value null: „—“.
+  EV.flowRows = function (flows, src) {
+    var on = { house: !!(src && src.house), imp: !!(src && src.imp.length), exp: !!(src && src.exp.length), solar: !!(src && src.solar.length) };
+    return FLOW_ROWS.filter(function (r) { return on[r[0]]; }).map(function (r) {
+      return { id: r[0], icon: r[2], iconTone: r[3], label: r[1], value: flows ? fmtS(flows[r[0]]) : '…' };
+    });
+  };
   // Devices by their sum, largest first; without a value last (keeping the settings' order).
   EV.sorted = function (devs) {
     return (devs || []).map(function (x, i) { return { x: x, i: i }; }).sort(function (a, b) {
@@ -282,13 +337,17 @@
   };
   EV.load = function (hass, range, el) {
     if (!hass || typeof hass.callWS !== 'function') return null;
-    var devs = EV.devices(hass);
-    if (!devs.length) return null;
+    var prefs = window.casoraEnergyPrefs ? window.casoraEnergyPrefs(hass) : null;
+    // #210: the request also carries the sources' meters, so the section „Energie“ needs none of its own.
+    var devs = EV.devices(hass), src = EV.sources(prefs);
+    if (!devs.length && !src) return null;
     var plan = EV.plan(range, Date.now(), EV.firstDay(hass));
-    var house = EV.house(window.casoraEnergyPrefs ? window.casoraEnergyPrefs(hass) : null);
-    var ids = devs.map(function (x) { return x.id; });
-    var all = ids.concat(house ? house.plus.concat(house.minus).filter(function (id) { return ids.indexOf(id) < 0; }) : []);
-    var ck = (house ? house.plus.join(',') + '-' + house.minus.join(',') + '|' : '') + plan.range + '|' + plan.starts[0] + '|' + ids.join(',') + '|' + devs.map(function (x) { return x.parent || ''; }).join(',');
+    var house = EV.house(prefs);
+    var ids = devs.map(function (x) { return x.id; }), all = ids.slice();
+    (house ? house.plus.concat(house.minus) : []).concat(src ? src.imp.concat(src.exp, src.solar) : [])
+      .forEach(function (id) { if (all.indexOf(id) < 0) all.push(id); });
+    var ck = (house ? house.plus.join(',') + '-' + house.minus.join(',') + '|' : '')
+      + (src ? src.imp.join(',') + '-' + src.exp.join(',') + '-' + src.solar.join(',') + '|' : '') + plan.range + '|' + plan.starts[0] + '|' + ids.join(',') + '|' + devs.map(function (x) { return x.parent || ''; }).join(',');
     var key = Math.floor(Date.now() / 300000), hit = cache[ck];
     if (hit && (hit.key === key || hit.busy)) {
       if (el && hit.busy && hit.wait.indexOf(el) < 0) hit.wait.push(el);
@@ -297,7 +356,11 @@
     var cell = cache[ck] = { key: key, busy: true, data: hit ? hit.data : null, wait: el ? [el] : [] };
     hass.callWS({ type: 'recorder/statistics_during_period', start_time: new Date(plan.starts[0]).toISOString(),
       end_time: new Date(plan.end).toISOString(), statistic_ids: all, period: plan.per, types: ['change'], units: { energy: 'kWh' } })
-      .then(function (r) { cell.data = EV.aggregate(r || {}, devs, EV.plan(range, Date.now(), EV.firstDay(hass)), house); },
+      .then(function (r) {
+        var pl = EV.plan(range, Date.now(), EV.firstDay(hass)), agg = EV.aggregate(r || {}, devs, pl, house);
+        agg.flows = src ? EV.flows(r || {}, src, pl, agg) : null;
+        cell.data = agg;
+      },
         // A hiccup keeps what is on screen; only without anything the error shows.
         function () { if (!cell.data) cell.data = { error: true, devs: [], totals: [], total: null, has: false, plan: plan }; })
       .then(function () {
@@ -423,6 +486,20 @@
   EV.sec = function (part, C, states, hass, el) {
     var UI = window._casoraUI;
     if (!UI) return '';
+    if (part === 'flows') {
+      // #210: house, grid and solar over today / this week / this month, the range shared with „Verbrauch je Gerät“.
+      // Without statistics for any of them (or without the meters) nothing shows; while loading the rows keep their place.
+      var src = EV.sources(window.casoraEnergyPrefs ? window.casoraEnergyPrefs(hass) : null);
+      if (!src) return '';
+      remember(el);
+      var rg = EV.range(), d1 = EV.load(hass, rg, el);
+      var pl1 = d1 && d1 !== 'wait' && d1.plan ? d1.plan : EV.plan(rg, Date.now(), EV.firstDay(hass));
+      if (!d1 || (d1 !== 'wait' && !d1.error && !(d1.flows && d1.flows.any))) return '';
+      var list = d1 && d1 !== 'wait' && d1.error ? [{ icon: 'mdi:chart-bar', iconTone: OTHER_ROW, label: 'Statistik nicht abrufbar' }]
+        : EV.flowRows(d1 && d1 !== 'wait' ? d1.flows : null, src);
+      return UI.group(list, T('Energie') + ' · ' + periodText(pl1))
+        + '<div style="margin-top:var(--casora-space-3, 12px);">' + segHtml(UI, rg) + '</div>';
+    }
     if (part === 'entry') {
       // Row in the house's energy popup: only with devices that have statistics (an empty answer hides it).
       var devs = EV.devices(hass);

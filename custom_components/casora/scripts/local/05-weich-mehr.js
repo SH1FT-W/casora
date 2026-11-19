@@ -642,8 +642,13 @@
         EVh.prefetch(ctx.hass);
         f3.hist = { card: secCard([], 'return window._casoraEnergyHistory ? window._casoraEnergyHistory.sec("entry", null, states, hass, this) : "";', states) };
       }
-      return layout({ fields: f3, top: ['hero'], stage: 'stage', quick: 'quick', left: [], right: ['use', 'top', 'hist'], moveLeft: [],
-        narrowOrder: ['stage', 'quick', 'top', 'use', 'hist'] });
+      // #210: house, grid and solar in kWh over today / this week / this month (same range and request as the page).
+      if (EVh && EVh.sources(window.casoraEnergyPrefs ? window.casoraEnergyPrefs(ctx.hass) : null)) {
+        EVh.prefetch(ctx.hass);
+        f3.flows = { card: secCard([], 'return window._casoraEnergyHistory ? window._casoraEnergyHistory.sec("flows", null, states, hass, this) : "";', states) };
+      }
+      return layout({ fields: f3, top: ['hero'], stage: 'stage', quick: 'quick', left: [], right: ['use', 'top', 'flows', 'hist'], moveLeft: [],
+        narrowOrder: ['stage', 'quick', 'top', 'use', 'flows', 'hist'] });
     }
     return layout({ fields: f, top: ['hero', 'metric'], left: wide ? ['flow'] : ['top'],
       right: wide ? ['use', 'top', 'more'] : ['use', 'more'], moveLeft: ['top'],
