@@ -2968,7 +2968,8 @@
     "Alles normal": "All normal",
     "Rauchmelder offline": "Smoke detector offline",
     "Wassermelder offline": "Water detector offline",
-    "Gasmelder": "Gas detectors"
+    "Gasmelder": "Gas detectors",
+    "Solarerzeugung": "Solar production"
   },
   "patterns": [
     [

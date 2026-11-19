@@ -2986,7 +2986,8 @@
     "Alles normal": "Tout est normal",
     "Rauchmelder offline": "Détecteur de fumée hors ligne",
     "Wassermelder offline": "Détecteur d’eau hors ligne",
-    "Gasmelder": "Détecteurs de gaz"
+    "Gasmelder": "Détecteurs de gaz",
+    "Solarerzeugung": "Production solaire"
   },
   "patterns": [
     [
