@@ -2917,7 +2917,7 @@
     "What happens when you hold a tile, and when busy tiles move to the front.": "Qué pasa al mantener pulsado un mosaico, y cuándo pasan delante los mosaicos activos.",
     "The dashboard on the phone, and progress on the lock screen.": "El panel en el móvil y el progreso en la pantalla de bloqueo.",
     "Open updates": "Abrir actualizaciones",
-    "Go back to Home after a while without use.": "Volver a Inicio tras un rato sin uso.",
+    "Go back to Home and close popups after a while without use.": "Vuelve a Casa y cierra los popups tras un rato sin uso.",
     "A push to your phone when a new Casora version is out.": "Una notificación al móvil cuando sale una nueva versión de Casora.",
     "See the installed version, install updates, try test versions (betas).": "Ver la versión instalada, instalar actualizaciones, probar versiones de prueba (betas).",
     "Music and players": "Música y reproductores",
@@ -3165,7 +3165,9 @@
     "Above it only turns red after an hour: after a shower or cooking humid air is normal.": "Por encima solo se pone en rojo tras una hora: tras ducharse o cocinar, el aire húmedo es normal.",
     "Use recommended values": "Usar valores recomendados",
     "Smoke detectors": "Detectores de humo",
-    "Water detectors": "Detectores de agua"
+    "Water detectors": "Detectores de agua",
+    "Close popups when idle": "Cerrar popups sin actividad",
+    "Tablets only. Closes an open popup after a while without use.": "Solo en tabletas. Cierra un popup abierto tras un rato sin uso."
   },
   "patterns": [
     [

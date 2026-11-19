@@ -1,6 +1,6 @@
-// Idle return (Wall tablet, Return to Home when idle): one pure function, idleDecision, in the Idle return
-// block of casora-core.js. A popup open pauses the count instead of restarting it; after it closes, the count
-// runs from the last touch. Phones, Off and Home change nothing.   node dev/unit/idle_decision.mjs
+// Idle return and Idle close (Wall tablet): one pure function, idleDecision, in the Idle return block of
+// casora-core.js. A popup open pauses Idle return; Idle close counts from the later of the last touch and the
+// moment the popup opened. Phones and Off change nothing.   node dev/unit/idle_decision.mjs
 // @deckt: custom_components/casora/scripts/casora-core.js#idleDecision
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -25,15 +25,20 @@ function check(name, fn) {
 let clock = 0;
 const realNow = Date.now;
 Date.now = () => clock;
-function loadBlock({ pathname = '/dash/room', idle = '1', tablet = true, popup = null } = {}) {
+function loadBlock({ pathname = '/dash/room', idle = '1', close = '0', tablet = true, popup = null, openedAt = 0 } = {}) {
   const window = {
     addEventListener() {},
     dispatchEvent() {},
     casoraIsWallTablet: () => tablet,
-    casoraPopup: { surface: popup },
+    casoraPopup: {
+      surface: popup,
+      openedAt,
+      closes: 0,
+      close() { this.closes++; this.surface = null; },
+    },
   };
   const views = [
-    { path: 'home', cards: [{ variables: { casora_idle_home: idle } }] },
+    { path: 'home', cards: [{ variables: { casora_idle_home: idle, casora_idle_close: close } }] },
     { path: 'room', cards: [{}] },
   ];
   const hui = { lovelace: { editMode: false, config: { views } }, isConnected: true };
@@ -58,7 +63,7 @@ function loadBlock({ pathname = '/dash/room', idle = '1', tablet = true, popup =
 const { window: w } = loadBlock();
 const idleDecision = w.casoraIdleDecision;
 const MIN_AWAY = 10 * MIN; // "now" for the cases below
-const base = { now: MIN_AWAY, lastTouch: 0, popupOpen: false, onHome: false, idleHomeMins: 1, isWallTablet: true };
+const base = { now: MIN_AWAY, lastTouch: 0, popupOpen: false, popupOpenedAt: 0, onHome: false, idleHomeMins: 1, idleCloseMins: 0, isWallTablet: true };
 const decide = (over) => idleDecision({ ...base, ...over });
 const nothing = (d) => assert.deepEqual([d.close, d.home], [false, false]);
 const goHome = (d) => assert.deepEqual([d.close, d.home], [false, true]);
@@ -66,6 +71,38 @@ const goHome = (d) => assert.deepEqual([d.close, d.home], [false, true]);
 check('phone (not a Wall tablet) → nothing', () => {
   nothing(decide({ isWallTablet: false }));
   nothing(decide({ isWallTablet: false, popupOpen: true, now: 90 * MIN }));
+  nothing(decide({ isWallTablet: false, popupOpen: true, now: 90 * MIN, idleCloseMins: 2 }));
+  nothing(decide({ isWallTablet: false, idleCloseMins: 1, popupOpen: true, popupOpenedAt: 0, lastTouch: 0, now: 5 * MIN }));
+});
+check('Idle close Off → popup stays (an hour too)', () => {
+  nothing(decide({ idleCloseMins: 0, idleHomeMins: 0, popupOpen: true, popupOpenedAt: 0, lastTouch: 0, now: 60 * MIN }));
+});
+check('Idle close: popup opened by a tap, 2 minutes after the last touch → close', () => {
+  const at = { idleCloseMins: 2, idleHomeMins: 0, popupOpen: true, popupOpenedAt: 0, lastTouch: 0 };
+  nothing(decide({ ...at, now: 2 * MIN - 1000 }));
+  assert.deepEqual([decide({ ...at, now: 2 * MIN }).close, decide({ ...at, now: 2 * MIN }).home], [true, false]);
+});
+check('Idle close: Ring popup opened after 20 min without a touch, Idle close 2 → nothing at 1:59, close at 2:00', () => {
+  const ring = { idleCloseMins: 2, idleHomeMins: 0, popupOpen: true, popupOpenedAt: 20 * MIN, lastTouch: 0 };
+  nothing(decide({ ...ring, now: 22 * MIN - 1000 }));
+  assert.deepEqual([decide({ ...ring, now: 22 * MIN }).close, decide({ ...ring, now: 22 * MIN }).home], [true, false]);
+});
+check('Idle close: no popup open → nothing', () => {
+  nothing(decide({ idleCloseMins: 1, popupOpen: false, popupOpenedAt: 0, lastTouch: 0, now: 60 * MIN, idleHomeMins: 0 }));
+});
+check('Idle close shuts the popup and Idle return has passed → close then Home in one answer', () => {
+  const d = decide({ idleCloseMins: 2, idleHomeMins: 2, popupOpen: true, popupOpenedAt: 0, lastTouch: 0, now: 2 * MIN });
+  assert.deepEqual([d.close, d.home], [true, true]);
+});
+check('Idle close 5, Idle return 2 → nothing at 4:59, close then Home at 5', () => {
+  const x = { idleCloseMins: 5, idleHomeMins: 2, popupOpen: true, popupOpenedAt: 0, lastTouch: 0 };
+  nothing(decide({ ...x, now: 5 * MIN - 1000 }));
+  const d = decide({ ...x, now: 5 * MIN });
+  assert.deepEqual([d.close, d.home], [true, true]);
+});
+check('Idle close while on Home: close, no Home', () => {
+  const d = decide({ idleCloseMins: 1, idleHomeMins: 1, onHome: true, popupOpen: true, popupOpenedAt: 0, lastTouch: 0, now: MIN });
+  assert.deepEqual([d.close, d.home], [true, false]);
 });
 check('Idle return Off (0 minutes) → nothing', () => {
   nothing(decide({ idleHomeMins: 0 }));
@@ -109,6 +146,30 @@ check('block: popup open for an hour, closed → Home at the next check', () => 
   clock = 60 * MIN + 10 * 1000;
   env.tick();
   assert.deepEqual(env.pushes, ['/dash/home'], 'Home at the first check after the popup closed');
+});
+
+check('block: light popup opened on Home, Idle close 1, no touch → closed at 1 minute', () => {
+  clock = 0;
+  const env = loadBlock({ pathname: '/dash/home', idle: '0', close: '1', popup: true, openedAt: 0 });
+  clock = 30 * 1000; env.tick();
+  assert.equal(env.window.casoraPopup.closes, 0, 'not after 30 s');
+  clock = 60 * 1000; env.tick();
+  assert.equal(env.window.casoraPopup.closes, 1, 'closed at 60 s');
+});
+check('block: Idle close 1 and Idle return 1 → popup closed and Home in the same check', () => {
+  clock = 0;
+  const env = loadBlock({ idle: '1', close: '1', popup: true, openedAt: 0 });
+  clock = 60 * 1000; env.tick();
+  assert.equal(env.window.casoraPopup.closes, 1, 'popup closed');
+  assert.deepEqual(env.pushes, ['/dash/home'], 'Home in the same check');
+});
+check('block: Ring popup opened at 20 min, Idle close 2 → not closed at 21:50, closed at 22:00', () => {
+  clock = 0;
+  const env = loadBlock({ idle: '0', close: '2', popup: true, openedAt: 20 * MIN });
+  clock = 21 * MIN + 50 * 1000; env.tick();
+  assert.equal(env.window.casoraPopup.closes, 0, 'not at 21:50');
+  clock = 22 * MIN; env.tick();
+  assert.equal(env.window.casoraPopup.closes, 1, 'closed at 22:00');
 });
 
 Date.now = realNow;

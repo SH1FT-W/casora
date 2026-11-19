@@ -2924,7 +2924,7 @@
     "Colors and design, font, clock – how your dashboards look.": "Farger og design, skrift, klokke – hvordan dashbordene dine ser ut.",
     "Which bins are collected when, so tiles and the bell remind you.": "Hvilke dunker som hentes når, slik at fliser og bjellen minner deg på det.",
     "Switch the bell on or off and choose which messages it shows here.": "Slå bjellen på eller av, og velg hvilke varsler den viser her.",
-    "Go back to Home after a while without use.": "Gå tilbake til Hjem etter en stund uten bruk.",
+    "Go back to Home and close popups after a while without use.": "Går tilbake til Hjem og lukker popup etter en stund uten bruk.",
     "What tapping and holding a tile does, and how a wall tablet behaves.": "Hva trykk og hold på en flis gjør, og hvordan et veggnettbrett oppfører seg.",
     "See the installed version, install updates, try test versions (betas).": "Se installert versjon, installer oppdateringer, prøv testversjoner (betaer).",
     "Weather source, outdoor values, electricity price and fuel nearby.": "Værkilde, uteverdier, strømpris og drivstoff i nærheten.",
@@ -3165,7 +3165,9 @@
     "Above it only turns red after an hour: after a shower or cooking humid air is normal.": "Over blir det først rødt etter en time: etter dusj eller matlaging er fuktig luft normalt.",
     "Use recommended values": "Bruk anbefalte verdier",
     "Smoke detectors": "Røykvarslere",
-    "Water detectors": "Vannvarslere"
+    "Water detectors": "Vannvarslere",
+    "Close popups when idle": "Lukk popup ved inaktivitet",
+    "Tablets only. Closes an open popup after a while without use.": "Bare nettbrett. Lukker et åpent popup etter en stund uten bruk."
   },
   "patterns": [
     [

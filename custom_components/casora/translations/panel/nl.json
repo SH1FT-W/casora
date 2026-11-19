@@ -2948,7 +2948,7 @@
     "Tapping & tablet": "Tikken & tablet",
     "Clock": "Klok",
     "Top bar and badges": "Bovenbalk en badges",
-    "Go back to Home after a while without use.": "Na een tijdje zonder gebruik terug naar Thuis.",
+    "Go back to Home and close popups after a while without use.": "Na een tijdje zonder gebruik terug naar Thuis en popups sluiten.",
     "Search: e.g. clock, waste, push…": "Zoeken: bijv. klok, afval, melding…",
     "Some changes are not saved yet. Discard takes back everything not saved, also on this dashboard.": "Sommige wijzigingen zijn nog niet opgeslagen. ‘Verwerpen’ draait alles terug wat niet is opgeslagen, ook op dit dashboard.",
     "Plain panels instead of frosted glass, so slow devices keep up.": "Effen vlakken in plaats van matglas, zodat trage apparaten bijblijven.",
@@ -3165,7 +3165,9 @@
     "Above it only turns red after an hour: after a shower or cooking humid air is normal.": "Daarboven pas na een uur rood: na douchen of koken is vochtige lucht normaal.",
     "Use recommended values": "Aanbevolen waarden gebruiken",
     "Smoke detectors": "Rookmelders",
-    "Water detectors": "Watermelders"
+    "Water detectors": "Watermelders",
+    "Close popups when idle": "Bij inactiviteit popups sluiten",
+    "Tablets only. Closes an open popup after a while without use.": "Alleen tablets. Sluit een open popup na een tijd zonder gebruik."
   },
   "patterns": [
     [

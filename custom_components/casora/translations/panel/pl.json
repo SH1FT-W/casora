@@ -2934,7 +2934,7 @@
     "Where the weather comes from and what the weather window shows.": "Skąd pochodzi pogoda i co pokazuje okno pogody.",
     "Remove Hemma": "Usuń Hemma",
     "Shutters at night": "Rolety w nocy",
-    "Go back to Home after a while without use.": "Po chwili bezczynności wróć do ekranu Dom.",
+    "Go back to Home and close popups after a while without use.": "Po chwili bez użycia wraca do Domu i zamyka popupy.",
     "Gas stations nearby in the car window: price, distance, open or closed.": "Stacje paliw w pobliżu w oknie samochodu: cena, odległość, otwarte czy zamknięte.",
     "What do you want to set up? Pick a topic or search for a word.": "Co chcesz ustawić? Wybierz temat lub wyszukaj słowo.",
     "Search at the top, rooms by category, how soft the room photo is, tile size.": "Wyszukiwanie u góry, pomieszczenia według kategorii, rozmycie zdjęcia pomieszczenia, rozmiar kafelków.",
@@ -3165,7 +3165,9 @@
     "Above it only turns red after an hour: after a shower or cooking humid air is normal.": "Powyżej robi się czerwono dopiero po godzinie: po prysznicu lub gotowaniu wilgotne powietrze jest normalne.",
     "Use recommended values": "Użyj zalecanych wartości",
     "Smoke detectors": "Czujniki dymu",
-    "Water detectors": "Czujniki wody"
+    "Water detectors": "Czujniki wody",
+    "Close popups when idle": "Zamykaj popupy przy bezczynności",
+    "Tablets only. Closes an open popup after a while without use.": "Tylko tablety. Zamyka otwarte popupy po chwili bez użycia."
   },
   "patterns": [
     [

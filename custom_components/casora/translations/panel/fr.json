@@ -2952,7 +2952,7 @@
     "Other devices": "Autres appareils",
     "Remove Hemma": "Supprimer Hemma",
     "The dashboard on the phone, and progress on the lock screen.": "Le tableau de bord sur le téléphone, et la progression sur l’écran verrouillé.",
-    "Go back to Home after a while without use.": "Revenir à l’accueil après un moment sans utilisation.",
+    "Go back to Home and close popups after a while without use.": "Revient à Maison et ferme les popups après un moment sans utilisation.",
     "Bell & messages": "Cloche et messages",
     "Lock screen (Live Activities)": "Écran verrouillé (Activités en direct)",
     "Updates & setup": "Mises à jour et configuration",
@@ -3165,7 +3165,9 @@
     "Above it only turns red after an hour: after a shower or cooking humid air is normal.": "Au-dessus, rouge seulement après une heure : après une douche ou la cuisine, l'air humide est normal.",
     "Use recommended values": "Utiliser les valeurs recommandées",
     "Smoke detectors": "Détecteurs de fumée",
-    "Water detectors": "Détecteurs d’eau"
+    "Water detectors": "Détecteurs d’eau",
+    "Close popups when idle": "Fermer les popups en cas d'inactivité",
+    "Tablets only. Closes an open popup after a while without use.": "Tablettes seulement. Ferme un popup ouvert après un moment sans utilisation."
   },
   "patterns": [
     [

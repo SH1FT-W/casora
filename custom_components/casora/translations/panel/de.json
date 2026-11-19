@@ -770,7 +770,7 @@
     "Steam": "Steam",
     "System uses SF Pro on Apple devices.": "„System“ nutzt auf Apple-Geräten SF Pro.",
     "Tablet": "Tablet",
-    "Tablets only. Brings one back to Home after a while without use.": "Nur auf Tablets.",
+    "Tablets only. Brings one back to Home after a while without use.": "Nur auf Tablets. Bringt nach einer Weile ohne Bedienung zurück zu „Zuhause“.",
     "Temperature": "Temperatur",
     "Temperature sensor": "Temperatursensor",
     "Humidity sensor": "Luftfeuchtigkeitssensor",
@@ -2924,7 +2924,7 @@
     "Colors and design, font, clock – how your dashboards look.": "Design, Schrift und Uhr.",
     "Which bins are collected when, so tiles and the bell remind you.": "Welche Tonne wann abgeholt wird – damit Kacheln und Glocke dich erinnern.",
     "Switch the bell on or off and choose which messages it shows here.": "Glocke ein- oder ausschalten und wählen, welche Meldungen sie hier zeigt.",
-    "Go back to Home after a while without use.": "Nach einer Weile ohne Bedienung zurück zu „Zuhause“.",
+    "Go back to Home and close popups after a while without use.": "Nach einer Weile ohne Bedienung zurück zu „Zuhause“ und Popups schließen.",
     "What tapping and holding a tile does, and how a wall tablet behaves.": "Tippen, Halten und Wand-Tablet.",
     "See the installed version, install updates, try test versions (betas).": "Installierte Version sehen, Updates installieren, Testversionen (Betas) ausprobieren.",
     "Weather source, outdoor values, electricity price and fuel nearby.": "Wetter, Außenwerte, Strompreis, Tanken.",
@@ -3165,7 +3165,9 @@
     "Above it only turns red after an hour: after a shower or cooking humid air is normal.": "Darüber erst nach einer Stunde rot: Nach dem Duschen oder Kochen ist feuchte Luft normal.",
     "Use recommended values": "Empfohlene Werte verwenden",
     "Smoke detectors": "Rauchmelder",
-    "Water detectors": "Wassermelder"
+    "Water detectors": "Wassermelder",
+    "Close popups when idle": "Bei Inaktivität Popups schließen",
+    "Tablets only. Closes an open popup after a while without use.": "Nur auf Tablets. Schließt ein offenes Popup nach einer Weile ohne Bedienung."
   },
   "patterns": [
     [
