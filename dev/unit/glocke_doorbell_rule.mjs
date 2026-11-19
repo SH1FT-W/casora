@@ -1,7 +1,7 @@
 // Doorbell rule of the bell: a Reolink visitor sensor counts as a doorbell by platform and translation key
 // (entity registry), with no device class and no guessed entity ID. The Studio exclusion list uses the same rule.
 //   node dev/unit/glocke_doorbell_rule.mjs
-// @deckt: custom_components/casora/scripts/local/00-finder.js#casoraIsDoorbell,isVisitor,notifySources
+// @deckt: custom_components/casora/scripts/local/00-finder.js#casoraIsDoorbell,isReolinkVisitor,notifySources
 // @deckt: custom_components/casora/scripts/casora-core.js#_casoraNotify,isDoorbell
 import fs from 'node:fs';
 import assert from 'node:assert/strict';

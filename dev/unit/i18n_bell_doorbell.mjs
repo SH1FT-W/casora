@@ -1,5 +1,6 @@
 // Bell doorbell stacks in the dashboard language: the expanded stack's text, relative time and day heading
 // come from the existing dashboard phrases in all nine languages (no new phrases).
+// The expected words are read from the real phrase files (translations/dashboard/phrases/<lang>.json).
 //   node dev/unit/i18n_bell_doorbell.mjs
 // @deckt: custom_components/casora/scripts/casora-core.js#_casoraNotify,tlEntries,tlTexts,tlHtml,ago
 import fs from 'node:fs';
@@ -9,6 +10,7 @@ import { phrases } from './lib/i18n_phrases.mjs';
 const core = fs.readFileSync(new URL('../../custom_components/casora/scripts/casora-core.js', import.meta.url), 'utf8');
 const finder = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/00-finder.js', import.meta.url), 'utf8');
 const i18n = fs.readFileSync(new URL('../../custom_components/casora/scripts/casora-i18n.js', import.meta.url), 'utf8');
+const PHRASES = new URL('../../custom_components/casora/translations/dashboard/phrases/', import.meta.url);
 const start = core.indexOf('(function () {\n  if (window._casoraNotify) return;');
 assert.ok(start > 0, 'bell module found');
 const mod = core.slice(start, core.indexOf('\n})();', start) + 6);
@@ -16,7 +18,6 @@ const mod = core.slice(start, core.indexOf('\n})();', start) + 6);
 const MIN = 60000;
 const NOW = Date.parse('2026-11-17T08:00:00Z');
 Date.now = () => NOW;
-const SRC = 'event.mock_entrance_ding';
 let hass;
 globalThis.window = globalThis;
 globalThis.localStorage = { getItem: () => null, setItem() {}, removeItem() {} };
@@ -38,40 +39,47 @@ window.casoraClockText = (h, use12, d) => String(d.getHours()).padStart(2, '0') 
 window.CASORA_NOTIFY_EXTENSIONS = [];
 new Function(finder)(); // the doorbell rule (window.casoraIsDoorbell) loads before the bell, as on the dashboard
 
-// Two doorbell kinds: a Ring event (rows read „Mock Entrance hat geklingelt“) and a Reolink
-// visitor sensor (binary, on and back to off; its release adds no ring).
+// The phrase a German source text gets in a language, from the real file: exact match first, then the pattern
+// ({1}, {2} are the captured groups). A German text with no entry stays German (de has no entries).
+const phraseFile = (lang) => JSON.parse(fs.readFileSync(new URL(lang + '.json', PHRASES), 'utf8'));
+function fromFile(lang, german) {
+  const table = phraseFile(lang);
+  if (Object.prototype.hasOwnProperty.call(table.exact || {}, german)) return table.exact[german];
+  for (const [pattern, out] of table.patterns || []) {
+    const m = german.match(new RegExp(pattern));
+    if (m) return out.replace(/\{(\d+)\}/g, (_, i) => m[Number(i)]);
+  }
+  return german;
+}
+
+// Three doorbell kinds: a Ring event with the device name (rows read „Mock Entrance hat geklingelt“), a Ring event
+// named „Mock Entrance Ding“ (the row name is then not a prefix of the label, so the pattern form is used), and a
+// Reolink visitor sensor (binary, on and back to off; its release adds no ring).
 const yesterday = new Date(NOW);
 yesterday.setDate(yesterday.getDate() - 1);
 yesterday.setHours(20, 17, 0, 0);
 const rings = [NOW - 5 * MIN, NOW - 50 * MIN, yesterday.getTime()];
 const KINDS = {
-  ring: { id: 'event.mock_entrance_ding', friendly: 'Mock Entrance', device_class: 'doorbell',
+  ring: { id: 'event.mock_entrance_ding', friendly: 'Mock Entrance', device_class: 'doorbell', text: 'Hat geklingelt',
     entity: { device_id: 'mock-bell', platform: 'ring', translation_key: 'ding' },
     log: rings.map((ms) => ({ entity_id: 'event.mock_entrance_ding', state: new Date(ms).toISOString(), when: ms / 1000 })),
     state: new Date(rings[0]).toISOString() },
-  reolink: { id: 'binary_sensor.mock_front_gate', friendly: 'Mock Entrance', device_class: undefined,
+  ringDing: { id: 'event.mock_entrance_ding', friendly: 'Mock Entrance Ding', device_class: 'doorbell', text: 'Mock Entrance hat geklingelt',
+    entity: { device_id: 'mock-bell', platform: 'ring', translation_key: 'ding' },
+    log: rings.map((ms) => ({ entity_id: 'event.mock_entrance_ding', state: new Date(ms).toISOString(), when: ms / 1000 })),
+    state: new Date(rings[0]).toISOString() },
+  reolink: { id: 'binary_sensor.mock_front_gate', friendly: 'Mock Entrance', text: 'Hat geklingelt',
     entity: { device_id: 'mock-bell', platform: 'reolink', translation_key: 'visitor' },
     log: rings.flatMap((ms) => [{ entity_id: 'binary_sensor.mock_front_gate', state: 'on', when: ms / 1000 },
       { entity_id: 'binary_sensor.mock_front_gate', state: 'off', when: ms / 1000 + 3 }]),
     state: 'off' },
 };
-
-// The phrases of each language: text of the stack's entry, relative time of the newest, day heading of yesterday.
-const CASES = [
-  ['de', 'Hat geklingelt', 'vor 50 Min.', 'Gestern'],
-  ['en', 'Someone rang', '50 min ago', 'Yesterday'],
-  ['es', 'Han llamado', 'hace 50 min', 'Ayer'],
-  ['fr', 'On a sonné', 'il y a 50 min', 'Hier'],
-  ['it', 'Hanno suonato', '50 min fa', 'Ieri'],
-  ['nl', 'Er is aangebeld', '50 min geleden', 'Gisteren'],
-  ['pl', 'Ktoś dzwonił', '50 min temu', 'Wczoraj'],
-  ['pt', 'Tocaram à campainha', 'há 50 min', 'Ontem'],
-  ['nb', 'Noen ringte på', 'for 50 min siden', 'I går'],
-];
+const LANGS = ['de', 'en', 'es', 'fr', 'it', 'nl', 'pl', 'pt', 'nb'];
 const GERMAN = /Hat geklingelt|hat geklingelt|vor \d+ Min\.|Gestern|Gerade eben/;
 
-for (const kind of Object.keys(KINDS)) for (const [lang, text, rel, day] of CASES) {
+for (const kind of Object.keys(KINDS)) for (const lang of LANGS) {
   const K = KINDS[kind], SRC = K.id;
+  const text = fromFile(lang, K.text), rel = fromFile(lang, 'vor 50 Min.'), day = fromFile(lang, 'Gestern');
   delete window._casoraNotify;
   hass = {
     user: { id: 'u', is_admin: false }, locale: { language: lang, time_format: '24' }, language: lang,
@@ -87,7 +95,6 @@ for (const kind of Object.keys(KINDS)) for (const [lang, text, rel, day] of CASE
   const doc = { querySelector: (q) => (q === 'home-assistant' ? { hass: { locale: { language: lang } } } : null), addEventListener() {} };
   new Function('window', 'document', 'customElements', 'MutationObserver', i18n)(
     window, doc, { whenDefined: () => new Promise(() => {}), get: () => null }, class { observe() {} });
-  assert.equal(window.casoraTr('Aus'), window.casoraTr('Aus'), 'translator loaded');
   const realTimeout = globalThis.setTimeout;
   globalThis.setTimeout = () => 0;
   new Function(mod)();
@@ -100,15 +107,17 @@ for (const kind of Object.keys(KINDS)) for (const [lang, text, rel, day] of CASE
   n.stack(card.stackKey, true);
   const tl = n.timeline(card.stackKey);
   const shown = tl.map((e) => e.text).join(' | ');
-  assert.ok(tl.some((e) => e.text === text), `${kind} ${lang}: stack entry reads "${text}", got: ${shown}`);
+  assert.ok(tl.some((e) => e.text === text), `${kind} ${lang}: stack entry reads "${text}" (phrase file), got: ${shown}`);
   const newest = tl.find((e) => e.rel);
-  assert.equal(newest && newest.rel, rel, `${lang}: relative time`);
-  assert.ok(tl.some((e) => e.day === day), `${lang}: day heading "${day}"`);
-  // Also the rendered markup (what the drawer shows): no German text left, in any language but German.
+  assert.equal(newest && newest.rel, rel, `${kind} ${lang}: relative time`);
+  assert.ok(tl.some((e) => e.day === day), `${kind} ${lang}: day heading "${day}"`);
+  // No German text left in the entries shown, in any language but German.
   if (lang !== 'de') {
-    const html = [text, rel, day].join(' ');
-    assert.doesNotMatch(html, GERMAN, `${lang}: no German text`);
-    for (const e of tl) assert.doesNotMatch(String(e.text) + String(e.rel) + String(e.day), GERMAN, `${lang}: entry without German`);
+    for (const e of tl) {
+      for (const shownText of [e.text, e.rel, e.day]) {
+        assert.doesNotMatch(String(shownText || ''), GERMAN, `${kind} ${lang}: German left in "${shownText}"`);
+      }
+    }
   }
   console.log(`ok   ${kind} ${lang}: ${text} | ${rel} | ${day}`);
 }

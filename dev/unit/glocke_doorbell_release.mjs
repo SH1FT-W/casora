@@ -2,7 +2,7 @@
 // by name and for a Reolink visitor sensor.
 //   node dev/unit/glocke_doorbell_release.mjs
 // @deckt: custom_components/casora/scripts/casora-core.js#_casoraNotify,isDoorbell
-// @deckt: custom_components/casora/scripts/local/00-finder.js#casoraIsDoorbell,isVisitor
+// @deckt: custom_components/casora/scripts/local/00-finder.js#casoraIsDoorbell,isReolinkVisitor
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import { phrases } from './lib/i18n_phrases.mjs';
@@ -14,12 +14,10 @@ const start = core.indexOf('(function () {\n  if (window._casoraNotify) return;'
 assert.ok(start > 0, 'bell module found');
 const mod = core.slice(start, core.indexOf('\n})();', start) + 6);
 
-const MIN = 60000;
 const NOW = Date.parse('2026-11-17T08:00:00Z');
 Date.now = () => NOW;
 const GATE = 'binary_sensor.mock_front_gate';
 const CHIME = 'binary_sensor.mock_chime_doorbell';
-const RING = 'event.mock_entrance_ding';
 let hass;
 globalThis.window = globalThis;
 globalThis.localStorage = { getItem: () => null, setItem() {}, removeItem() {} };
@@ -66,14 +64,14 @@ async function bell({ states, entities, log }) {
 const on = (id, ms, state = 'on') => ({ entity_id: id, state, when: ms / 1000 });
 const attrs = (name, extra = {}) => ({ friendly_name: name, ...extra });
 
-// 2. Release: a binary doorbell (occupancy class, name rule) going back to „off“ adds no second row.
+// 1. Release: a binary doorbell (occupancy class, name rule) going back to „off“ adds no second row.
 const chimeStates = { [CHIME]: { entity_id: CHIME, state: 'off', last_changed: new Date(NOW - 20 * 1000).toISOString(), attributes: attrs('Mock Chime Doorbell', { device_class: 'occupancy' }) } };
 const pressed = await bell({ states: chimeStates, entities: {}, log: [on(CHIME, NOW - 60 * 1000), on(CHIME, NOW - 57 * 1000, 'off')] });
 const chimeRows = pressed.rows.filter((r) => r.entity === CHIME);
 assert.equal(chimeRows.length, 1, 'the release of a binary doorbell does not create a second row');
 assert.equal(chimeRows[0].count, 1, 'the release is not counted as a ring');
 
-// 3. Reolink visitor release: the same rule, for a visitor sensor (needs the doorbell rule of glocke_doorbell_rule.mjs).
+// 2. Reolink visitor release: the same rule, for a visitor sensor (needs the doorbell rule of glocke_doorbell_rule.mjs).
 const gateStates = { [GATE]: { entity_id: GATE, state: 'off', last_changed: new Date(NOW - 50 * 1000).toISOString(), attributes: attrs('Mock Front Gate') } };
 const gateEntities = { [GATE]: { device_id: 'mock-gate-device', platform: 'reolink', translation_key: 'visitor' } };
 const released = await bell({

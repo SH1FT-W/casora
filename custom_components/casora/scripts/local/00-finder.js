@@ -1455,7 +1455,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
 
   // ── Doorbell: one rule for the bell rows and the Studio exclusion list ────
   // Reolink: binary_sensor with translation_key visitor (no device_class, the ID may be renamed, on only briefly).
-  function isVisitor(hass, id) {
+  function isReolinkVisitor(hass, id) {
     var e = reg(hass)[id] || {};
     return id.indexOf('binary_sensor.') === 0 && e.translation_key === 'visitor'
       && (e.platform === 'reolink' || e.platform === 'casora_mock');
@@ -1465,7 +1465,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     var st = hass && hass.states && hass.states[id], a = (st && st.attributes) || {};
     if (id.indexOf('event.') === 0) return a.device_class === 'doorbell';
     if (id.indexOf('binary_sensor.') !== 0) return false;
-    return isVisitor(hass, id) || (a.device_class === 'occupancy' && /doorbell|ding|chime/i.test(id));
+    return isReolinkVisitor(hass, id) || (a.device_class === 'occupancy' && /doorbell|ding|chime/i.test(id));
   };
 
   // ── Bell: which entities can create an entry at all (1.1.2) ────
