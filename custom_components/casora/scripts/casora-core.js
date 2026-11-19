@@ -18186,6 +18186,20 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   var last = Date.now();
   function bump() { last = Date.now(); }
 
+  // The idle decision. A pure function: it reads no globals and changes nothing, so a test can call it with
+  // plain values (dev/unit/idle_decision.mjs). Input: now and lastTouch (ms), popupOpen, onHome, idleHomeMins
+  // (0 = Off), isWallTablet. Output: close (Idle close, #334) and home (Idle return). restart = the count does
+  // not run now, so the caller sets lastTouch to now. A popup open pauses the count; it does not restart it.
+  function idleDecision(s) {
+    var out = { close: false, home: false, restart: false };
+    if (!s.isWallTablet || !s.idleHomeMins || s.onHome) { out.restart = true; return out; }
+    if (s.popupOpen) return out;
+    if (s.now - s.lastTouch < s.idleHomeMins * 60000) return out;
+    out.home = true;
+    return out;
+  }
+  window.casoraIdleDecision = idleDecision;
+
   ['pointerdown', 'touchstart', 'keydown', 'wheel', 'scroll'].forEach(function (t) {
     window.addEventListener(t, bump, { capture: true, passive: true });
   });
@@ -18247,16 +18261,18 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   function norm(p) { return String(p || '').replace(/\/+$/, '') || '/'; }
 
   function check() {
-    if (OFF || !isTablet()) return bump();
     var cfg = config();
-    if (!cfg) return bump();
-    var mins = minutes(cfg);
-    if (!mins) return bump();
-    var home = homePath(cfg);
-    if (!home || norm(location.pathname) === norm(home)) return bump();
-    // Never pull the view out from under someone reading a popup.
-    if (window.casoraPopup && window.casoraPopup.surface) return bump();
-    if (Date.now() - last < mins * 60000) return;
+    var home = cfg ? homePath(cfg) : null;
+    var d = idleDecision({
+      now: Date.now(),
+      lastTouch: last,
+      popupOpen: !!(window.casoraPopup && window.casoraPopup.surface),
+      onHome: !home || norm(location.pathname) === norm(home),
+      idleHomeMins: cfg ? minutes(cfg) : 0,
+      isWallTablet: !OFF && isTablet()
+    });
+    if (d.restart) return bump();
+    if (!d.home) return;
     history.pushState(null, '', home);
     window.dispatchEvent(new CustomEvent('location-changed', { detail: { replace: false } }));
     bump();
