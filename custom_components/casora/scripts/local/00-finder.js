@@ -1788,7 +1788,9 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     return String(s == null ? '' : s).trim().toLowerCase().replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss');
   };
   // The house's detectors, once per states object of HA's root element (as casoraContacts): hidden, disabled,
-  // diagnostic/config entities, groups, vehicles and sensors with a location (a shop, a station) are left out.
+  // config entities, groups, vehicles and sensors with a location (a shop, a station) are left out. A diagnostic
+  // smoke/water/gas/CO sensor counts (wmbusmeters files a smoke detector's alarm as diagnostic, the user sets it to
+  // smoke); diagnostic motion stays out.
   function detHouse(hass) {
     var S = (hass && hass.states) || {}, R = reg(hass), D = devs(hass), A = (hass && hass.areas) || {};
     var ids = [], kind = {}, area = {};
@@ -1811,7 +1813,8 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
       var k = detKind(S, id);
       if (!k) return;
       var e = R[id] || {}, a = (S[id] && S[id].attributes) || {};
-      if (e.hidden || e.hidden_by || e.disabled_by || e.entity_category) return;
+      if (e.hidden || e.hidden_by || e.disabled_by) return;
+      if (e.entity_category && (e.entity_category !== 'diagnostic' || k === 'motion')) return;
       if (Array.isArray(a.entity_id) || (a.latitude != null && a.longitude != null) || isVehicle(hass, id)) return;
       if (k === 'motion' && e.device_id && oddDev(e.device_id)) return;
       var aid = e.area_id || (e.device_id && D[e.device_id] ? D[e.device_id].area_id : null);

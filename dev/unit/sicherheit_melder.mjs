@@ -28,6 +28,8 @@ const base = () => ({
   'binary_sensor.fenster_bad': st('off', 'window'),
   'binary_sensor.rauch_diag': st('on', 'smoke'),
   'binary_sensor.rauch_hidden': st('on', 'smoke'),
+  'binary_sensor.rauch_wmbus': st('off', 'smoke'),
+  'binary_sensor.bewegung_diag': st('on', 'motion'),
   'binary_sensor.safety_x': st('on', 'safety'),
   'person.a': { state: 'home', attributes: {} },
 });
@@ -35,7 +37,9 @@ const entities = {
   'binary_sensor.rauch_kueche': { area_id: 'kueche' }, 'binary_sensor.rauch_flur': { area_id: 'flur' },
   'binary_sensor.leck_bad': { device_id: 'd_bad' }, 'binary_sensor.bewegung_flur': { area_id: 'flur' },
   'binary_sensor.fenster_bad': { area_id: 'bad' },
-  'binary_sensor.rauch_diag': { area_id: 'kueche', entity_category: 'diagnostic' },
+  'binary_sensor.rauch_diag': { area_id: 'kueche', entity_category: 'config' },
+  'binary_sensor.rauch_wmbus': { area_id: 'flur', entity_category: 'diagnostic' },
+  'binary_sensor.bewegung_diag': { area_id: 'flur', entity_category: 'diagnostic' },
   'binary_sensor.rauch_hidden': { area_id: 'kueche', hidden_by: 'user' },
 };
 const hassOf = (S) => ({ states: S, entities, devices: { d_bad: { area_id: 'bad' } },
@@ -73,8 +77,12 @@ assert.ok(window.casoraSecSub.KEYS.includes('detectors') && window.casoraSecSub.
 // ── Which detectors: Home the house, a room its area (device area too); hidden/diagnostic out ──
 set(undefined);
 let d = window.casoraSecDetectors(hassOf(S), { place: 'home' }, null, null);
-assert.deepEqual(d.safety.sort(), ['binary_sensor.leck_bad', 'binary_sensor.rauch_flur', 'binary_sensor.rauch_kueche']);
+assert.deepEqual(d.safety.sort(), ['binary_sensor.leck_bad', 'binary_sensor.rauch_flur', 'binary_sensor.rauch_kueche', 'binary_sensor.rauch_wmbus'],
+  'a diagnostic smoke sensor counts (wmbusmeters), a config one does not');
 assert.deepEqual(d.motion, [], 'motion off by default');
+set({ motion: true });
+assert.ok(!window.casoraSecDetectors(hassOf(S), { place: 'home' }, null, null).motion.includes('binary_sensor.bewegung_diag'), 'diagnostic motion stays out');
+set(undefined);
 d = window.casoraSecDetectors(hassOf(S), { room_name: 'Bad' }, 'room', null);
 assert.deepEqual(d.safety, ['binary_sensor.leck_bad'], 'room by its area (the device\'s area)');
 d = window.casoraSecDetectors(hassOf(S), { room_name: 'kueche' }, 'room', null);
@@ -86,7 +94,7 @@ assert.deepEqual(d.safety, ['binary_sensor.rauch_flur'], 'a room\'s own entry co
 
 // ── Calm: all secure, ok ──
 let r = count(S, { place: 'home' });
-assert.equal(r.insecure, false); assert.equal(r.problem, false); assert.equal(r.level, 'ok'); assert.equal(r.detectors, 3);
+assert.equal(r.insecure, false); assert.equal(r.problem, false); assert.equal(r.level, 'ok'); assert.equal(r.detectors, 4);
 assert.equal(window.casoraSecuritySummary(r, { summary: 'short' }).text, 'Alles sicher');
 
 // ── Smoke in the kitchen: leads in red, with the room on Home ──
@@ -150,7 +158,7 @@ assert.equal(count(S, { place: 'home' }).motion, 0, 'motion switch off: never');
 set({ motion: true });
 S = base();
 let b = D.badge(S, hassOf(S), null, { place: 'home' }, 'home', 'detectors');
-assert.equal(b.shown, true); assert.equal(b.title, 'Melder'); assert.equal(b.sub, '3 Melder · Normal'); assert.equal(b.level, 'ok');
+assert.equal(b.shown, true); assert.equal(b.title, 'Melder'); assert.equal(b.sub, '4 Melder · Normal'); assert.equal(b.level, 'ok');
 b = D.badge(S, hassOf(S), null, { place: 'room', room_name: 'Bad' }, 'room', 'detectors');
 assert.equal(b.title, 'Wassermelder'); assert.equal(b.sub, 'Trocken');
 b = D.badge(S, hassOf(S), null, { place: 'room', room_name: 'Bad', own: ['binary_sensor.leck_bad'] }, 'room', 'detectors');
