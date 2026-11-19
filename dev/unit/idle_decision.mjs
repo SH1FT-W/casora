@@ -59,14 +59,18 @@ function loadBlock({ pathname = '/dash/room', idle = '1', close = '0', tablet = 
   return { window, pushes, tick: () => tick() };
 }
 
-// The pure function, loaded from the block.
-const { window: w } = loadBlock();
-const idleDecision = w.casoraIdleDecision;
+// The pure function alone: cut out of the block as source text (no window global needed).
+const fnStart = m[0].indexOf('  function idleDecision(s) {');
+const fnEnd = m[0].indexOf('\n  }\n', fnStart) + '\n  }\n'.length;
+assert.ok(fnStart > 0 && fnEnd > fnStart, 'idleDecision in the Idle return block');
+const idleDecision = new Function(m[0].slice(fnStart, fnEnd) + '\nreturn idleDecision;')();
 const MIN_AWAY = 10 * MIN; // "now" for the cases below
 const base = { now: MIN_AWAY, lastTouch: 0, popupOpen: false, popupOpenedAt: 0, onHome: false, idleHomeMins: 1, idleCloseMins: 0, isWallTablet: true };
 const decide = (over) => idleDecision({ ...base, ...over });
 const nothing = (d) => assert.deepEqual([d.close, d.home], [false, false]);
 const goHome = (d) => assert.deepEqual([d.close, d.home], [false, true]);
+const closeOnly = (d) => assert.deepEqual([d.close, d.home], [true, false]);
+const closeAndHome = (d) => assert.deepEqual([d.close, d.home], [true, true]);
 
 check('phone (not a Wall tablet) → nothing', () => {
   nothing(decide({ isWallTablet: false }));
@@ -80,29 +84,26 @@ check('Idle close Off → popup stays (an hour too)', () => {
 check('Idle close: popup opened by a tap, 2 minutes after the last touch → close', () => {
   const at = { idleCloseMins: 2, idleHomeMins: 0, popupOpen: true, popupOpenedAt: 0, lastTouch: 0 };
   nothing(decide({ ...at, now: 2 * MIN - 1000 }));
-  assert.deepEqual([decide({ ...at, now: 2 * MIN }).close, decide({ ...at, now: 2 * MIN }).home], [true, false]);
+  closeOnly(decide({ ...at, now: 2 * MIN }));
 });
 check('Idle close: Ring popup opened after 20 min without a touch, Idle close 2 → nothing at 1:59, close at 2:00', () => {
   const ring = { idleCloseMins: 2, idleHomeMins: 0, popupOpen: true, popupOpenedAt: 20 * MIN, lastTouch: 0 };
   nothing(decide({ ...ring, now: 22 * MIN - 1000 }));
-  assert.deepEqual([decide({ ...ring, now: 22 * MIN }).close, decide({ ...ring, now: 22 * MIN }).home], [true, false]);
+  closeOnly(decide({ ...ring, now: 22 * MIN }));
 });
 check('Idle close: no popup open → nothing', () => {
   nothing(decide({ idleCloseMins: 1, popupOpen: false, popupOpenedAt: 0, lastTouch: 0, now: 60 * MIN, idleHomeMins: 0 }));
 });
 check('Idle close shuts the popup and Idle return has passed → close then Home in one answer', () => {
-  const d = decide({ idleCloseMins: 2, idleHomeMins: 2, popupOpen: true, popupOpenedAt: 0, lastTouch: 0, now: 2 * MIN });
-  assert.deepEqual([d.close, d.home], [true, true]);
+  closeAndHome(decide({ idleCloseMins: 2, idleHomeMins: 2, popupOpen: true, popupOpenedAt: 0, lastTouch: 0, now: 2 * MIN }));
 });
 check('Idle close 5, Idle return 2 → nothing at 4:59, close then Home at 5', () => {
   const x = { idleCloseMins: 5, idleHomeMins: 2, popupOpen: true, popupOpenedAt: 0, lastTouch: 0 };
   nothing(decide({ ...x, now: 5 * MIN - 1000 }));
-  const d = decide({ ...x, now: 5 * MIN });
-  assert.deepEqual([d.close, d.home], [true, true]);
+  closeAndHome(decide({ ...x, now: 5 * MIN }));
 });
 check('Idle close while on Home: close, no Home', () => {
-  const d = decide({ idleCloseMins: 1, idleHomeMins: 1, onHome: true, popupOpen: true, popupOpenedAt: 0, lastTouch: 0, now: MIN });
-  assert.deepEqual([d.close, d.home], [true, false]);
+  closeOnly(decide({ idleCloseMins: 1, idleHomeMins: 1, onHome: true, popupOpen: true, popupOpenedAt: 0, lastTouch: 0, now: MIN }));
 });
 check('Idle return Off (0 minutes) → nothing', () => {
   nothing(decide({ idleHomeMins: 0 }));

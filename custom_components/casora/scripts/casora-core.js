@@ -8792,11 +8792,12 @@ window.casoraMenuGlass = {
       this._bridge.target = null;
       this.removeAttribute('data-casora-charts-ready');
 
+      // Idle close counts from the last open() call (casoraPopup.openedAt), also when new content replaces an open popup.
+      this._openedAt = Date.now();
       if (!wasOpen) {
         // Keyboard and screen readers (a11y round 14.11.2026): remember where the focus was (the tile), give it back on close.
         this._focusBack = focusChain(deepFocus());
         if (!this._focusBack.length && srcTile && srcTile.nodeType === 1) this._focusBack = focusChain(srcTile);
-        this._openedAt = Date.now();  // Idle close counts from here (casoraPopup.openedAt)
         this.setAttribute('open', '');
         requestAnimationFrame(() => { this.setAttribute('shown', ''); if (this._moreCheck) this._moreCheck(); });
         if (this._moreCheck) setTimeout(this._moreCheck, 700);
@@ -18210,7 +18211,6 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     out.home = !out.restart && homeDue;
     return out;
   }
-  window.casoraIdleDecision = idleDecision;
 
   ['pointerdown', 'touchstart', 'keydown', 'wheel', 'scroll'].forEach(function (t) {
     window.addEventListener(t, bump, { capture: true, passive: true });
