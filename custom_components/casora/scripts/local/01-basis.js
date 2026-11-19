@@ -2274,7 +2274,11 @@ window._casoraColGap = window._casoraColGap || function (keys) {
         var W = window.casoraDevice && window.casoraDevice.waste
           ? window.casoraDevice.waste(hass, c.waste_sensors ? { trash_sensors: c.waste_sensors, trash_duty_entity: c.waste_duty } : null)
           : { bins: [], duty: null };
+        // #211: a pickup confirmed as put out (waste tile icon or popup, 50-waste-out.js) leaves the bell too; undone, it is back.
+        var WO = window._casoraWasteOut;
+        var outDays = WO && WO.isOut && WO.isOut(W) ? W.days : null;
         W.bins.forEach(function (b) {
+          if (outDays != null && b.days === outDays) return;
           if (b.days === 0) today.push(b.label);
           else if (b.days === 1) tomorrow.push(b.label);
         });

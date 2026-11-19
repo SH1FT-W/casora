@@ -1,9 +1,10 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/scripts/local/50-waste-out.js custom_components/casora/waste_out.py dashboards/casora/button_card_templates.json#casora_trash
+// @deckt: custom_components/casora/scripts/local/50-waste-out.js custom_components/casora/scripts/local/01-basis.js#standing custom_components/casora/waste_out.py dashboards/casora/button_card_templates.json#casora_trash
 // Issue #211: on the pickup day the waste tile is active; a tap on its icon confirms „put out“ and the tile hides until
 // the next pickup – on every device (list kept by the integration, casora/waste_out/*), not only in this browser. The
-// waste popup has the same as a switch row „Rausgestellt“, which is also the way back.
+// waste popup has the same as a switch row „Rausgestellt“, which is also the way back. The bell's „Abfall heute“ row
+// for that pickup goes with the confirmation and comes back with the undo (maintainer, #211).
 // Two browsers stand for two devices: a phone (393x852, WebKit) taps the icon, a desktop (1440x900) sees the tile go
 // without reloading, opens the popup and switches the row off; both tiles come back.
 // Made-up bin sensors (fakeStates, sticky, this browser only) with residual waste today; the tile is built in the
@@ -73,6 +74,16 @@ const ICON_AT = () => {
   const r = ic.getBoundingClientRect();
   return r.width > 0 ? { x: r.x + r.width / 2, y: r.y + r.height / 2 } : null;
 };
+// The bell's waste rows: notify hours wide open and the same made-up bins as the tile (browser only).
+const BELL_WASTE = (bins) => {
+  window.CASORA_NOTIFY_LOCAL = Object.assign({}, window.CASORA_NOTIFY_LOCAL || {}, { waste: true, waste_from_hour: 0, waste_until_hour: 24,
+    waste_sensors: bins.sensors, waste_duty: bins.duty });
+  const N = window._casoraNotify;
+  if (!N || !N.refresh) return Promise.resolve(null);
+  return Promise.resolve(N.refresh()).then(() => N.rows.filter((r) => /^casora:waste:/.test(String(r.id))).map((r) => r.label + ' · ' + (r.sub || '')));
+};
+const BINS = { sensors: { [REST]: 'Restmüll', [BIO]: 'Bio' }, duty: DUTY };
+const bellRest = (rows) => !!(rows && rows.some((t) => /^Abfall heute · .*Restmüll/.test(t)));
 const setOut = (pg, key, out) => pg.evaluate(([k, o]) => document.querySelector('home-assistant').hass.connection
   .sendMessagePromise({ type: 'casora/waste_out/set', key: k, out: o }).then((r) => !!r, () => false), [key, out]);
 
@@ -90,6 +101,8 @@ await setOut(phone.page, KEY, false);
 a = await stable(phone.page, TILE_NOW, null, { until: (t) => t && t.shown });
 await check('Handy: Kachel vor dem Bestätigen sichtbar', a && a.shown, a);
 await pic(phone.page, 'handy-1-kachel-faellig');
+let bell = await stable(phone.page, BELL_WASTE, BINS, { until: bellRest });
+await check('Handy: Glocke zeigt „Abfall heute · Restmüll“ vor dem Bestätigen', bellRest(bell), bell);
 
 // ── desktop (second device) ──
 const desk2 = await open({ dark: false, theme: 'Casora', width: 1440, height: 900 });
@@ -105,6 +118,8 @@ await need('Handy: Symbol der Kachel gefunden', at);
 await phone.page.touchscreen.tap(at.x, at.y);
 a = await stable(phone.page, TILE_NOW, null, { max: 8000, until: (t) => t && !t.shown });
 await check('Handy: Tipp aufs Symbol – Kachel ausgeblendet', a && !a.shown && a.out, a);
+bell = await stable(phone.page, BELL_WASTE, BINS, { max: 8000, until: (r) => r && !bellRest(r) });
+await check('Handy: Glocken-Eintrag nach dem Bestätigen weg', bell && !bellRest(bell), bell);
 const popupOpen = await phone.page.evaluate(() => !!window.__pierce('casora-popup').find((x) => x.hasAttribute('open')));
 await check('Handy: Symbol öffnet am Abholtag kein Popup', !popupOpen);
 await phone.page.waitForTimeout(400);
@@ -113,6 +128,8 @@ await pic(phone.page, 'handy-2-bestaetigt-hinweis');
 usePage(desk2.page);
 b = await stable(desk2.page, TILE_NOW, null, { max: 8000, until: (t) => t && !t.shown });
 await check('Desktop: ohne Neuladen ebenfalls ausgeblendet (geteilt)', b && !b.shown && b.out, b);
+const bellD = await stable(desk2.page, BELL_WASTE, BINS, { max: 8000, until: (r) => r && !bellRest(r) });
+await check('Desktop: Glocken-Eintrag ebenfalls weg (geteilt)', bellD && !bellRest(bellD), bellD);
 
 // ── desktop: popup row „Rausgestellt“ on, switch it off ──
 await desk2.page.evaluate(() => {
@@ -143,4 +160,6 @@ await check('Desktop: Bestätigung zurückgenommen', b && !b.out, b);
 usePage(phone.page);
 a = await stable(phone.page, TILE_NOW, null, { max: 8000, until: (t) => t && t.shown });
 await check('Handy: Kachel wieder da (geteilt)', a && a.shown && !a.out, a);
+bell = await stable(phone.page, BELL_WASTE, BINS, { max: 8000, until: bellRest });
+await check('Handy: Glocken-Eintrag nach dem Zurücknehmen wieder da', bellRest(bell), bell);
 await finish();

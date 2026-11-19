@@ -2,7 +2,7 @@
 // On the pickup day (or the evening before, while the waste tile is active) a tap on the tile's icon confirms
 // "put out": the tile hides until the next pickup, a notice offers „Rückgängig“. The waste popup carries the same
 // as a switch row „Rausgestellt“ (on/off, so it is also the way back). The header line under the greeting keeps
-// naming the pickup (casoraHomeNext reads the bins, not this list).
+// naming the pickup (casoraHomeNext reads the bins, not this list); the bell's waste row for that pickup goes too.
 // Shared by every device and user: the integration keeps the list (waste_out.py, casora/waste_out/subscribe|set)
 // and pushes changes to every open dashboard; localStorage only gives the first paint before the push arrives.
 // A confirmation is keyed by the pickup („2026-11-20|restmüll“), so the next pickup has another key and the tile
@@ -71,6 +71,8 @@
   };
   O.redraw = function () {
     try { if (typeof window.casoraKickAll === 'function') window.casoraKickAll('waste-out', isTrash); } catch (e) { /* the next state push redraws */ }
+    // The bell's „Abfall heute/morgen“ row follows the confirmation (01-basis.js, #211).
+    try { if (window._casoraNotify && typeof window._casoraNotify.refresh === 'function') window._casoraNotify.refresh(); } catch (e) { /* next collect */ }
   };
 
   O.hidden = function (hass, variables) {
