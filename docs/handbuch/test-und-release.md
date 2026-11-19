@@ -18,8 +18,8 @@ mit `pytest-homeassistant-custom-component` (HA 2026.10) und zusätzlich mit HAs
 `pytest-homeassistant` (HA 2026.11, `--prerelease=allow`, `-p no:respx`; Import über `dev/pytest/ha_common.py`).
 
 Private Testdateien (gitignored) fehlen in einem frischen Worktree – aus dem Haupt-Checkout kopieren:
-`dev/casora_mock/fixture.json`, `scenarios.json`, `skip.txt`, `dev/e2e/testhaus.json`, `dev/privat-woerter.txt`,
-`dev/demo/privat.json`. Nie committen.
+`dev/casora_mock/fixture.json`, `scenarios.json`, `skip.txt` (Syntax: `dev/casora_mock/README.md`),
+`dev/e2e/testhaus.json`, `dev/privat-woerter.txt`, `dev/demo/privat.json`. Nie committen.
 
 ## 2. Tests schreiben
 

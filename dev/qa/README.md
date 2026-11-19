@@ -52,7 +52,8 @@ Rückgabe ≠ 0 bei jedem Fehler.
 
 Bevor ein HA startet, prüft das Gate, was die Tests brauchen, aber nicht im Repo liegt:
 private Testdateien (`dev/casora_mock/fixture.json`, `scenarios.json`, `dev/e2e/testhaus.json`,
-`dev/privat-woerter.txt`, optional `skip.txt`, `einstellungen.privat.js`), Docker (bzw. `uv` mit `CASORA_HA_BACKEND=venv`), Test-Zugang
+`dev/privat-woerter.txt`, optional `skip.txt` – Syntax in `dev/casora_mock/README.md` –,
+`einstellungen.privat.js`), Docker (bzw. `uv` mit `CASORA_HA_BACKEND=venv`), Test-Zugang
 (`~/casora-haus/ZUGANG.txt`), die Zustände unter `~/casora-haus/zustaende/` und freie Ports 8301–8307.
 In einem Worktree werden fehlende private Dateien aus dem Haupt-Checkout kopiert (alle gitignored).
 Fehlt etwas ganz, startet das Gate nicht, statt später als roter Test (früher: t01/t11 ohne testhaus.json).

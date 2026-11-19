@@ -119,15 +119,10 @@ def ha_stubs(registry: FakeEntities) -> None:
             return name
 
         @staticmethod
-        def Optional(name, **_kw):
-            return name
-
-        @staticmethod
         def In(values):
             return ("In", values)
 
-    _module("voluptuous", Schema=Vol.Schema, Required=Vol.Required, Optional=Vol.Optional,
-            In=Vol.In, ALLOW_EXTRA=Vol.ALLOW_EXTRA)
+    _module("voluptuous", Schema=Vol.Schema, Required=Vol.Required, In=Vol.In, ALLOW_EXTRA=Vol.ALLOW_EXTRA)
     _module("homeassistant.core", Event=object, HomeAssistant=object, ServiceCall=object,
             callback=lambda fn: fn)
     _module("homeassistant.config_entries", SOURCE_IMPORT="import", ConfigEntry=object)
@@ -154,9 +149,6 @@ def ha_stubs(registry: FakeEntities) -> None:
             async_track_state_change_event=lambda *a, **k: lambda: None,
             async_track_time_change=lambda *a, **k: lambda: None,
             async_call_later=lambda hass, delay, action: lambda: None)
-    _module("homeassistant.components.http", HomeAssistantView=object)
-    _module("aiohttp", web=SimpleNamespace(json_response=lambda *a, **k: None, Response=object,
-                                           FileResponse=object, StaticResource=object))
 
 
 def load_mock(tmp: Path, skip: str | None, registry: FakeEntities):
@@ -170,8 +162,7 @@ def load_mock(tmp: Path, skip: str | None, registry: FakeEntities):
     if skip is not None:
         (tmp / "casora_mock" / "skip.txt").write_text(skip, encoding="utf-8")
     ha_stubs(registry)
-    _module("casora_mock.haus", compose=lambda *args: None)
-    for name in ("frigate", "klingel", "kamerabild", "coffee", "dishwasher", "live"):
+    for name in ("frigate", "klingel", "kamerabild", "coffee", "dishwasher", "live", "velair"):
         sys.modules[f"casora_mock.{name}"] = types.ModuleType(f"casora_mock.{name}")
         sys.modules[f"casora_mock.{name}"].setup = lambda hass, mock: None
     spec = importlib.util.spec_from_file_location(
@@ -180,6 +171,8 @@ def load_mock(tmp: Path, skip: str | None, registry: FakeEntities):
     module = importlib.util.module_from_spec(spec)
     sys.modules["casora_mock"] = module
     spec.loader.exec_module(module)
+    # The startup builds the full house; this test only wants the neutral fixture, so compose does nothing.
+    module.compose = lambda *args: None
     return module
 
 
@@ -207,7 +200,7 @@ class PlatformSkipTest(unittest.TestCase):
         sys.modules.update(self._saved)
 
     def world(self, skip: str | None):
-        """Loads the mock once with the given skip.txt and starts it; returns the hass used."""
+        """Loads the mock once with the given skip.txt and starts it; returns the loaded module."""
         mock = load_mock(self.tmp, skip, self.registry)
         start(mock, self.hass)
         return mock
