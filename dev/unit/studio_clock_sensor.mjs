@@ -1,4 +1,4 @@
-// #223: the Studio preview clock follows the Dashboard's casora_time rule for the time text. A time sensor with a
+// The Studio preview clock follows the Dashboard's casora_time rule for the time text. A time sensor with a
 // usable value shows its own time (whatever the profile says); Automatic with no usable sensor.time shows the
 // device clock in the profile's zone; a chosen sensor that is gone shows nothing. Both rules run on the same
 // inputs here: the real template from button_card_templates.json, and the real preview through _roomMap.
@@ -88,6 +88,7 @@ const previewText = (hass, variables) => {
 };
 
 // 05:05 UTC: 06:05 Amsterdam, 00:05 New York. 23:30 UTC: the server zone is past midnight, New York is not.
+// 11:00 UTC: noon in Amsterdam, the 12-hour boundary.
 const INSTANTS = ['2026-01-15T05:05:00Z', '2026-01-15T23:30:00Z', '2026-01-15T11:00:00Z'];
 const KITCHEN = 'sensor.kitchen_clock';
 
@@ -115,6 +116,15 @@ const CASES = [
     vars: { time_entity: KITCHEN, use_12h: false }, expect: '' },
   { name: 'Studio-chosen sensor unavailable: its state text, as the Dashboard shows', states: { [KITCHEN]: { state: 'unavailable' } },
     vars: { time_entity: KITCHEN, use_12h: false }, expect: 'UNAVAILABLE' },
+  { name: 'sensor.time chosen by hand, unavailable: device clock, as the Dashboard', states: { 'sensor.time': { state: 'unavailable' } },
+    vars: { time_entity: 'sensor.time', use_12h: false }, expect: 'DEVICE' },
+  { name: 'Studio-chosen sensor with 00:05, 12-hour: 12:05 AM', states: { [KITCHEN]: { state: '00:05' } },
+    vars: { time_entity: KITCHEN, use_12h: true }, expect: '12:05 AM' },
+  // use_12h never stored (undefined): the template reads only use_12h === true, so it shows 24-hour. The preview
+  // takes the profile's setting instead. This 24-hour profile ('nl') makes both agree; the 12-hour profile below
+  // shows where they part.
+  { name: 'Automatic, sensor.time with a value, use_12h not stored: 24-hour', states: { 'sensor.time': { state: '08:13' } },
+    vars: {}, expect: '08:13' },
 ];
 
 for (const c of CASES) {
@@ -141,10 +151,11 @@ instant = new RealDate('2026-01-15T05:05:00Z');
 assert.equal(previewText(hassFor('local', { 'sensor.time': { state: '08:13' } }), { use_12h: false }), '08:13',
   'the sensor time, not the device clock (00:05 in New York)');
 
-// The helper itself, on the same cases: the Studio-chosen sensor is read the same way as the template.
-const hassLocal = hassFor('local', { [KITCHEN]: { state: '09:30' } });
-assert.equal(I.studioTimeText(hassLocal, { time_entity: KITCHEN, use_12h: false }, false, instant), '09:30', 'helper: sensor text');
-assert.equal(I.studioTimeText(hassFor('local', {}), { use_12h: false }, false, instant), '00:05', 'helper: device clock, profile zone');
-assert.equal(I.studioTimeText(hassFor('local', {}), { time_entity: KITCHEN }, false, instant), '', 'helper: chosen sensor gone');
+// Known gap, asserted as it is today (not changed here): use_12h never stored. The template shows 24-hour; the
+// preview follows the profile (clock12: time_format "12" means 12-hour). Here the Dashboard and the preview differ.
+instant = new RealDate('2026-01-15T05:05:00Z');
+const hass12 = { states: { 'sensor.time': { state: '08:13' } }, locale: { language: 'nl', time_zone: 'local', time_format: '12' }, config: { time_zone: 'Europe/Amsterdam' } };
+assert.equal(dashboardText(hass12, hass12.states, {}), '08:13', 'use_12h not stored: the Dashboard shows 24-hour');
+assert.equal(previewText(hass12, {}), '8:13 AM', 'use_12h not stored, profile 12-hour: the preview follows the profile');
 
 console.log('studio_clock_sensor: ok');
