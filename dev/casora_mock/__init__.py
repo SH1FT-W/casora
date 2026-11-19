@@ -25,7 +25,7 @@ from homeassistant.helpers.event import async_track_state_change_event, async_tr
 from homeassistant.util import dt as dt_util
 
 from .entity import PLATFORMS, build_classes
-from .haus import compose
+from .haus import compose, skip_entity
 from .registry_rules import (clear_old_platform_entry, hidden_by_for, registry_platform_for, sensor_options_for,
                              writes_state_directly)
 
@@ -138,12 +138,8 @@ class CasoraMock:
         self.scenarios = scenarios
         skip = set(fixture.get("_skip", []))
         # Entitäten, die im Test-HA echt existieren (Helfer/Skripte aus Paketen), auslassen.
-        # skip.txt also accepts platform:<registry platform> for a real integration.
-        self.entities = {
-            e["entity_id"]: e for e in fixture["entities"]
-            if e["entity_id"] not in skip
-            and f"platform:{e.get('registry_platform')}" not in skip
-        }
+        # skip.txt: entity id or platform:<registry platform>, see README.md in this folder.
+        self.entities = {e["entity_id"]: e for e in fixture["entities"] if not skip_entity(e, skip)}
         fixture["entities"] = list(self.entities.values())
         self.store: dict[str, list] = {}
         self.objs: dict = {}
