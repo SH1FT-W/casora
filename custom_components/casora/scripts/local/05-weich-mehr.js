@@ -647,7 +647,9 @@
         EVh.prefetch(ctx.hass);
         f3.flows = { card: secCard([], 'return window._casoraEnergyHistory ? window._casoraEnergyHistory.sec("flows", null, states, hass, this) : "";', states) };
       }
-      return layout({ fields: f3, top: ['hero'], stage: 'stage', quick: 'quick', left: [], right: ['use', 'top', 'flows', 'hist'], moveLeft: [],
+      // „Verlauf“ (one row) leads the right column: the column balance moves leading sections under the stage, so it
+      // lands there (§7.1) and the column gap stays small with the section „Energie“ (r457, 19.11.2026: 253 → ~37 px).
+      return layout({ fields: f3, top: ['hero'], stage: 'stage', quick: 'quick', left: [], right: ['hist', 'use', 'top', 'flows'], moveLeft: [],
         narrowOrder: ['stage', 'quick', 'top', 'use', 'flows', 'hist'] });
     }
     return layout({ fields: f, top: ['hero', 'metric'], left: wide ? ['flow'] : ['top'],

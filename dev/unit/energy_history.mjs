@@ -247,7 +247,7 @@ assert.equal(EV.sec('entry', null, {}, h3, null), '', 'no devices: no row');
 // ── Wiring ───────────────────────────────────────────────────────────────
 assert.ok(read('custom_components/casora/scripts/casora-local.js').includes("'48-energie-verlauf'"), 'module in MODULES');
 const mehr = read('custom_components/casora/scripts/local/05-weich-mehr.js');
-assert.ok(/_casoraEnergyHistory\.sec\("entry"/.test(mehr) && /right: \['use', 'top', 'flows', 'hist'\]/.test(mehr), 'row in the house energy popup');
+assert.ok(/_casoraEnergyHistory\.sec\("entry"/.test(mehr) && /right: \['hist', 'use', 'top', 'flows'\]/.test(mehr), 'row in the house energy popup');
 const chart = read('custom_components/casora/scripts/casora-chart.js');
 assert.ok(/c\.kind === 'stack'\) return this\._stack\(box, W\)/.test(chart), 'casora-chart draws stacks');
 // „Nicht erfasst“'s legend dot as a ring (owner, 13.11.2026): visible on a dark popup too, still the palest.

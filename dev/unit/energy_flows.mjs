@@ -121,8 +121,8 @@ assert.equal(EV.sec('entry', null, {}, hass, null), '', 'no devices: no device r
 // ── Wiring ───────────────────────────────────────────────────────────────
 const mehr = read('custom_components/casora/scripts/local/05-weich-mehr.js');
 assert.ok(/_casoraEnergyHistory\.sec\("flows"/.test(mehr), 'section in the house energy popup');
-assert.ok(/right: \['use', 'top', 'flows', 'hist'\]/.test(mehr) && /narrowOrder: \['stage', 'quick', 'top', 'use', 'flows', 'hist'\]/.test(mehr),
-  'right column, before „Verlauf“; same order on the phone');
+assert.ok(/right: \['hist', 'use', 'top', 'flows'\]/.test(mehr) && /narrowOrder: \['stage', 'quick', 'top', 'use', 'flows', 'hist'\]/.test(mehr),
+  'right column after „Verlauf“ (balance moves it under the stage, r457); on the phone before it');
 const en = JSON.parse(read('custom_components/casora/translations/dashboard/phrases/en.json')).exact;
 ['Hausverbrauch', 'Netzbezug', 'Einspeisung', 'Solarerzeugung', 'Energie', 'Statistik nicht abrufbar', 'Diese Woche'].forEach((k) => assert.ok(en[k], 'en: ' + k));
 console.log('energy_flows: ok');

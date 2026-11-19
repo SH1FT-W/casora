@@ -367,8 +367,7 @@
         cell.busy = false;
         var ws = cell.wait; cell.wait = [];
         ws.forEach(kick);
-        parts = parts.filter(function (x) { return x && x.isConnected; });
-        parts.forEach(function (x) { if (ws.indexOf(x) < 0) kick(x); });
+        live().forEach(function (x) { if (ws.indexOf(x) < 0) kick(x); });
       });
     return cell.data || 'wait';
   };
@@ -380,15 +379,18 @@
   var choice = { range: 'week', focus: null }, parts = [];
   EV.range = function () { return choice.range; };
   EV.focus = function () { return choice.focus; };
+  // Weak references: a closed popup's cards must not stay alive through this list (r106; nothing prunes it after close).
+  var wref = function (el) { return typeof WeakRef === 'function' ? new WeakRef(el) : { deref: function () { return el; } }; };
+  var live = function () {
+    var out = [];
+    parts = parts.filter(function (r) { var x = r.deref(); if (x && x.isConnected) { out.push(x); return true; } return false; });
+    return out;
+  };
   var remember = function (el) {
     if (!el) return;
-    parts = parts.filter(function (x) { return x && x.isConnected; });
-    if (parts.indexOf(el) < 0) parts.push(el);
+    if (live().indexOf(el) < 0) parts.push(wref(el));
   };
-  var redraw = function () {
-    parts = parts.filter(function (x) { return x && x.isConnected; });
-    parts.forEach(kick);
-  };
+  var redraw = function () { live().forEach(kick); };
   EV.setRange = function (r) { if (RANGES.indexOf(r) < 0 || r === choice.range) return; choice.range = r; redraw(); };
   // A second tap on the highlighted device shows all again.
   EV.toggle = function (id) { choice.focus = choice.focus === id ? null : id; redraw(); };
