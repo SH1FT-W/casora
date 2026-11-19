@@ -2979,7 +2979,10 @@
     "Alles normal": "Alt normalt",
     "Rauchmelder offline": "Røykvarsler frakoblet",
     "Wassermelder offline": "Vannvarsler frakoblet",
-    "Gasmelder": "Gassvarslere"
+    "Gasmelder": "Gassvarslere",
+    "Rausgestellt": "Satt ut",
+    "Müll ist rausgestellt": "Søppelet er satt ut",
+    "Kachel bis zur nächsten Abholung ausgeblendet": "Flisen er skjult til neste henting"
   },
   "patterns": [
     [

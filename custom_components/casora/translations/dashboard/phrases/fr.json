@@ -2986,7 +2986,10 @@
     "Alles normal": "Tout est normal",
     "Rauchmelder offline": "Détecteur de fumée hors ligne",
     "Wassermelder offline": "Détecteur d’eau hors ligne",
-    "Gasmelder": "Détecteurs de gaz"
+    "Gasmelder": "Détecteurs de gaz",
+    "Rausgestellt": "Sorti",
+    "Müll ist rausgestellt": "Les poubelles sont sorties",
+    "Kachel bis zur nächsten Abholung ausgeblendet": "Tuile masquée jusqu’à la prochaine collecte"
   },
   "patterns": [
     [

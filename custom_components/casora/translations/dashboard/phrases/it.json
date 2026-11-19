@@ -2986,7 +2986,10 @@
     "Alles normal": "Tutto normale",
     "Rauchmelder offline": "Rilevatore di fumo offline",
     "Wassermelder offline": "Rilevatore d’acqua offline",
-    "Gasmelder": "Rilevatori di gas"
+    "Gasmelder": "Rilevatori di gas",
+    "Rausgestellt": "Portato fuori",
+    "Müll ist rausgestellt": "Rifiuti portati fuori",
+    "Kachel bis zur nächsten Abholung ausgeblendet": "Scheda nascosta fino al prossimo ritiro"
   },
   "patterns": [
     [

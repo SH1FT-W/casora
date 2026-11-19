@@ -2986,7 +2986,10 @@
     "Alles normal": "Alles normaal",
     "Rauchmelder offline": "Rookmelder offline",
     "Wassermelder offline": "Watermelder offline",
-    "Gasmelder": "Gasmelders"
+    "Gasmelder": "Gasmelders",
+    "Rausgestellt": "Buitengezet",
+    "Müll ist rausgestellt": "Afval is buitengezet",
+    "Kachel bis zur nächsten Abholung ausgeblendet": "Tegel verborgen tot de volgende ophaling"
   },
   "patterns": [
     [

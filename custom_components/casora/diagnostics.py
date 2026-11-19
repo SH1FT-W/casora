@@ -206,7 +206,7 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigE
         "dashboards": summarize_dashboards(configs, known),
         "integrations": summarize_integrations(domains),
         "running": sorted(k for k in ("ki", "raumklima", "media_pause", "timers", "tanken", "charging",
-                                      "notify_hidden", "live", "update_push") if data.get(k) is not None),
+                                      "notify_hidden", "waste_out", "live", "update_push") if data.get(k) is not None),
         "checks": {
             "update": {"last_check": data.get(DATA_LAST_CHECK), "last_error": _error(data.get(DATA_LAST_ERROR))},
             "tanken": _status(data.get("tanken")),

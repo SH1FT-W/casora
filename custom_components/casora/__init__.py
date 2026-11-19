@@ -403,6 +403,10 @@ async def _async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     from .notify_hidden import async_setup_notify_hidden
 
     await async_setup_notify_hidden(hass)
+    # Waste tile: "put out" confirmations shared by every device (waste_out.py, issue #211).
+    from .waste_out import async_setup_waste_out
+
+    await async_setup_waste_out(hass)
     # Live-Aktivitäten auf dem Handy (live_activity.py): Geräte wie die Kacheln finden, Store statt Optionen.
     from .live_activity import async_setup_live
 
@@ -513,6 +517,7 @@ async def _async_teardown(hass: HomeAssistant, entry: ConfigEntry, *, remove_pan
         tk.stop()
     hass.data.get(DOMAIN, {}).pop("charging", None)
     hass.data.get(DOMAIN, {}).pop("notify_hidden", None)
+    hass.data.get(DOMAIN, {}).pop("waste_out", None)
     live = hass.data.get(DOMAIN, {}).pop("live", None)
     if live:
         live.stop()

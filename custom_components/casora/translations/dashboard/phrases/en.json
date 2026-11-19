@@ -2968,7 +2968,10 @@
     "Alles normal": "All normal",
     "Rauchmelder offline": "Smoke detector offline",
     "Wassermelder offline": "Water detector offline",
-    "Gasmelder": "Gas detectors"
+    "Gasmelder": "Gas detectors",
+    "Rausgestellt": "Put out",
+    "Müll ist rausgestellt": "Waste is put out",
+    "Kachel bis zur nächsten Abholung ausgeblendet": "Tile hidden until the next pickup"
   },
   "patterns": [
     [

@@ -2986,7 +2986,10 @@
     "Alles normal": "Tudo normal",
     "Rauchmelder offline": "Detetor de fumo offline",
     "Wassermelder offline": "Detetor de água offline",
-    "Gasmelder": "Detetores de gás"
+    "Gasmelder": "Detetores de gás",
+    "Rausgestellt": "Posto fora",
+    "Müll ist rausgestellt": "O lixo foi posto fora",
+    "Kachel bis zur nächsten Abholung ausgeblendet": "Cartão oculto até à próxima recolha"
   },
   "patterns": [
     [

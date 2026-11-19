@@ -2986,7 +2986,10 @@
     "Alles normal": "Todo normal",
     "Rauchmelder offline": "Detector de humo sin conexión",
     "Wassermelder offline": "Detector de agua sin conexión",
-    "Gasmelder": "Detectores de gas"
+    "Gasmelder": "Detectores de gas",
+    "Rausgestellt": "Sacado",
+    "Müll ist rausgestellt": "La basura está fuera",
+    "Kachel bis zur nächsten Abholung ausgeblendet": "Tarjeta oculta hasta la próxima recogida"
   },
   "patterns": [
     [

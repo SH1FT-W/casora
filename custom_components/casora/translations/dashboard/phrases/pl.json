@@ -2986,7 +2986,10 @@
     "Alles normal": "Wszystko w normie",
     "Rauchmelder offline": "Czujnik dymu offline",
     "Wassermelder offline": "Czujnik wody offline",
-    "Gasmelder": "Czujniki gazu"
+    "Gasmelder": "Czujniki gazu",
+    "Rausgestellt": "Wystawione",
+    "Müll ist rausgestellt": "Śmieci są wystawione",
+    "Kachel bis zur nächsten Abholung ausgeblendet": "Kafelek ukryty do następnego odbioru"
   },
   "patterns": [
     [
