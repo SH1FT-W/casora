@@ -3165,7 +3165,22 @@
     "Above it only turns red after an hour: after a shower or cooking humid air is normal.": "Acima só fica vermelho após uma hora: depois do duche ou de cozinhar, o ar húmido é normal.",
     "Use recommended values": "Usar valores recomendados",
     "Smoke detectors": "Detetores de fumo",
-    "Water detectors": "Detetores de inundação"
+    "Water detectors": "Detetores de inundação",
+    "Smart meter": "Contador inteligente",
+    "Meter sensor": "Sensor do contador",
+    "Your smart meter's sensor": "Um sensor do teu contador inteligente",
+    "On the tile": "No mosaico",
+    "Cost": "Custo",
+    "Usage": "Consumo",
+    "Electricity usage": "Consumo de eletricidade",
+    "Electricity cost": "Custo de eletricidade",
+    "Gas usage": "Consumo de gás",
+    "Gas cost": "Custo de gás",
+    "Standing charge": "Termo fixo",
+    "Total cost": "Custo total",
+    "Electricity": "Eletricidade",
+    "Gas": "Gás",
+    "Today's electricity and gas cost side by side on the tile, or the usage in kWh. The popup shows the day, the week or the month: usage and cost of electricity and gas apart, standing charge and total, and a chart with bars per hour or day. Week and month come from Home Assistant's statistics of the daily counters. For smart meters without solar, e.g. Hildebrand Glow and Octopus Energy.": "O custo de hoje de eletricidade e gás lado a lado no mosaico, ou o consumo em kWh. O popup mostra o dia, a semana ou o mês: consumo e custo de eletricidade e gás em separado, termo fixo e total, com um gráfico de barras por hora ou por dia. A semana e o mês vêm das estatísticas dos contadores diários do Home Assistant. Para contadores inteligentes sem solar, p. ex. Hildebrand Glow e Octopus Energy."
   },
   "patterns": [
     [

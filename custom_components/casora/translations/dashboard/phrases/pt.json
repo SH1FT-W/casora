@@ -2986,9 +2986,27 @@
     "Alles normal": "Tudo normal",
     "Rauchmelder offline": "Detetor de fumo offline",
     "Wassermelder offline": "Detetor de água offline",
-    "Gasmelder": "Detetores de gás"
+    "Gasmelder": "Detetores de gás",
+    "Stromzähler": "Contador de eletricidade",
+    "Gaszähler": "Contador de gás",
+    "Kosten": "Custo",
+    "Grundgebühr": "Termo fixo",
+    "Gesamtkosten": "Custo total",
+    "Strom und Gas": "Eletricidade e gás"
   },
   "patterns": [
+    [
+      "^Strom (.+) · Gas (.+)$",
+      "Eletricidade {1} · Gás {2}"
+    ],
+    [
+      "^Strom (\\S*\\d\\S*(?: \\S+)?)$",
+      "Eletricidade {1}"
+    ],
+    [
+      "^Gas (\\S*\\d\\S*(?: \\S+)?)$",
+      "Gás {1}"
+    ],
     [
       "^(\\d+) Rauchmelder offline$",
       "{1} detetores de fumo offline"

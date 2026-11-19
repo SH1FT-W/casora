@@ -2986,9 +2986,27 @@
     "Alles normal": "Tutto normale",
     "Rauchmelder offline": "Rilevatore di fumo offline",
     "Wassermelder offline": "Rilevatore d’acqua offline",
-    "Gasmelder": "Rilevatori di gas"
+    "Gasmelder": "Rilevatori di gas",
+    "Stromzähler": "Contatore elettrico",
+    "Gaszähler": "Contatore del gas",
+    "Kosten": "Costo",
+    "Grundgebühr": "Quota fissa",
+    "Gesamtkosten": "Costo totale",
+    "Strom und Gas": "Luce e gas"
   },
   "patterns": [
+    [
+      "^Strom (.+) · Gas (.+)$",
+      "Elettricità {1} · Gas {2}"
+    ],
+    [
+      "^Strom (\\S*\\d\\S*(?: \\S+)?)$",
+      "Elettricità {1}"
+    ],
+    [
+      "^Gas (\\S*\\d\\S*(?: \\S+)?)$",
+      "Gas {1}"
+    ],
     [
       "^(\\d+) Rauchmelder offline$",
       "{1} rilevatori di fumo offline"

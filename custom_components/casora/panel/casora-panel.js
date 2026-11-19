@@ -760,6 +760,7 @@ const FILTER_CATEGORIES = {
   casora_tasks: "unfiltered",
   casora_kettle: "unfiltered",
   casora_co: "security",
+  casora_smart_meter: "energy",
   casora_map: "unfiltered",
   casora_plant: "unfiltered",
 };
@@ -5775,6 +5776,9 @@ const TILE_MAIN_FIND = {
   casora_kettle: { anchors: (h) => (window.casoraKettleFind ? window.casoraKettleFind.all(h).map((k) => k.anchor) : []) },
   // CO detector (community card 124): every carbon monoxide sensor (device_class, never the entity id) – Matter's CO
   // concentration in ppm; the detector's alarm binary_sensor is no reading.
+  // Smart meter (card request 208): the anchor of every meter the shared finder knows (total cost, else a cost, else a
+  // consumption – casoraSmartMeterFind in 00-finder.js); any energy sensor would be guesswork.
+  casora_smart_meter: { anchors: (h) => (window.casoraSmartMeterFind ? window.casoraSmartMeterFind.all(h).map((m) => m.anchor) : []) },
   casora_co: { domain: "sensor", match: (h, id) => ((((h.states || {})[id] || {}).attributes || {}).device_class === "carbon_monoxide") },
   casora_frigate: { domain: "camera", match: (h, id) => ((((h.states || {})[id] || {}).attributes || {}).device_class === "camera") && !/birdseye/i.test(id) },
   casora_reolink_doorbell: { domain: "camera", match: (h, id) => typeof window.__casoraBellCam === "function" && !!window.__casoraBellCam(h, id) },

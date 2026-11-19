@@ -2968,9 +2968,27 @@
     "Alles normal": "All normal",
     "Rauchmelder offline": "Smoke detector offline",
     "Wassermelder offline": "Water detector offline",
-    "Gasmelder": "Gas detectors"
+    "Gasmelder": "Gas detectors",
+    "Stromzähler": "Electricity meter",
+    "Gaszähler": "Gas meter",
+    "Kosten": "Cost",
+    "Grundgebühr": "Standing charge",
+    "Gesamtkosten": "Total cost",
+    "Strom und Gas": "Electricity and gas"
   },
   "patterns": [
+    [
+      "^Strom (.+) · Gas (.+)$",
+      "Electricity {1} · Gas {2}"
+    ],
+    [
+      "^Strom (\\S*\\d\\S*(?: \\S+)?)$",
+      "Electricity {1}"
+    ],
+    [
+      "^Gas (\\S*\\d\\S*(?: \\S+)?)$",
+      "Gas {1}"
+    ],
     [
       "^(\\d+) Rauchmelder offline$",
       "{1} smoke detectors offline"

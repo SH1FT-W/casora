@@ -129,6 +129,8 @@ const MIGRIERT = [
   // S5: HA's own map card mounted into UI.stage('image'), across the wide popup (issue 159).
   { popup: 'Landkarte', vorlagen: ['casora_popup_map'], file: '44-landkarte.js', from: '  M.sec = function', to: '  M.popup = function', stages: 2 },
   { popup: 'CO-Melder', vorlagen: ['casora_popup_co'], file: '42-co.js', from: '  C.sec = function', to: "  // The popup's cards: v3", stages: 1 },
+  // Built for v3 (card request 208): S6 with the range's cost or usage over stacked bars, Tag · Woche · Monat in the stage.
+  { popup: 'Smart Meter', vorlagen: ['casora_popup_smart_meter'], file: '50-smart-meter.js', from: '  SM.sec = function', to: '  // ── Popup ──', stages: 1 },
 ];
 
 // 1. Pieces.

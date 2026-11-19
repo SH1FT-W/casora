@@ -3165,7 +3165,22 @@
     "Above it only turns red after an hour: after a shower or cooking humid air is normal.": "Darüber erst nach einer Stunde rot: Nach dem Duschen oder Kochen ist feuchte Luft normal.",
     "Use recommended values": "Empfohlene Werte verwenden",
     "Smoke detectors": "Rauchmelder",
-    "Water detectors": "Wassermelder"
+    "Water detectors": "Wassermelder",
+    "Smart meter": "Smart Meter",
+    "Meter sensor": "Zähler-Sensor",
+    "Your smart meter's sensor": "Ein Sensor deines Smart Meters",
+    "On the tile": "Auf der Kachel",
+    "Cost": "Kosten",
+    "Usage": "Verbrauch",
+    "Electricity usage": "Stromverbrauch",
+    "Electricity cost": "Stromkosten",
+    "Gas usage": "Gasverbrauch",
+    "Gas cost": "Gaskosten",
+    "Standing charge": "Grundgebühr",
+    "Total cost": "Gesamtkosten",
+    "Electricity": "Strom",
+    "Gas": "Gas",
+    "Today's electricity and gas cost side by side on the tile, or the usage in kWh. The popup shows the day, the week or the month: usage and cost of electricity and gas apart, standing charge and total, and a chart with bars per hour or day. Week and month come from Home Assistant's statistics of the daily counters. For smart meters without solar, e.g. Hildebrand Glow and Octopus Energy.": "Die heutigen Kosten für Strom und Gas nebeneinander auf der Kachel, oder der Verbrauch in kWh. Das Popup zeigt den Tag, die Woche oder den Monat: Verbrauch und Kosten von Strom und Gas getrennt, Grundgebühr und Summe, dazu ein Diagramm mit Balken je Stunde oder Tag. Woche und Monat kommen aus den Statistiken der Tageszähler in Home Assistant. Für Smart Meter ohne Solar, z. B. Hildebrand Glow und Octopus Energy."
   },
   "patterns": [
     [

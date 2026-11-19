@@ -3165,7 +3165,22 @@
     "Above it only turns red after an hour: after a shower or cooking humid air is normal.": "Powyżej robi się czerwono dopiero po godzinie: po prysznicu lub gotowaniu wilgotne powietrze jest normalne.",
     "Use recommended values": "Użyj zalecanych wartości",
     "Smoke detectors": "Czujniki dymu",
-    "Water detectors": "Czujniki wody"
+    "Water detectors": "Czujniki wody",
+    "Smart meter": "Inteligentny licznik",
+    "Meter sensor": "Czujnik licznika",
+    "Your smart meter's sensor": "Czujnik twojego inteligentnego licznika",
+    "On the tile": "Na kafelku",
+    "Cost": "Koszt",
+    "Usage": "Zużycie",
+    "Electricity usage": "Zużycie prądu",
+    "Electricity cost": "Koszt prądu",
+    "Gas usage": "Zużycie gazu",
+    "Gas cost": "Koszt gazu",
+    "Standing charge": "Opłata stała",
+    "Total cost": "Koszt całkowity",
+    "Electricity": "Prąd",
+    "Gas": "Gaz",
+    "Today's electricity and gas cost side by side on the tile, or the usage in kWh. The popup shows the day, the week or the month: usage and cost of electricity and gas apart, standing charge and total, and a chart with bars per hour or day. Week and month come from Home Assistant's statistics of the daily counters. For smart meters without solar, e.g. Hildebrand Glow and Octopus Energy.": "Dzisiejszy koszt prądu i gazu obok siebie na kafelku albo zużycie w kWh. Okno pokazuje dzień, tydzień lub miesiąc: zużycie i koszt prądu i gazu osobno, opłatę stałą i sumę oraz wykres słupkowy na godzinę lub dzień. Tydzień i miesiąc pochodzą ze statystyk liczników dziennych w Home Assistant. Dla inteligentnych liczników bez fotowoltaiki, np. Hildebrand Glow i Octopus Energy."
   },
   "patterns": [
     [

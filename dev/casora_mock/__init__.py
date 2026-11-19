@@ -547,11 +547,14 @@ class CasoraMock:
                 "source": "recorder", "statistic_id": eid, "unit_class": unit_class(unit), "unit_of_measurement": unit,
             }, rows)
             n += 1
+        # Daily counters that reset at local midnight (smart meter, card request 208, "_stats_daily"), see below.
+        daily = self.fixture.get("_stats_daily") or {}
+        n += self._import_daily_stats(daily, list(hours_of("")), utc, unit_class)
         for eid, (state, attrs) in self.store.items():
             if not eid.startswith("sensor.") or attrs.get("device_class") != "energy" \
                     or attrs.get("state_class") not in ("total_increasing", "total"):
                 continue
-            if eid in events:
+            if eid in events or eid in daily:
                 continue
             try:
                 now_v = float(state)
@@ -593,6 +596,85 @@ class CasoraMock:
             }, rows)
             n += 1
         _LOGGER.warning("Casora Mock: Statistik für %s Sensoren importiert (30 Tage, %s länger)", n, len(days_of))
+
+    # Daily counters (smart meter, card request 208): hourly use from a profile ("elec" household, "gas" heating), a cost
+    # as another counter's use × rate, a constant (the standing charge, all day) and a total (other counters + constant).
+    # Rows: state = the day's sum so far (back to 0 at local midnight), sum = the running total ending at 0 (as above).
+    # Today's states are set to the sums since midnight, so the sensors and their statistics agree.
+    def _import_daily_stats(self, daily: dict, hours: list, utc, unit_class) -> int:
+        import math
+        import random
+
+        from homeassistant.components.recorder.models import StatisticMeanType
+        from homeassistant.components.recorder.statistics import async_import_statistics
+
+        if not daily or not hours:
+            return 0
+        day_of = [dt_util.as_local(utc(h)).date() for h in hours]
+        hour_of = [dt_util.as_local(utc(h)).hour for h in hours]
+        use: dict = {}
+
+        def profile(eid: str, kind: str) -> list:
+            rnd = random.Random(eid)
+            out = []
+            for hr in hour_of:
+                if kind == "gas":
+                    v = 0.15 + 1.6 * math.exp(-((hr - 6.5) / 1.2) ** 2) + 1.2 * math.exp(-((hr - 18.5) / 2.0) ** 2)
+                else:
+                    v = 0.12 + 0.35 * math.exp(-((hr - 19.5) / 2.2) ** 2) + 0.25 * math.exp(-((hr - 7.5) / 1.2) ** 2)
+                out.append(round(v * (0.6 + 0.8 * rnd.random()), 3))
+            return out
+
+        def uses(eid: str) -> list:
+            if eid in use:
+                return use[eid]
+            spec = daily.get(eid) or {}
+            if spec.get("profile"):
+                use[eid] = profile(eid, spec["profile"])
+            elif spec.get("of"):
+                use[eid] = [round(u * float(spec.get("rate", 0)), 4) for u in uses(spec["of"])]
+            else:
+                use[eid] = [0.0] * len(hours)
+            return use[eid]
+
+        def states(eid: str) -> list:
+            spec = daily.get(eid) or {}
+            out, acc, prev = [], 0.0, None
+            parts = [states(x) for x in spec.get("sum", [])]
+            for i, u in enumerate(uses(eid)):
+                if day_of[i] != prev:
+                    acc, prev = 0.0, day_of[i]
+                acc += u
+                v = acc + float(spec.get("const", 0)) + sum(p[i] for p in parts)
+                out.append(round(v, 4))
+            return out
+
+        n = 0
+        for eid in daily:
+            st = self.store.get(eid)
+            if not st:
+                continue
+            unit = st[1].get("unit_of_measurement")
+            vals = states(eid)
+            # The running sum: what the counter added each hour, a fall at midnight is a reset (no use).
+            rise = [max(0.0, v - (vals[i - 1] if i and day_of[i] == day_of[i - 1] else 0.0)) for i, v in enumerate(vals)]
+            if daily[eid].get("const") is not None and not daily[eid].get("sum"):
+                rise = [0.0] * len(vals)  # a constant never rises
+            total, acc, rows = sum(rise), 0.0, []
+            for h, v, r in zip(hours, vals, rise):
+                acc += r
+                rows.append({"start": utc(h), "state": v, "sum": acc - total})
+            async_import_statistics(self.hass, {
+                "has_mean": False, "mean_type": StatisticMeanType.NONE, "has_sum": True, "name": None,
+                "source": "recorder", "statistic_id": eid, "unit_class": unit_class(unit), "unit_of_measurement": unit,
+            }, rows)
+            # Today's value: the last row when it is today, else a fresh day.
+            today = dt_util.as_local(dt_util.utcnow()).date()
+            spec = daily[eid]
+            now_v = vals[-1] if day_of[-1] == today else float(spec.get("const", 0))
+            self.set(eid, str(round(now_v, 2)))
+            n += 1
+        return n
 
     def run_scenario(self, name: str) -> None:
         for eid, state in self.scenarios.get(name, {}).items():

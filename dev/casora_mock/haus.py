@@ -40,6 +40,7 @@ def merge(fixture: dict, extra: dict, label: str = "Stresshaus aktiv") -> None:
     # Days of long-term statistics per entity (default 30; e.g. 400 for the chart card's year range).
     fixture.setdefault("_stats_days", {}).update(extra.get("_stats_days", {}))
     fixture.setdefault("_stats_events", {}).update(extra.get("_stats_events", {}))
+    fixture.setdefault("_stats_daily", {}).update(extra.get("_stats_daily", {}))
     _LOGGER.warning("Casora Mock: %s (+%s Entitäten)", label, len(extra.get("entities", [])))
 
 
@@ -60,7 +61,7 @@ def vacuum_map(fixture: dict) -> None:
 def compose(fixture: dict, now: datetime, stress: dict | None = None, hacs: dict | None = None) -> dict:
     """Fixture plus the made-up devices, in the order async_setup_entry always used."""
     from . import (aquarium, befeuchter, co, coffee, dishwasher, ebike, energie, frigate, fussball, game_account, haustier,
-                   halten, hubs, klingel, fridge, medien, kettle, live, maeher, mixed_lights, oven, shopping,
+                   halten, hubs, klingel, fridge, medien, kettle, live, maeher, mixed_lights, oven, shopping, smartmeter,
                    testlimousine, testserver, testwagen, tumble, velair, waesche, wetter)
     if stress:
         merge(fixture, stress)
@@ -129,6 +130,8 @@ def compose(fixture: dict, now: datetime, stress: dict | None = None, hacs: dict
         merge(fixture, kettle.extra(now), "Testkocher/Testwasserkocher")
         # A made-up smoke and CO detector, Matter-like (community card #124), see co.py.
         merge(fixture, co.extra(now), "Testmelder")
+        # A made-up smart meter with daily counters for electricity and gas (community card, card request 208), see smartmeter.py.
+        merge(fixture, smartmeter.extra(now), "Testsmartmeter")
         # A made-up shopping list (community card #82), see shopping.py.
         merge(fixture, shopping.extra(now), "Testeinkauf")
         # A made-up electric car like BMW CarData, without door or lock values (#89), see testwagen.py.
