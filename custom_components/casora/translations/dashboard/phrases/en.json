@@ -2975,7 +2975,10 @@
     "Kosten": "Cost",
     "Grundgebühr": "Standing charge",
     "Gesamtkosten": "Total cost",
-    "Strom und Gas": "Electricity and gas"
+    "Strom und Gas": "Electricity and gas",
+    "Rausgestellt": "Put out",
+    "Müll ist rausgestellt": "Waste is put out",
+    "Kachel bis zur nächsten Abholung ausgeblendet": "Tile hidden until the next pickup"
   },
   "patterns": [
     [

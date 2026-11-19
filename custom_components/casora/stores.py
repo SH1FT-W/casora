@@ -16,6 +16,7 @@ STORE_KEYS = (
     "casora_media_pause",
     "casora_timers",
     "casora_notify_hidden",
+    "casora_waste_out",
     # Earlier versions only.
     "casora.card_updates",
     "casora.update_history",

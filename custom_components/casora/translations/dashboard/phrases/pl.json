@@ -2993,7 +2993,10 @@
     "Kosten": "Koszt",
     "Grundgebühr": "Opłata stała",
     "Gesamtkosten": "Koszt całkowity",
-    "Strom und Gas": "Prąd i gaz"
+    "Strom und Gas": "Prąd i gaz",
+    "Rausgestellt": "Wystawione",
+    "Müll ist rausgestellt": "Śmieci są wystawione",
+    "Kachel bis zur nächsten Abholung ausgeblendet": "Kafelek ukryty do następnego odbioru"
   },
   "patterns": [
     [

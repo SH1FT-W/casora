@@ -2993,7 +2993,10 @@
     "Kosten": "Coût",
     "Grundgebühr": "Abonnement",
     "Gesamtkosten": "Coût total",
-    "Strom und Gas": "Électricité et gaz"
+    "Strom und Gas": "Électricité et gaz",
+    "Rausgestellt": "Sorti",
+    "Müll ist rausgestellt": "Les poubelles sont sorties",
+    "Kachel bis zur nächsten Abholung ausgeblendet": "Tuile masquée jusqu’à la prochaine collecte"
   },
   "patterns": [
     [

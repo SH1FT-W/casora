@@ -2993,7 +2993,10 @@
     "Kosten": "Costo",
     "Grundgebühr": "Quota fissa",
     "Gesamtkosten": "Costo totale",
-    "Strom und Gas": "Luce e gas"
+    "Strom und Gas": "Luce e gas",
+    "Rausgestellt": "Portato fuori",
+    "Müll ist rausgestellt": "Rifiuti portati fuori",
+    "Kachel bis zur nächsten Abholung ausgeblendet": "Scheda nascosta fino al prossimo ritiro"
   },
   "patterns": [
     [

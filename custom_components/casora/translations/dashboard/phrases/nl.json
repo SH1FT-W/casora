@@ -2993,7 +2993,10 @@
     "Kosten": "Kosten",
     "Grundgebühr": "Vastrecht",
     "Gesamtkosten": "Totale kosten",
-    "Strom und Gas": "Stroom en gas"
+    "Strom und Gas": "Stroom en gas",
+    "Rausgestellt": "Buitengezet",
+    "Müll ist rausgestellt": "Afval is buitengezet",
+    "Kachel bis zur nächsten Abholung ausgeblendet": "Tegel verborgen tot de volgende ophaling"
   },
   "patterns": [
     [

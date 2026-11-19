@@ -2993,7 +2993,10 @@
     "Kosten": "Custo",
     "Grundgebühr": "Termo fixo",
     "Gesamtkosten": "Custo total",
-    "Strom und Gas": "Eletricidade e gás"
+    "Strom und Gas": "Eletricidade e gás",
+    "Rausgestellt": "Posto fora",
+    "Müll ist rausgestellt": "O lixo foi posto fora",
+    "Kachel bis zur nächsten Abholung ausgeblendet": "Cartão oculto até à próxima recolha"
   },
   "patterns": [
     [

@@ -2986,7 +2986,10 @@
     "Kosten": "Kostnad",
     "Grundgebühr": "Fastledd",
     "Gesamtkosten": "Totalkostnad",
-    "Strom und Gas": "Strøm og gass"
+    "Strom und Gas": "Strøm og gass",
+    "Rausgestellt": "Satt ut",
+    "Müll ist rausgestellt": "Søppelet er satt ut",
+    "Kachel bis zur nächsten Abholung ausgeblendet": "Flisen er skjult til neste henting"
   },
   "patterns": [
     [

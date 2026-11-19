@@ -2993,7 +2993,10 @@
     "Kosten": "Coste",
     "Grundgebühr": "Término fijo",
     "Gesamtkosten": "Coste total",
-    "Strom und Gas": "Electricidad y gas"
+    "Strom und Gas": "Electricidad y gas",
+    "Rausgestellt": "Sacado",
+    "Müll ist rausgestellt": "La basura está fuera",
+    "Kachel bis zur nächsten Abholung ausgeblendet": "Tarjeta oculta hasta la próxima recogida"
   },
   "patterns": [
     [
