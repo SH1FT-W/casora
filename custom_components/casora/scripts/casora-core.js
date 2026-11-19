@@ -3432,6 +3432,7 @@ window.casoraMenuGlass = {
       casora_shopping:      'unfiltered',
       casora_kettle:        'unfiltered',
       casora_co:            'security',
+      casora_smart_meter:   'energy',
       casora_map:           'unfiltered',
       casora_plant:         'unfiltered',
     };

@@ -3165,7 +3165,22 @@
     "Above it only turns red after an hour: after a shower or cooking humid air is normal.": "Daarboven pas na een uur rood: na douchen of koken is vochtige lucht normaal.",
     "Use recommended values": "Aanbevolen waarden gebruiken",
     "Smoke detectors": "Rookmelders",
-    "Water detectors": "Watermelders"
+    "Water detectors": "Watermelders",
+    "Smart meter": "Slimme meter",
+    "Meter sensor": "Metersensor",
+    "Your smart meter's sensor": "Een sensor van je slimme meter",
+    "On the tile": "Op de tegel",
+    "Cost": "Kosten",
+    "Usage": "Verbruik",
+    "Electricity usage": "Stroomverbruik",
+    "Electricity cost": "Stroomkosten",
+    "Gas usage": "Gasverbruik",
+    "Gas cost": "Kosten van gas",
+    "Standing charge": "Vastrecht",
+    "Total cost": "Totale kosten",
+    "Electricity": "Stroom",
+    "Gas": "Gas",
+    "Today's electricity and gas cost side by side on the tile, or the usage in kWh. The popup shows the day, the week or the month: usage and cost of electricity and gas apart, standing charge and total, and a chart with bars per hour or day. Week and month come from Home Assistant's statistics of the daily counters. For smart meters without solar, e.g. Hildebrand Glow and Octopus Energy.": "De kosten van vandaag voor stroom en gas naast elkaar op de tegel, of het verbruik in kWh. De pop-up toont de dag, de week of de maand: verbruik en kosten van stroom en gas apart, vastrecht en totaal, met een grafiek met staven per uur of dag. Week en maand komen uit de statistieken van de dagtellers in Home Assistant. Voor slimme meters zonder zonnepanelen, bijv. Hildebrand Glow en Octopus Energy."
   },
   "patterns": [
     [

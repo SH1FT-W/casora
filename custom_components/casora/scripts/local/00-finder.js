@@ -4226,3 +4226,101 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
   }
   window.casoraHeatPumpFind = { field: field, find: find, isPump: isPump, fields: FIELDS };
 })();
+
+// ── Smart meter (community card casora_smart_meter, card request 208) ───────────────────────────────────────────────
+// Smart meter integrations without solar (Hildebrand Glow, Octopus Energy, template sensors on top of them) give daily
+// counters that reset at midnight: electricity and gas consumption (device_class energy, or gas), their costs, the
+// standing charge and the day's total (device_class monetary). Found by device class and the entity's own words in the
+// common languages (friendly name, original name, translation_key – never the entity id); rates (unit with „/“,
+// „rate“, „tariff“), yesterday's, forecast, export and week/month/year counters are no daily counter. Every sensor
+// needs a state_class: week and month come from its long-term statistics (scripts/local/50-smart-meter.js).
+// One meter per integration (platform); per slot the best match: words of a daily counter („today“, „daily“) first.
+//   casoraSmartMeterFind.kind(hass, id)        → { fuel: elec|gas|standing|total, metric: use|cost, score } or null
+//   casoraSmartMeterFind.all(hass)             → [{ platform, anchor, elecUse, elecCost, gasUse, gasCost, standing, total, ids }]
+//   casoraSmartMeterFind.of(hass, id)          → the meter that entity belongs to, or null
+//   casoraSmartMeterFind.field(hass, id, key)  → one slot of that meter (Studio's „found“ hint)
+//   casoraSmartMeterFind.present(hass)         – any smart meter in the house
+(function () {
+  if (window.casoraSmartMeterFind) return;
+  var GAS = /(^|[^a-zà-ÿ])(gas|gaz|erdgas)/i;
+  var ELEC = /electric|elec\b|strom|elektr|(é|e)lectri|elettric|elektry/i;
+  var STANDING = /standing|grundgeb(ü|ue)hr|grundpreis|abonnement|fixed.?charge|daily.?charge/i;
+  var TOTAL = /total|gesamt|combined|insgesamt|overall|totaal|totale/i;
+  var DAILY = /today|daily|\bday\b|heute|t(ä|ae)glich|tages|current.?day|accumulative|aujourd|oggi|vandaag|dzisiaj|hoje|i ?dag/i;
+  var NOT = /previous|yesterday|gestern|forecast|prognose|projected|estimat|week|month|year|woche|monat|jahr|export|einspeis|feed.?in|\brate\b|tarif|price|preis|\bpv\b|solar|battery|akku/i;
+  // Integrations that are smart meters (their sensors are offered without a cost of their own).
+  var KNOWN = /hildebrand|glow|octopus/i;
+  var keys = ['elecUse', 'elecCost', 'gasUse', 'gasCost', 'standing', 'total'];
+  var wordsOf = function (hass, id) {
+    var e = ((hass && hass.entities) || {})[id] || {}, a = ((((hass && hass.states) || {})[id]) || {}).attributes || {};
+    return [a.friendly_name, e.original_name, e.name, String(e.translation_key || '').replace(/_/g, ' ')].filter(Boolean).join(' ');
+  };
+  var kind = function (hass, id) {
+    var S = (hass && hass.states) || {}, st = S[id], e = ((hass && hass.entities) || {})[id] || {};
+    if (!st || id.indexOf('sensor.') !== 0 || e.disabled_by) return null;
+    var a = st.attributes || {}, dc = a.device_class, unit = String(a.unit_of_measurement || '');
+    if (!a.state_class || /\//.test(unit)) return null;
+    var metric = dc === 'monetary' ? 'cost' : dc === 'energy' || dc === 'gas' ? 'use' : null;
+    if (!metric) return null;
+    var w = wordsOf(hass, id);
+    if (NOT.test(w)) return null;
+    var fuel = STANDING.test(w) ? 'standing' : GAS.test(w) || dc === 'gas' ? 'gas' : ELEC.test(w) ? 'elec'
+      : metric === 'cost' && TOTAL.test(w) ? 'total' : null;
+    if (!fuel || (fuel === 'standing' && metric !== 'cost')) return null;
+    // „Total consumption“ without a word of a day is the meter's running reading, no daily counter.
+    if (metric === 'use' && TOTAL.test(w) && !DAILY.test(w)) return null;
+    // Octopus Energy's day cost holds the standing charge already; its standing charge is a rate.
+    if (fuel === 'standing' && /octopus/i.test(e.platform || '')) return null;
+    // Gas in kWh before m³ (both kinds side by side would not add up).
+    var score = (DAILY.test(w) ? 4 : 0) + (KNOWN.test(e.platform || '') ? 2 : 0) + (fuel === 'gas' && metric === 'use' && /wh$/i.test(unit) ? 1 : 0);
+    return { fuel: fuel, metric: metric, score: score, daily: DAILY.test(w), platform: String(e.platform || '') };
+  };
+  var slotOf = function (k) {
+    return k.fuel === 'standing' || k.fuel === 'total' ? k.fuel : k.fuel + (k.metric === 'use' ? 'Use' : 'Cost');
+  };
+  var memo = { R: null, S: null, list: [] };
+  var all = function (hass) {
+    var S = (hass && hass.states) || {}, R = (hass && hass.entities) || {};
+    if (memo.R === R && memo.S === S) return memo.list;
+    var by = {};
+    Object.keys(S).forEach(function (id) {
+      if (id.indexOf('sensor.') !== 0) return;
+      var k = kind(hass, id);
+      if (!k) return;
+      var g = by[k.platform] || (by[k.platform] = { platform: k.platform, best: {}, daily: false });
+      var slot = slotOf(k), cur = g.best[slot];
+      if (!cur || k.score > cur.score) g.best[slot] = { id: id, score: k.score };
+      if (k.daily) g.daily = true;
+    });
+    var out = [];
+    Object.keys(by).forEach(function (p) {
+      var g = by[p], m = { platform: p, ids: [] };
+      keys.forEach(function (k) { m[k] = g.best[k] ? g.best[k].id : null; if (m[k]) m.ids.push(m[k]); });
+      if (!(m.elecUse || m.elecCost || m.gasUse || m.gasCost)) return;
+      // Without a cost of its own and outside a known integration only with words of a daily counter: a plain
+      // electricity meter (a plug's total) is no smart meter card.
+      if (!(m.elecCost || m.gasCost || m.total || KNOWN.test(p) || g.daily)) return;
+      m.anchor = m.total || m.elecCost || m.gasCost || m.elecUse || m.gasUse;
+      out.push(m);
+    });
+    out.sort(function (a, b) { return b.ids.length - a.ids.length || (a.platform < b.platform ? -1 : 1); });
+    memo = { R: R, S: S, list: out };
+    return out;
+  };
+  var of = function (hass, id) {
+    var list = all(hass);
+    for (var i = 0; i < list.length; i++) if (list[i].ids.indexOf(id) >= 0) return list[i];
+    var p = String((((hass && hass.entities) || {})[id] || {}).platform || '');
+    for (var j = 0; j < list.length; j++) if (list[j].platform === p) return list[j];
+    return null;
+  };
+  var FIELD = { elec_energy_entity: 'elecUse', elec_cost_entity: 'elecCost', gas_energy_entity: 'gasUse',
+    gas_cost_entity: 'gasCost', standing_entity: 'standing', total_cost_entity: 'total' };
+  var field = function (hass, id, key) {
+    var m = of(hass, id);
+    var k = FIELD[key] || key;
+    return (m && m[k]) || null;
+  };
+  window.casoraSmartMeterFind = { kind: kind, all: all, of: of, field: field, fields: FIELD, keys: keys,
+    present: function (hass) { return all(hass).length > 0; } };
+})();

@@ -483,6 +483,23 @@ window.CASORA_TILE_TYPES = [
     community: { desc: "Carbon monoxide in ppm on the tile, the symbol in the color of its level: green, from 30 ppm yellow, from 50 orange, from 100 red. The popup shows the value in a ring with the four levels, the history of 24 hours and 7 days, what to do when it rises and when it was last raised, plus battery, self-test and alarm of the detector. For every CO sensor, e.g. Matter smoke and CO alarms.",
       darkShots: true },
     fields: [ICON, TITLE_NAME] },
+  // Smart meter (community card, card request 208): a smart meter's daily counters (Hildebrand Glow, Octopus Energy …):
+  // electricity and gas consumption (energy) and cost (monetary), standing charge and the day's total, found on the tile's
+  // integration (casoraSmartMeterFind in 00-finder.js). Tile: today's cost (or usage) of electricity and gas; popup: a day,
+  // week or month of usage and cost from the long-term statistics, with a chart (scripts/local/50-smart-meter.js).
+  { id: "casora_smart_meter", label: "Smart meter", template: "casora_smart_meter", domains: ["sensor"], classes: ["energy", "monetary", "gas"],
+    icon: "energy", color: "var(--casora-color-yellow, #FFD60A)", entityLabel: "Meter sensor", entityPlaceholder: "Your smart meter's sensor",
+    onlyIf: (hass) => !!(window.casoraSmartMeterFind && window.casoraSmartMeterFind.present(hass)),
+    community: { desc: "Today's electricity and gas cost side by side on the tile, or the usage in kWh. The popup shows the day, the week or the month: usage and cost of electricity and gas apart, standing charge and total, and a chart with bars per hour or day. Week and month come from Home Assistant's statistics of the daily counters. For smart meters without solar, e.g. Hildebrand Glow and Octopus Energy." },
+    fields: [ICON,
+      { key: "tile_value", label: "On the tile", type: "select", options: ["cost", "usage"], optionLabels: { cost: "Cost", usage: "Usage" } },
+      { key: "elec_energy_entity", label: "Electricity usage", domains: ["sensor"], classes: ["energy"], find: { smartmeter: "elec_energy_entity" }, group: "Electricity" },
+      { key: "elec_cost_entity", label: "Electricity cost", domains: ["sensor"], classes: ["monetary"], find: { smartmeter: "elec_cost_entity" }, group: "Electricity" },
+      { key: "gas_energy_entity", label: "Gas usage", domains: ["sensor"], classes: ["energy", "gas"], find: { smartmeter: "gas_energy_entity" }, group: "Gas" },
+      { key: "gas_cost_entity", label: "Gas cost", domains: ["sensor"], classes: ["monetary"], find: { smartmeter: "gas_cost_entity" }, group: "Gas" },
+      { key: "standing_entity", label: "Standing charge", domains: ["sensor"], classes: ["monetary"], find: { smartmeter: "standing_entity" }, group: "Cost" },
+      { key: "total_cost_entity", label: "Total cost", domains: ["sensor"], classes: ["monetary"], find: { smartmeter: "total_cost_entity" }, group: "Cost" },
+      TITLE_NAME] },
   // Heat pump (issue 132): a climate with program, hot water and compressor – thermostat tile underneath, own popup
   // (44-waermepumpe.js). Everything but the climate is optional; empty fields are found on the climate's device.
   { id: "casora_heat_pump", like: "thermostat", label: "Heat pump", template: "casora_heat_pump", domains: ["climate"],
@@ -1104,6 +1121,11 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
       if (f.find.heatpump) {
         const HF = window.casoraHeatPumpFind;
         return (HF && HF.field(hass, tile.entity, f.find.heatpump)) || null;
+      }
+      // Smart meter (card request 208): the same meter the card uses, on the tile's integration.
+      if (f.find.smartmeter) {
+        const SF = window.casoraSmartMeterFind;
+        return (SF && SF.field(hass, tile.entity, f.find.smartmeter)) || null;
       }
       // Fridge: the shared fridge finder (Liebherr, Home Connect, generic) and its field.
       if (f.find.fridge) {

@@ -259,6 +259,7 @@ const MODULES = [
   '47-media-extra',
   '48-energie-verlauf',
   '49-security-detectors',
+  '50-smart-meter',
 ];
 
 const START_MODULES = MODULES.slice(0, 5);

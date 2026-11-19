@@ -3165,7 +3165,22 @@
     "Above it only turns red after an hour: after a shower or cooking humid air is normal.": "Over blir det først rødt etter en time: etter dusj eller matlaging er fuktig luft normalt.",
     "Use recommended values": "Bruk anbefalte verdier",
     "Smoke detectors": "Røykvarslere",
-    "Water detectors": "Vannvarslere"
+    "Water detectors": "Vannvarslere",
+    "Smart meter": "Smartmåler",
+    "Meter sensor": "Målersensor",
+    "Your smart meter's sensor": "En sensor fra smartmåleren din",
+    "On the tile": "På flisen",
+    "Cost": "Kostnad",
+    "Usage": "Forbruk",
+    "Electricity usage": "Strømforbruk",
+    "Electricity cost": "Strømkostnad",
+    "Gas usage": "Gassforbruk",
+    "Gas cost": "Gasskostnad",
+    "Standing charge": "Fastledd",
+    "Total cost": "Totalkostnad",
+    "Electricity": "Strøm",
+    "Gas": "Gass",
+    "Today's electricity and gas cost side by side on the tile, or the usage in kWh. The popup shows the day, the week or the month: usage and cost of electricity and gas apart, standing charge and total, and a chart with bars per hour or day. Week and month come from Home Assistant's statistics of the daily counters. For smart meters without solar, e.g. Hildebrand Glow and Octopus Energy.": "Dagens kostnad for strøm og gass side om side på flisen, eller forbruket i kWh. Popupen viser dagen, uken eller måneden: forbruk og kostnad for strøm og gass hver for seg, fastledd og sum, med et diagram med søyler per time eller dag. Uke og måned kommer fra Home Assistants statistikk for dagstellerne. For smartmålere uten solceller, f.eks. Hildebrand Glow og Octopus Energy."
   },
   "patterns": [
     [

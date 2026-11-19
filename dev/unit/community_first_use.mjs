@@ -16,6 +16,7 @@ const TEST_DEVICES = {
   casora_velair: ['testklimaanlage'], // velair.py: air conditioner planned by Velair (zone sensors under the platform velair)
   casora_shopping: ['testeinkauf'], // shopping.py: a to-do list named like a shopping list
   casora_kettle: ['testkocher', 'testwasserkocher'], // kettle.py: Xiaomi-BLE-like kettle (shows only) and one with target + keep warm
+  casora_smart_meter: ['testsmartmeter'], // smartmeter.py: Glow-like daily counters of electricity and gas, costs, standing charge, total
   casora_co: ['testmelder'], // co.py: Matter-like smoke and CO detector with CO reading, alarm, battery and self-test
   casora_map: [], // no device of its own: persons and zones of the whole home
 };

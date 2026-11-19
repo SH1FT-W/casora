@@ -2969,7 +2969,13 @@
     "Rauchmelder offline": "Smoke detector offline",
     "Wassermelder offline": "Water detector offline",
     "Gasmelder": "Gas detectors",
-    "Solarerzeugung": "Solar production"
+    "Solarerzeugung": "Solar production",
+    "Stromzähler": "Electricity meter",
+    "Gaszähler": "Gas meter",
+    "Kosten": "Cost",
+    "Grundgebühr": "Standing charge",
+    "Gesamtkosten": "Total cost",
+    "Strom und Gas": "Electricity and gas"
   },
   "patterns": [
     [
@@ -5383,6 +5389,18 @@
     [
       "^Wohlfühlbereich (\\d+)–(\\d+) %$",
       "Comfort range {1}–{2}%"
+    ],
+    [
+      "^Strom (.+) · Gas (.+)$",
+      "Electricity {1} · Gas {2}"
+    ],
+    [
+      "^Strom (\\S*\\d\\S*(?: \\S+)?)$",
+      "Electricity {1}"
+    ],
+    [
+      "^Gas (\\S*\\d\\S*(?: \\S+)?)$",
+      "Gas {1}"
     ]
   ]
 }

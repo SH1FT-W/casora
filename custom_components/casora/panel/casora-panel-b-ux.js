@@ -89,6 +89,7 @@
     casora_heat_pump: "wärmepumpe waermepumpe heizung warmwasser verdichter kompressor vicare nibe daikin heat pump hot water compressor",
     casora_kettle: "wasserkocher kocher tee wasser xiaomi kettle",
     casora_map: "karte landkarte map personen zonen standort geo location",
+    casora_smart_meter: "smart meter stromzähler gaszähler zähler strom gas kosten verbrauch hildebrand glow octopus electricity gas meter cost usage",
     casora_co: "co kohlenmonoxid co-melder melder gas carbon monoxide detector alarm matter",
     casora_oven: "backofen ofen herd backen home connect oven",
     // E03 (test 2): "Abfall"/"Müll" found nothing – tile types are found by their everyday words as well.
@@ -755,6 +756,8 @@
       if (typeIds.has("casora_heat_pump") && W.casoraHeatPumpFind) Object.keys(S).forEach((id) => {
         if (id.startsWith("climate.") && W.casoraHeatPumpFind.isPump(h, id)) push(id, "", "casora_heat_pump");
       });
+      // Smart meter (card request 208, when added): one tile per meter on its anchor (casoraSmartMeterFind).
+      if (typeIds.has("casora_smart_meter") && W.casoraSmartMeterFind) W.casoraSmartMeterFind.all(h).forEach((m) => push(m.anchor, "", "casora_smart_meter"));
       // CO detector (community card 124, when added): every carbon monoxide sensor (device_class) as this card.
       if (typeIds.has("casora_co")) Object.keys(S).forEach((id) => {
         if (id.startsWith("sensor.") && (S[id].attributes || {}).device_class === "carbon_monoxide") push(id, "", "casora_co");

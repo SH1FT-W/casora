@@ -2987,7 +2987,13 @@
     "Rauchmelder offline": "Rilevatore di fumo offline",
     "Wassermelder offline": "Rilevatore d’acqua offline",
     "Gasmelder": "Rilevatori di gas",
-    "Solarerzeugung": "Produzione solare"
+    "Solarerzeugung": "Produzione solare",
+    "Stromzähler": "Contatore elettrico",
+    "Gaszähler": "Contatore del gas",
+    "Kosten": "Costo",
+    "Grundgebühr": "Quota fissa",
+    "Gesamtkosten": "Costo totale",
+    "Strom und Gas": "Luce e gas"
   },
   "patterns": [
     [
@@ -5401,6 +5407,18 @@
     [
       "^Wohlfühlbereich (\\d+)–(\\d+) %$",
       "Intervallo di comfort {1}–{2} %"
+    ],
+    [
+      "^Strom (.+) · Gas (.+)$",
+      "Elettricità {1} · Gas {2}"
+    ],
+    [
+      "^Strom (\\S*\\d\\S*(?: \\S+)?)$",
+      "Elettricità {1}"
+    ],
+    [
+      "^Gas (\\S*\\d\\S*(?: \\S+)?)$",
+      "Gas {1}"
     ]
   ]
 }

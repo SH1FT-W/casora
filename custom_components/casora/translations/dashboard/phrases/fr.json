@@ -2987,7 +2987,13 @@
     "Rauchmelder offline": "Détecteur de fumée hors ligne",
     "Wassermelder offline": "Détecteur d’eau hors ligne",
     "Gasmelder": "Détecteurs de gaz",
-    "Solarerzeugung": "Production solaire"
+    "Solarerzeugung": "Production solaire",
+    "Stromzähler": "Compteur d’électricité",
+    "Gaszähler": "Compteur de gaz",
+    "Kosten": "Coût",
+    "Grundgebühr": "Abonnement",
+    "Gesamtkosten": "Coût total",
+    "Strom und Gas": "Électricité et gaz"
   },
   "patterns": [
     [
@@ -5401,6 +5407,18 @@
     [
       "^Wohlfühlbereich (\\d+)–(\\d+) %$",
       "Zone de confort {1}–{2} %"
+    ],
+    [
+      "^Strom (.+) · Gas (.+)$",
+      "Électricité {1} · Gaz {2}"
+    ],
+    [
+      "^Strom (\\S*\\d\\S*(?: \\S+)?)$",
+      "Électricité {1}"
+    ],
+    [
+      "^Gas (\\S*\\d\\S*(?: \\S+)?)$",
+      "Gaz {1}"
     ]
   ]
 }

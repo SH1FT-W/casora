@@ -2987,7 +2987,13 @@
     "Rauchmelder offline": "Czujnik dymu offline",
     "Wassermelder offline": "Czujnik wody offline",
     "Gasmelder": "Czujniki gazu",
-    "Solarerzeugung": "Produkcja solarna"
+    "Solarerzeugung": "Produkcja solarna",
+    "Stromzähler": "Licznik prądu",
+    "Gaszähler": "Licznik gazu",
+    "Kosten": "Koszt",
+    "Grundgebühr": "Opłata stała",
+    "Gesamtkosten": "Koszt całkowity",
+    "Strom und Gas": "Prąd i gaz"
   },
   "patterns": [
     [
@@ -5401,6 +5407,18 @@
     [
       "^Wohlfühlbereich (\\d+)–(\\d+) %$",
       "Zakres komfortu {1}–{2} %"
+    ],
+    [
+      "^Strom (.+) · Gas (.+)$",
+      "Prąd {1} · Gaz {2}"
+    ],
+    [
+      "^Strom (\\S*\\d\\S*(?: \\S+)?)$",
+      "Prąd {1}"
+    ],
+    [
+      "^Gas (\\S*\\d\\S*(?: \\S+)?)$",
+      "Gaz {1}"
     ]
   ]
 }

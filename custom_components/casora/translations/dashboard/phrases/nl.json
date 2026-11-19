@@ -2987,7 +2987,13 @@
     "Rauchmelder offline": "Rookmelder offline",
     "Wassermelder offline": "Watermelder offline",
     "Gasmelder": "Gasmelders",
-    "Solarerzeugung": "Zonne-opwek"
+    "Solarerzeugung": "Zonne-opwek",
+    "Stromzähler": "Elektriciteitsmeter",
+    "Gaszähler": "Gasmeter",
+    "Kosten": "Kosten",
+    "Grundgebühr": "Vastrecht",
+    "Gesamtkosten": "Totale kosten",
+    "Strom und Gas": "Stroom en gas"
   },
   "patterns": [
     [
@@ -5401,6 +5407,18 @@
     [
       "^Wohlfühlbereich (\\d+)–(\\d+) %$",
       "Comfortbereik {1}–{2} %"
+    ],
+    [
+      "^Strom (.+) · Gas (.+)$",
+      "Stroom {1} · Gas {2}"
+    ],
+    [
+      "^Strom (\\S*\\d\\S*(?: \\S+)?)$",
+      "Stroom {1}"
+    ],
+    [
+      "^Gas (\\S*\\d\\S*(?: \\S+)?)$",
+      "Gas {1}"
     ]
   ]
 }
