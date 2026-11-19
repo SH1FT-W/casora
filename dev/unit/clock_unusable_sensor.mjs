@@ -1,7 +1,7 @@
 // Automatic time source with a sensor.time that has no usable value (unavailable, unknown, empty): the clock
 // counts it as missing and shows the device clock, never the state text. A usable sensor.time and a sensor
 // chosen in the Studio keep their behaviour.   node dev/unit/clock_unusable_sensor.mjs
-// @deckt: dashboards/casora/button_card_templates.json#casora_time, custom_components/casora/scripts/casora-core.js#casoraClockText,casoraClockHtml
+// @deckt: dashboards/casora/button_card_templates.json#casora_time custom_components/casora/scripts/casora-core.js#casoraClockText,casoraClockHtml
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -37,6 +37,27 @@ assert.equal(clock({ 'sensor.time': { state: 'Mon, 08:13' } }, { time_entity: 's
 // Keep: no sensor.time at all shows the device clock.
 assert.match(clock({}, { time_entity: 'sensor.time', use_12h: false }), DEVICE, 'missing sensor.time: the device clock');
 assert.match(clock({}, { use_12h: false }), DEVICE, 'no entry at all: the same');
+
+// The date line (show_date) on the device clock: the same markup as the device-clock path builds.
+{
+  const out = clock({ 'sensor.time': { state: 'unavailable' } }, { time_entity: 'sensor.time', use_12h: false, show_date: true });
+  assert.match(out, /^<casora-clock data-h12="" data-suffix="" data-date="1"><span class="casora-clock-date"/, 'unusable sensor.time with show_date: date lines');
+  const hhmm = (x) => x.replace(/\d\d:\d\d/, 'HH:MM');
+  assert.equal(hhmm(out), hhmm(window.casoraClockHtml(false, '', true)), 'unusable sensor.time with show_date: same as the device-clock path');
+}
+
+// Without casoraClockHtml (core script not loaded yet): an unusable sensor.time shows nothing, like a missing one.
+{
+  const html = window.casoraClockHtml;
+  delete window.casoraClockHtml;
+  try {
+    for (const state of ['unavailable', 'unknown', '']) {
+      assert.equal(clock({ 'sensor.time': { state } }, { time_entity: 'sensor.time', use_12h: false }), '', 'no casoraClockHtml, sensor.time state "' + state + '": empty');
+    }
+  } finally {
+    window.casoraClockHtml = html;
+  }
+}
 
 // Keep: a sensor chosen in the Studio is not changed by the fix.
 assert.equal(clock({ 'sensor.kitchen_clock': { state: 'unavailable' } }, { time_entity: 'sensor.kitchen_clock', use_12h: false }),
