@@ -15977,8 +15977,10 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   var APPLIANCE_BUSY = /^(on|run|running|active|washing|rinsing|spinning|drying|printing|busy)$/i;
 
   function isDoorbell(id, st) {
-    // The rule lives in 00-finder.js (one rule for the bell and the Studio list). Before it has loaded, the old check.
-    if (window.casoraIsDoorbell) return window.casoraIsDoorbell(hassOf(), id);
+    // The rule lives in 00-finder.js (one rule for the bell and the Studio list). The old check below is only
+    // for the moment before 00-finder.js or hass has loaded.
+    var h = hassOf();
+    if (window.casoraIsDoorbell && h) return window.casoraIsDoorbell(h, id);
     if (id.indexOf('event.') === 0) return dc(st) === 'doorbell';
     if (id.indexOf('binary_sensor.') === 0) {
       return dc(st) === 'occupancy' && /doorbell|ding|chime/i.test(id);

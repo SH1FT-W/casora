@@ -66,6 +66,10 @@ async function bell({ states, entities, log }) {
 const on = (id, ms, state = 'on') => ({ entity_id: id, state, when: ms / 1000 });
 const attrs = (name, extra = {}) => ({ friendly_name: name, ...extra });
 
+// 0. The bell asks the shared rule only when a hass is there; without one, the old check below it applies.
+assert.match(core, /var h = hassOf\(\);\s*if \(window\.casoraIsDoorbell && h\) return window\.casoraIsDoorbell\(h, id\);/,
+  'isDoorbell delegates to the shared rule only with hass present');
+
 // 1. Reolink visitor sensor: renamed (no „doorbell“ in its ID), no device class, on only briefly.
 const gateStates = { [GATE]: { entity_id: GATE, state: 'off', last_changed: new Date(NOW - 50 * 1000).toISOString(), attributes: attrs('Mock Front Gate') } };
 const gateEntities = { [GATE]: { device_id: 'mock-gate-device', platform: 'reolink', translation_key: 'visitor' } };
