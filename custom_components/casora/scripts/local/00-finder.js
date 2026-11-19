@@ -1453,6 +1453,21 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
   }
   window.casoraNotAnOpening = notAnOpening;
 
+  // ── Doorbell: one rule for the bell rows and the Studio exclusion list ────
+  // Reolink: binary_sensor with translation_key visitor (no device_class, the ID may be renamed, on only briefly).
+  function isVisitor(hass, id) {
+    var e = reg(hass)[id] || {};
+    return id.indexOf('binary_sensor.') === 0 && e.translation_key === 'visitor'
+      && (e.platform === 'reolink' || e.platform === 'casora_mock');
+  }
+  // Is this entity a doorbell? Used by the bell rows (casora-core.js) and the Studio list (notifySources).
+  window.casoraIsDoorbell = function (hass, id) {
+    var st = hass && hass.states && hass.states[id], a = (st && st.attributes) || {};
+    if (id.indexOf('event.') === 0) return a.device_class === 'doorbell';
+    if (id.indexOf('binary_sensor.') !== 0) return false;
+    return isVisitor(hass, id) || (a.device_class === 'occupancy' && /doorbell|ding|chime/i.test(id));
+  };
+
   // ── Bell: which entities can create an entry at all (1.1.2) ────
   // For the exception list „Nicht melden“ in the Studio (casora-panel-glocke.js). The same sources
   // the bell checks (casora-core.js watched/standing, 01-basis.js extension) – without the
@@ -1488,7 +1503,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
       else if (dom === 'person') add(id, 'person', false);
       else if (dom === 'update') add(id, 'update', s === 'on' && !a.in_progress);
       else if (isPlant(hass, id)) add(id, 'plant', s === 'problem');
-      if ((dom === 'event' && dc === 'doorbell') || (dom === 'binary_sensor' && dc === 'occupancy' && /doorbell|ding|chime/i.test(id))) {
+      if (window.casoraIsDoorbell(hass, id)) {
         add(id, 'doorbell', false);
       }
       if (dc === 'battery' && (dom === 'sensor' || dom === 'binary_sensor')) {
