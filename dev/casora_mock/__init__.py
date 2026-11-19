@@ -124,7 +124,12 @@ class CasoraMock:
         self.scenarios = scenarios
         skip = set(fixture.get("_skip", []))
         # Entitäten, die im Test-HA echt existieren (Helfer/Skripte aus Paketen), auslassen.
-        self.entities = {e["entity_id"]: e for e in fixture["entities"] if e["entity_id"] not in skip}
+        # skip.txt also accepts platform:<registry platform> for a real integration.
+        self.entities = {
+            e["entity_id"]: e for e in fixture["entities"]
+            if e["entity_id"] not in skip
+            and f"platform:{e.get('registry_platform')}" not in skip
+        }
         fixture["entities"] = list(self.entities.values())
         self.store: dict[str, list] = {}
         self.objs: dict = {}
