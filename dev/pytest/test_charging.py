@@ -9,6 +9,7 @@ No real requests: aioclient_mock answers /v3/poi with invented chargers.
 from __future__ import annotations
 
 import logging
+import re
 
 from ha_common import MockConfigEntry
 
@@ -111,7 +112,8 @@ async def test_search_around_the_car_when_it_is_away(hass: HomeAssistant, aiocli
     assert res["origin"] == "car" and res["error"] is None and len(res["stations"]) == 3
     assert aioclient_mock.mock_calls[-1][1].query["latitude"] == "51.00000"
     # The answer names chargers, not where the car is.
-    assert "51.0" not in repr({k: v for k, v in res.items() if k != "stations"})
+    # Not after ":" or a digit: a timestamp like "18:18:51.07" is no coordinate (flaky in the gate, 19.11.2026).
+    assert not re.search(r"(?<![\d:])51\.0", repr({k: v for k, v in res.items() if k != "stations"}))
 
 
 async def test_a_failed_request_keeps_the_last_list(hass: HomeAssistant, aioclient_mock) -> None:
