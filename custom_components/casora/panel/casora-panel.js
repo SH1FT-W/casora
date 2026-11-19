@@ -692,11 +692,11 @@ function badgeOrderOf(saved) {
 // Security badge: the kinds of entries it has (security_sub_order list in the Studio), in the usual order
 // (casoraSecSub.KEYS, 00-finder.js). houseIds: Home's doors and windows (#39), covers: Home's covers (#76) count.
 const SEC_SUB_LABEL = { alarm: "Alarm", doors: "Doors", gates: "Gates", locks: "Locks", windows: "Windows",
-  covers: "Blinds", detectors: "Detectors", motion: "Motion", cameras: "Cameras", other: "Other sensors" };
+  covers: "Blinds", smoke: "Smoke detectors", water: "Water detectors", motion: "Motion", cameras: "Cameras", other: "Other sensors" };
 const SEC_SUB_ICON = { alarm: "mdi:shield-home", doors: "mdi:door", gates: "mdi:garage", locks: "mdi:lock",
-  windows: "mdi:window-closed-variant", covers: "mdi:blinds-horizontal", detectors: "mdi:smoke-detector-variant",
+  windows: "mdi:window-closed-variant", covers: "mdi:blinds-horizontal", smoke: "mdi:smoke-detector-variant", water: "mdi:water",
   motion: "mdi:motion-sensor", cameras: "mdi:cctv", other: "mdi:motion-sensor" };
-// det: { safety, motion } of the room or Home (casoraSecDetectors, #209) – the „Detectors“ and „Motion“ sub-badges.
+// det: { safety, motion, kind } of the room or Home (casoraSecDetectors, #209) – the smoke, water and motion sub-badges.
 function secSubPresent(V, states, houseIds, covers, det) {
   const S = window.casoraSecSub;
   if (!S || !V) return [];
@@ -707,7 +707,7 @@ function secSubPresent(V, states, houseIds, covers, det) {
   for (let n = 1; n <= 8; n++) { const k = S.keyOf(V["security_entity_" + n], states); if (k) have.add(k); }
   (houseIds || []).forEach((id) => { const k = S.keyOf(id, states); if (k) have.add(k); });
   if (covers) have.add("covers");
-  if (det && (det.safety || []).length) have.add("detectors");
+  (det && det.safety || []).forEach((id) => have.add(((det.kind || {})[id]) === "water" ? "water" : "smoke"));
   if (det && (det.motion || []).length) have.add("motion");
   return S.KEYS.filter((k) => have.has(k));
 }

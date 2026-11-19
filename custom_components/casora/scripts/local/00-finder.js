@@ -1888,7 +1888,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
 
   // ── The security group badge's count (casora_badge_security_group: name, icon, styles; #209 one place) ─────────
   // r: triggered, disarmed, locks, lockJammed, lockDead, doors, windows, doorsTilted, windowsTilted, gates, camDead,
-  // covers, danger (detectors reporting), dangerWords, detDead, motion (only while away), motionWords, insecure,
+  // covers, danger (detectors reporting), dangerWords, detDead (detDeadSmoke, detDeadWater), motion (only while away), motionWords, insecure,
   // problem, level ('ok'|'warn'|'alarm'), ids. el: the card (Home view?), as `this` in the template.
   window.casoraSecCount = function (states, hass, v, user, el) {
     var S = states || (hass && hass.states) || {};
@@ -1939,10 +1939,10 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     // #209: detectors of the house (Home) or the room's area, and the badge's own ones.
     var det = window.casoraSecDetectors(hass, v, home ? 'home' : 'room', user, ids);
     var hits = [], moves = [];
-    r.detDead = 0;
+    r.detDead = 0; r.detDeadSmoke = 0; r.detDeadWater = 0;
     det.safety.forEach(function (id) {
       var s = st(id);
-      if (!s || s === 'unavailable' || s === 'unknown') r.detDead++;
+      if (!s || s === 'unavailable' || s === 'unknown') { r.detDead++; if (det.kind[id] === 'water') r.detDeadWater++; else r.detDeadSmoke++; }
       else if (s === 'on') hits.push({ id: id, kind: det.kind[id], area: det.area[id] });
     });
     // Motion reads its sensors only while away: at home it never counts, and the badge need not redraw on it.
@@ -2062,7 +2062,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
         // A group helper without a class of its own: its first member's class.
         if (!dc && Array.isArray(a.entity_id) && a.entity_id.length) dc = low(((S[a.entity_id[0]] || {}).attributes || {}).device_class);
         // #209: smoke, gas, CO and water detectors; motion, occupancy and presence sensors.
-        if (DET_SAFE[dc]) return 'detectors';
+        if (DET_SAFE[dc]) return DET_SAFE[dc] === 'water' ? 'water' : 'smoke';
         if (DET_MOVE[dc]) return 'motion';
         var nm = id + ' ' + (a.friendly_name || '');
         if (dc === 'window' || (dc !== 'door' && dc !== 'garage_door' && /fenster|window/i.test(nm))) return 'windows';
@@ -2070,17 +2070,19 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
         return 'other';
       };
       var SEC_TPL = { casora_badge_lock_group: 'locks', casora_badge_camera_group: 'cameras', casora_badge_security_covers: 'covers',
-        casora_badge_security_detectors: 'detectors', casora_badge_security_motion: 'motion',
+        casora_badge_security_detectors: 'smoke', casora_badge_security_motion: 'motion',
         casora_badge_contact_group: null, casora_badge_security: null };
       var secCard = function (cfg, states) {
         var hit = tplHit(cfg, SEC_TPL);
         if (hit === undefined) return undefined;
+        // The detectors' badge is one template for both rows: variables.kind 'smoke' (also gas, CO) or 'water'.
+        if (hit === 'casora_badge_security_detectors') return ((cfg.variables || {}).kind === 'water') ? 'water' : 'smoke';
         if (SEC_TPL[hit]) return SEC_TPL[hit];
         var kind = ((cfg.variables || {}).contacts_kind);
         if (kind === 'door' || kind === 'window') return kind + 's';
         return keyOf(cfg.entity, states);
       };
-      window.casoraSecSub = make(['alarm', 'doors', 'windows', 'gates', 'locks', 'covers', 'detectors', 'motion', 'cameras', 'other'], secCard);
+      window.casoraSecSub = make(['alarm', 'doors', 'windows', 'gates', 'locks', 'covers', 'smoke', 'water', 'motion', 'cameras', 'other'], secCard);
       window.casoraSecSub.keyOf = keyOf;
 
       // Climate: temperature, humidity, air quality, blinds (the sub-row's order in button_card_templates.json).
@@ -2168,7 +2170,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     // [word, icon, number, offline?, key, kind]; kind ranks the lead (casoraSecLead); words with a number are in phrases/en.json.
     var L = [];
     // #209: detectors that report („Rauch · Küche“) and motion while away („Bewegung · Flur“), casoraSecCount.
-    (S.dangerWords || []).forEach(function (d) { L.push([d.word, d.icon, d.n, false, 'detectors', 'danger']); });
+    (S.dangerWords || []).forEach(function (d) { L.push([d.word, d.icon, d.n, false, d.kind === 'water' ? 'water' : 'smoke', 'danger']); });
     (S.motionWords || []).forEach(function (d) { L.push([d.word, d.icon, d.n, false, 'motion', 'motion']); });
     if (S.doors) L.push([n(S.doors, 'Tür offen', 'Türen offen'), 'door-open', S.doors, false, 'doors', 'open']);
     if (S.windows) L.push([n(S.windows, 'Fenster offen', 'Fenster offen'), 'window-open', S.windows, false, 'windows', 'open']);
@@ -2181,7 +2183,11 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     if (S.covers) L.push([n(S.covers, 'Jalousie offen', 'Jalousien offen'), 'cover_open', S.covers, false, 'covers', 'open']);
     if (S.lockDead) L.push([n(S.lockDead, 'Schloss offline', 'Schlösser offline'), 'lock', S.lockDead, true, 'locks', 'offline']);
     if (S.camDead) L.push([n(S.camDead, 'Kamera offline', 'Kameras offline'), 'camera', S.camDead, true, 'cameras', 'offline']);
-    if (S.detDead) L.push([n(S.detDead, 'Melder offline', 'Melder offline'), 'attention2', S.detDead, true, 'detectors', 'offline']);
+    // Smoke (gas, CO) and water detectors apart, as their two sub-badges.
+    var dS = S.detDeadSmoke, dW = S.detDeadWater;
+    if (dS == null && dW == null) { dS = S.detDead; dW = 0; }
+    if (dS) L.push([n(dS, 'Rauchmelder offline', 'Rauchmelder offline'), 'attention2', dS, true, 'smoke', 'offline']);
+    if (dW) L.push([n(dW, 'Wassermelder offline', 'Wassermelder offline'), 'attention2', dW, true, 'water', 'offline']);
     // Alarm off: a sign behind the findings (icon, no number); alone it stays in words like any single finding.
     if (S.disarmed) L.push(['Alarm aus', 'shield_off', 0, false, 'alarm', 'disarmed']);
     // Own order from the Studio (security_sub_order): by kind; the lead (most important finding) still goes first.

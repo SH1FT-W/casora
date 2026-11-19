@@ -1939,19 +1939,19 @@
     "double_tap_action": {
       "action": "none"
     },
-    "extra_styles": "[[[\n  const ev = variables?.enabled;\n  const enabled = (ev === undefined || ev === null) ? true :\n    (typeof ev === 'boolean') ? ev :\n    (typeof ev === 'number') ? ev !== 0 :\n    !['false','0','no','off','disabled'].includes(String(ev).trim().toLowerCase());\n  /* #209: detectors in Security (scripts/local/49-security-detectors.js): shown while the switch is on and the house or\n     the room has such a sensor, also when all is calm. The glyph is the HA icon (no Casora file for it). */\n  const _b = window._casoraSecDet ? window._casoraSecDet.badge(states, hass, user, variables, this, 'detectors') : { shown: false };\n  return `:host{display:${(!enabled || !_b.shown) ? 'none' : 'inline-block'} !important;${variables?.inline ? 'order:var(--casora-badge-order-security,1);' : ''}}`;\n]]]\n",
-    "icon": "[[[\n  const _b = window._casoraSecDet ? window._casoraSecDet.badge(states, hass, user, variables, this, 'detectors') : { shown: false };\n  return _b.icon || 'mdi:smoke-detector-variant';\n]]]\n",
-    "name": "[[[\n  const esc = window.casoraEsc || ((t) => String(t ?? '').replace(/[&<>\"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', \"'\": '&#39;' }[c])));\n  const _b = window._casoraSecDet ? window._casoraSecDet.badge(states, hass, user, variables, this, 'detectors') : { shown: false };\n  return `\n    <div class=\"badge-wrap\">\n      <div class=\"badge-title\">${esc(variables?.label || _b.title || 'Melder')}</div>\n      ${_b.sub ? `<div class=\"badge-sub\">${_b.html || esc(_b.sub)}</div>` : ''}\n    </div>\n  `;\n]]]\n",
+    "extra_styles": "[[[\n  const ev = variables?.enabled;\n  const enabled = (ev === undefined || ev === null) ? true :\n    (typeof ev === 'boolean') ? ev :\n    (typeof ev === 'number') ? ev !== 0 :\n    !['false','0','no','off','disabled'].includes(String(ev).trim().toLowerCase());\n  /* #209: detectors in Security (scripts/local/49-security-detectors.js): shown while the switch is on and the house or\n     the room has such a sensor, also when all is calm. The glyph is the HA icon (no Casora file for it). */\n  const _b = window._casoraSecDet ? window._casoraSecDet.badge(states, hass, user, variables, this, variables?.kind || 'smoke') : { shown: false };\n  return `:host{display:${(!enabled || !_b.shown) ? 'none' : 'inline-block'} !important;${variables?.inline ? 'order:var(--casora-badge-order-security,1);' : ''}}`;\n]]]\n",
+    "icon": "[[[\n  const _b = window._casoraSecDet ? window._casoraSecDet.badge(states, hass, user, variables, this, variables?.kind || 'smoke') : { shown: false };\n  return _b.icon || (variables?.kind === 'water' ? 'mdi:water-check' : 'mdi:smoke-detector-variant');\n]]]\n",
+    "name": "[[[\n  const esc = window.casoraEsc || ((t) => String(t ?? '').replace(/[&<>\"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', \"'\": '&#39;' }[c])));\n  const _b = window._casoraSecDet ? window._casoraSecDet.badge(states, hass, user, variables, this, variables?.kind || 'smoke') : { shown: false };\n  return `\n    <div class=\"badge-wrap\">\n      <div class=\"badge-title\">${esc(variables?.label || _b.title || 'Rauchmelder')}</div>\n      ${_b.sub ? `<div class=\"badge-sub\">${_b.html || esc(_b.sub)}</div>` : ''}\n    </div>\n  `;\n]]]\n",
     "show_icon": true,
     "show_label": false,
     "show_state": false,
     "styles": {
       "card": [
         {
-          "display": "[[[\n  const ev = variables?.enabled;\n  const enabled = (ev === undefined || ev === null) ? true :\n    (typeof ev === 'boolean') ? ev :\n    (typeof ev === 'number') ? ev !== 0 :\n    !['false','0','no','off','disabled'].includes(String(ev).trim().toLowerCase());\n  const _b = window._casoraSecDet ? window._casoraSecDet.badge(states, hass, user, variables, this, 'detectors') : { shown: false };\n  return (enabled && _b.shown) ? 'inline-grid' : 'none';\n]]]\n"
+          "display": "[[[\n  const ev = variables?.enabled;\n  const enabled = (ev === undefined || ev === null) ? true :\n    (typeof ev === 'boolean') ? ev :\n    (typeof ev === 'number') ? ev !== 0 :\n    !['false','0','no','off','disabled'].includes(String(ev).trim().toLowerCase());\n  const _b = window._casoraSecDet ? window._casoraSecDet.badge(states, hass, user, variables, this, variables?.kind || 'smoke') : { shown: false };\n  return (enabled && _b.shown) ? 'inline-grid' : 'none';\n]]]\n"
         },
         {
-          "--casora-badge-icon-color": "[[[\n  /* The security level's colour: alarm while a detector reports (or motion while away), warn when one is offline. */\n  const _b = window._casoraSecDet ? window._casoraSecDet.badge(states, hass, user, variables, this, 'detectors') : { shown: false };\n  return window._casoraSecDet ? window._casoraSecDet.color(_b.level) : 'var(--casora-badge-security-color, #00c3d0)';\n]]]\n"
+          "--casora-badge-icon-color": "[[[\n  /* The security level's colour: alarm while a detector reports (or motion while away), warn when one is offline. */\n  const _b = window._casoraSecDet ? window._casoraSecDet.badge(states, hass, user, variables, this, variables?.kind || 'smoke') : { shown: false };\n  return window._casoraSecDet ? window._casoraSecDet.color(_b.level) : 'var(--casora-badge-security-color, #00c3d0)';\n]]]\n"
         },
         {
           "--icon-primary-color": "color-mix(in srgb, var(--casora-badge-glyph, #fff) var(--casora-badge-circle-mix, 0%), var(--casora-badge-icon-color))"
@@ -1963,13 +1963,13 @@
           "--state-icon-color": "color-mix(in srgb, var(--casora-badge-glyph, #fff) var(--casora-badge-circle-mix, 0%), var(--casora-badge-icon-color))"
         },
         {
-          "background": "[[[\n  /* Lit like an active security sub-badge while it reports (#209). */\n  const _b = window._casoraSecDet ? window._casoraSecDet.badge(states, hass, user, variables, this, 'detectors') : { level: 'ok' };\n  return _b.level === 'alarm' ? 'rgba(255,255,255,0.94)' : 'var(--badge-background, rgba(10,12,14,0.65))';\n]]]\n"
+          "background": "[[[\n  /* Lit like an active security sub-badge while it reports (#209). */\n  const _b = window._casoraSecDet ? window._casoraSecDet.badge(states, hass, user, variables, this, variables?.kind || 'smoke') : { level: 'ok' };\n  return _b.level === 'alarm' ? 'rgba(255,255,255,0.94)' : 'var(--badge-background, rgba(10,12,14,0.65))';\n]]]\n"
         },
         {
-          "--badge-title-color": "[[[\n  /* Lit like an active security sub-badge while it reports (#209). */\n  const _b = window._casoraSecDet ? window._casoraSecDet.badge(states, hass, user, variables, this, 'detectors') : { level: 'ok' };\n  return _b.level === 'alarm' ? 'rgba(0,0,0,0.85)' : 'var(--casora-badge-title-color, var(--primary-text-color))';\n]]]\n"
+          "--badge-title-color": "[[[\n  /* Lit like an active security sub-badge while it reports (#209). */\n  const _b = window._casoraSecDet ? window._casoraSecDet.badge(states, hass, user, variables, this, variables?.kind || 'smoke') : { level: 'ok' };\n  return _b.level === 'alarm' ? 'rgba(0,0,0,0.85)' : 'var(--casora-badge-title-color, var(--primary-text-color))';\n]]]\n"
         },
         {
-          "--badge-sub-color": "[[[\n  /* Lit like an active security sub-badge while it reports (#209). */\n  const _b = window._casoraSecDet ? window._casoraSecDet.badge(states, hass, user, variables, this, 'detectors') : { level: 'ok' };\n  return _b.level === 'alarm' ? 'rgba(0,0,0,0.55)' : 'var(--casora-badge-sub-color, var(--secondary-text-color))';\n]]]\n"
+          "--badge-sub-color": "[[[\n  /* Lit like an active security sub-badge while it reports (#209). */\n  const _b = window._casoraSecDet ? window._casoraSecDet.badge(states, hass, user, variables, this, variables?.kind || 'smoke') : { level: 'ok' };\n  return _b.level === 'alarm' ? 'rgba(0,0,0,0.55)' : 'var(--casora-badge-sub-color, var(--secondary-text-color))';\n]]]\n"
         }
       ],
       "icon": [
@@ -1991,7 +1991,7 @@
       "enabled": true,
       "label": null,
       "inline": false,
-      "kind": "detectors",
+      "kind": "smoke",
       "place": null,
       "room_name": null,
       "own": null
@@ -2925,7 +2925,7 @@
       "action": "none"
     },
     "icon": "[[[\n  /* One count for name, icon and colours (window.casoraSecCount, 00-finder.js; #209 detectors included). */\n  const _sec = window.casoraSecCount ? window.casoraSecCount(states, hass, variables, user, this) : { level: 'ok' };\n  return (_sec.triggered || _sec.danger) ? 'mdi:shield-alert-outline' : (_sec.insecure || _sec.problem) ? 'mdi:shield-alert' : 'mdi:shield-check';\n]]]\n",
-    "name": "[[[\n  const esc = window.casoraEsc || ((t) => String(t ?? '').replace(/[&<>\"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', \"'\": '&#39;' }[c])));\n  /* One count for name, icon and colours (window.casoraSecCount, 00-finder.js; #209 detectors included). */\n  const _sec = window.casoraSecCount ? window.casoraSecCount(states, hass, variables, user, this) : { level: 'ok' };\n  /* Weich/Nebel: window.casoraSecuritySummary (00-finder.js) – Variable summary: auto (Standard,\n     Startseite kurz, Räume ausgeschrieben) | short (Symbole mit Zahl) | detailed (Liste in Worten); Zustandswörter „Alles sicher“, „Aktiv · Modus“, „Alarm!“.\n     Hemma 2/1: Liste wie bisher, alles zu = „Alles sicher“ (Schlösser, Alarm, Türen, Fenster), Kipp-Stellung und offline. */\n  const n = (c, one, many) => c === 1 ? one : c + ' ' + many;\n  let sub = 'Alles sicher', subHtml = null;\n  if ((window._casoraSoft && window._casoraSoft()) && window.casoraSecuritySummary) {\n    const arr = (v) => Array.isArray(v) ? v : (v ? [v] : []);\n    const alId = [variables.alarm_entity, ...arr(variables.entities)].find((x) => typeof x === 'string' && x.startsWith('alarm_control_panel.'));\n    /* Kurz oder ausführlich (07.10.2026): summary auto (Standard) = Startseite kurz, Räume ausgeschrieben;\n       place sagt die Handy-Vorlage (home/room), am Desktop erkennt die Karte ihre Ansicht selbst. */\n    const place = variables.place || (window.casoraOnHomeView && window.casoraOnHomeView(this) ? 'home' : 'room');\n    const mode = window.casoraSecurityMode ? window.casoraSecurityMode(variables.summary, place) : 'short';\n    const o = window.casoraSecuritySummary(_sec, { summary: mode,\n      alarmState: alId ? states[alId]?.state : null, order: variables.sub_order });\n    sub = o.text; subHtml = o.html;\n  } else if (_sec.triggered) sub = 'Ausgelöst';\n  else if (_sec.insecure || _sec.problem) {\n    const parts = [], pk = [];\n    /* pk: kind of each part, for the Studio's own order (security_sub_order, casoraSecSub). */\n    const P = (k, t) => { parts.push(t); pk.push(k); };\n    /* #209: a detector that reports and motion while away lead, as in the soft line. */\n    (_sec.dangerWords || []).forEach((x) => P('detectors', x.word));\n    (_sec.motionWords || []).forEach((x) => P('motion', x.word));\n    if (_sec.locks) P('locks', n(_sec.locks, 'Schloss offen', 'Schlösser offen'));\n    if (_sec.lockJammed) P('locks', _sec.lockJammed === 1 ? 'Schloss klemmt' : _sec.lockJammed + ' Schlösser klemmen');\n    if (_sec.doors) P('doors', n(_sec.doors, 'Tür offen', 'Türen offen'));\n    if (_sec.gates) P('gates', n(_sec.gates, 'Tor offen', 'Tore offen'));\n    if (_sec.windows) P('windows', n(_sec.windows, 'Fenster offen', 'Fenster offen'));\n    if (_sec.windowsTilted) P('windows', n(_sec.windowsTilted, 'Fenster gekippt', 'Fenster gekippt'));\n    if (_sec.doorsTilted) P('doors', n(_sec.doorsTilted, 'Tür gekippt', 'Türen gekippt'));\n    if (_sec.covers) P('covers', n(_sec.covers, 'Jalousie offen', 'Jalousien offen'));\n    if (_sec.lockDead) P('locks', n(_sec.lockDead, 'Schloss offline', 'Schlösser offline'));\n    if (_sec.camDead) P('cameras', n(_sec.camDead, 'Kamera offline', 'Kameras offline'));\n    if (_sec.detDead) P('detectors', n(_sec.detDead, 'Melder offline', 'Melder offline'));\n    /* Alarm off after the real findings (2B, 14.11.2026): off is normal by day. */\n    if (_sec.disarmed) P('alarm', 'Alarm deaktiviert');\n    if (variables.sub_order && window.casoraSecSub) {\n      const ix = window.casoraSecSub.sort(parts.map((_, i) => i), variables.sub_order, (i) => pk[i]);\n      ix.map((i) => parts[i]).forEach((t, j) => { parts[j] = t; });\n    }\n    sub = parts.join(' · ');\n    /* Tablet-Badge-Reihe (1.3): Kurzform „3 offen · 3 offline“, nur wenn die Badge-Reihe sonst nicht in\n       die Breite passt – window.casoraSecFit (00-finder.js) misst die Reihe und schaltet um. */\n    const open = (_sec.danger || 0) + (_sec.motion || 0) + _sec.locks + (_sec.lockJammed || 0) + _sec.doors + _sec.gates + _sec.windows + _sec.windowsTilted + _sec.doorsTilted + (_sec.covers || 0);\n    const dead = _sec.lockDead + _sec.camDead + (_sec.detDead || 0);\n    const sp = [];\n    if (open) sp.push(open + ' offen');\n    if (dead) sp.push(dead + ' offline');\n    if (_sec.disarmed) sp.push('Alarm aus');\n    const kurz = sp.join(' · ');\n    if (kurz && kurz !== sub && parts.length > 1) {\n      const _card = this;\n      (typeof requestAnimationFrame === 'function' ? requestAnimationFrame : (f) => setTimeout(f, 0))(() => { try { window.casoraSecFit ? window.casoraSecFit(_card) : setTimeout(() => window.casoraSecFit && window.casoraSecFit(_card), 2500); } catch (e) {} });\n      subHtml = '<style>.sec-kurz{display:none}:host(.casora-sec-kurz) .sec-lang{display:none}:host(.casora-sec-kurz) .sec-kurz{display:inline}</style>'\n        + '<span class=\"sec-lang\">' + esc(sub) + '</span><span class=\"sec-kurz\">' + esc(kurz) + '</span>';\n    }\n  }\n  return `\n    <div class=\"badge-wrap\">\n      ${variables.title ? `<div class=\"badge-title\" data-no-i18n>${esc(variables.title)}</div>` : `<div class=\"badge-title\">Sicherheit</div>`}\n      <div class=\"badge-sub\">${subHtml || esc(sub)}</div>\n    </div>\n  `;\n]]]\n",
+    "name": "[[[\n  const esc = window.casoraEsc || ((t) => String(t ?? '').replace(/[&<>\"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', \"'\": '&#39;' }[c])));\n  /* One count for name, icon and colours (window.casoraSecCount, 00-finder.js; #209 detectors included). */\n  const _sec = window.casoraSecCount ? window.casoraSecCount(states, hass, variables, user, this) : { level: 'ok' };\n  /* Weich/Nebel: window.casoraSecuritySummary (00-finder.js) – Variable summary: auto (Standard,\n     Startseite kurz, Räume ausgeschrieben) | short (Symbole mit Zahl) | detailed (Liste in Worten); Zustandswörter „Alles sicher“, „Aktiv · Modus“, „Alarm!“.\n     Hemma 2/1: Liste wie bisher, alles zu = „Alles sicher“ (Schlösser, Alarm, Türen, Fenster), Kipp-Stellung und offline. */\n  const n = (c, one, many) => c === 1 ? one : c + ' ' + many;\n  let sub = 'Alles sicher', subHtml = null;\n  if ((window._casoraSoft && window._casoraSoft()) && window.casoraSecuritySummary) {\n    const arr = (v) => Array.isArray(v) ? v : (v ? [v] : []);\n    const alId = [variables.alarm_entity, ...arr(variables.entities)].find((x) => typeof x === 'string' && x.startsWith('alarm_control_panel.'));\n    /* Kurz oder ausführlich (07.10.2026): summary auto (Standard) = Startseite kurz, Räume ausgeschrieben;\n       place sagt die Handy-Vorlage (home/room), am Desktop erkennt die Karte ihre Ansicht selbst. */\n    const place = variables.place || (window.casoraOnHomeView && window.casoraOnHomeView(this) ? 'home' : 'room');\n    const mode = window.casoraSecurityMode ? window.casoraSecurityMode(variables.summary, place) : 'short';\n    const o = window.casoraSecuritySummary(_sec, { summary: mode,\n      alarmState: alId ? states[alId]?.state : null, order: variables.sub_order });\n    sub = o.text; subHtml = o.html;\n  } else if (_sec.triggered) sub = 'Ausgelöst';\n  else if (_sec.insecure || _sec.problem) {\n    const parts = [], pk = [];\n    /* pk: kind of each part, for the Studio's own order (security_sub_order, casoraSecSub). */\n    const P = (k, t) => { parts.push(t); pk.push(k); };\n    /* #209: a detector that reports and motion while away lead, as in the soft line. */\n    (_sec.dangerWords || []).forEach((x) => P(x.kind === 'water' ? 'water' : 'smoke', x.word));\n    (_sec.motionWords || []).forEach((x) => P('motion', x.word));\n    if (_sec.locks) P('locks', n(_sec.locks, 'Schloss offen', 'Schlösser offen'));\n    if (_sec.lockJammed) P('locks', _sec.lockJammed === 1 ? 'Schloss klemmt' : _sec.lockJammed + ' Schlösser klemmen');\n    if (_sec.doors) P('doors', n(_sec.doors, 'Tür offen', 'Türen offen'));\n    if (_sec.gates) P('gates', n(_sec.gates, 'Tor offen', 'Tore offen'));\n    if (_sec.windows) P('windows', n(_sec.windows, 'Fenster offen', 'Fenster offen'));\n    if (_sec.windowsTilted) P('windows', n(_sec.windowsTilted, 'Fenster gekippt', 'Fenster gekippt'));\n    if (_sec.doorsTilted) P('doors', n(_sec.doorsTilted, 'Tür gekippt', 'Türen gekippt'));\n    if (_sec.covers) P('covers', n(_sec.covers, 'Jalousie offen', 'Jalousien offen'));\n    if (_sec.lockDead) P('locks', n(_sec.lockDead, 'Schloss offline', 'Schlösser offline'));\n    if (_sec.camDead) P('cameras', n(_sec.camDead, 'Kamera offline', 'Kameras offline'));\n    if (_sec.detDeadSmoke) P('smoke', n(_sec.detDeadSmoke, 'Rauchmelder offline', 'Rauchmelder offline'));\n    if (_sec.detDeadWater) P('water', n(_sec.detDeadWater, 'Wassermelder offline', 'Wassermelder offline'));\n    /* Alarm off after the real findings (2B, 14.11.2026): off is normal by day. */\n    if (_sec.disarmed) P('alarm', 'Alarm deaktiviert');\n    if (variables.sub_order && window.casoraSecSub) {\n      const ix = window.casoraSecSub.sort(parts.map((_, i) => i), variables.sub_order, (i) => pk[i]);\n      ix.map((i) => parts[i]).forEach((t, j) => { parts[j] = t; });\n    }\n    sub = parts.join(' · ');\n    /* Tablet-Badge-Reihe (1.3): Kurzform „3 offen · 3 offline“, nur wenn die Badge-Reihe sonst nicht in\n       die Breite passt – window.casoraSecFit (00-finder.js) misst die Reihe und schaltet um. */\n    const open = (_sec.danger || 0) + (_sec.motion || 0) + _sec.locks + (_sec.lockJammed || 0) + _sec.doors + _sec.gates + _sec.windows + _sec.windowsTilted + _sec.doorsTilted + (_sec.covers || 0);\n    const dead = _sec.lockDead + _sec.camDead + (_sec.detDead || 0);\n    const sp = [];\n    if (open) sp.push(open + ' offen');\n    if (dead) sp.push(dead + ' offline');\n    if (_sec.disarmed) sp.push('Alarm aus');\n    const kurz = sp.join(' · ');\n    if (kurz && kurz !== sub && parts.length > 1) {\n      const _card = this;\n      (typeof requestAnimationFrame === 'function' ? requestAnimationFrame : (f) => setTimeout(f, 0))(() => { try { window.casoraSecFit ? window.casoraSecFit(_card) : setTimeout(() => window.casoraSecFit && window.casoraSecFit(_card), 2500); } catch (e) {} });\n      subHtml = '<style>.sec-kurz{display:none}:host(.casora-sec-kurz) .sec-lang{display:none}:host(.casora-sec-kurz) .sec-kurz{display:inline}</style>'\n        + '<span class=\"sec-lang\">' + esc(sub) + '</span><span class=\"sec-kurz\">' + esc(kurz) + '</span>';\n    }\n  }\n  return `\n    <div class=\"badge-wrap\">\n      ${variables.title ? `<div class=\"badge-title\" data-no-i18n>${esc(variables.title)}</div>` : `<div class=\"badge-title\">Sicherheit</div>`}\n      <div class=\"badge-sub\">${subHtml || esc(sub)}</div>\n    </div>\n  `;\n]]]\n",
     "show_icon": true,
     "show_label": false,
     "show_state": false,
@@ -7580,8 +7580,18 @@
               "template": "casora_badge_security_detectors",
               "type": "custom:button-card",
               "variables": {
-                "enabled": "[[[ return !!(((window.casoraSeen?window.casoraSeen(variables,'security',user,variables.show_security):variables.show_security)!==false) && window._casoraSecDet && window._casoraSecDet.show(states,hass,user,{ place: 'home', own: [1,2,3,4,5,6,7,8].map((i) => variables['security_entity_' + i]).filter(Boolean) },'home','detectors')) ]]]",
-                "kind": "detectors",
+                "enabled": "[[[ return !!(((window.casoraSeen?window.casoraSeen(variables,'security',user,variables.show_security):variables.show_security)!==false) && window._casoraSecDet && window._casoraSecDet.show(states,hass,user,{ place: 'home', own: [1,2,3,4,5,6,7,8].map((i) => variables['security_entity_' + i]).filter(Boolean) },'home','smoke')) ]]]",
+                "kind": "smoke",
+                "place": "home",
+                "own": "[[[ return [1,2,3,4,5,6,7,8].map((i) => variables['security_entity_' + i]).filter(Boolean) ]]]"
+              }
+            },
+            {
+              "template": "casora_badge_security_detectors",
+              "type": "custom:button-card",
+              "variables": {
+                "enabled": "[[[ return !!(((window.casoraSeen?window.casoraSeen(variables,'security',user,variables.show_security):variables.show_security)!==false) && window._casoraSecDet && window._casoraSecDet.show(states,hass,user,{ place: 'home', own: [1,2,3,4,5,6,7,8].map((i) => variables['security_entity_' + i]).filter(Boolean) },'home','water')) ]]]",
+                "kind": "water",
                 "place": "home",
                 "own": "[[[ return [1,2,3,4,5,6,7,8].map((i) => variables['security_entity_' + i]).filter(Boolean) ]]]"
               }
@@ -7914,8 +7924,20 @@
               "template": "casora_badge_security_detectors",
               "type": "custom:button-card",
               "variables": {
-                "enabled": "[[[ const _rv = variables.casora_rv || {}; return !!(((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false) && _rv.show_security_inline && window._casoraSecDet && window._casoraSecDet.show(states,hass,user,{ place: 'room', room_name: (_rv.room_name || _rv.aqi_room_name || (String(_rv._name || '').startsWith('[[[') ? null : _rv._name) || null), own: [1,2,3,4,5,6,7,8].map((i) => _rv['security_entity_' + i]).filter(Boolean) },'room','detectors')) ]]]",
-                "kind": "detectors",
+                "enabled": "[[[ const _rv = variables.casora_rv || {}; return !!(((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false) && _rv.show_security_inline && window._casoraSecDet && window._casoraSecDet.show(states,hass,user,{ place: 'room', room_name: (_rv.room_name || _rv.aqi_room_name || (String(_rv._name || '').startsWith('[[[') ? null : _rv._name) || null), own: [1,2,3,4,5,6,7,8].map((i) => _rv['security_entity_' + i]).filter(Boolean) },'room','smoke')) ]]]",
+                "kind": "smoke",
+                "place": "[[[ const _rv = variables.casora_rv || {}; return 'room' ]]]",
+                "room_name": "[[[ const _rv = variables.casora_rv || {}; return (_rv.room_name || _rv.aqi_room_name || (String(_rv._name || '').startsWith('[[[') ? null : _rv._name) || null) ]]]",
+                "own": "[[[ const _rv = variables.casora_rv || {}; return [1,2,3,4,5,6,7,8].map((i) => _rv['security_entity_' + i]).filter(Boolean) ]]]",
+                "inline": true
+              }
+            },
+            {
+              "template": "casora_badge_security_detectors",
+              "type": "custom:button-card",
+              "variables": {
+                "enabled": "[[[ const _rv = variables.casora_rv || {}; return !!(((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false) && _rv.show_security_inline && window._casoraSecDet && window._casoraSecDet.show(states,hass,user,{ place: 'room', room_name: (_rv.room_name || _rv.aqi_room_name || (String(_rv._name || '').startsWith('[[[') ? null : _rv._name) || null), own: [1,2,3,4,5,6,7,8].map((i) => _rv['security_entity_' + i]).filter(Boolean) },'room','water')) ]]]",
+                "kind": "water",
                 "place": "[[[ const _rv = variables.casora_rv || {}; return 'room' ]]]",
                 "room_name": "[[[ const _rv = variables.casora_rv || {}; return (_rv.room_name || _rv.aqi_room_name || (String(_rv._name || '').startsWith('[[[') ? null : _rv._name) || null) ]]]",
                 "own": "[[[ const _rv = variables.casora_rv || {}; return [1,2,3,4,5,6,7,8].map((i) => _rv['security_entity_' + i]).filter(Boolean) ]]]",
@@ -8419,8 +8441,19 @@
               "template": "casora_badge_security_detectors",
               "type": "custom:button-card",
               "variables": {
-                "enabled": "[[[ const _rv = variables.casora_rv || {}; return !!(((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false) && window._casoraSecDet && window._casoraSecDet.show(states,hass,user,{ place: 'room', room_name: (_rv.room_name || _rv.aqi_room_name || (String(_rv._name || '').startsWith('[[[') ? null : _rv._name) || null), own: [1,2,3,4,5,6,7,8].map((i) => _rv['security_entity_' + i]).filter(Boolean) },'room','detectors')) ]]]",
-                "kind": "detectors",
+                "enabled": "[[[ const _rv = variables.casora_rv || {}; return !!(((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false) && window._casoraSecDet && window._casoraSecDet.show(states,hass,user,{ place: 'room', room_name: (_rv.room_name || _rv.aqi_room_name || (String(_rv._name || '').startsWith('[[[') ? null : _rv._name) || null), own: [1,2,3,4,5,6,7,8].map((i) => _rv['security_entity_' + i]).filter(Boolean) },'room','smoke')) ]]]",
+                "kind": "smoke",
+                "place": "[[[ const _rv = variables.casora_rv || {}; return 'room' ]]]",
+                "room_name": "[[[ const _rv = variables.casora_rv || {}; return (_rv.room_name || _rv.aqi_room_name || (String(_rv._name || '').startsWith('[[[') ? null : _rv._name) || null) ]]]",
+                "own": "[[[ const _rv = variables.casora_rv || {}; return [1,2,3,4,5,6,7,8].map((i) => _rv['security_entity_' + i]).filter(Boolean) ]]]"
+              }
+            },
+            {
+              "template": "casora_badge_security_detectors",
+              "type": "custom:button-card",
+              "variables": {
+                "enabled": "[[[ const _rv = variables.casora_rv || {}; return !!(((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false) && window._casoraSecDet && window._casoraSecDet.show(states,hass,user,{ place: 'room', room_name: (_rv.room_name || _rv.aqi_room_name || (String(_rv._name || '').startsWith('[[[') ? null : _rv._name) || null), own: [1,2,3,4,5,6,7,8].map((i) => _rv['security_entity_' + i]).filter(Boolean) },'room','water')) ]]]",
+                "kind": "water",
                 "place": "[[[ const _rv = variables.casora_rv || {}; return 'room' ]]]",
                 "room_name": "[[[ const _rv = variables.casora_rv || {}; return (_rv.room_name || _rv.aqi_room_name || (String(_rv._name || '').startsWith('[[[') ? null : _rv._name) || null) ]]]",
                 "own": "[[[ const _rv = variables.casora_rv || {}; return [1,2,3,4,5,6,7,8].map((i) => _rv['security_entity_' + i]).filter(Boolean) ]]]"
@@ -12660,7 +12693,7 @@
   "casora_popup_security_detectors": {
     "icon_tap_action": {
       "casora_popup": {
-        "content": "[[[\n  /* #209: the detectors of the house or the room (variables.kind 'detectors' or 'motion'),\n     window._casoraSecDet.popup in scripts/local/49-security-detectors.js. */\n  return window._casoraSecDet ? window._casoraSecDet.popup(states, hass, variables) : { type: 'vertical-stack', cards: [] };\n]]]\n",
+        "content": "[[[\n  /* #209: the detectors of the house or the room (variables.kind 'smoke', 'water' or 'motion'),\n     window._casoraSecDet.popup in scripts/local/49-security-detectors.js. */\n  return window._casoraSecDet ? window._casoraSecDet.popup(states, hass, variables) : { type: 'vertical-stack', cards: [] };\n]]]\n",
         "dismiss_on_background": true,
         "popup_styles": [
           {
@@ -12676,7 +12709,7 @@
     },
     "tap_action": {
       "casora_popup": {
-        "content": "[[[\n  /* #209: the detectors of the house or the room (variables.kind 'detectors' or 'motion'),\n     window._casoraSecDet.popup in scripts/local/49-security-detectors.js. */\n  return window._casoraSecDet ? window._casoraSecDet.popup(states, hass, variables) : { type: 'vertical-stack', cards: [] };\n]]]\n",
+        "content": "[[[\n  /* #209: the detectors of the house or the room (variables.kind 'smoke', 'water' or 'motion'),\n     window._casoraSecDet.popup in scripts/local/49-security-detectors.js. */\n  return window._casoraSecDet ? window._casoraSecDet.popup(states, hass, variables) : { type: 'vertical-stack', cards: [] };\n]]]\n",
         "dismiss_on_background": true,
         "popup_styles": [
           {
@@ -14107,8 +14140,20 @@
               "template": "casora_badge_security_detectors",
               "type": "custom:button-card",
               "variables": {
-                "enabled": "[[[ return !!(((window.casoraSeen?window.casoraSeen(variables,'security',user,variables.show_security):variables.show_security)!==false) && variables.show_security_inline && window._casoraSecDet && window._casoraSecDet.show(states,hass,user,{ place: (window.casoraOnHomeView && window.casoraOnHomeView(this) ? 'home' : 'room'), room_name: (variables.room_name || variables.aqi_room_name || (String(this._config?.name || '').startsWith('[[[') ? null : this._config?.name) || null), own: [1,2,3,4,5,6,7,8].map((i) => variables['security_entity_' + i]).filter(Boolean) },'room','detectors')) ]]]",
-                "kind": "detectors",
+                "enabled": "[[[ return !!(((window.casoraSeen?window.casoraSeen(variables,'security',user,variables.show_security):variables.show_security)!==false) && variables.show_security_inline && window._casoraSecDet && window._casoraSecDet.show(states,hass,user,{ place: (window.casoraOnHomeView && window.casoraOnHomeView(this) ? 'home' : 'room'), room_name: (variables.room_name || variables.aqi_room_name || (String(this._config?.name || '').startsWith('[[[') ? null : this._config?.name) || null), own: [1,2,3,4,5,6,7,8].map((i) => variables['security_entity_' + i]).filter(Boolean) },'room','smoke')) ]]]",
+                "kind": "smoke",
+                "place": "[[[ return (window.casoraOnHomeView && window.casoraOnHomeView(this) ? 'home' : 'room') ]]]",
+                "room_name": "[[[ return (variables.room_name || variables.aqi_room_name || (String(this._config?.name || '').startsWith('[[[') ? null : this._config?.name) || null) ]]]",
+                "own": "[[[ return [1,2,3,4,5,6,7,8].map((i) => variables['security_entity_' + i]).filter(Boolean) ]]]",
+                "inline": true
+              }
+            },
+            {
+              "template": "casora_badge_security_detectors",
+              "type": "custom:button-card",
+              "variables": {
+                "enabled": "[[[ return !!(((window.casoraSeen?window.casoraSeen(variables,'security',user,variables.show_security):variables.show_security)!==false) && variables.show_security_inline && window._casoraSecDet && window._casoraSecDet.show(states,hass,user,{ place: (window.casoraOnHomeView && window.casoraOnHomeView(this) ? 'home' : 'room'), room_name: (variables.room_name || variables.aqi_room_name || (String(this._config?.name || '').startsWith('[[[') ? null : this._config?.name) || null), own: [1,2,3,4,5,6,7,8].map((i) => variables['security_entity_' + i]).filter(Boolean) },'room','water')) ]]]",
+                "kind": "water",
                 "place": "[[[ return (window.casoraOnHomeView && window.casoraOnHomeView(this) ? 'home' : 'room') ]]]",
                 "room_name": "[[[ return (variables.room_name || variables.aqi_room_name || (String(this._config?.name || '').startsWith('[[[') ? null : this._config?.name) || null) ]]]",
                 "own": "[[[ return [1,2,3,4,5,6,7,8].map((i) => variables['security_entity_' + i]).filter(Boolean) ]]]",
@@ -15151,8 +15196,19 @@
               "template": "casora_badge_security_detectors",
               "type": "custom:button-card",
               "variables": {
-                "enabled": "[[[ return !!(((window.casoraSeen?window.casoraSeen(variables,'security',user,variables.show_security):variables.show_security)!==false) && window._casoraSecDet && window._casoraSecDet.show(states,hass,user,{ place: (window.casoraOnHomeView && window.casoraOnHomeView(this) ? 'home' : 'room'), room_name: (variables.room_name || variables.aqi_room_name || (String(this._config?.name || '').startsWith('[[[') ? null : this._config?.name) || null), own: [1,2,3,4,5,6,7,8].map((i) => variables['security_entity_' + i]).filter(Boolean) },'room','detectors')) ]]]",
-                "kind": "detectors",
+                "enabled": "[[[ return !!(((window.casoraSeen?window.casoraSeen(variables,'security',user,variables.show_security):variables.show_security)!==false) && window._casoraSecDet && window._casoraSecDet.show(states,hass,user,{ place: (window.casoraOnHomeView && window.casoraOnHomeView(this) ? 'home' : 'room'), room_name: (variables.room_name || variables.aqi_room_name || (String(this._config?.name || '').startsWith('[[[') ? null : this._config?.name) || null), own: [1,2,3,4,5,6,7,8].map((i) => variables['security_entity_' + i]).filter(Boolean) },'room','smoke')) ]]]",
+                "kind": "smoke",
+                "place": "[[[ return (window.casoraOnHomeView && window.casoraOnHomeView(this) ? 'home' : 'room') ]]]",
+                "room_name": "[[[ return (variables.room_name || variables.aqi_room_name || (String(this._config?.name || '').startsWith('[[[') ? null : this._config?.name) || null) ]]]",
+                "own": "[[[ return [1,2,3,4,5,6,7,8].map((i) => variables['security_entity_' + i]).filter(Boolean) ]]]"
+              }
+            },
+            {
+              "template": "casora_badge_security_detectors",
+              "type": "custom:button-card",
+              "variables": {
+                "enabled": "[[[ return !!(((window.casoraSeen?window.casoraSeen(variables,'security',user,variables.show_security):variables.show_security)!==false) && window._casoraSecDet && window._casoraSecDet.show(states,hass,user,{ place: (window.casoraOnHomeView && window.casoraOnHomeView(this) ? 'home' : 'room'), room_name: (variables.room_name || variables.aqi_room_name || (String(this._config?.name || '').startsWith('[[[') ? null : this._config?.name) || null), own: [1,2,3,4,5,6,7,8].map((i) => variables['security_entity_' + i]).filter(Boolean) },'room','water')) ]]]",
+                "kind": "water",
                 "place": "[[[ return (window.casoraOnHomeView && window.casoraOnHomeView(this) ? 'home' : 'room') ]]]",
                 "room_name": "[[[ return (variables.room_name || variables.aqi_room_name || (String(this._config?.name || '').startsWith('[[[') ? null : this._config?.name) || null) ]]]",
                 "own": "[[[ return [1,2,3,4,5,6,7,8].map((i) => variables['security_entity_' + i]).filter(Boolean) ]]]"

@@ -70,9 +70,10 @@ assert.equal(window.casoraSecDetKind('binary_sensor.leck_bad', S), 'water');
 assert.equal(window.casoraSecDetKind('binary_sensor.bewegung_flur', S), 'motion');
 assert.equal(window.casoraSecDetKind('binary_sensor.fenster_bad', S), null);
 assert.equal(window.casoraSecDetKind('binary_sensor.safety_x', S), null, 'safety stays out');
-assert.equal(window.casoraSecSub.keyOf('binary_sensor.rauch_kueche', S), 'detectors');
+assert.equal(window.casoraSecSub.keyOf('binary_sensor.rauch_kueche', S), 'smoke');
+assert.equal(window.casoraSecSub.keyOf('binary_sensor.leck_bad', S), 'water', 'smoke and water apart');
 assert.equal(window.casoraSecSub.keyOf('binary_sensor.bewegung_flur', S), 'motion');
-assert.ok(window.casoraSecSub.KEYS.includes('detectors') && window.casoraSecSub.KEYS.includes('motion'));
+assert.deepEqual(window.casoraSecSub.KEYS.filter((k) => ['smoke', 'water', 'motion', 'detectors'].includes(k)), ['smoke', 'water', 'motion']);
 
 // ── Which detectors: Home the house, a room its area (device area too); hidden/diagnostic out ──
 set(undefined);
@@ -107,7 +108,7 @@ assert.match(o.html, /class="cs-sum-item cs-sum-lead"[^>]*>Rauch · Küche</, 's
 // Leads even a jammed lock (rank above „jammed“) and whatever order the Studio set.
 o = window.casoraSecuritySummary({ ...r, lockJammed: 1 }, { summary: 'short', order: ['locks', 'windows'] });
 assert.match(o.html, /cs-sum-lead"[^>]*>Rauch · Küche</);
-assert.equal(window.casoraSecLead([['x', 'i', 1, false, 'locks', 'jammed'], ['Wasser · Bad', 'i', 1, false, 'detectors', 'danger']]), 1);
+assert.equal(window.casoraSecLead([['x', 'i', 1, false, 'locks', 'jammed'], ['Wasser · Bad', 'i', 1, false, 'water', 'danger']]), 1);
 // A room: no room name in the words.
 r = count(S, { place: 'room', room_name: 'Küche' });
 assert.equal(window.casoraSecuritySummary(r, { summary: 'detailed' }).text, 'Rauch erkannt');
@@ -122,7 +123,11 @@ assert.equal(window.casoraSecurityLevel(hassOf(S), ['binary_sensor.leck_bad']), 
 S = { ...base(), 'binary_sensor.rauch_flur': st('unavailable', 'smoke') };
 r = count(S, { place: 'home' });
 assert.equal(r.detDead, 1); assert.equal(r.problem, true); assert.equal(r.level, 'warn');
-assert.equal(window.casoraSecuritySummary(r, { summary: 'short' }).text, 'Melder offline');
+assert.equal(r.detDeadSmoke, 1); assert.equal(r.detDeadWater, 0);
+assert.equal(window.casoraSecuritySummary(r, { summary: 'short' }).text, 'Rauchmelder offline');
+S = { ...S, 'binary_sensor.leck_bad': st('unknown', 'moisture') };
+r = count(S, { place: 'home' });
+assert.equal(window.casoraSecuritySummary(r, { summary: 'detailed' }).text, 'Rauchmelder offline · Wassermelder offline', 'smoke and water apart');
 
 // ── Switch off: exactly as before (nothing counted, a reporting smoke sensor is no danger) ──
 set({ detectors: false });
@@ -130,7 +135,7 @@ S = { ...base(), 'binary_sensor.rauch_kueche': st('on', 'smoke') };
 r = count(S, { place: 'home' });
 assert.equal(r.danger, 0); assert.equal(r.insecure, false); assert.equal(r.level, 'ok');
 assert.equal(window.casoraSecurityLevel(hassOf(S), ['binary_sensor.rauch_kueche']), 'ok', 'off: no alarm level');
-assert.equal(D.show(S, hassOf(S), null, { place: 'home' }, 'home', 'detectors'), false, 'off: no sub-badge');
+assert.equal(D.show(S, hassOf(S), null, { place: 'home' }, 'home', 'smoke'), false, 'off: no sub-badge');
 
 // ── Motion: only with its switch and only while away ──
 set({ motion: true });
@@ -157,14 +162,20 @@ assert.equal(count(S, { place: 'home' }).motion, 0, 'motion switch off: never');
 // ── Sub-badges ──
 set({ motion: true });
 S = base();
-let b = D.badge(S, hassOf(S), null, { place: 'home' }, 'home', 'detectors');
-assert.equal(b.shown, true); assert.equal(b.title, 'Melder'); assert.equal(b.sub, '4 Melder · Normal'); assert.equal(b.level, 'ok');
-b = D.badge(S, hassOf(S), null, { place: 'room', room_name: 'Bad' }, 'room', 'detectors');
+// Smoke and water are two sub-badges (owner 19.11.2026), not one „Melder“.
+let b = D.badge(S, hassOf(S), null, { place: 'home' }, 'home', 'smoke');
+assert.equal(b.shown, true); assert.equal(b.title, 'Rauchmelder'); assert.equal(b.sub, '3 Melder · Normal'); assert.equal(b.level, 'ok');
+assert.deepEqual(b.ids.sort(), ['binary_sensor.rauch_flur', 'binary_sensor.rauch_kueche', 'binary_sensor.rauch_wmbus']);
+b = D.badge(S, hassOf(S), null, { place: 'home' }, 'home', 'water');
+assert.equal(b.title, 'Wassermelder'); assert.equal(b.sub, 'Trocken'); assert.deepEqual(b.ids, ['binary_sensor.leck_bad']);
+b = D.badge(S, hassOf(S), null, { place: 'room', room_name: 'Bad' }, 'room', 'water');
 assert.equal(b.title, 'Wassermelder'); assert.equal(b.sub, 'Trocken');
-b = D.badge(S, hassOf(S), null, { place: 'room', room_name: 'Bad', own: ['binary_sensor.leck_bad'] }, 'room', 'detectors');
+assert.equal(D.show(S, hassOf(S), null, { place: 'room', room_name: 'Bad' }, 'room', 'smoke'), false, 'no smoke detector in the bathroom');
+b = D.badge(S, hassOf(S), null, { place: 'room', room_name: 'Bad', own: ['binary_sensor.leck_bad'] }, 'room', 'water');
 assert.equal(b.shown, false, 'its own entry keeps its single badge, no twin');
 S = { ...base(), 'binary_sensor.rauch_kueche': st('on', 'smoke') };
-b = D.badge(S, hassOf(S), null, { place: 'home' }, 'home', 'detectors');
+assert.equal(D.badge(S, hassOf(S), null, { place: 'home' }, 'home', 'water').level, 'ok', 'smoke does not light the water badge');
+b = D.badge(S, hassOf(S), null, { place: 'home' }, 'home', 'smoke');
 assert.equal(b.sub, 'Rauch · Küche'); assert.equal(b.level, 'alarm');
 const ago = Date.now() - 3 * 60000;
 S = { ...base(), 'binary_sensor.bewegung_flur': { ...st('off', 'motion'), last_changed: new Date(ago).toISOString() } };
@@ -179,8 +190,10 @@ for (const k of ['extra_styles', 'icon', 'name']) assert.match(G[k], /window\.ca
 assert.ok(!JSON.stringify(G).includes('const _sec = (() =>'), 'no copies of the count left');
 for (const [t, f] of [['casora_mobile_sensor_chips', 'security_row'], ['casora_mobile_sensor_chips', 'rooms_row'],
   ['casora_mobile_sensor_chips', 'room_sub_security'], ['casora_room', 'badges'], ['casora_room', 'badges_security']]) {
-  const tpls = T[t].custom_fields[f].card.cards.map((c) => c.template);
-  assert.ok(tpls.includes('casora_badge_security_detectors') && tpls.includes('casora_badge_security_motion'), t + ' › ' + f);
+  const cards = T[t].custom_fields[f].card.cards;
+  const det = cards.filter((c) => c.template === 'casora_badge_security_detectors').map((c) => c.variables.kind);
+  assert.deepEqual(det, ['smoke', 'water'], t + ' › ' + f + ': smoke and water rows');
+  assert.ok(cards.some((c) => c.template === 'casora_badge_security_motion'), t + ' › ' + f);
 }
 assert.ok(!JSON.stringify(T.casora_mobile_sensor_chips).includes("casoraOnHomeView(this) ? 'home'"), 'phone room pages are rooms');
 assert.ok(read('custom_components/casora/scripts/casora-local.js').includes("'49-security-detectors'"), 'module loaded');
@@ -200,8 +213,9 @@ assert.ok(!/door/.test(sb(T.casora_badge_security.extra_styles, smoke)), 'no doo
 
 // ── Phrases ──
 const en = JSON.parse(read('custom_components/casora/translations/dashboard/phrases/en.json'));
-for (const k of ['Rauch', 'Wasser', 'Bewegung', 'Rauch erkannt', 'Melder offline', 'Rauchmelder', 'Wassermelder', 'Normal', 'Trocken', 'Nass']) {
+for (const k of ['Rauch', 'Wasser', 'Bewegung', 'Rauch erkannt', 'Rauchmelder offline', 'Wassermelder offline', 'Gasmelder', 'Rauchmelder', 'Wassermelder', 'Normal', 'Trocken', 'Nass']) {
   assert.ok(en.exact[k], 'en phrase ' + k);
 }
 assert.ok(en.patterns.some(([p]) => p === '^(\\d+) Melder$'), 'en pattern „3 Melder“');
+for (const w of ['Rauchmelder', 'Wassermelder']) assert.ok(en.patterns.some(([p]) => p === '^(\\d+) ' + w + ' offline$'), 'en pattern ' + w);
 console.log('ok sicherheit_melder');

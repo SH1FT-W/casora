@@ -261,7 +261,7 @@ await finish();
 
 // The Studio's usual order: casoraSecSub.KEYS filtered to what is there.
 function window_keys(rows) {
-  // #209: detectors and motion between blinds and cameras.
-  const K = ['alarm', 'doors', 'windows', 'gates', 'locks', 'covers', 'detectors', 'motion', 'cameras', 'other'];
+  // #209: smoke, water and motion detectors between blinds and cameras.
+  const K = ['alarm', 'doors', 'windows', 'gates', 'locks', 'covers', 'smoke', 'water', 'motion', 'cameras', 'other'];
   return (rows || []).slice().sort((a, b) => (K.indexOf(a) < 0 ? 99 : K.indexOf(a)) - (K.indexOf(b) < 0 ? 99 : K.indexOf(b)));
 }

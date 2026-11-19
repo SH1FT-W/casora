@@ -3163,7 +3163,9 @@
     "Red below and above, orange in between.": "Rødt under og over, oransje imellom.",
     "Green and good in between.": "Imellom grønt og bra.",
     "Above it only turns red after an hour: after a shower or cooking humid air is normal.": "Over blir det først rødt etter en time: etter dusj eller matlaging er fuktig luft normalt.",
-    "Use recommended values": "Bruk anbefalte verdier"
+    "Use recommended values": "Bruk anbefalte verdier",
+    "Smoke detectors": "Røykvarslere",
+    "Water detectors": "Vannvarslere"
   },
   "patterns": [
     [

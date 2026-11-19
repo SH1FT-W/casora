@@ -3163,7 +3163,9 @@
     "Red below and above, orange in between.": "Rouge en dessous et au-dessus, orange entre les deux.",
     "Green and good in between.": "Entre les deux, vert et bon.",
     "Above it only turns red after an hour: after a shower or cooking humid air is normal.": "Au-dessus, rouge seulement après une heure : après une douche ou la cuisine, l'air humide est normal.",
-    "Use recommended values": "Utiliser les valeurs recommandées"
+    "Use recommended values": "Utiliser les valeurs recommandées",
+    "Smoke detectors": "Détecteurs de fumée",
+    "Water detectors": "Détecteurs d’eau"
   },
   "patterns": [
     [

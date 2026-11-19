@@ -425,9 +425,10 @@
       return C && C.count(hass.states, hass, hass.user, { place: 'home' }) > 0 ? 'warn' : 'ok';
     }
     // #209: the detectors' and motion sub-badges rate themselves (49-security-detectors.js) – motion only while away.
-    var dk = /casora_badge_security_detectors/.test(item.tpl || '') ? 'detectors' : /casora_badge_security_motion/.test(item.tpl || '') ? 'motion' : null;
+    var dk = /casora_badge_security_detectors/.test(item.tpl || '') ? 'smoke' : /casora_badge_security_motion/.test(item.tpl || '') ? 'motion' : null;
     if (dk) {
       var Dt = window._casoraSecDet, ev = (item.el && (item.el._evaledVariables || item.el._config && item.el._config.variables)) || {};
+      if (dk === 'smoke' && ev.kind === 'water') dk = 'water';
       return Dt ? Dt.badge(hass.states, hass, hass.user, ev, item.el, dk).level : 'ok';
     }
     var ids = (item.kind === 't' && item.main ? [item.main] : item.ids || []).filter(function (id) { return SEC_DOM.test(id); });

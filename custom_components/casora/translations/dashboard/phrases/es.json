@@ -2983,9 +2983,20 @@
     "Bewegungsmelder": "Sensores de movimiento",
     "Meldet": "Avisando",
     "Alles trocken": "Todo seco",
-    "Alles normal": "Todo normal"
+    "Alles normal": "Todo normal",
+    "Rauchmelder offline": "Detector de humo sin conexión",
+    "Wassermelder offline": "Detector de agua sin conexión",
+    "Gasmelder": "Detectores de gas"
   },
   "patterns": [
+    [
+      "^(\\d+) Rauchmelder offline$",
+      "{1} detectores de humo sin conexión"
+    ],
+    [
+      "^(\\d+) Wassermelder offline$",
+      "{1} detectores de agua sin conexión"
+    ],
     [
       "^(\\d+) Melder offline$",
       "{1} detectores sin conexión"

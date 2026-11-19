@@ -2976,9 +2976,20 @@
     "Bewegungsmelder": "Bevegelsessensorer",
     "Meldet": "Varsler",
     "Alles trocken": "Alt tørt",
-    "Alles normal": "Alt normalt"
+    "Alles normal": "Alt normalt",
+    "Rauchmelder offline": "Røykvarsler frakoblet",
+    "Wassermelder offline": "Vannvarsler frakoblet",
+    "Gasmelder": "Gassvarslere"
   },
   "patterns": [
+    [
+      "^(\\d+) Rauchmelder offline$",
+      "{1} røykvarslere frakoblet"
+    ],
+    [
+      "^(\\d+) Wassermelder offline$",
+      "{1} vannvarslere frakoblet"
+    ],
     [
       "^(\\d+) Melder offline$",
       "{1} detektorer frakoblet"

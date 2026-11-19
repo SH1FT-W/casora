@@ -2983,9 +2983,20 @@
     "Bewegungsmelder": "Bewegingssensoren",
     "Meldet": "Meldt",
     "Alles trocken": "Alles droog",
-    "Alles normal": "Alles normaal"
+    "Alles normal": "Alles normaal",
+    "Rauchmelder offline": "Rookmelder offline",
+    "Wassermelder offline": "Watermelder offline",
+    "Gasmelder": "Gasmelders"
   },
   "patterns": [
+    [
+      "^(\\d+) Rauchmelder offline$",
+      "{1} rookmelders offline"
+    ],
+    [
+      "^(\\d+) Wassermelder offline$",
+      "{1} watermelders offline"
+    ],
     [
       "^(\\d+) Melder offline$",
       "{1} melders offline"

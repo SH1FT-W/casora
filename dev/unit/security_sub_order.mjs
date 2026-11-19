@@ -24,6 +24,8 @@ const states = {
   'binary_sensor.kitchen_window': { state: 'on', attributes: { device_class: 'window' } },
   'binary_sensor.fenster_gruppe': { state: 'off', attributes: { entity_id: ['binary_sensor.kitchen_window'] } },
   'binary_sensor.smoke': { state: 'off', attributes: { device_class: 'smoke' } },
+  'binary_sensor.gas': { state: 'off', attributes: { device_class: 'gas' } },
+  'binary_sensor.leak': { state: 'off', attributes: { device_class: 'moisture' } },
   'cover.garage': { state: 'open', attributes: { device_class: 'garage' } },
   'cover.living_blind': { state: 'open', attributes: { device_class: 'blind' } },
 };
@@ -36,7 +38,9 @@ assert.equal(K('camera.example'), 'cameras');
 assert.equal(K('binary_sensor.front_door'), 'doors');
 assert.equal(K('binary_sensor.kitchen_window'), 'windows');
 assert.equal(K('binary_sensor.fenster_gruppe'), 'windows', 'group helper: its member\'s class');
-assert.equal(K('binary_sensor.smoke'), 'detectors', '#209: a smoke detector is a detector');
+assert.equal(K('binary_sensor.smoke'), 'smoke', '#209: smoke detectors have their own row');
+assert.equal(K('binary_sensor.gas'), 'smoke', '#209: gas detectors go with smoke');
+assert.equal(K('binary_sensor.leak'), 'water', '#209: water detectors have their own row');
 assert.equal(K('cover.garage'), 'gates');
 assert.equal(K('cover.living_blind'), 'covers');
 assert.equal(K(null), null);

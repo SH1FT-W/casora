@@ -1,9 +1,9 @@
-// ── Detectors in Security: sub-badges „Melder“ and „Bewegung“ with their popups (#209) ───────────────────────────
-// The counting lives in 00-finder.js (casoraSecDetectors, casoraSecCount); here the two sub-badges of the security
+// ── Detectors in Security: sub-badges „Rauchmelder“, „Wassermelder“ and „Bewegung“ with their popups (#209) ───────────────────────────
+// The counting lives in 00-finder.js (casoraSecDetectors, casoraSecCount); here the three sub-badges of the security
 // badge and the popups they open. They show while their switch is on (Settings › Home & devices › Security ›
 // Detectors) and there is at least one such sensor – also when all is calm, so one sees Casora knows the detectors.
 // A detector the badge lists itself (security_entity_1…8) keeps its own single badge and is not listed again here.
-//   D.list(hass, v, where, user, kind)          → ids of 'detectors' (smoke, gas, CO, water) or 'motion'
+//   D.list(hass, v, where, user, kind)          → ids of 'smoke' (smoke, gas, CO), 'water', 'motion' ('detectors': all but motion)
 //   D.badge(states, hass, user, v, where, kind) → { shown, level, title, sub, html, icon, ids }
 //   D.show(states, hass, user, v, where, kind)  → the sub-badge is visible
 //   D.popup(states, hass, variables)            – popup casora_popup_security_detectors (variables.kind)
@@ -21,6 +21,8 @@
   };
   var onHome = function (v, where) { return window.casoraSecDetOnHome ? window.casoraSecDetOnHome(v || {}, where) : !!(v && v.place === 'home'); };
 
+  // The sub-badge's kind: 'smoke' (smoke, gas, CO), 'water', 'motion'; 'detectors' = smoke and water together.
+  var kindOf = function (k) { return k === 'motion' || k === 'water' || k === 'detectors' ? k : 'smoke'; };
   // The badge's own entries: v.own (the room's security_entity_1…8, passed by the row), groups through their members.
   var ownOf = function (S, v) {
     var out = [];
@@ -35,7 +37,11 @@
     if (!window.casoraSecDetectors || !hass) return { ids: [], kind: {}, area: {} };
     var det = window.casoraSecDetectors(hass, v || {}, onHome(v, where) ? 'home' : 'room', user, []);
     var own = ownOf((hass && hass.states) || {}, v || {});
-    var ids = (kind === 'motion' ? det.motion : det.safety).filter(function (x) { return own.indexOf(x) < 0; });
+    var grp = kindOf(kind);
+    var ids = (grp === 'motion' ? det.motion : det.safety).filter(function (x) {
+      if (own.indexOf(x) >= 0) return false;
+      return grp === 'detectors' || grp === 'motion' || (grp === 'water') === (det.kind[x] === 'water');
+    });
     return { ids: ids, kind: det.kind, area: det.area };
   };
 
@@ -83,9 +89,10 @@
       if (isDead(s)) dead.push(id);
       else if (low(s) === 'on') hits.push({ id: id, kind: L.kind[id], area: L.area[id] });
     });
-    var water = ids.every(function (id) { return L.kind[id] === 'water'; });
-    var smoke = ids.every(function (id) { return L.kind[id] === 'smoke'; });
-    var b = { shown: true, ids: ids, html: null, title: smoke ? 'Rauchmelder' : water ? 'Wassermelder' : 'Melder' };
+    var every = function (k) { return ids.every(function (id) { return L.kind[id] === k; }); };
+    var water = every('water');
+    var b = { shown: true, ids: ids, html: null,
+      title: every('smoke') ? 'Rauchmelder' : water ? 'Wassermelder' : every('gas') ? 'Gasmelder' : every('co') ? 'CO-Melder' : kindOf(kind) === 'smoke' ? 'Rauchmelder' : 'Melder' };
     if (hits.length) {
       b.level = 'alarm';
       b.sub = window.casoraSecDetWords(hits, home).map(function (w) { return w.word; }).join(' · ');
@@ -116,7 +123,7 @@
   var ICON = { smoke: 'mdi:smoke-detector-variant', gas: 'mdi:meter-gas', co: 'mdi:molecule-co', water: 'mdi:water' };
   var ctxOf = function (variables) {
     var v = variables || {};
-    return { kind: v.kind === 'motion' ? 'motion' : 'detectors', place: v.place || null, room_name: v.room_name || null,
+    return { kind: kindOf(v.kind), place: v.place || null, room_name: v.room_name || null,
       own: Array.isArray(v.own) ? v.own.filter(function (x) { return typeof x === 'string'; }) : [] };
   };
   D.popup = function (states, hass, variables) {
@@ -177,9 +184,9 @@
     }
     // Smoke, gas, CO and water detectors.
     var st = function (id) { var s = (S[id] || {}).state; return isDead(s) ? 'dead' : low(s) === 'on' ? 'on' : 'off'; };
-    if (part === 'hero') return UI.line(b.sub || 'Melder', [], { tone: b.level === 'alarm' ? 'bad' : b.level === 'warn' ? 'warn' : null });
+    if (part === 'hero') return UI.line(b.sub || b.title || 'Melder', [], { tone: b.level === 'alarm' ? 'bad' : b.level === 'warn' ? 'warn' : null });
     if (part === 'stage') {
-      if (!ids.length) return UI.stage('status', { empty: { icon: 'mdi:smoke-detector-variant', text: 'Keine Melder gefunden' } });
+      if (!ids.length) return UI.stage('status', { empty: { icon: c.kind === 'water' ? 'mdi:water' : 'mdi:smoke-detector-variant', text: 'Keine Melder gefunden' } });
       var hits = ids.filter(function (id) { return st(id) === 'on'; }), dead = ids.filter(function (id) { return st(id) === 'dead'; });
       var water = ids.every(function (id) { return L.kind[id] === 'water'; });
       var facts = [{ label: 'Melder', value: String(ids.length) }];
@@ -213,7 +220,7 @@
     var html = '';
     if (on2.length) html += UI.group(on2, 'Meldet');
     if (off2.length) html += UI.group(off2, 'Offline');
-    if (ok2.length) html += UI.group(ok2, on2.length || off2.length ? 'Normal' : 'Melder');
+    if (ok2.length) html += UI.group(ok2, on2.length || off2.length ? 'Normal' : (b.title || 'Melder'));
     return '<div style="display:flex;flex-direction:column;gap:var(--casora-popup-sec-gap, 22px);">' + html + '</div>';
   };
 })();
