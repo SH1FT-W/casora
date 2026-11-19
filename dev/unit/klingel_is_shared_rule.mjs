@@ -28,15 +28,33 @@ const hass = {
 assert.equal(KL.is(hass, 'camera.mock_gate_sub'), true, 'a Reolink camera with a visitor sensor is found');
 // The same device without a visitor sensor is not.
 assert.equal(KL.is(hass, 'camera.mock_yard_sub'), false, 'a Reolink camera with only a motion sensor is not');
-// KL.is asks the shared rule: with the rule saying no, the camera is not a doorbell.
+// KL.is asks the shared rule: with the rule saying no, the camera is not a doorbell. The stub is restored in any case.
 const realRule = window.casoraIsReolinkVisitor;
 const asked = [];
-window.casoraIsReolinkVisitor = (h, id) => { asked.push(id); return false; };
-assert.equal(KL.is(hass, 'camera.mock_gate_sub'), false, 'KL.is follows the shared rule');
-assert.ok(asked.includes('binary_sensor.mock_gate_visitor'), 'KL.is asks the shared rule about the sensor');
-window.casoraIsReolinkVisitor = realRule;
+try {
+  window.casoraIsReolinkVisitor = (h, id) => { asked.push(id); return false; };
+  assert.equal(KL.is(hass, 'camera.mock_gate_sub'), false, 'KL.is follows the shared rule');
+  assert.ok(asked.includes('binary_sensor.mock_gate_visitor'), 'KL.is asks the shared rule about the sensor');
+} finally {
+  window.casoraIsReolinkVisitor = realRule;
+}
 // Without the finder's rule (it has not loaded), the fallback still finds the visitor sensor.
-delete window.casoraIsReolinkVisitor;
-assert.equal(KL.is(hass, 'camera.mock_gate_sub'), true, 'fallback without the shared rule');
-window.casoraIsReolinkVisitor = realRule;
+try {
+  delete window.casoraIsReolinkVisitor;
+  assert.equal(KL.is(hass, 'camera.mock_gate_sub'), true, 'fallback without the shared rule');
+} finally {
+  window.casoraIsReolinkVisitor = realRule;
+}
+// A camera without a platform field on a device with a Reolink visitor sensor is still a doorbell.
+const noPlatform = { entities: {
+  'camera.mock_barn_sub': { entity_id: 'camera.mock_barn_sub', device_id: 'mock-barn', translation_key: 'sub' },
+  'binary_sensor.mock_barn_visitor': { entity_id: 'binary_sensor.mock_barn_visitor', platform: 'reolink', device_id: 'mock-barn', translation_key: 'visitor' },
+}, states: {} };
+assert.equal(KL.is(noPlatform, 'camera.mock_barn_sub'), true, 'a camera without a platform field, with a Reolink visitor sensor, is a doorbell');
+// The shared rule also checks the sensor's platform: a visitor sensor of another platform (template) does not count.
+const otherPlatform = { entities: {
+  'camera.mock_hill_sub': { entity_id: 'camera.mock_hill_sub', platform: 'reolink', device_id: 'mock-hill', translation_key: 'sub' },
+  'binary_sensor.mock_hill_visitor': { entity_id: 'binary_sensor.mock_hill_visitor', platform: 'template', device_id: 'mock-hill', translation_key: 'visitor' },
+}, states: {} };
+assert.equal(KL.is(otherPlatform, 'camera.mock_hill_sub'), false, 'a visitor sensor of another platform does not make a doorbell');
 console.log('ok klingel_is_shared_rule');

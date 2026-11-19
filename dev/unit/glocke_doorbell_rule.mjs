@@ -21,11 +21,17 @@ const GATE = 'binary_sensor.mock_front_gate';
 const CHIME = 'binary_sensor.mock_chime_doorbell';
 const RING = 'event.mock_entrance_ding';
 let hass;
+let hassReads = -1; // -1: the page's hass on every read; n >= 0: only the first n reads get it, later reads find none
 globalThis.window = globalThis;
 globalThis.localStorage = { getItem: () => null, setItem() {}, removeItem() {} };
 globalThis.document = {
   readyState: 'complete', hidden: false,
-  querySelector: (q) => (q === 'home-assistant' ? { hass, dispatchEvent: () => true } : null),
+  querySelector: (q) => {
+    if (q !== 'home-assistant') return null;
+    if (hassReads === 0) return { hass: undefined, dispatchEvent: () => true };
+    if (hassReads > 0) hassReads -= 1;
+    return { hass, dispatchEvent: () => true };
+  },
   querySelectorAll: () => [], addEventListener: () => {}, getElementById: () => null,
   createElement: () => ({ style: {}, setAttribute() {}, appendChild() {} }), head: { appendChild() {} },
 };
@@ -66,9 +72,13 @@ async function bell({ states, entities, log }) {
 const on = (id, ms, state = 'on') => ({ entity_id: id, state, when: ms / 1000 });
 const attrs = (name, extra = {}) => ({ friendly_name: name, ...extra });
 
-// 0. The bell asks the shared rule only when a hass is there; without one, the old check below it applies.
-assert.match(core, /var h = hassOf\(\);\s*if \(window\.casoraIsDoorbell && h\) return window\.casoraIsDoorbell\(h, id\);/,
-  'isDoorbell delegates to the shared rule only with hass present');
+// 0. isDoorbell finds no hass (its own hassOf() read is empty; collect() had the hass and passes it on): the shared
+// rule cannot be asked, so the old check recognises the Ring-style doorbell event from the state it is given.
+hassReads = 1; // collect() reads the hass once; every later read (isDoorbell's own) finds none
+const noHassRows = (await bell({ states: { [RING]: { entity_id: RING, state: new Date(NOW - 60 * 1000).toISOString(), attributes: attrs('Mock Entrance Ding', { device_class: 'doorbell' }) } },
+  entities: {}, log: [on(RING, NOW - 60 * 1000, new Date(NOW - 60 * 1000).toISOString())] })).rows;
+hassReads = -1;
+assert.equal(noHassRows.filter((r) => r.entity === RING).length, 1, 'without hass, the old check still finds the Ring-style doorbell event');
 
 // 1. Reolink visitor sensor: renamed (no „doorbell“ in its ID), no device class, on only briefly.
 const gateStates = { [GATE]: { entity_id: GATE, state: 'off', last_changed: new Date(NOW - 50 * 1000).toISOString(), attributes: attrs('Mock Front Gate') } };

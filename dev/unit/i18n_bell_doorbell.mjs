@@ -59,15 +59,16 @@ const yesterday = new Date(NOW);
 yesterday.setDate(yesterday.getDate() - 1);
 yesterday.setHours(20, 17, 0, 0);
 const rings = [NOW - 5 * MIN, NOW - 50 * MIN, yesterday.getTime()];
+// The Ring-style event; the two Ring kinds differ only in the entity's friendly name and the German text of the row.
+const RING_EVENT = {
+  id: 'event.mock_entrance_ding', device_class: 'doorbell',
+  entity: { device_id: 'mock-bell', platform: 'ring', translation_key: 'ding' },
+  log: rings.map((ms) => ({ entity_id: 'event.mock_entrance_ding', state: new Date(ms).toISOString(), when: ms / 1000 })),
+  state: new Date(rings[0]).toISOString(),
+};
 const KINDS = {
-  ring: { id: 'event.mock_entrance_ding', friendly: 'Mock Entrance', device_class: 'doorbell', text: 'Hat geklingelt',
-    entity: { device_id: 'mock-bell', platform: 'ring', translation_key: 'ding' },
-    log: rings.map((ms) => ({ entity_id: 'event.mock_entrance_ding', state: new Date(ms).toISOString(), when: ms / 1000 })),
-    state: new Date(rings[0]).toISOString() },
-  ringDing: { id: 'event.mock_entrance_ding', friendly: 'Mock Entrance Ding', device_class: 'doorbell', text: 'Mock Entrance hat geklingelt',
-    entity: { device_id: 'mock-bell', platform: 'ring', translation_key: 'ding' },
-    log: rings.map((ms) => ({ entity_id: 'event.mock_entrance_ding', state: new Date(ms).toISOString(), when: ms / 1000 })),
-    state: new Date(rings[0]).toISOString() },
+  ring: { ...RING_EVENT, friendly: 'Mock Entrance', text: 'Hat geklingelt' },
+  ringDing: { ...RING_EVENT, friendly: 'Mock Entrance Ding', text: 'Mock Entrance hat geklingelt' },
   reolink: { id: 'binary_sensor.mock_front_gate', friendly: 'Mock Entrance', text: 'Hat geklingelt',
     entity: { device_id: 'mock-bell', platform: 'reolink', translation_key: 'visitor' },
     log: rings.flatMap((ms) => [{ entity_id: 'binary_sensor.mock_front_gate', state: 'on', when: ms / 1000 },
