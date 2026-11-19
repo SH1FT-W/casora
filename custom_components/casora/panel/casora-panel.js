@@ -96,6 +96,28 @@ function studioClockLine(hass, use12, suffix, now) {
   const t = studioClockText(hass, use12, now);
   return (suffix ? t + " " + suffix : t).toUpperCase();
 }
+// #223: the time text as the dashboard's casora_time tile draws it (the time-sensor rule of the template, same
+// order). A time sensor with a usable value shows its own time, the profile does not matter. Automatic
+// (sensor.time) with no usable value (unavailable, unknown, empty, or no entry) shows the device clock. A
+// sensor chosen in the Studio that is gone shows nothing, and one that is there shows its state as it is.
+function studioTimeText(hass, V, use12, now) {
+  const id = V.time_entity || "sensor.time";
+  const states = (hass && hass.states) || {};
+  const ent = states[id];
+  const suffix = String(V.time_suffix || "").trim();
+  const unusable = !ent || (id === "sensor.time" && ["unavailable", "unknown", ""].indexOf(String(ent.state || "")) >= 0);
+  if (unusable) return id === "sensor.time" ? studioClockLine(hass, use12, suffix, now) : "";
+  const raw = String(ent.state || "");
+  let display = raw;
+  if (raw.indexOf(",") >= 0) display = (raw.split(",")[1] || "").trim() || raw;
+  const m = display.match(/^(\d{1,2}):(\d{2})$/);
+  if (use12 && m) {
+    const h = parseInt(m[1], 10);
+    display = ((h % 12) || 12) + ":" + m[2] + " " + (h >= 12 ? "PM" : "AM");
+  }
+  if (suffix) display = display + " " + suffix;
+  return display.toUpperCase();
+}
 // A bool field's default: a plain value, or a function of hass (the 12-hour clock needs the HA user).
 const fieldDefault = (f, hass) => (typeof f.boolDefault === "function" ? !!f.boolDefault(hass) : f.boolDefault);
 
@@ -27656,8 +27678,7 @@ class CasoraPanel extends HTMLElement {
     // waiting for a script; the date waits for the dashboard's language file when it is not loaded yet.
     const d = new Date();
     const use12 = V.use_12h === undefined ? clock12(this._hass) : V.use_12h !== false;
-    const extra = String(V.time_suffix || "").trim();
-    q(".mini-time").textContent = studioClockLine(this._hass, use12, extra, d);
+    q(".mini-time").textContent = studioTimeText(this._hass, V, use12, d);
     // #179: the date under the time, as on the dashboard.
     if (V.show_date === true) {
       if (typeof window.casoraLocale === "function") {
@@ -30887,7 +30908,7 @@ window.__casoraPanelInternals = {
   setupStep, hiddenFromAs,
   blankRoom, roomPhoto, slug, translit, expandConfig, expandAny, extractAny, retargetRoutes, mobileFromRooms,
   applyScenePick, confirmEntities, confirmNames, entityUsers, wrapCustomCard, hostCard, FINGERPRINT_KEY, fingerprintOf, refreshTemplates, templatePrint, TILE_TYPES, USER_TILE_TYPES,
-  fieldDefault, findType, tileTypeAny, newTile, previewHasError, isPetTracker, petName, isStatSensor, isPlantEntity, listCategory, TILE_MAIN_FIND, tileMissingEntity, tileEntityGone, iconUrl, studioIcon, roomGlyph, roomIconSrc, titleCase, clone, FLOW_TINT, isMobileConfig, applyKiosk, studioClockText, studioClockDate, studioClockLine,
+  fieldDefault, findType, tileTypeAny, newTile, previewHasError, isPetTracker, petName, isStatSensor, isPlantEntity, listCategory, TILE_MAIN_FIND, tileMissingEntity, tileEntityGone, iconUrl, studioIcon, roomGlyph, roomIconSrc, titleCase, clone, FLOW_TINT, isMobileConfig, applyKiosk, studioClockText, studioTimeText, studioClockDate, studioClockLine,
   applyMotion, markPhoneManaged, applyFirstRun, CASORA_THEMES, ensureCustomFontCss, sceneBadgeOn, dropNavScenes,
   parseCardText, cardToText,
   isDefaultHomeName, homeRoomWord, shotLang, isHomeRoom, roomLabel, storedRoomName, HOME_ROOM_NAME, markAutoHome, isDefaultHome, setHomeName, badgeOrderOf, BADGE_ORDER_IDS,
