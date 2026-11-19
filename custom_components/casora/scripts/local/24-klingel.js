@@ -70,9 +70,13 @@
     var R = hass.entities || {}, me = R[id];
     if (!me || !me.device_id) return false;
     if (me.platform && me.platform !== 'reolink' && me.platform !== 'casora_mock') return false;
+    // The visitor rule lives in 00-finder.js (one rule for the bell and the Studio list). Its fallback, used only
+    // while the finder has not loaded, is the old check.
+    var isVisitor = typeof window.casoraIsReolinkVisitor === 'function' ? window.casoraIsReolinkVisitor
+      : function (h, eid) { var e = R[eid]; return !!e && e.translation_key === 'visitor' && /^binary_sensor\./.test(eid); };
     for (var eid in R) {
       var e = R[eid];
-      if (e && e.device_id === me.device_id && e.translation_key === 'visitor' && /^binary_sensor\./.test(eid)) return true;
+      if (e && e.device_id === me.device_id && isVisitor(hass, eid)) return true;
     }
     return false;
   };
