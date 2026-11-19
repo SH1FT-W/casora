@@ -62,11 +62,52 @@ let rows = null, head = null;
 win._casoraUI = { group: (r, l) => { rows = r; head = l; return 'G'; }, label: (t) => t };
 assert.equal(G.html(gh, 'media_player.wz'), 'G');
 assert.equal(head, 'Zusammen abspielen · 2 Lautsprecher');
+deq(rows.map((r) => r.label), ['wz', 'kue', 'bad'], 'the grouped player itself is listed first (#212)');
 assert.equal(rows[0].selected, true);
 assert.equal(rows[0].iconTone, 'accent');
-assert.equal(rows[1].selected, false);
-assert.equal(rows[1].iconTone, 'rgba(0,0,0,0)');
+assert.equal(rows[1].selected, true);
+assert.equal(rows[2].selected, false);
+assert.equal(rows[2].iconTone, 'rgba(0,0,0,0)');
 assert.ok(rows.every((r) => r.noChev && r.svc));
+deq(rows[0].svc, { domain: 'media_player', service: 'unjoin', target: { entity_id: 'media_player.wz' } },
+  'a tap on the own row takes it out of the group, like any joined row');
+assert.equal(G.html(gh, 'media_player.bad'), 'G');
+assert.equal(head, 'Zusammen abspielen', 'ungrouped: no count');
+deq(rows.map((r) => r.label), ['kue', 'wz'], 'ungrouped: the player itself is not listed (it cannot join itself)');
+
+// #212 (Sonos: a single speaker, a stereo pair as one player, a picture frame speaker; all three in every room).
+const sp = (id, state, members) => ({ ...gs(id, { group_members: members }), state });
+const all3 = ['media_player.s_kue', 'media_player.s_wz', 'media_player.s_buero'];
+const sh = (st) => ({
+  states: Object.fromEntries(Object.entries(st).map(([id, [state, m]]) => [id, sp(id, state, m)])),
+  entities: { 'media_player.s_kue': { platform: 'sonos', area_id: 'k' }, 'media_player.s_wz': { platform: 'sonos', area_id: 'w' },
+    'media_player.s_buero': { platform: 'sonos', area_id: 'b' } },
+  devices: {}, areas: { k: { name: 'Küche' }, w: { name: 'Wohnzimmer' }, b: { name: 'Büro' } },
+});
+// A) all three play as one group: every room counts 3 and lists 3, its own speaker among them.
+const hA = sh({ 'media_player.s_kue': ['playing', all3], 'media_player.s_wz': ['playing', all3], 'media_player.s_buero': ['playing', all3] });
+for (const id of all3) {
+  G.html(hA, id);
+  const lit = rows.filter((r) => r.selected).length;
+  assert.equal(head, 'Zusammen abspielen · 3 Lautsprecher', id + ': heading');
+  assert.equal(lit, 3, id + ': counted = listed (highlighted rows)');
+  assert.equal(rows[0].label, id.split('.')[1], id + ': own speaker listed first');
+  assert.ok(rows.every((r) => r.value === 'Läuft'), id + ': every row says it plays');
+}
+// B) kitchen and office play together, the living room is idle: its popup shows who plays.
+const hB = sh({ 'media_player.s_kue': ['playing', ['media_player.s_kue', 'media_player.s_buero']],
+  'media_player.s_buero': ['playing', ['media_player.s_kue', 'media_player.s_buero']], 'media_player.s_wz': ['idle', ['media_player.s_wz']] });
+G.html(hB, 'media_player.s_wz');
+assert.equal(head, 'Zusammen abspielen');
+deq(rows.map((r) => [r.label, r.value || '', r.selected]), [['s_buero', 'Läuft', false], ['s_kue', 'Läuft', false]],
+  'idle player: the playing speakers are named as playing');
+// Playing speakers come before resting ones; paused says so.
+const hC = sh({ 'media_player.s_wz': ['idle', ['media_player.s_wz']], 'media_player.s_kue': ['idle', ['media_player.s_kue']],
+  'media_player.s_buero': ['playing', ['media_player.s_buero']], 'media_player.a_bad': ['paused', ['media_player.a_bad']] });
+hC.entities['media_player.a_bad'] = { platform: 'sonos' };
+G.html(hC, 'media_player.s_wz');
+deq(rows.map((r) => [r.label, r.value || '']), [['s_buero', 'Läuft'], ['a_bad', 'Pausiert'], ['s_kue', '']],
+  'playing first, then by name; paused named');
 
 // A player without grouping (a TV) gets no extra card: the popup stays as before.
 const tvh = { states: { 'media_player.tv': { entity_id: 'media_player.tv', state: 'playing', attributes: { supported_features: 1 | 4 | 16384, device_class: 'tv' } },

@@ -57,9 +57,27 @@
       if (!e || e.hidden || (plat && e.platform && e.platform !== plat)) return false;
       return G.can(S[id]) && !bad(S[id]);
     });
-    return ids.map(function (id) {
-      return { id: id, name: nameOf(hass, id), area: areaOf(hass, id), on: mine.indexOf(id) > -1, playing: S[id].state === 'playing' };
-    }).sort(function (a, b) { return (b.on - a.on) || a.name.localeCompare(b.name); }).slice(0, 12);
+    // #212: joined first, then the speakers that play elsewhere (so an idle player still shows who is playing), then by name.
+    return ids.map(function (id) { return G.row(hass, id, mine.indexOf(id) > -1); })
+      .sort(function (a, b) { return (b.on - a.on) || (b.playing - a.playing) || a.name.localeCompare(b.name); }).slice(0, 12);
+  };
+  // State word on the right of a row: what the speaker does right now ('' when it rests).
+  G.word = function (st) {
+    var s = st && st.state;
+    return s === 'playing' || s === 'buffering' ? 'Läuft' : s === 'paused' ? 'Pausiert' : '';
+  };
+  G.row = function (hass, id, on) {
+    var st = ((hass && hass.states) || {})[id];
+    return { id: id, name: nameOf(hass, id), area: areaOf(hass, id), on: !!on, playing: !!st && st.state === 'playing', word: G.word(st) };
+  };
+  // Rows of the section. #212: while the player is grouped, the heading counts it too, so it is listed as well (first,
+  // highlighted; a tap takes it out of the group like any joined row). Ungrouped it is not listed: it cannot join itself.
+  G.rows = function (hass, playerId) {
+    var list = G.list(hass, playerId);
+    if (!list.some(function (r) { return r.on; })) return list;
+    var me = G.row(hass, playerId, true);
+    me.self = true;
+    return [me].concat(list.slice(0, 11));
   };
   G.rowSvc = function (playerId, r) {
     return r.on
@@ -68,15 +86,17 @@
   };
   G.html = function (hass, playerId) {
     var UI = window._casoraUI;
-    var list = G.list(hass, playerId);
+    var list = G.rows(hass, playerId);
     if (!UI || !list.length) return '';
+    // Counted = listed (#212): every highlighted row, the player itself included.
     var n = list.filter(function (r) { return r.on; }).length;
     var rows = list.map(function (r) {
       // Selection list without ticks: the joined row is highlighted (hui-sel) and its symbol in the device colour.
+      // On the right what the speaker does (#212: an idle player showed no sign of the others playing).
       return { icon: 'mdi:speaker', iconTone: r.on ? 'accent' : 'rgba(0,0,0,0)', label: r.name, labelLit: true, sub: r.area || undefined,
-        selected: r.on, noChev: true, tappable: true, svc: G.rowSvc(playerId, r) };
+        value: r.word || undefined, selected: r.on, noChev: true, tappable: true, svc: G.rowSvc(playerId, r) };
     });
-    return UI.group(rows, n ? 'Zusammen abspielen · ' + (n + 1) + ' Lautsprecher' : 'Zusammen abspielen');
+    return UI.group(rows, n ? 'Zusammen abspielen · ' + n + ' Lautsprecher' : 'Zusammen abspielen');
   };
 
   // The speaker section for the media popup (right column); '' when the player does not group.
