@@ -95,6 +95,8 @@ const touch = async (page, points, gap = 16) => {
   const maxSheet = await page.evaluate(() => { window.__qaWatch = false; return window.__qaSheet; });
   return { touch: !!how, how, maxSheet };
 };
+// brightness_pct of a recorded light call ("turn_on:{...}"), NaN if there is none.
+const sentPct = (call) => { try { return Number(JSON.parse(String(call).replace(/^[^:]*:/, '')).brightness_pct); } catch (e) { return NaN; } };
 const arc = (box, from, to, n = 10, rad = 150) => Array.from({ length: n + 1 }, (_, i) => pt(box, from + (to - from) * i / n, rad));
 
 // ── Phone (WebKit and Chromium, touch) ─────────────────────────────────────
@@ -132,10 +134,13 @@ for (const safari of [true, false]) {
     s = await state(page);
     await check(tag + ': swipe from the middle: value unchanged, nothing sent', s.open && s.pct === p0 && s.calls.length === 0, { s, g });
     // DH-01: thumb on the ring top right, turn clockwise downwards (not from the knob).
+    // Judged by the value sent, not the ring shown afterwards: the service call is only recorded, so the next real
+    // state_changed in the shared HA re-applies the sticky fake (brightness 128) and redraws the dial at 50 % (flake
+    // in the gate of 4735f1d3a: sent brightness_pct 69, ring back at 50).
     const start = s.pct;
     g = await touch(page, arc(s.box, 315, 375, 12));
     s = await state(page);
-    await check(tag + ': turning along the ring changes the value', s.open && s.pct > start, { start, s, g });
+    await check(tag + ': turning along the ring changes the value', s.open && sentPct(s.calls[0]) > start, { start, s, g });
     await check(tag + ': turning does not move the sheet', g.maxSheet === 0 && !/translateY\([1-9]/.test(s.sheet), { g, sheet: s.sheet });
     await page.waitForTimeout(700);
     s = await state(page);
@@ -144,7 +149,7 @@ for (const safari of [true, false]) {
     const kAng = 135 + s.pct / 100 * 270, before = s.pct;
     await touch(page, arc(s.box, kAng, kAng - 40, 8));
     s = await state(page);
-    await check(tag + ': turning from the knob back lowers the value, popup open', s.open && s.pct < before && s.calls.length === 2, { before, s });
+    await check(tag + ': turning from the knob back lowers the value, popup open', s.open && s.calls.length === 2 && sentPct(s.calls[1]) < before, { before, s });
     // DH-02 with a popup taller than the screen (house lighting on the phone dashboard): a vertical swipe
     // starting on the ring's side scrolls the sheet and changes nothing.
     if (g.how === 'cdp') {
