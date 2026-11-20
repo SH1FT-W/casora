@@ -6732,21 +6732,20 @@ const tileStateWord = (kind, tile, ent, states, hass, settings) => {
   if (kind === "casora_calendar" && !ent) {
     const K = typeof window !== "undefined" && window._casoraCalendar;
     if (K && K.tile) return K.tile(states || {}, V);
-    // Studio: no calendar module. The same title rule as the dashboard (06a-kalender-filter.js); the waste
-    // calendar is left out when casoraDevice knows it. Nothing is shown until the rule and the settings are there.
+    // Studio: no calendar module. The dashboard's rules: casoraCalendars (00-finder.js) picks the calendars, casoraCalendarNext
+    // (06a-kalender-filter.js) the event, the title filter skips titles. Nothing is shown until they and the settings are there.
     const allows = typeof window !== "undefined" && window.casoraCalendarAllows;
-    if (!allows || !settings) return "";
-    const S = states || {};
+    const next = typeof window !== "undefined" && window.casoraCalendarNext;
+    const cals = typeof window !== "undefined" && window.casoraCalendars;
+    if (!allows || !next || !cals || !settings) return "";
+    // The Studio draft's calendar list counts when the tile has none of its own.
+    const vars = Array.isArray(V.calendars) && V.calendars.length ? V : { calendars: settings.calendars };
+    // The waste calendar from the Studio draft stays out, as on the dashboard (it is pickups, not appointments).
     const wasteCal = settings.waste && settings.waste.calendar;
     const waste = window.casoraDevice && window.casoraDevice.waste ? window.casoraDevice.waste(hass, wasteCal ? { trash_calendar: wasteCal } : null).calendar : null;
-    const list = Array.isArray(V.calendars) && V.calendars.length ? V.calendars : settings.calendars;
-    const configured = Array.isArray(list) && list.length;
-    const entities = (hass && hass.entities) || {};
-    const ids = configured ? list.filter((c) => c && c.entity && c.tile !== false).map((c) => c.entity)
-      : Object.keys(S).filter((id) => !(entities[id] && (entities[id].hidden || entities[id].hidden_by)));
-    const cal = ids.sort().find((id) => id !== waste && id.startsWith("calendar.") && S[id]
-      && S[id].attributes && S[id].attributes.message && allows(S[id].attributes.message, settings));
-    if (cal) return String(S[cal].attributes.message);
+    const list = cals(hass, vars).filter((c) => c.entity !== waste && c.entity !== wasteCal);
+    const pick = next(states || {}, list, new Date(), (title) => allows(title, settings));
+    if (pick) return String(pick.name);
     return window.casoraI18n && window.casoraI18n.t ? window.casoraI18n.t("No events") : "No events";
   }
   if (kind === "casora_map") return "";
@@ -26822,7 +26821,8 @@ class CasoraPanel extends HTMLElement {
     if (!window.casoraCalendarAllows && !this._calRuleAsked && (this._calRuleAttempts || 0) < 2) {
       this._calRuleAsked = true;
       this._calRuleAttempts = (this._calRuleAttempts || 0) + 1;
-      (window.casoraImportScript || ((p) => import("/casora_scripts/" + p)))("local/06a-kalender-filter.js")
+      const imp = window.casoraImportScript || ((p) => import("/casora_scripts/" + p));
+      Promise.all([imp("local/06a-kalender-filter.js"), window.casoraCalendars ? null : imp("local/00-finder.js").catch(() => {})])
         .then(() => {
           if (window.casoraCalendarAllows) this._rebuildPreview();
           else this._calRuleAsked = false;
