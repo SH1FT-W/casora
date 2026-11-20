@@ -76,9 +76,9 @@
           // #217: not the hint of the switch again, only what the title does not say.
           plain: "On phone and tablet, in the order of the room menu.",
           kw: "wischen swipe räume wechseln blättern tablet handy nächster raum" },
-        { k: "screen", sec: "General", sub: "chrome", keys: ["casora_idle_home"], title: "Wall tablet",
-          plain: "Go back to Home after a while without use.",
-          kw: "tablet inaktivität zurück zuhause idle kiosk wand" },
+        { k: "screen", sec: "General", sub: "chrome", keys: ["casora_idle_home", "casora_idle_close"], title: "Wall tablet",
+          plain: "Go back to Home and close popups after a while without use.",
+          kw: "tablet inaktivität zurück zuhause idle kiosk wand popup popups schließen schliessen sluiten close" },
         { k: "dialogs", sec: "General", sub: "dialogs", title: "Home Assistant detail windows", adv: true,
           plain: "What the windows of Home Assistant itself show: logbook, history, attributes.",
           kw: "logbuch verlauf attribute brotkrumen lichtaktionen dialog mehr infos kiosk-mode" },
@@ -1309,15 +1309,17 @@
           if (!c.querySelector(".row")) c.remove();
         });
       }
-      // One plate per part: a hint between two plates belongs to the row above it, so it moves into the plate under
-      // that row and the two plates become one (before, the hint tore the plate apart).
+      // One plate per part: a hint right after a plate belongs to the row above it, so it moves into that plate. A hint
+      // between two plates moves in and the two plates become one (before, the hint tore the plate apart). A hint after
+      // the last plate of a part moves in too, so every field's hint sits inside its plate. Section descriptions (.cdesc) stay.
       for (let c = card.firstElementChild; c; c = c.nextElementSibling) {
         if (!c.classList.contains("subcard") || c.classList.contains("togglecard")) continue;
         let h = c.nextElementSibling;
-        while (h && h.classList.contains("hint") && h.nextElementSibling && h.nextElementSibling.classList.contains("subcard")
-          && !h.nextElementSibling.classList.contains("togglecard")) {
+        while (h && h.classList.contains("hint")) {
           const next = h.nextElementSibling;
+          const plateAfter = next && next.classList.contains("subcard") && !next.classList.contains("togglecard");
           c.appendChild(h);
+          if (!plateAfter) break;
           while (next.firstChild) c.appendChild(next.firstChild);
           next.remove();
           h = c.nextElementSibling;

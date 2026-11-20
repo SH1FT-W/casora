@@ -180,7 +180,7 @@ const pickCombo = (block, key, label) => P(`const row = p.shadowRoot.querySelect
 const comboVal = (block, key) => P(`const row = p.shadowRoot.querySelector('#pane [data-pkey="nb-' + arg[0] + '"] .row[data-key="' + arg[1] + '"]');
   return row ? row.querySelector('.combo input').value : null;`, [block, key]);
 await part('Auswahl, Text, Bereich, Option', async () => {
-const SELECTS = [['look', 'font', 'font', 'Systemschrift'], ['use', 'hold', 'hold_mode', 'Popup öffnen'], ['use', 'screen', 'casora_idle_home', 'Nach 1 Minute'], ['use', 'perf', 'performance', 'An']];
+const SELECTS = [['look', 'font', 'font', 'Systemschrift'], ['use', 'hold', 'hold_mode', 'Popup öffnen'], ['use', 'screen', 'casora_idle_home', 'Nach 1 Minute'], ['use', 'screen', 'casora_idle_close', 'Nach 1 Minute'],['use', 'perf', 'performance', 'An']];
 for (const [tile, block, key, label] of SELECTS) {
   await openTile(tile);
   const was = await comboVal(block, key);

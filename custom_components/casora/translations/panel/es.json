@@ -3185,7 +3185,10 @@
     "Total cost": "Coste total",
     "Electricity": "Electricidad",
     "Gas": "Gas",
-    "Today's electricity and gas cost side by side on the tile, or the usage in kWh. The popup shows the day, the week or the month: usage and cost of electricity and gas apart, standing charge and total, and a chart with bars per hour or day. Week and month come from Home Assistant's statistics of the daily counters. For smart meters without solar, e.g. Hildebrand Glow and Octopus Energy.": "El coste de hoy de electricidad y gas uno al lado del otro en el mosaico, o el consumo en kWh. La ventana muestra el día, la semana o el mes: consumo y coste de electricidad y gas por separado, término fijo y total, con un gráfico de barras por hora o por día. La semana y el mes salen de las estadísticas de los contadores diarios de Home Assistant. Para contadores inteligentes sin solar, p. ej. Hildebrand Glow y Octopus Energy."
+    "Today's electricity and gas cost side by side on the tile, or the usage in kWh. The popup shows the day, the week or the month: usage and cost of electricity and gas apart, standing charge and total, and a chart with bars per hour or day. Week and month come from Home Assistant's statistics of the daily counters. For smart meters without solar, e.g. Hildebrand Glow and Octopus Energy.": "El coste de hoy de electricidad y gas uno al lado del otro en el mosaico, o el consumo en kWh. La ventana muestra el día, la semana o el mes: consumo y coste de electricidad y gas por separado, término fijo y total, con un gráfico de barras por hora o por día. La semana y el mes salen de las estadísticas de los contadores diarios de Home Assistant. Para contadores inteligentes sin solar, p. ej. Hildebrand Glow y Octopus Energy.",
+    "Go back to Home and close popups after a while without use.": "Volver a Inicio y cerrar las ventanas tras un rato sin uso.",
+    "Close popups when idle": "Cerrar ventanas sin actividad",
+    "Tablets only. Closes an open popup after a while without use.": "Solo tabletas. Cierra una ventana abierta tras un rato sin uso."
   },
   "patterns": [
     [

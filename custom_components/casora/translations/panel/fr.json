@@ -3185,7 +3185,10 @@
     "Total cost": "Coût total",
     "Electricity": "Électricité",
     "Gas": "Gaz",
-    "Today's electricity and gas cost side by side on the tile, or the usage in kWh. The popup shows the day, the week or the month: usage and cost of electricity and gas apart, standing charge and total, and a chart with bars per hour or day. Week and month come from Home Assistant's statistics of the daily counters. For smart meters without solar, e.g. Hildebrand Glow and Octopus Energy.": "Le coût du jour pour l’électricité et le gaz côte à côte sur la tuile, ou la consommation en kWh. Le popup affiche le jour, la semaine ou le mois : consommation et coût de l’électricité et du gaz séparés, abonnement et total, avec un graphique en barres par heure ou par jour. La semaine et le mois viennent des statistiques des compteurs journaliers de Home Assistant. Pour les compteurs intelligents sans solaire, p. ex. Hildebrand Glow et Octopus Energy."
+    "Today's electricity and gas cost side by side on the tile, or the usage in kWh. The popup shows the day, the week or the month: usage and cost of electricity and gas apart, standing charge and total, and a chart with bars per hour or day. Week and month come from Home Assistant's statistics of the daily counters. For smart meters without solar, e.g. Hildebrand Glow and Octopus Energy.": "Le coût du jour pour l’électricité et le gaz côte à côte sur la tuile, ou la consommation en kWh. Le popup affiche le jour, la semaine ou le mois : consommation et coût de l’électricité et du gaz séparés, abonnement et total, avec un graphique en barres par heure ou par jour. La semaine et le mois viennent des statistiques des compteurs journaliers de Home Assistant. Pour les compteurs intelligents sans solaire, p. ex. Hildebrand Glow et Octopus Energy.",
+    "Go back to Home and close popups after a while without use.": "Revenir à l’accueil et fermer les fenêtres après un moment sans utilisation.",
+    "Close popups when idle": "Fermer les fenêtres en cas d'inactivité",
+    "Tablets only. Closes an open popup after a while without use.": "Tablettes seulement. Ferme une fenêtre ouverte après un moment sans utilisation."
   },
   "patterns": [
     [

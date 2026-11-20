@@ -3185,7 +3185,10 @@
     "Total cost": "Totale kosten",
     "Electricity": "Stroom",
     "Gas": "Gas",
-    "Today's electricity and gas cost side by side on the tile, or the usage in kWh. The popup shows the day, the week or the month: usage and cost of electricity and gas apart, standing charge and total, and a chart with bars per hour or day. Week and month come from Home Assistant's statistics of the daily counters. For smart meters without solar, e.g. Hildebrand Glow and Octopus Energy.": "De kosten van vandaag voor stroom en gas naast elkaar op de tegel, of het verbruik in kWh. De pop-up toont de dag, de week of de maand: verbruik en kosten van stroom en gas apart, vastrecht en totaal, met een grafiek met staven per uur of dag. Week en maand komen uit de statistieken van de dagtellers in Home Assistant. Voor slimme meters zonder zonnepanelen, bijv. Hildebrand Glow en Octopus Energy."
+    "Today's electricity and gas cost side by side on the tile, or the usage in kWh. The popup shows the day, the week or the month: usage and cost of electricity and gas apart, standing charge and total, and a chart with bars per hour or day. Week and month come from Home Assistant's statistics of the daily counters. For smart meters without solar, e.g. Hildebrand Glow and Octopus Energy.": "De kosten van vandaag voor stroom en gas naast elkaar op de tegel, of het verbruik in kWh. De pop-up toont de dag, de week of de maand: verbruik en kosten van stroom en gas apart, vastrecht en totaal, met een grafiek met staven per uur of dag. Week en maand komen uit de statistieken van de dagtellers in Home Assistant. Voor slimme meters zonder zonnepanelen, bijv. Hildebrand Glow en Octopus Energy.",
+    "Go back to Home and close popups after a while without use.": "Na een tijdje zonder gebruik terug naar Thuis en popups sluiten.",
+    "Close popups when idle": "Bij inactiviteit popups sluiten",
+    "Tablets only. Closes an open popup after a while without use.": "Alleen tablets. Sluit een open popup na een tijd zonder gebruik."
   },
   "patterns": [
     [
