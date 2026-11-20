@@ -5,6 +5,7 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import { loadPanel } from './lib/testhaus.mjs';
+import { loadCalendars } from './lib/calendars_block.mjs';
 
 const read = (p) => fs.readFileSync(new URL('../../' + p, import.meta.url), 'utf8');
 const panel = read('custom_components/casora/panel/casora-panel.js');
@@ -39,14 +40,18 @@ const makeWindow = ({ withRule = true, waste = null } = {}) => {
     casoraDevice: { waste: (h, v) => ({ calendar: (v && v.trash_calendar) || waste }) },
   };
   if (withRule && rule) new Function('window', rule)(w);
+  // The Studio loads the finder too: casoraCalendars picks the calendars (the same block as the dashboard).
+  if (withRule) loadCalendars(w);
   return w;
 };
 const tileStateWord = (w) => new Function('window', tileStateWordSrc)(w);
 
+// A running event: the calendar states carry start_time and end_time, as in Home Assistant.
+const running = { start_time: '2000-01-01 00:00:00', end_time: '2100-01-01 00:00:00', all_day: true };
 const states = {
-  'calendar.waste': { state: 'on', attributes: { message: 'Bins out' } },
-  'calendar.a': { state: 'on', attributes: { message: 'Termin-cccccc' } },
-  'calendar.b': { state: 'on', attributes: { message: 'Visible' } },
+  'calendar.waste': { state: 'on', attributes: { message: 'Bins out', ...running } },
+  'calendar.a': { state: 'on', attributes: { message: 'Termin-cccccc', ...running } },
+  'calendar.b': { state: 'on', attributes: { message: 'Visible', ...running } },
 };
 const calTile = { variables: {} };
 
@@ -55,7 +60,7 @@ const calTile = { variables: {} };
   const w = makeWindow();
   delete w.casoraDevice;
   new Function('window', 'document', read('custom_components/casora/scripts/local/00-finder.js'))(w, { querySelector: () => null });
-  const only = { 'calendar.bins': { state: 'on', attributes: { message: 'Pickup' } } };
+  const only = { 'calendar.bins': { state: 'on', attributes: { message: 'Pickup', ...running } } };
   const settings = { calendars: [], waste: { calendar: 'calendar.bins' } };
   assert.equal(tileStateWord(w)('casora_calendar', calTile, null, only, { states: only }, settings),
     'Keine Termine', 'the configured waste calendar is excluded with the real finder and Studio settings');
@@ -65,10 +70,11 @@ const calTile = { variables: {} };
   const w = makeWindow({ waste: 'calendar.waste' });
   const word = tileStateWord(w);
   const chosen = { calendars: [{ entity: 'calendar.b' }] };
-  assert.equal(word('casora_calendar', calTile, null, states, {}, chosen), 'Visible', 'configured list excludes unselected calendars');
-  assert.equal(word('casora_calendar', calTile, null, states, {}, { calendars: [{ entity: 'calendar.waste' }] }), 'Keine Termine', 'configured waste stays excluded');
-  assert.equal(word('casora_calendar', calTile, null, states, {}, { calendars: [{ entity: 'calendar.a', tile: false }] }), 'Keine Termine', 'disabled tile calendar stays excluded');
-  const hass = { entities: { 'calendar.a': { hidden_by: 'user' } } };
+  assert.equal(word('casora_calendar', calTile, null, states, { states: states }, chosen), 'Visible', 'configured list excludes unselected calendars');
+  assert.equal(word('casora_calendar', calTile, null, states, { states: states }, { calendars: [{ entity: 'calendar.waste' }] }), 'Keine Termine', 'configured waste stays excluded');
+  assert.equal(word('casora_calendar', calTile, null, states, { states: states }, { calendars: [{ entity: 'calendar.a', tile: false }] }), 'Keine Termine', 'disabled tile calendar stays excluded');
+  // As in Home Assistant, the hass object carries the states too (the finder reads both).
+  const hass = { states, entities: { 'calendar.a': { hidden_by: 'user' } } };
   assert.equal(word('casora_calendar', calTile, null, states, hass, { calendars: [] }), 'Visible', 'automatic selection excludes hidden calendars');
   assert.equal(word('casora_calendar', calTile, null, states, hass, { calendars: [{ entity: 'calendar.a' }] }), 'Termin-cccccc', 'explicit selection includes hidden calendars');
   const ownTile = { variables: { calendars: [{ entity: 'calendar.b' }, { entity: 'calendar.waste' }] } };
@@ -79,7 +85,7 @@ const calTile = { variables: {} };
 // Saved filter words hide the first title; the next calendar's title shows.
 {
   const w = makeWindow({ waste: 'calendar.waste' });
-  const word = tileStateWord(w)('casora_calendar', calTile, null, states, {}, { calendar_filter: 'Termin-' });
+  const word = tileStateWord(w)('casora_calendar', calTile, null, states, { states: states }, { calendar_filter: 'Termin-' });
   assert.equal(word, 'Visible', 'the Studio Agenda preview hides a title that contains a filter entry');
   console.log('ok Studio Agenda preview applies the calendar filter');
 }
@@ -88,7 +94,7 @@ const calTile = { variables: {} };
 {
   const w = makeWindow({ waste: 'calendar.waste' });
   const only = { 'calendar.waste': states['calendar.waste'] };
-  const word = tileStateWord(w)('casora_calendar', calTile, null, only, {}, { calendar_filter: '' });
+  const word = tileStateWord(w)('casora_calendar', calTile, null, only, { states: only }, { calendar_filter: '' });
   assert.equal(word, 'Keine Termine', 'the waste calendar is not shown; no event left is "No events", translated');
   console.log('ok Studio Agenda preview leaves out the waste calendar');
 }
@@ -96,7 +102,7 @@ const calTile = { variables: {} };
 // No message at all: the translated text, not the English one.
 {
   const w = makeWindow();
-  const word = tileStateWord(w)('casora_calendar', calTile, null, {}, {}, { calendar_filter: '' });
+  const word = tileStateWord(w)('casora_calendar', calTile, null, {}, { states: {} }, { calendar_filter: '' });
   assert.equal(word, 'Keine Termine', 'no event is translated through casoraI18n');
   console.log('ok Studio Agenda preview translates "No events"');
 }
@@ -104,7 +110,7 @@ const calTile = { variables: {} };
 // Until the title rule has loaded, nothing is shown (no unfiltered text).
 {
   const w = makeWindow({ withRule: false });
-  const word = tileStateWord(w)('casora_calendar', calTile, null, states, {}, { calendar_filter: 'Termin-' });
+  const word = tileStateWord(w)('casora_calendar', calTile, null, states, { states: states }, { calendar_filter: 'Termin-' });
   assert.equal(word, '', 'no unfiltered calendar title before the rule has loaded');
   console.log('ok Studio Agenda preview waits for the title rule');
 }
@@ -113,7 +119,8 @@ const calTile = { variables: {} };
 {
   const w = makeWindow({ waste: 'calendar.waste' });
   delete w.casoraDevice;
-  const word = tileStateWord(w)('casora_calendar', calTile, null, { 'calendar.waste': states['calendar.waste'] }, {}, { calendar_filter: '' });
+  const only = { 'calendar.waste': states['calendar.waste'] };
+  const word = tileStateWord(w)('casora_calendar', calTile, null, only, { states: only }, { calendar_filter: '' });
   assert.equal(word, 'Bins out', 'without casoraDevice the waste calendar is not known and stays');
   console.log('ok Studio Agenda preview leaves the waste calendar in only when it is not known');
 }
@@ -183,8 +190,8 @@ const make = (ctx, win) => new Function('window', 'return {' + methodSrc() + '}'
 // The title rule is requested once, the settings read once; the preview is drawn again when they arrive.
 {
   let imports = 0, rebuilt = 0;
-  const win = { casoraImportScript: (path) => { imports++; assert.equal(path, 'local/06a-kalender-filter.js');
-    return Promise.resolve().then(() => { win.casoraCalendarAllows = () => true; }); } };
+  const win = { casoraImportScript: (path) => { if (path === 'local/06a-kalender-filter.js') imports++;
+    return Promise.resolve().then(() => { if (path.endsWith('06a-kalender-filter.js')) win.casoraCalendarAllows = () => true; }); } };
   const ctx = { _hass: {}, _settingsOnce: () => Promise.resolve({ calendar_filter: '' }), _rebuildPreview: () => { rebuilt++; } };
   const pick = make(ctx, win);
   assert.equal(pick('casora_calendar'), null, 'nothing known yet');
@@ -198,10 +205,10 @@ const make = (ctx, win) => new Function('window', 'return {' + methodSrc() + '}'
 // A failed settings read leaves nothing (no unfiltered titles), and the next paint asks again.
 {
   let imports = 0, rebuilt = 0;
-  const win = { casoraImportScript: () => {
-    imports++;
-    if (imports === 1) return Promise.reject(new Error('offline'));
-    win.casoraCalendarAllows = () => true;
+  const win = { casoraImportScript: (path) => {
+    if (path.endsWith('06a-kalender-filter.js')) imports++;
+    if (imports === 1 && path.endsWith('06a-kalender-filter.js')) return Promise.reject(new Error('offline'));
+    if (path.endsWith('06a-kalender-filter.js')) win.casoraCalendarAllows = () => true;
     return Promise.resolve();
   } };
   const ctx = { _cs: { S: {} }, _rebuildPreview: () => { rebuilt++; } };
@@ -219,13 +226,13 @@ const make = (ctx, win) => new Function('window', 'return {' + methodSrc() + '}'
 
 {
   let imports = 0, rebuilt = 0;
-  const win = { casoraImportScript: () => { imports++; return Promise.reject(new Error('offline')); } };
+  const win = { casoraImportScript: (path) => { if (path.endsWith('06a-kalender-filter.js')) imports++; return Promise.reject(new Error('offline')); } };
   const ctx = { _cs: { S: {} }, _rebuildPreview: () => { rebuilt++; } };
   const pick = make(ctx, win);
   for (let i = 0; i < 6; i++) { pick('casora_calendar'); await tick(); }
   assert.equal(imports, 2, 'only the initial import and one later retry are allowed');
   assert.equal(rebuilt, 0, 'repeated failures never schedule a redraw');
-  assert.equal(tileStateWord(win)('casora_calendar', calTile, null, states, {}, ctx._cs.S), '', 'exhaustion remains fail-closed');
+  assert.equal(tileStateWord(win)('casora_calendar', calTile, null, states, { states: states }, ctx._cs.S), '', 'exhaustion remains fail-closed');
 }
 
 {

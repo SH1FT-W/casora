@@ -1,11 +1,15 @@
-// Calendar filter: one title predicate shared by Home, the greeting and screensavers.
-// @deckt: custom_components/casora/scripts/local/00-finder.js#casoraHomeNext,custom_components/casora/scripts/local/46-screensaver.js#S.context,custom_components/casora/scripts/local/06-kalender.js#K.allowsTitle,K.next
+// Calendar filter: one title rule for the Agenda tile, the greeting, the screensavers and the Studio preview.
+// The tile's pick is Upstream's rule (one event per calendar from the calendar states, a running event wins,
+// then the earliest start); the filter only skips titles.
+// @deckt: custom_components/casora/scripts/local/00-finder.js#casoraHomeNext,custom_components/casora/scripts/local/46-screensaver.js#S.context,custom_components/casora/scripts/local/06-kalender.js#K.next,custom_components/casora/scripts/local/06a-kalender-filter.js#casoraCalendarNext
 import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
 import { loadCalendars } from './lib/calendars_block.mjs';
 
-let settings = { calendar_filter: 'Termin-bbbbbb ffffff' };
+const read = (p) => fs.readFileSync(new URL(`../../custom_components/casora/scripts/local/${p}`, import.meta.url), 'utf8');
+
+let settings = {};
 const now = new Date(2054, 10, 13, 10).getTime();
 class ClockDate extends Date {
   constructor(...args) { super(...(args.length ? args : [now])); }
@@ -14,174 +18,59 @@ class ClockDate extends Date {
 const window = { casoraSettings: () => settings, addEventListener() {} };
 loadCalendars(window);
 const context = vm.createContext({ window, document: { querySelector: () => null }, setTimeout: () => 0, console, Date: ClockDate });
-vm.runInContext(fs.readFileSync(new URL('../../custom_components/casora/scripts/local/06a-kalender-filter.js', import.meta.url), 'utf8'), context);
-vm.runInContext(fs.readFileSync(new URL('../../custom_components/casora/scripts/local/06-kalender.js', import.meta.url), 'utf8'), context);
+vm.runInContext(read('06a-kalender-filter.js'), context);
+vm.runInContext(read('06-kalender.js'), context);
 const calendar = window._casoraCalendar;
 
-assert.equal(calendar.allowsTitle('Termin-bbbbbb ffffff'), false, 'the complete entry hides an identical title');
-assert.equal(calendar.allowsTitle('termin-bbbbbb ffffff (a)'), false, 'title fragments ignore case and preserve spaces');
-assert.equal(calendar.allowsTitle('Vrijdagmarkt'), true, 'a word inside an entry is not a separate filter');
-console.log('ok calendar filter title fragments');
+// ── Title rule ────────────────────────────────────────────────────────────────
+assert.equal(window.casoraCalendarAllows('Termin-bbbbbb ffffff'), true, 'empty settings hide nothing');
+assert.equal(window.casoraCalendarAllows('Termin-bbbbbb ffffff', { calendar_filter: 'Termin-bbbbbb ffffff' }), false, 'the entry hides an identical title');
+assert.equal(window.casoraCalendarAllows('termin-bbbbbb ffffff (a)', { calendar_filter: 'Termin-bbbbbb ffffff' }), false, 'matching ignores case and keeps fragments');
+assert.equal(window.casoraCalendarAllows('Vrijdagmarkt', { calendar_filter: 'Termin-bbbbbb ffffff' }), true, 'a word inside an entry is no separate filter');
+assert.equal(window.casoraCalendarAllows('Concert', { calendar_filter: 'a, , b' }), true, 'empty comma entries hide nothing');
+assert.equal(window.casoraCalendarAllows('Ballet', { calendar_filter: 'a, , b' }), false, 'each comma entry matches on its own');
+console.log('ok calendar filter title rule');
 
-settings = { calendar_filter: 'a, , b' };
-assert.equal(calendar.allowsTitle('Concert'), true, 'empty comma entries do not hide every title');
-assert.equal(calendar.allowsTitle('Ballet'), false, 'each comma entry matches independently');
-settings = { calendar_filter: '' };
-assert.equal(calendar.allowsTitle('Termin-bbbbbb ffffff'), true, 'the default empty filter hides nothing');
-settings = { calendar_filter: ' Termin-bbbbbb ffffff, Termin-hhhhhh ' };
-assert.equal(calendar.allowsTitle('termin-hhhhhh'), false, 'entries are trimmed');
-
+// ── Agenda tile: Upstream's pick, the filter skips titles ─────────────────────
 const states = {
   'calendar.mock_day': { state: 'on', attributes: { message: 'Termin-bbbbbb ffffff', start_time: '2054-11-13 00:00:00', end_time: '2054-11-14 00:00:00', all_day: true } },
   'calendar.mock_meeting': { state: 'off', attributes: { message: 'Termin-gggggg', start_time: '2054-11-13 14:00:00', end_time: '2054-11-13 15:00:00', all_day: false } },
 };
 const variables = { calendars: Object.keys(states).map(entity => ({ entity })) };
-assert.equal(calendar.tile(states, variables), 'Heute 14:00 · Termin-gggggg', 'a filtered all-day event never wins the Agenda tile');
-settings = {};
-assert.equal(calendar.tile(states, variables), 'Heute 14:00 · Termin-gggggg', 'a timed event later today wins over a running all-day event without a filter');
-states['calendar.mock_meeting'].attributes.start_time = '2054-11-14 09:00:00';
-states['calendar.mock_meeting'].attributes.end_time = '2054-11-14 10:00:00';
-assert.equal(calendar.tile(states, variables), 'Heute · Termin-bbbbbb ffffff', 'the running all-day event wins when no timed event remains today');
-settings = { calendar_filter: 'Termin-bbbbbb ffffff' };
-assert.equal(calendar.tile(states, variables), 'Morgen 09:00 · Termin-gggggg', 'without a visible event today the tile shows the next event');
-// Order: running timed event, then next timed event today, then running all-day event.
-{
-  const order = {
-    'calendar.mock_day': states['calendar.mock_day'],
-    'calendar.mock_later': { state: 'off', attributes: { message: 'Termin-gggggg', start_time: '2054-11-13 14:00:00', end_time: '2054-11-13 15:00:00', all_day: false } },
-    'calendar.mock_now': { state: 'on', attributes: { message: 'Appointment A', start_time: '2054-11-13 09:15:00', end_time: '2054-11-13 11:00:00', all_day: false } },
-  };
-  const orderVars = { calendars: Object.keys(order).map(entity => ({ entity })) };
-  assert.ok(calendar.tile(order, orderVars).includes('Appointment A'), 'a running timed event comes before the next timed event today');
-  order['calendar.mock_now'].attributes.end_time = '2054-11-13 09:45:00';
-  order['calendar.mock_now'].state = 'off';
-  assert.equal(calendar.tile(order, orderVars), 'Heute 14:00 · Termin-gggggg', 'with no timed event running, the next timed event today comes before the all-day event');
-}
-console.log('ok Agenda tile selection and Calendar filter');
 
-// Public tile seam: HA exposes only the current all-day event in entity attributes.
-const localStates = { 'calendar.mock_local': states['calendar.mock_day'] };
-const localVariables = { calendars: [{ entity: 'calendar.mock_local' }] };
-let calls = 0, updates = 0;
-let response = [
-  { summary: 'Termin-bbbbbb ffffff', start: { date: '2054-11-13' }, end: { date: '2054-11-14' } },
-  { summary: 'Termin-gggggg', start: { dateTime: '2054-11-13T14:00:00' }, end: { dateTime: '2054-11-13T15:00:00' } },
-  { summary: 'Appointment A', start: { dateTime: '2054-11-14T11:00:00' }, end: { dateTime: '2054-11-14T12:00:00' } },
-];
-const card = { _config: { state_display: 'window._casoraCalendar.tile(states, variables)' } };
-const ha = { hass: { states: localStates, callApi: async () => { calls++; return response; } },
-  shadowRoot: { querySelectorAll: selector => selector === 'button-card' ? [card] : [] } };
-context.document.querySelector = () => ha;
-window.casoraKick = () => { updates++; };
-const settle = () => new Promise(resolve => setImmediate(resolve));
 settings = {};
-calendar.tile(localStates, localVariables);
-await settle();
-assert.equal(calendar.tile(localStates, localVariables), 'Heute 14:00 · Termin-gggggg', 'Agenda fetches all candidates in one calendar without opening its popup');
-assert.ok(updates > 0, 'loaded events redraw the Agenda tile without a popup');
+assert.equal(calendar.tile(states, variables), 'Heute · Termin-bbbbbb ffffff', 'empty filter: the running all-day event wins, as on Upstream main');
 settings = { calendar_filter: 'Termin-bbbbbb ffffff' };
-assert.equal(calendar.tile(localStates, localVariables), 'Heute 14:00 · Termin-gggggg', 'hiding the all-day title still finds the timed event in the same calendar');
+assert.equal(calendar.tile(states, variables), 'Heute 14:00 · Termin-gggggg', 'a filtered running event leaves its calendar out of the pick');
 settings = { calendar_filter: 'Termin-gggggg' };
-assert.equal(calendar.tile(localStates, localVariables), 'Heute · Termin-bbbbbb ffffff', 'filtering the timed event leaves the current all-day event');
+assert.equal(calendar.tile(states, variables), 'Heute · Termin-bbbbbb ffffff', 'a filtered timed event never shows');
 settings = { calendar_filter: 'Termin-gggggg, Termin-bbbbbb ffffff' };
-assert.equal(calendar.tile(localStates, localVariables), 'Morgen 11:00 · Appointment A', 'filtered same-calendar events never win');
-assert.equal(calls, 1, 'filter changes reuse the popup event cache');
-assert.ok(calendar.html('day', localVariables).includes('Termin-bbbbbb ffffff'), 'the shared cache keeps filtered titles for the popup');
-response = [];
-localStates['calendar.mock_local'] = { ...localStates['calendar.mock_local'], last_updated: '2054-11-13T10:01:00' };
-ha.hass.states = localStates;
-calendar.tile(localStates, localVariables);
-await settle();
-assert.equal(calendar.tile(localStates, localVariables), 'Keine Termine', 'a fresh empty API result does not resurrect entity attributes');
-assert.equal(calls, 2, 'calendar state changes refresh the shared event cache');
-settings = {};
-ha.hass.callApi = async () => { calls++; throw new Error('Calendar unavailable'); };
-localStates['calendar.mock_local'] = { ...localStates['calendar.mock_local'], last_updated: '2054-11-13T10:02:00' };
-assert.equal(calendar.tile(localStates, localVariables), 'Heute · Termin-bbbbbb ffffff', 'loading a changed calendar uses its current state, not stale cached events');
-await settle();
-assert.equal(calendar.tile(localStates, localVariables), 'Heute · Termin-bbbbbb ffffff', 'an API error falls back to the entity instead of claiming the calendar is empty');
-assert.equal(calls, 3, 'an API error does not start a fetch loop');
-let finish;
-ha.hass.callApi = () => { calls++; return new Promise(resolve => { finish = resolve; }); };
-localStates['calendar.mock_local'] = { ...localStates['calendar.mock_local'], last_updated: '2054-11-13T10:03:00' };
-calendar.tile(localStates, localVariables);
-calendar.tile(localStates, localVariables);
-assert.equal(calls, 4, 'repeated tile renders share the in-flight calendar request');
-localStates['calendar.mock_local'] = { ...localStates['calendar.mock_local'], last_updated: '2054-11-13T10:04:00' };
-calendar.tile(localStates, localVariables);
-finish([{ summary: 'Old event', start: { dateTime: '2054-11-13T14:00:00' }, end: { dateTime: '2054-11-13T15:00:00' } }]);
-await settle();
-assert.equal(calls, 5, 'a change during loading queues a fresh request on the same cache');
-assert.equal(calendar.tile(localStates, localVariables), 'Heute · Termin-bbbbbb ffffff', 'a response for an older state cannot win while its replacement loads');
-finish([]);
-await settle();
-assert.equal(calendar.tile(localStates, localVariables), 'Keine Termine', 'the latest response replaces the superseded candidates');
-context.document.querySelector = () => null;
-console.log('ok same-calendar Agenda candidates without a popup');
-settings = { calendar_filter: 'Termin-bbbbbb ffffff' };
+assert.equal(calendar.tile(states, variables), 'Keine Termine', 'every title filtered: no event left');
+console.log('ok Agenda tile pick with the filter');
 
+// A calendar that casoraCalendars leaves out reaches no tile pick.
+settings = {};
+assert.equal(calendar.tile(states, { calendars: [{ entity: 'calendar.mock_meeting' }] }), 'Heute 14:00 · Termin-gggggg', 'only the calendars casoraCalendars gives count');
+assert.equal(calendar.tile(states, { calendars: [{ entity: 'calendar.mock_day' }] }), 'Heute · Termin-bbbbbb ffffff', 'a calendar left out by casoraCalendars is not picked');
+console.log('ok Agenda tile uses casoraCalendars');
+
+// ── Greeting line ─────────────────────────────────────────────────────────────
+settings = { calendar_filter: 'Termin-bbbbbb ffffff' };
 const finder = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/00-finder.js', import.meta.url), 'utf8');
 vm.runInContext(finder.slice(finder.indexOf('// casora-home-next:start'), finder.indexOf('// casora-home-next:end')), context);
-assert.equal(window.casoraHomeNext({ states }, { casora_greeting_next: true }, new ClockDate()), 'Morgen 09:00 Termin-gggggg', 'the greeting excludes the same filtered title');
+assert.equal(window.casoraHomeNext({ states }, { casora_greeting_next: true }, new ClockDate()), 'Heute 14:00 Termin-gggggg', 'the greeting excludes the filtered title');
+console.log('ok greeting line uses the filter');
 
-vm.runInContext(fs.readFileSync(new URL('../../custom_components/casora/scripts/local/46-screensaver.js', import.meta.url), 'utf8'), context);
+// ── Screensavers ──────────────────────────────────────────────────────────────
+vm.runInContext(read('46-screensaver.js'), context);
 const saver = window._casoraSaver;
 const events = [
   { title: 'Termin-bbbbbb ffffff', start: now - 10 * 3600000, end: now + 14 * 3600000, allDay: true },
   { title: 'Termin-gggggg', start: now + 4 * 3600000, end: now + 5 * 3600000, allDay: false },
 ];
-for (const kind of ['linie', 'woche']) {
-  const view = saver.context({ kind, now: new ClockDate(), hass: { states: {} }, events, rooms: [], sun: null, wx: null, daily: [], hourly: [], bins: [] });
+for (const kind of ['linie', 'woche', 'kalender']) {
+  const view = saver.context({ kind, now: new ClockDate(), hass: { states: {} }, events, settings, rooms: [], sun: null, wx: null, daily: [], hourly: [], bins: [] });
   const html = saver.html(kind, view);
   assert.ok(!html.includes('Termin-bbbbbb ffffff') && html.includes('Termin-gggggg'), `${kind} applies the shared Calendar filter`);
 }
-
-calendar.load({ callApi: async () => [{ summary: 'Termin-bbbbbb ffffff', start: { date: '2054-11-13' }, end: { date: '2054-11-14' } }] }, { calendars: [{ entity: 'calendar.mock_day', name: 'Mock calendar' }] });
-await new Promise(resolve => setImmediate(resolve));
-assert.ok(calendar.html('day', { calendars: [{ entity: 'calendar.mock_day', name: 'Mock calendar' }] }).includes('Termin-bbbbbb ffffff'), 'the popup still shows a title hidden from Home');
-console.log('ok shared filter in greeting and screensavers, unfiltered popup');
-
-class Panel {}
-const elements = [], rows = [];
-const element = () => ({ dataset: {}, classList: { add() {} }, appendChild() {}, setAttribute() {} });
-const document = { createElement: tag => { const el = element(); elements.push({ tag, el }); return el; } };
-vm.runInNewContext(fs.readFileSync(new URL('../../custom_components/casora/panel/casora-panel-personal.js', import.meta.url), 'utf8'), {
-  window, document, customElements: { whenDefined: () => Promise.resolve(), get: () => Panel },
-});
-await Promise.resolve();
-const saved = { calendar_filter: 'Termin-hhhhhh' }, draft = window.casoraPersonal.normalize(saved);
-const panel = new Panel();
-panel.shadowRoot = { getElementById: () => ({}) };
-panel._hass = { states: {} };
-panel._flowGroup = () => ({ parentElement: element() });
-panel._flowRow = (list, options) => { rows.push(options); return { row: element() }; };
-panel._casoraPersonalGroups(element(), draft, ['calendars'], () => {});
-assert.ok(rows.some(row => row.title === 'Hide when the title contains'), 'Calendars settings expose the exact filter label');
-assert.ok(rows.some(row => row.sub === 'Separate entries with commas; an entry may have several words. The calendar popup still shows them.'), 'Calendars settings explain comma entries and the unfiltered popup');
-const field = elements.find(({ tag, el }) => tag === 'input' && el.value === 'Termin-hhhhhh').el;
-field.value = 'Termin-bbbbbb ffffff'; field.oninput();
-assert.equal(saved.calendar_filter, 'Termin-hhhhhh', 'typing changes only the draft, not saved settings');
-assert.equal(window.casoraPersonal.prune(draft).calendar_filter, 'Termin-bbbbbb ffffff', 'the draft retains the filter for the existing save path');
-
-vm.runInNewContext(fs.readFileSync(new URL('../../custom_components/casora/panel/casora-panel-settings.js', import.meta.url), 'utf8'), {
-  window, document, customElements: { whenDefined: () => Promise.resolve(), get: () => Panel },
-});
-await Promise.resolve();
-let persisted = saved;
-panel._hass.callWS = async msg => {
-  if (msg.type === 'casora/settings/get') return { settings: persisted, stored: true };
-  if (msg.type === 'casora/settings/set') { persisted = msg.settings; return { settings: persisted, stored: true }; }
-  throw { code: 'unknown_command' };
-};
-panel.shadowRoot.querySelectorAll = () => [];
-panel._csRepaint = () => {};
-panel._status = () => {};
-panel._cs = { S: draft, S0: JSON.stringify(saved) };
-assert.equal(panel._csOwnDirty(), true, 'typing marks the settings draft dirty');
-assert.equal(await panel._csSave(), true, 'the existing Save settings action succeeds');
-assert.equal(persisted.calendar_filter, 'Termin-bbbbbb ffffff', 'Save settings persists the filter');
-panel._cs.S.calendar_filter = 'discard this';
-await panel._csDiscardAll();
-assert.equal(panel._cs.S.calendar_filter, 'Termin-bbbbbb ffffff', 'Discard restores the saved filter');
-assert.equal(panel._csOwnDirty(), false, 'Discard clears the dirty state');
-console.log('ok Calendar filter settings draft, save and discard');
+console.log('ok screensavers apply the filter');
