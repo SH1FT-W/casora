@@ -47,20 +47,22 @@ const hassOf = (S) => ({ states: S, entities, devices: { d_bad: { area_id: 'bad'
 const set = (sec) => { window.CASORA_SETTINGS = sec === undefined ? {} : { security: sec }; };
 const count = (S, v) => window.casoraSecCount(S, hassOf(S), v, null, null);
 
-// ── Settings: smoke and water on by default (stored only as detectors: false), motion off (only motion: true) ──
+// ── Settings: smoke and water on by default (#220: a switch each, stored only as false; the #209 key detectors:
+// false still switches both off), motion off (only motion: true) ──
 set(undefined);
-assert.deepEqual(window.casoraSecDetCfg(), { detectors: true, motion: false }, 'defaults');
+assert.deepEqual(window.casoraSecDetCfg(), { detectors: true, smoke: true, water: true, motion: false, exclude: [] }, 'defaults');
 set({ detectors: false, motion: true });
-assert.deepEqual(window.casoraSecDetCfg(), { detectors: false, motion: true });
+assert.deepEqual(window.casoraSecDetCfg(), { detectors: false, smoke: false, water: false, motion: true, exclude: [] });
 const pers = read('custom_components/casora/panel/casora-panel-personal.js');
-assert.ok(pers.includes('if (v === false) sec.detectors = false; else delete sec.detectors;'), 'Studio stores only „off“');
+assert.ok(pers.includes('DET_KEYS.forEach((x) => { if (now[x] === false) sec[x] = false; else delete sec[x]; });'), 'Studio stores only „off“');
 assert.ok(pers.includes('if (v === true) sec.motion = true; else delete sec.motion;'), 'Studio stores only „on“');
-assert.ok(/header: "Detectors"[\s\S]{0,1600}header: "Blinds and gates"/.test(pers), 'group Detectors, then Blinds and gates');
+assert.ok(/header: "Detectors"[\s\S]{0,4000}header: "Blinds and gates"/.test(pers), 'group Detectors, then Blinds and gates');
 const sett = read('custom_components/casora/panel/casora-panel-settings.js');
 assert.match(sett, /\{ k: "security", personal: \["security"\], title: "Security",[^}]*kw: "[^"]*sicherheit[^"]*rauchmelder[^"]*bewegungsmelder/);
 const de = JSON.parse(read('custom_components/casora/translations/panel/de.json')).exact;
 assert.equal(de['Detectors'], 'Melder');
-assert.equal(de['Smoke and water detectors'], 'Rauch- und Wassermelder');
+assert.equal(de['Smoke detectors'], 'Rauchmelder');
+assert.equal(de['Water detectors'], 'Wassermelder');
 assert.equal(de['Motion sensors'], 'Bewegungsmelder');
 
 // ── Kinds ──

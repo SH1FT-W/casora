@@ -1711,9 +1711,10 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
         || (dom === 'camera' && !!(window.casoraCamOffline && window.casoraCamOffline(id, S)));
       if (dom === 'binary_sensor') {
         if (dc === 'motion' || dc === 'occupancy' || dc === 'presence') { if (s === 'on' && isAway()) up('alarm'); }
-        // #209: smoke, gas, CO or water detected is danger; an offline detector a notice (switch „Rauch- und
-        // Wassermelder“, on by default; off: as before, only offline counts).
-        else if (DET_SAFE[dc] && detCfg().detectors) { if (dead) up('warn'); else if (s === 'on') up('alarm'); }
+        // #209: smoke, gas, CO or water detected is danger; an offline detector a notice (switches „Rauchmelder“ and
+        // „Wassermelder“, #220, on by default; off: as before, only offline counts). Not counted in the Studio: nothing.
+        else if (DET_SAFE[dc] && detCfg().exclude.indexOf(id) >= 0) return;
+        else if (DET_SAFE[dc] && detCfg()[DET_SAFE[dc] === 'water' ? 'water' : 'smoke']) { if (dead) up('warn'); else if (s === 'on') up('alarm'); }
         else if (dc === 'door' || dc === 'window' || dc === 'garage_door' || dc === 'opening' || !dc) contacts.push(id);
         else if (dead) up('warn');
         return;
@@ -1772,10 +1773,13 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
   // Smoke, gas, CO and water detectors (binary_sensor device_class smoke/gas/carbon_monoxide/moisture) count under
   // Security: one that reports is danger and leads the badge („Rauch · Küche“), an offline one a notice. Motion,
   // occupancy and presence sensors count only while nobody is home (securityAway) – „Bewegung · Flur“. Settings ›
-  // Home & devices › Security: security.detectors (on by default, stored only as false) and security.motion (off by
-  // default, stored only as true). Switched off, nothing of this counts (as before #209). Home takes the whole house,
-  // a room the detectors of its Home Assistant area (by the room's name) plus its own security entries.
-  //   casoraSecDetCfg()                                → { detectors, motion }
+  // Home & devices › Security: security.smoke_detectors (smoke, gas, CO) and security.water_detectors (#220, both on by
+  // default, stored only as false; without them the common switch of #209, security.detectors, decides for both) and
+  // security.motion (off by default, stored only as true). Switched off, nothing of this kind counts (as before #209).
+  // security.detectors_exclude (#220): single detectors that never count. Home takes the whole house, a room the
+  // detectors of its Home Assistant area (by the room's name) plus its own security entries.
+  //   casoraSecDetCfg()                                → { detectors, smoke, water, motion, exclude }
+  //   casoraSecDetHouse(hass)                          → the house's detectors { ids, kind, area } (Studio picker)
   //   casoraSecDetKind(id, states)                     → 'smoke'|'gas'|'co'|'water'|'motion'|null
   //   casoraSecDetectors(hass, v, where, user, own)    → { safety: [ids], motion: [ids], kind: {id}, area: {id} }
   //   casoraSecCount(states, hass, v, user, el)        → the security group badge's count (casora_badge_security_group)
@@ -1785,7 +1789,11 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
   function detCfg() {
     var s = (window.CASORA_SETTINGS || {}).security;
     s = s && typeof s === 'object' ? s : {};
-    return { detectors: s.detectors !== false, motion: s.motion === true };
+    var common = s.detectors !== false;
+    var smoke = typeof s.smoke_detectors === 'boolean' ? s.smoke_detectors : common;
+    var water = typeof s.water_detectors === 'boolean' ? s.water_detectors : common;
+    var exclude = (Array.isArray(s.detectors_exclude) ? s.detectors_exclude : []).filter(function (x) { return typeof x === 'string' && x; });
+    return { detectors: smoke || water, smoke: smoke, water: water, motion: s.motion === true, exclude: exclude };
   }
   window.casoraSecDetCfg = detCfg;
   function detKind(S, id) {
@@ -1797,10 +1805,35 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
   var foldName = function (s) {
     return String(s == null ? '' : s).trim().toLowerCase().replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss');
   };
+  // #220: a weather station's rain sensor is a moisture binary_sensor too, but no leak in the house. Words of a leak
+  // (on the entity or its device) keep a sensor counting; else rain words on the entity, weather words on its device
+  // (name, model, manufacturer), a weather integration, or a device that also measures rain or wind or has a weather
+  // entity make it weather. An outdoor area (OUTDOOR, as the weather popup's outdoor sensor) only adds to a device
+  // that also measures the air (temperature, humidity, pressure, light) – a leak sensor in the garden still counts.
+  var DET_LEAK = /leak|leck|flood|ueberflut|ueberschwemm|wassermelder|wasserleck|wasseralarm|water ?alarm|water ?detector|wasserstopp|aquastop/;
+  var DET_RAIN = /(^|[^a-z])(rain|raining|regen(?!er)|regnet|precipitation|niederschlag|pluie|lluvia|pioggia|neerslag)/;
+  var DET_WX_DEV = /weather|wetter|station|(^|[^a-z])(rain|regen(?!er))|niederschlag|precipitation|ecowitt|davis|froggit|bresser|ambient ?weather|weatherflow|tempest|fine ?offset|meteo|pluvio|anemo/;
+  var DET_WX_PLATFORM = /^(ecowitt|weatherflow|weatherflow_cloud|ambient_station|ambient_network|davis_vantage|weatherlink|meteobridge|smartweatherudp|wh2600|froggit|bresser)$/;
+  var DET_WX_DC = { precipitation: 1, precipitation_intensity: 1, wind_speed: 1, wind_direction: 1 };
+  var DET_AIR_DC = { temperature: 1, humidity: 1, atmospheric_pressure: 1, pressure: 1, illuminance: 1, irradiance: 1 };
+  function detWeather(hass, id, devInfo) {
+    var S = (hass && hass.states) || {}, e = reg(hass)[id] || {}, d = (e.device_id && devs(hass)[e.device_id]) || {};
+    var A = (hass && hass.areas) || {};
+    var words = function (x) { return foldName(x).replace(/[_.\-]+/g, ' '); };
+    var ent = words([id, ((S[id] || {}).attributes || {}).friendly_name, e.name, e.original_name, e.translation_key].join(' '));
+    var dev = words([d.name_by_user, d.name, d.model, d.model_id, d.manufacturer].join(' '));
+    if (DET_LEAK.test(ent) || DET_LEAK.test(dev)) return false;
+    if (DET_RAIN.test(ent) || DET_WX_DEV.test(dev) || DET_WX_PLATFORM.test(String(e.platform || ''))) return true;
+    var info = e.device_id ? devInfo(e.device_id) : null;
+    if (!info) return false;
+    if (info.wx) return true;
+    var aid = e.area_id || d.area_id;
+    return !!(info.air && aid && A[aid] && OUTDOOR.test(foldName(A[aid].name)));
+  }
   // The house's detectors, once per states object of HA's root element (as casoraContacts): hidden, disabled,
-  // config entities, groups, vehicles and sensors with a location (a shop, a station) are left out. A diagnostic
-  // smoke/water/gas/CO sensor counts (wmbusmeters files a smoke detector's alarm as diagnostic, the user sets it to
-  // smoke); diagnostic motion stays out.
+  // config entities, groups, vehicles and sensors with a location (a shop, a station) are left out, and a weather
+  // station's rain sensor (#220, detWeather). A diagnostic smoke/water/gas/CO sensor counts (wmbusmeters files a smoke
+  // detector's alarm as diagnostic, the user sets it to smoke); diagnostic motion stays out.
   function detHouse(hass) {
     var S = (hass && hass.states) || {}, R = reg(hass), D = devs(hass), A = (hass && hass.areas) || {};
     var ids = [], kind = {}, area = {};
@@ -1819,6 +1852,24 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
       }
       return !!odd[dev];
     };
+    // Per device: does it measure weather (rain, wind, a weather entity) or the air (not diagnostic)? (#220)
+    var meas = null;
+    var devInfo = function (dev) {
+      if (!meas) {
+        meas = {};
+        Object.keys(R).forEach(function (k) {
+          var x = R[k], d = x && x.device_id;
+          if (!d || x.entity_category) return;
+          var m = meas[d] = meas[d] || { wx: false, air: false };
+          if (k.indexOf('weather.') === 0) { m.wx = true; return; }
+          if (k.indexOf('sensor.') !== 0) return;
+          var dc = String(((S[k] || {}).attributes || {}).device_class || '').toLowerCase();
+          if (DET_WX_DC[dc]) m.wx = true;
+          else if (DET_AIR_DC[dc]) m.air = true;
+        });
+      }
+      return meas[dev] || null;
+    };
     Object.keys(S).forEach(function (id) {
       var k = detKind(S, id);
       if (!k) return;
@@ -1827,6 +1878,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
       if (e.entity_category && (e.entity_category !== 'diagnostic' || k === 'motion')) return;
       if (Array.isArray(a.entity_id) || (a.latitude != null && a.longitude != null) || isVehicle(hass, id)) return;
       if (k === 'motion' && e.device_id && oddDev(e.device_id)) return;
+      if (k === 'water' && detWeather(hass, id, devInfo)) return;
       var aid = e.area_id || (e.device_id && D[e.device_id] ? D[e.device_id].area_id : null);
       ids.push(id); kind[id] = k; area[id] = aid && A[aid] ? String(A[aid].name || '') : '';
     });
@@ -1841,6 +1893,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     }
     return detShared.v;
   };
+  window.casoraSecDetHouse = function (hass) { return detHouseShared(hass); };
   // Home or a room? v.place wins (phone templates), else where: 'home' | 'room' | the card (casoraOnHomeView).
   var detOnHome = function (v, where) {
     if (v && v.place) return v.place === 'home';
@@ -1867,12 +1920,14 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
       var m = ((S[x] || {}).attributes || {}).entity_id;
       (Array.isArray(m) ? m : [x]).forEach(function (y) { if (list.indexOf(y) < 0 && detKind(S, y)) list.push(y); });
     });
+    // #220: what the Studio leaves out never counts, also as the badge's own entry.
+    if (cfg.exclude.length) list = list.filter(function (id) { return cfg.exclude.indexOf(id) < 0; });
     var sees = function (x) { return typeof window.casoraSeesEntity !== 'function' || window.casoraSeesEntity(x, user); };
     list.forEach(function (id) {
       if (!sees(id)) return;
       var k = house.kind[id] || detKind(S, id);
       if (k === 'motion') { if (!cfg.motion) return; out.motion.push(id); }
-      else if (k) { if (!cfg.detectors) return; out.safety.push(id); }
+      else if (k) { if (!(k === 'water' ? cfg.water : cfg.smoke)) return; out.safety.push(id); }
       else return;
       out.kind[id] = k;
       out.area[id] = house.area[id] != null ? house.area[id] : '';
