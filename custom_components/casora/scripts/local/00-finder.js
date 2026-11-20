@@ -497,14 +497,17 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
   // opaque instead of half transparent, and on pickup day the tile got a grey icon on a grey
   // circle. Hazardous waste has its own colour (red) only in the Soft look; otherwise nothing
   // changes (colour null = orange, calendar match by name).
+  // Dutch names (#218): GFT (groente-, fruit- en tuinafval), PMD (plastic, metaal en drankenkartons), grofvuil,
+  // huisvuil. "karton" only as a word of its own or in "Altkarton": the drink cartons of PMD ("drankenkartons")
+  // are packaging, not paper – as a part of any word the PMD pickup in the waste calendar counted for the paper bin.
   var WASTE_KINDS = [
-    [/bio|organ|kompost|green waste/i, '#30D158', 'bio', '#6AAE78'],
-    [/papier|paper|pappe|karton|cardboard/i, '#0A84FF', 'paper', '#5B8FC9'],
-    [/wertstoff|gelb|plastik|plastic|verpack|recycl/i, '#FFCC00', 'yellow', '#E8B04A'],
+    [/bio|organ|kompost|green waste|gft|groente|tuinafval|groenafval/i, '#30D158', 'bio', '#6AAE78'],
+    [/papier|paper|pappe|(?:^|[^a-z])karton|altkarton|cardboard/i, '#0A84FF', 'paper', '#5B8FC9'],
+    [/wertstoff|gelb|plastik|plastic|verpack|verpakking|recycl|pmd|pbd|drankenkarton|drankkarton/i, '#FFCC00', 'yellow', '#E8B04A'],
     [/glas|glass/i, '#00C3D0', 'glass', '#4E9E95'],
-    [/sperr|bulky/i, null, 'bulky', '#DE8A4E'],
-    [/problem|schadstoff|sonderm|gift|hazard/i, null, 'hazard', '#D35A4E'],
-    [/rest|residual|general|haus|black/i, '#8E8E93', 'rest', '#8F7E6D'],
+    [/sperr|bulky|grofvuil|grof afval/i, null, 'bulky', '#DE8A4E'],
+    [/problem|schadstoff|sonderm|gift|hazard|chemisch/i, null, 'hazard', '#D35A4E'],
+    [/rest|residual|general|haus|black|huisvuil/i, '#8E8E93', 'rest', '#8F7E6D'],
   ];
   var WASTE_WORDS = [
     [/gr(ü|ue)n|green/i, '#30D158'], [/blau|blue/i, '#0A84FF'], [/braun|brown/i, '#8F7E6D'],
@@ -544,6 +547,12 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     if (isNaN(d)) return null;
     d.setHours(0, 0, 0, 0); t.setHours(0, 0, 0, 0);
     return Math.round((d - t) / 86400000);
+  }
+  // A countdown as a plain number of days. Template sensors report a sentinel for "no pickup known" (99, 999, -1;
+  // #218): negative, all nines or more than a year away is no countdown (NaN), so no date is made up from it.
+  function wasteCountdown(v) {
+    var n = parseInt(v, 10);
+    return isNaN(n) || n < 0 || n > 366 || /^9{2,}$/.test(String(n)) ? NaN : n;
   }
   function waste(hass, variables) {
     var V = variables || {};
@@ -589,7 +598,8 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
       // lists them (wasteDates). Attributes only when those dates are one bin's ({date: type} with one type,
       // or one {type: date}): an overview sensor for every type would otherwise join the next pickup of the
       // real bin. The countdown (state number, daysTo) only without a date from today on.
-      var days = stDays != null && stDays >= 0 ? stDays : NaN;
+      // A calendar bin's days are counted from its event: no sensor countdown, so no sentinel to sort out.
+      var days = fromCal[id] ? fromCal[id].days : stDays != null && stDays >= 0 ? stDays : NaN;
       if (!fromCal[id]) {
         var a1 = st.attributes || {}, near = NaN, kinds = {};
         Object.keys(a1).forEach(function (k) {
@@ -600,8 +610,8 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
         });
         if (Object.keys(kinds).length === 1 && (isNaN(days) || near < days)) days = near;
       }
-      if (isNaN(days) && stDays == null) days = parseInt(st.state, 10);
-      if (isNaN(days)) days = parseInt(st.attributes && st.attributes.daysTo, 10);
+      if (isNaN(days) && stDays == null) days = wasteCountdown(st.state);
+      if (isNaN(days)) days = wasteCountdown(st.attributes && st.attributes.daysTo);
       var r = parseInt(color.slice(1, 3), 16), g = parseInt(color.slice(3, 5), 16), b = parseInt(color.slice(5, 7), 16);
       var tint = 'rgba(' + r + ',' + g + ',' + b + ',0.25)';
       if (weich && !word) {
