@@ -12,17 +12,28 @@ const { page } = await open({ width: 1440, height: 1000, theme: 'Casora', lang: 
 let blocked = 0;
 const historyIds = new Set(), replies = new Set();
 let latestHistoryEnd = 0;
+// Every recorder request of the doorbell (sent/answered on this clock, end_time on the browser's), for the
+// precondition's failure detail: the gate of 4735f1d3a saw it red once without a trace of what was asked when.
+const historyLog = [];
 page.on('websocket', (socket) => {
   socket.on('framesent', ({ payload }) => {
     try {
       const m = JSON.parse(String(payload));
       if (m.type === 'history/history_during_period' && m.entity_ids?.includes('binary_sensor.testklingel_visitor')) {
         historyIds.add(m.id); latestHistoryEnd = Math.max(latestHistoryEnd, Date.parse(m.end_time));
+        historyLog.push({ id: m.id, sent: Date.now(), end: Date.parse(m.end_time) });
       }
     } catch {}
   });
   socket.on('framereceived', ({ payload }) => {
-    try { const m = JSON.parse(String(payload)); if (historyIds.has(m.id)) replies.add(m.id); } catch {}
+    try {
+      const m = JSON.parse(String(payload));
+      if (historyIds.has(m.id)) {
+        replies.add(m.id);
+        const r = historyLog.find((h) => h.id === m.id && !h.replied);
+        if (r) { r.replied = Date.now(); r.ok = m.success !== false; }
+      }
+    } catch {}
   });
 });
 await page.route(/\/api\/camera_proxy(?:_stream)?\//, async (route) => { blocked++; await route.abort(); });
@@ -60,7 +71,10 @@ const recorderDeadline = Date.now() + 20000;
 const releasedAt = await page.evaluate(() => Date.parse(document.querySelector('home-assistant').hass.states['binary_sensor.testklingel_visitor'].last_changed));
 const recorderDone = () => latestHistoryEnd >= releasedAt + 7000 && replies.size === historyIds.size;
 while (!recorderDone() && Date.now() < recorderDeadline) await page.waitForTimeout(100);
-await need('recorder retry after release completed', recorderDone());
+await need('recorder retry after release completed', recorderDone(), {
+  releasedAt, latestHistoryEnd, margin: latestHistoryEnd - releasedAt - 7000,
+  replies: replies.size, requests: historyLog.map((h) => ({ ...h, end: h.end - releasedAt, sent: h.sent - releasedAt,
+    replied: h.replied ? h.replied - releasedAt : null })) });
 const requestsBefore = historyIds.size;
 await page.evaluate(async (id) => {
   const q = window.__doorbellTime, ha = document.querySelector('home-assistant');
