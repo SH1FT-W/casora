@@ -171,5 +171,31 @@ class CalendarPlatformDriftTest(unittest.TestCase):
                 self.assertEqual(entities[eid]["platform"], expected)
 
 
+class SnapshotSkipTest(unittest.TestCase):
+    """haus.py snapshot() reads the same skip.txt lines as the mock startup."""
+
+    ENTITIES = [
+        {"entity_id": "sensor.test_lamp", "state": "on"},
+        {"entity_id": "sensor.test_example", "registry_platform": "example_integration", "state": "3"},
+        {"entity_id": "input_boolean.test_helper", "state": "off"},
+    ]
+
+    def ids(self, skip=()) -> set[str]:
+        fixture = {"areas": [], "devices": [], "entities": [dict(e) for e in self.ENTITIES]}
+        return set(haus.snapshot(fixture, skip)["entities"])
+
+    def test_without_skip_only_the_real_domains_are_left_out(self):
+        self.assertEqual(self.ids(), {"sensor.test_lamp", "sensor.test_example"})
+
+    def test_entity_id_skips_only_that_entity(self):
+        self.assertEqual(self.ids(["sensor.test_lamp"]), {"sensor.test_example"})
+
+    def test_platform_line_skips_that_platform(self):
+        self.assertEqual(self.ids(["platform:example_integration"]), {"sensor.test_lamp"})
+
+    def test_platform_line_for_the_mocks_own_entities(self):
+        self.assertEqual(self.ids(["platform:casora_mock"]), {"sensor.test_example"})
+
+
 if __name__ == "__main__":
     unittest.main()
