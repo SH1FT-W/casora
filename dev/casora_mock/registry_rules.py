@@ -37,3 +37,57 @@ def sensor_options_for(entity: Mapping, current: Mapping | None) -> dict | None:
     if precision is not None:
         opts["suggested_display_precision"] = precision
     return opts or None
+
+
+def has_own_object(entity: Mapping, domain: str) -> bool:
+    """Whether setup_domain() gives the fixture entity its own entity object.
+
+    An entity registered under another integration (registry_platform, velair.py) has none: its state is
+    written directly. The exception is a calendar with "events": the replay serves its events through its
+    object, and the calendar websocket and REST reads need one. Every other entity keeps the skip.
+    """
+    if not entity.get("registry_platform"):
+        return True
+    return domain == "calendar" and "events" in entity
+
+
+def registry_platform_for(entity: Mapping, domain: str, default: str) -> str:
+    """Platform the registry entry is written under.
+
+    HA files an entity object under the config entry's platform (default), so an object needs its registry
+    entry under that platform too: otherwise HA creates a second entry and the entity_id gets a suffix
+    (calendar.x_2). Entities without an object keep their registry_platform.
+    """
+    if has_own_object(entity, domain):
+        return default
+    return entity["registry_platform"]
+
+
+def clear_old_platform_entry(registry, entity: Mapping, domain: str, default: str) -> None:
+    """Remove the old-platform entry for an entity the mock now gives an object.
+
+    A house that loaded the export before holds (calendar, <integration>, uid) and owns the exported entity_id.
+    Removing that entry frees the id, so the mock's entry keeps the exported entity_id. Only entities with a
+    registry_platform and their own object are touched; the registry resolves domain, platform and unique_id
+    with entity_id_for and removes entries with remove.
+    """
+    if not entity.get("registry_platform") or not has_own_object(entity, domain):
+        return
+    old_platform = entity["registry_platform"]
+    if old_platform == default:
+        return
+    entity_id = registry.entity_id_for(domain, old_platform, entity.get("unique_id") or entity["entity_id"])
+    if entity_id is not None:
+        registry.remove(entity_id)
+
+
+def writes_state_directly(entity: Mapping, domain: str, in_platforms: bool) -> bool:
+    """Whether apply_fixture() writes the state itself, because no entity object will.
+
+    Outside the platforms there is no object. Inside them the object writes it, except an entity registered
+    under another integration without an own object (Velair's sensors). apply_fixture() runs before the
+    platforms load, so a direct write of an entity that gets an object makes HA drop that object.
+    """
+    if not in_platforms:
+        return True
+    return bool(entity.get("registry_platform")) and not has_own_object(entity, domain)
