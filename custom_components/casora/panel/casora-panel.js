@@ -64,7 +64,7 @@ function clock12(hass) {
   } catch (e) { return false; }
 }
 
-// The preview clock, drawn exactly like the dashboard clock (#214): a small local copy of the dashboard rule
+// The preview clock, drawn exactly like the dashboard clock (#179): a small local copy of the dashboard rule
 // in casora-core.js (casoraClockText, casoraClockDate, the casora-clock element's line), so the preview needs
 // no script for the time. The parity test dev/unit/studio_clock_parity.mjs fails when the two rules drift apart.
 function studioClockText(hass, use12, now) {
@@ -27227,7 +27227,7 @@ class CasoraPanel extends HTMLElement {
     if (found) { warmPhoto(found.day); warmPhoto(found.night); }
 
     // Navigation, so the room's place in the tab order reads too.
-    // #214: time and date as the dashboard clock draws them (studioClockText/…Date above): the profile's time
+    // #179: time and date as the dashboard clock draws them (studioClockText/…Date above): the profile's time
     // zone, the 12/24-hour setting, the dashboard's language and the suffix. The time stands here without
     // waiting for a script; the date waits for the dashboard's language file when it is not loaded yet.
     const d = new Date();
