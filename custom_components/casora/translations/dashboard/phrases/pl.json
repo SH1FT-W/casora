@@ -2996,7 +2996,16 @@
     "Strom und Gas": "Prąd i gaz",
     "Rausgestellt": "Wystawione",
     "Müll ist rausgestellt": "Śmieci są wystawione",
-    "Kachel bis zur nächsten Abholung ausgeblendet": "Kafelek ukryty do następnego odbioru"
+    "Kachel bis zur nächsten Abholung ausgeblendet": "Kafelek ukryty do następnego odbioru",
+    "Update gesperrt": "Aktualizacja zablokowana",
+    "Zu tun": "Do zrobienia",
+    "Release-Notes": "Informacje o wydaniu",
+    "Software-Updates": "Aktualizacje oprogramowania",
+    "✓ Freigegeben": "✓ Zatwierdzono",
+    "erst lesen": "najpierw przeczytaj",
+    "automatisch": "automatycznie",
+    "automatische Updates": "automatyczne aktualizacje",
+    "Zurückholen": "Przywróć"
   },
   "patterns": [
     [
@@ -5422,6 +5431,22 @@
     [
       "^Gas (\\S*\\d\\S*(?: \\S+)?)$",
       "Gaz {1}"
+    ],
+    [
+      "^geprüft (vor .+|gestern|gerade eben)$",
+      "sprawdzono {1}"
+    ],
+    [
+      "^✓ Freigegeben (vor .+|gestern|gerade eben)$",
+      "✓ Zatwierdzono {1}"
+    ],
+    [
+      "^Update auf (.+)$",
+      "Aktualizacja do {1}"
+    ],
+    [
+      "^Version (.+) übersprungen$",
+      "Pominięto wersję {1}"
     ]
   ]
 }

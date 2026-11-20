@@ -2996,7 +2996,16 @@
     "Strom und Gas": "Luce e gas",
     "Rausgestellt": "Portato fuori",
     "Müll ist rausgestellt": "Rifiuti portati fuori",
-    "Kachel bis zur nächsten Abholung ausgeblendet": "Scheda nascosta fino al prossimo ritiro"
+    "Kachel bis zur nächsten Abholung ausgeblendet": "Scheda nascosta fino al prossimo ritiro",
+    "Update gesperrt": "Aggiornamento bloccato",
+    "Zu tun": "Da fare",
+    "Release-Notes": "Note di rilascio",
+    "Software-Updates": "Aggiornamenti software",
+    "✓ Freigegeben": "✓ Approvato",
+    "erst lesen": "leggere prima",
+    "automatisch": "automatico",
+    "automatische Updates": "aggiornamenti automatici",
+    "Zurückholen": "Ripristina"
   },
   "patterns": [
     [
@@ -5422,6 +5431,22 @@
     [
       "^Gas (\\S*\\d\\S*(?: \\S+)?)$",
       "Gas {1}"
+    ],
+    [
+      "^geprüft (vor .+|gestern|gerade eben)$",
+      "controllato {1}"
+    ],
+    [
+      "^✓ Freigegeben (vor .+|gestern|gerade eben)$",
+      "✓ Approvato {1}"
+    ],
+    [
+      "^Update auf (.+)$",
+      "Aggiornamento a {1}"
+    ],
+    [
+      "^Version (.+) übersprungen$",
+      "Versione {1} saltata"
     ]
   ]
 }

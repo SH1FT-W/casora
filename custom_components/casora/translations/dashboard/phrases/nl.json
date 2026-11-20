@@ -2996,7 +2996,16 @@
     "Strom und Gas": "Stroom en gas",
     "Rausgestellt": "Buitengezet",
     "Müll ist rausgestellt": "Afval is buitengezet",
-    "Kachel bis zur nächsten Abholung ausgeblendet": "Tegel verborgen tot de volgende ophaling"
+    "Kachel bis zur nächsten Abholung ausgeblendet": "Tegel verborgen tot de volgende ophaling",
+    "Update gesperrt": "Update geblokkeerd",
+    "Zu tun": "Te doen",
+    "Release-Notes": "Release-opmerkingen",
+    "Software-Updates": "Software-updates",
+    "✓ Freigegeben": "✓ Goedgekeurd",
+    "erst lesen": "eerst lezen",
+    "automatisch": "automatisch",
+    "automatische Updates": "automatische updates",
+    "Zurückholen": "Terughalen"
   },
   "patterns": [
     [
@@ -5422,6 +5431,22 @@
     [
       "^Gas (\\S*\\d\\S*(?: \\S+)?)$",
       "Gas {1}"
+    ],
+    [
+      "^geprüft (vor .+|gestern|gerade eben)$",
+      "gecontroleerd {1}"
+    ],
+    [
+      "^✓ Freigegeben (vor .+|gestern|gerade eben)$",
+      "✓ Goedgekeurd {1}"
+    ],
+    [
+      "^Update auf (.+)$",
+      "Update naar {1}"
+    ],
+    [
+      "^Version (.+) übersprungen$",
+      "Versie {1} overgeslagen"
     ]
   ]
 }

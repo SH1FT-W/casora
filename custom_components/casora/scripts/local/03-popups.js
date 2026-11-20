@@ -348,7 +348,9 @@
       if (it.affects && it.affects.length) body += '<div class="lb">Betrifft bei dir</div><ul>' + it.affects.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>';
       if (it.todo && it.todo.length) body += '<div class="lb">Zu tun</div><ul>' + it.todo.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>';
       var src = it.source && /^https?:\/\//.test(it.source) ? '<a class="hua-link" href="' + esc(it.source) + '" target="_blank" rel="noopener">Release-Notes</a>' : '';
-      var when = it.checked && x.key !== 'none' ? esc((x.key === 'running' ? 'läuft seit ' : 'geprüft ') + ago(it.checked)) : '';
+      // The time is an element of its own: as bare text after the link it was „ · geprüft vor 3 Std.“, and a text that
+      // starts with the separator matches no phrase (#175).
+      var when = it.checked && x.key !== 'none' ? '<span>' + esc((x.key === 'running' ? 'läuft seit ' : 'geprüft ') + ago(it.checked)) + '</span>' : '';
       var needAck = (x.key === 'breaking' || x.key === 'action');
       if (needAck && !it.ack) {
         body += '<div class="hn">Zum Freigeben oben in der Update-Zeile auf „Freigeben“ tippen und bestätigen.</div>';

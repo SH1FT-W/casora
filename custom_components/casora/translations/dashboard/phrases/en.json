@@ -2978,7 +2978,16 @@
     "Strom und Gas": "Electricity and gas",
     "Rausgestellt": "Put out",
     "Müll ist rausgestellt": "Waste is put out",
-    "Kachel bis zur nächsten Abholung ausgeblendet": "Tile hidden until the next pickup"
+    "Kachel bis zur nächsten Abholung ausgeblendet": "Tile hidden until the next pickup",
+    "Update gesperrt": "Update blocked",
+    "Zu tun": "To do",
+    "Release-Notes": "Release notes",
+    "Software-Updates": "Software updates",
+    "✓ Freigegeben": "✓ Approved",
+    "erst lesen": "read first",
+    "automatisch": "automatic",
+    "automatische Updates": "automatic updates",
+    "Zurückholen": "Bring back"
   },
   "patterns": [
     [
@@ -5404,6 +5413,22 @@
     [
       "^Gas (\\S*\\d\\S*(?: \\S+)?)$",
       "Gas {1}"
+    ],
+    [
+      "^geprüft (vor .+|gestern|gerade eben)$",
+      "checked {1}"
+    ],
+    [
+      "^✓ Freigegeben (vor .+|gestern|gerade eben)$",
+      "✓ Approved {1}"
+    ],
+    [
+      "^Update auf (.+)$",
+      "Update to {1}"
+    ],
+    [
+      "^Version (.+) übersprungen$",
+      "Version {1} skipped"
     ]
   ]
 }
