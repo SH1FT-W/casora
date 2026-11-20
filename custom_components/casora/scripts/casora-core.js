@@ -8197,6 +8197,13 @@ window.casoraMenuGlass = {
       var el = nodes[i];
       var st = hass.states[el.dataset.casoraEnt];
       if (!st && el.dataset.casoraLive !== 'fill' && el.dataset.casoraLive !== 'seg' && el.dataset.casoraLive !== 'dial') continue;
+      // #223: usage of a running meter today / this month (casoraUsagePeriod, 48-energie-verlauf.js); while the
+      // statistics load the placeholder stays.
+      if (el.dataset.casoraLive === 'period') {
+        var upT = window.casoraUsagePeriod ? window.casoraUsagePeriod.text(hass, el.dataset.casoraEnt, el.dataset.casoraPer, el.dataset.casoraFmt) : null;
+        if (upT != null) { upT += el.dataset.casoraSuffix || ''; if (el.textContent !== upT) el.textContent = upT; }
+        continue;
+      }
       if (el.dataset.casoraLive === 'seg') { // Weich: aktives Segment folgt dem Mittelwert
         var gIds;
         try { gIds = JSON.parse(el.dataset.casoraEnts || '[]'); } catch (e) { continue; }
@@ -11153,6 +11160,11 @@ window.casoraMenuGlass = {
           vlive = ' data-casora-live="text" data-casora-ent="' + esc(r.entity)
             + '" data-casora-attr="' + esc(r.liveAttr) + '"'
             + ' data-casora-suffix="' + esc(r.liveSuffix || '') + '"';
+        } else if (r.livePeriod && r.entity) {
+          // #223: today's / this month's usage of a running meter, from the statistics once they are there.
+          vlive = ' data-casora-live="period" data-casora-ent="' + esc(r.entity)
+            + '" data-casora-per="' + esc(r.livePeriod.per || 'day') + '" data-casora-fmt="' + esc(r.livePeriod.fmt || 'n') + '"'
+            + ' data-casora-suffix="' + esc(r.livePeriod.suffix || '') + '"';
         }
         // A value without a tone is marked (hui-vq): on a chosen row (hinterlegt, also set later as .hp-sel by the chart
         // pickers) it takes the full ink – text 2 on the lighter fill was 4,3 : 1 in dark.
@@ -11455,6 +11467,11 @@ window.casoraMenuGlass = {
           vlive = ' data-casora-live="text" data-casora-ent="' + esc(r.entity)
             + '" data-casora-attr="' + esc(r.liveAttr) + '"'
             + ' data-casora-suffix="' + esc(r.liveSuffix || '') + '"';
+        } else if (r.livePeriod && r.entity) {
+          // #223: today's / this month's usage of a running meter, from the statistics once they are there.
+          vlive = ' data-casora-live="period" data-casora-ent="' + esc(r.entity)
+            + '" data-casora-per="' + esc(r.livePeriod.per || 'day') + '" data-casora-fmt="' + esc(r.livePeriod.fmt || 'n') + '"'
+            + ' data-casora-suffix="' + esc(r.livePeriod.suffix || '') + '"';
         }
         out += '<div' + vlive + (r.valueIcon ? ' class="hui-actx"' + actxLabel(r.value) : '') + ' style="font-size:var(--casora-popup-row-value-size, 17px);'
           + 'letter-spacing:-0.022em;color:'

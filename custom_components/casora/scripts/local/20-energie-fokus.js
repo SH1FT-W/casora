@@ -71,6 +71,14 @@
     if (v > 0 && v < 1) return Math.round(v * 1000) + ' Wh';
     return fN(v, hass) + ' kWh';
   };
+  // #223: usage today / this month – of a running meter (a Shelly's total energy) its change from HA's statistics
+  // (casoraUsagePeriod, 48-energie-verlauf.js), never its reading; null while they load. run: the row follows live.
+  var running = function (states, id) {
+    return !!(id && window.casoraUsagePeriod && window.casoraUsagePeriod.kind(states, id) === 'check');
+  };
+  var useKwh = function (states, id, hass, per) {
+    return running(states, id) && hass ? window.casoraUsagePeriod.text(hass, id, per, 'wh') : kwh(states, id, hass);
+  };
   // A share in %: something above 0 that rounds to 0 is „< 1 %“, not „0 %“.
   var pct = function (part, all) { var x = part / all * 100; return x > 0 && x < 0.5 ? '< 1 %' : Math.round(x) + ' %'; };
   var money = function (states, id, hass) {
@@ -381,7 +389,7 @@
         if (h != null && h > 0 && g != null && (C.solar || C.soc)) {
           bits.push(Math.round(Math.max(0, Math.min(1, 1 - Math.max(g, 0) / h)) * 100) + ' % aus Solar und Akku');
         }
-        var ht = kwh(states, C.today, hass);
+        var ht = useKwh(states, C.today, hass, 'day');
         if (ht) bits.push('heute ' + ht);
       } else if (C.focus === 'grid') {
         var gw = watt(states, C.grid);
@@ -415,6 +423,13 @@
       return r;
     };
     var grp = function (list, label) { list = list.filter(Boolean); return list.length ? UI.group(list, label) : ''; };
+    // „Heute“ / „Diesen Monat“: kWh and cost; a running meter's kWh follows once the statistics are there (#223).
+    var use = function (id, costId, per, icon, tone, label) {
+      var c = money(states, costId, hass), run = running(states, id);
+      var r = row(id || costId, icon, tone, label, both(useKwh(states, id, hass, per) || (run ? '—' : null), c));
+      if (r && run) r.livePeriod = { per: per, fmt: 'wh', suffix: c ? ' · ' + c : '' };
+      return r;
+    };
     if (C.focus === 'solar') {
       // Only inputs with a panel: seen with power once (remembered in the browser); none seen yet
       // (at night, first start): all.
@@ -441,13 +456,13 @@
       ], 'Akku');
     } else if (C.focus === 'home') {
       out.use = grp([
-        row(C.today || C.costToday, 'calendar-day', 'accent', 'Heute', both(kwh(states, C.today, hass), money(states, C.costToday, hass))),
-        row(C.month || C.costMonth, 'calendar', 'accent', 'Diesen Monat', both(kwh(states, C.month, hass), money(states, C.costMonth, hass))),
+        use(C.today, C.costToday, 'day', 'calendar-day', 'accent', 'Heute'),
+        use(C.month, C.costMonth, 'month', 'calendar', 'accent', 'Diesen Monat'),
       ], 'Verbrauch');
     } else if (C.focus === 'grid') {
       out.use = grp([
-        row(C.gridToday || C.gridCostToday, 'calendar-day', COL.grid, 'Heute', both(kwh(states, C.gridToday, hass), money(states, C.gridCostToday, hass))),
-        row(C.gridMonth || C.gridCostMonth, 'calendar', COL.grid, 'Diesen Monat', both(kwh(states, C.gridMonth, hass), money(states, C.gridCostMonth, hass))),
+        use(C.gridToday, C.gridCostToday, 'day', 'calendar-day', COL.grid, 'Heute'),
+        use(C.gridMonth, C.gridCostMonth, 'month', 'calendar', COL.grid, 'Diesen Monat'),
       ], 'Bezug');
       var sT2 = num(states, C.solarToday), gT2 = num(states, C.gridToday);
       out.aut = grp([
