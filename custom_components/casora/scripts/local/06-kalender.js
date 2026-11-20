@@ -16,6 +16,24 @@
   var DAYS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
   var MON = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
   var MONS = ['Jan.', 'Feb.', 'März', 'Apr.', 'Mai', 'Juni', 'Juli', 'Aug.', 'Sep.', 'Okt.', 'Nov.', 'Dez.'];
+  // Month title and long date in the dashboard language (#218): the phrase tables translate fixed texts, not a date
+  // built from the German lists above („Dezember 2026“, „Freitag, 4. Dezember“ stayed German in every language).
+  // German (and no translator, as in tests) keeps the lists; any other language asks Intl with HA's language.
+  var dateLoc = function () {
+    var l = null;
+    try { l = window.casoraLocale ? window.casoraLocale() : null; } catch (e) { l = null; }
+    return l && !/^de\b/i.test(l) ? l : null;
+  };
+  var monthYear = function (d) {
+    var l = dateLoc();
+    if (l) { try { return d.toLocaleDateString(l, { month: 'long', year: 'numeric' }); } catch (e) { /* old browser */ } }
+    return MON[d.getMonth()] + ' ' + d.getFullYear();
+  };
+  var longDate = function (d) {
+    var l = dateLoc();
+    if (l) { try { return d.toLocaleDateString(l, { weekday: 'long', day: 'numeric', month: 'long' }); } catch (e) { /* old browser */ } }
+    return DAYL[d.getDay()] + ', ' + d.getDate() + '. ' + MON[d.getMonth()];
+  };
   var esc = window.casoraEsc || function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var day0 = function (d) { var x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
   var addD = function (d, n) { var x = new Date(d); x.setDate(x.getDate() + n); return x; };
@@ -316,8 +334,8 @@
     var lg = '<div class="hcal-lg">' + legend.map(function (c) {
       return '<span class="hcal-c' + (c.off ? ' off' : '') + '" data-hcal="' + esc(c.key) + '"><i style="background:' + esc(c.color) + ';"></i>' + esc(c.name) + '</span>';
     }).join('') + '</div>';
-    if (SOFT()) return CSS() + '<div class="hcal hs">' + sHead(MON[m.getMonth()] + ' ' + m.getFullYear(), nav, true) + '<div class="hcal-pl">' + g + lg + '</div></div>';
-    return CSS() + '<div class="hcal">' + head(MON[m.getMonth()] + ' ' + m.getFullYear(), nav) + g + lg + '</div>';
+    if (SOFT()) return CSS() + '<div class="hcal hs">' + sHead(esc(monthYear(m)), nav, true) + '<div class="hcal-pl">' + g + lg + '</div></div>';
+    return CSS() + '<div class="hcal">' + head(esc(monthYear(m)), nav) + g + lg + '</div>';
   };
 
   /* ── Abfall-Popup (03.10.2026, optional über Studio → Einstellungen → Haus & Geräte):
@@ -362,7 +380,7 @@
       }).join('') : '<div class="hcal-e">' + (data.loading && !data.list.length ? 'Wird geladen …' : esc(empty)) + '</div>';
       return CSS() + (SOFT() ? '<div class="hcal hs">' + sHead(esc(t)) : '<div class="hcal">' + head(esc(t))) + body + '</div>';
     };
-    var dayTitle = function (d, n) { return n === 0 ? 'Heute' : n === 1 ? 'Morgen' : DAYL[d.getDay()] + ', ' + d.getDate() + '. ' + MON[d.getMonth()]; };
+    var dayTitle = function (d, n) { return n === 0 ? 'Heute' : n === 1 ? 'Morgen' : longDate(d); };
     var rowsOf = function (d, n) { var s = subOf(n); return on(d).map(function (b) { return { b: b, sub: s }; }); };
     if (k === 'wtoday') {
       /* Phone (issue 117): a fixed card for today on top – today's pickups, else tomorrow's bins to put out tonight. */
@@ -464,7 +482,7 @@
       var n = K.ev ? onDay(today).length : null;
       var nx = (K.ev || []).filter(function (e) { return !K.hide[e.cal] && e.end > new Date() && day0(e.start) > today; })[0];
       var UI = window._casoraUI;
-      var o = { center: true, label: DAYL[today.getDay()] + ', ' + today.getDate() + '. ' + MON[today.getMonth()],
+      var o = { center: true, label: longDate(today),
         value: n == null ? '…' : n === 0 ? 'Keine Termine' : n === 1 ? '1 Termin' : n + ' Termine',
         sub: nx ? 'Als Nächstes: ' + dayWord(nx.start, false) + (nx.allDay ? '' : ' ' + hm(nx.start)) + ' · ' + nx.name : null };
       /* Weich (Entschlacken): „3 Termine heute“ als eine Aussage, das Datum steht im Monat. */
@@ -481,7 +499,7 @@
     if (k === 'day') {
       var list = K.ev ? onDay(sel) : [];
       var body = wait || (list.length ? list.map(function (e) { return row(e, cals); }).join('') : '<div class="hcal-e">Keine Termine</div>');
-      var t = diffDays(sel) === 0 ? 'Heute' : diffDays(sel) === 1 ? 'Morgen' : DAYL[sel.getDay()] + ', ' + sel.getDate() + '. ' + MON[sel.getMonth()];
+      var t = diffDays(sel) === 0 ? 'Heute' : diffDays(sel) === 1 ? 'Morgen' : longDate(sel);
       // Issue 146: only where a calendar takes new events.
       var haNow = document.querySelector('home-assistant');
       var addHtml = haNow && haNow.hass && K.writable(variables, haNow.hass.states).length
