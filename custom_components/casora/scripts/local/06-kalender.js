@@ -71,8 +71,8 @@
   var calOf = function (cals, id) { for (var i = 0; i < cals.length; i++) if (cals[i].entity === id) return cals[i]; return { entity: id, name: id, color: '#8E8E93' }; };
 
   // The calendar popup keeps every event; the Agenda tile skips filtered titles (rule in 06a-kalender-filter.js).
-  K.allowsTitle = function (title) {
-    return window.casoraCalendarAllows ? window.casoraCalendarAllows(title) : true;
+  K.allowsTitle = function (title, attrs) {
+    return window.casoraCalendarAllows ? window.casoraCalendarAllows(title, null, attrs) : true;
   };
   /* Nächster Termin aus den Kalender-Zuständen (message/start_time/all_day). Regel: casoraCalendarNext (06a). */
   K.next = function (states, variables) {

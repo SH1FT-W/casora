@@ -6744,7 +6744,7 @@ const tileStateWord = (kind, tile, ent, states, hass, settings) => {
     const wasteCal = settings.waste && settings.waste.calendar;
     const waste = window.casoraDevice && window.casoraDevice.waste ? window.casoraDevice.waste(hass, wasteCal ? { trash_calendar: wasteCal } : null).calendar : null;
     const list = cals(hass, vars).filter((c) => c.entity !== waste && c.entity !== wasteCal);
-    const pick = next(states || {}, list, new Date(), (title) => allows(title, settings));
+    const pick = next(states || {}, list, new Date(), (title, attrs) => allows(title, settings, attrs));
     if (pick) return String(pick.name);
     return window.casoraI18n && window.casoraI18n.t ? window.casoraI18n.t("No events") : "No events";
   }
