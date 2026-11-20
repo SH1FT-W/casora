@@ -705,7 +705,19 @@
     _dashExtrasRaf = 0;
     const list = Array.from(_dashExtrasQ);
     _dashExtrasQ.clear();
-    if (_activeOverlay) return;
+    if (_activeOverlay) {
+      // A room already open while the dashboard is (re)built (#221: back to it from another HA page, the room
+      // still chosen on this device): build the header anyway. Without it no capsule exists, so bell, chat and
+      // the dots menu never reach the phone bar. update() keeps the header hidden while the room is open.
+      if (!_dashHeader?.grad?.isConnected) {
+        const inst = list.find((i) => i._headerEl);
+        if (inst) {
+          _ensureDashboardHeader(inst);
+          requestAnimationFrame(() => requestAnimationFrame(() => { if (_activeOverlay) _hideChromePill(); }));
+        }
+      }
+      return;
+    }
     for (const inst of list) { try { inst._discoverElements(); } catch (_) {} }
     const containers = new Set();
     for (const inst of list) {
