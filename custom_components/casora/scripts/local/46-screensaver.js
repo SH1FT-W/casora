@@ -698,7 +698,8 @@
     + '.cs-sv .cs-fl.cs-v::before{left:0;right:0;top:-' + u(26) + ';bottom:0;background:radial-gradient(circle at 50% ' + u(4) + ', var(--cs-c) ' + u(3.6) + ', transparent ' + u(4.2) + ') 0 0/100% ' + u(26) + ' repeat-y;animation-name:cs-fall;}'
     + '@keyframes cs-fall{to{transform:translateY(' + u(26) + ');}}'
     + '.cs-sv .cs-bal{position:absolute;left:' + u(M) + ';right:' + u(M) + ';bottom:' + u(54) + ';display:grid;grid-template-columns:repeat(4, minmax(0, 1fr));border-top:' + u(2) + ' solid var(--line);padding-top:' + u(22) + ';}'
-    + '.cs-sv .cs-bal div{min-width:0;padding:0 ' + u(24) + ';border-left:' + u(2) + ' solid var(--line);}.cs-sv .cs-bal div:first-child{padding-left:0;border-left:0;}'
+    // Centred under the flow like everything above it (owner, 20.11.2026); the hairlines between stay.
+    + '.cs-sv .cs-bal div{min-width:0;padding:0 ' + u(24) + ';border-left:' + u(2) + ' solid var(--line);text-align:center;}.cs-sv .cs-bal div:first-child{border-left:0;}'
     + '.cs-sv .cs-bal .cs-cap{font-size:' + u(22) + ';letter-spacing:0;text-transform:none;font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
     + '.cs-sv .cs-bal b{display:block;font-size:' + u(46) + ';font-weight:700;margin-top:' + u(2) + ';letter-spacing:-.035em;font-variant-numeric:tabular-nums;line-height:1.1;}'
     // House at rest
@@ -780,7 +781,7 @@
     + '.cs-sv .cs-left .cs-time, .cs-sv.cs-calm .cs-left .cs-time{font-size:' + u(200) + ';margin-left:-' + u(10) + ';}.cs-sv.cs-calm .cs-say, .cs-sv.cs-calm .cs-ppl{justify-content:flex-start;}'
     + '.cs-sv .cs-right{position:static;width:auto;padding:' + u(56) + ' ' + u(M + 8) + ' 0;}'
     // Energy: the balance in two rows.
-    + '.cs-sv .cs-bal{grid-template-columns:repeat(2, minmax(0, 1fr)) !important;row-gap:' + u(22) + ';}.cs-sv .cs-bal div:nth-child(odd){padding-left:0;border-left:0;}.cs-sv .cs-flow{bottom:' + u(300) + ';top:' + u(260) + ';}'
+    + '.cs-sv .cs-bal{grid-template-columns:repeat(2, minmax(0, 1fr)) !important;row-gap:' + u(22) + ';}.cs-sv .cs-bal div:nth-child(odd){border-left:0;}.cs-sv .cs-flow{bottom:' + u(300) + ';top:' + u(260) + ';}'
     + '.cs-sv .cs-fn{width:' + u(240) + ';--cs-r:' + u(60) + ';}.cs-sv .cs-fn i{width:' + u(120) + ';height:' + u(120) + ';}.cs-sv .cs-fn.cs-house{--cs-r:' + u(80) + ';}.cs-sv .cs-fn.cs-house i{width:' + u(160) + ';height:' + u(160) + ';}'
     + '.cs-sv .cs-fn b{font-size:' + u(38) + ';}.cs-sv .cs-fn.cs-sun{transform:translate(-' + u(60) + ', calc(var(--cs-r) * -1));}'
     + '.cs-sv .cs-fl.cs-l{left:calc(17% + ' + u(76) + ');right:calc(50% + ' + u(96) + ');}.cs-sv .cs-fl.cs-r{left:calc(50% + ' + u(96) + ');right:calc(17% + ' + u(76) + ');}.cs-sv .cs-fl.cs-v{top:calc(9% + ' + u(76) + ');bottom:calc(38% + ' + u(96) + ');}'
