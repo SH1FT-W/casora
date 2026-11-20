@@ -189,6 +189,23 @@ with tempfile.TemporaryDirectory() as d:
     lc.ws_scripts(hass, conn, {"id": 1, "type": "casora/legacy/scripts"})
     lc.ws_scripts(hass, conn, {"id": 2, "type": "casora/legacy/scripts"})
     check(len(sent[0]["pending"]) == 3 and sent[1] == {"pending": []}, f"claimed once: {sent}")
+    # A host up for less than CLAIM_SECONDS (fresh CI runner, HA just booted): the first claim must still work.
+    real = lc.time.monotonic
+    try:
+        lc.time.monotonic = lambda: 5.0
+        rt0 = lc._rt(hass)
+        saved = (list(rt0.pending), rt0.claimed)
+        # The value a fresh run starts with (whatever _Cleanup sets before any browser claimed it).
+        fresh = lc._Cleanup.__new__(lc._Cleanup)
+        lc._Cleanup.__init__(fresh, hass, rt0.store, {})
+        rt0.claimed = fresh.claimed
+        early = []
+        conn2 = SimpleNamespace(user=SimpleNamespace(is_admin=True), send_result=lambda i, r: early.append(r), send_error=lambda *a: early.append(("error", a)))
+        lc.ws_scripts(hass, conn2, {"id": 9, "type": "casora/legacy/scripts"})
+        check(len(early[0]["pending"]) == 3, f"claim right after boot: {early}")
+        rt0.pending, rt0.claimed = saved
+    finally:
+        lc.time.monotonic = real
     configs = {"casora_light_smart_toggle": dict(OLD["casora_light_smart_toggle"]),
                "casora_thermostat_overlay_toggle": dict(OLD["casora_thermostat_overlay_toggle"], alias="Mine")}
     lc.ws_match(hass, conn, {"id": 3, "configs": configs})

@@ -291,7 +291,9 @@ class _Cleanup:
         self.store = store
         self.data = data
         self.pending: list[str] = []
-        self.claimed = 0.0
+        # When a browser took the pending list (time.monotonic()); None = nobody holds it. Not 0.0: monotonic counts
+        # from boot, so on a host up for less than CLAIM_SECONDS a 0.0 looked like a fresh claim (flaky CI).
+        self.claimed: float | None = None
         self.js_url: str | None = None
 
     @property
@@ -413,7 +415,7 @@ _ID = vol.In(OBJECT_IDS)
 def ws_scripts(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
     rt = _rt(hass)
     now = time.monotonic()
-    if rt is None or not rt.pending or now - rt.claimed < CLAIM_SECONDS:
+    if rt is None or not rt.pending or (rt.claimed is not None and now - rt.claimed < CLAIM_SECONDS):
         # Nothing to do, or another admin browser is at it right now.
         connection.send_result(msg["id"], {"pending": []})
         return
@@ -459,7 +461,7 @@ async def async_record(hass: HomeAssistant, rt: _Cleanup, removed: list[str], ke
     news["removed"] = list(dict.fromkeys([*(news.get("removed") or []), *removed]))
     news["kept"] = {**(news.get("kept") or {}), **kept}
     rt.pending = [o for o in rt.pending if o not in removed and o not in kept]
-    rt.claimed = 0.0
+    rt.claimed = None
     await rt.save()
     if removed:
         _LOGGER.info("Casora: former scripts removed: %s", ", ".join(removed))
