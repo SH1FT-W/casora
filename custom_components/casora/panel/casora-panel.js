@@ -63,6 +63,39 @@ function clock12(hass) {
       { hour: "numeric" }).resolvedOptions().hour12 === true;
   } catch (e) { return false; }
 }
+
+// The preview clock, drawn exactly like the dashboard clock (#214): a small local copy of the dashboard rule
+// in casora-core.js (casoraClockText, casoraClockDate, the casora-clock element's line), so the preview needs
+// no script for the time. The parity test dev/unit/studio_clock_parity.mjs fails when the two rules drift apart.
+function studioClockText(hass, use12, now) {
+  const d = now || new Date();
+  const tz = hass && hass.locale && hass.locale.time_zone === "server" && hass.config && hass.config.time_zone;
+  let h = d.getHours(), m = d.getMinutes();
+  if (tz) {
+    try {
+      const p = new Intl.DateTimeFormat("en-GB", { timeZone: tz, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(d);
+      h = Number((p.find((x) => x.type === "hour") || {}).value); m = Number((p.find((x) => x.type === "minute") || {}).value);
+    } catch (e) { /* the device's zone */ }
+  }
+  const mm = String(m).padStart(2, "0");
+  if (!use12) return String(h).padStart(2, "0") + ":" + mm;
+  return ((h % 12) || 12) + ":" + mm + " " + (h >= 12 ? "PM" : "AM");
+}
+// The date needs the dashboard's language (casoraLocale from casora-i18n.js); until that file is there the
+// preview shows no date rather than a wrong-language one.
+function studioClockDate(hass, now) {
+  const d = now || new Date();
+  const tz = hass && hass.locale && hass.locale.time_zone === "server" && hass.config && hass.config.time_zone;
+  const loc = window.casoraLocale ? window.casoraLocale() : "de-DE";
+  const o = { weekday: "long", day: "numeric", month: "long" };
+  try { return new Intl.DateTimeFormat(loc, tz ? Object.assign({ timeZone: tz }, o) : o).format(d); } catch (e) {
+    return new Intl.DateTimeFormat(loc, o).format(d);
+  }
+}
+function studioClockLine(hass, use12, suffix, now) {
+  const t = studioClockText(hass, use12, now);
+  return (suffix ? t + " " + suffix : t).toUpperCase();
+}
 // A bool field's default: a plain value, or a function of hass (the 12-hour clock needs the HA user).
 const fieldDefault = (f, hass) => (typeof f.boolDefault === "function" ? !!f.boolDefault(hass) : f.boolDefault);
 
@@ -27194,20 +27227,28 @@ class CasoraPanel extends HTMLElement {
     if (found) { warmPhoto(found.day); warmPhoto(found.night); }
 
     // Navigation, so the room's place in the tab order reads too.
+    // #214: time and date as the dashboard clock draws them (studioClockText/…Date above): the profile's time
+    // zone, the 12/24-hour setting, the dashboard's language and the suffix. The time stands here without
+    // waiting for a script; the date waits for the dashboard's language file when it is not loaded yet.
     const d = new Date();
-    let hh = d.getHours();
     const use12 = V.use_12h === undefined ? clock12(this._hass) : V.use_12h !== false;
-    const suffix = use12 ? (hh < 12 ? " AM" : " PM") : "";
-    if (use12) hh = hh % 12 || 12;
     const extra = String(V.time_suffix || "").trim();
-    q(".mini-time").textContent = hh + ":" + String(d.getMinutes()).padStart(2, "0")
-      + suffix + (extra ? " " + extra : "");
+    q(".mini-time").textContent = studioClockLine(this._hass, use12, extra, d);
     // #179: the date under the time, as on the dashboard.
     if (V.show_date === true) {
-      const dl = document.createElement("span");
-      dl.className = "mini-date";
-      dl.textContent = d.toLocaleDateString(this._hass?.locale?.language || "de", { weekday: "long", day: "numeric", month: "long" });
-      q(".mini-time").appendChild(dl);
+      if (typeof window.casoraLocale === "function") {
+        const dl = document.createElement("span");
+        dl.className = "mini-date";
+        dl.textContent = studioClockDate(this._hass, d);
+        q(".mini-time").appendChild(dl);
+      } else if (!this._previewLocaleLoad) {
+        // Missing language file: import it once, then redraw with the date. A failed import stays silent –
+        // no page error, no retry on every draw; the time is already there without it.
+        const imp = window.casoraImportScript || ((p) => import("/casora_scripts/" + p));
+        this._previewLocaleLoad = Promise.resolve().then(() => imp("casora-i18n.js")).then(() => {
+          if (typeof window.casoraLocale === "function") this._rebuildPreview();
+        }).catch(() => {});
+      }
     }
     q(".mini-time").style.visibility = V.show_time === false ? "hidden" : "";
     const tabs = q(".mini-tabs");
@@ -30382,7 +30423,7 @@ window.__casoraPanelInternals = {
   setupStep,
   blankRoom, roomPhoto, slug, translit, expandConfig, expandAny, extractAny, retargetRoutes, mobileFromRooms,
   applyScenePick, confirmEntities, confirmNames, entityUsers, wrapCustomCard, hostCard, FINGERPRINT_KEY, fingerprintOf, refreshTemplates, templatePrint, TILE_TYPES, USER_TILE_TYPES,
-  fieldDefault, findType, tileTypeAny, newTile, previewHasError, isPetTracker, petName, isStatSensor, isPlantEntity, listCategory, TILE_MAIN_FIND, tileMissingEntity, tileEntityGone, iconUrl, studioIcon, roomGlyph, roomIconSrc, titleCase, clone, FLOW_TINT, isMobileConfig, applyKiosk,
+  fieldDefault, findType, tileTypeAny, newTile, previewHasError, isPetTracker, petName, isStatSensor, isPlantEntity, listCategory, TILE_MAIN_FIND, tileMissingEntity, tileEntityGone, iconUrl, studioIcon, roomGlyph, roomIconSrc, titleCase, clone, FLOW_TINT, isMobileConfig, applyKiosk, studioClockText, studioClockDate, studioClockLine,
   applyMotion, markPhoneManaged, applyFirstRun, CASORA_THEMES, ensureCustomFontCss, sceneBadgeOn, dropNavScenes,
   parseCardText, cardToText,
   isDefaultHomeName, homeRoomWord, shotLang, isHomeRoom, roomLabel, storedRoomName, HOME_ROOM_NAME, markAutoHome, isDefaultHome, setHomeName, badgeOrderOf, BADGE_ORDER_IDS,
