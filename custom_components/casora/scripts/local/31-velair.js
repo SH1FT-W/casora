@@ -476,20 +476,26 @@
   window.casoraClimateModes.LABEL = MODE;
   window.casoraClimateModes.ICON = { off: 'mdi:power', heat: 'mdi:fire', cool: 'mdi:snowflake', heat_cool: 'mdi:sun-snowflake-variant',
     auto: 'mdi:calendar-clock', dry: 'mdi:water-percent', fan_only: 'mdi:fan' };
-  // Fan, preset and swing of a device that cools; a heating-only thermostat stays as it was.
+  // Fan, preset and swing of a device that cools. A heating-only thermostat (or one with cooling hidden) gets the
+  // preset choice alone, when it reports a real preset besides „none“ (#219).
   window.casoraClimateExtras = function (UI, attrs, variables, target) {
     var a = attrs || {};
-    if (window.casoraClimateModes(a, variables).indexOf('cool') < 0) return '';
     var part = function (label, list, cur, words, service, field) {
       return segsHtml(UI, label, list, cur, words, function (v) {
         var data = {}; data[field] = v;
         return { domain: 'climate', service: service, data: data, target: target };
       });
     };
-    return [part('Lüfter', a.fan_modes, a.fan_mode, FAN, 'set_fan_mode', 'fan_mode'),
-      part('Voreinstellung', a.preset_modes, a.preset_mode, PRESET, 'set_preset_mode', 'preset_mode'),
-      part('Lamellen', a.swing_modes, a.swing_mode, SWING, 'set_swing_mode', 'swing_mode')]
-      .filter(Boolean).map(function (h) { return GAP + h; }).join('');
+    var preset = function () { return part('Voreinstellung', a.preset_modes, a.preset_mode, PRESET, 'set_preset_mode', 'preset_mode'); };
+    var parts;
+    if (window.casoraClimateModes(a, variables).indexOf('cool') < 0) {
+      var real = Array.isArray(a.preset_modes) && a.preset_modes.some(function (p) { return String(p).toLowerCase() !== 'none'; });
+      parts = real ? [preset()] : [];
+    } else {
+      parts = [part('Lüfter', a.fan_modes, a.fan_mode, FAN, 'set_fan_mode', 'fan_mode'), preset(),
+        part('Lamellen', a.swing_modes, a.swing_mode, SWING, 'set_swing_mode', 'swing_mode')];
+    }
+    return parts.filter(Boolean).map(function (h) { return GAP + h; }).join('');
   };
   var MINUS = '<svg width="20" height="20" viewBox="0 0 20 20" style="display:block"><path d="M4 10H16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
   var PLUS = '<svg width="20" height="20" viewBox="0 0 20 20" style="display:block"><path d="M4 10H16M10 4V16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';

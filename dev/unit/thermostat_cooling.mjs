@@ -29,9 +29,11 @@ assert.equal(calls[0].items[1].active, true);
 assert.deepEqual(calls[0].items[1].svc, { domain: 'climate', service: 'set_fan_mode', data: { fan_mode: 'Silence' }, target: { entity_id: 'climate.ac' } }, 'the raw value goes to HA');
 assert.equal(calls[2].items[1].label, '3D');
 calls.length = 0;
-assert.equal(X(UI, { hvac_modes: ['off', 'heat'], preset_modes: ['eco', 'comfort'], preset_mode: 'eco' }, {}, {}), '', 'a heating-only thermostat gets nothing new');
-assert.equal(X(UI, { ...AC }, { hide_cooling: true }, {}), '', 'nor one with cooling hidden');
+assert.equal(X(UI, { hvac_modes: ['off', 'heat'], fan_modes: ['auto', 'low'], swing_modes: ['off', 'on'] }, {}, {}), '', 'a heating-only thermostat gets no fan or swing');
 assert.equal(calls.length, 0);
+// Since #219 a heating-only thermostat gets its presets (thermostat_presets_heating.mjs), fan and swing stay out.
+X(UI, { ...AC }, { hide_cooling: true }, {});
+assert.deepEqual(calls.map((c) => c.label), ['Voreinstellung'], 'cooling hidden: the preset alone');
 
 const T = JSON.parse(fs.readFileSync(new URL('../../custom_components/casora/panel/casora-templates.json', import.meta.url), 'utf8')).templates.casora_thermostat;
 for (const k of ['tap_action', 'hold_action']) {
