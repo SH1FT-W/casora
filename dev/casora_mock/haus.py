@@ -177,7 +177,12 @@ def snapshot(fixture: dict, skip: list[str] | tuple = ()) -> dict:
             continue
         did = "dev_" + str(e.get("device")) if e.get("device") else None
         # registry_platform: registered under another integration's name (Velair, velair.py), as in a real house.
-        entities[eid] = {"entity_id": eid, "platform": e.get("registry_platform") or "casora_mock", "device_id": did if did in devices else None,
+        # Exception: a calendar with fixture events has an object of the mock (registry_rules.has_own_object);
+        # it is loaded by file path in the unit tests, so the rule is repeated here, not imported.
+        platform = e.get("registry_platform") or "casora_mock"
+        if domain == "calendar" and "events" in e:
+            platform = "casora_mock"
+        entities[eid] = {"entity_id": eid, "platform": platform, "device_id": did if did in devices else None,
                          "area_id": area_id.get(e.get("area")), "name": e.get("name"), "icon": e.get("icon"),
                          "translation_key": e.get("translation_key"), "hidden": bool(e.get("hidden")),
                          "entity_category": e.get("entity_category") or DEFAULT_CATEGORY.get(domain)}

@@ -377,9 +377,11 @@
           hassDesc.set.call(this, hass);
           if (this._cvNoticeAsked || !hass || !hass.callWS || !(hass.user && hass.user.is_admin)) return;
           this._cvNoticeAsked = true;
-          hass.callWS({ type: "casora/templates/auto_notice", ack: true }).then((r) => {
+          hass.callWS({ type: "casora/templates/auto_notice", ack: true }).then(async (r) => {
             const n = r && r.notice && r.notice.count;
             if (!n) return;
+            // The language table may still be loading: wait for it, or the toast comes out in English.
+            if (window.casoraI18n && window.casoraI18n.ready) await window.casoraI18n.ready();
             const msg = (n === 1 ? t("1 dashboard brought up to the new templates")
               : t("{n} dashboards brought up to the new templates").replace("{n}", n))
               + " – " + t("see Rewind to undo");

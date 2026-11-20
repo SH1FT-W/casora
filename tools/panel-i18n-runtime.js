@@ -262,7 +262,18 @@
     });
   });
 
+  // Resolves when the current language's table is there: at once for English or a language without a
+  // table, after at most 3 s, or when the load failed. Never rejects. Builds on load(), no second fetch.
+  function ready() {
+    const w = pick(lang);
+    if (!w || TABLES[w]) return Promise.resolve();
+    return new Promise((res) => {
+      const t = setTimeout(res, 3000);
+      load(w).then(() => { clearTimeout(t); res(); });
+    });
+  }
+
   window.casoraI18nMissing = () => [...missing].sort();
   // Für Casora-Erweiterungen: einzelnen Text in der aktuellen Sprache (sonst unverändert).
-  window.casoraI18n = { t: (s) => (s && tr(String(s))) || s };
+  window.casoraI18n = { t: (s) => (s && tr(String(s))) || s, ready };
 })();

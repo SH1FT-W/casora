@@ -4,8 +4,8 @@ Every entity reads state and attributes from the test integration's store
 (CasoraMock.store) and writes changes made by services back there.
 Each platform inherits HA's real base class (SensorEntity, TrackerEntity, UpdateEntity ...),
 so HA's defaults apply as in a real installation: entity category, device class handling,
-registry behaviour. Only state and attributes are overridden: the computed attributes of
-the base classes are bypassed on purpose, so the values match the snapshot 1:1.
+registry behaviour. State and attributes normally match the snapshot 1:1; replay calendars
+instead use HA's computed calendar state and event attributes.
 """
 from __future__ import annotations
 
@@ -20,6 +20,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
+
+from .calendar_replay import fixture_events, served_features
+from .registry_rules import has_own_object
 
 DOMAIN = "casora_mock"
 HIDE_ATTRS = {"friendly_name", "icon", "unit_of_measurement", "device_class", "supported_features"}
@@ -123,11 +126,89 @@ class ToggleMixin:
         self.put("off" if self.s == "on" else "on")
 
 
+def build_calendar_class() -> type:
+    """Build the calendar without loading unrelated platform dependencies."""
+    from homeassistant.components.calendar import CalendarEntity, CalendarEvent
+
+    class MCalendar(MockEntity, CalendarEntity):
+        @property
+        def _replaying(self):
+            return "events" in self.mock.entities[self._key]
+
+        @property
+        def should_poll(self):
+            # Refresh at week boundaries even when there is no event to schedule.
+            return self._replaying
+
+        async def async_update(self):
+            pass
+
+        def _events(self, start: datetime, end: datetime):
+            fixture = fixture_events(self.mock.entities[self._key], self.mock.fixture, start, end,
+                                     local_tz=dt_util.get_default_time_zone())
+            if fixture is not None:
+                return [CalendarEvent(**event) for event in fixture]
+            base = dt_util.start_of_local_day()
+            titles = ["Termin", "Müllabfuhr", "Arzttermin", "Feiertag", "Training", "Geburtstag"]
+            out = []
+            for i in range(14):
+                s = base + timedelta(days=i, hours=9 + (i % 5) * 2)
+                if start <= s <= end:
+                    out.append(CalendarEvent(start=s, end=s + timedelta(hours=1), summary=titles[i % len(titles)]))
+            return out
+
+        @property
+        def supported_features(self):
+            # The fixture's numbers are scrambled by the exporter; no event services are served (calendar_replay).
+            return served_features(int(self.a.get("supported_features") or 0))
+
+        @property
+        def event(self):
+            now = dt_util.now()
+            end = datetime(9998, 1, 1, tzinfo=now.tzinfo)
+            ev = self._events(now, end)
+            return ev[0] if ev else None
+
+        @property
+        def state(self):
+            return CalendarEntity.state.fget(self) if self._replaying else super().state
+
+        @property
+        def state_attributes(self):
+            return CalendarEntity.state_attributes.fget(self) if self._replaying else super().state_attributes
+
+        @property
+        def extra_state_attributes(self):
+            attrs = super().extra_state_attributes
+            if not self._replaying:
+                return attrs
+            for key in ("message", "all_day", "start_time", "end_time", "location", "description"):
+                attrs.pop(key, None)
+            meta = attrs.get("casora_filter_match")
+            if isinstance(meta, dict):
+                meta = dict(meta)
+                meta.pop("message", None)
+                event = self.event
+                events = self.mock.entities[self._key]["events"]
+                uid = event.uid if event else None
+                decisions = meta.get("events")
+                if uid and sum(item.get("uid") == uid for item in events) == 1 and isinstance(decisions, dict):
+                    decision = decisions.get(uid)
+                    if isinstance(decision, dict) and decision.get("title") == event.summary:
+                        meta["message"] = decision
+                attrs["casora_filter_match"] = meta
+            return attrs
+
+        async def async_get_events(self, hass, start_date, end_date):
+            return self._events(start_date, end_date)
+
+    return MCalendar
+
+
 def build_classes(hass: HomeAssistant) -> dict[str, type]:
     """Import the classes only here, so only the needed components load."""
     from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
     from homeassistant.components.button import ButtonEntity
-    from homeassistant.components.calendar import CalendarEntity, CalendarEvent
     from homeassistant.components.camera import Camera
     from homeassistant.components.climate import ClimateEntity, HVACMode
     from homeassistant.components.cover import CoverEntity
@@ -154,6 +235,8 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
     from homeassistant.components.text import TextEntity
     from homeassistant.components.time import TimeEntity
     from homeassistant.components.update import UpdateEntity
+
+    MCalendar = build_calendar_class()
 
     class MLight(MockEntity, ToggleMixin, LightEntity):
         def __init__(self, mock, eid):
@@ -685,25 +768,6 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
             self._items = [i for i in self._items if i.uid not in uids]
             self._count()
 
-    class MCalendar(MockEntity, CalendarEntity):
-        def _events(self, start: datetime, end: datetime):
-            base = dt_util.start_of_local_day()
-            titles = ["Termin", "Müllabfuhr", "Arzttermin", "Feiertag", "Training", "Geburtstag"]
-            out = []
-            for i in range(14):
-                s = base + timedelta(days=i, hours=9 + (i % 5) * 2)
-                if start <= s <= end:
-                    out.append(CalendarEvent(start=s, end=s + timedelta(hours=1), summary=titles[i % len(titles)]))
-            return out
-
-        @property
-        def event(self):
-            ev = self._events(dt_util.now(), dt_util.now() + timedelta(days=14))
-            return ev[0] if ev else None
-
-        async def async_get_events(self, hass, start_date, end_date):
-            return self._events(start_date, end_date)
-
     class MWeather(MockEntity, WeatherEntity):
         _attr_native_temperature_unit = "°C"
         _attr_native_pressure_unit = "hPa"
@@ -884,9 +948,10 @@ PLATFORMS = [
 async def setup_domain(hass: HomeAssistant, entry, async_add_entities, domain: str) -> None:
     mock = hass.data[DOMAIN]
     cls = mock.classes[domain]
-    # Entities registered under another integration (registry_platform, velair.py) have no object of their own.
+    # Entities registered under another integration (registry_platform, velair.py) have no object of their own,
+    # except calendars with fixture events (registry_rules.has_own_object).
     async_add_entities(cls(mock, eid) for eid in mock.store if eid.split(".")[0] == domain
-                       and not (mock.entities.get(eid) or {}).get("registry_platform"))
+                       and has_own_object(mock.entities.get(eid) or {}, domain))
 
 
 def _png(w: int, h: int, rgb: tuple[int, int, int]) -> bytes:
