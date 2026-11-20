@@ -3181,7 +3181,10 @@
     "Total cost": "Costo totale",
     "Electricity": "Elettricità",
     "Gas": "Gas",
-    "Today's electricity and gas cost side by side on the tile, or the usage in kWh. The popup shows the day, the week or the month: usage and cost of electricity and gas apart, standing charge and total, and a chart with bars per hour or day. Week and month come from Home Assistant's statistics of the daily counters. For smart meters without solar, e.g. Hildebrand Glow and Octopus Energy.": "Il costo di oggi di luce e gas affiancati sul riquadro, oppure il consumo in kWh. Il popup mostra il giorno, la settimana o il mese: consumo e costo di luce e gas separati, quota fissa e totale, con un grafico a barre per ora o per giorno. Settimana e mese vengono dalle statistiche dei contatori giornalieri di Home Assistant. Per contatori intelligenti senza fotovoltaico, ad es. Hildebrand Glow e Octopus Energy."
+    "Today's electricity and gas cost side by side on the tile, or the usage in kWh. The popup shows the day, the week or the month: usage and cost of electricity and gas apart, standing charge and total, and a chart with bars per hour or day. Week and month come from Home Assistant's statistics of the daily counters. For smart meters without solar, e.g. Hildebrand Glow and Octopus Energy.": "Il costo di oggi di luce e gas affiancati sul riquadro, oppure il consumo in kWh. Il popup mostra il giorno, la settimana o il mese: consumo e costo di luce e gas separati, quota fissa e totale, con un grafico a barre per ora o per giorno. Settimana e mese vengono dalle statistiche dei contatori giornalieri di Home Assistant. Per contatori intelligenti senza fotovoltaico, ad es. Hildebrand Glow e Octopus Energy.",
+    "Go back to Home and close popups after a while without use.": "Tornare alla Home e chiudere le finestre dopo un po’ di inattività.",
+    "Close popups when idle": "Chiudi le finestre se inattivo",
+    "Tablets only. Closes an open popup after a while without use.": "Solo tablet. Chiude una finestra aperta dopo un po' senza uso."
   },
   "patterns": [
     [

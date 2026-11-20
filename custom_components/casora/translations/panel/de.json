@@ -771,7 +771,7 @@
     "Steam": "Steam",
     "System uses SF Pro on Apple devices.": "„System“ nutzt auf Apple-Geräten SF Pro.",
     "Tablet": "Tablet",
-    "Tablets only. Brings one back to Home after a while without use.": "Nur auf Tablets.",
+    "Tablets only. Brings one back to Home after a while without use.": "Nur auf Tablets. Bringt nach einer Weile ohne Bedienung zurück zu „Zuhause“.",
     "Temperature": "Temperatur",
     "Temperature sensor": "Temperatursensor",
     "Humidity sensor": "Luftfeuchtigkeitssensor",
@@ -3181,7 +3181,10 @@
     "Total cost": "Gesamtkosten",
     "Electricity": "Strom",
     "Gas": "Gas",
-    "Today's electricity and gas cost side by side on the tile, or the usage in kWh. The popup shows the day, the week or the month: usage and cost of electricity and gas apart, standing charge and total, and a chart with bars per hour or day. Week and month come from Home Assistant's statistics of the daily counters. For smart meters without solar, e.g. Hildebrand Glow and Octopus Energy.": "Die heutigen Kosten für Strom und Gas nebeneinander auf der Kachel, oder der Verbrauch in kWh. Das Popup zeigt den Tag, die Woche oder den Monat: Verbrauch und Kosten von Strom und Gas getrennt, Grundgebühr und Summe, dazu ein Diagramm mit Balken je Stunde oder Tag. Woche und Monat kommen aus den Statistiken der Tageszähler in Home Assistant. Für Smart Meter ohne Solar, z. B. Hildebrand Glow und Octopus Energy."
+    "Today's electricity and gas cost side by side on the tile, or the usage in kWh. The popup shows the day, the week or the month: usage and cost of electricity and gas apart, standing charge and total, and a chart with bars per hour or day. Week and month come from Home Assistant's statistics of the daily counters. For smart meters without solar, e.g. Hildebrand Glow and Octopus Energy.": "Die heutigen Kosten für Strom und Gas nebeneinander auf der Kachel, oder der Verbrauch in kWh. Das Popup zeigt den Tag, die Woche oder den Monat: Verbrauch und Kosten von Strom und Gas getrennt, Grundgebühr und Summe, dazu ein Diagramm mit Balken je Stunde oder Tag. Woche und Monat kommen aus den Statistiken der Tageszähler in Home Assistant. Für Smart Meter ohne Solar, z. B. Hildebrand Glow und Octopus Energy.",
+    "Go back to Home and close popups after a while without use.": "Nach einer Weile ohne Bedienung zurück zu „Zuhause“ und Popups schließen.",
+    "Close popups when idle": "Bei Inaktivität Popups schließen",
+    "Tablets only. Closes an open popup after a while without use.": "Nur auf Tablets. Schließt ein offenes Popup nach einer Weile ohne Bedienung."
   },
   "patterns": [
     [

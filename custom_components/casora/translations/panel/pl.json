@@ -3181,7 +3181,10 @@
     "Total cost": "Koszt całkowity",
     "Electricity": "Prąd",
     "Gas": "Gaz",
-    "Today's electricity and gas cost side by side on the tile, or the usage in kWh. The popup shows the day, the week or the month: usage and cost of electricity and gas apart, standing charge and total, and a chart with bars per hour or day. Week and month come from Home Assistant's statistics of the daily counters. For smart meters without solar, e.g. Hildebrand Glow and Octopus Energy.": "Dzisiejszy koszt prądu i gazu obok siebie na kafelku albo zużycie w kWh. Okno pokazuje dzień, tydzień lub miesiąc: zużycie i koszt prądu i gazu osobno, opłatę stałą i sumę oraz wykres słupkowy na godzinę lub dzień. Tydzień i miesiąc pochodzą ze statystyk liczników dziennych w Home Assistant. Dla inteligentnych liczników bez fotowoltaiki, np. Hildebrand Glow i Octopus Energy."
+    "Today's electricity and gas cost side by side on the tile, or the usage in kWh. The popup shows the day, the week or the month: usage and cost of electricity and gas apart, standing charge and total, and a chart with bars per hour or day. Week and month come from Home Assistant's statistics of the daily counters. For smart meters without solar, e.g. Hildebrand Glow and Octopus Energy.": "Dzisiejszy koszt prądu i gazu obok siebie na kafelku albo zużycie w kWh. Okno pokazuje dzień, tydzień lub miesiąc: zużycie i koszt prądu i gazu osobno, opłatę stałą i sumę oraz wykres słupkowy na godzinę lub dzień. Tydzień i miesiąc pochodzą ze statystyk liczników dziennych w Home Assistant. Dla inteligentnych liczników bez fotowoltaiki, np. Hildebrand Glow i Octopus Energy.",
+    "Go back to Home and close popups after a while without use.": "Po chwili bezczynności wróć do ekranu Dom i zamknij okna.",
+    "Close popups when idle": "Zamykaj okna przy bezczynności",
+    "Tablets only. Closes an open popup after a while without use.": "Tylko tablety. Zamyka otwarte okno po chwili bez użycia."
   },
   "patterns": [
     [

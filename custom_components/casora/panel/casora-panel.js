@@ -2522,6 +2522,13 @@ const fieldFault = (f, val, hass) => {
 // Faltzustand) und bleibt darum stehen; title benennt ihn nur in der Oberfläche um.
 const secName = (sec) => (sec && (sec.title || sec.label)) || "";
 
+// Idle return and Idle close (Wall tablet): the choices of both selects, written once here.
+const IDLE_CHOICES = {
+  options: ["", "1", "2", "5", "10"],
+  optionLabels: { "": "Off", "1": "After 1 minute", "2": "After 2 minutes",
+    "5": "After 5 minutes", "10": "After 10 minutes" },
+};
+
 const SECTIONS = [
   {
     label: "Appearance", icon: "home", iconColor: studioIcon("appearance"), group: "rooms",
@@ -2577,11 +2584,13 @@ const SECTIONS = [
       { key: "casora_hide_header", sub: "chrome", label: "Show the HA header", type: "bool", invert: true,
         boolDefault: true, auto: true, scope: "dashboard" },
       { key: "casora_idle_home", sub: "chrome", label: "Return to Home when idle",
-        type: "select", auto: true, scope: "dashboard",
-        options: ["", "1", "2", "5", "10"],
-        optionLabels: { "": "Off", "1": "After 1 minute", "2": "After 2 minutes",
-          "5": "After 5 minutes", "10": "After 10 minutes" },
+        type: "select", auto: true, scope: "dashboard", ...IDLE_CHOICES,
         hint: "Tablets only. Brings one back to Home after a while without use." },
+      // Idle close: shuts an open popup after these minutes without a touch, counted from the later of the
+      // last touch and the moment the popup opened (scripts/casora-core.js, idleDecision). Same choices as above.
+      { key: "casora_idle_close", sub: "chrome", label: "Close popups when idle",
+        type: "select", auto: true, scope: "dashboard", ...IDLE_CHOICES,
+        hint: "Tablets only. Closes an open popup after a while without use." },
       // Issue 114: swipe left/right on Home or an open room for the next/previous page (scripts/local/40-swipe-rooms.js),
       // on every touch device (owner, 03.11.2026: one setting). Under Screen, not Phone (issue 186: read as phone only).
       // The tablet reads swipe_rooms from the room views (casora-core.js, window._casoraSwipeRooms), the phone's bottom

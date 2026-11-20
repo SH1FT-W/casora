@@ -8793,6 +8793,8 @@ window.casoraMenuGlass = {
       this._bridge.target = null;
       this.removeAttribute('data-casora-charts-ready');
 
+      // Idle close counts from the last open() call (casoraPopup.openedAt), also when new content replaces an open popup.
+      this._openedAt = Date.now();
       if (!wasOpen) {
         // Keyboard and screen readers (a11y round 14.11.2026): remember where the focus was (the tile), give it back on close.
         this._focusBack = focusChain(deepFocus());
@@ -10062,6 +10064,8 @@ window.casoraMenuGlass = {
     get current() { return _el && _el.hasAttribute('open') ? _el._cfgCurrent : null; },
     get entity() { return _el && _el.hasAttribute('open') ? _el._casoraEntity || null : null; },
     get surface() { return _el && _el.hasAttribute('open') ? _el.surface : null; },
+    // When the open popup opened (ms, Idle close counts from it); null when none is open.
+    get openedAt() { return _el && _el.hasAttribute('open') ? _el._openedAt || 0 : null; },
     get enabled() { return flagOn(); },
     setEnabled: function (on) {
       window.CASORA_POPUP = !!on;
@@ -18193,6 +18197,28 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   var last = Date.now();
   function bump() { last = Date.now(); }
 
+  // The idle decision. A pure function: it reads no globals and changes nothing, so a test can call it with
+  // plain values (dev/unit/idle_decision.mjs). Input: now, lastTouch and popupOpenedAt (ms; popupOpenedAt 0 =
+  // unknown), popupOpen, onHome, idleHomeMins and idleCloseMins (0 = Off), isWallTablet. Output: close (Idle
+  // close: the popup shuts after idleCloseMins from the later of lastTouch and popupOpenedAt) and home (Idle
+  // return: after idleHomeMins from lastTouch, paused while a popup is open). Both in one answer when both
+  // apply. restart = the Idle return count does not run now, so the caller sets lastTouch to now; a popup
+  // open never restarts it.
+  function idleDecision(s) {
+    var out = { close: false, home: false, restart: false };
+    if (!s.isWallTablet || (!s.idleHomeMins && !s.idleCloseMins)) { out.restart = true; return out; }
+    var homeDue = !!s.idleHomeMins && s.now - s.lastTouch >= s.idleHomeMins * 60000;
+    if (s.popupOpen) {
+      var since = Math.max(s.lastTouch, s.popupOpenedAt || 0);
+      out.close = !!s.idleCloseMins && s.now - since >= s.idleCloseMins * 60000;
+      out.home = out.close && homeDue && !s.onHome;
+      return out;
+    }
+    out.restart = !s.idleHomeMins || !!s.onHome;
+    out.home = !out.restart && homeDue;
+    return out;
+  }
+
   ['pointerdown', 'touchstart', 'keydown', 'wheel', 'scroll'].forEach(function (t) {
     window.addEventListener(t, bump, { capture: true, passive: true });
   });
@@ -18225,13 +18251,13 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     return ll.editMode ? null : (ll.config || null);
   }
 
-  // The setting is a room variable, like every other dashboard-scoped one, so
-  // it rides along in the hero card of each view.
-  function minutes(cfg) {
+  // The settings are room variables, like every other dashboard-scoped one, so
+  // they ride along in the hero card of each view. Missing or empty = Off.
+  function minutes(cfg, key) {
     var views = (cfg && cfg.views) || [];
     for (var i = 0; i < views.length; i++) {
       var card = ((views[i].cards || [])[0]) || {};
-      var v = (card.variables || {}).casora_idle_home;
+      var v = (card.variables || {})[key];
       if (v !== undefined && v !== null && v !== '') return parseFloat(v) || 0;
     }
     return 0;
@@ -18254,16 +18280,22 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   function norm(p) { return String(p || '').replace(/\/+$/, '') || '/'; }
 
   function check() {
-    if (OFF || !isTablet()) return bump();
     var cfg = config();
-    if (!cfg) return bump();
-    var mins = minutes(cfg);
-    if (!mins) return bump();
-    var home = homePath(cfg);
-    if (!home || norm(location.pathname) === norm(home)) return bump();
-    // Never pull the view out from under someone reading a popup.
-    if (window.casoraPopup && window.casoraPopup.surface) return bump();
-    if (Date.now() - last < mins * 60000) return;
+    var home = cfg ? homePath(cfg) : null;
+    var d = idleDecision({
+      now: Date.now(),
+      lastTouch: last,
+      popupOpen: !!(window.casoraPopup && window.casoraPopup.surface),
+      popupOpenedAt: (window.casoraPopup && window.casoraPopup.openedAt) || 0,
+      onHome: !home || norm(location.pathname) === norm(home),
+      idleHomeMins: cfg ? minutes(cfg, 'casora_idle_home') : 0,
+      idleCloseMins: cfg ? minutes(cfg, 'casora_idle_close') : 0,
+      isWallTablet: !OFF && isTablet()
+    });
+    // Idle close first: the popup's own close. Then Idle return, in the same check.
+    if (d.close && window.casoraPopup) window.casoraPopup.close();
+    if (d.restart) return bump();
+    if (!d.home) return;
     history.pushState(null, '', home);
     window.dispatchEvent(new CustomEvent('location-changed', { detail: { replace: false } }));
     bump();
