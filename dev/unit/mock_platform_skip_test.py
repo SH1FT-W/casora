@@ -100,7 +100,7 @@ def _module(name: str, **attrs) -> types.ModuleType:
     return mod
 
 
-def ha_stubs(registry: FakeEntities) -> None:
+def ha_stubs() -> None:
     """Puts minimal homeassistant and voluptuous stand-ins into sys.modules (entity.py and __init__.py imports)."""
     ha = _module("homeassistant")
     helpers = _module("homeassistant.helpers")
@@ -142,7 +142,7 @@ def ha_stubs(registry: FakeEntities) -> None:
                 async_get_or_create=lambda **kw: SimpleNamespace(id=f"dev-{kw.get('identifiers')}", area_id=None),
                 async_update_device=lambda dev_id, **kw: None),
             DeviceInfo=object)
-    _module("homeassistant.helpers.entity_registry", async_get=lambda hass: registry,
+    _module("homeassistant.helpers.entity_registry", async_get=lambda hass: hass.registry,
             RegistryEntryHider=lambda value: value)
     _module("homeassistant.helpers.entity", Entity=object)
     _module("homeassistant.helpers.event",
@@ -151,7 +151,7 @@ def ha_stubs(registry: FakeEntities) -> None:
             async_call_later=lambda hass, delay, action: lambda: None)
 
 
-def load_mock(tmp: Path, skip: str | None, registry: FakeEntities):
+def load_mock(tmp: Path, skip: str | None):
     """Copies dev/casora_mock into tmp (code only), writes the neutral fixture and skip.txt, imports the
     package from there and returns it. The setup side-effect modules are stubbed out."""
     shutil.copytree(MOCK, tmp / "casora_mock", ignore=shutil.ignore_patterns(
@@ -161,7 +161,8 @@ def load_mock(tmp: Path, skip: str | None, registry: FakeEntities):
     (tmp / "casora_mock" / "fixture.json").write_text(json.dumps(fixture), encoding="utf-8")
     if skip is not None:
         (tmp / "casora_mock" / "skip.txt").write_text(skip, encoding="utf-8")
-    ha_stubs(registry)
+    ha_stubs()
+    # Must match the setup modules in dev/casora_mock/__init__.py (a new one there needs a stub here).
     for name in ("frigate", "klingel", "kamerabild", "coffee", "dishwasher", "live", "velair"):
         sys.modules[f"casora_mock.{name}"] = types.ModuleType(f"casora_mock.{name}")
         sys.modules[f"casora_mock.{name}"].setup = lambda hass, mock: None
@@ -201,7 +202,7 @@ class PlatformSkipTest(unittest.TestCase):
 
     def world(self, skip: str | None):
         """Loads the mock once with the given skip.txt and starts it; returns the loaded module."""
-        mock = load_mock(self.tmp, skip, self.registry)
+        mock = load_mock(self.tmp, skip)
         start(mock, self.hass)
         return mock
 
@@ -215,9 +216,12 @@ class PlatformSkipTest(unittest.TestCase):
     def test_skipped_platform_stays_away_on_a_second_start(self):
         mock = self.world("platform:flightradar24\n")
         self.assertEqual([c for c in self.registry.created if c.platform == "flightradar24"], [])
-        second = FakeHass(self.tmp, self.registry)  # the registry a restart begins with
+        second_registry = FakeEntities()  # a restart begins with an empty registry
+        second = FakeHass(self.tmp, second_registry)
         start(mock, second)
-        self.assertEqual([c for c in second.registry.created if c.platform == "flightradar24"], [])
+        self.assertNotIn("flightradar24", {c.platform for c in second_registry.created})
+        for platform in OTHER_PLATFORMS:
+            self.assertIn(platform, {c.platform for c in second_registry.created})
 
     def test_other_registry_platforms_are_still_created(self):
         self.world("platform:flightradar24\n")
