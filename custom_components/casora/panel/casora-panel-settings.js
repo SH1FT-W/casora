@@ -73,7 +73,8 @@
           kw: "halten gedrückt halten schnellmenü popup sortieren reihenfolge hold sort" },
         // #186: phone and tablet alike, so here and not under Phone (the field moved to the part chrome).
         { k: "swipe", sec: "General", sub: "chrome", keys: ["swipe_rooms"], title: "Swipe between rooms",
-          plain: "On a phone or tablet, swipe left or right on Home or an open room to get to the next or previous room, in the order of the room menu.",
+          // #217: not the hint of the switch again, only what the title does not say.
+          plain: "On phone and tablet, in the order of the room menu.",
           kw: "wischen swipe räume wechseln blättern tablet handy nächster raum" },
         { k: "screen", sec: "General", sub: "chrome", keys: ["casora_idle_home"], title: "Wall tablet",
           plain: "Go back to Home after a while without use.",
