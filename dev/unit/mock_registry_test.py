@@ -110,7 +110,7 @@ class SnapshotSkipTest(unittest.TestCase):
 
     ENTITIES = [
         {"entity_id": "sensor.test_lamp", "state": "on"},
-        {"entity_id": "sensor.test_flight", "registry_platform": "flightradar24", "state": "3"},
+        {"entity_id": "sensor.test_example", "registry_platform": "example_integration", "state": "3"},
         {"entity_id": "input_boolean.test_helper", "state": "off"},
     ]
 
@@ -119,16 +119,16 @@ class SnapshotSkipTest(unittest.TestCase):
         return set(haus.snapshot(fixture, skip)["entities"])
 
     def test_without_skip_only_the_real_domains_are_left_out(self):
-        self.assertEqual(self.ids(), {"sensor.test_lamp", "sensor.test_flight"})
+        self.assertEqual(self.ids(), {"sensor.test_lamp", "sensor.test_example"})
 
     def test_entity_id_skips_only_that_entity(self):
-        self.assertEqual(self.ids(["sensor.test_lamp"]), {"sensor.test_flight"})
+        self.assertEqual(self.ids(["sensor.test_lamp"]), {"sensor.test_example"})
 
     def test_platform_line_skips_that_platform(self):
-        self.assertEqual(self.ids(["platform:flightradar24"]), {"sensor.test_lamp"})
+        self.assertEqual(self.ids(["platform:example_integration"]), {"sensor.test_lamp"})
 
     def test_platform_line_for_the_mocks_own_entities(self):
-        self.assertEqual(self.ids(["platform:casora_mock"]), {"sensor.test_flight"})
+        self.assertEqual(self.ids(["platform:casora_mock"]), {"sensor.test_example"})
 
 
 if __name__ == "__main__":

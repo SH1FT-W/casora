@@ -31,10 +31,10 @@ MOCK = ROOT / "dev" / "casora_mock"
 
 # The neutral fixture: one entity per registry platform, plus one of the mock's own.
 ENTITIES = [
-    {"entity_id": "sensor.test_flight_altitude", "registry_platform": "flightradar24",
-     "unique_id": "fr24-alt", "state": "35000", "attributes": {"unit_of_measurement": "ft"}},
-    {"entity_id": "button.test_flight_refresh", "registry_platform": "flightradar24",
-     "unique_id": "fr24-btn", "state": "unknown", "attributes": {}},
+    {"entity_id": "sensor.test_example_value", "registry_platform": "example_integration",
+     "unique_id": "ex-value", "state": "7", "attributes": {}},
+    {"entity_id": "button.test_example_refresh", "registry_platform": "example_integration",
+     "unique_id": "ex-btn", "state": "unknown", "attributes": {}},
     {"entity_id": "sensor.test_system_disk", "registry_platform": "hassio",
      "unique_id": "hassio-disk", "state": "42", "attributes": {"unit_of_measurement": "%"}},
     {"entity_id": "sensor.test_music_title", "registry_platform": "music_assistant",
@@ -210,40 +210,40 @@ class PlatformSkipTest(unittest.TestCase):
         return {created.platform for created in self.registry.created}
 
     def test_skipped_platform_is_never_created(self):
-        self.world("platform:flightradar24\n")
-        self.assertNotIn("flightradar24", self.platforms())
+        self.world("platform:example_integration\n")
+        self.assertNotIn("example_integration", self.platforms())
 
     def test_skipped_platform_stays_away_on_a_second_start(self):
-        mock = self.world("platform:flightradar24\n")
-        self.assertEqual([c for c in self.registry.created if c.platform == "flightradar24"], [])
+        mock = self.world("platform:example_integration\n")
+        self.assertEqual([c for c in self.registry.created if c.platform == "example_integration"], [])
         second_registry = FakeEntities()  # a restart begins with an empty registry
         second = FakeHass(self.tmp, second_registry)
         start(mock, second)
-        self.assertNotIn("flightradar24", {c.platform for c in second_registry.created})
+        self.assertNotIn("example_integration", {c.platform for c in second_registry.created})
         for platform in OTHER_PLATFORMS:
             self.assertIn(platform, {c.platform for c in second_registry.created})
 
     def test_other_registry_platforms_are_still_created(self):
-        self.world("platform:flightradar24\n")
+        self.world("platform:example_integration\n")
         for platform in OTHER_PLATFORMS:
             self.assertIn(platform, self.platforms())
 
     def test_the_mocks_own_entities_are_still_created(self):
-        self.world("platform:flightradar24\n")
+        self.world("platform:example_integration\n")
         own = [c for c in self.registry.created if c.platform == "casora_mock"]
         self.assertTrue(any(c.domain == "light" for c in own))
 
     def test_without_skip_txt_every_platform_is_created_as_before(self):
         self.world(None)
-        self.assertIn("flightradar24", self.platforms())
+        self.assertIn("example_integration", self.platforms())
         for platform in OTHER_PLATFORMS:
             self.assertIn(platform, self.platforms())
 
     def test_entity_ids_in_skip_txt_still_skip_only_those_entities(self):
-        self.world("sensor.test_flight_altitude\n")
+        self.world("sensor.test_example_value\n")
         creations = {(c.platform, c.unique_id) for c in self.registry.created}
-        self.assertNotIn(("flightradar24", "fr24-alt"), creations)
-        self.assertIn(("flightradar24", "fr24-btn"), creations)
+        self.assertNotIn(("example_integration", "ex-value"), creations)
+        self.assertIn(("example_integration", "ex-btn"), creations)
         for platform in OTHER_PLATFORMS:
             self.assertIn(platform, self.platforms())
 
