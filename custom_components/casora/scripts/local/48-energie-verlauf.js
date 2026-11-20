@@ -610,3 +610,126 @@
       style: '--popup-min-width: min(552px, calc(100vw - 16px)); --popup-max-width: min(552px, calc(100vw - 16px));' });
   };
 })();
+
+// ── Usage today / this month of a running meter (#223) ──────────────────────────────────────────────────────
+// The energy popup's fields „Heute“ and „Diesen Monat“ expect a counter that resets every day / month and show its
+// state. A meter that only ever counts up (a Shelly 3EM's total energy, state_class total_increasing) put its reading
+// there (528 kWh in both rows). For such a sensor the period's value is its change in HA's long-term statistics
+// (recorder/statistics_during_period, period day, change in kWh): one request per sensor for this month and the last
+// 7 days, kept 5 minutes; nothing is fetched for a sensor that resets.
+// Which kind: a sensor without state_class total / total_increasing, with last_reset (a cycle of its own, e.g.
+// utility_meter) or not in Wh/kWh/MWh is a period counter right away – its state as before. Otherwise the daily
+// statistics decide (UP.mode, the rule of the smart meter card's SM.mode): states that never fall and end far above a
+// day's change are a running meter. Until they are there the value is 'wait' (the row's placeholder, never the
+// reading); without any statistics the state as before.
+//   UP.kind(states, id)               → 'state' (show the state) | 'check' (the statistics decide)
+//   UP.mode(rows)                     → 'daily' | 'total' from the day rows [{ start, state, change }]
+//   UP.span(now)                      → { day, month, start, end } local midnights of the request
+//   UP.sums(rows, now)                → { day, month } kWh change of today / this month, null without a row
+//   UP.value(hass, id, per, el)       → number in the sensor's own unit (like its state) | 'wait' | null
+//   UP.text(hass, id, per, fmt)       → the value in kWh as text ('n': the energy popup's rows, 'wh': under 1 kWh in
+//                                       Wh, like 20-energie-fokus.js) or null while it loads / without a value
+// Pure parts are tested in dev/unit/energy_usage_period.mjs.
+(function () {
+  if (window.casoraUsagePeriod) return;
+  var UP = window.casoraUsagePeriod = {};
+  var H = 36e5;
+  var FACTOR = { Wh: 1000, kWh: 1, MWh: 0.001 };
+  var n = function (v) { var x = v == null || v === '' ? NaN : Number(v); return isFinite(x) ? x : null; };
+  var tOf = function (p) { return typeof p.start === 'number' ? p.start : Date.parse(p.start); };
+  UP.kind = function (states, id) {
+    var st = states && id ? states[id] : null;
+    if (!st) return 'state';
+    var a = st.attributes || {};
+    if (a.state_class !== 'total_increasing' && a.state_class !== 'total') return 'state';
+    if (a.last_reset != null) return 'state';
+    return FACTOR[String(a.unit_of_measurement || '')] ? 'check' : 'state';
+  };
+  // Day rows: a daily counter falls back at midnight (or its day's value stays near the day's change); a running meter
+  // only rises and its last state is far above a day's change.
+  UP.mode = function (rows) {
+    var st = (rows || []).filter(function (p) { return p && n(p.state) != null; });
+    if (st.length < 2) return 'daily';
+    for (var i = 1; i < st.length; i++) if (n(st[i].state) < n(st[i - 1].state) - 1e-9) return 'daily';
+    var first = n(st[0].state), last = n(st[st.length - 1].state);
+    var ch = (rows || []).reduce(function (a, p) { var c = p && n(p.change); return c != null && c > a ? c : a; }, 0);
+    return last > first && last > 3 * ch ? 'total' : 'daily';
+  };
+  UP.span = function (now) {
+    var d = new Date(now); d.setHours(0, 0, 0, 0);
+    var day = d.getTime();
+    var m = new Date(day); m.setDate(1);
+    var w = new Date(day); w.setDate(w.getDate() - 7);
+    var e = new Date(day); e.setDate(e.getDate() + 1);
+    return { day: day, month: m.getTime(), start: Math.min(m.getTime(), w.getTime()), end: e.getTime() };
+  };
+  // HA cuts the days at its own midnight: today is the row that holds now; the month takes the rows from its first
+  // day, half a day of leeway for a browser in another time zone than HA. A negative change is no consumption.
+  UP.sums = function (rows, now) {
+    var sp = UP.span(now), day = null, last = -Infinity, month = null;
+    (rows || []).forEach(function (p) {
+      var t = p ? tOf(p) : NaN, c = p ? n(p.change) : null;
+      if (!isFinite(t) || c == null || t > now) return;
+      if (t > last && now - t < 25 * H) { last = t; day = Math.max(0, c); }
+      if (t >= sp.month - 12 * H) month = (month || 0) + Math.max(0, c);
+    });
+    return { day: day, month: month };
+  };
+
+  var cache = {};
+  var kick = function (el) {
+    try { if (typeof window.casoraKick === 'function') window.casoraKick(el); } catch (e) { /* popup closed */ }
+  };
+  var load = function (hass, id, el) {
+    var sp = UP.span(Date.now());
+    var ck = id + '|' + sp.start, key = Math.floor(Date.now() / 300000), hit = cache[ck];
+    if (hit && (hit.key === key || hit.busy)) {
+      if (el && hit.busy && hit.wait.indexOf(el) < 0) hit.wait.push(el);
+      return hit.data || 'wait';
+    }
+    var cell = cache[ck] = { key: key, busy: true, data: hit ? hit.data : null, wait: el ? [el] : [] };
+    var done = function () {
+      cell.busy = false;
+      var ws = cell.wait; cell.wait = [];
+      ws.forEach(kick);
+      // Rows built once (the energy popup's „Verbrauch“) follow through their live marker (casora-core.js, paintLive).
+      try { if (typeof window._casoraLiveRepaint === 'function') window._casoraLiveRepaint(); } catch (e) { /* only a repaint */ }
+    };
+    var p;
+    try {
+      p = hass.callWS({ type: 'recorder/statistics_during_period', start_time: new Date(sp.start - 864e5).toISOString(),
+        end_time: new Date(sp.end).toISOString(), statistic_ids: [id], period: 'day', types: ['state', 'change'],
+        units: { energy: 'kWh' } });
+    } catch (e) { p = Promise.reject(e); }
+    Promise.resolve(p).then(function (r) { cell.data = { rows: ((r || {})[id]) || [] }; },
+      // A hiccup keeps what was there; without anything the state as before.
+      function () { if (!cell.data) cell.data = { error: true, rows: [] }; })
+      .then(done);
+    return cell.data || 'wait';
+  };
+  UP.value = function (hass, id, per, el) {
+    var S = (hass && hass.states) || {}, st = id ? S[id] : null;
+    if (!st) return null;
+    var own = n(st.state);
+    if (UP.kind(S, id) !== 'check' || typeof hass.callWS !== 'function') return own;
+    var d = load(hass, id, el);
+    if (d === 'wait') return 'wait';
+    if (!d || !d.rows || !d.rows.length || UP.mode(d.rows) !== 'total') return own;
+    var s = UP.sums(d.rows, Date.now())[per === 'month' ? 'month' : 'day'];
+    return s == null ? null : s * FACTOR[String((st.attributes || {}).unit_of_measurement || '')];
+  };
+  UP.text = function (hass, id, per, fmt) {
+    var v = UP.value(hass, id, per);
+    if (typeof v !== 'number') return null;
+    var u = String((((hass.states[id] || {}).attributes) || {}).unit_of_measurement || '');
+    var lang = (hass.locale && hass.locale.language) || hass.language || 'de';
+    if (u === 'Wh') v /= 1000; else if (u === 'MWh') v *= 1000;
+    if (fmt === 'wh') {
+      if (v > 0 && v < 1) return Math.round(v * 1000) + ' Wh';
+      return (v >= 100 ? Math.round(v) : Math.round(v * 10) / 10).toLocaleString(lang) + ' kWh';
+    }
+    var s = v === 0 ? '0' : Math.abs(v) < 10 ? v.toLocaleString(lang, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+      : (v >= 100 ? Math.round(v) : Math.round(v * 10) / 10).toLocaleString(lang);
+    return s + ' kWh';
+  };
+})();

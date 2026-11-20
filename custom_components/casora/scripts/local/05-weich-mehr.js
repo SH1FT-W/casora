@@ -16,6 +16,14 @@
     var n = parseFloat(states[id].state);
     return isNaN(n) ? null : n;
   };
+  // #223: today's usage – of a running meter (a Shelly's total energy) its change from HA's statistics
+  // (casoraUsagePeriod, 48-energie-verlauf.js), never its reading; null while they load.
+  var usageToday = function (states, id, hass) {
+    var U = window.casoraUsagePeriod;
+    if (!U || !hass || !id || U.kind(states, id) !== 'check') return num(states, id);
+    var v = U.value(hass, id, 'day');
+    return typeof v === 'number' ? v : null;
+  };
   /* Leistung in Watt, auch wenn der Sensor kW/MW meldet (B-TPL-03). */
   var watt = function (states, id) {
     var n = num(states, id); if (n == null) return null;
@@ -695,7 +703,7 @@
       else main = 'Bezug aus dem Netz';
     } else if (v && act(v.imp)) main = 'Bezug aus dem Netz';
     if (!main) {
-      var kwh = num(states, C.today), cost = money(num(states, C.costToday), C.cur, hass);
+      var kwh = usageToday(states, C.today, hass), cost = money(num(states, C.costToday), C.cur, hass);
       if (p != null && p < -20) main = 'Einspeisung ins Netz';
       else if (kwh != null) { main = 'Heute ' + fN(kwh, hass) + ' kWh'; if (cost) rest.push(cost); }
       else main = p == null ? 'Noch keine Werte' : p <= FLOW_ON ? 'Kein Verbrauch' : 'Verbraucht Strom';
@@ -1569,7 +1577,7 @@
       var socH = fsrc && fsrc.soc ? num(states, fsrc.soc) : null;
       if (socH != null) bits.push('Akku ' + Math.round(socH) + ' %');
       var cost = money(num(states, C.costToday), C.cur, hass);
-      var kwh = num(states, C.today);
+      var kwh = usageToday(states, C.today, hass);
       if (cost) bits.push('heute ' + cost);
       else if (kwh != null) bits.push('heute ' + fN(kwh, hass) + ' kWh');
       var err = raw(states, C.error);
