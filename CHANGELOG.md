@@ -4,6 +4,29 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.11.29 – 20.11.2026
+
+Redrawn screensavers, smoke and water detectors under Security, waste you can mark as put out, energy over day, week and month, a Smart Meter card, and fixes from three betas.
+
+### New
+- **Screensavers redrawn:** all twelve are readable from across the room. Each has one big thing (the time, the temperature, the words, the next appointment or the month) and a colour of its own instead of grey plates, light by day and deep by night. The sky gets stars and the moon at night, the energy flow shows which way the power goes, the house at rest stands in the middle while nothing needs you, and the landscapes have softer light and a crescent moon. 4:3 tablets and portrait have their own sizes.
+
+  ![The redrawn screensavers](https://raw.githubusercontent.com/SH1FT-W/casora/main/docs/images/news-26.11.29-screensavers.webp)
+
+- **Smoke and water detectors under Security (#209):** smoke, water, gas and carbon monoxide detectors count in the security badge on Home and in their room. The badge's popup has its own rows "Smoke detectors" and "Water detectors"; a detector that reports leads the badge in red with its room. Detectors that an integration files as diagnostic entities (for example wM-Bus via wmbusmeters) count too. Motion sensors can be switched on under Studio › Settings › Security and then count only while nobody is home. Thanks to @Strako80.
+- **Waste put out (#211):** on the pickup day or the evening before, a tap on the waste tile's icon confirms that the bins are out. The tile and the bell's waste entry rest until the next pickup, on every device and for every account. Thanks to @Birdy2019.
+- **Energy per day, week and month (#210):** the house's energy popup shows home consumption, grid import, feed-in and solar production in kWh for today, this week or this month. Thanks to @Westerloer.
+- **Community card "Smart Meter" (#208):** today's cost or usage of electricity and gas on the tile; day, week and month as stacked bars in the popup, calculated from the long-term statistics of the daily sensors. Thanks to @Tokisuve.
+- **Presets for heating thermostats (#219):** a thermostat that only heats and reports presets gets the "Preset" row in its popup. Thanks to @vitidron.
+
+### Fixed
+- **Grouped speakers (#212):** the media popup's "Play together" lists its own speaker too, and every row says "Running" or "Paused". Thanks to @Birdy2019.
+- **House light tile (#206):** a hand-made Home light tile counts the lamps of its own list that no room holds, and editing "Popup lights" in the Studio now takes effect. The Studio's popup preview shows what the dashboard shows. Thanks to @Westerloer.
+- **Waste bins in Dutch (#218):** "drankenkartons" no longer counts as paper, Dutch bin names (GFT, PMD, groente, tuinafval and more) are recognised, a countdown of 99 means "no pickup known", and the month and date in the waste and calendar popups follow the dashboard language. Thanks to @ejetzass.
+- **Translations (#175):** the Updates popup is translated completely. Thanks to @daxy01.
+- **Studio (#217):** "Swipe between rooms" no longer shows the same sentence twice. Thanks to @ejetzass.
+- **Energy popup:** a closed popup no longer stays in memory, and its two columns stay balanced with the new section.
+
 ## 26.11.28 – 18.11.2026
 
 Room climate rated by room type, a clearer security badge, Casora follows renamed entities, undo in the bell and a fully translated interface. Plus many smaller fixes from thirteen betas.

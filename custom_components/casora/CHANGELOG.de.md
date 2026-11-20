@@ -4,6 +4,29 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.11.29 – 20.11.2026
+
+Neu gezeichnete Bildschirmschoner, Rauch- und Wassermelder unter Sicherheit, Müll als rausgestellt bestätigen, Energie über Tag, Woche und Monat, eine Smart-Meter-Karte und Korrekturen aus drei Betas.
+
+### Neu
+- **Bildschirmschoner neu gezeichnet:** alle zwölf sind quer durch den Raum lesbar. Jeder hat eine große Sache (Uhrzeit, Temperatur, Wörter, nächster Termin oder Monat) und eine eigene Farbe statt grauer Flächen, hell am Tag und tief in der Nacht. Der Himmel bekommt nachts Sterne und den Mond, der Energiefluss zeigt, in welche Richtung der Strom fließt, „Haus in Ruhe“ steht in der Mitte, solange nichts ansteht, und die Landschaften haben weicheres Licht und eine Mondsichel. 4:3-Tablets und Hochformat haben eigene Größen.
+
+  ![Die neu gezeichneten Bildschirmschoner](https://raw.githubusercontent.com/SH1FT-W/casora/main/docs/images/news-26.11.29-screensavers.webp)
+
+- **Rauch- und Wassermelder unter Sicherheit (#209):** Rauch-, Wasser-, Gas- und CO-Melder zählen im Sicherheits-Badge auf Zuhause und in ihrem Raum. Das Popup des Badges hat eigene Zeilen „Rauchmelder“ und „Wassermelder“; ein Melder, der auslöst, führt das Badge rot mit seinem Raum. Auch Melder, die eine Integration als Diagnose-Entität führt (etwa wM-Bus über wmbusmeters), zählen. Bewegungsmelder lassen sich unter Studio › Einstellungen › Sicherheit einschalten und zählen dann nur, wenn niemand zu Hause ist. Danke an @Strako80.
+- **Müll rausgestellt (#211):** am Abholtag oder am Abend davor bestätigt ein Tipp auf das Symbol der Abfall-Kachel, dass die Tonnen draußen sind. Kachel und Glocken-Eintrag ruhen bis zur nächsten Abholung, auf allen Geräten und für alle Konten. Danke an @Birdy2019.
+- **Energie je Tag, Woche und Monat (#210):** das Energie-Popup des Hauses zeigt Hausverbrauch, Netzbezug, Einspeisung und Solarerzeugung in kWh für heute, diese Woche oder diesen Monat. Danke an @Westerloer.
+- **Community-Karte „Smart Meter“ (#208):** Kosten oder Verbrauch von Strom und Gas heute auf der Kachel; Tag, Woche und Monat als gestapelte Balken im Popup, berechnet aus der Langzeitstatistik der Tagessensoren. Danke an @Tokisuve.
+- **Voreinstellungen für Heizthermostate (#219):** ein Thermostat, das nur heizt und Voreinstellungen meldet, bekommt die Zeile „Voreinstellung“ im Popup. Danke an @vitidron.
+
+### Behoben
+- **Gruppierte Lautsprecher (#212):** „Zusammen abspielen“ im Medien-Popup listet auch den eigenen Lautsprecher, und jede Zeile sagt „Läuft“ oder „Pausiert“. Danke an @Birdy2019.
+- **Licht-Kachel auf Zuhause (#206):** eine selbst angelegte Licht-Kachel zählt die Lampen ihrer eigenen Liste, die in keinem Raum stehen, und „Lichter im Popup“ im Studio wirkt jetzt. Die Popup-Vorschau im Studio zeigt, was das Dashboard zeigt. Danke an @Westerloer.
+- **Tonnen auf Niederländisch (#218):** „drankenkartons“ zählt nicht mehr als Papier, niederländische Tonnennamen (GFT, PMD, groente, tuinafval und mehr) werden erkannt, ein Countdown von 99 heißt „kein Termin bekannt“, und Monat und Datum in Abfall- und Kalender-Popup folgen der Dashboard-Sprache. Danke an @ejetzass.
+- **Übersetzungen (#175):** das Updates-Popup ist vollständig übersetzt. Danke an @daxy01.
+- **Studio (#217):** „Zwischen Räumen wischen“ zeigt nicht mehr zweimal denselben Satz. Danke an @ejetzass.
+- **Energie-Popup:** ein geschlossenes Popup bleibt nicht mehr im Speicher, und seine zwei Spalten bleiben mit dem neuen Abschnitt ausgeglichen.
+
 ## 26.11.28 – 18.11.2026
 
 Raumklima nach Raumart, ein klareres Sicherheits-Badge, Casora folgt umbenannten Entitäten, Rückgängig in der Glocke und eine durchgehend übersetzte Oberfläche. Dazu viele kleine Korrekturen aus dreizehn Betas.
