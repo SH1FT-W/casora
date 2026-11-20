@@ -2989,7 +2989,16 @@
     "Strom und Gas": "Strøm og gass",
     "Rausgestellt": "Satt ut",
     "Müll ist rausgestellt": "Søppelet er satt ut",
-    "Kachel bis zur nächsten Abholung ausgeblendet": "Flisen er skjult til neste henting"
+    "Kachel bis zur nächsten Abholung ausgeblendet": "Flisen er skjult til neste henting",
+    "Update gesperrt": "Oppdatering sperret",
+    "Zu tun": "Å gjøre",
+    "Release-Notes": "Versjonsmerknader",
+    "Software-Updates": "Programvareoppdateringer",
+    "✓ Freigegeben": "✓ Godkjent",
+    "erst lesen": "les først",
+    "automatisch": "automatisk",
+    "automatische Updates": "automatiske oppdateringer",
+    "Zurückholen": "Hent tilbake"
   },
   "patterns": [
     [
@@ -5415,6 +5424,22 @@
     [
       "^Gas (\\S*\\d\\S*(?: \\S+)?)$",
       "Gass {1}"
+    ],
+    [
+      "^geprüft (vor .+|gestern|gerade eben)$",
+      "sjekket {1}"
+    ],
+    [
+      "^✓ Freigegeben (vor .+|gestern|gerade eben)$",
+      "✓ Godkjent {1}"
+    ],
+    [
+      "^Update auf (.+)$",
+      "Oppdatering til {1}"
+    ],
+    [
+      "^Version (.+) übersprungen$",
+      "Versjon {1} hoppet over"
     ]
   ]
 }

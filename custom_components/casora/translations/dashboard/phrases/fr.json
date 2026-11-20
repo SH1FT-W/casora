@@ -2996,7 +2996,16 @@
     "Strom und Gas": "Électricité et gaz",
     "Rausgestellt": "Sorti",
     "Müll ist rausgestellt": "Les poubelles sont sorties",
-    "Kachel bis zur nächsten Abholung ausgeblendet": "Tuile masquée jusqu’à la prochaine collecte"
+    "Kachel bis zur nächsten Abholung ausgeblendet": "Tuile masquée jusqu’à la prochaine collecte",
+    "Update gesperrt": "Mise à jour bloquée",
+    "Zu tun": "À faire",
+    "Release-Notes": "Nouveautés de la version",
+    "Software-Updates": "Mises à jour logicielles",
+    "✓ Freigegeben": "✓ Approuvé",
+    "erst lesen": "à lire d'abord",
+    "automatisch": "automatique",
+    "automatische Updates": "mises à jour automatiques",
+    "Zurückholen": "Rétablir"
   },
   "patterns": [
     [
@@ -5422,6 +5431,22 @@
     [
       "^Gas (\\S*\\d\\S*(?: \\S+)?)$",
       "Gaz {1}"
+    ],
+    [
+      "^geprüft (vor .+|gestern|gerade eben)$",
+      "vérifié {1}"
+    ],
+    [
+      "^✓ Freigegeben (vor .+|gestern|gerade eben)$",
+      "✓ Approuvé {1}"
+    ],
+    [
+      "^Update auf (.+)$",
+      "Mise à jour vers {1}"
+    ],
+    [
+      "^Version (.+) übersprungen$",
+      "Version {1} ignorée"
     ]
   ]
 }

@@ -2996,7 +2996,16 @@
     "Strom und Gas": "Electricidad y gas",
     "Rausgestellt": "Sacado",
     "Müll ist rausgestellt": "La basura está fuera",
-    "Kachel bis zur nächsten Abholung ausgeblendet": "Tarjeta oculta hasta la próxima recogida"
+    "Kachel bis zur nächsten Abholung ausgeblendet": "Tarjeta oculta hasta la próxima recogida",
+    "Update gesperrt": "Actualización bloqueada",
+    "Zu tun": "Qué hacer",
+    "Release-Notes": "Notas de la versión",
+    "Software-Updates": "Actualizaciones de software",
+    "✓ Freigegeben": "✓ Aprobado",
+    "erst lesen": "leer primero",
+    "automatisch": "automático",
+    "automatische Updates": "actualizaciones automáticas",
+    "Zurückholen": "Recuperar"
   },
   "patterns": [
     [
@@ -5422,6 +5431,22 @@
     [
       "^Gas (\\S*\\d\\S*(?: \\S+)?)$",
       "Gas {1}"
+    ],
+    [
+      "^geprüft (vor .+|gestern|gerade eben)$",
+      "revisado {1}"
+    ],
+    [
+      "^✓ Freigegeben (vor .+|gestern|gerade eben)$",
+      "✓ Aprobado {1}"
+    ],
+    [
+      "^Update auf (.+)$",
+      "Actualización a {1}"
+    ],
+    [
+      "^Version (.+) übersprungen$",
+      "Versión {1} omitida"
     ]
   ]
 }
