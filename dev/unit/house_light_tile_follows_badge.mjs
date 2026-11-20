@@ -113,7 +113,7 @@ console.log('ok house tile = Home badge (group with rooms beside it)');
 // Studio preview (casora-panel-types.js withHouseLights): Home's variables being edited.
 {
   const src = read('custom_components/casora/panel/casora-panel-types.js');
-  const m = src.match(/const withHouseLights = [\s\S]*?\n  };\n/);
+  const m = src.match(/const studioHouse = [\s\S]*?const withHouseLights = [\s\S]*?\n  };\n/);
   assert.ok(m, 'withHouseLights');
   window._casoraLovelaceCfg = () => null;
   delete window._casoraHomeLightC;

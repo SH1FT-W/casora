@@ -942,18 +942,55 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
 
   // The house light tile (light_rooms_auto) counts the rooms' lights via window._casoraHouseLights, which reads the
   // dashboard's config – in the Studio the rooms being edited (casoraBasis.houseLights, the same rule).
+  // What the dashboard reads from its config, from the rooms being edited: the rooms' lights (Home's own view is no
+  // room there, as window._casoraHouseLights skips the first view) and Home's light badge.
+  const studioHouse = (rooms) => {
+    const B = window.casoraBasis;
+    const home = rooms.find((r) => r && r.path === "home") || rooms[0];
+    const others = rooms.length > 1 ? rooms.filter((r) => r !== home) : rooms;
+    return {
+      lights: (h) => B.houseLights(h, others),
+      // The house tile follows Home's light badge (window._casoraHomeLightVars): Home's variables being edited.
+      home: () => (window._casoraHomeLightVarsOf && home ? window._casoraHomeLightVarsOf(home.variables) : null),
+    };
+  };
   const withHouseLights = (rooms, fn) => {
     const B = window.casoraBasis;
     if (!rooms || !B || !B.houseLights) return fn();
     const was = window._casoraHouseLights, wasHome = window._casoraHomeLightVars;
-    window._casoraHouseLights = (h) => B.houseLights(h, rooms);
-    // The house tile follows Home's light badge (window._casoraHomeLightVars): Home's variables being edited.
-    const home = rooms.find((r) => r && r.path === "home") || rooms[0];
-    window._casoraHomeLightVars = () => (window._casoraHomeLightVarsOf && home ? window._casoraHomeLightVarsOf(home.variables) : null);
+    const sh = studioHouse(rooms);
+    window._casoraHouseLights = sh.lights;
+    window._casoraHomeLightVars = sh.home;
     try { return fn(); } finally {
       if (was === undefined) delete window._casoraHouseLights; else window._casoraHouseLights = was;
       if (wasHome === undefined) delete window._casoraHomeLightVars; else window._casoraHomeLightVars = wasHome;
     }
+  };
+  // The popup preview is a live popup: its cards read the house's lights whenever a lamp changes, long after the
+  // call that opened it, so the two readers stay swapped while it is open (#206: the preview listed the tile's own
+  // lamps, the dashboard the rooms'). getRooms: the rooms being edited, null once the preview is gone (then the
+  // readers answer as before, also when off() was never reached).
+  let houseHeld = null;
+  window.casoraStudioHouseLights = {
+    on(getRooms) {
+      this.off();
+      const B = window.casoraBasis;
+      if (!B || !B.houseLights || typeof getRooms !== "function") return;
+      const was = window._casoraHouseLights, wasHome = window._casoraHomeLightVars;
+      const lights = (h) => { const r = getRooms(); return r ? studioHouse(r).lights(h) : was ? was(h) : { rooms: [], ids: [], subs: [] }; };
+      const home = () => { const r = getRooms(); return r ? studioHouse(r).home() : wasHome ? wasHome() : null; };
+      window._casoraHouseLights = lights;
+      window._casoraHomeLightVars = home;
+      houseHeld = { was, wasHome, lights, home };
+    },
+    off() {
+      const H = houseHeld;
+      houseHeld = null;
+      if (!H) return;
+      // Only what is still ours (the dashboard module loaded meanwhile sets its own).
+      if (window._casoraHouseLights === H.lights) { if (H.was === undefined) delete window._casoraHouseLights; else window._casoraHouseLights = H.was; }
+      if (window._casoraHomeLightVars === H.home) { if (H.wasHome === undefined) delete window._casoraHomeLightVars; else window._casoraHomeLightVars = H.wasHome; }
+    },
   };
   window.casoraTileState = (tile, ent, hass, templates, rooms) => withHouseLights(rooms, () => tileState(tile, ent, hass, templates));
   const tileState = (tile, ent, hass, templates) => {

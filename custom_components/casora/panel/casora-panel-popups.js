@@ -383,6 +383,11 @@
       const ok = await this._cpReady();
       if (tok !== this._cpTok) return;
       if (!ok) { note(t("The popup can't be shown here – the button-card isn't installed.")); return; }
+      // The house's lights as the dashboard will read them: from the rooms being edited (casora-panel-types.js, #206).
+      if (window.casoraStudioHouseLights) {
+        window.casoraStudioHouseLights.on(() => (this.isConnected && this._cpLayer && this._state && this._state.compact
+          && Array.isArray(this._state.compact.rooms) && this._state.compact.rooms) || null);
+      }
       let cfg = null;
       try { cfg = await this._cpConfig(target); } catch (e) { cfg = null; }
       if (tok !== this._cpTok || !this._cpLayer) return;
@@ -440,6 +445,7 @@
       // The preview's room (set in _cpOpen) ends with the preview: the dashboard in the same window
       // (HA keeps one page) would otherwise take the Studio's room for its own tiles (issue #54).
       if (window._casoraStudioRoom !== undefined) delete window._casoraStudioRoom;
+      if (window.casoraStudioHouseLights) window.casoraStudioHouseLights.off();
       const layer = this._cpLayer;
       this._cpLayer = null;
       if (this._cpObs) this._cpObs.disconnect();
