@@ -47,7 +47,7 @@ atFinish(async () => {
 const put = async (patch) => {
   const k = await ws();
   const sec = { ...((before || {}).security || {}) };
-  delete sec.detectors; delete sec.motion;
+  delete sec.detectors; delete sec.motion; delete sec.smoke_detectors; delete sec.water_detectors; delete sec.detectors_exclude;
   await k.cmd({ type: 'casora/settings/set', settings: { ...(before || {}), security: { ...sec, ...patch } } });
   k.close();
 };
@@ -107,7 +107,7 @@ rows = await openPopup(page);
 await check('water: the detectors row says it („Wasser · …“)', rows.some((r) => /^(Wassermelder|Melder).*Wasser · /.test(r)), rows);
 await close(page);
 
-// 3. Switched off: as before #209.
+// 3. Switched off: as before #209 (the common key of #209 still switches smoke and water off, #220).
 await put({ detectors: false });
 await reload(page);
 await fakeStates(page, { [WATER]: { state: 'on' } }, { sticky: true });
@@ -131,7 +131,8 @@ await check('motion: the popup has a „Bewegung“ row', rows.some((r) => /^Bew
 await close(page);
 await ph.browser.close();
 
-// 5. Studio: Settings › Home & devices › Security, group „Melder“ with both switches (default on / off).
+// 5. Studio: Settings › Home & devices › Security, group „Melder“ with its switches (smoke and water apart since #220,
+// both on by default; motion off).
 await put({});
 const dk = await open({ width: 1440, height: 900, dark: true, theme: 'Casora' });
 usePage(dk.page);
@@ -151,8 +152,8 @@ const sw = await dk.page.evaluate(() => {
   const g = window.__panel().shadowRoot.querySelector('#pane [data-pkey="security_detectors"]');
   const row = (re) => { const r = g && [...g.querySelectorAll('.frow')].find((x) => re.test((x.querySelector('b') || {}).textContent || ''));
     return r ? (r.querySelector('.sw') || {}).getAttribute?.('aria-checked') : null; };
-  return { found: !!g, det: row(/^Rauch- und Wassermelder/), motion: row(/^Bewegungsmelder/) };
+  return { found: !!g, smoke: row(/^Rauchmelder$/), water: row(/^Wassermelder$/), motion: row(/^Bewegungsmelder/) };
 });
-await check('Studio: group „Melder“, smoke/water on, motion off', sw.found && sw.det === 'true' && sw.motion === 'false', sw);
+await check('Studio: group „Melder“, smoke and water on, motion off', sw.found && sw.smoke === 'true' && sw.water === 'true' && sw.motion === 'false', sw);
 await dk.browser.close();
 await finish();

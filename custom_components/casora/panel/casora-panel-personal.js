@@ -99,6 +99,7 @@
     s.contacts.names = s.contacts.names && typeof s.contacts.names === "object" ? s.contacts.names : {};
     s.security = s.security && typeof s.security === "object" ? s.security : {};
     s.security.covers = Array.isArray(s.security.covers) ? s.security.covers : [];
+    s.security.detectors_exclude = Array.isArray(s.security.detectors_exclude) ? s.security.detectors_exclude : [];
     s.media = s.media || {};
     s.media.players = s.media.players || {};
     s.media.hidden = Array.isArray(s.media.hidden) ? s.media.hidden : [];
@@ -452,23 +453,53 @@
         // Covers in security (#76, scripts/local/34-security-covers.js): which covers count on Home, and whether
         // only from sunset to sunrise (on by default; only "off" is stored). No cover picked = feature off.
         const sec = S.security;
-        // #209: detectors in Security (00-finder.js casoraSecDetectors). Smoke and water detectors count by default
-        // (only "off" is stored, detectors: false), motion sensors only when switched on (motion: true) and then
-        // only while nobody is home.
+        // #209: detectors in Security (00-finder.js casoraSecDetectors). Smoke and water detectors count by default,
+        // motion sensors only when switched on (motion: true) and then only while nobody is home.
+        // #220: smoke (with gas and CO) and water have a switch each (smoke_detectors, water_detectors, only "off" is
+        // stored). Without them the common switch of #209 (detectors: false) decides for both; the first change here
+        // writes both as they are and drops the common one.
         const det = group("security_detectors", { header: "Detectors",
           footer: "Smoke and water detectors show under Security on Home and in their room; one that reports leads the badge in red. Motion counts only while nobody is home." });
-        const detRow = self._flowRow(det, { title: "Smoke and water detectors", sub: "Also gas and carbon monoxide" });
-        if (typeof self._boolSwitch === "function") {
-          detRow.row.appendChild(self._boolSwitch(sec.detectors !== false, true, (v) => {
-            if (v === false) sec.detectors = false; else delete sec.detectors;
-          }, window.casoraI18n ? window.casoraI18n.t("Smoke and water detectors") : "Smoke and water detectors"));
-        }
+        const DET_KEYS = ["smoke_detectors", "water_detectors"];
+        const detOn = (k) => (typeof sec[k] === "boolean" ? sec[k] : sec.detectors !== false);
+        const detSet = (k, v) => {
+          const now = {};
+          DET_KEYS.forEach((x) => { now[x] = detOn(x); });
+          now[k] = v;
+          delete sec.detectors;
+          DET_KEYS.forEach((x) => { if (now[x] === false) sec[x] = false; else delete sec[x]; });
+        };
+        [["smoke_detectors", "Smoke detectors", "Also gas and carbon monoxide"],
+          ["water_detectors", "Water detectors", "Leak sensors; a weather station's rain sensor does not count"]].forEach(([k, title, sub]) => {
+          const r = self._flowRow(det, { title, sub });
+          if (typeof self._boolSwitch === "function") {
+            r.row.appendChild(self._boolSwitch(detOn(k), true, (v) => detSet(k, v),
+              window.casoraI18n ? window.casoraI18n.t(title) : title));
+          }
+        });
         const motRow = self._flowRow(det, { title: "Motion sensors", sub: "Count only while nobody is home" });
         if (typeof self._boolSwitch === "function") {
           motRow.row.appendChild(self._boolSwitch(sec.motion === true, false, (v) => {
             if (v === true) sec.motion = true; else delete sec.motion;
           }, window.casoraI18n ? window.casoraI18n.t("Motion sensors") : "Motion sensors"));
         }
+        // #220: single detectors that never count (security.detectors_exclude), picked from the ones Casora found
+        // (casoraSecDetHouse, without motion); picked ones stay in the list so they can be changed.
+        const found = (() => {
+          const H = window.casoraSecDetHouse ? window.casoraSecDetHouse(hass) : null;
+          const ids = H ? H.ids.filter((x) => H.kind[x] !== "motion")
+            : self._entityList(["binary_sensor"], ["smoke", "gas", "carbon_monoxide", "moisture"]);
+          sec.detectors_exclude.forEach((x) => { if (x && !ids.includes(x)) ids.push(x); });
+          return ids.sort();
+        })();
+        sec.detectors_exclude.forEach((id, i) => {
+          row(det, i ? "" : "Not counted", [
+            self._combo(id || "", found, self._pickHint ? self._pickHint(["binary_sensor"]) : "",
+              (v) => { sec.detectors_exclude[i] = v; }, { withRoom: true }).wrap,
+            del(() => { sec.detectors_exclude.splice(i, 1); }),
+          ], i ? undefined : "This detector does not count for security.");
+        });
+        addRow(det, "Leave out a detector", () => { sec.detectors_exclude.push(""); });
         g = group("security", { header: "Blinds and gates",
           footer: "Picked covers that are not fully closed show on Home in the security row as “Blinds” and count as not secure. Nothing picked: nothing changes." });
         const nightRow = self._flowRow(g, { title: "Evening and night only", sub: "From sunset to sunrise" });
