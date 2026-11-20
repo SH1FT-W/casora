@@ -254,3 +254,6 @@ console.log('ok screensaver');
   assert.match(S.html('musik', Object.assign(base(day), { media: { title: 'A', artist: 'B', where: 'C', cover: '', dur: 100, pos: 10 } })), /class="cs-cover"><svg/);
 }
 console.log('screensaver: reading distance ok');
+// Energy: the balance row is centred like the flow above it (owner, 20.11.2026: it was bound to the left).
+assert.match(S.CSS, /\.cs-bal div\{[^}]*text-align:center/, 'energy balance values centred');
+console.log('screensaver: energy balance centred');
