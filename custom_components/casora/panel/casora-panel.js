@@ -3316,6 +3316,13 @@ function homeLightsEdit(V, key, value) {
   if (value) { delete V.light_rooms_auto; return; }
   if (!V.light_group_entity && !LIGHT_SLOTS.some((k) => V[k])) V.light_rooms_auto = true;
 }
+// The same for the house light tile (#206): the setup marks it light_rooms_auto, the dashboard then follows the rooms
+// and never reads the tile's own "Popup lights". A list the user edits is theirs: the marker goes, so the dashboard
+// lists these lamps beside the rooms'. An emptied list keeps the marker (the tile follows the rooms).
+function houseTileLightsEdit(V, key, items) {
+  if (!V || key !== "lights" || V.house !== true || !Array.isArray(items) || !items.length) return;
+  delete V.light_rooms_auto;
+}
 // Setups before 26.11.8 gave Home's light badge the house's HA light group AND its lights in the slots
 // (light_entity_1…10, the first ten when there were more). Picked lights win over the group in the popup (#80): rooms
 // past the tenth were missing from the house light popup, and lights added later never joined. On load the Studio
@@ -29961,6 +29968,7 @@ class CasoraPanel extends HTMLElement {
         put(f.label, this._chipPicker(cur, doms, (items) => {
           if (items.length) { if (!tile.variables) tile.variables = {}; tile.variables[f.key] = items; }
           else if (tile.variables) delete tile.variables[f.key];
+          houseTileLightsEdit(tile.variables, f.key, items);
           if (type.noEntity && !f.noAnchor && !tile.entity && items.length) {
             tile.entity = items[0];
             return this._renderForm();
@@ -30379,7 +30387,7 @@ window.__casoraPanelInternals = {
   parseCardText, cardToText,
   isDefaultHomeName, homeRoomWord, shotLang, isHomeRoom, roomLabel, storedRoomName, HOME_ROOM_NAME, markAutoHome, isDefaultHome, setHomeName, badgeOrderOf, BADGE_ORDER_IDS,
   linkPair, syncPairRooms, syncPairTiles, syncTwinTile, assignTwins, tileTwinSig, phoneCondSnapshot, condChain, condModel, condWrite, syncRoomChips, phoneRoomBadgeVars, PHONE_ROOM_OVERRIDE, phoneRoundTrips, phoneStale, phoneRoomKeys, carryPhoneSizes, restorePhoneSizes, hasTileSize, setInnerSize, expandMobileConfig, extractMobileConfig,
-  deriveEnergyRooms, energyManual, energyBackToAuto, fillHomeLights, homeLightsEdit, homeLightsOldPick, fixHomeLightSlots, phoneSlotsMatch, roomVisibility, homePickOrder, MENU_ICONS, SECTIONS, tileTwinKey,
+  deriveEnergyRooms, energyManual, energyBackToAuto, fillHomeLights, homeLightsEdit, houseTileLightsEdit, homeLightsOldPick, fixHomeLightSlots, phoneSlotsMatch, roomVisibility, homePickOrder, MENU_ICONS, SECTIONS, tileTwinKey,
   CASORA_ACCENTS, accentsShown, accentLabel, swatchCss,
   condStates, condLoadSeen, isCarouselCard, isPageTile, carouselOf, carouselId, markCarousel, CAROUSEL_CARD, CAROUSEL_TILE,
   TILE_ICON, TILE_COLOR, syncUserTileTypes,  // eigene Kachelarten (casora-panel-kachelart.js)  // Farbmenü wie bei den Szenen, auch für Kalenderfarben (Einstellungen)

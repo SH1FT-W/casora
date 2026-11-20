@@ -668,6 +668,27 @@ window._casoraLightScope = function (entity, states, hass, vars) {
     var hr = (hl.rooms || []).map(function (r) {
       return { name: r.name, rid: r.rid && S[r.rid] ? r.rid : null, lights: (r.lights || []).filter(function (x) { return S[x]; }) };
     }).filter(function (r) { return r.lights.length; });
+    /* A list picked by hand (lights without light_rooms_auto, #206): its lamps that no room's badge holds count and
+       are listed too - under the dashboard room they stand in (a tile there, else their HA area), else as a room
+       named after their area, else as a room of their own (like a single lamp picked on the badge). A lamp HA does
+       not know never counts. The setup's list (light_rooms_auto) stays out: that house follows the rooms. */
+    if (hr.length > 1 && !isArr(variables.house_rooms) && variables.light_rooms_auto !== true && isArr(variables.lights)) {
+      var held = {};
+      hr.forEach(function (r) { r.lights.forEach(function (x) { held[x] = 1; }); });
+      var key = function (n) { return String(n || '').trim().toLowerCase(); };
+      // A listed group stands for its lamps (expand), as everywhere in the count.
+      var rest = [];
+      variables.lights.forEach(function (g) { if (typeof g === 'string') expand(g).forEach(function (x) { rest.push(x); }); });
+      rest.forEach(function (x) {
+        if (!S[x] || held[x]) return;
+        held[x] = 1;
+        var names = [window._casoraRoomOf ? window._casoraRoomOf(x) : null, areaName(x)].filter(Boolean);
+        var at = null;
+        names.forEach(function (n) { if (!at) at = hr.filter(function (r) { return key(r.name) === key(n); })[0] || null; });
+        if (at) at.lights.push(x);
+        else hr.push({ name: names[names.length - 1] || String((S[x].attributes || {}).friendly_name || x), rid: null, lights: [x] });
+      });
+    }
     if (hr.length > 1) { rooms = hr; topLevelIds = hr.map(function (r) { return r.rid; }); roomsAuto = true; }
   }
   var lightIds = unit ? [eid] : roomsAuto ? [].concat.apply([], rooms.map(function (r) { return r.lights; }))
