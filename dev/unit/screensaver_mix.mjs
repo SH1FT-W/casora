@@ -90,8 +90,10 @@ assert.ok((h.match(/class="cs-kd/g) || []).length === 42 && (h.match(/cs-ktoday/
 assert.ok(/November/.test(h) && /2026/.test(h) && /16:42/.test(h), 'calendar: month, year, time');
 assert.ok(/Zahnarzt/.test(h) && !/Urlaub <b>/.test(h) && (h.match(/Urlaub &lt;b&gt;/g) || []).length === 3, 'an appointment over three days shows on each, escaped');
 assert.ok(/--cs-c:#4E9E95/.test(h) && /--cs-c:#5B8FC9/.test(h), 'each calendar its colour');
-assert.match(h, /\+1<\/span>/, 'more than three on a day: „+1“');
-assert.ok(/data-kind="kalender"/.test(h) && !/cs-dark/.test(h), 'by day: light');
+// November 2026 takes six weeks: a day has room for one title, the other three are counted.
+assert.match(h, /\+3<\/span>/, 'more on a day than it has room for: „+3“');
+assert.ok(!/\+1<\/span>/.test(h), 'never „+1“ where the one left over fits');
+assert.ok(/data-kind="kalender"/.test(h) && !/cs-dark/.test(h) && /cs-kalender cs-light/.test(h), 'by day: light');
 assert.match(S.html('kalender', kctx({ now: new Date('2026-11-13T21:00:00') })), /cs-kalender cs-dark/, 'by night: dark');
 assert.match(S.html('kalender', kctx({ events: [] })), /cs-ktoday/, 'no appointments: still the month');
 // The pick of calendars: only those (none, or none left = all that count).

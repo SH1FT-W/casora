@@ -160,65 +160,85 @@
     { id: 'winternacht', name: 'Winternacht', seed: 101, sky: ['#0B1230', '#1C2A55', '#3A4A7C', '#6C7AA6'], stars: 90, moon: { x: .78, y: .22, r: 30 },
       layers: { n: 5, kind: 'peaks', far: '#7C8CB4', near: '#141B38', top: .46, bottom: .9, amp: .2 }, mist: '#8E9CC4' },
   ];
+  // One scene as a picture. Depth comes from the air: every ridge is lighter at its top than at its foot, the sun and
+  // the moon are light without an edge, clouds are soft, and a fine grain lies over all of it like on a print.
   S.landSvg = function (s, w, h) {
-    var r = rng(s.seed), id = 'cl' + s.id, out = [];
+    var r = rng(s.seed), id = 'cl' + s.id, out = [], defs = [], body = [];
     var stops = s.sky.map(function (c, i) { return '<stop offset="' + (i / (s.sky.length - 1)) + '" stop-color="' + c + '"/>'; }).join('');
-    out.push('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="xMidYMid slice" aria-hidden="true">');
-    out.push('<defs><linearGradient id="' + id + 's" x1="0" y1="0" x2="0" y2="1">' + stops + '</linearGradient>');
-    if (s.sun) out.push('<radialGradient id="' + id + 'g"><stop offset="0" stop-color="' + s.sun.c + '" stop-opacity=".9"/><stop offset=".35" stop-color="' + s.sun.c + '" stop-opacity=".35"/><stop offset="1" stop-color="' + s.sun.c + '" stop-opacity="0"/></radialGradient>');
-    if (s.water) out.push('<linearGradient id="' + id + 'w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + s.water.a + '"/><stop offset="1" stop-color="' + s.water.b + '"/></linearGradient>');
-    if (s.mist) out.push('<linearGradient id="' + id + 'm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + s.mist + '" stop-opacity="0"/><stop offset=".5" stop-color="' + s.mist + '" stop-opacity=".5"/><stop offset="1" stop-color="' + s.mist + '" stop-opacity="0"/></linearGradient>');
-    if (s.aurora) out.push('<filter id="' + id + 'b" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="16"/></filter>');
-    out.push('</defs><rect width="' + w + '" height="' + h + '" fill="url(#' + id + 's)"/>');
+    defs.push('<linearGradient id="' + id + 's" x1="0" y1="0" x2="0" y2="1">' + stops + '</linearGradient>');
+    if (s.sun) defs.push('<radialGradient id="' + id + 'g"><stop offset="0" stop-color="' + s.sun.c + '" stop-opacity=".85"/><stop offset=".3" stop-color="' + s.sun.c + '" stop-opacity=".34"/><stop offset="1" stop-color="' + s.sun.c + '" stop-opacity="0"/></radialGradient>'
+      + '<radialGradient id="' + id + 'd"><stop offset="0" stop-color="#fff"/><stop offset=".72" stop-color="' + s.sun.c + '"/><stop offset="1" stop-color="' + s.sun.c + '" stop-opacity=".0"/></radialGradient>');
+    if (s.moon) defs.push('<radialGradient id="' + id + 'o"><stop offset="0" stop-color="#DCE4FF" stop-opacity=".42"/><stop offset=".4" stop-color="#DCE4FF" stop-opacity=".12"/><stop offset="1" stop-color="#DCE4FF" stop-opacity="0"/></radialGradient>');
+    if (s.water) defs.push('<linearGradient id="' + id + 'w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + s.water.a + '"/><stop offset="1" stop-color="' + s.water.b + '"/></linearGradient>');
+    if (s.mist) defs.push('<linearGradient id="' + id + 'm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + s.mist + '" stop-opacity="0"/><stop offset=".5" stop-color="' + s.mist + '" stop-opacity=".5"/><stop offset="1" stop-color="' + s.mist + '" stop-opacity="0"/></linearGradient>');
+    if (s.aurora) defs.push('<filter id="' + id + 'b" x="-20%" y="-60%" width="140%" height="220%"><feGaussianBlur stdDeviation="22"/></filter>');
+    if (s.clouds) defs.push('<filter id="' + id + 'c" x="-20%" y="-80%" width="140%" height="260%"><feGaussianBlur stdDeviation="7"/></filter>');
+    defs.push('<filter id="' + id + 'n" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" seed="' + s.seed + '" stitchTiles="stitch"/>'
+      + '<feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .9 -.34"/></filter>');
+    body.push('<rect width="' + w + '" height="' + h + '" fill="url(#' + id + 's)"/>');
     for (var i = 0; i < (s.stars || 0); i++) {
-      out.push('<circle cx="' + (r() * w).toFixed(1) + '" cy="' + (r() * h * 0.6).toFixed(1) + '" r="' + (0.5 + r() * 1.3).toFixed(2) + '" fill="#fff" opacity="' + (0.25 + r() * 0.7).toFixed(2) + '"/>');
+      body.push('<circle cx="' + (r() * w).toFixed(1) + '" cy="' + (r() * h * 0.6).toFixed(1) + '" r="' + (0.6 + r() * 1.4).toFixed(2) + '" fill="#fff" opacity="' + (0.25 + r() * 0.7).toFixed(2) + '"/>');
     }
     if (s.aurora) s.aurora.forEach(function (c, k) {
       var y0 = h * (0.14 + k * 0.09), d = 'M-40 ' + y0;
       for (var x = 0; x <= w + 40; x += 60) d += ' L' + x + ' ' + (y0 + Math.sin(x / (150 + k * 40) + k * 2) * 46 + Math.sin(x / 61 + k) * 14).toFixed(1);
-      out.push('<path d="' + d + '" fill="none" stroke="' + c + '" stroke-width="' + (64 - k * 14) + '" stroke-linecap="round" opacity="' + (0.5 - k * 0.1) + '" filter="url(#' + id + 'b)"/>');
+      body.push('<path d="' + d + '" fill="none" stroke="' + c + '" stroke-width="' + (78 - k * 16) + '" stroke-linecap="round" opacity="' + (0.55 - k * 0.1) + '" filter="url(#' + id + 'b)"/>');
     });
     if (s.sun) {
-      out.push('<circle cx="' + s.sun.x * w + '" cy="' + s.sun.y * h + '" r="' + s.sun.r * 5 + '" fill="url(#' + id + 'g)"/>');
-      out.push('<circle cx="' + s.sun.x * w + '" cy="' + s.sun.y * h + '" r="' + s.sun.r + '" fill="' + s.sun.c + '"/>');
+      body.push('<circle cx="' + s.sun.x * w + '" cy="' + s.sun.y * h + '" r="' + s.sun.r * 7 + '" fill="url(#' + id + 'g)"/>');
+      body.push('<circle cx="' + s.sun.x * w + '" cy="' + s.sun.y * h + '" r="' + (s.sun.r * 1.12).toFixed(1) + '" fill="url(#' + id + 'd)"/>');
     }
     if (s.moon) {
       var mx = s.moon.x * w, my = s.moon.y * h, mr = s.moon.r;
-      out.push('<circle cx="' + mx + '" cy="' + my + '" r="' + mr * 3.2 + '" fill="#DCE4FF" opacity=".10"/><circle cx="' + mx + '" cy="' + my + '" r="' + mr + '" fill="#F2F4FF"/>');
-      out.push('<circle cx="' + (mx + mr * 0.42) + '" cy="' + (my - mr * 0.18) + '" r="' + mr * 0.86 + '" fill="' + s.sky[0] + '"/>');
+      body.push('<circle cx="' + mx + '" cy="' + my + '" r="' + mr * 6 + '" fill="url(#' + id + 'o)"/>');
+      // A crescent: the disc without the part a second, shifted disc covers.
+      body.push('<path d="M' + (mx - mr * 0.2).toFixed(1) + ' ' + (my - mr).toFixed(1) + 'a' + mr + ' ' + mr + ' 0 1 0 ' + (mr * 1.05).toFixed(1) + ' ' + (mr * 1.42).toFixed(1)
+        + 'a' + (mr * 0.86).toFixed(1) + ' ' + (mr * 0.86).toFixed(1) + ' 0 1 1 -' + (mr * 1.05).toFixed(1) + ' -' + (mr * 1.42).toFixed(1) + 'z" fill="#F4F6FF"/>');
     }
     for (var c = 0; c < (s.clouds || 0); c++) {
-      var cx = (0.1 + r() * 0.8) * w, cy = (0.1 + r() * 0.22) * h, cw = 120 + r() * 160;
-      out.push('<g fill="#fff" opacity=".7"><ellipse cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" rx="' + (cw / 2).toFixed(1) + '" ry="' + (cw / 9).toFixed(1) + '"/><ellipse cx="' + (cx - cw * .18).toFixed(1) + '" cy="' + (cy - cw * .07).toFixed(1) + '" rx="' + (cw * .22).toFixed(1) + '" ry="' + (cw * .12).toFixed(1) + '"/><ellipse cx="' + (cx + cw * .14).toFixed(1) + '" cy="' + (cy - cw * .1).toFixed(1) + '" rx="' + (cw * .26).toFixed(1) + '" ry="' + (cw * .15).toFixed(1) + '"/></g>');
+      var cx = (0.08 + r() * 0.84) * w, cy = (0.1 + r() * 0.2) * h, cw = 220 + r() * 260;
+      body.push('<g fill="#fff" opacity=".62" filter="url(#' + id + 'c)"><ellipse cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" rx="' + (cw / 2).toFixed(1) + '" ry="' + (cw / 15).toFixed(1) + '"/>'
+        + '<ellipse cx="' + (cx - cw * .14).toFixed(1) + '" cy="' + (cy - cw * .045).toFixed(1) + '" rx="' + (cw * .2).toFixed(1) + '" ry="' + (cw * .07).toFixed(1) + '"/>'
+        + '<ellipse cx="' + (cx + cw * .12).toFixed(1) + '" cy="' + (cy - cw * .06).toFixed(1) + '" rx="' + (cw * .17).toFixed(1) + '" ry="' + (cw * .08).toFixed(1) + '"/></g>');
     }
     var L = s.layers, landBottom = s.water ? s.water.y * h : h;
     for (var k = 0; k < L.n; k++) {
       var t = L.n === 1 ? 1 : k / (L.n - 1);
       var base = (L.top + (L.bottom - L.top) * t) * h, amp = L.amp * h * (1 - t * 0.45);
-      var col = mix(L.far, L.near, Math.pow(t, 0.9));
-      out.push('<path d="' + ridge(r, w, landBottom, base, amp, L.kind, L.mesa ? 46 : 8) + '" fill="' + col + '"/>');
+      var tt = Math.pow(t, 0.9), col = mix(L.far, L.near, tt);
+      // Lighter where the ridge meets the air, deeper at its foot.
+      defs.push('<linearGradient id="' + id + 'r' + k + '" gradientUnits="userSpaceOnUse" x1="0" y1="' + (base - amp).toFixed(1) + '" x2="0" y2="' + Math.min(landBottom, base + amp * 1.6 + h * 0.12).toFixed(1) + '">'
+        + '<stop offset="0" stop-color="' + mix(L.far, L.near, Math.max(0, tt - 0.1)) + '"/><stop offset="1" stop-color="' + mix(L.far, L.near, Math.min(1, tt + 0.2)) + '"/></linearGradient>');
+      body.push('<path d="' + ridge(r, w, landBottom, base, amp, L.kind, L.mesa ? 46 : 6) + '" fill="url(#' + id + 'r' + k + ')"/>');
       if (L.trees && k >= 1) {
         var n = 46 + k * 10, th = 20 + k * 12;
         for (var q = 0; q < n; q++) {
           var tx = r() * w, ty = base - amp * 0.2 + r() * amp * 0.7;
-          out.push('<path d="M' + tx.toFixed(1) + ' ' + (ty - th).toFixed(1) + 'l' + (th * 0.26).toFixed(1) + ' ' + th + 'h-' + (th * 0.52).toFixed(1) + 'z" fill="' + col + '"/>');
+          body.push('<path d="M' + tx.toFixed(1) + ' ' + (ty - th).toFixed(1) + 'l' + (th * 0.26).toFixed(1) + ' ' + th + 'h-' + (th * 0.52).toFixed(1) + 'z" fill="' + col + '"/>');
         }
       }
-      if (s.mist && k < L.n - 1) out.push('<rect x="0" y="' + (base - amp * 0.2).toFixed(1) + '" width="' + w + '" height="' + (amp * 1.5 + 40).toFixed(1) + '" fill="url(#' + id + 'm)" opacity="' + (0.9 - t * 0.5).toFixed(2) + '"/>');
+      if (s.mist && k < L.n - 1) body.push('<rect x="0" y="' + (base - amp * 0.2).toFixed(1) + '" width="' + w + '" height="' + (amp * 1.5 + 40).toFixed(1) + '" fill="url(#' + id + 'm)" opacity="' + (0.9 - t * 0.5).toFixed(2) + '"/>');
     }
     if (s.water) {
       var wy = s.water.y * h;
-      out.push('<rect x="0" y="' + wy + '" width="' + w + '" height="' + (h - wy) + '" fill="url(#' + id + 'w)"/>');
-      if (s.sun) for (var z = 0; z < 16; z++) {
-        var ry = wy + 8 + z * z * 1.25, rw = s.sun.r * (2.4 - z * 0.08) * (0.7 + r() * 0.6);
-        if (ry > h) break;
-        out.push('<rect x="' + (s.sun.x * w - rw / 2 + (r() - .5) * 26).toFixed(1) + '" y="' + ry.toFixed(1) + '" width="' + rw.toFixed(1) + '" height="' + (2 + z * 0.35).toFixed(1) + '" rx="2" fill="' + s.sun.c + '" opacity="' + (0.75 - z * 0.04).toFixed(2) + '"/>');
+      body.push('<rect x="0" y="' + wy + '" width="' + w + '" height="' + (h - wy) + '" fill="url(#' + id + 'w)"/>');
+      if (s.sun) {
+        // The sun on the water: a soft column of light, then the glints.
+        defs.push('<clipPath id="' + id + 'k"><rect x="0" y="' + wy + '" width="' + w + '" height="' + (h - wy) + '"/></clipPath>');
+        body.push('<ellipse cx="' + s.sun.x * w + '" cy="' + wy + '" rx="' + s.sun.r * 3.4 + '" ry="' + ((h - wy) * 0.9).toFixed(1) + '" fill="url(#' + id + 'g)" opacity=".5" clip-path="url(#' + id + 'k)"/>');
+        for (var z = 0; z < 16; z++) {
+          var ry = wy + 8 + z * z * 1.25, rw = s.sun.r * (2.4 - z * 0.08) * (0.7 + r() * 0.6);
+          if (ry > h) break;
+          body.push('<rect x="' + (s.sun.x * w - rw / 2 + (r() - .5) * 26).toFixed(1) + '" y="' + ry.toFixed(1) + '" width="' + rw.toFixed(1) + '" height="' + (2 + z * 0.35).toFixed(1) + '" rx="2" fill="' + s.sun.c + '" opacity="' + (0.7 - z * 0.04).toFixed(2) + '"/>');
+        }
       }
-      for (var u = 0; u < 22; u++) {
-        out.push('<rect x="' + (r() * w).toFixed(1) + '" y="' + (wy + 10 + r() * (h - wy - 16)).toFixed(1) + '" width="' + (30 + r() * 140).toFixed(1) + '" height="1.6" rx="1" fill="#fff" opacity="' + (0.06 + r() * 0.12).toFixed(2) + '"/>');
+      for (var u2 = 0; u2 < 22; u2++) {
+        body.push('<rect x="' + (r() * w).toFixed(1) + '" y="' + (wy + 10 + r() * (h - wy - 16)).toFixed(1) + '" width="' + (30 + r() * 140).toFixed(1) + '" height="1.6" rx="1" fill="#fff" opacity="' + (0.06 + r() * 0.12).toFixed(2) + '"/>');
       }
     }
-    return out.join('') + '</svg>';
+    body.push('<rect width="' + w + '" height="' + h + '" filter="url(#' + id + 'n)" opacity=".16"/>');
+    out.push('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="xMidYMid slice" aria-hidden="true">');
+    return out.join('') + '<defs>' + defs.join('') + '</defs>' + body.join('') + '</svg>';
   };
 
   // ── What a screensaver knows ─────────────────────────────────────────────
@@ -548,197 +568,278 @@
 
   // ── Drawing ──────────────────────────────────────────────────────────────
   // One unit is a hundredth of the box's shorter side (cqmin), so a preview and a wall tablet look the same.
+  // Reading distance (owner, 20.11.2026): a wall tablet is read from across the room. Nothing is smaller than 19
+  // units (most text 22 and up), every screensaver has one thing that is big, and the ground is a colour of its own
+  // instead of grey plates: light by day, deep by night (cs-light; --ink, --ink2, --ink3, --plate, --line, --acc).
   var u = function (n) { return (n / 8.2).toFixed(3) + 'cqmin'; };
-  var CSS = '.cs-sv{position:absolute;inset:0;overflow:hidden;container-type:size;color:#F6EFE6;text-align:left;'
-    + 'font-family:var(--primary-font-family, var(--ha-font-family, system-ui, sans-serif));-webkit-user-select:none;user-select:none;}'
+  var M = 72;
+  var CSS = '.cs-sv{position:absolute;inset:0;overflow:hidden;container-type:size;text-align:left;'
+    + '--ink:#F7F1E8;--ink2:rgba(247,241,232,.72);--ink3:rgba(247,241,232,.42);--plate:rgba(255,255,255,.09);--line:rgba(255,255,255,.17);--acc:#E08A5C;color:var(--ink);'
+    + 'font-family:var(--primary-font-family, var(--ha-font-family, system-ui, sans-serif));-webkit-user-select:none;user-select:none;-webkit-font-smoothing:antialiased;}'
+    + '.cs-sv.cs-light{--ink:#2A2520;--ink2:rgba(42,37,32,.66);--ink3:rgba(42,37,32,.4);--plate:rgba(42,37,32,.065);--line:rgba(42,37,32,.15);--acc:#C8693F;}'
     + '.cs-sv *{box-sizing:border-box;margin:0;padding:0;}'
     + '.cs-sv svg.cs-bg, .cs-sv .cs-bg{position:absolute;inset:0;width:100%;height:100%;display:block;}'
     + '.cs-sv .cs-in{position:absolute;inset:0;transform:translate(var(--cs-dx, 0px), var(--cs-dy, 0px));transition:transform 4s ease;}'
-    + '.cs-sv .cs-time{font-weight:500;letter-spacing:-.045em;line-height:1;font-variant-numeric:tabular-nums;}'
-    + '.cs-sv .cs-date{font-weight:600;letter-spacing:-.01em;color:rgba(255,255,255,.84);}'
-    + '.cs-sv .cs-shade{position:absolute;inset:0;background:linear-gradient(0deg, rgba(10,8,6,.72) 0%, rgba(10,8,6,.24) 34%, rgba(10,8,6,0) 58%);}'
-    + '.cs-sv .sv-bar{position:absolute;left:' + u(72) + ';right:' + u(72) + ';bottom:' + u(62) + ';display:flex;justify-content:space-between;align-items:flex-end;gap:' + u(24) + ';}'
-    + '.cs-sv .sv-bar .cs-time{font-size:' + u(124) + ';margin-left:-' + u(5) + ';text-shadow:0 ' + u(6) + ' ' + u(30) + ' rgba(0,0,0,.35);}'
-    + '.cs-sv .sv-bar .cs-date{font-size:' + u(22) + ';margin-top:' + u(6) + ';}'
-    + '.cs-sv .cs-name{text-align:right;font-size:' + u(19) + ';font-weight:600;color:rgba(255,255,255,.86);}'
-    + '.cs-sv .cs-name b{display:block;font-size:' + u(30) + ';font-weight:700;color:#fff;letter-spacing:-.01em;}'
+    + '.cs-sv .cs-time{font-weight:600;letter-spacing:-.055em;line-height:.92;font-variant-numeric:tabular-nums;}'
+    + '.cs-sv .cs-date{font-weight:600;letter-spacing:-.012em;color:var(--ink2);}'
+    + '.cs-sv img{filter:brightness(0) invert(1);}.cs-sv.cs-light img{filter:brightness(0);opacity:.8;}'
+    // Pictures (landscapes, photos): the time big at the bottom left over a soft shade, the name at the right.
+    + '.cs-sv .cs-shade{position:absolute;inset:0;background:linear-gradient(0deg, rgba(8,6,5,.78) 0%, rgba(8,6,5,.34) 30%, rgba(8,6,5,0) 56%), linear-gradient(180deg, rgba(8,6,5,.18) 0%, rgba(8,6,5,0) 22%);}'
+    + '.cs-sv .sv-bar{position:absolute;left:' + u(M) + ';right:' + u(M) + ';bottom:' + u(60) + ';display:flex;justify-content:space-between;align-items:flex-end;gap:' + u(28) + ';}'
+    + '.cs-sv .sv-bar .cs-time{font-size:' + u(176) + ';margin-left:-' + u(8) + ';text-shadow:0 ' + u(4) + ' ' + u(40) + ' rgba(0,0,0,.35);}'
+    + '.cs-sv .sv-bar .cs-date{font-size:' + u(32) + ';margin-top:' + u(14) + ';color:rgba(255,255,255,.9);text-shadow:0 ' + u(2) + ' ' + u(16) + ' rgba(0,0,0,.4);}'
+    + '.cs-sv .cs-name{text-align:right;font-size:' + u(24) + ';font-weight:600;color:rgba(255,255,255,.8);padding-bottom:' + u(4) + ';text-shadow:0 ' + u(2) + ' ' + u(16) + ' rgba(0,0,0,.4);}'
+    + '.cs-sv .cs-name b{display:block;font-size:' + u(40) + ';font-weight:700;color:#fff;letter-spacing:-.02em;line-height:1.15;}'
     + '.cs-sv .cs-photo{position:absolute;inset:-2%;background-size:cover;background-position:center;animation:cs-pan 60s ease-in-out infinite alternate;}'
     + '@keyframes cs-pan{from{transform:scale(1.04) translate(-1%, 0);}to{transform:scale(1.1) translate(1.2%, -1%);}}'
-    + '@media (prefers-reduced-motion: reduce){.cs-sv .cs-photo{animation:none;}}'
-    // Himmel
-    + '.cs-sv .cs-top{position:absolute;left:' + u(72) + ';right:' + u(72) + ';top:' + u(64) + ';display:flex;justify-content:space-between;align-items:flex-start;gap:' + u(24) + ';}'
-    + '.cs-sv .cs-top .cs-time{font-size:' + u(188) + ';margin-left:-' + u(8) + ';}'
-    + '.cs-sv .cs-top .cs-date{font-size:' + u(26) + ';margin-top:' + u(10) + ';}'
-    + '.cs-sv .cs-wx{text-align:right;padding-top:' + u(22) + ';}'
-    + '.cs-sv .cs-wx .cs-t{display:flex;align-items:center;justify-content:flex-end;gap:' + u(14) + ';font-size:' + u(68) + ';font-weight:600;letter-spacing:-.03em;line-height:1;}'
-    + '.cs-sv .cs-wx img{width:' + u(62) + ';height:' + u(62) + ';filter:brightness(0) invert(1);}'
-    + '.cs-sv .cs-wx p{font-size:' + u(21) + ';font-weight:600;color:rgba(255,255,255,.84);margin-top:' + u(10) + ';}'
-    + '.cs-sv .cs-arc{position:absolute;left:' + u(72) + ';right:' + u(72) + ';bottom:' + u(110) + ';height:' + u(330) + ';}'
+    // Sky
+    + '.cs-sv .cs-top{position:absolute;left:' + u(M) + ';right:' + u(M) + ';top:' + u(62) + ';display:flex;justify-content:space-between;align-items:flex-start;gap:' + u(24) + ';}'
+    + '.cs-sv .cs-top .cs-time{font-size:' + u(214) + ';margin-left:-' + u(10) + ';text-shadow:0 ' + u(4) + ' ' + u(50) + ' rgba(20,20,40,.18);}'
+    + '.cs-sv .cs-top .cs-date{font-size:' + u(34) + ';margin-top:' + u(18) + ';color:rgba(255,255,255,.92);}'
+    + '.cs-sv .cs-wx{text-align:right;padding-top:' + u(14) + ';}'
+    + '.cs-sv .cs-wx .cs-t{display:flex;align-items:center;justify-content:flex-end;gap:' + u(16) + ';font-size:' + u(88) + ';font-weight:600;letter-spacing:-.04em;line-height:1;}'
+    + '.cs-sv .cs-wx img{width:' + u(78) + ';height:' + u(78) + ';}'
+    + '.cs-sv .cs-wx p{font-size:' + u(28) + ';font-weight:600;color:rgba(255,255,255,.9);margin-top:' + u(12) + ';}'
+    + '.cs-sv .cs-arc{position:absolute;left:' + u(M) + ';right:' + u(M) + ';bottom:' + u(124) + ';height:' + u(300) + ';}'
     + '.cs-sv .cs-arc svg{width:100%;height:100%;display:block;overflow:visible;}'
-    + '.cs-sv .cs-ends{position:absolute;left:' + u(72) + ';right:' + u(72) + ';bottom:' + u(58) + ';display:flex;justify-content:space-between;gap:' + u(16) + ';font-size:' + u(17) + ';font-weight:600;color:rgba(255,255,255,.86);}'
-    + '.cs-sv .cs-ends b{font-weight:700;color:#fff;font-variant-numeric:tabular-nums;}'
-    // Wortuhr (light by day, dark by night)
-    + '.cs-sv.cs-wort{background:#F2EBE0;color:#2A2520;}.cs-sv.cs-wort.cs-dark{background:#191613;color:#F3ECE2;}'
-    + '.cs-sv .cs-words{position:absolute;left:' + u(84) + ';right:' + u(60) + ';top:50%;transform:translateY(-58%);font-size:' + u(148) + ';font-weight:700;letter-spacing:-.045em;line-height:.98;}'
-    + '.cs-sv .cs-words span{display:block;}.cs-sv .cs-words .cs-acc{color:#C8693F;}.cs-sv.cs-dark .cs-words .cs-acc{color:#E08A5C;}'
-    + '.cs-sv .cs-foot{position:absolute;left:' + u(90) + ';right:' + u(84) + ';bottom:' + u(76) + ';display:flex;justify-content:space-between;align-items:flex-end;gap:' + u(20) + ';font-size:' + u(26) + ';font-weight:600;opacity:.7;}'
-    + '.cs-sv .cs-foot b{font-weight:700;font-variant-numeric:tabular-nums;}'
-    + '.cs-sv .cs-foot .cs-fw{display:flex;align-items:center;gap:' + u(12) + ';font-weight:700;}'
-    + '.cs-sv .cs-foot img{width:' + u(40) + ';height:' + u(40) + ';}.cs-sv.cs-wort:not(.cs-dark) .cs-foot img{filter:brightness(0);}.cs-sv.cs-dark .cs-foot img{filter:brightness(0) invert(1);}'
-    // Shared by the six data screensavers: a small clock top left, a line of text top right, quiet plates.
-    + '.cs-sv .sv-head{position:absolute;left:' + u(64) + ';right:' + u(64) + ';top:' + u(48) + ';display:flex;justify-content:space-between;align-items:flex-end;gap:' + u(24) + ';}'
-    + '.cs-sv .sv-head .cs-time{font-size:' + u(92) + ';margin-left:-' + u(4) + ';}.cs-sv .sv-head .cs-date{font-size:' + u(19) + ';margin-top:' + u(4) + ';color:rgba(246,239,230,.64);}'
-    + '.cs-sv .cs-sum{text-align:right;font-size:' + u(20) + ';font-weight:600;color:rgba(246,239,230,.64);min-width:0;}'
-    + '.cs-sv .cs-sum b{display:block;font-size:' + u(30) + ';font-weight:700;color:#F6EFE6;letter-spacing:-.02em;}'
-    + '.cs-sv .cs-cap{font-size:' + u(13) + ';font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(246,239,230,.64);}'
-    + '.cs-sv .cs-body{position:absolute;left:' + u(64) + ';right:' + u(64) + ';top:' + u(214) + ';bottom:' + u(56) + ';}'
-    + '.cs-sv.cs-wetter{background:linear-gradient(170deg, #2C3E57 0%, #1E2A3B 55%, #171F2B 100%);}'
-    + '.cs-sv .cs-wnow{display:flex;align-items:center;gap:' + u(24) + ';}'
-    + '.cs-sv .cs-wnow img{width:' + u(120) + ';height:' + u(120) + ';filter:brightness(0) invert(1);}'
-    + '.cs-sv .cs-wnow b{font-size:' + u(140) + ';font-weight:500;letter-spacing:-.05em;line-height:1;}'
-    + '.cs-sv .cs-wnow p{font-size:' + u(22) + ';font-weight:600;color:rgba(246,239,230,.64);}.cs-sv .cs-wnow p:first-child{color:#F6EFE6;font-weight:700;}'
-    + '.cs-sv .cs-wk{position:absolute;right:0;top:-' + u(160) + ';width:' + u(400) + ';display:flex;flex-direction:column;gap:' + u(4) + ';}'
-    + '.cs-sv .cs-wd{display:grid;grid-template-columns:' + u(54) + ' ' + u(40) + ' ' + u(44) + ' 1fr ' + u(44) + ';align-items:center;gap:' + u(10) + ';height:' + u(44) + ';font-size:' + u(18) + ';font-weight:600;font-variant-numeric:tabular-nums;}'
-    + '.cs-sv .cs-wd img{width:' + u(30) + ';height:' + u(30) + ';filter:brightness(0) invert(1);}.cs-sv .cs-wd span{color:rgba(246,239,230,.64);text-align:right;}.cs-sv .cs-wd em{font-style:normal;text-align:right;}'
-    + '.cs-sv .cs-wd i{position:relative;height:' + u(8) + ';border-radius:99px;background:rgba(255,255,255,.1);}.cs-sv .cs-wd i u{position:absolute;top:0;bottom:0;border-radius:99px;background:linear-gradient(90deg, #5B8FC9, #E8B04A);}'
-    + '.cs-sv .cs-curve{position:absolute;left:0;right:0;bottom:0;height:' + u(300) + ';}.cs-sv .cs-curve svg{width:100%;height:100%;display:block;overflow:visible;}'
-    + '.cs-sv .cs-pk{position:absolute;transform:translate(-50%, -135%);font-size:' + u(17) + ';font-weight:700;font-variant-numeric:tabular-nums;}.cs-sv .cs-pk.cs-lo{transform:translate(-50%, 45%);}'
-    + '.cs-sv .cs-hours{position:absolute;left:0;right:0;bottom:-' + u(30) + ';display:flex;justify-content:space-between;font-size:' + u(15) + ';font-weight:600;color:rgba(246,239,230,.64);}'
-    + '.cs-sv.cs-linie{background:radial-gradient(100% 80% at 58% 56%, #2A2622 0%, #181512 70%);}'
-    + '.cs-sv .cs-line{position:absolute;left:0;right:0;top:50%;height:' + u(6) + ';margin-top:-' + u(3) + ';border-radius:99px;background:rgba(255,255,255,.16);}'
-    + '.cs-sv .cs-line u{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:#4E9E95;}'
-    + '.cs-sv .cs-tick{position:absolute;top:50%;width:' + u(60) + ';margin:' + u(18) + ' 0 0 -' + u(30) + ';text-align:center;font-size:' + u(14) + ';font-weight:600;color:rgba(246,239,230,.64);font-variant-numeric:tabular-nums;}'
-    + '.cs-sv .cs-now{position:absolute;top:50%;width:' + u(22) + ';height:' + u(22) + ';margin:-' + u(11) + ' 0 0 -' + u(11) + ';border-radius:50%;background:#F6EFE6;box-shadow:0 0 0 ' + u(11) + ' rgba(78,158,149,.28);}'
-    + '.cs-sv .cs-ev{position:absolute;width:' + u(210) + ';margin-left:-' + u(105) + ';background:rgba(255,255,255,.07);border-radius:' + u(20) + ';padding:' + u(14) + ' ' + u(16) + ';}'
-    + '.cs-sv .cs-ev.cs-up{bottom:calc(50% + ' + u(34) + ');}.cs-sv .cs-ev.cs-down{top:calc(50% + ' + u(52) + ');}.cs-sv .cs-ev.cs-past{opacity:.5;}.cs-sv .cs-ev.cs-next{background:color-mix(in srgb, #4E9E95 34%, #2a2622);}'
-    + '.cs-sv .cs-ev b{display:block;font-size:' + u(17.5) + ';font-weight:700;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.cs-sv .cs-ev span{font-size:' + u(14.5) + ';font-weight:600;color:rgba(246,239,230,.64);font-variant-numeric:tabular-nums;}'
-    + '.cs-sv .sv-dot{position:absolute;top:50%;width:' + u(13) + ';height:' + u(13) + ';margin:-' + u(6.5) + ' 0 0 -' + u(6.5) + ';border-radius:50%;background:#F6EFE6;}.cs-sv .sv-dot.cs-past{opacity:.5;}'
-    + '.cs-sv .sv-empty{position:absolute;left:0;right:0;top:calc(50% + ' + u(70) + ');text-align:center;font-size:' + u(22) + ';font-weight:600;color:rgba(246,239,230,.64);}'
-    + '.cs-sv.cs-woche{background:radial-gradient(110% 90% at 20% 0%, #26302F 0%, #171614 62%);}'
-    + '.cs-sv .cs-cols{position:absolute;inset:0;display:grid;grid-template-columns:repeat(7, minmax(0, 1fr));gap:' + u(10) + ';}'
-    + '.cs-sv .cs-col{background:rgba(255,255,255,.05);border-radius:' + u(24) + ';padding:' + u(16) + ' ' + u(12) + ' ' + u(14) + ';display:flex;flex-direction:column;min-width:0;overflow:hidden;}'
-    + '.cs-sv .cs-col.cs-today{background:color-mix(in srgb, #4E9E95 30%, #232120);}.cs-sv .cs-col.cs-today .cs-cap{color:#F6EFE6;}'
-    + '.cs-sv .cs-col .cs-n{font-size:' + u(38) + ';font-weight:600;letter-spacing:-.03em;line-height:1.05;margin-top:' + u(2) + ';font-variant-numeric:tabular-nums;}'
-    + '.cs-sv .cs-cw{display:flex;align-items:center;gap:' + u(8) + ';margin-top:' + u(14) + ';font-size:' + u(16) + ';font-weight:700;font-variant-numeric:tabular-nums;min-height:' + u(30) + ';}'
-    + '.cs-sv .cs-cw img{width:' + u(30) + ';height:' + u(30) + ';filter:brightness(0) invert(1);}.cs-sv .cs-cw span{color:rgba(246,239,230,.64);font-weight:600;}'
-    + '.cs-sv .cs-li{margin-top:' + u(16) + ';display:flex;flex-direction:column;gap:' + u(8) + ';}'
-    + '.cs-sv .cs-e{border-radius:' + u(14) + ';padding:' + u(9) + ' ' + u(10) + ';background:rgba(255,255,255,.07);border-left:' + u(4) + ' solid var(--cs-c, #8a857d);}'
-    + '.cs-sv .cs-e b{font-size:' + u(14.5) + ';font-weight:700;line-height:1.2;overflow:hidden;overflow-wrap:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}.cs-sv .cs-e span{display:block;font-size:' + u(13) + ';font-weight:600;color:rgba(246,239,230,.64);font-variant-numeric:tabular-nums;}'
-    + '.cs-sv .cs-none{margin-top:' + u(16) + ';font-size:' + u(14) + ';font-weight:600;color:rgba(246,239,230,.34);}'
-    + '.cs-sv.cs-musik{background:linear-gradient(135deg, #3A2F45 0%, #2D2540 50%, #162036 100%);}'
-    + '.cs-sv .cs-blur{position:absolute;inset:-12%;background-size:cover;background-position:center;filter:blur(' + u(60) + ') saturate(1.3) brightness(.55);}'
-    + '.cs-sv .cs-cover{position:absolute;left:' + u(80) + ';top:50%;width:' + u(440) + ';height:' + u(440) + ';margin-top:-' + u(220) + ';border-radius:' + u(34) + ';overflow:hidden;background:rgba(255,255,255,.08) center/cover no-repeat;box-shadow:0 ' + u(40) + ' ' + u(80) + ' -' + u(30) + ' rgba(0,0,0,.7);}'
-    + '.cs-sv .cs-corner{position:absolute;right:' + u(80) + ';top:' + u(54) + ';text-align:right;}.cs-sv .cs-corner .cs-time{font-size:' + u(72) + ';}.cs-sv .cs-corner .cs-date{font-size:' + u(18) + ';margin-top:' + u(4) + ';}'
-    + '.cs-sv .cs-meta{position:absolute;left:' + u(590) + ';right:' + u(80) + ';top:50%;transform:translateY(-46%);min-width:0;}'
-    + '.cs-sv .cs-meta h2{font-size:' + u(58) + ';font-weight:700;letter-spacing:-.03em;line-height:1.05;margin-top:' + u(12) + ';overflow-wrap:anywhere;}.cs-sv .cs-meta h3{font-size:' + u(28) + ';font-weight:600;color:rgba(246,239,230,.64);margin-top:' + u(10) + ';letter-spacing:-.01em;}'
-    + '.cs-sv .cs-prog{height:' + u(8) + ';border-radius:99px;background:rgba(255,255,255,.16);margin-top:' + u(52) + ';position:relative;}.cs-sv .cs-prog u{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:#F6EFE6;}'
-    + '.cs-sv .cs-tt{display:flex;justify-content:space-between;font-size:' + u(16) + ';font-weight:600;color:rgba(246,239,230,.64);margin-top:' + u(10) + ';font-variant-numeric:tabular-nums;}'
-    + '.cs-sv.cs-energie{background:radial-gradient(110% 80% at 50% 46%, #252B2A 0%, #161918 72%);}'
-    + '.cs-sv .cs-flow{position:absolute;left:0;right:0;top:' + u(70) + ';bottom:' + u(200) + ';}'
+    + '.cs-sv .cs-ends{position:absolute;left:' + u(M) + ';right:' + u(M) + ';bottom:' + u(58) + ';display:flex;justify-content:space-between;align-items:baseline;gap:' + u(16) + ';font-size:' + u(24) + ';font-weight:600;color:rgba(255,255,255,.82);}'
+    + '.cs-sv .cs-ends b{font-weight:700;color:#fff;font-variant-numeric:tabular-nums;font-size:' + u(30) + ';letter-spacing:-.02em;margin-left:' + u(6) + ';}'
+    + '.cs-sv .cs-ends span:nth-child(2){font-size:' + u(26) + ';color:#fff;}'
+    // Word clock (light by day, dark by night)
+    + '.cs-sv.cs-wort{background:#191613;}.cs-sv.cs-wort.cs-light{background:#F2EBE0;}'
+    + '.cs-sv .cs-words{position:absolute;left:' + u(84) + ';right:' + u(60) + ';top:50%;transform:translateY(-57%);font-size:' + u(172) + ';font-weight:700;letter-spacing:-.05em;line-height:.96;}'
+    + '.cs-sv .cs-words span{display:block;}.cs-sv .cs-words .cs-acc{color:var(--acc);}'
+    + '.cs-sv .cs-foot{position:absolute;left:' + u(92) + ';right:' + u(84) + ';bottom:' + u(70) + ';display:flex;justify-content:space-between;align-items:center;gap:' + u(20) + ';font-size:' + u(30) + ';font-weight:600;color:var(--ink2);}'
+    + '.cs-sv .cs-foot b{font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;}'
+    + '.cs-sv .cs-foot .cs-fw{display:flex;align-items:center;gap:' + u(12) + ';font-weight:700;color:var(--ink);font-size:' + u(34) + ';}'
+    + '.cs-sv .cs-foot img{width:' + u(46) + ';height:' + u(46) + ';}'
+    // Shared by the data screensavers: what it is about big at the top left, the clock at the top right.
+    + '.cs-sv .sv-head{position:absolute;left:' + u(M) + ';right:' + u(M) + ';top:' + u(58) + ';display:flex;justify-content:space-between;align-items:flex-start;gap:' + u(40) + ';}'
+    + '.cs-sv .sv-head .cs-time{font-size:' + u(92) + ';}.cs-sv .sv-head .cs-date{font-size:' + u(25) + ';margin-top:' + u(12) + ';}'
+    + '.cs-sv .sv-head .cs-clock{flex:none;}.cs-sv .sv-head .cs-clock:last-child{text-align:right;}'
+    + '.cs-sv .cs-sum{min-width:0;font-size:' + u(32) + ';font-weight:600;color:var(--ink2);letter-spacing:-.01em;line-height:1.2;}'
+    + '.cs-sv .cs-sum b{display:block;font-size:' + u(84) + ';font-weight:700;color:var(--ink);letter-spacing:-.045em;line-height:1;margin:-' + u(4) + ' 0 ' + u(12) + ' -' + u(4) + ';overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;padding-bottom:.08em;}'
+    + '.cs-sv .cs-sum.cs-accent{color:var(--acc);}'
+    + '.cs-sv .cs-cap{font-size:' + u(21) + ';font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink2);}'
+    + '.cs-sv .cs-body{position:absolute;left:' + u(M) + ';right:' + u(M) + ';top:' + u(236) + ';bottom:' + u(60) + ';}'
+    // Weather: the sky's colour as the ground, the temperature as the big thing.
+    + '.cs-sv.cs-wetter{background:linear-gradient(180deg, #2F6FB8 0%, #5C9AD6 58%, #8FBDE6 100%);}'
+    + '.cs-sv.cs-wetter.cs-grey{background:linear-gradient(180deg, #4E6A86 0%, #7C95AD 60%, #A5B8C8 100%);}'
+    + '.cs-sv.cs-wetter.cs-dark{background:linear-gradient(180deg, #0B1429 0%, #172849 60%, #25406A 100%);}'
+    + '.cs-sv .cs-wnow{position:absolute;left:' + u(M) + ';top:' + u(54) + ';}'
+    + '.cs-sv .cs-wnow .cs-wt{display:flex;align-items:center;gap:' + u(22) + ';margin-left:-' + u(6) + ';}'
+    + '.cs-sv .cs-wnow img{width:' + u(150) + ';height:' + u(150) + ';}'
+    + '.cs-sv .cs-wnow b{font-size:' + u(232) + ';font-weight:600;letter-spacing:-.06em;line-height:.9;font-variant-numeric:tabular-nums;}'
+    + '.cs-sv .cs-wnow p{font-size:' + u(38) + ';font-weight:600;letter-spacing:-.015em;margin-top:' + u(16) + ';}'
+    + '.cs-sv .cs-corner{position:absolute;right:' + u(M) + ';top:' + u(58) + ';text-align:right;}.cs-sv .cs-corner .cs-time{font-size:' + u(92) + ';}.cs-sv .cs-corner .cs-date{font-size:' + u(25) + ';margin-top:' + u(12) + ';color:rgba(255,255,255,.86);}'
+    + '.cs-sv .cs-wk{position:absolute;right:' + u(M) + ';top:' + u(204) + ';width:' + u(430) + ';display:flex;flex-direction:column;}'
+    + '.cs-sv .cs-wd{display:grid;grid-template-columns:' + u(62) + ' ' + u(46) + ' ' + u(52) + ' 1fr ' + u(52) + ';align-items:center;gap:' + u(12) + ';height:' + u(50) + ';font-size:' + u(26) + ';font-weight:600;font-variant-numeric:tabular-nums;}'
+    + '.cs-sv .cs-wd img{width:' + u(40) + ';height:' + u(40) + ';}.cs-sv .cs-wd span{color:rgba(255,255,255,.74);text-align:right;}.cs-sv .cs-wd em{font-style:normal;text-align:right;font-weight:700;}'
+    + '.cs-sv .cs-wd i{position:relative;height:' + u(10) + ';border-radius:99px;background:rgba(255,255,255,.2);}.cs-sv .cs-wd i u{position:absolute;top:0;bottom:0;border-radius:99px;background:linear-gradient(90deg, #BFE0FF, #FFD98A);}'
+    + '.cs-sv .cs-curve{position:absolute;left:' + u(M) + ';right:' + u(M) + ';bottom:' + u(104) + ';height:' + u(230) + ';}.cs-sv .cs-curve svg{width:100%;height:100%;display:block;overflow:visible;}'
+    + '.cs-sv .cs-pk{position:absolute;transform:translate(-50%, -130%);font-size:' + u(26) + ';font-weight:700;font-variant-numeric:tabular-nums;}.cs-sv .cs-pk.cs-lo{transform:translate(-50%, 35%);}'
+    + '.cs-sv .cs-hours{position:absolute;left:0;right:0;bottom:-' + u(48) + ';display:flex;justify-content:space-between;font-size:' + u(23) + ';font-weight:600;color:rgba(255,255,255,.8);font-variant-numeric:tabular-nums;}'
+    // Day line
+    + '.cs-sv.cs-linie{background:linear-gradient(160deg, #173335 0%, #0F2224 100%);}.cs-sv.cs-linie.cs-light{background:linear-gradient(160deg, #E4EEEA 0%, #D2E3DD 100%);--acc:#2F7F76;}.cs-sv.cs-linie{--acc:#7FD0C4;}'
+    + '.cs-sv.cs-linie .cs-body{top:' + u(300) + ';}'
+    + '.cs-sv .cs-line{position:absolute;left:0;right:0;top:50%;height:' + u(10) + ';margin-top:-' + u(5) + ';border-radius:99px;background:var(--line);}'
+    + '.cs-sv .cs-line u{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--acc);}'
+    + '.cs-sv .cs-tick{position:absolute;top:50%;width:' + u(60) + ';margin:' + u(26) + ' 0 0 -' + u(30) + ';text-align:center;font-size:' + u(22) + ';font-weight:600;color:var(--ink3);font-variant-numeric:tabular-nums;}'
+    + '.cs-sv .cs-tick.cs-first{text-align:left;margin-left:0;}.cs-sv .cs-tick.cs-last{text-align:right;margin-left:-' + u(60) + ';}'
+    + '.cs-sv .cs-now{position:absolute;top:50%;width:' + u(32) + ';height:' + u(32) + ';margin:-' + u(16) + ' 0 0 -' + u(16) + ';border-radius:50%;background:var(--ink);border:' + u(7) + ' solid var(--acc);box-shadow:0 0 0 ' + u(12) + ' color-mix(in srgb, var(--acc) 26%, transparent);}'
+    + '.cs-sv .cs-ev{position:absolute;width:22%;margin-left:-11%;min-width:' + u(190) + ';background:var(--plate);border-radius:' + u(24) + ';padding:' + u(16) + ' ' + u(20) + ' ' + u(17) + ';}'
+    + '.cs-sv .cs-ev.cs-up{bottom:calc(50% + ' + u(40) + ');}.cs-sv .cs-ev.cs-down{top:calc(50% + ' + u(74) + ');}.cs-sv .cs-ev.cs-past{opacity:.5;}'
+    + '.cs-sv .cs-ev.cs-next{background:var(--acc);color:#10201F;}.cs-sv.cs-light .cs-ev.cs-next{color:#fff;}.cs-sv .cs-ev.cs-next span{color:inherit;opacity:.8;}'
+    + '.cs-sv .cs-ev b{display:block;font-size:' + u(25) + ';font-weight:700;letter-spacing:-.015em;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.cs-sv .cs-ev span{font-size:' + u(21) + ';font-weight:600;color:var(--ink2);font-variant-numeric:tabular-nums;}'
+    + '.cs-sv .sv-dot{position:absolute;top:50%;width:' + u(16) + ';height:' + u(16) + ';margin:-' + u(8) + ' 0 0 -' + u(8) + ';border-radius:50%;background:var(--ink);}.cs-sv .sv-dot.cs-past{opacity:.5;}'
+    + '.cs-sv .sv-empty{position:absolute;left:0;right:0;top:calc(50% + ' + u(96) + ');text-align:center;font-size:' + u(30) + ';font-weight:600;color:var(--ink2);}'
+    // Week
+    + '.cs-sv.cs-woche{background:linear-gradient(160deg, #1B2538 0%, #111827 100%);--acc:#8DB6F0;}.cs-sv.cs-woche.cs-light{background:linear-gradient(160deg, #E6ECF4 0%, #D5DFEC 100%);--acc:#3E74B8;}'
+    + '.cs-sv.cs-woche .cs-body{top:' + u(250) + ';bottom:' + u(56) + ';left:' + u(M - 14) + ';right:' + u(M - 14) + ';}'
+    + '.cs-sv .cs-cols{position:absolute;inset:0;display:grid;grid-template-columns:repeat(7, minmax(0, 1fr));}'
+    + '.cs-sv .cs-col{padding:' + u(18) + ' ' + u(14) + ' ' + u(16) + ';display:flex;flex-direction:column;min-width:0;overflow:hidden;border-radius:' + u(26) + ';}'
+    + '.cs-sv .cs-col.cs-today{background:var(--plate);box-shadow:inset 0 0 0 ' + u(2) + ' color-mix(in srgb, var(--acc) 55%, transparent);}.cs-sv .cs-col.cs-today .cs-cap{color:var(--acc);}'
+    + '.cs-sv .cs-col .cs-cap{font-size:' + u(20) + ';}'
+    + '.cs-sv .cs-col .cs-n{font-size:' + u(72) + ';font-weight:600;letter-spacing:-.05em;line-height:1;margin-top:' + u(6) + ';font-variant-numeric:tabular-nums;}'
+    + '.cs-sv .cs-cw{display:flex;align-items:center;gap:' + u(8) + ';margin-top:' + u(14) + ';font-size:' + u(24) + ';font-weight:700;font-variant-numeric:tabular-nums;min-height:' + u(38) + ';}'
+    + '.cs-sv .cs-cw img{width:' + u(36) + ';height:' + u(36) + ';}.cs-sv .cs-cw span{color:var(--ink3);font-weight:600;}'
+    + '.cs-sv .cs-li{margin-top:' + u(20) + ';display:flex;flex-direction:column;gap:' + u(14) + ';}'
+    + '.cs-sv .cs-e{padding-left:' + u(12) + ';border-left:' + u(5) + ' solid var(--cs-c, var(--ink3));border-radius:' + u(3) + ';}'
+    + '.cs-sv .cs-e b{font-size:' + u(22) + ';font-weight:700;letter-spacing:-.01em;line-height:1.18;overflow:hidden;overflow-wrap:break-word;-webkit-hyphens:auto;hyphens:auto;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}.cs-sv .cs-e span{display:block;font-size:' + u(20) + ';font-weight:600;color:var(--ink2);font-variant-numeric:tabular-nums;margin-top:' + u(2) + ';}'
+    + '.cs-sv .cs-none{margin-top:' + u(24) + ';width:' + u(26) + ';height:' + u(5) + ';border-radius:99px;background:var(--line);font-size:0;}'
+    // Music
+    + '.cs-sv.cs-musik{background:radial-gradient(90% 120% at 12% 20%, #6B3F74 0%, transparent 60%), radial-gradient(90% 120% at 96% 90%, #24477A 0%, transparent 62%), #1B1730;}'
+    + '.cs-sv .cs-blur{position:absolute;inset:-12%;background-size:cover;background-position:center;filter:blur(' + u(70) + ') saturate(1.4) brightness(.6);}'
+    + '.cs-sv .cs-cover{position:absolute;left:' + u(M + 8) + ';top:50%;width:' + u(480) + ';height:' + u(480) + ';margin-top:-' + u(240) + ';border-radius:' + u(40) + ';overflow:hidden;background:linear-gradient(140deg, #C77DD8 0%, #7A6BE0 52%, #4C8FE0 100%) center/cover no-repeat;box-shadow:0 ' + u(46) + ' ' + u(90) + ' -' + u(30) + ' rgba(0,0,0,.7), inset 0 0 0 ' + u(1.5) + ' rgba(255,255,255,.14);display:grid;place-items:center;}'
+    + '.cs-sv .cs-cover svg{width:38%;height:38%;color:rgba(255,255,255,.9);}'
+    + '.cs-sv .cs-meta{position:absolute;left:' + u(M + 8 + 480 + 64) + ';right:' + u(M) + ';top:50%;transform:translateY(-44%);min-width:0;}'
+    + '.cs-sv .cs-meta .cs-cap{color:rgba(255,255,255,.7);}'
+    + '.cs-sv .cs-meta h2{font-size:' + u(78) + ';font-weight:700;letter-spacing:-.04em;line-height:1.02;margin-top:' + u(14) + ';overflow-wrap:anywhere;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;padding-bottom:.08em;}.cs-sv .cs-meta h3{font-size:' + u(38) + ';font-weight:600;color:rgba(255,255,255,.74);margin-top:' + u(10) + ';letter-spacing:-.015em;}'
+    + '.cs-sv .cs-prog{height:' + u(10) + ';border-radius:99px;background:rgba(255,255,255,.2);margin-top:' + u(54) + ';position:relative;}.cs-sv .cs-prog u{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:#fff;}'
+    + '.cs-sv .cs-tt{display:flex;justify-content:space-between;font-size:' + u(23) + ';font-weight:600;color:rgba(255,255,255,.72);margin-top:' + u(12) + ';font-variant-numeric:tabular-nums;}'
+    // Energy flow
+    + '.cs-sv.cs-energie{background:linear-gradient(160deg, #241D12 0%, #15120C 100%);--ground:#1D170F;}.cs-sv.cs-energie.cs-light{background:linear-gradient(160deg, #F6ECD6 0%, #EEDFC0 100%);--ground:#F3E6CC;}'
+    + '.cs-sv .cs-flow{position:absolute;left:0;right:0;top:' + u(56) + ';bottom:' + u(196) + ';}'
     // A node hangs on its point by the centre of its circle (--cs-r = the circle's radius); the text follows below.
-    + '.cs-sv .cs-fn{position:absolute;--cs-r:' + u(56) + ';transform:translate(-50%, calc(var(--cs-r) * -1));text-align:center;width:' + u(240) + ';}'
-    + '.cs-sv .cs-fn.cs-house{--cs-r:' + u(75) + ';}'
-    + '.cs-sv .cs-fn i{display:grid;place-items:center;margin:0 auto;border-radius:50%;border:' + u(3) + ' solid var(--cs-c);background:#1B1F1E;width:' + u(112) + ';height:' + u(112) + ';}'
-    + '.cs-sv .cs-fn.cs-house i{width:' + u(150) + ';height:' + u(150) + ';}.cs-sv .cs-fn svg{width:44%;height:44%;}'
-    + '.cs-sv .cs-fn b{display:block;font-size:' + u(30) + ';font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1;margin-top:' + u(12) + ';}.cs-sv .cs-fn span{font-size:' + u(15) + ';font-weight:600;color:rgba(246,239,230,.64);}'
-    + '.cs-sv .cs-fl{position:absolute;top:64%;height:0;margin-top:-' + u(2.5) + ';border-top:' + u(5) + ' dotted var(--cs-c);}'
-    + '.cs-sv .cs-fl.cs-l{left:calc(18% + ' + u(74) + ');right:calc(50% + ' + u(93) + ');}.cs-sv .cs-fl.cs-r{left:calc(50% + ' + u(93) + ');right:calc(18% + ' + u(74) + ');}'
-    + '.cs-sv .cs-fl.cs-v{left:50%;width:0;height:auto;margin:0 0 0 -' + u(2.5) + ';border-top:0;border-left:' + u(5) + ' dotted var(--cs-c);top:calc(11% + ' + u(140) + ');bottom:calc(36% + ' + u(93) + ');}'
-    + '.cs-sv .cs-bal{position:absolute;left:' + u(64) + ';right:' + u(64) + ';bottom:' + u(52) + ';display:grid;grid-template-columns:repeat(4, minmax(0, 1fr));gap:' + u(14) + ';}'
-    + '.cs-sv .cs-bal div{background:rgba(255,255,255,.055);border-radius:' + u(22) + ';padding:' + u(16) + ' ' + u(22) + ' ' + u(18) + ';min-width:0;}'
-    + '.cs-sv .cs-bal b{display:block;font-size:' + u(28) + ';font-weight:700;margin-top:' + u(4) + ';letter-spacing:-.02em;font-variant-numeric:tabular-nums;}'
-    + '.cs-sv.cs-ruhe{background:radial-gradient(90% 90% at 12% 8%, #22302D 0%, #191714 58%);}'
-    + '.cs-sv .cs-left{position:absolute;left:' + u(80) + ';top:0;bottom:0;width:' + u(560) + ';display:flex;flex-direction:column;justify-content:center;}'
-    + '.cs-sv .cs-left .cs-time{font-size:' + u(172) + ';margin-left:-' + u(8) + ';}.cs-sv .cs-left .cs-date{font-size:' + u(25) + ';margin-top:' + u(8) + ';color:rgba(246,239,230,.64);}'
-    + '.cs-sv .cs-say{font-size:' + u(38) + ';font-weight:700;letter-spacing:-.02em;margin-top:' + u(56) + ';}.cs-sv .cs-say small{display:block;font-size:' + u(20) + ';font-weight:600;color:rgba(246,239,230,.64);margin-top:' + u(6) + ';letter-spacing:0;}'
-    + '.cs-sv .cs-ppl{display:flex;flex-wrap:wrap;gap:' + u(10) + ';margin-top:' + u(44) + ';}'
-    + '.cs-sv .cs-p{display:flex;align-items:center;gap:' + u(10) + ';padding:' + u(7) + ' ' + u(16) + ' ' + u(7) + ' ' + u(7) + ';border-radius:999px;background:rgba(255,255,255,.07);font-size:' + u(16) + ';font-weight:600;}.cs-sv .cs-p.cs-away{opacity:.55;}'
-    + '.cs-sv .cs-p i{width:' + u(30) + ';height:' + u(30) + ';border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:' + u(14) + ';font-weight:700;color:#1b1916;background:#E8B04A;}.cs-sv .cs-p.cs-away i{background:#9b958c;}'
-    + '.cs-sv .cs-right{position:absolute;right:' + u(80) + ';top:0;bottom:0;width:' + u(400) + ';display:flex;flex-direction:column;justify-content:center;gap:' + u(12) + ';}'
-    + '.cs-sv .cs-it{display:flex;align-items:center;gap:' + u(16) + ';background:rgba(255,255,255,.06);border-radius:' + u(22) + ';padding:' + u(15) + ' ' + u(18) + ';min-width:0;}'
-    + '.cs-sv .cs-it i{width:' + u(14) + ';height:' + u(14) + ';border-radius:50%;flex:none;background:var(--cs-c);}'
-    + '.cs-sv .cs-it b{display:block;font-size:' + u(18) + ';font-weight:700;line-height:1.25;}.cs-sv .cs-it span{font-size:' + u(15) + ';font-weight:600;color:rgba(246,239,230,.64);}'
+    + '.cs-sv .cs-fn{position:absolute;--cs-r:' + u(75) + ';transform:translate(-50%, calc(var(--cs-r) * -1));text-align:center;width:' + u(320) + ';}'
+    + '.cs-sv .cs-fn.cs-house{--cs-r:' + u(100) + ';}'
+    + '.cs-sv .cs-fn i{display:grid;place-items:center;margin:0 auto;border-radius:50%;border:' + u(4) + ' solid var(--cs-c);background:color-mix(in srgb, var(--cs-c) 20%, var(--ground));color:var(--cs-c);width:' + u(150) + ';height:' + u(150) + ';}'
+    + '.cs-sv .cs-fn.cs-house i{width:' + u(200) + ';height:' + u(200) + ';background:var(--ink);border-color:var(--ink);color:var(--ground);}.cs-sv .cs-fn svg{width:46%;height:46%;}'
+    + '.cs-sv .cs-fn b{display:block;font-size:' + u(46) + ';font-weight:700;letter-spacing:-.035em;font-variant-numeric:tabular-nums;line-height:1.05;margin-top:' + u(14) + ';}.cs-sv .cs-fn span{font-size:' + u(23) + ';font-weight:600;color:var(--ink2);}'
+    // The sun's text stands beside its circle, so the line to the house has room.
+    + '.cs-sv .cs-fn.cs-sun{width:auto;transform:translate(-' + u(75) + ', calc(var(--cs-r) * -1));display:flex;align-items:center;gap:' + u(24) + ';text-align:left;}.cs-sv .cs-fn.cs-sun i{margin:0;flex:none;}.cs-sv .cs-fn.cs-sun b{margin-top:0;}'
+    // A flow: dots that run the way the power goes (cs-rev = the other way).
+    + '.cs-sv .cs-fl{position:absolute;top:62%;height:' + u(8) + ';margin-top:-' + u(4) + ';overflow:hidden;}'
+    + '.cs-sv .cs-fl::before{content:"";position:absolute;top:0;bottom:0;left:-' + u(26) + ';right:0;background:radial-gradient(circle at ' + u(4) + ' 50%, var(--cs-c) ' + u(3.6) + ', transparent ' + u(4.2) + ') 0 0/' + u(26) + ' 100% repeat-x;animation:cs-run 1.1s linear infinite;}'
+    + '.cs-sv .cs-fl.cs-rev::before{animation-direction:reverse;}'
+    + '@keyframes cs-run{to{transform:translateX(' + u(26) + ');}}'
+    + '.cs-sv .cs-fl.cs-l{left:calc(17% + ' + u(93) + ');right:calc(50% + ' + u(118) + ');}.cs-sv .cs-fl.cs-r{left:calc(50% + ' + u(118) + ');right:calc(17% + ' + u(93) + ');}'
+    + '.cs-sv .cs-fl.cs-v{left:50%;width:' + u(8) + ';height:auto;margin:0 0 0 -' + u(4) + ';top:calc(9% + ' + u(93) + ');bottom:calc(38% + ' + u(118) + ');}'
+    + '.cs-sv .cs-fl.cs-v::before{left:0;right:0;top:-' + u(26) + ';bottom:0;background:radial-gradient(circle at 50% ' + u(4) + ', var(--cs-c) ' + u(3.6) + ', transparent ' + u(4.2) + ') 0 0/100% ' + u(26) + ' repeat-y;animation-name:cs-fall;}'
+    + '@keyframes cs-fall{to{transform:translateY(' + u(26) + ');}}'
+    + '.cs-sv .cs-bal{position:absolute;left:' + u(M) + ';right:' + u(M) + ';bottom:' + u(54) + ';display:grid;grid-template-columns:repeat(4, minmax(0, 1fr));border-top:' + u(2) + ' solid var(--line);padding-top:' + u(22) + ';}'
+    + '.cs-sv .cs-bal div{min-width:0;padding:0 ' + u(24) + ';border-left:' + u(2) + ' solid var(--line);}.cs-sv .cs-bal div:first-child{padding-left:0;border-left:0;}'
+    + '.cs-sv .cs-bal .cs-cap{font-size:' + u(22) + ';letter-spacing:0;text-transform:none;font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
+    + '.cs-sv .cs-bal b{display:block;font-size:' + u(46) + ';font-weight:700;margin-top:' + u(2) + ';letter-spacing:-.035em;font-variant-numeric:tabular-nums;line-height:1.1;}'
+    // House at rest
+    + '.cs-sv.cs-ruhe{background:linear-gradient(160deg, #18291F 0%, #0F1A14 100%);--acc:#8FD3A0;}.cs-sv.cs-ruhe.cs-light{background:linear-gradient(160deg, #E6EFE2 0%, #D6E5D2 100%);--acc:#3F8F55;}'
+    + '.cs-sv.cs-ruhe.cs-busy{--acc:#F0A766;}.cs-sv.cs-ruhe.cs-light.cs-busy{--acc:#C8693F;}'
+    + '.cs-sv .cs-left{position:absolute;left:' + u(M + 8) + ';top:0;bottom:0;right:' + u(M + 8 + 470 + 48) + ';display:flex;flex-direction:column;justify-content:center;min-width:0;}'
+    + '.cs-sv .cs-left .cs-time{font-size:' + u(214) + ';margin-left:-' + u(10) + ';}.cs-sv .cs-left .cs-date{font-size:' + u(34) + ';margin-top:' + u(18) + ';}'
+    + '.cs-sv .cs-say{font-size:' + u(52) + ';font-weight:700;letter-spacing:-.03em;margin-top:' + u(60) + ';display:flex;flex-wrap:wrap;align-items:center;gap:0 ' + u(18) + ';line-height:1.15;}'
+    + '.cs-sv .cs-say::before{content:"";width:' + u(22) + ';height:' + u(22) + ';border-radius:50%;background:var(--acc);box-shadow:0 0 0 ' + u(9) + ' color-mix(in srgb, var(--acc) 24%, transparent);margin:0 ' + u(8) + ' 0 ' + u(9) + ';flex:none;}'
+    + '.cs-sv .cs-say small{flex-basis:100%;font-size:' + u(28) + ';font-weight:600;color:var(--ink2);margin-top:' + u(10) + ';letter-spacing:-.01em;}'
+    + '.cs-sv .cs-ppl{display:flex;flex-wrap:wrap;gap:' + u(12) + ';margin-top:' + u(46) + ';}'
+    + '.cs-sv .cs-p{display:flex;align-items:center;gap:' + u(12) + ';padding:' + u(8) + ' ' + u(22) + ' ' + u(8) + ' ' + u(8) + ';border-radius:999px;background:var(--plate);font-size:' + u(24) + ';font-weight:600;}.cs-sv .cs-p.cs-away{opacity:.5;}'
+    + '.cs-sv .cs-p i{width:' + u(42) + ';height:' + u(42) + ';border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:' + u(21) + ';font-weight:700;color:#1b1916;background:#E8B04A;}.cs-sv .cs-p.cs-away i{background:#9b958c;}'
+    // Nothing asks for anyone: the whole thing stands in the middle.
+    + '.cs-sv.cs-calm .cs-left{left:' + u(M) + ';right:' + u(M) + ';align-items:center;text-align:center;}.cs-sv.cs-calm .cs-left .cs-time{font-size:' + u(260) + ';margin-left:0;}'
+    + '.cs-sv.cs-calm .cs-say{justify-content:center;}.cs-sv.cs-calm .cs-ppl{justify-content:center;}'
+    + '.cs-sv .cs-right{position:absolute;right:' + u(M + 8) + ';top:0;bottom:0;width:' + u(470) + ';display:flex;flex-direction:column;justify-content:center;gap:' + u(14) + ';}'
+    + '.cs-sv .cs-it{display:flex;align-items:center;gap:' + u(20) + ';background:var(--plate);border-radius:' + u(26) + ';padding:' + u(20) + ' ' + u(24) + ';min-width:0;}'
+    + '.cs-sv .cs-it i{width:' + u(18) + ';height:' + u(18) + ';border-radius:50%;flex:none;background:var(--cs-c);}'
+    + '.cs-sv .cs-it div{min-width:0;}.cs-sv .cs-it b{display:block;font-size:' + u(26) + ';font-weight:700;letter-spacing:-.015em;line-height:1.2;}.cs-sv .cs-it span{font-size:' + u(22) + ';font-weight:600;color:var(--ink2);}'
     // Cameras: one still picture per camera, the grid as large as the count needs.
-    + '.cs-sv.cs-kameras{background:radial-gradient(110% 90% at 30% 0%, #222A30 0%, #131618 64%);}'
-    + '.cs-sv .cs-cams{position:absolute;inset:0;display:grid;grid-template-columns:repeat(var(--cs-cols), minmax(0, 1fr));grid-template-rows:repeat(var(--cs-rows), minmax(0, 1fr));gap:' + u(14) + ';}'
-    + '.cs-sv .cs-cam{position:relative;display:block;min-width:0;min-height:0;border:0;padding:0;font:inherit;color:inherit;text-align:left;cursor:pointer;border-radius:' + u(24) + ';overflow:hidden;'
-    +   'background:linear-gradient(160deg, #2A3238, #1A1F23);transition:transform .16s ease;-webkit-tap-highlight-color:transparent;}'
+    + '.cs-sv.cs-kameras{background:linear-gradient(160deg, #1A2026 0%, #0E1114 100%);}'
+    + '.cs-sv.cs-kameras .sv-head{top:' + u(44) + ';align-items:center;}.cs-sv.cs-kameras .sv-head .cs-time{font-size:' + u(76) + ';}.cs-sv.cs-kameras .sv-head .cs-date{display:none;}'
+    + '.cs-sv.cs-kameras .cs-sum{font-size:' + u(25) + ';}.cs-sv.cs-kameras .cs-sum b{font-size:' + u(52) + ';margin-bottom:' + u(4) + ';}'
+    + '.cs-sv.cs-kameras .cs-body{top:' + u(168) + ';bottom:' + u(40) + ';left:' + u(40) + ';right:' + u(40) + ';}'
+    + '.cs-sv .cs-cams{position:absolute;inset:0;display:grid;grid-template-columns:repeat(var(--cs-cols), minmax(0, 1fr));grid-template-rows:repeat(var(--cs-rows), minmax(0, 1fr));gap:' + u(12) + ';}'
+    + '.cs-sv .cs-cam{position:relative;display:block;min-width:0;min-height:0;border:0;padding:0;font:inherit;color:inherit;text-align:left;cursor:pointer;border-radius:' + u(28) + ';overflow:hidden;'
+    +   'background:linear-gradient(160deg, #2C353D, #1B2126);transition:transform .16s ease;-webkit-tap-highlight-color:transparent;}'
     + '.cs-sv .cs-cam:active{transform:scale(var(--casora-press-scale, .97));}'
     + '.cs-sv .cs-shot{position:absolute;inset:0;background-size:cover;background-position:center;}'
     // Until (or where) a camera gives no picture: its symbol, quiet in the middle.
-    + '.cs-sv .cs-camic{position:absolute;left:50%;top:50%;transform:translate(-50%, -60%);opacity:.28;--mdc-icon-size:' + u(44) + ';}.cs-sv .cs-camic ha-icon{display:flex;}'
-    + '.cs-sv .cs-cam b{position:absolute;left:0;right:0;bottom:0;padding:' + u(30) + ' ' + u(18) + ' ' + u(14) + ';font-size:' + u(17) + ';font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'
-    +   'background:linear-gradient(transparent, rgba(0,0,0,.55));}'
-    // Month calendar: paper by day, dark by night.
-    + '.cs-sv.cs-kalender{background:#F2EBE0;color:#2A2520;}.cs-sv.cs-kalender.cs-dark{background:#191613;color:#F3ECE2;}'
-    + '.cs-sv .cs-kh{position:absolute;left:' + u(64) + ';right:' + u(64) + ';top:' + u(46) + ';display:flex;justify-content:space-between;align-items:flex-end;gap:' + u(24) + ';}'
-    + '.cs-sv .cs-km{font-size:' + u(64) + ';font-weight:700;letter-spacing:-.035em;line-height:1;}.cs-sv .cs-ky{font-size:' + u(20) + ';font-weight:600;opacity:.55;margin-top:' + u(6) + ';font-variant-numeric:tabular-nums;}'
-    + '.cs-sv .cs-kc{text-align:right;}.cs-sv .cs-kc .cs-time{font-size:' + u(52) + ';}.cs-sv.cs-kalender .cs-date{color:inherit;opacity:.6;font-size:' + u(17) + ';margin-top:' + u(4) + ';}'
-    + '.cs-sv .cs-kg{position:absolute;left:' + u(64) + ';right:' + u(64) + ';top:' + u(150) + ';bottom:' + u(48) + ';display:grid;grid-template-columns:repeat(7, minmax(0, 1fr));'
-    +   'grid-template-rows:auto repeat(var(--cs-weeks), minmax(0, 1fr));gap:' + u(8) + ';}'
-    + '.cs-sv .cs-kw{font-size:' + u(13) + ';font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.5;padding:0 ' + u(12) + ' ' + u(2) + ';}'
-    + '.cs-sv .cs-kd{min-width:0;min-height:0;overflow:hidden;border-radius:' + u(18) + ';padding:' + u(10) + ' ' + u(12) + ';background:rgba(42,37,32,.045);display:flex;flex-direction:column;gap:' + u(6) + ';}'
-    + '.cs-sv.cs-dark .cs-kd{background:rgba(255,255,255,.045);}'
-    + '.cs-sv .cs-kd > b{display:grid;place-items:center;width:' + u(36) + ';height:' + u(36) + ';margin:-' + u(4) + ' 0 0 -' + u(6) + ';border-radius:50%;font-size:' + u(19) + ';font-weight:700;font-variant-numeric:tabular-nums;flex:none;}'
-    + '.cs-sv .cs-kd.cs-kout{background:none;}.cs-sv .cs-kd.cs-kout > b, .cs-sv .cs-kd.cs-kpast > b{opacity:.38;}.cs-sv .cs-kd.cs-kpast .cs-kl{opacity:.5;}'
-    + '.cs-sv .cs-kd.cs-ktoday{background:color-mix(in srgb, #C8693F 14%, transparent);}.cs-sv .cs-kd.cs-ktoday > b{background:#C8693F;color:#fff;}'
-    + '.cs-sv.cs-dark .cs-kd.cs-ktoday{background:color-mix(in srgb, #E08A5C 18%, transparent);}.cs-sv.cs-dark .cs-kd.cs-ktoday > b{background:#E08A5C;color:#191613;}'
-    + '.cs-sv .cs-kl{display:flex;flex-direction:column;gap:' + u(4) + ';min-width:0;}'
-    + '.cs-sv .cs-ke{display:flex;align-items:center;gap:' + u(6) + ';min-width:0;font-size:' + u(13.5) + ';font-weight:600;line-height:1.2;}'
-    + '.cs-sv .cs-ke i{flex:none;width:' + u(8) + ';height:' + u(8) + ';border-radius:50%;background:var(--cs-c);}'
+    + '.cs-sv .cs-camic{position:absolute;left:50%;top:50%;transform:translate(-50%, -60%);opacity:.3;--mdc-icon-size:' + u(64) + ';}.cs-sv .cs-camic ha-icon{display:flex;}'
+    + '.cs-sv .cs-cam b{position:absolute;left:0;right:0;bottom:0;padding:' + u(44) + ' ' + u(24) + ' ' + u(18) + ';font-size:' + u(25) + ';font-weight:700;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'
+    +   'background:linear-gradient(transparent, rgba(0,0,0,.62));}'
+    // Month calendar: paper by day, dark by night. No boxes: a hairline per week, today as a filled circle.
+    + '.cs-sv.cs-kalender{background:#191613;}.cs-sv.cs-kalender.cs-light{background:#F2EBE0;}'
+    + '.cs-sv .cs-kh{position:absolute;left:' + u(M) + ';right:' + u(M) + ';top:' + u(52) + ';display:flex;justify-content:space-between;align-items:flex-start;gap:' + u(24) + ';}'
+    + '.cs-sv .cs-kt{display:flex;align-items:baseline;gap:' + u(22) + ';min-width:0;}'
+    + '.cs-sv .cs-km{font-size:' + u(92) + ';font-weight:700;letter-spacing:-.05em;line-height:1;color:var(--acc);margin-left:-' + u(4) + ';}.cs-sv .cs-ky{font-size:' + u(92) + ';font-weight:300;letter-spacing:-.05em;line-height:1;color:var(--ink3);font-variant-numeric:tabular-nums;}'
+    + '.cs-sv .cs-kc{text-align:right;flex:none;}.cs-sv .cs-kc .cs-time{font-size:' + u(92) + ';}.cs-sv .cs-kc .cs-date{font-size:' + u(25) + ';margin-top:' + u(12) + ';}'
+    + '.cs-sv .cs-kg{position:absolute;left:' + u(M) + ';right:' + u(M) + ';top:' + u(206) + ';bottom:' + u(44) + ';display:grid;grid-template-columns:repeat(7, minmax(0, 1fr));'
+    +   'grid-template-rows:auto repeat(var(--cs-weeks), minmax(0, 1fr));}'
+    + '.cs-sv .cs-kw{font-size:' + u(21) + ';font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink3);padding:0 ' + u(8) + ' ' + u(14) + ';}'
+    + '.cs-sv .cs-kd{min-width:0;min-height:0;overflow:hidden;padding:' + u(10) + ' ' + u(8) + ' ' + u(4) + ';border-top:' + u(2) + ' solid var(--line);display:flex;flex-direction:column;gap:' + u(5) + ';}'
+    + '.cs-sv .cs-kd > b{display:grid;place-items:center;min-width:' + u(50) + ';height:' + u(50) + ';align-self:flex-start;margin-left:-' + u(9) + ';border-radius:99px;font-size:' + u(32) + ';font-weight:600;letter-spacing:-.03em;font-variant-numeric:tabular-nums;flex:none;}'
+    + '.cs-sv .cs-kd.cs-kout > b{color:var(--ink3);font-weight:500;}.cs-sv .cs-kd.cs-kpast > b{color:var(--ink2);}.cs-sv .cs-kd.cs-kpast .cs-kl{opacity:.55;}'
+    + '.cs-sv .cs-kd.cs-ktoday > b{background:var(--acc);color:#fff;font-weight:700;}.cs-sv:not(.cs-light) .cs-kd.cs-ktoday > b{color:#191613;}'
+    + '.cs-sv .cs-kl{display:flex;flex-direction:column;gap:' + u(3) + ';min-width:0;}'
+    + '.cs-sv .cs-ke{display:flex;align-items:center;gap:' + u(8) + ';min-width:0;font-size:' + u(19.5) + ';font-weight:600;line-height:1.2;}'
+    + '.cs-sv .cs-ke i{flex:none;width:' + u(10) + ';height:' + u(10) + ';border-radius:50%;background:var(--cs-c);}'
     + '.cs-sv .cs-ke em{font-style:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}'
-    + '.cs-sv .cs-kmore{font-size:' + u(12.5) + ';font-weight:700;opacity:.5;}'
+    + '.cs-sv .cs-kmore{font-size:' + u(19) + ';font-weight:700;color:var(--ink3);padding-left:' + u(18) + ';}'
     // The cover's colour as a soft wash from the top left (over the ground, under the content).
     + '.cs-sv .cs-tint{position:absolute;inset:0;pointer-events:none;background:radial-gradient(130% 110% at 12% 0%, var(--cs-t) 0%, transparent 72%);opacity:.42;transition:opacity 2s ease;}'
-    + '.cs-sv.cs-wort:not(.cs-dark) .cs-tint, .cs-sv.cs-kalender:not(.cs-dark) .cs-tint{opacity:.2;}'
-    // Narrow boxes (portrait tablet): the big time gives way.
+    + '.cs-sv.cs-light .cs-tint{opacity:.2;}'
+    + '@media (prefers-reduced-motion: reduce){.cs-sv .cs-photo, .cs-sv .cs-fl::before{animation:none;}}'
+    // Less wide than 16:10 (a 4:3 tablet): the widest pieces give way.
+    + '@container (aspect-ratio < 1.45){.cs-sv .cs-cover{width:' + u(400) + ';height:' + u(400) + ';margin-top:-' + u(200) + ';}.cs-sv .cs-meta{left:' + u(M + 8 + 400 + 50) + ';}.cs-sv .cs-meta h2{font-size:' + u(62) + ';}'
+    + '.cs-sv .cs-wk{width:' + u(380) + ';}.cs-sv .cs-wnow b{font-size:' + u(200) + ';}.cs-sv .cs-wnow img{width:' + u(124) + ';height:' + u(124) + ';}'
+    + '.cs-sv .cs-km, .cs-sv .cs-ky{font-size:' + u(76) + ';}.cs-sv .cs-right{width:' + u(400) + ';}.cs-sv .cs-left{right:' + u(M + 8 + 400 + 40) + ';}.cs-sv .cs-left .cs-time{font-size:' + u(184) + ';}'
+    + '.cs-sv.cs-calm .cs-left{right:' + u(M) + ';}.cs-sv.cs-calm .cs-left .cs-time{font-size:' + u(240) + ';}'
+    + '.cs-sv .cs-col .cs-n{font-size:' + u(60) + ';}.cs-sv .cs-e b{font-size:' + u(20) + ';}.cs-sv .cs-sum b{font-size:' + u(72) + ';}}'
+    // Narrow boxes (portrait tablet): one under the other.
     + '@container (aspect-ratio < 1){.cs-sv .cs-top{flex-direction:column;}.cs-sv .cs-wx{text-align:left;padding-top:0;}.cs-sv .cs-wx .cs-t{justify-content:flex-start;}'
-    + '.cs-sv .cs-top .cs-time{font-size:' + u(150) + ';}.cs-sv .cs-words{font-size:' + u(104) + ';}.cs-sv .sv-bar{flex-direction:column;align-items:flex-start;}.cs-sv .cs-name{text-align:left;}'
-    // Weather: the days go under the current weather. Week: seven rows instead of seven columns.
-    + '.cs-sv .cs-wk{position:static;width:auto;margin-top:' + u(44) + ';}.cs-sv.cs-wetter .cs-body{display:flex;flex-direction:column;}.cs-sv .cs-wnow{order:-1;}'
-    + '.cs-sv .cs-cols{grid-template-columns:minmax(0, 1fr);grid-auto-rows:minmax(0, 1fr);}'
-    + '.cs-sv .cs-col{flex-direction:row;align-items:center;gap:' + u(16) + ';padding:' + u(8) + ' ' + u(22) + ';}.cs-sv .cs-col .cs-cap{width:' + u(58) + ';flex:none;}'
-    + '.cs-sv .cs-col .cs-n{width:' + u(52) + ';flex:none;margin:0;}.cs-sv .cs-cw{width:' + u(118) + ';flex:none;margin:0;}'
-    + '.cs-sv .cs-li{flex-direction:row;flex:1;min-width:0;margin:0;}.cs-sv .cs-e{flex:0 1 ' + u(190) + ';min-width:0;}.cs-sv .cs-none{margin:0;}'
+    + '.cs-sv .cs-top .cs-time{font-size:' + u(190) + ';}.cs-sv .cs-words{font-size:' + u(118) + ';}.cs-sv .sv-bar{flex-direction:column;align-items:flex-start;}.cs-sv .cs-name{text-align:left;}'
+    + '.cs-sv .sv-bar .cs-time{font-size:' + u(160) + ';}'
+    + '.cs-sv .sv-head{flex-direction:column-reverse;gap:' + u(34) + ';}.cs-sv .sv-head .cs-clock:last-child{text-align:left;}.cs-sv .cs-body{top:' + u(420) + ';}.cs-sv.cs-linie .cs-body{top:' + u(520) + ';}.cs-sv.cs-woche .cs-body{top:' + u(400) + ';}'
+    // Weather: the clock leaves, the days go under the current weather, the curve stays at the bottom.
+    + '.cs-sv.cs-wetter .cs-corner{display:none;}.cs-sv .cs-wk{left:' + u(M) + ';right:' + u(M) + ';width:auto;top:' + u(400) + ';}.cs-sv .cs-wd{height:' + u(64) + ';}'
+    // Week: seven rows instead of seven columns.
+    + '.cs-sv .cs-cols{grid-template-columns:minmax(0, 1fr);grid-auto-rows:minmax(0, 1fr);gap:' + u(6) + ';}'
+    + '.cs-sv .cs-col{flex-direction:row;align-items:center;gap:' + u(18) + ';padding:' + u(8) + ' ' + u(22) + ';}.cs-sv .cs-col .cs-cap{width:' + u(74) + ';flex:none;}'
+    + '.cs-sv .cs-col .cs-n{width:' + u(70) + ';flex:none;margin:0;font-size:' + u(50) + ';}.cs-sv .cs-cw{width:' + u(150) + ';flex:none;margin:0;}'
+    + '.cs-sv .cs-li{flex-direction:row;flex:1;min-width:0;margin:0;}.cs-sv .cs-e{flex:0 1 ' + u(230) + ';min-width:0;}.cs-sv .cs-none{margin:0;}'
     // Day line: narrower cards. Music and the house at rest: one under the other.
-    + '.cs-sv .cs-ev{width:' + u(132) + ';margin-left:-' + u(66) + ';padding:' + u(10) + ' ' + u(12) + ';}.cs-sv .cs-ev b{font-size:' + u(15) + ';}.cs-sv .cs-ev span{font-size:' + u(13) + ';}'
-    + '.cs-sv .cs-cover{left:50%;top:' + u(210) + ';margin:0 0 0 -' + u(220) + ';}.cs-sv .cs-meta{left:' + u(80) + ';top:' + u(710) + ';transform:none;}'
-    + '.cs-sv .cs-left{position:static;width:auto;display:block;padding:' + u(170) + ' ' + u(80) + ' 0;}'
-    + '.cs-sv .cs-right{position:static;width:auto;padding:' + u(56) + ' ' + u(80) + ' 0;}'
+    + '.cs-sv .cs-ev{width:30%;margin-left:-15%;min-width:0;padding:' + u(12) + ' ' + u(14) + ';}.cs-sv .cs-ev b{font-size:' + u(21) + ';}.cs-sv .cs-ev span{font-size:' + u(19) + ';}'
+    + '.cs-sv .cs-cover{left:50%;top:' + u(230) + ';width:' + u(480) + ';height:' + u(480) + ';margin:0 0 0 -' + u(240) + ';}.cs-sv .cs-meta{left:' + u(M + 8) + ';top:' + u(790) + ';transform:none;}.cs-sv .cs-meta h2{font-size:' + u(64) + ';}'
+    + '.cs-sv .cs-left, .cs-sv.cs-calm .cs-left{position:static;display:block;padding:' + u(190) + ' ' + u(M + 8) + ' 0;text-align:left;}.cs-sv.cs-calm .cs-left{padding-top:' + u(380) + ';}'
+    + '.cs-sv .cs-left .cs-time, .cs-sv.cs-calm .cs-left .cs-time{font-size:' + u(200) + ';margin-left:-' + u(10) + ';}.cs-sv.cs-calm .cs-say, .cs-sv.cs-calm .cs-ppl{justify-content:flex-start;}'
+    + '.cs-sv .cs-right{position:static;width:auto;padding:' + u(56) + ' ' + u(M + 8) + ' 0;}'
+    // Energy: the balance in two rows.
+    + '.cs-sv .cs-bal{grid-template-columns:repeat(2, minmax(0, 1fr)) !important;row-gap:' + u(22) + ';}.cs-sv .cs-bal div:nth-child(odd){padding-left:0;border-left:0;}.cs-sv .cs-flow{bottom:' + u(300) + ';top:' + u(260) + ';}'
+    + '.cs-sv .cs-fn{width:' + u(240) + ';--cs-r:' + u(60) + ';}.cs-sv .cs-fn i{width:' + u(120) + ';height:' + u(120) + ';}.cs-sv .cs-fn.cs-house{--cs-r:' + u(80) + ';}.cs-sv .cs-fn.cs-house i{width:' + u(160) + ';height:' + u(160) + ';}'
+    + '.cs-sv .cs-fn b{font-size:' + u(38) + ';}.cs-sv .cs-fn.cs-sun{transform:translate(-' + u(60) + ', calc(var(--cs-r) * -1));}'
+    + '.cs-sv .cs-fl.cs-l{left:calc(17% + ' + u(76) + ');right:calc(50% + ' + u(96) + ');}.cs-sv .cs-fl.cs-r{left:calc(50% + ' + u(96) + ');right:calc(17% + ' + u(76) + ');}.cs-sv .cs-fl.cs-v{top:calc(9% + ' + u(76) + ');bottom:calc(38% + ' + u(96) + ');}'
     // Cameras: fewer columns. Calendar: dots only, no titles.
+    + '.cs-sv.cs-kameras .sv-head{flex-direction:row;}.cs-sv.cs-kameras .sv-head .cs-clock:last-child{text-align:right;}.cs-sv.cs-kameras .cs-body{top:' + u(168) + ';}'
+    + '.cs-sv .cs-ends{font-size:' + u(19) + ';}.cs-sv .cs-ends b{display:block;margin:0;font-size:' + u(27) + ';}.cs-sv .cs-ends span:nth-child(2){font-size:' + u(20) + ';text-align:center;}.cs-sv .cs-ends span:last-child{text-align:right;}'
     + '.cs-sv .cs-cams{grid-template-columns:repeat(var(--cs-pcols), minmax(0, 1fr));grid-template-rows:repeat(var(--cs-prows), minmax(0, 1fr));}'
-    + '.cs-sv .cs-kh{flex-direction:column;align-items:flex-start;}.cs-sv .cs-kc{text-align:left;}.cs-sv .cs-kg{top:' + u(260) + ';}'
-    + '.cs-sv .cs-kl{flex-direction:row;flex-wrap:wrap;}.cs-sv .cs-ke em{display:none;}}';
+    + '.cs-sv .cs-kh{flex-direction:column-reverse;gap:' + u(34) + ';}.cs-sv .cs-kc{text-align:left;}.cs-sv .cs-kg{top:' + u(380) + ';}.cs-sv .cs-km, .cs-sv .cs-ky{font-size:' + u(84) + ';}'
+    + '.cs-sv .cs-kl{flex-direction:row;flex-wrap:wrap;gap:' + u(6) + ';}.cs-sv .cs-ke em{display:none;}.cs-sv .cs-kmore{padding-left:0;}}';
 
+  var clock = function (ctx) {
+    return '<div class="cs-clock"><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div>';
+  };
   var bar = function (ctx, name, sub) {
     var wx = ctx.wx;
     return '<div class="cs-shade"></div><div class="sv-bar"><div><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div>'
       + '<div class="cs-date">' + esc(dateText(ctx.now)) + (wx && wx.temp != null ? ' · ' + wx.temp + '° ' + esc(wx.text.toLowerCase()) : '') + '</div></div>'
       + (name ? '<div class="cs-name"><b data-no-i18n>' + esc(name) + '</b>' + esc(sub || '') + '</div>' : '') + '</div>';
   };
+  // The share of the night that has passed (0 at sunset, 1 at sunrise), from today's rise and set.
+  S.nightShare = function (now, rise, set) {
+    var t = +now, day = 86400000;
+    if (!isFinite(rise) || !isFinite(set) || set <= rise) return null;
+    if (t >= set) return Math.min(1, (t - set) / (rise + day - set));
+    if (t < rise) return Math.max(0, (t - (set - day)) / (rise - (set - day)));
+    return null;
+  };
+  var STARS = (function () {
+    var r = rng(7), out = '';
+    for (var i = 0; i < 90; i++) out += '<circle cx="' + (r() * 1312).toFixed(1) + '" cy="' + (r() * 520).toFixed(1) + '" r="' + (0.7 + r() * 1.5).toFixed(2) + '" fill="#fff" opacity="' + (0.18 + r() * 0.6).toFixed(2) + '"/>';
+    return '<svg class="cs-bg cs-stars" viewBox="0 0 1312 820" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' + out + '</svg>';
+  })();
   var DRAW = {
-    // The sky is the picture: its colours follow the sun's height, the sun sits on its path between rise and set.
+    // The sky is the picture: its colours follow the sun's height, the sun sits on its path between rise and set;
+    // by night the stars are out and the moon takes the same path.
     himmel: function (ctx) {
       var sun = ctx.sun, share = sun ? S.dayShare(ctx.now, sun.rise, sun.set) : null;
       var sky = S.sky(sun ? share : 0.5), wx = ctx.wx;
-      var W = 1036, H = 330, x0 = 0, x1 = W, top = 40;
+      var night = sun ? share == null : false, moonAt = night ? S.nightShare(ctx.now, sun.rise, sun.set) : null;
+      var W = 1168, H = 300, x0 = 0, x1 = W, top = 34;
       // Quadratic curve from the left end over the top to the right end; the point for a share of the day.
       var at = function (t) { var a = 1 - t; return [a * a * x0 + 2 * a * t * (W / 2) + t * t * x1, a * a * H + 2 * a * t * (top * 2 - H) + t * t * H]; };
       var pts = function (to) { var d = ''; for (var i = 0; i <= 60; i++) { var p = at(to * i / 60); d += (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); } return d; };
-      var p = share == null ? null : at(share);
+      var p = share == null ? null : at(share), q = moonAt == null ? null : at(moonAt);
       var left = sun && share != null ? Math.round((sun.set - +ctx.now) / 60000) : null;
       // Whole sentences with placeholders: the translation works on the finished text.
       var mid = share == null ? T('Nacht') : left >= 60 ? T('Noch {h} Std. {m} Min. Tageslicht'.replace('{h}', Math.floor(left / 60)).replace('{m}', left % 60))
         : T('Noch {m} Min. Tageslicht'.replace('{m}', left));
-      return '<div class="cs-bg" style="background:linear-gradient(180deg, ' + sky[0] + ' 0%, ' + sky[1] + ' 36%, ' + sky[2] + ' 74%, ' + sky[3] + ' 100%)"></div><div class="cs-in">'
+      return '<div class="cs-bg" style="background:linear-gradient(180deg, ' + sky[0] + ' 0%, ' + sky[1] + ' 36%, ' + sky[2] + ' 74%, ' + sky[3] + ' 100%)"></div>' + (night ? STARS : '') + '<div class="cs-in">'
         + '<div class="cs-top"><div><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div>'
         + (wx ? '<div class="cs-wx"><div class="cs-t"><img src="' + esc(wx.icon) + '" alt="">' + (wx.temp != null ? wx.temp + '°' : '') + '</div><p>' + esc(wx.text) + '</p></div>' : '') + '</div>'
         + (sun ? '<div class="cs-arc"><svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true">'
-          + '<defs><radialGradient id="cs-glow"><stop offset="0" stop-color="#FFE9BF" stop-opacity=".95"/><stop offset=".32" stop-color="#FFD9A0" stop-opacity=".5"/><stop offset="1" stop-color="#FFD9A0" stop-opacity="0"/></radialGradient></defs>'
-          + '<line x1="0" y1="' + H + '" x2="' + W + '" y2="' + H + '" stroke="rgba(255,255,255,.5)" stroke-width="2" vector-effect="non-scaling-stroke"/>'
-          + '<path d="' + pts(1) + '" fill="none" stroke="rgba(255,255,255,.42)" stroke-width="2.5" stroke-dasharray="2 9" stroke-linecap="round" vector-effect="non-scaling-stroke"/>'
-          + (p ? '<path class="cs-done" d="' + pts(share) + '" fill="none" stroke="#FFE3B0" stroke-width="3.5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>'
-            + '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="64" fill="url(#cs-glow)"/><circle class="cs-sun" cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="19" fill="#FFF1D2"/>' : '')
+          + '<defs><radialGradient id="cs-glow"><stop offset="0" stop-color="#FFF3D6" stop-opacity=".95"/><stop offset=".22" stop-color="#FFE0A6" stop-opacity=".55"/><stop offset="1" stop-color="#FFD9A0" stop-opacity="0"/></radialGradient>'
+          + '<radialGradient id="cs-mglow"><stop offset="0" stop-color="#DCE6FF" stop-opacity=".5"/><stop offset="1" stop-color="#DCE6FF" stop-opacity="0"/></radialGradient></defs>'
+          + '<line x1="0" y1="' + H + '" x2="' + W + '" y2="' + H + '" stroke="rgba(255,255,255,.55)" stroke-width="2" vector-effect="non-scaling-stroke"/>'
+          + '<path d="' + pts(1) + '" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="3" stroke-dasharray="1 11" stroke-linecap="round" vector-effect="non-scaling-stroke"/>'
+          + (p ? '<path class="cs-done" d="' + pts(share) + '" fill="none" stroke="#FFE9BE" stroke-width="5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>'
+            + '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="130" fill="url(#cs-glow)"/><circle class="cs-sun" cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="27" fill="#FFF6DF"/>' : '')
+          + (q ? '<circle cx="' + q[0].toFixed(1) + '" cy="' + q[1].toFixed(1) + '" r="96" fill="url(#cs-mglow)"/><circle class="cs-moon" cx="' + q[0].toFixed(1) + '" cy="' + q[1].toFixed(1) + '" r="22" fill="#F1F4FF"/>' : '')
           + '</svg></div><div class="cs-ends"><span>' + esc(T('Aufgang')) + ' <b>' + esc(hm(sun.rise)) + '</b></span><span>' + esc(mid) + '</span><span>' + esc(T('Untergang')) + ' <b>' + esc(hm(sun.set)) + '</b></span></div>' : '')
         + '</div>';
     },
@@ -748,7 +849,7 @@
       var pool = S.SCENES.filter(function (s) { return !!s.stars === night; });
       if (!pool.length) pool = S.SCENES;
       var s = pool[Math.floor(+ctx.now / 600000) % pool.length];
-      return S.landSvg(s, 1180, 820).replace('<svg ', '<svg class="cs-bg" ') + '<div class="cs-in">' + bar(ctx, T(s.name), T('Landschaften')) + '</div>';
+      return S.landSvg(s, 1312, 820).replace('<svg ', '<svg class="cs-bg" data-scene="' + esc(s.id) + '" ') + '<div class="cs-in">' + bar(ctx, T(s.name), T('Landschaften')) + '</div>';
     },
     // The dashboard's own room photos, slowly moving; a new room every two minutes.
     fotos: function (ctx) {
@@ -764,9 +865,10 @@
         + (wx && wx.temp != null ? '<div class="cs-fw"><img src="' + esc(wx.icon) + '" alt="">' + wx.temp + '°</div>' : '') + '</div></div>';
     },
   };
-  var head = function (ctx, title, sub) {
-    return '<div class="sv-head"><div><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div>'
-      + (title ? '<div class="cs-sum"><b>' + esc(title) + '</b>' + esc(sub || '') + '</div>' : '') + '</div>';
+  // What the screensaver is about, big at the top left (accent = the line under it in the accent colour); the clock
+  // at the top right. Without a title the clock stands at the left.
+  var head = function (ctx, title, sub, accent) {
+    return '<div class="sv-head">' + (title ? '<div class="cs-sum' + (accent ? ' cs-accent' : '') + '"><b>' + esc(title) + '</b>' + esc(sub || '') + '</div>' : '') + clock(ctx) + '</div>';
   };
   var clockOf = function (ts) { return hm(ts); };
   // Now, the coming 24 hours as a curve with the rain under it, and the coming days.
@@ -774,29 +876,36 @@
     var wx = ctx.wx;
     if (!wx) return DRAW.himmel(ctx);
     var hours = (ctx.hourly || []).slice(0, 24), days = (ctx.daily || []).slice(0, 5);
-    var W = 1052, H = 300, base = H - 40;
+    var W = 1168, H = 230, base = H - 6;
     var curve = '';
     var temps = hours.map(function (x) { return Number(x.temperature); }).filter(isFinite);
     if (temps.length >= 6) {
       var lo = Math.min.apply(null, temps), hi = Math.max.apply(null, temps), span = Math.max(1, hi - lo);
-      var X = function (i) { return i / (hours.length - 1) * W; }, Y = function (t) { return 34 + (1 - (t - lo) / span) * (base - 110); };
-      var d = '', rain = '', maxR = Math.max.apply(null, hours.map(function (x) { return Number(x.precipitation) || 0; }).concat([0]));
+      var X = function (i) { return i / (hours.length - 1) * W; }, Y = function (t) { return 44 + (1 - (t - lo) / span) * (base - 120); };
+      var pts = [], rain = '', maxR = Math.max.apply(null, hours.map(function (x) { return Number(x.precipitation) || 0; }).concat([0]));
       hours.forEach(function (x, i) {
         var t = Number(x.temperature);
-        if (isFinite(t)) d += (d ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(t).toFixed(1);
+        if (isFinite(t)) pts.push([X(i), Y(t)]);
         var r = Number(x.precipitation) || 0;
         if (r > 0 && maxR > 0) {
-          var bh = 12 + r / maxR * 52;
-          rain += '<rect x="' + (X(i) - 11).toFixed(1) + '" y="' + (base - bh).toFixed(1) + '" width="22" height="' + bh.toFixed(1) + '" rx="6" fill="#5B8FC9"/>';
+          var bh = 12 + r / maxR * 58;
+          rain += '<rect x="' + (X(i) - 13).toFixed(1) + '" y="' + (base - bh).toFixed(1) + '" width="26" height="' + bh.toFixed(1) + '" rx="8" fill="#DDF0FF" opacity=".9"/>';
         }
       });
+      // A soft line through the hours (Catmull-Rom: each piece leaves and arrives in its neighbours' direction).
+      var d = pts.map(function (p, i) {
+        if (!i) return 'M' + p[0].toFixed(1) + ' ' + p[1].toFixed(1);
+        var a = pts[i - 2] || pts[i - 1], o = pts[i - 1], n = pts[i + 1] || p;
+        return 'C' + (o[0] + (p[0] - a[0]) / 6).toFixed(1) + ' ' + (o[1] + (p[1] - a[1]) / 6).toFixed(1) + ' ' + (p[0] - (n[0] - o[0]) / 6).toFixed(1) + ' ' + (p[1] - (n[1] - o[1]) / 6).toFixed(1)
+          + ' ' + p[0].toFixed(1) + ' ' + p[1].toFixed(1);
+      }).join('');
       var iLo = temps.indexOf(lo), iHi = temps.indexOf(hi);
       var pct = function (x) { return Math.min(97, Math.max(3, x / W * 100)).toFixed(1); };
       curve = '<div class="cs-curve"><svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true">'
-        + '<defs><linearGradient id="cs-tf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E8B04A" stop-opacity=".36"/><stop offset="1" stop-color="#E8B04A" stop-opacity="0"/></linearGradient></defs>'
+        + '<defs><linearGradient id="cs-tf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".34"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>'
         + '<path d="' + d + 'L' + W + ' ' + base + 'L0 ' + base + 'Z" fill="url(#cs-tf)"/>' + rain
-        + '<path d="' + d + '" fill="none" stroke="#E8B04A" stroke-width="3.5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>'
-        + '<line x1="0" y1="' + base + '" x2="' + W + '" y2="' + base + '" stroke="rgba(255,255,255,.22)" stroke-width="2" vector-effect="non-scaling-stroke"/>'
+        + '<path d="' + d + '" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>'
+        + '<line x1="0" y1="' + base + '" x2="' + W + '" y2="' + base + '" stroke="rgba(255,255,255,.4)" stroke-width="2" vector-effect="non-scaling-stroke"/>'
         + '</svg>'
         + '<b class="cs-pk" style="left:' + pct(X(iHi)) + '%;top:' + (Y(hi) / H * 100).toFixed(1) + '%">' + Math.round(hi) + '°</b>'
         + (iLo !== iHi ? '<b class="cs-pk cs-lo" style="left:' + pct(X(iLo)) + '%;top:' + (Y(lo) / H * 100).toFixed(1) + '%">' + Math.round(lo) + '°</b>' : '')
@@ -808,13 +917,13 @@
     var mn = Math.min.apply(null, los.concat(his)), mx = Math.max.apply(null, his.concat(los)), sp = Math.max(1, mx - mn);
     var week = days.length && his.length ? '<div class="cs-wk">' + days.map(function (x) {
       var lo2 = Number(x.templow), hi2 = Number(x.temperature);
-      var bar = isFinite(lo2) && isFinite(hi2) ? '<i><u style="left:' + ((lo2 - mn) / sp * 100).toFixed(0) + '%;right:' + ((mx - hi2) / sp * 100).toFixed(0) + '%"></u></i>' : '<i></i>';
+      var bar2 = isFinite(lo2) && isFinite(hi2) ? '<i><u style="left:' + ((lo2 - mn) / sp * 100).toFixed(0) + '%;right:' + ((mx - hi2) / sp * 100).toFixed(0) + '%"></u></i>' : '<i></i>';
       return '<div class="cs-wd"><b>' + esc(dayName(Date.parse(x.datetime), true)) + '</b><img src="' + esc(wxIcon(x.condition)) + '" alt=""><span>' + (isFinite(lo2) ? Math.round(lo2) + '°' : '') + '</span>'
-        + bar + '<em>' + (isFinite(hi2) ? Math.round(hi2) + '°' : '') + '</em></div>';
+        + bar2 + '<em>' + (isFinite(hi2) ? Math.round(hi2) + '°' : '') + '</em></div>';
     }).join('') + '</div>' : '';
-    return '<div class="cs-in">' + head(ctx) + '<div class="cs-body">' + week
-      + '<div class="cs-wnow"><img src="' + esc(wx.icon) + '" alt=""><b>' + (wx.temp != null ? wx.temp + '°' : '') + '</b><div><p>' + esc(wx.text) + '</p></div></div>'
-      + curve + '</div></div>';
+    return '<div class="cs-in"><div class="cs-wnow"><div class="cs-wt"><img src="' + esc(wx.icon) + '" alt=""><b>' + (wx.temp != null ? wx.temp + '°' : '') + '</b></div><p>' + esc(wx.text) + '</p></div>'
+      + '<div class="cs-corner"><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div>'
+      + week + curve + '</div>';
   };
   // The day as one line from 6 to 24: what was, where now is, what comes; the next appointment big at the top.
   DRAW.linie = function (ctx) {
@@ -827,18 +936,18 @@
     var mins = next ? Math.round((next.start - now) / 60000) : null;
     var inText = next ? (mins >= 60 ? T('in {h} Std. {m} Min.'.replace('{h}', Math.floor(mins / 60)).replace('{m}', mins % 60)) : T('in {m} Min.'.replace('{m}', mins))) : '';
     var whenNext = next && !sameDay(next.start, now) ? dayName(next.start) + ' ' + clockOf(next.start) : inText;
-    var out = '<div class="cs-in">' + head(ctx, next ? next.title : T('Heute nichts mehr'), next ? whenNext : '')
+    var out = '<div class="cs-in">' + head(ctx, next ? next.title : T('Heute nichts mehr'), next ? whenNext : '', true)
       + '<div class="cs-body"><div class="cs-line"><u style="width:' + pos(now).toFixed(1) + '%"></u></div>';
-    [6, 9, 12, 15, 18, 21, 24].forEach(function (h) { out += '<div class="cs-tick" style="left:' + ((h - 6) / 18 * 100).toFixed(2) + '%">' + h + '</div>'; });
+    [6, 9, 12, 15, 18, 21, 24].forEach(function (h) { out += '<div class="cs-tick' + (h === 6 ? ' cs-first' : h === 24 ? ' cs-last' : '') + '" style="left:' + ((h - 6) / 18 * 100).toFixed(2) + '%">' + h + '</div>'; });
     var last = { up: -100, down: -100 };
     today.forEach(function (e, i) {
       var p = pos(e.start), past = (e.end || e.start) < now;
       // Above and below in turn; two on the same side keep their distance.
       var side = i % 2 ? 'down' : 'up';
-      if (p - last[side] < 19) side = side === 'up' ? 'down' : 'up';
-      if (p - last[side] < 19) { out += '<div class="sv-dot' + (past ? ' cs-past' : '') + '" style="left:' + p.toFixed(1) + '%"></div>'; return; }
+      if (p - last[side] < 23.5) side = side === 'up' ? 'down' : 'up';
+      if (p - last[side] < 23.5) { out += '<div class="sv-dot' + (past ? ' cs-past' : '') + '" style="left:' + p.toFixed(1) + '%"></div>'; return; }
       last[side] = p;
-      var left = Math.max(10, Math.min(90, p));
+      var left = Math.max(11, Math.min(89, p));
       out += '<div class="sv-dot' + (past ? ' cs-past' : '') + '" style="left:' + p.toFixed(1) + '%"></div>'
         + '<div class="cs-ev cs-' + side + (past ? ' cs-past' : '') + (e === next ? ' cs-next' : '') + '" style="left:' + left.toFixed(1) + '%"><b data-no-i18n>' + esc(e.title) + '</b><span>'
         + esc(clockOf(e.start) + (e.end ? ' – ' + clockOf(e.end) : '')) + '</span></div>';
@@ -859,7 +968,7 @@
       var day = +new Date(d0.getFullYear(), d0.getMonth(), d0.getDate() + i), items = [];
       // A waste integration gives a pickup twice, as a calendar event and as a sensor (#171): the pickup line wins.
       var binNames = bins.filter(function (b) { return b.days === i; }).map(function (b) { return norm(b.label); });
-      ev.filter(function (e) { return sameDay(e.start, day) && (i || e.allDay || (e.end || e.start) >= +ctx.now) && binNames.indexOf(norm(e.title)) < 0; }).slice(0, 4).forEach(function (e, j) {
+      ev.filter(function (e) { return sameDay(e.start, day) && (i || e.allDay || (e.end || e.start) >= +ctx.now) && binNames.indexOf(norm(e.title)) < 0; }).slice(0, 3).forEach(function (e, j) {
         items.push('<div class="cs-e" style="--cs-c:' + TONES[(i + j) % TONES.length] + '"><b data-no-i18n>' + esc(e.title) + '</b><span>' + esc(e.allDay ? T('ganztägig') : clockOf(e.start)) + '</span></div>');
         nEv++;
       });
@@ -871,25 +980,28 @@
       var hi = f ? Number(f.temperature) : NaN, lo = f ? Number(f.templow) : NaN;
       cols += '<div class="cs-col' + (i ? '' : ' cs-today') + '"><div class="cs-cap">' + esc(i ? dayName(day, true) : T('Heute')) + '</div><div class="cs-n">' + new Date(day).getDate() + '</div>'
         + '<div class="cs-cw">' + (f ? '<img src="' + esc(wxIcon(f.condition)) + '" alt="">' + (isFinite(hi) ? Math.round(hi) + '°' : '') + (isFinite(lo) ? '<span>' + Math.round(lo) + '°</span>' : '') : '') + '</div>'
-        + (items.length ? '<div class="cs-li">' + items.join('') + '</div>' : '<div class="cs-none">' + esc(T('Nichts geplant')) + '</div>') + '</div>';
+        // A free day: a quiet mark instead of seven times „Nichts geplant“ (read out for screen readers).
+        + (items.length ? '<div class="cs-li">' + items.join('') + '</div>' : '<div class="cs-none" role="img" aria-label="' + esc(T('Nichts geplant')) + '"></div>') + '</div>';
     }
     var sub = [nEv === 1 ? T('1 Termin') : T('{n} Termine'.replace('{n}', nEv)), nBin === 1 ? T('1 Abholung') : T('{n} Abholungen'.replace('{n}', nBin))].join(' · ');
     return '<div class="cs-in">' + head(ctx, T('Diese Woche'), sub) + '<div class="cs-body"><div class="cs-cols">' + cols + '</div></div></div>';
   };
   // What is playing, big with its cover; the background is the cover out of focus.
   var mmss = function (sec) { var s2 = Math.max(0, Math.round(sec)); return Math.floor(s2 / 60) + ':' + String(s2 % 60).padStart(2, '0'); };
+  var NOTE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5V6.2a1 1 0 0 1 .8-1l8-1.7a1 1 0 0 1 1.2 1v10.9a2.9 2.9 0 1 1-2-2.7V8.1l-6 1.3v8.5a2.9 2.9 0 1 1-2-2.8z" fill="currentColor"/></svg>';
   DRAW.musik = function (ctx) {
     var m = ctx.media;
     if (!m) return DRAW.himmel(ctx);
     var pct = m.dur && m.pos != null ? Math.max(0, Math.min(100, m.pos / m.dur * 100)) : null;
     var pic = m.cover ? 'background-image:url(&quot;' + esc(cssUrl(m.cover)) + '&quot;)' : '';
-    return (m.cover ? '<div class="cs-blur" style="' + pic + '"></div>' : '') + '<div class="cs-in"><div class="cs-cover" style="' + pic + '"></div>'
+    // Without a cover: a note on the cover's own colours.
+    return (m.cover ? '<div class="cs-blur" style="' + pic + '"></div>' : '') + '<div class="cs-in"><div class="cs-cover"' + (pic ? ' style="' + pic + '"' : '') + '>' + (m.cover ? '' : NOTE) + '</div>'
       + '<div class="cs-corner"><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div>'
       + '<div class="cs-meta"><div class="cs-cap" data-no-i18n>' + esc(m.where) + '</div><h2 data-no-i18n>' + esc(m.title) + '</h2>' + (m.artist ? '<h3 data-no-i18n>' + esc(m.artist) + '</h3>' : '')
       + (pct != null ? '<div class="cs-prog"><u style="width:' + pct.toFixed(1) + '%"></u></div><div class="cs-tt"><span>' + mmss(m.pos) + '</span><span>' + mmss(m.dur) + '</span></div>' : '')
       + '</div></div>';
   };
-  // Where the power goes right now: sun, battery and grid around the house, a dotted line for every flow.
+  // Where the power goes right now: sun, battery and grid around the house, running dots for every flow.
   var GLYPH = {
     sun: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></g></svg>',
     house: '<svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" fill="currentColor"/></svg>',
@@ -900,18 +1012,19 @@
     var e = ctx.energy;
     if (!e) return DRAW.himmel(ctx);
     var node = function (cls, x, y, glyph, color, value, label) {
-      return '<div class="cs-fn ' + cls + '" style="left:' + x + '%;top:' + y + '%;--cs-c:' + color + ';color:' + color + '"><i>' + GLYPH[glyph] + '</i><b style="color:#F6EFE6">' + esc(value) + '</b><span>' + esc(label) + '</span></div>';
+      return '<div class="cs-fn ' + cls + '" style="left:' + x + '%;top:' + y + '%;--cs-c:' + color + '"><i>' + GLYPH[glyph] + '</i><div><b>' + esc(value) + '</b><span>' + esc(label) + '</span></div></div>';
     };
-    // A dotted line from rim to rim, drawn only while power flows: cs-v sun–house, cs-l battery–house, cs-r house–grid.
-    var flow = function (cls, color, on) { return on ? '<div class="cs-fl ' + cls + '" style="--cs-c:' + color + '"></div>' : ''; };
+    // Dots from rim to rim, drawn only while power flows, running the way it goes: cs-v sun–house (down), cs-l
+    // battery–house (to the house while the battery gives), cs-r house–grid (to the grid while feeding in).
+    var flow = function (cls, color, on, rev) { return on ? '<div class="cs-fl ' + cls + (rev ? ' cs-rev' : '') + '" style="--cs-c:' + color + '"></div>' : ''; };
     var out = '<div class="cs-in">' + head(ctx) + '<div class="cs-flow">';
-    if (e.hasSolar) out += flow('cs-v', '#E8B04A', (e.solar || 0) > 20) + node('cs-sun', 50, 11, 'sun', '#E8B04A', kw(e.solar || 0), T('Sonne'));
-    if (e.hasBattery) out += flow('cs-l', '#4E9E95', Math.abs(e.battery || 0) > 20)
-      + node('cs-bat', 18, 64, 'battery', '#4E9E95', e.soc != null ? e.soc + ' %' : kw(e.battery || 0),
+    if (e.hasSolar) out += flow('cs-v', '#E8A93A', (e.solar || 0) > 20) + node('cs-sun', 50, 9, 'sun', '#E8A93A', kw(e.solar || 0), T('Sonne'));
+    if (e.hasBattery) out += flow('cs-l', '#3FA79A', Math.abs(e.battery || 0) > 20, !(e.battery > 0))
+      + node('cs-bat', 17, 62, 'battery', '#3FA79A', e.soc != null ? e.soc + ' %' : kw(e.battery || 0),
         Math.abs(e.battery || 0) <= 20 ? T('Akku') : (e.battery > 0 ? T('Akku gibt ab') : T('Akku lädt')) + (e.soc != null ? ' · ' + kw(e.battery) : ''));
-    out += flow('cs-r', '#5B8FC9', Math.abs(e.grid) > 20)
-      + node('cs-grid', 82, 64, 'grid', '#5B8FC9', kw(e.grid), Math.abs(e.grid) <= 20 ? T('Netz') : e.grid > 0 ? T('aus dem Netz') : T('ins Netz'))
-      + node('cs-house', 50, 64, 'house', '#F6EFE6', kw(e.house), T('Haus verbraucht')) + '</div>';
+    out += flow('cs-r', '#5B8FC9', Math.abs(e.grid) > 20, e.grid > 0)
+      + node('cs-grid', 83, 62, 'grid', '#5B8FC9', kw(e.grid), Math.abs(e.grid) <= 20 ? T('Netz') : e.grid > 0 ? T('aus dem Netz') : T('ins Netz'))
+      + node('cs-house', 50, 62, 'house', 'var(--ink)', kw(e.house), T('Haus verbraucht')) + '</div>';
     var own = e.house > 0 ? Math.max(0, Math.min(100, Math.round((e.house - Math.max(0, e.grid)) / e.house * 100))) : null;
     var tiles = [[T('Verbrauch jetzt'), kw(e.house)]];
     if (e.hasSolar) tiles.push([T('Erzeugung jetzt'), kw(e.solar || 0)]);
@@ -974,7 +1087,9 @@
     var y = g.start.getFullYear(), m = g.start.getMonth(), d = g.start.getDate();
     var tone = function (e) { var i = cals.indexOf(e.cal); return TONES[(i < 0 ? 0 : i) % TONES.length]; };
     var month = new Intl.DateTimeFormat(loc(), { month: 'long' }).format(ctx.now);
-    var html = '<div class="cs-in"><div class="cs-kh"><div><div class="cs-km">' + esc(month.charAt(0).toUpperCase() + month.slice(1)) + '</div><div class="cs-ky">' + ctx.now.getFullYear() + '</div></div>'
+    // Titles a day has room for: two, one in a month of six weeks.
+    var room = g.weeks >= 6 ? 1 : 2;
+    var html = '<div class="cs-in"><div class="cs-kh"><div class="cs-kt"><div class="cs-km">' + esc(month.charAt(0).toUpperCase() + month.slice(1)) + '</div><div class="cs-ky">' + ctx.now.getFullYear() + '</div></div>'
       + '<div class="cs-kc"><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div></div>'
       + '<div class="cs-kg" style="--cs-weeks:' + Number(g.weeks) + '">';
     for (var w = 0; w < 7; w++) html += '<div class="cs-kw">' + esc(dayName(+new Date(y, m, d + w), true)) + '</div>';
@@ -982,15 +1097,20 @@
       var day = new Date(y, m, d + i), a = +day, b = +new Date(y, m, d + i + 1);
       var list = ev.filter(function (e) { return e.start < b && (e.end && e.end > e.start ? e.end : e.start + 1) > a; });
       var cls = 'cs-kd' + (day.getMonth() !== g.month ? ' cs-kout' : '') + (sameDay(a, ctx.now) ? ' cs-ktoday' : b <= +ctx.now ? ' cs-kpast' : '');
-      html += '<div class="' + esc(cls) + '"><b>' + day.getDate() + '</b>' + (list.length ? '<div class="cs-kl">' + list.slice(0, 3).map(function (e) {
+      // Never „+1“: a single one left over takes the line itself.
+      var show = list.length === room + 1 ? room + 1 : room;
+      if (show > room && room === 1) show = 1;
+      html += '<div class="' + esc(cls) + '"><b>' + day.getDate() + '</b>' + (list.length ? '<div class="cs-kl">' + list.slice(0, show).map(function (e) {
         return '<span class="cs-ke" style="--cs-c:' + esc(tone(e)) + '"><i></i><em data-no-i18n>' + esc(e.title) + '</em></span>';
-      }).join('') + (list.length > 3 ? '<span class="cs-kmore">+' + (list.length - 3) + '</span>' : '') + '</div>' : '') + '</div>';
+      }).join('') + (list.length > show ? '<span class="cs-kmore">+' + (list.length - show) + '</span>' : '') + '</div>' : '') + '</div>';
     }
     return html + '</div></div>';
   };
   // A soft wash in the colour of the playing cover over the screensavers that have a coloured ground (Studio switch).
   var TINT_KINDS = ['wort', 'wetter', 'linie', 'woche', 'energie', 'ruhe', 'kalender'];
   S.TINT_KINDS = TINT_KINDS;
+  // The stylesheet (the rule test reads the sizes from it).
+  S.CSS = CSS;
   // What a preview shows where the house has nothing to show right now (nothing playing, energy not set up, no
   // appointments, no forecast): an example, so every screensaver can be looked at before it is picked.
   S.sample = function (ctx) {
@@ -1047,16 +1167,21 @@
     }
     return ids.indexOf(kind) === -1 ? ids[0] : kind;
   };
+  var LIGHT_KINDS = ['wort', 'linie', 'woche', 'energie', 'ruhe', 'kalender'], NIGHT_KINDS = LIGHT_KINDS.concat(['wetter']);
   // Night by the sun (by the clock without sun.sun).
   var isNight = function (ctx) { return ctx.sun ? S.dayShare(ctx.now, ctx.sun.rise, ctx.sun.set) == null : (ctx.now.getHours() < 7 || ctx.now.getHours() >= 20); };
   S.html = function (kind, ctx, pool) {
     var k = S.kindAt(kind, ctx.now, pool);
     // Nothing to show (no weather entity, nothing playing, energy not set up, no camera): the sky, with its own look.
     if ((k === 'wetter' && !ctx.wx) || (k === 'musik' && !ctx.media) || (k === 'energie' && !ctx.energy) || (k === 'kameras' && !(ctx.cams && ctx.cams.length))) k = 'himmel';
-    // The month calendar is light by day and dark by night (and with a dark theme).
-    var dark = ctx.dark || (k === 'kalender' && isNight(ctx));
+    // The screensavers with a ground of their own are light by day and deep by night (and with a dark theme).
+    var dark = ctx.dark || (NIGHT_KINDS.indexOf(k) > -1 && isNight(ctx));
+    var cls = (dark ? ' cs-dark' : '') + (!dark && LIGHT_KINDS.indexOf(k) > -1 ? ' cs-light' : '');
+    // Weather under clouds: a greyer sky. The house at rest: in the middle while nothing asks for anyone.
+    if (k === 'wetter' && !dark && /rain|thunder|snow|fog|mixed|cloudy-fill|lightning/.test(String((ctx.wx || {}).icon || ''))) cls += ' cs-grey';
+    if (k === 'ruhe') cls += !(ctx.bell || []).length ? ' cs-calm' : (ctx.bell || []).some(function (r) { return r.tone !== 'info'; }) ? ' cs-busy' : '';
     var tintHtml = ctx.tint && ctx.media && TINT_KINDS.indexOf(k) > -1 ? '<div class="cs-tint" style="--cs-t:' + esc(ctx.tint) + '"></div>' : '';
-    return '<div class="cs-sv cs-' + k + (dark ? ' cs-dark' : '') + '" data-kind="' + k + '"' + (tintHtml ? ' data-tint="1"' : '') + '>' + tintHtml + DRAW[k](ctx) + '</div>';
+    return '<div class="cs-sv cs-' + k + cls + '" data-kind="' + k + '"' + (tintHtml ? ' data-tint="1"' : '') + '>' + tintHtml + DRAW[k](ctx) + '</div>';
   };
   S.mount = function (host, kind, o) {
     o = o || {};

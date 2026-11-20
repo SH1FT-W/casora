@@ -212,3 +212,45 @@ const studio = ['casora-panel.js', 'casora-panel-settings.js', 'casora-panel-b.j
 const clash = [...own].filter((c) => c !== 'cs-sv' && new RegExp('\\.' + c + '(?![\\w-])[^;(){}"\'=]*\\{').test(studio));
 assert.deepEqual(clash, [], 'saver classes also styled by the Studio');
 console.log('ok screensaver');
+
+// ── Reading distance (owner, 20.11.2026: the screensavers looked cheap, the texts were tiny) ─────────────────────
+// A wall tablet is read from across the room: no text under 19 units (a unit = 1/820 of the shorter side).
+{
+  const sizes = [...S.CSS.matchAll(/font-size:([\d.]+)cqmin/g)].map((m) => Number(m[1]) * 8.2);
+  assert.ok(sizes.length > 60, 'the sizes are read from the stylesheet');
+  const small = sizes.filter((n) => n < 18.99);
+  assert.deepEqual(small, [], 'no text smaller than 19 units');
+  // Every screensaver has one thing that is big (the time, the temperature, the words, the title, the month).
+  for (const sel of ['.cs-top .cs-time', '.sv-bar .cs-time', '.cs-words', '.cs-wnow b', '.cs-sum b', '.cs-left .cs-time', '.cs-km', '.cs-meta h2']) {
+    const m = S.CSS.match(new RegExp(sel.replace(/[.\s]/g, (c) => (c === '.' ? '\\.' : '\\s')) + '\\{[^}]*?font-size:([\\d.]+)cqmin'));
+    assert.ok(m && Number(m[1]) * 8.2 >= 75, sel + ' is big');
+  }
+  // The grounds of their own are light by day and deep by night, and deep with a dark theme.
+  const day = new Date('2026-11-10T13:00:00'), night = new Date('2026-11-10T22:00:00');
+  const sunT = { rise: Date.parse('2026-11-10T07:22:00'), set: Date.parse('2026-11-10T17:05:00') };
+  const base = (now, dark) => ({ now, dark: !!dark, sun: sunT, hass: null, vars: {}, wx: { temp: 11, text: 'Sonnig', icon: '/casora_assets/weather/clear-day.svg' }, rooms: [], cals: [], cams: [],
+    hourly: [], daily: [], events: [], bins: [], bell: [], people: [], media: null, energy: { solar: 900, grid: -200, battery: 0, soc: null, hasSolar: true, hasBattery: false, house: 700 } });
+  for (const k of ['wort', 'linie', 'woche', 'energie', 'ruhe', 'kalender']) {
+    assert.match(S.html(k, base(day)), new RegExp('class="cs-sv cs-' + k + ' cs-light'), k + ': light by day');
+    assert.match(S.html(k, base(night)), new RegExp('class="cs-sv cs-' + k + ' cs-dark'), k + ': deep by night');
+    assert.match(S.html(k, base(day, true)), new RegExp('class="cs-sv cs-' + k + ' cs-dark'), k + ': deep with a dark theme');
+  }
+  assert.ok(!/cs-light/.test(S.html('wetter', base(day))) && /cs-wetter cs-dark/.test(S.html('wetter', base(night))), 'weather: the sky by day, deep by night');
+  assert.match(S.html('wetter', Object.assign(base(day), { wx: { temp: 6, text: 'Regen', icon: '/casora_assets/weather/rain-fill.svg' } })), /cs-wetter cs-grey/, 'weather under clouds: a greyer sky');
+  // The house at rest stands in the middle while nothing asks for anyone.
+  assert.match(S.html('ruhe', base(day)), /cs-calm/);
+  const busy = S.html('ruhe', Object.assign(base(day), { bell: [{ tone: 'warn', label: 'Fenster offen', sub: 'Bad' }] }));
+  assert.ok(/cs-busy/.test(busy) && !/cs-calm/.test(busy), 'something asks for someone: not in the middle');
+  // The sky by night: stars and the moon on the sun's path.
+  assert.ok(Math.abs(S.nightShare(Date.parse('2026-11-10T17:05:00'), sunT.rise, sunT.set)) < 1e-9 && S.nightShare(day, sunT.rise, sunT.set) === null, 'the night starts at sunset');
+  const mid = S.nightShare(Date.parse('2026-11-11T00:13:30'), sunT.rise, sunT.set);
+  assert.ok(mid > 0.49 && mid < 0.51, 'half the night');
+  assert.ok(/cs-moon/.test(S.html('himmel', base(night))) && /cs-stars/.test(S.html('himmel', base(night))) && !/cs-moon/.test(S.html('himmel', base(day))), 'moon and stars only by night');
+  // Energy: the dots run the way the power goes.
+  const en = (e) => S.html('energie', Object.assign(base(day), { energy: Object.assign({ solar: 900, grid: 0, battery: 0, soc: 50, hasSolar: true, hasBattery: true, house: 700 }, e) }));
+  assert.ok(/cs-fl cs-r cs-rev/.test(en({ grid: 400 })) && /cs-fl cs-r"/.test(en({ grid: -400 })), 'grid: towards the house while buying, away while feeding in');
+  assert.ok(/cs-fl cs-l"/.test(en({ battery: 300 })) && /cs-fl cs-l cs-rev/.test(en({ battery: -300 })), 'battery: towards the house while it gives, away while it charges');
+  // Music without a cover: a note instead of an empty plate.
+  assert.match(S.html('musik', Object.assign(base(day), { media: { title: 'A', artist: 'B', where: 'C', cover: '', dur: 100, pos: 10 } })), /class="cs-cover"><svg/);
+}
+console.log('screensaver: reading distance ok');
