@@ -66,6 +66,178 @@ function makeHass() {
   assert.deepEqual(n.latency, []);
 }
 
+// ── #226: udr7 (UniFi Router Testhaus integration): SSIDs as switches on the router, APs and switches below it ──
+// @deckt: 00-finder.js#network
+function udr7House({ en = false } = {}) {
+  const h = makeHass();
+  const P = 'udr7';
+  // Hub: values of the whole network plus the router's own device entities.
+  h.dev('gw', 'Router Testhaus', 'Ubiquiti', 'UDR7');
+  const gw = 'router_testhaus';
+  h.ent(`binary_sensor.${gw}_internet`, 'gw', P, { key: 'internet', dc: 'connectivity', state: 'on' });
+  h.ent(`binary_sensor.${gw}_${en ? 'wan_connected' : 'wan_verbunden'}`, 'gw', P, { key: 'wan_up', dc: 'connectivity', state: 'on' });
+  h.ent(`binary_sensor.${gw}_online`, 'gw', P, { key: 'online', dc: 'connectivity', state: 'on' });
+  h.ent(`sensor.${gw}_clients`, 'gw', P, { key: 'clients', state: '52' });
+  h.ent(`sensor.${gw}_${en ? 'wifi_clients' : 'wlan_clients'}`, 'gw', P, { key: 'wlan_clients', state: '37' });
+  h.ent(`sensor.${gw}_lan_clients`, 'gw', P, { key: 'lan_clients', state: '15' });
+  h.ent(`sensor.${gw}_${en ? 'guests' : 'gaste'}`, 'gw', P, { key: 'guest_clients', state: '0' });
+  h.ent(`sensor.${gw}_vpn_clients`, 'gw', P, { key: 'vpn_clients', state: '0' });
+  h.ent(`sensor.${gw}_${en ? 'internet_latency' : 'internet_latenz'}`, 'gw', P, { key: 'internet_latency', dc: 'duration', unit: 'ms', state: '9',
+    name: en ? 'Router Testhaus Internet latency' : 'Router Testhaus Internet-Latenz' });
+  h.ent(`sensor.${gw}_${en ? 'last_internet_outage' : 'letzter_internetausfall'}`, 'gw', P, { key: 'internet_last_outage', dc: 'timestamp' });
+  h.ent(`sensor.${gw}_${en ? 'last_speed_test' : 'letzter_speedtest'}`, 'gw', P, { key: 'speedtest_last', dc: 'timestamp' });
+  h.ent(`sensor.${gw}_speedtest_ping`, 'gw', P, { key: 'speedtest_ping', dc: 'duration', unit: 'ms', state: '11' });
+  h.ent(`sensor.${gw}_${en ? 'internet_availability' : 'internet_verfugbarkeit'}`, 'gw', P, { key: 'wan_availability', unit: '%', state: '100' });
+  h.ent(`update.${gw}_unifi_network`, 'gw', P, { key: 'network_app', state: 'off' });
+  h.ent(`switch.${gw}_${en ? 'wifi' : 'wlan'}_seestern`, 'gw', P, { key: 'wlan', state: 'on',
+    name: `Router Testhaus ${en ? 'WiFi' : 'WLAN'} Seestern`, attrs: { ssid: 'Seestern', security: 'wpapsk', hidden: false, guest: false } });
+  h.ent(`switch.${gw}_${en ? 'wifi' : 'wlan'}_seestern_iot`, 'gw', P, { key: 'wlan', state: 'on',
+    name: `Router Testhaus ${en ? 'WiFi' : 'WLAN'} Seestern_IoT`, attrs: { ssid: 'Seestern_IoT', security: 'wpapsk', hidden: false, guest: false } });
+  // Rule switches sit on the router too; their names may say "Gast"/"WLAN" without being a Wi-Fi network.
+  h.ent(`switch.${gw}_firewall_gast_wlan_sperren`, 'gw', P, { key: 'firewall_policy', state: 'on', name: 'Router Testhaus Firewall Gast-WLAN sperren' });
+  h.ent(`switch.${gw}_upnp`, 'gw', P, { key: 'upnp', state: 'off' });
+  // Per device (router, access point, switch): online, restart, started, firmware; CPU/RAM/clients where the device has them.
+  const perDevice = (id, slug, { load = true, radios = false, poe = false } = {}) => {
+    if (id !== 'gw') h.ent(`binary_sensor.${slug}_online`, id, P, { key: 'online', dc: 'connectivity', state: 'on' });
+    h.ent(`button.${slug}_${en ? 'restart' : 'neu_starten'}`, id, P, { key: 'restart', dc: 'restart' });
+    h.ent(`sensor.${slug}_${en ? 'started' : 'gestartet'}`, id, P, { key: 'started', dc: 'timestamp' });
+    h.ent(`update.${slug}_firmware`, id, P, { key: 'firmware', dc: 'firmware', state: 'off' });
+    h.ent(`switch.${slug}_${en ? 'locate' : 'gerat_suchen'}`, id, P, { key: 'locate', state: 'off' });
+    h.ent(`sensor.${slug}_port_1_${en ? 'link_speed' : 'verbindung'}`, id, P, { key: 'port_link_speed', dc: 'data_rate', unit: 'Mbit/s', state: '1000' });
+    if (load) {
+      h.ent(`sensor.${slug}_${en ? 'cpu_load' : 'cpu_auslastung'}`, id, P, { key: 'cpu_load', unit: '%', state: '7' });
+      h.ent(`sensor.${slug}_${en ? 'memory_usage' : 'arbeitsspeicher'}`, id, P, { key: 'memory_usage', unit: '%', state: '41' });
+      h.ent(`sensor.${slug}_${en ? 'connected_clients' : 'verbundene_clients'}`, id, P, { key: 'connected_clients', state: '12' });
+    }
+    if (radios) {
+      h.ent(`sensor.${slug}_2_4_ghz_clients`, id, P, { key: 'radio_clients', state: '5' });
+      h.ent(`sensor.${slug}_5_ghz_clients`, id, P, { key: 'radio_clients', state: '7' });
+      h.ent(`sensor.${slug}_2_4_ghz_${en ? 'channel_utilization' : 'kanalauslastung'}`, id, P, { key: 'radio_utilization', unit: '%', state: '20' });
+    }
+    if (poe) {
+      h.ent(`button.${slug}_port_4_${en ? 'power_cycle' : 'poe_neu_starten'}`, id, P, { key: 'port_power_cycle', dc: 'restart' });
+      h.ent(`switch.${slug}_port_4_poe`, id, P, { key: 'port_poe', dc: 'outlet', state: 'on' });
+    }
+  };
+  perDevice('gw', gw, { radios: true, poe: true });
+  h.ent(`sensor.${gw}_${en ? 'cpu_temperature' : 'cpu_temperatur'}`, 'gw', P, { key: 'cpu_temperature', dc: 'temperature', unit: '°C', state: '55' });
+  h.dev('ap', 'AP Flur', 'Ubiquiti', 'U7LITE');
+  perDevice('ap', 'ap_flur', { radios: true });
+  h.dev('s1', 'Switch Keller', 'Ubiquiti', 'USMINI');
+  perDevice('s1', 'switch_keller', { load: false });
+  h.dev('s2', 'Switch Buero', 'Ubiquiti', 'USMINI');
+  perDevice('s2', 'switch_buero', { load: false });
+  ['ap', 's1', 's2'].forEach((id) => { h.devices[id].via_device_id = 'gw'; });
+  // A tracked client: a device of its own (by MAC), no network device.
+  h.dev('cl', 'Tablet Flur', null, null);
+  h.devices.cl.via_device_id = 'gw';
+  h.ent('device_tracker.tablet_flur', 'cl', P, { key: 'client', state: 'home' });
+  h.ent(`button.tablet_flur_${en ? 'reconnect' : 'neu_verbinden'}`, 'cl', P, { key: 'client_reconnect' });
+  h.ent(`sensor.tablet_flur_${en ? 'connected_since' : 'verbunden_seit'}`, 'cl', P, { key: 'client_connected_since', dc: 'timestamp' });
+  h.ent(`switch.tablet_flur_${en ? 'internet_access' : 'internetzugang'}`, 'cl', P, { key: 'client_allowed', state: 'on' });
+  return h;
+}
+for (const en of [false, true]) {
+  const h = udr7House({ en });
+  const n = CD.network(h);
+  // WLAN: one row per SSID, named after the SSID; the router's Wi-Fi total is not one SSID's count.
+  assert.deepEqual(n.wlans.map((w) => w.label), ['Seestern', 'Seestern_IoT'], 'rows named after the SSIDs');
+  assert.deepEqual(n.wlans.map((w) => w.clients), [null, null], 'no per-SSID counter: no count instead of the total twice');
+  assert.equal(n.wlans.every((w) => w.total === (en ? 'sensor.router_testhaus_wifi_clients' : 'sensor.router_testhaus_wlan_clients')), true);
+  assert.equal(n.wlans.some((w) => /firewall/.test(w.sw)), false, 'a firewall rule named "Gast-WLAN" is no Wi-Fi network');
+  // Devices: router, access point, switches, each once.
+  assert.deepEqual(n.devices.map((d) => d.label), ['Router Testhaus', 'AP Flur', 'Switch Buero', 'Switch Keller']);
+  assert.deepEqual(n.devices.map((d) => d.icon), ['network', 'mesh', 'access_point', 'access_point']);
+  const [router, ap, sw] = n.devices;
+  const de = (a, b) => (en ? b : a);
+  assert.equal(router.state, 'binary_sensor.router_testhaus_online', 'the router\'s own online sensor, not the internet one');
+  assert.equal(router.clients, de('sensor.router_testhaus_verbundene_clients', 'sensor.router_testhaus_connected_clients'));
+  assert.equal(router.restart, de('button.router_testhaus_neu_starten', 'button.router_testhaus_restart'), 'never the PoE power cycle button');
+  assert.equal(router.uptime, de('sensor.router_testhaus_gestartet', 'sensor.router_testhaus_started'));
+  assert.equal(router.update, 'update.router_testhaus_firmware');
+  assert.equal(router.temp, de('sensor.router_testhaus_cpu_temperatur', 'sensor.router_testhaus_cpu_temperature'));
+  assert.equal(ap.clients, de('sensor.ap_flur_verbundene_clients', 'sensor.ap_flur_connected_clients'), 'not one radio\'s clients');
+  assert.equal(ap.cpu, de('sensor.ap_flur_cpu_auslastung', 'sensor.ap_flur_cpu_load'));
+  assert.equal(sw.state, 'binary_sensor.switch_buero_online');
+  assert.equal(sw.uptime, de('sensor.switch_buero_gestartet', 'sensor.switch_buero_started'));
+  assert.equal(sw.clients, undefined);
+  assert.deepEqual(n.latency, [[de('sensor.router_testhaus_internet_latenz', 'sensor.router_testhaus_internet_latency'), 'Internet']]);
+
+  // Renamed devices keep their place: the kind comes from the entities, not from the name.
+  h.devices.ap.name_by_user = 'Diele';
+  h.devices.s1.name_by_user = 'Abstellraum';
+  h.devices.gw.name_by_user = 'Zentrale';
+  const r = CD.network(h);
+  assert.deepEqual(r.devices.map((d) => d.label + ':' + d.icon), ['Zentrale:network', 'Diele:mesh', 'Abstellraum:access_point', 'Switch Buero:access_point']);
+  ['ap', 's1', 'gw'].forEach((id) => { delete h.devices[id].name_by_user; });
+  // SSID renamed in UniFi: the row follows the switch's ssid attribute.
+  const sid = de('switch.router_testhaus_wlan_seestern', 'switch.router_testhaus_wifi_seestern');
+  h.states[sid].attributes.ssid = 'Qualle';
+  assert.deepEqual(CD.network(h).wlans.map((w) => w.label), ['Qualle', 'Seestern_IoT']);
+  // Without the attribute the name of the switch gives the SSID (device name and the leading "WLAN" removed).
+  delete h.states[sid].attributes.ssid;
+  assert.deepEqual(CD.network(h).wlans.map((w) => w.label), ['Seestern', 'Seestern_IoT']);
+  // Only one SSID left: the router's Wi-Fi total is that SSID's count.
+  h.states[sid].attributes.ssid = 'Seestern';
+  const iot = sid + '_iot';
+  delete h.states[iot]; delete h.entities[iot];
+  const one = CD.network(h).wlans;
+  assert.deepEqual(one.map((w) => [w.label, w.clients]), [['Seestern', de('sensor.router_testhaus_wlan_clients', 'sensor.router_testhaus_wifi_clients')]]);
+}
+
+// ── #226: the popup with SSIDs sharing one counter: rows "Aktiv", the head line counts the Wi-Fi total once ──
+// @deckt: 05-weich-mehr.js#_casoraSoftNet
+{
+  document.addEventListener = () => {};
+  new Function(fs.readFileSync(new URL('../../custom_components/casora/scripts/local/05-weich-mehr.js', import.meta.url), 'utf8'))();
+  window._casoraUI = {
+    line: (text, parts) => [text].concat(parts || []).join(' · '),
+    row: { toggle: (o) => o },
+    group: (rows, label) => label + ': ' + rows.map((r) => r.label + '|' + r.sub).join(' ; '),
+  };
+  const h = udr7House();
+  const C = { wlans: CD.network(h).wlans };
+  const N = window._casoraSoftNet;
+  assert.equal(N.sec('wl', C, h.states, h), 'WLAN: Seestern|Aktiv ; Seestern_IoT|Aktiv');
+  assert.equal(N.sec('line', C, h.states, h), '2 WLANs an · 37 Geräte');
+  h.states['switch.router_testhaus_wlan_seestern_iot'].state = 'off';
+  assert.equal(N.sec('wl', C, h.states, h), 'WLAN: Seestern|Aktiv ; Seestern_IoT|Ausgeschaltet');
+  assert.equal(N.sec('line', C, h.states, h), '1 WLAN an · 37 Geräte');
+  // Own counters per WLAN (core unifi, fixed dashboard variables) still add up.
+  const S = { 'switch.a': { state: 'on', attributes: {} }, 'switch.b': { state: 'on', attributes: {} },
+    'sensor.a': { state: '21', attributes: {} }, 'sensor.b': { state: '3', attributes: {} } };
+  const own = { wlans: [{ sw: 'switch.a', clients: 'sensor.a', label: 'A' }, { sw: 'switch.b', clients: 'sensor.b', label: 'B' }] };
+  assert.equal(N.sec('line', own, S, h), '2 WLANs an · 24 Geräte');
+  assert.equal(N.sec('wl', own, S, h), 'WLAN: A|21 Clients ; B|3 Clients');
+  delete window._casoraUI;
+}
+
+// ── #226: HA core unifi stays as it is: every WLAN a device of its own with its own client counter ──
+// @deckt: 00-finder.js#network
+{
+  const h = makeHass();
+  h.dev('udm', 'Dream Machine', 'Ubiquiti Networks', 'UDM-Pro');
+  h.ent('sensor.dream_machine_state', 'udm', 'unifi', { key: 'device_state', state: 'connected' });
+  h.ent('sensor.dream_machine_clients', 'udm', 'unifi', { key: 'device_clients', state: '9' });
+  h.ent('sensor.dream_machine_cpu_utilization', 'udm', 'unifi', { key: 'device_cpu_utilization', unit: '%', state: '5' });
+  h.ent('sensor.dream_machine_uptime', 'udm', 'unifi', { key: 'device_uptime', dc: 'timestamp' });
+  h.ent('button.dream_machine_restart', 'udm', 'unifi', { dc: 'restart' });
+  h.ent('button.dream_machine_port_2_power_cycle', 'udm', 'unifi', { dc: 'restart' });
+  h.ent('update.dream_machine', 'udm', 'unifi', { dc: 'firmware', state: 'off' });
+  for (const [id, name, n] of [['w1', 'Koralle', '21'], ['w2', 'Koralle Gast', '3']]) {
+    const slug = name.toLowerCase().replace(' ', '_');
+    h.dev(id, name, 'Ubiquiti Networks', 'UniFi WLAN');
+    h.ent(`switch.${slug}`, id, 'unifi', { key: 'wlan_control', state: 'on', name });
+    h.ent(`sensor.${slug}`, id, 'unifi', { key: 'wlan_clients', state: n, name });
+    h.ent(`button.${slug}_regenerate_password`, id, 'unifi', { key: 'wlan_regenerate_password' });
+  }
+  const n = CD.network(h);
+  assert.deepEqual(n.devices.map((d) => d.label), ['Dream Machine'], 'a WLAN device is no network device');
+  assert.equal(n.devices[0].restart, 'button.dream_machine_restart');
+  assert.deepEqual(n.wlans.map((w) => [w.label, w.sw, w.clients]),
+    [['Koralle', 'switch.koralle', 'sensor.koralle'], ['Koralle Gast', 'switch.koralle_gast', 'sensor.koralle_gast']]);
+}
+
 // ── #98: FRITZ!Portal over MQTT, a switch only Pulse watches, a Synology NAS ──
 {
   const h = makeHass();

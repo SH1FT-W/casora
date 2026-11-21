@@ -46,7 +46,7 @@ KNOWN_PLATFORMS = (
     "whirlpool", "hon", "electrolux_status", "electrolux", "smartthinq_sensors", "candy", "haier",
     "delonghi_primadonna", "delonghi_coffee", "delonghi_coffeelink", "jura", "melitta_barista", "lamarzocco",
     "bambu_lab", "dwd_weather_warnings", "nina", "husqvarna_automower", "gardena_bluetooth",
-    "unifi", "fritz", "tplink_omada", "tplink_deco", "asuswrt", "netgear", "mikrotik", "eero",
+    "unifi", "udr7", "fritz", "tplink_omada", "tplink_deco", "asuswrt", "netgear", "mikrotik", "eero",
 )
 # Integrations Casora works with besides the tiles' finders (AI, energy, the store it is installed from).
 RELATED = ("ai_task", "energy", "hacs", "marketplace", "mealie", "button_card", "card_mod", "kiosk_mode", "browser_mod")

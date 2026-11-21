@@ -35,7 +35,7 @@
     "hon", "electrolux_status", "electrolux", "smartthinq_sensors", "candy", "haier",
     "delonghi_primadonna", "delonghi_coffee", "delonghi_coffeelink", "jura", "melitta_barista", "lamarzocco",
     "bambu_lab", "dwd_weather_warnings", "nina", "husqvarna_automower", "gardena_bluetooth",
-    "unifi", "fritz", "tplink_omada", "tplink_deco", "asuswrt", "netgear", "mikrotik", "eero",
+    "unifi", "udr7", "fritz", "tplink_omada", "tplink_deco", "asuswrt", "netgear", "mikrotik", "eero",
   ];
   const KNOWN = new Set(KNOWN_PLATFORMS);
   // Theme names Casora ships; any other theme is "other" (its name is the user's). "Casora Glas" was missing (energy
