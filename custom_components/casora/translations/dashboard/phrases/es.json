@@ -5447,6 +5447,14 @@
     [
       "^Version (.+) übersprungen$",
       "Versión {1} omitida"
+    ],
+    [
+      "^Noch (\\d+) Std\\. (\\d+) Min\\. bis Sonnenaufgang$",
+      "Quedan {1} h {2} min para el amanecer"
+    ],
+    [
+      "^Noch (\\d+) Min\\. bis Sonnenaufgang$",
+      "Quedan {1} min para el amanecer"
     ]
   ]
 }

@@ -801,13 +801,19 @@
       + '<div class="cs-date">' + esc(dateText(ctx.now)) + (wx && wx.temp != null ? ' · ' + wx.temp + '° ' + esc(wx.text.toLowerCase()) : '') + '</div></div>'
       + (name ? '<div class="cs-name"><b data-no-i18n>' + esc(name) + '</b>' + esc(sub || '') + '</div>' : '') + '</div>';
   };
-  // The share of the night that has passed (0 at sunset, 1 at sunrise), from today's rise and set.
-  S.nightShare = function (now, rise, set) {
+  // The night around now, from today's rise and set: { start: the sunset it began with, end: the coming sunrise };
+  // null by day. Before midnight the sunrise is tomorrow's, after midnight the sunset was yesterday's.
+  S.nightSpan = function (now, rise, set) {
     var t = +now, day = 86400000;
     if (!isFinite(rise) || !isFinite(set) || set <= rise) return null;
-    if (t >= set) return Math.min(1, (t - set) / (rise + day - set));
-    if (t < rise) return Math.max(0, (t - (set - day)) / (rise - (set - day)));
+    if (t >= set) return { start: set, end: rise + day };
+    if (t < rise) return { start: set - day, end: rise };
     return null;
+  };
+  // The share of the night that has passed (0 at sunset, 1 at sunrise).
+  S.nightShare = function (now, rise, set) {
+    var n = S.nightSpan(now, rise, set);
+    return n ? Math.max(0, Math.min(1, (+now - n.start) / (n.end - n.start))) : null;
   };
   var STARS = (function () {
     var r = rng(7), out = '';
@@ -820,16 +826,23 @@
     himmel: function (ctx) {
       var sun = ctx.sun, share = sun ? S.dayShare(ctx.now, sun.rise, sun.set) : null;
       var sky = S.sky(sun ? share : 0.5), wx = ctx.wx;
-      var night = sun ? share == null : false, moonAt = night ? S.nightShare(ctx.now, sun.rise, sun.set) : null;
+      var night = sun ? share == null : false, span = night ? S.nightSpan(ctx.now, sun.rise, sun.set) : null;
+      var moonAt = span ? S.nightShare(ctx.now, sun.rise, sun.set) : null;
       var W = 1168, H = 300, x0 = 0, x1 = W, top = 34;
       // Quadratic curve from the left end over the top to the right end; the point for a share of the day.
       var at = function (t) { var a = 1 - t; return [a * a * x0 + 2 * a * t * (W / 2) + t * t * x1, a * a * H + 2 * a * t * (top * 2 - H) + t * t * H]; };
       var pts = function (to) { var d = ''; for (var i = 0; i <= 60; i++) { var p = at(to * i / 60); d += (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); } return d; };
       var p = share == null ? null : at(share), q = moonAt == null ? null : at(moonAt);
-      var left = sun && share != null ? Math.round((sun.set - +ctx.now) / 60000) : null;
+      // The minutes until the path's right end: sunset by day, the coming sunrise by night.
+      var left = sun && share != null ? Math.round((sun.set - +ctx.now) / 60000) : span ? Math.max(0, Math.round((span.end - +ctx.now) / 60000)) : null;
       // Whole sentences with placeholders: the translation works on the finished text.
-      var mid = share == null ? T('Nacht') : left >= 60 ? T('Noch {h} Std. {m} Min. Tageslicht'.replace('{h}', Math.floor(left / 60)).replace('{m}', left % 60))
+      var mid = left == null ? T('Nacht')
+        : span ? (left >= 60 ? T('Noch {h} Std. {m} Min. bis Sonnenaufgang'.replace('{h}', Math.floor(left / 60)).replace('{m}', left % 60)) : T('Noch {m} Min. bis Sonnenaufgang'.replace('{m}', left)))
+        : left >= 60 ? T('Noch {h} Std. {m} Min. Tageslicht'.replace('{h}', Math.floor(left / 60)).replace('{m}', left % 60))
         : T('Noch {m} Min. Tageslicht'.replace('{m}', left));
+      // The labels name the two ends of the path that is drawn: by day sunrise and sunset, by night (the moon's
+      // way) the sunset the night began with and the coming sunrise (#229).
+      var ends = span ? [T('Untergang'), span.start, T('Aufgang'), span.end] : sun ? [T('Aufgang'), sun.rise, T('Untergang'), sun.set] : null;
       return '<div class="cs-bg" style="background:linear-gradient(180deg, ' + sky[0] + ' 0%, ' + sky[1] + ' 36%, ' + sky[2] + ' 74%, ' + sky[3] + ' 100%)"></div>' + (night ? STARS : '') + '<div class="cs-in">'
         + '<div class="cs-top"><div><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div>'
         + (wx ? '<div class="cs-wx"><div class="cs-t"><img src="' + esc(wx.icon) + '" alt="">' + (wx.temp != null ? wx.temp + '°' : '') + '</div><p>' + esc(wx.text) + '</p></div>' : '') + '</div>'
@@ -841,7 +854,7 @@
           + (p ? '<path class="cs-done" d="' + pts(share) + '" fill="none" stroke="#FFE9BE" stroke-width="5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>'
             + '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="130" fill="url(#cs-glow)"/><circle class="cs-sun" cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="27" fill="#FFF6DF"/>' : '')
           + (q ? '<circle cx="' + q[0].toFixed(1) + '" cy="' + q[1].toFixed(1) + '" r="96" fill="url(#cs-mglow)"/><circle class="cs-moon" cx="' + q[0].toFixed(1) + '" cy="' + q[1].toFixed(1) + '" r="22" fill="#F1F4FF"/>' : '')
-          + '</svg></div><div class="cs-ends"><span>' + esc(T('Aufgang')) + ' <b>' + esc(hm(sun.rise)) + '</b></span><span>' + esc(mid) + '</span><span>' + esc(T('Untergang')) + ' <b>' + esc(hm(sun.set)) + '</b></span></div>' : '')
+          + '</svg></div><div class="cs-ends"><span>' + esc(ends[0]) + ' <b>' + esc(hm(ends[1])) + '</b></span><span>' + esc(mid) + '</span><span>' + esc(ends[2]) + ' <b>' + esc(hm(ends[3])) + '</b></span></div>' : '')
         + '</div>';
     },
     // A drawn landscape; a new one every ten minutes, dark ones by night.

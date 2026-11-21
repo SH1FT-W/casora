@@ -5447,6 +5447,14 @@
     [
       "^Version (.+) übersprungen$",
       "Versione {1} saltata"
+    ],
+    [
+      "^Noch (\\d+) Std\\. (\\d+) Min\\. bis Sonnenaufgang$",
+      "Ancora {1} h {2} min all’alba"
+    ],
+    [
+      "^Noch (\\d+) Min\\. bis Sonnenaufgang$",
+      "Ancora {1} min all’alba"
     ]
   ]
 }

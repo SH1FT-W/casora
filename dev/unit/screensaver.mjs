@@ -101,7 +101,7 @@ assert.equal(clockOf('12', 'de-DE'), '4:42', 'own 12-hour format wins');
 assert.ok(/class="cs-time">4:42</.test(S.html('himmel', S.context({ hass: { ...hass, locale: { time_format: 'language', language: 'en' } }, now: new Date('2026-11-10T16:42:00'), sun: null, rooms: [] }))),
   'the HA user language first, as the dashboard clock (use_12h in the templates)');
 h = S.html('himmel', ctx({ now: new Date('2026-11-10T22:00:00') }));
-assert.ok(!/cs-sun/.test(h) && /Nacht/.test(h), 'sky at night: no sun');
+assert.ok(!/cs-sun/.test(h) && /bis Sonnenaufgang/.test(h), 'sky at night: no sun, the middle counts to sunrise (#229)');
 h = S.html('himmel', ctx({ sun: null, wx: null }));
 assert.ok(/16:42/.test(h) && !/cs-arc/.test(h) && !/cs-wx/.test(h), 'sky without sun entity and weather: the time alone');
 h = S.html('land', ctx());
@@ -257,3 +257,17 @@ console.log('screensaver: reading distance ok');
 // Energy: the balance row is centred like the flow above it (owner, 20.11.2026: it was bound to the left).
 assert.match(S.CSS, /\.cs-bal div\{[^}]*text-align:center/, 'energy balance values centred');
 console.log('screensaver: energy balance centred');
+// #229: by night the moon takes the path from tonight's sunset to the coming sunrise, and the two end labels name
+// exactly those two ends (they kept the sun's day times: sunrise left, sunset right).
+{
+  const sunT = { rise: Date.parse('2026-11-10T07:22:00'), set: Date.parse('2026-11-10T17:05:00') };
+  const at = (iso, sun) => S.html('himmel', S.context({ hass, now: new Date(iso), sun: sun || sunT, wx: null, rooms: [] }));
+  const ends = (html) => [...html.match(/class="cs-ends">(.*?)<\/div>/)[1].matchAll(/<span>(.*?)<\/span>/g)].map((m) => m[1].replace(/<[^>]+>/g, ''));
+  assert.deepEqual(ends(at('2026-11-10T13:00:00')), ['Aufgang 07:22', 'Noch 4 Std. 5 Min. Tageslicht', 'Untergang 17:05'], 'day: sunrise … sunset, as before');
+  assert.deepEqual(ends(at('2026-11-10T21:00:00')), ['Untergang 17:05', 'Noch 10 Std. 22 Min. bis Sonnenaufgang', 'Aufgang 07:22'], 'evening: tonight\'s sunset left, the coming sunrise right');
+  assert.deepEqual(ends(at('2026-11-10T06:40:00')), ['Untergang 17:05', 'Noch 42 Min. bis Sonnenaufgang', 'Aufgang 07:22'], 'after midnight: the same night, still sunset … sunrise');
+  const span = S.nightSpan(Date.parse('2026-11-10T21:00:00'), sunT.rise, sunT.set);
+  assert.deepEqual([span.start, span.end], [sunT.set, sunT.rise + 86400000], 'the night\'s two ends are the ones the moon\'s share is measured between');
+  assert.equal(S.nightSpan(Date.parse('2026-11-10T13:00:00'), sunT.rise, sunT.set), null, 'no night by day');
+}
+console.log('screensaver: sky labels by night ok');

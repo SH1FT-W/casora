@@ -5429,6 +5429,14 @@
     [
       "^Version (.+) übersprungen$",
       "Version {1} skipped"
+    ],
+    [
+      "^Noch (\\d+) Std\\. (\\d+) Min\\. bis Sonnenaufgang$",
+      "{1} h {2} min until sunrise"
+    ],
+    [
+      "^Noch (\\d+) Min\\. bis Sonnenaufgang$",
+      "{1} min until sunrise"
     ]
   ]
 }
