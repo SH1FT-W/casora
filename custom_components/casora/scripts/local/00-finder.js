@@ -844,27 +844,32 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
   // roles per entity from translation_key, device class, unit and name.
   // Result shaped like the popup variables network_devices / wlan_entities /
   // latency_entities – fixed variables in the dashboard still win.
-  var NET_PLATFORM = /^(unifi|fritz|tplink_omada|tplink_deco|tplink_router|asuswrt|netgear|mikrotik|luci|openwrt|ubus|keenetic_ndms2|synology_srm|huawei_lte|vodafone_station|freebox|bbox|sfr_box|eero|linksys_smart|zyxel|draytek|glinet|omada)$/;
+  var NET_PLATFORM = /^(unifi|udr7|fritz|tplink_omada|tplink_deco|tplink_router|asuswrt|netgear|mikrotik|luci|openwrt|ubus|keenetic_ndms2|synology_srm|huawei_lte|vodafone_station|freebox|bbox|sfr_box|eero|linksys_smart|zyxel|draytek|glinet|omada)$/;
   // Synology is no network maker (#98): its routers come in through synology_srm, a NAS (synology_dsm) is no
   // router. Storage and server integrations never make a network device, whatever the maker.
   var NET_MAKER = /ubiquiti|\bavm\b|fritz|tp-?link|netgear|asus|mikrotik|linksys|zyxel|draytek|eero|gl\.?inet|keenetic|huawei|openwrt/i;
   var NET_NOT = /^(synology_dsm|qnap|truenas|unraid|proxmoxve|hassio)$/;
   // Model or name of network gear (for devices that only Pulse watches; plugs of the same makers are not).
+  // udr7 (UniFi Dream Router 7 integration, #226): entities of a tracked client (its own device, by MAC) are no
+  // network device; rule switches (firewall, routes …) sit on the router and may say "Gast" or "WLAN" in their name.
+  var UDR_CLIENT = /^client(_|$)/;
   var NET_GEAR = /router|gateway|switch|access.?point|repeater|mesh|\bap\b|fritz!?box|\b(xmg|xgs|xs|gs|sg|usw|eap|tl-sg|tl-sx)-?\d{3,}/i;
   var NET_ROLE = {
     // The device's own state. Pulse's status sensor (translation_key "status" too) is no device state (#98).
     state: function (x) { return x.domain === 'sensor' && x.platform !== 'pulse' && /^(device_state|device_status|status|wan_status|connection_status)$/.test(x.key || ''); },
     pulse: function (x) { return x.platform === 'pulse' && x.key === 'status'; },
     online: function (x) { return x.domain === 'binary_sensor' && x.dc === 'connectivity'; },
-    clients: function (x) { return x.domain === 'sensor' && x.key !== 'wlan_clients' && /(^|_)(device_clients|connected_clients|clients|client_count|connected_devices|devices_online|gerate_online|geraete_online)$/.test(x.key || x.entity_id); },
+    // Part counters (per radio, LAN only, VPN, guests: udr7) are not the device's clients (#226).
+    clients: function (x) { return x.domain === 'sensor' && x.key !== 'wlan_clients' && !/^(radio|lan|vpn|guest)_clients$/.test(x.key || '') && /(^|_)(device_clients|connected_clients|clients|client_count|connected_devices|devices_online|gerate_online|geraete_online)$/.test(x.key || x.entity_id); },
     cpu: function (x) { return x.domain === 'sensor' && x.dc !== 'temperature' && /cpu|prozessor/.test(x.key || x.entity_id) && x.unit === '%'; },
     mem: function (x) { return x.domain === 'sensor' && /mem|(^|[._])ram(_|$)|speicher/.test(x.key || x.entity_id) && x.unit === '%'; },
     temp: function (x) { return x.domain === 'sensor' && x.dc === 'temperature'; },
-    uptime: function (x) { return x.domain === 'sensor' && (x.dc === 'timestamp' || x.dc === 'uptime') && /uptime|betriebszeit|boot|last_restart/.test((x.key || '') + ' ' + x.entity_id) && !/connection|wan/.test((x.key || '') + ' ' + x.entity_id); },
-    restart: function (x) { return x.domain === 'button' && (x.dc === 'restart' || /reboot|restart|neu_?start/.test((x.key || '') + ' ' + x.entity_id)); },
+    uptime: function (x) { return x.domain === 'sensor' && (x.dc === 'timestamp' || x.dc === 'uptime') && (x.key === 'started' || /uptime|betriebszeit|boot|last_restart/.test((x.key || '') + ' ' + x.entity_id)) && !/connection|wan/.test((x.key || '') + ' ' + x.entity_id); },
+    // A PoE power cycle button (device class restart too) restarts what hangs on the port, not the device (#226).
+    restart: function (x) { return x.domain === 'button' && !/power_cycle|(^|_)poe(_|$)/.test((x.key || '') + ' ' + x.entity_id) && (x.dc === 'restart' || /reboot|restart|neu_?start/.test((x.key || '') + ' ' + x.entity_id)); },
     // update entity, or a firmware binary_sensor with device class update (FRITZ!Portal over MQTT).
     update: function (x) { return x.domain === 'update' || (x.domain === 'binary_sensor' && x.dc === 'update'); },
-    wlan: function (x) { return x.domain === 'switch' && (x.key === 'wlan_control' || /wi_?fi|wlan|ssid|guest|gast/.test((x.key || '') + ' ' + x.entity_id)); },
+    wlan: function (x) { return x.domain === 'switch' && (x.platform === 'udr7' ? x.key === 'wlan' : x.key === 'wlan_control' || /wi_?fi|wlan|ssid|guest|gast/.test((x.key || '') + ' ' + x.entity_id)); },
     wlanClients: function (x) { return x.domain === 'sensor' && x.key === 'wlan_clients'; },
     latency: function (x) { return x.domain === 'sensor' && !/speedtest/.test(x.entity_id) && (x.key === 'wan_latency' || (/latency|latenz|ping/.test(x.entity_id) && (x.dc === 'duration' || x.unit === 'ms'))); },
   };
@@ -877,11 +882,12 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
       var d = D[e.device_id];
       if (NET_NOT.test(e.platform || '')) { notDev[e.device_id] = true; return; }
       if (!d || !(NET_PLATFORM.test(e.platform || '') || NET_MAKER.test(d.manufacturer || ''))) return;
+      if (e.platform === 'udr7' && UDR_CLIENT.test(e.translation_key || '')) return;
       if (NET_PLATFORM.test(e.platform || '')) (netDev[e.device_id] = true);
       (byDev[e.device_id] = byDev[e.device_id] || []).push({
         entity_id: eid, key: e.translation_key || null, domain: eid.split('.')[0], platform: e.platform || null,
         dc: st.attributes.device_class, unit: st.attributes.unit_of_measurement,
-        name: String(st.attributes.friendly_name || ''), state: st.state,
+        name: String(st.attributes.friendly_name || ''), state: st.state, ssid: st.attributes.ssid,
       });
     });
     var out = { devices: [], wlans: [], latency: [] };
@@ -891,24 +897,39 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
       if (notDev[devId]) return;
       var list = byDev[devId].sort(function (a, b) { return a.entity_id < b.entity_id ? -1 : 1; });
       var dev = D[devId], label = String(dev.name_by_user || dev.name || '');
-      var first = function (role) { var hit = list.filter(NET_ROLE[role])[0]; return hit ? hit.entity_id : null; };
+      // First entity of a role; with `prefer` the one with such a translation_key wins (the device's own value).
+      var first = function (role, prefer) {
+        var hits = list.filter(NET_ROLE[role]);
+        var hit = (prefer && hits.filter(function (x) { return prefer.test(x.key || ''); })[0]) || hits[0];
+        return hit ? hit.entity_id : null;
+      };
+      var online = first('online', /^online$/), clients = first('clients', /^(device_clients|connected_clients)$/);
       var lat = list.filter(NET_ROLE.latency);
       lat.forEach(function (x) {
-        var n = x.name.replace(label, '').replace(/\b(wan|latency|latenz|ping)\b/gi, '').replace(/\s+/g, ' ').trim();
+        var n = x.name.replace(label, '').replace(/\b(wan|latency|latenz|ping)\b/gi, '').replace(/\s+/g, ' ').replace(/^[\s:–-]+|[\s:–-]+$/g, '');
         out.latency.push([x.entity_id, n || label]);
       });
       // A WLAN as a device of its own (UniFi) – or WLAN switches on the router (FRITZ!Box, TP-Link …).
       // Orphaned entries (unavailable) are no WLAN – a switched-off one is off.
       // A device found by its maker only needs an internet connection of its own (FRITZ!Portal over MQTT).
-      var router = netDev[devId] || !!first('online');
+      var router = netDev[devId] || !!online;
       var wl = list.filter(function (x) { return NET_ROLE.wlan(x) && (router || x.key === 'wlan_control') && x.state !== 'unavailable'; }), wc = first('wlanClients');
+      // Several WLANs on one device with one Wi-Fi counter (udr7, #226): the counter is the sum of all SSIDs, so
+      // each row is named after its SSID (attribute `ssid`, otherwise the switch name without device and "WLAN")
+      // and gets no count of its own; `total` keeps the sum for the summary line.
+      var shared = !!wc && wl.length > 1;
       wl.forEach(function (x) {
-        var n = wc || wl.length === 1 ? label : x.name.replace(label, '').replace(/^[\s:–-]+/, '').trim() || x.name;
-        out.wlans.push({ sw: x.entity_id, clients: wc, label: n });
+        var own = x.name.replace(label, '').replace(/^[\s:–-]+/, '').trim();
+        var n = x.ssid ? String(x.ssid) : shared ? own.replace(/^(wlan|wi-?fi)[\s:–-]+/i, '') || own || x.name
+          : wc || wl.length === 1 ? label : own || x.name;
+        var w = { sw: x.entity_id, clients: shared ? null : wc, label: n };
+        if (shared) w.total = wc;
+        out.wlans.push(w);
       });
-      if (wc) return;
+      // A WLAN as a device of its own is no network device; a router that also counts Wi-Fi clients is one (#226).
+      if (wc && !(online || clients || first('restart'))) return;
       var d = {
-        label: label, state: first('state') || first('online'), clients: first('clients'), cpu: first('cpu'),
+        label: label, state: first('state') || online, clients: clients, cpu: first('cpu'),
         mem: first('mem'), temp: first('temp'), uptime: first('uptime'), restart: first('restart'), update: first('update'),
         pulse: first('pulse'),
       };
@@ -920,8 +941,12 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
       var strong = d.clients || d.cpu || d.mem || (d.state && first('state')) || lat.length
         || (d.pulse && NET_GEAR.test(model));
       if (!(strong || (netDev[devId] && d.restart && (d.uptime || d.update)))) return;
-      d.icon = lat.length || /router|gateway|fritz!?box|udm|udr|ucg|uxg|usg|archer|\bdream/i.test(model) ? 'network'
-        : /switch|usw|\bsg\d|\bgs\d|flex/i.test(model) ? 'access_point' : 'mesh';
+      // udr7 says what a device is through its entities (renamed devices keep their place, #226): the router carries
+      // the network-wide values, an access point has radios, a switch only ports.
+      var udr = function (re) { return list.some(function (x) { return x.platform === 'udr7' && re.test(x.key || ''); }); };
+      var kind = udr(/^(internet|wan_up|network_app)$/) ? 'network' : udr(/^radio_/) ? 'mesh' : udr(/^port_/) ? 'access_point' : null;
+      d.icon = kind || (lat.length || /router|gateway|fritz!?box|udm|udr|ucg|uxg|usg|archer|\bdream/i.test(model) ? 'network'
+        : /switch|usw|\bsg\d|\bgs\d|flex/i.test(model) ? 'access_point' : 'mesh');
       Object.keys(d).forEach(function (k) { if (d[k] == null) delete d[k]; });
       out.devices.push(d);
     });

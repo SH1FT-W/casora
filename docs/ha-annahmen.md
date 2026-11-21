@@ -235,10 +235,22 @@ Kern-Integrationen (Schlüssel im Test geprüft):
   Geräteklasse, Einheit und deutsche Namen; der Anbieter steht nur als Attribut `provider` am Verbindungssensor.
   Pulse (`pulse`, HACS): der Statussensor (`translation_key` `status`) hängt am überwachten Gerät und ist kein
   Gerätezustand, die Netzwerkliste bewertet ihn mit Pulses eigenen Wörtern.
+  HA-Kern `unifi`: jedes WLAN ist ein eigenes Gerät mit Schalter `wlan_control` und Zähler `wlan_clients`; der
+  PoE-Neustart eines Ports ist ein Knopf mit Geräteklasse `restart` wie der Geräte-Neustart (Casora nimmt nie einen
+  Knopf mit `power_cycle`/`poe` in Schlüssel oder ID als Neustart des Geräts).
+  `udr7` (UniFi Dream Router 7, HACS, #226): der Router ist das Hauptgerät und trägt die Werte des ganzen Netzes
+  (`internet`, `wan_up`, `network_app`, `clients`, `wlan_clients` = Summe aller SSIDs, `lan_clients`, `vpn_clients`,
+  `guest_clients`, `internet_latency`) sowie je SSID einen Schalter `wlan` mit Attribut `ssid` (keinen Zähler je SSID);
+  Regel-Schalter (`firewall_policy`, `port_forward` …) hängen am selben Gerät. Jedes UniFi-Gerät (Router, Access
+  Point, Switch) hat `online` (connectivity), `restart` (Knopf, Geräteklasse `restart`), `started` (Zeitstempel),
+  `firmware` (update), wo vorhanden `cpu_load`, `memory_usage`, `connected_clients`, je Funkband `radio_*`, je Port
+  `port_*` (`port_power_cycle` ist ebenfalls ein Knopf mit Geräteklasse `restart`). Casora liest die Art des Geräts
+  daran ab: Netzwerte = Router, `radio_*` = Access Point, nur `port_*` = Switch. Ausgewählte Clients sind eigene
+  Geräte mit Schlüsseln `client`/`client_*` und nie ein Netzwerkgerät.
 
 Nicht im Kern-Paket prüfbar (HACS), Casora liest `platform`/`translation_key`:
 `waste_collection_schedule`, `frigate`, `ha_washdata`, `home_connect_alt`/`homeconnect_ws`, `bambu_lab`,
-`anker_solix`, `pulse`, `teamtracker`, `bosch_ebike`, `velair`, `powercalc`, `browser_mod`, `hacs`, Kaffee-Integrationen
+`anker_solix`, `pulse`, `udr7`, `teamtracker`, `bosch_ebike`, `velair`, `powercalc`, `browser_mod`, `hacs`, Kaffee-Integrationen
 (`delonghi_primadonna`, `delonghi_coffee`, `delonghi_coffeelink`, `jura`, `jura_wifi`, `melitta_barista`, `philips_homeid`;
 Schlüssel je Quelle in `25-coffee.js` `SOURCES`, Stand Quellcode 24.10.2026, Test `dev/unit/coffee_sources.mjs`),
 Auto-Integrationen.

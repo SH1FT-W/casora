@@ -312,9 +312,9 @@
     if (UI.v3 && UI.v3() && UI.stage) {
       f.stage = { card: secCard([C.dl, C.ul, C.status, C.ping, C.stDown, C.stUp, C.stButton, C.stRunning, C.stLast], call('_casoraSoftNet', 'stage', C), states) };
       // The head's status line (§3): Wi-Fi in words – not the tile entity's value („0 kWh“) nor the wheel's rates.
-      if (N.sec('line', C, states, hass)) f.line = { card: secCard(C.wlans.map(function (w) { return w.sw; }).concat(C.wlans.map(function (w) { return w.clients; })), call('_casoraSoftNet', 'line', C), states) };
+      if (N.sec('line', C, states, hass)) f.line = { card: secCard(C.wlans.map(function (w) { return w.sw; }).concat(C.wlans.map(function (w) { return w.clients || w.total; })), call('_casoraSoftNet', 'line', C), states) };
       if (ctx.metricCard) f.metric = { card: chartCard(ctx.metricCard, null) };
-      if (C.wlans.length) f.wl = { card: secCard(C.wlans.map(function (w) { return w.sw; }).concat(C.wlans.map(function (w) { return w.clients; })), call('_casoraSoftNet', 'wl', C), states) };
+      if (C.wlans.length) f.wl = { card: secCard(C.wlans.map(function (w) { return w.sw; }).concat(C.wlans.map(function (w) { return w.clients || w.total; })), call('_casoraSoftNet', 'wl', C), states) };
       // Latency is not watched (it changes all the time); the rows swap it as text (data-hp-live-join).
       if (N.sec('inet', C, states, hass)) f.inet = { card: secCard([C.isp, C.wanName, C.ip4, C.ip6], call('_casoraSoftNet', 'inet', C), states) };
       if (C.devices.filter(function (d) { return states[d.state] || states[d.pulse] || states[d.restart]; }).length) {
@@ -327,7 +327,7 @@
       ? { card: secCard([C.stButton, C.stRunning, C.stLast], call('_casoraSoftNet', 'st', C), states) } : null;
     f.metric = { card: chartCard(ctx.metricCard, st) };
     if (!ctx.metricCard) delete f.metric;
-    if (C.wlans.length) f.wl = { card: secCard(C.wlans.map(function (w) { return w.sw; }).concat(C.wlans.map(function (w) { return w.clients; })), call('_casoraSoftNet', 'wl', C), states) };
+    if (C.wlans.length) f.wl = { card: secCard(C.wlans.map(function (w) { return w.sw; }).concat(C.wlans.map(function (w) { return w.clients || w.total; })), call('_casoraSoftNet', 'wl', C), states) };
     if (C.devices.filter(function (d) { return states[d.state] || states[d.pulse] || states[d.restart]; }).length) {
       f.nd = { card: secCard([].concat.apply([], C.devices.map(function (d) { return [d.state, d.pulse, d.update]; })), call('_casoraSoftNet', 'nd', C), states) };
     }
@@ -386,11 +386,14 @@
     }
     if (part === 'line') {
       // „2 WLANs an · 66 Geräte“: how many Wi-Fi networks are on and how many devices use them.
-      var wOn = 0, wCl = 0, wHas = false;
+      var wOn = 0, wCl = 0, wHas = false, wSeen = {};
       (C.wlans || []).forEach(function (w) {
         if (!states[w.sw] || raw(states, w.sw) !== 'on') return;
         wOn++;
-        var c0 = num(states, w.clients);
+        /* #226: several WLANs sharing one counter (`total`) – that sum counts once. */
+        if (!w.clients && w.total && wSeen[w.total]) return;
+        if (!w.clients && w.total) wSeen[w.total] = true;
+        var c0 = num(states, w.clients || w.total);
         if (c0 != null) { wCl += Math.round(c0); wHas = true; }
       });
       var wN = (C.wlans || []).filter(function (w) { return states[w.sw]; }).length;
