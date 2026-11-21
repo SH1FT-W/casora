@@ -2632,6 +2632,11 @@ const SECTIONS = [
       { key: "casora_screensaver_tint", sub: "chrome", label: "Cover colour", type: "bool", boolDefault: false, auto: true, scope: "dashboard",
         when: (v) => v.casora_screensaver != null && v.casora_screensaver !== "",
         hint: "While music plays, the calm screensavers take on a soft tint in the main colour of the cover." },
+      // Burn-in protection (#230): on the tablet the screensaver's content wanders a few pixels three times a minute.
+      // On by default; off is stored as false (46-screensaver.js S.wanders). The preview never wanders.
+      { key: "casora_screensaver_wander", sub: "chrome", label: "Burn-in protection", type: "bool", boolDefault: true, auto: true, scope: "dashboard",
+        when: (v) => v.casora_screensaver != null && v.casora_screensaver !== "",
+        hint: "Moves the screensaver a few pixels every now and then, so nothing burns into the display. An LCD does not need it." },
       // Halten auf Kacheln (22-halten.js): leer = Schnellmenü. casora-core.js setzt daraus window._casoraHoldMode,
       // ans Handy geht es über casora_mobile_bg. Je Kachel überstimmbar (variables.hold_mode, Kachel-Inspektor).
       { key: "hold_mode", sub: "hold", label: "Hold on tiles", type: "select", auto: true, scope: "dashboard",

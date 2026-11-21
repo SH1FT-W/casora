@@ -3129,6 +3129,8 @@
     "Screensaver calendars": "Kalendarze wygaszacza ekranu",
     "Cover colour": "Kolor okładki",
     "While music plays, the calm screensavers take on a soft tint in the main colour of the cover.": "Gdy gra muzyka, spokojne wygaszacze ekranu przyjmują delikatny odcień głównego koloru okładki.",
+    "Burn-in protection": "Ochrona przed wypaleniem",
+    "Moves the screensaver a few pixels every now and then, so nothing burns into the display. An LCD does not need it.": "Co jakiś czas przesuwa wygaszacz o kilka pikseli, żeby nic nie wypaliło się na ekranie. Ekran LCD tego nie potrzebuje.",
     "Hide my own arrivals and departures": "Ukryj moje własne przyjścia i wyjścia",
     "For people linked to a Home Assistant user: you see the others come and go, not yourself.": "Dla osób powiązanych z użytkownikiem Home Assistant: widzisz, jak przychodzą i wychodzą inni, a nie ty.",
     "Removed for all users": "Usunięte dla wszystkich użytkowników",

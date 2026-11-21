@@ -8,8 +8,8 @@
 // waste dates, the playing media player, the energy settings, the bell, the dashboard's room photos); nothing is
 // loaded from another server. One that has nothing to show (no music playing, energy not set up) shows the sky; in the
 // alternation („mix“, the kinds picked in casora_screensaver_mix) it is skipped instead. The same drawing serves the Studio's preview (mount into any box): all sizes are
-// container units, so it looks the same small and full screen. The content wanders a few pixels every minute, so
-// nothing burns in.
+// container units, so it looks the same small and full screen. On the tablet the content wanders a few pixels three
+// times a minute, never together with the clock's digits, so nothing burns in (casora_screensaver_wander, false = off).
 //   window._casoraSaver.KINDS                  → [{ id, label, needs }]
 //   window._casoraSaver.words(lang, h, m)      → the time as people say it: [{ t, acc }] lines (nine languages)
 //   window._casoraSaver.dayShare(now, rise, set) → 0…1 share of the daylight that has passed, null at night
@@ -21,7 +21,8 @@
 //   window._casoraSaver.kindAt(kind, now, pool) → the kind on show
 //   window._casoraSaver.canStart() / start()   → start by hand (the dashboard's ⋯ menu), only where one may start
 // Studio settings beside the three above: casora_screensaver_mix (kinds that alternate, none = all),
-// casora_screensaver_cameras (none = automatic: the real cameras) / _calendars (none = all), casora_screensaver_tint (the playing cover's colour as a wash).
+// casora_screensaver_cameras (none = automatic: the real cameras) / _calendars (none = all), casora_screensaver_tint (the playing cover's colour as a wash),
+// casora_screensaver_wander (false = the content stands still, for displays that do not burn in).
 (function () {
   if (window._casoraSaver) return;
   var S = window._casoraSaver = {};
@@ -1197,9 +1198,17 @@
     var tintHtml = ctx.tint && ctx.media && TINT_KINDS.indexOf(k) > -1 ? '<div class="cs-tint" style="--cs-t:' + esc(ctx.tint) + '"></div>' : '';
     return '<div class="cs-sv cs-' + k + cls + '" data-kind="' + k + '"' + (tintHtml ? ' data-tint="1"' : '') + '>' + tintHtml + DRAW[k](ctx) + '</div>';
   };
+  // The wander against burn-in (#230). A step every twenty seconds, at :10, :30 and :50 of the minute: the glide of
+  // four seconds is over before the minute ends, so the layout never moves while the clock's digits change.
+  S.DRIFT_EVERY = 20000;
+  S.DRIFT_AT = 10000;
+  S.driftStep = function (ms) { return Math.floor((+ms - S.DRIFT_AT) / S.DRIFT_EVERY); };
+  S.driftAt = function (n) { return [(Math.sin(n / 3) * 10).toFixed(1) + 'px', (Math.cos(n / 4) * 8).toFixed(1) + 'px']; };
+  // The switch in the Studio: on unless it was turned off (stored only as false).
+  S.wanders = function (vars) { var v = vars && vars.casora_screensaver_wander; return !(v === false || v === 'false' || v === 0 || v === '0'); };
   S.mount = function (host, kind, o) {
     o = o || {};
-    var last = '', timer = 0, n = 0;
+    var last = '', timer = 0, step = null, minute = null, moved = false;
     if (!document.getElementById('cs-sv-css')) {
       var st = document.createElement('style');
       st.id = 'cs-sv-css';
@@ -1241,12 +1250,19 @@
       var html = S.html(k, ctx);
       api.kind = k;
       if (html !== last) { last = html; host.innerHTML = html; }
-      // Wander a few pixels so nothing burns in (not in a preview): one step every twenty seconds.
-      if (o.drift) {
-        var el = host.firstElementChild;
-        n = Math.floor(Date.now() / 20000);
-        if (el) { el.style.setProperty('--cs-dx', (Math.sin(n / 3) * 10).toFixed(1) + 'px'); el.style.setProperty('--cs-dy', (Math.cos(n / 4) * 8).toFixed(1) + 'px'); }
+      // Wander a few pixels so nothing burns in (not in a preview). o.drift: true, or a function asked every time
+      // (the Studio switch). A call that sees a new minute (the one that changes the digits) keeps the step it had,
+      // also when a throttled timer skipped the step's own moment: the step then follows with the next call.
+      var el = host.firstElementChild, t = +now, min = Math.floor(t / 60000);
+      if (typeof o.drift === 'function' ? o.drift() : o.drift) {
+        if (step == null || min === minute) step = S.driftStep(t);
+        var d = S.driftAt(step);
+        if (el) { el.style.setProperty('--cs-dx', d[0]); el.style.setProperty('--cs-dy', d[1]); moved = true; }
+      } else if (moved) {
+        if (el) { el.style.removeProperty('--cs-dx'); el.style.removeProperty('--cs-dy'); }
+        moved = false; step = null;
       }
+      minute = min;
     };
     update();
     timer = setInterval(update, o.every || 20000);
@@ -1268,7 +1284,7 @@
   // The settings of the dashboard: the first value found on a view's hero card.
   S.vars = function (cfg) {
     var out = {}, keys = ['casora_screensaver', 'casora_screensaver_kind', 'casora_screensaver_calendar', 'casora_screensaver_photos', 'casora_screensaver_mix',
-      'casora_screensaver_cameras', 'casora_screensaver_calendars', 'casora_screensaver_tint', 'weather_entity'];
+      'casora_screensaver_cameras', 'casora_screensaver_calendars', 'casora_screensaver_tint', 'casora_screensaver_wander', 'weather_entity'];
     ((cfg && cfg.views) || []).forEach(function (v) {
       var vars = ((((v.cards || [])[0]) || {}).variables) || {};
       keys.forEach(function (k) { if ((out[k] == null || out[k] === '' || (Array.isArray(out[k]) && !out[k].length)) && vars[k] != null && vars[k] !== '') out[k] = vars[k]; });
@@ -1395,7 +1411,7 @@
     ['pointerdown', 'touchstart', 'pointerup', 'touchend', 'mousedown', 'mouseup', 'click', 'contextmenu'].forEach(function (t) { layer.addEventListener(t, wake, { passive: false }); });
     layer.setAttribute('data-casora-window', ''); document.body.appendChild(layer);
     // Every five seconds: the cameras' pictures stay fresh (everything else only repaints when it changed).
-    live = S.mount(stage, null, { drift: true, every: 5000, kind: function () { return S.vars(config() || cfg).casora_screensaver_kind || 'mix'; },
+    live = S.mount(stage, null, { drift: function () { return S.wanders(S.vars(config() || cfg)); }, every: 5000, kind: function () { return S.vars(config() || cfg).casora_screensaver_kind || 'mix'; },
       context: function () { var c = config() || cfg; return { config: c, vars: S.vars(c) }; } });
   };
   S.show = show;

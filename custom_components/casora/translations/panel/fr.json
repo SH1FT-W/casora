@@ -3129,6 +3129,8 @@
     "Screensaver calendars": "Calendriers de l’économiseur d’écran",
     "Cover colour": "Couleur de la pochette",
     "While music plays, the calm screensavers take on a soft tint in the main colour of the cover.": "Quand de la musique joue, les économiseurs d’écran calmes prennent une teinte douce de la couleur principale de la pochette.",
+    "Burn-in protection": "Protection contre le marquage",
+    "Moves the screensaver a few pixels every now and then, so nothing burns into the display. An LCD does not need it.": "Déplace l'économiseur d'écran de quelques pixels de temps en temps, pour que rien ne marque l'écran. Un écran LCD n'en a pas besoin.",
     "Hide my own arrivals and departures": "Masquer mes propres arrivées et départs",
     "For people linked to a Home Assistant user: you see the others come and go, not yourself.": "Pour les personnes liées à un utilisateur Home Assistant : tu vois les autres arriver et partir, pas toi.",
     "Removed for all users": "Supprimé pour tous les utilisateurs",

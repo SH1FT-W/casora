@@ -43,6 +43,13 @@ l = await list();
 await check('wieder dazu: alle (Variable weg)', l.rows.every((x) => x[1] === 'true') && l.vars.length === 1 && l.vars[0] === 'null', JSON.stringify(l.vars));
 const sw = await P(`const r = p.shadowRoot; return ['casora_screensaver_light', 'casora_screensaver_tint'].map((k) => !!r.querySelector('[data-key="' + k + '"]'));`);
 await check('Schalter Coverfarbe da, kein Licht-Schalter', !sw[0] && sw[1], JSON.stringify(sw));
+// #230: the burn-in wander has a switch, on by default; off goes to the draft as false on every room.
+const wander = await P(`const r = p.shadowRoot, row = r.querySelector('[data-key="casora_screensaver_wander"]'), sw = row && row.querySelector('.sw');
+  const was = sw ? sw.getAttribute('aria-checked') : null;
+  if (sw) sw.click();
+  await new Promise((ok) => setTimeout(ok, 400));
+  return { was, vars: [...new Set(p._state.compact.rooms.map((x) => JSON.stringify(x.variables.casora_screensaver_wander ?? null)))] };`);
+await check('Schalter Einbrennschutz da, an; aus = false im Entwurf (jeder Raum)', wander.was === 'true' && wander.vars.length === 1 && wander.vars[0] === 'false', JSON.stringify(wander));
 const mid = await c.cmd({ type: 'lovelace/config', url_path: dash });
 await check('nichts gespeichert', JSON.stringify(mid) === JSON.stringify(before));
 await P('if (p._csDirty() || p._isDirty()) await p._csDiscardAll();').catch(() => {});

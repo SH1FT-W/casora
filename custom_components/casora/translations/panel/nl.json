@@ -3129,6 +3129,8 @@
     "Screensaver calendars": "Agenda’s voor de schermbeveiliging",
     "Cover colour": "Hoeskleur",
     "While music plays, the calm screensavers take on a soft tint in the main colour of the cover.": "Als er muziek speelt, krijgen de rustige schermbeveiligingen een zachte tint in de hoofdkleur van de hoes.",
+    "Burn-in protection": "Inbrandbescherming",
+    "Moves the screensaver a few pixels every now and then, so nothing burns into the display. An LCD does not need it.": "Verschuift de schermbeveiliging af en toe een paar pixels, zodat er niets in het scherm inbrandt. Een lcd-scherm heeft dat niet nodig.",
     "Hide my own arrivals and departures": "Mijn eigen komen en gaan verbergen",
     "For people linked to a Home Assistant user: you see the others come and go, not yourself.": "Voor personen gekoppeld aan een Home Assistant-gebruiker: je ziet wie er komt en gaat, behalve jezelf.",
     "Removed for all users": "Verwijderd voor alle gebruikers",

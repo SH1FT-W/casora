@@ -3129,6 +3129,8 @@
     "Screensaver calendars": "Calendários da proteção de ecrã",
     "Cover colour": "Cor da capa",
     "While music plays, the calm screensavers take on a soft tint in the main colour of the cover.": "Enquanto toca música, as proteções de ecrã calmas ganham um tom suave da cor principal da capa.",
+    "Burn-in protection": "Proteção contra burn-in",
+    "Moves the screensaver a few pixels every now and then, so nothing burns into the display. An LCD does not need it.": "Desloca a proteção de ecrã alguns píxeis de vez em quando, para que nada fique marcado no ecrã. Um LCD não precisa disso.",
     "Hide my own arrivals and departures": "Ocultar as minhas próprias chegadas e saídas",
     "For people linked to a Home Assistant user: you see the others come and go, not yourself.": "Para pessoas ligadas a um utilizador do Home Assistant: vês os outros a chegar e a sair, não a ti.",
     "Removed for all users": "Removido para todos os utilizadores",
