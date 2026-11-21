@@ -61,7 +61,9 @@ const menuState = (pg) => pg.evaluate(() => {
     pane: { top: r.top, bottom: r.bottom }, head: h ? { bottom: h.bottom } : null, surf: s ? { top: s.top, bottom: s.bottom } : null };
 });
 const fxNow = (pg) => pg.evaluate((id) => { const s = document.querySelector('home-assistant').hass.states[id]; return s && s.attributes.effect; }, LAMP);
-const setFx = (pg, e) => pg.evaluate(([id, e]) => document.querySelector('home-assistant').hass.callService('light', 'turn_on', { entity_id: id, effect: e }), [LAMP, e]);
+// Fire and forget: handing the call's promise back to Playwright failed with "Promise was collected" when the
+// browser tidied up before the answer came (21.11.2026); every caller waits or reads the state afterwards anyway.
+const setFx = (pg, e) => pg.evaluate(([id, e]) => { document.querySelector('home-assistant').hass.callService('light', 'turn_on', { entity_id: id, effect: e }); }, [LAMP, e]);
 
 const run = async (label, pg, tap, pickName) => {
   usePage(pg);

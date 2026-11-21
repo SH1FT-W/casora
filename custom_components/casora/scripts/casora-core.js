@@ -153,7 +153,7 @@
 
 // button-card lazy hass (#227): Home Assistant hands every card a new hass object for every state change in the
 // house. button-card then copies that object twice per card (its template `hass`) and runs an update cycle that
-// ends in "nothing I watch changed". With ~180 cards on a Casora Home that was the largest idle cost of the page,
+// ends without a redraw, because nothing the card watches changed. With ~180 cards on a Casora Home that was the largest idle cost of the page,
 // in step with how busy the house is (power meters every second). A Casora card now keeps such a hass aside
 // instead: nothing on hass but the states differs from the one it has, and none of the entities it watches
 // (button-card's own list, _monitoredEntities) changed. Whoever reads card._hass still gets the newest one, the
