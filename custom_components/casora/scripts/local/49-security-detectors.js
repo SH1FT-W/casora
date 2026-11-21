@@ -8,6 +8,7 @@
 //   D.show(states, hass, user, v, where, kind)  → the sub-badge is visible
 //   D.popup(states, hass, variables)            – popup casora_popup_security_detectors (variables.kind)
 //   D.sec(part, ctx, states, hass, user)        – live parts (stage, list)
+//   D.names(rows)                               → the list rows with their titles (the room only in the subtitle, #225)
 (function () {
   if (window._casoraSecDet && window._casoraSecDet.v === 1) return;
   var D = window._casoraSecDet = { v: 1 };
@@ -126,6 +127,43 @@
     return { kind: kindOf(v.kind), place: v.place || null, room_name: v.room_name || null,
       own: Array.isArray(v.own) ? v.own.filter(function (x) { return typeof x === 'string'; }) : [] };
   };
+  /* The titles of a detector list (#225). A row shows its room as subtitle (r.sub), so the title does not say it
+     again: after the shared leading words are dropped (casoraDropCommonPrefix), the room goes from the start or the
+     end of the title, whole words only, any case, with its separators („Flur Rauchmelder“, „Rauchmelder - Flur“,
+     „Rauchmelder (Flur)“ → „Rauchmelder“). The twin rule (#116: the room in front of equal names from different
+     rooms) does not apply to these rows, the subtitle tells them apart. Never an empty title or a bare number (then
+     the whole name without its room, else the name as it was), and two detectors of one room that would read alike
+     keep their names. A row without a room is named as in every other list. Returns new rows, marked so that
+     UI.group does not cut them again. */
+  var SEP = '[\\s\\-–—·:,;|/()\\[\\]]*';
+  var bare = function (t) { return !/[\p{L}]/u.test(String(t || '')); };
+  var noRoom = function (name, room) {
+    var rx = String(room || '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+');
+    if (!rx) return String(name);
+    return String(name)
+      .replace(new RegExp('^' + SEP + rx + '(?![\\p{L}\\p{N}])' + SEP, 'iu'), '')
+      .replace(new RegExp('(^|[^\\p{L}\\p{N}])' + SEP + rx + SEP + '$', 'iu'), '').trim();
+  };
+  D.names = function (rows) {
+    rows = rows || [];
+    var drop = window.casoraDropCommonPrefix;
+    var full = rows.map(function (r) { return String(r.label == null ? '' : r.label); });
+    var cut = drop ? drop(full) : full;
+    var twin = drop ? drop(full, rows.map(function (r) { return r.entity || null; })) : full;
+    var out = rows.map(function (r, i) {
+      if (!r.sub) return twin[i];
+      var t = noRoom(cut[i], r.sub);
+      if (bare(t)) t = noRoom(full[i], r.sub);
+      return bare(t) ? cut[i] : t;
+    });
+    return rows.map(function (r, i) {
+      var alike = !!r.sub && rows.some(function (q, j) {
+        return j !== i && q.sub === r.sub && low(out[j]) === low(out[i]) && low(full[j]) !== low(full[i]);
+      });
+      return Object.assign({}, r, { label: alike ? cut[i] : out[i], popupNamed: true });
+    });
+  };
+
   D.popup = function (states, hass, variables) {
     var K = window._casoraSoftKit, UI = window._casoraUI;
     var empty = { type: 'vertical-stack', cards: [] };
@@ -180,7 +218,7 @@
         if (k === 'on' && b.away) r.iconTone = 'bad';
         return r;
       });
-      return rows.length ? UI.group(UI.popupNames ? rows.map(UI.popupNames(rows)) : rows, 'Bewegungsmelder') : '';
+      return rows.length ? UI.group(D.names(rows), 'Bewegungsmelder') : '';
     }
     // Smoke, gas, CO and water detectors.
     var st = function (id) { var s = (S[id] || {}).state; return isDead(s) ? 'dead' : low(s) === 'on' ? 'on' : 'off'; };
@@ -212,11 +250,10 @@
       else if (k === 'dead') r.iconTone = 'warn';
       return r;
     };
-    var all = ids.map(row);
-    var nm = UI.popupNames ? UI.popupNames(all) : function (x) { return x; };
-    var on2 = ids.filter(function (id) { return st(id) === 'on'; }).map(row).map(nm);
-    var off2 = ids.filter(function (id) { return st(id) === 'dead'; }).map(row).map(nm);
-    var ok2 = ids.filter(function (id) { return st(id) === 'off'; }).map(row).map(nm);
+    // One name per detector across „Meldet“, „Offline“ and the calm ones: a detector that reports keeps its name.
+    var all = D.names(ids.map(row));
+    var of = function (k) { return all.filter(function (r) { return st(r.entity) === k; }); };
+    var on2 = of('on'), off2 = of('dead'), ok2 = of('off');
     var html = '';
     if (on2.length) html += UI.group(on2, 'Meldet');
     if (off2.length) html += UI.group(off2, 'Offline');
