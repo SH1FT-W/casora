@@ -52,13 +52,21 @@
   var blank = function (key, label) {
     return { key: key, label: label, temp: null, set: null, climate: null, sup: null, supKind: null, supLabel: null, door: null, alarm: null, alarmTemp: null };
   };
+  var houseHass = function (hass) {
+    var ha = typeof document !== 'undefined' && document.querySelector ? document.querySelector('home-assistant') : null;
+    return (ha && ha.hass && ha.hass.states) ? ha.hass : hass;
+  };
   F.find = function (hass, id, variables) {
     var FF = window.casoraFridgeFind;
     if (!FF) return null;
     var V = variables || {};
     var c = id ? FF.find(hass, id) : null;
     // No entity (tile added without one): the first fridge of the house.
-    if (!c && !id) { var every = FF.all(hass); c = every.length ? FF.find(hass, every[0].anchor) : null; }
+    // The search through the whole house reads Home Assistant's own hass, not the card's: button-card notes every
+    // state a template reads through its hass as "watched", so this tile watched every entity of the house and was
+    // redrawn (and its row re-checked) on every state change anywhere (#227). The fridge found is read through the
+    // card's hass again, so the tile watches exactly that device.
+    if (!c && !id) { var every = FF.all(houseHass(hass)); c = every.length ? FF.find(hass, every[0].anchor) : null; }
     var C = c ? JSON.parse(JSON.stringify(c)) : null;
     var over = ['entity_zone1_temp', 'entity_zone1_set', 'entity_zone2_temp', 'entity_zone2_set', 'entity_door', 'sw_super_cool', 'sw_super_frost', 'sw_night', 'sw_party']
       .some(function (k) { return isId(V[k]); });

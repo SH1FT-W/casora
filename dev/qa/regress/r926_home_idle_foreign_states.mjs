@@ -61,6 +61,14 @@ await page.waitForTimeout(5500);
 const rowsLater = await page.evaluate(() => window.__qa926.rows);
 await check(`the rows take one calm look afterwards (${rowsLater} checks, ${setup.rows} rows)`, rowsLater >= 1 && rowsLater <= MAX_ROW_CHECKS * setup.rows, rowsLater);
 
+// ── No card watches the whole house ──
+// button-card notes every state a template reads through its hass. A template that searches all states that way
+// (the fridge tile without an entity did) makes its card redraw on every state change anywhere.
+const watch = await page.evaluate(() => { const all = Object.keys(document.querySelector('home-assistant').hass.states).length;
+  const worst = window.__pierce('button-card').map((c) => ({ n: (c._monitoredEntities || []).length, template: [].concat((c._config || {}).template || ['?'])[0] })).sort((x, y) => y.n - x.n)[0];
+  return { all, worst }; });
+await check(`no card on Home watches more than a quarter of the house (most: ${watch.worst.template}, ${watch.worst.n} of ${watch.all})`, watch.worst.n <= watch.all / 4, watch);
+
 // ── A watched entity still redraws its card at once ──
 const pick = await page.evaluate(() => {
   const ha = document.querySelector('home-assistant').hass;
