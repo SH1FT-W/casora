@@ -22,7 +22,8 @@
 //   window._casoraSaver.canStart() / start()   → start by hand (the dashboard's ⋯ menu), only where one may start
 // Studio settings beside the three above: casora_screensaver_mix (kinds that alternate, none = all),
 // casora_screensaver_cameras (none = automatic: the real cameras) / _calendars (none = all), casora_screensaver_tint (the playing cover's colour as a wash),
-// casora_screensaver_wander (false = the content stands still, for displays that do not burn in).
+// casora_screensaver_wander (false = the content stands still, for displays that do not burn in),
+// casora_screensaver_calendar_range ('2w' = the calendar shows this week and the next instead of the month).
 (function () {
   if (window._casoraSaver) return;
   var S = window._casoraSaver = {};
@@ -753,6 +754,14 @@
     + '.cs-sv .cs-ke i{flex:none;width:' + u(10) + ';height:' + u(10) + ';border-radius:50%;background:var(--cs-c);}'
     + '.cs-sv .cs-ke em{font-style:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}'
     + '.cs-sv .cs-kmore{font-size:' + u(19) + ';font-weight:700;color:var(--ink3);padding-left:' + u(18) + ';}'
+    // Two weeks: the span as the big thing, as large as its length leaves room beside the clock (--cs-res: what the
+    // clock and the margins take); each title with its time under it.
+    + '.cs-sv .cs-kh{--cs-res:' + u(2 * M + 24 + 390) + ';}'
+    + '.cs-sv .cs-km.cs-kr{white-space:nowrap;font-size:clamp(' + u(56) + ', calc((100cqw - var(--cs-res)) / var(--cs-n, 16) / .54), ' + u(92) + ');}'
+    + '.cs-sv .cs-kn{display:none;font-size:' + u(19) + ';font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink3);}'
+    + '.cs-sv .cs-k2 .cs-kl{gap:' + u(6) + ';}'
+    + '.cs-sv .cs-ke2{display:grid;grid-template-columns:auto minmax(0, 1fr);gap:0 ' + u(8) + ';align-items:center;font-size:' + u(20) + ';line-height:1.12;}'
+    + '.cs-sv .cs-ke2 small{grid-column:2;font-size:' + u(19) + ';font-weight:600;line-height:1.08;color:var(--ink2);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
     // The cover's colour as a soft wash from the top left (over the ground, under the content).
     + '.cs-sv .cs-tint{position:absolute;inset:0;pointer-events:none;background:radial-gradient(130% 110% at 12% 0%, var(--cs-t) 0%, transparent 72%);opacity:.42;transition:opacity 2s ease;}'
     + '.cs-sv.cs-light .cs-tint{opacity:.2;}'
@@ -791,7 +800,16 @@
     + '.cs-sv .cs-ends{font-size:' + u(19) + ';}.cs-sv .cs-ends b{display:block;margin:0;font-size:' + u(27) + ';}.cs-sv .cs-ends span:nth-child(2){font-size:' + u(20) + ';text-align:center;}.cs-sv .cs-ends span:last-child{text-align:right;}'
     + '.cs-sv .cs-cams{grid-template-columns:repeat(var(--cs-pcols), minmax(0, 1fr));grid-template-rows:repeat(var(--cs-prows), minmax(0, 1fr));}'
     + '.cs-sv .cs-kh{flex-direction:column-reverse;gap:' + u(34) + ';}.cs-sv .cs-kc{text-align:left;}.cs-sv .cs-kg{top:' + u(380) + ';}.cs-sv .cs-km, .cs-sv .cs-ky{font-size:' + u(84) + ';}'
-    + '.cs-sv .cs-kl{flex-direction:row;flex-wrap:wrap;gap:' + u(6) + ';}.cs-sv .cs-ke em{display:none;}.cs-sv .cs-kmore{padding-left:0;}}';
+    + '.cs-sv .cs-kl{flex-direction:row;flex-wrap:wrap;gap:' + u(6) + ';}.cs-sv .cs-ke em{display:none;}.cs-sv .cs-kmore{padding-left:0;}'
+    // Two weeks: a column per week, a row per day (the number and its weekday at the left, the titles with their
+    // time in front beside them), so the titles stay readable on a narrow box.
+    + '.cs-sv .cs-kh{--cs-res:' + u(2 * M) + ';}'
+    + '.cs-sv .cs-kg.cs-k2{grid-template-columns:repeat(2, minmax(0, 1fr));grid-template-rows:repeat(7, minmax(0, 1fr));grid-auto-flow:column;column-gap:' + u(28) + ';}.cs-sv .cs-k2 .cs-kw{display:none;}'
+    + '.cs-sv .cs-k2 .cs-kd{display:grid;grid-template-columns:max(' + u(62) + ', calc(var(--cs-wd, 2) * ' + u(15.5) + ' + ' + u(8) + ')) minmax(0, 1fr);grid-template-rows:auto 1fr;column-gap:' + u(12) + ';row-gap:' + u(2) + ';padding:' + u(10) + ' 0 ' + u(4) + ';}'
+    + '.cs-sv .cs-k2 .cs-kd > b{margin-left:0;justify-self:start;}.cs-sv .cs-k2 .cs-kn{display:block;grid-column:1;grid-row:2;padding-left:' + u(6) + ';}'
+    + '.cs-sv .cs-k2 .cs-kl{grid-column:2;grid-row:1 / span 2;flex-direction:column;flex-wrap:nowrap;gap:' + u(3) + ';padding-top:' + u(4) + ';}'
+    + '.cs-sv .cs-k2 .cs-ke2{display:flex;gap:' + u(8) + ';}.cs-sv .cs-k2 .cs-ke em{display:block;}.cs-sv .cs-k2 .cs-ke2 small{order:1;flex:none;}.cs-sv .cs-k2 .cs-ke2 em{order:2;}'
+    + '.cs-sv .cs-k2 .cs-kmore{padding-left:' + u(18) + ';}}';
 
   var clock = function (ctx) {
     return '<div class="cs-clock"><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div>';
@@ -1097,27 +1115,58 @@
     var len = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
     return { start: new Date(d.getFullYear(), d.getMonth(), 1 - off), weeks: Math.ceil((off + len) / 7), month: d.getMonth() };
   };
+  // Two calendar weeks (#231, casora_screensaver_calendar_range '2w'): this week and the next, from the locale's first
+  // weekday. { start, weeks: 2, two: true }
+  S.twoWeekGrid = function (now, hass) {
+    var d = new Date(+now), off = (d.getDay() - firstDay(hass) % 7 + 7) % 7;
+    return { start: new Date(d.getFullYear(), d.getMonth(), d.getDate() - off), weeks: 2, month: null, two: true };
+  };
+  // The days the calendar screensaver shows (and asks the calendars for): the month, or two weeks when picked.
+  S.calGrid = function (now, hass, vars) {
+    return vars && vars.casora_screensaver_calendar_range === '2w' ? S.twoWeekGrid(now, hass) : S.monthGrid(now, hass);
+  };
+  // First and last day of a span as the language writes it (Intl puts the month once where both share it: de
+  // 16.–29. November, en 16–29 November); two months take their short names (30. Nov. – 13. Dez.).
+  S.spanText = function (from, to) {
+    var a = new Date(+from), b = new Date(+to);
+    var f = new Intl.DateTimeFormat(loc(), { day: 'numeric', month: a.getMonth() === b.getMonth() ? 'long' : 'short' });
+    // Across New Year Intl would add both years: the two days on their own then, the year stays out of the title.
+    var text = typeof f.formatRange === 'function' && a.getFullYear() === b.getFullYear() ? f.formatRange(a, b) : f.format(a) + ' – ' + f.format(b);
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  };
   DRAW.kalender = function (ctx) {
-    var g = S.monthGrid(ctx.now, ctx.hass), ev = ctx.events || [], cals = ctx.cals || [];
+    var g = S.calGrid(ctx.now, ctx.hass, ctx.vars), ev = ctx.events || [], cals = ctx.cals || [];
     var y = g.start.getFullYear(), m = g.start.getMonth(), d = g.start.getDate();
     var tone = function (e) { var i = cals.indexOf(e.cal); return TONES[(i < 0 ? 0 : i) % TONES.length]; };
     var month = new Intl.DateTimeFormat(loc(), { month: 'long' }).format(ctx.now);
-    // Titles a day has room for: two, one in a month of six weeks.
-    var room = g.weeks >= 6 ? 1 : 2;
-    var html = '<div class="cs-in"><div class="cs-kh"><div class="cs-kt"><div class="cs-km">' + esc(month.charAt(0).toUpperCase() + month.slice(1)) + '</div><div class="cs-ky">' + ctx.now.getFullYear() + '</div></div>'
+    // The big thing: the month and its year, or the two weeks' first and last day (--cs-n: its length, the
+    // stylesheet fits the size to it).
+    var span = g.two ? S.spanText(g.start, new Date(y, m, d + 13)) : '';
+    var title = g.two ? '<div class="cs-km cs-kr" style="--cs-n:' + Math.max(8, span.length) + '">' + esc(span) + '</div>'
+      : '<div class="cs-km">' + esc(month.charAt(0).toUpperCase() + month.slice(1)) + '</div><div class="cs-ky">' + ctx.now.getFullYear() + '</div>';
+    // Titles a day has room for: two, one in a month of six weeks; three with their times at two weeks.
+    var room = g.two ? 3 : g.weeks >= 6 ? 1 : 2;
+    var html = '<div class="cs-in"><div class="cs-kh"><div class="cs-kt">' + title + '</div>'
       + '<div class="cs-kc"><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div></div>'
-      + '<div class="cs-kg" style="--cs-weeks:' + Number(g.weeks) + '">';
-    for (var w = 0; w < 7; w++) html += '<div class="cs-kw">' + esc(dayName(+new Date(y, m, d + w), true)) + '</div>';
+      + '<div class="cs-kg' + (g.two ? ' cs-k2' : '') + '" style="--cs-weeks:' + Number(g.weeks) + ';--cs-wd:';
+    // --cs-wd: the longest weekday name (pt: „segunda“); the portrait layout of the two weeks makes room for it.
+    var names = [0, 1, 2, 3, 4, 5, 6].map(function (w) { return dayName(+new Date(y, m, d + w), true); });
+    var wd = Math.max.apply(null, names.map(function (n) { return n.length; }));
+    html += Number(wd) + '">';
+    names.forEach(function (n) { html += '<div class="cs-kw">' + esc(n) + '</div>'; });
     for (var i = 0; i < g.weeks * 7; i++) {
       var day = new Date(y, m, d + i), a = +day, b = +new Date(y, m, d + i + 1);
       var list = ev.filter(function (e) { return e.start < b && (e.end && e.end > e.start ? e.end : e.start + 1) > a; });
-      var cls = 'cs-kd' + (day.getMonth() !== g.month ? ' cs-kout' : '') + (sameDay(a, ctx.now) ? ' cs-ktoday' : b <= +ctx.now ? ' cs-kpast' : '');
+      var cls = 'cs-kd' + (!g.two && day.getMonth() !== g.month ? ' cs-kout' : '') + (sameDay(a, ctx.now) ? ' cs-ktoday' : b <= +ctx.now ? ' cs-kpast' : '');
       // Never „+1“: a single one left over takes the line itself.
       var show = list.length === room + 1 ? room + 1 : room;
       if (show > room && room === 1) show = 1;
-      html += '<div class="' + esc(cls) + '"><b>' + day.getDate() + '</b>' + (list.length ? '<div class="cs-kl">' + list.slice(0, show).map(function (e) {
-        return '<span class="cs-ke" style="--cs-c:' + esc(tone(e)) + '"><i></i><em data-no-i18n>' + esc(e.title) + '</em></span>';
-      }).join('') + (list.length > show ? '<span class="cs-kmore">+' + (list.length - show) + '</span>' : '') + '</div>' : '') + '</div>';
+      // Two weeks: the weekday in the cell too (the portrait layout has no row of weekdays), and each title's time.
+      html += '<div class="' + esc(cls) + '"><b>' + day.getDate() + '</b>' + (g.two ? '<small class="cs-kn">' + esc(names[i % 7]) + '</small>' : '')
+        + (list.length ? '<div class="cs-kl">' + list.slice(0, show).map(function (e) {
+          var when = g.two ? '<small>' + esc(e.allDay || e.start < a ? T('ganztägig') : clockOf(e.start)) + '</small>' : '';
+          return '<span class="cs-ke' + (g.two ? ' cs-ke2' : '') + '" style="--cs-c:' + esc(tone(e)) + '"><i></i><em data-no-i18n>' + esc(e.title) + '</em>' + when + '</span>';
+        }).join('') + (list.length > show ? '<span class="cs-kmore">+' + (list.length - show) + '</span>' : '') + '</div>' : '') + '</div>';
     }
     return html + '</div></div>';
   };
@@ -1154,8 +1203,8 @@
     var kind = o.kind || '';
     var need = function (list) { return !kind || list.indexOf(kind) > -1; };
     var cals = need(['linie', 'woche', 'kalender']) ? S.calendars(hass, vars.casora_screensaver_calendars) : [];
-    // The month calendar asks for its whole grid, the others for the coming eight days.
-    var grid = kind === 'kalender' ? S.monthGrid(now, hass) : null;
+    // The calendar asks for its whole grid (the month, or two weeks), the others for the coming eight days.
+    var grid = kind === 'kalender' ? S.calGrid(now, hass, vars) : null;
     var events = o.events !== undefined ? o.events : !cals.length ? [] : grid ? S.events(hass, cals, grid.weeks * 7, grid.start) : S.events(hass, cals, 8);
     var media = o.media !== undefined ? o.media : need(['musik']) || (S.on(vars.casora_screensaver_tint) && TINT_KINDS.indexOf(kind) > -1) ? S.playing(hass) : null;
     var cams = o.cams !== undefined ? o.cams : need(['kameras']) ? S.cameras(hass, vars.casora_screensaver_cameras).map(function (c) { c.shot = S.shot(c, now); return c; }) : [];
@@ -1284,7 +1333,7 @@
   // The settings of the dashboard: the first value found on a view's hero card.
   S.vars = function (cfg) {
     var out = {}, keys = ['casora_screensaver', 'casora_screensaver_kind', 'casora_screensaver_calendar', 'casora_screensaver_photos', 'casora_screensaver_mix',
-      'casora_screensaver_cameras', 'casora_screensaver_calendars', 'casora_screensaver_tint', 'casora_screensaver_wander', 'weather_entity'];
+      'casora_screensaver_cameras', 'casora_screensaver_calendars', 'casora_screensaver_tint', 'casora_screensaver_wander', 'casora_screensaver_calendar_range', 'weather_entity'];
     ((cfg && cfg.views) || []).forEach(function (v) {
       var vars = ((((v.cards || [])[0]) || {}).variables) || {};
       keys.forEach(function (k) { if ((out[k] == null || out[k] === '' || (Array.isArray(out[k]) && !out[k].length)) && vars[k] != null && vars[k] !== '') out[k] = vars[k]; });

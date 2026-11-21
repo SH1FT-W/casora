@@ -2620,6 +2620,13 @@ const SECTIONS = [
           linie: "Day line", woche: "Week", musik: "Music", energie: "Energy flow", ruhe: "House at rest", kameras: "Cameras", kalender: "Calendar" },
         when: (v) => v.casora_screensaver != null && v.casora_screensaver !== "",
         hint: "Sky follows the sun and the weather. Landscapes are drawn, nothing is loaded. Photos shows this dashboard's room photos." },
+      // What the Calendar screensaver shows (#231): "" = the month (as before), "2w" = this week and the next from the
+      // locale's first weekday (46-screensaver.js S.calGrid). Offered where the calendar can come up.
+      { key: "casora_screensaver_calendar_range", sub: "chrome", label: "Calendar shows", type: "select", seg: true, auto: true, scope: "dashboard",
+        options: ["", "2w"],
+        optionLabels: { "": "Month", "2w": "Two weeks" },
+        when: (v) => v.casora_screensaver != null && v.casora_screensaver !== "" && (!v.casora_screensaver_kind || v.casora_screensaver_kind === "kalender"),
+        hint: "Two weeks shows this week and the next, with the time of every appointment." },
       // The room photos „Photos“ shows (day photo names); none = all. Picked on the Screensaver page under its preview,
       // never drawn as a field here; listed so a new room takes it over like the other dashboard settings.
       { key: "casora_screensaver_photos", sub: "chrome", label: "Screensaver photos", type: "text", auto: true, scope: "dashboard", when: () => false },
