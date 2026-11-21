@@ -351,8 +351,10 @@
     }
     _load(force) {
       var c = this._c, h = this._h;
-      if (c && (c.points || c.stack)) { this._draw(); return; }
-      if (!c || !h || !h.connection || !c.series.length || !this.isConnected) { this._draw(); return; }
+      // Nothing to fetch: drawn now, and (like fetched data) looked at again in five minutes. Without the time
+      // stamp the hass setter came here on every state change in the house and rebuilt the whole chart (#227).
+      if (c && (c.points || c.stack)) { this._at = Date.now(); this._draw(); return; }
+      if (!c || !h || !h.connection || !c.series.length || !this.isConnected) { this._at = Date.now(); this._draw(); return; }
       var src = this._src(), per = this._per();
       var ids = c.series.map(function (s) { return s.entity; }).filter(function (e, i, a) { return a.indexOf(e) === i; });
       var key = c.series.map(rawKey).join(',') + '|' + c.span + '|' + src + '|' + (c.agg || '') + '|' + per + (c.kind === 'bar' || c.kind === 'heat' ? '|' + c.kind : '');
