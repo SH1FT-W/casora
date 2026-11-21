@@ -153,8 +153,17 @@ def _slug(s: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", s).strip("_")
 
 
+def skip_entity(entity: dict, skip) -> bool:
+    """Whether skip.txt leaves an entity out: its entity id, or the platform it registers under."""
+    return (entity["entity_id"] in skip
+            or f"platform:{entity.get('registry_platform') or 'casora_mock'}" in skip)
+
+
 def snapshot(fixture: dict, skip: list[str] | tuple = ()) -> dict:
-    """The composed house as the frontend sees it (hass.states/entities/devices/areas)."""
+    """The composed house as the frontend sees it (hass.states/entities/devices/areas).
+
+    skip holds skip.txt's entries, the same lines the mock startup reads.
+    """
     areas = {}
     for name in fixture["areas"]:
         if name:
@@ -173,7 +182,7 @@ def snapshot(fixture: dict, skip: list[str] | tuple = ()) -> dict:
     for e in fixture["entities"]:
         eid = e["entity_id"]
         domain = eid.split(".")[0]
-        if eid in skip or domain in REAL_DOMAINS:
+        if skip_entity(e, skip) or domain in REAL_DOMAINS:
             continue
         did = "dev_" + str(e.get("device")) if e.get("device") else None
         # registry_platform: registered under another integration's name (Velair, velair.py), as in a real house.
