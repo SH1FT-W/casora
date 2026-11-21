@@ -151,6 +151,86 @@
   });
 })();
 
+// button-card lazy hass (#227): Home Assistant hands every card a new hass object for every state change in the
+// house. button-card then copies that object twice per card (its template `hass`) and runs an update cycle that
+// ends in "nothing I watch changed". With ~180 cards on a Casora Home that was the largest idle cost of the page,
+// in step with how busy the house is (power meters every second). A Casora card now keeps such a hass aside
+// instead: nothing on hass but the states differs from the one it has, and none of the entities it watches
+// (button-card's own list, _monitoredEntities) changed. Whoever reads card._hass still gets the newest one, the
+// template `states` reads through it, and cards inside the card receive every hass as before. Anything else
+// (first hass, another user/theme/language/registry, a watched entity) goes to button-card unchanged.
+(function () {
+  if (!window.customElements || window.__casoraLazyHass) return;
+  window.__casoraLazyHass = true;
+  // A Casora card: one with a casora_ template, or a card inside one (badges, buttons in custom_fields, often
+  // without a template of their own). Asked for every card on every hass, so the answer is kept per config.
+  var casoraCard = function (card) {
+    var cfg = card._config;
+    if (card.__casoraCfg !== cfg) {
+      card.__casoraCfg = cfg;
+      card.__casoraIs = [].concat((cfg && cfg.template) || []).some(function (t) { return /^casora_/.test(String(t)); });
+    }
+    return card.__casoraIs || card.__casoraInner === true;
+  };
+  // "Same hass apart from the states", decided once per hass object instead of once per card: an object gets the
+  // stamp of the one seen before it unless a property other than states differs.
+  var stamps = typeof WeakMap === 'function' ? new WeakMap() : null, last = null, stamp = 0;
+  var stampOf = function (h) {
+    var s = stamps.get(h);
+    if (s !== undefined) return s;
+    var same = false;
+    if (last) {
+      var a = Object.keys(h);
+      same = a.length === Object.keys(last).length;
+      for (var i = 0; same && i < a.length; i++) if (a[i] !== 'states' && h[a[i]] !== last[a[i]]) same = false;
+    }
+    if (!same) stamp++;
+    stamps.set(h, stamp);
+    last = h;
+    return stamp;
+  };
+  var find = function (P, key) {
+    for (var p = P; p && p !== Object.prototype; p = Object.getPrototypeOf(p)) {
+      var d = Object.getOwnPropertyDescriptor(p, key);
+      if (d) return d;
+    }
+    return null;
+  };
+  customElements.whenDefined('button-card').then(function () {
+    var C = customElements.get('button-card');
+    var P = C && C.prototype;
+    if (!P || P.__casoraLazyHass || !stamps) return;
+    var outer = find(P, 'hass'), inner = find(P, '_hass');
+    // Another button-card than the one this was written for (7.x): leave it alone.
+    if (!outer || !outer.set || !inner || !inner.get || !inner.set) return;
+    P.__casoraLazyHass = true;
+    Object.defineProperty(P, '_hass', {
+      configurable: true, enumerable: !!inner.enumerable,
+      get: function () { return this.__casoraHassLazy || inner.get.call(this); },
+      set: function (v) { this.__casoraHassLazy = null; inner.set.call(this, v); },
+    });
+    Object.defineProperty(P, 'hass', {
+      configurable: true, enumerable: !!outer.enumerable, get: outer.get,
+      set: function (h) {
+        var old = inner.get.call(this), mon = this._monitoredEntities;
+        var k, c, mine = !!this._config && casoraCard(this);
+        if (mine && h && old && h.states && old.states && this._initialSetupComplete && Array.isArray(mon) && this._cards
+            && stampOf(old) === stampOf(h)) {
+          var a = old.states, b = h.states, i = mon.length;
+          while (i-- && a[mon[i]] === b[mon[i]]) { /* next */ }
+          if (i < 0) {
+            this.__casoraHassLazy = h;
+            for (k in this._cards) { c = this._cards[k]; if (c) { c.__casoraInner = true; c.hass = h; } }
+            return;
+          }
+        }
+        if (mine && this._cards) for (k in this._cards) { c = this._cards[k]; if (c) c.__casoraInner = true; }
+        outer.set.call(this, h);
+      },
+    });
+  });
+})();
+
 // Haptik (14.10.2026): casoraHaptic('light'|'selection'|'medium'|'success') – HA-Companion-App vibriert.
 // Tipp-Handler hängen oft an touchend UND click: ein zweiter Impuls binnen 250 ms entfällt (Klick-Echo).
 window.casoraHaptic = window.casoraHaptic || function (kind) {
