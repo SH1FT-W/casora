@@ -35,6 +35,8 @@ const SORT_DELAY_MS = 2500; // hold time before a state change triggers a sort
 const QUIET_MS = 2000;
 // Load phase of a row: until then late colours (modules, sensors) still sort; afterwards the order holds.
 const SETTLE_MS = 10000;
+// A state change no tile of the row watches: one look at the row this long after the first one (#227).
+const UNWATCHED_MS = 5000;
 // Module fertig (casora-local-loaded): nach den beiden Neuzeichnungen (06: sofort, nach 1,5 s) jede
 // Reihe in der Ladephase gleich nachsortieren (_settleSort). Ein Listener für alle Reihen.
 if (!window._casoraRowSettle) {
@@ -691,6 +693,7 @@ class CasoraSmartRow extends HTMLElement {
     if (this._vizRetry1) { clearTimeout(this._vizRetry1); this._vizRetry1 = null; }
     if (this._vizRetry2) { clearTimeout(this._vizRetry2); this._vizRetry2 = null; }
     if (this._vizSweep)  { clearTimeout(this._vizSweep);  this._vizSweep  = null; }
+    if (this._calmT)     { clearTimeout(this._calmT);     this._calmT     = null; }
     if (this._casoraEdgesFn) window.removeEventListener('resize', this._casoraEdgesFn);
     if (this._casoraRo) this._casoraRo.disconnect();
   }
@@ -735,6 +738,7 @@ class CasoraSmartRow extends HTMLElement {
       }, { once: true });
     }
     hass = F ? F.apply(hass) : hass;
+    const prev = this._hass;
     this._hass = hass;
 
     if (!this._cardsCreated) {
@@ -747,6 +751,22 @@ class CasoraSmartRow extends HTMLElement {
     }
 
     if (!this._initialized) return;
+
+    // #227: every state change in the house arrives here. Each one re-checked the whole row five times (this
+    // frame, 100/250/500 ms, 1.5 s), every check a forced style recalculation: with a busy house that was a
+    // layout per state change on Home, all day. A change no tile of this row watches gets one calm look instead.
+    if (!this._hassMatters(prev, hass)) {
+      if (!this._calmT) {
+        this._calmT = setTimeout(() => {
+          this._calmT = null;
+          if (!this._initialized || !this.isConnected) return;
+          this._updateWrapperVisibility();
+          this._updateSort();
+          this._autoSize();
+        }, UNWATCHED_MS);
+      }
+      return;
+    }
 
     if (!this._rafId) {
       this._rafId = requestAnimationFrame(() => {
@@ -765,6 +785,29 @@ class CasoraSmartRow extends HTMLElement {
         if (this._initialized && this.isConnected) this._updateSort();
       }, 1500);
     }
+  }
+
+  // Can this hass change what the row shows or how it is sorted? Yes unless every tile is a button-card that
+  // tells which entities it watches (_monitoredEntities, button-card 7) and none of those, nor the tile's own
+  // entity / active_entities, changed since the hass before. Anything unknown counts as yes.
+  _hassMatters(prev, hass) {
+    if (!prev || !hass || prev === hass || !prev.states || !hass.states) return true;
+    // Load phase: tiles colour late (modules arrive after the cards), keep looking on every update.
+    if (!this._sortSettled()) return true;
+    if (this._scrollMode && window._casoraFilter && window._casoraFilter.get() !== this._lastKnownFilter) return true;
+    for (const k in hass) if (k !== 'states' && hass[k] !== prev[k]) return true;
+    const a = prev.states, b = hass.states, cards = this._cards || [], cfgs = this._config.cards;
+    if (cards.length < cfgs.length) return true;
+    for (let i = 0; i < cards.length; i++) {
+      const card = cards[i], mon = card && card._monitoredEntities;
+      if (!card || card.localName !== 'button-card' || !Array.isArray(mon) || !card._initialSetupComplete) return true;
+      for (let j = 0; j < mon.length; j++) if (a[mon[j]] !== b[mon[j]]) return true;
+      const cfg = resolveCardConfig(cfgs[i]);
+      if (cfg && typeof cfg.entity === 'string' && a[cfg.entity] !== b[cfg.entity]) return true;
+      const act = cfg && cfg.active_entities;
+      if (Array.isArray(act)) for (let j = 0; j < act.length; j++) if (a[act[j]] !== b[act[j]]) return true;
+    }
+    return false;
   }
 
   // WebKit reports display:none for everything inside a hidden subtree.
