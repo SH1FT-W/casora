@@ -103,11 +103,22 @@ const TWO = { casora_screensaver_calendar_range: '2w' };
 const FULL = [[-3, 9, 0, 45, 'Zahnarzt', 'b'], [-1, 19, 0, 90, 'Elternabend', 'c'], [0, 8, 30, 45, 'Arzttermin', 'b'], [0, 12, 30, 60, 'Mittagessen'], [0, 18, 30, 90, 'Einkaufen'], [0, 20, 45, 75, 'Kino', 'c'],
   [1, 9, 0, 60, 'Wochenmarkt'], [1, 14, 0, 105, 'Fußballtraining', 'c'], [2, 11, 0, 120, 'Brunch bei Oma'], [4, 0, 0, 0, 'Papiertonne', 'b'], [4, 16, 30, 45, 'Schwimmkurs', 'c'], [4, 18, 0, 60, 'Yoga'],
   [4, 19, 30, 45, 'Elterngespräch', 'c'], [4, 20, 15, 90, 'Chorprobe'], [5, 10, 15, 45, 'Friseur', 'b'], [7, 0, 0, 0, 'Geburtstag Oma'], [7, 19, 0, 120, 'Abendessen', 'c'], [8, 0, 0, 0, 'Ausflug'], [11, 15, 0, 60, 'Kinderarzt', 'b']];
+const RUN = [[0, 7, 45, 300, 'Schule', 'c'], [0, 15, 0, 45, 'Schwimmkurs', 'c'], [0, 17, 0, 60, 'Hausaufgaben'], [0, 18, 45, 45, 'Musikschule', 'c'], [0, 20, 0, 75, 'Abendessen mit Oma'],
+  [1, 9, 0, 45, 'Zahnarzt', 'b'], [1, 10, 30, 60, 'Wochenmarkt'], [2, 11, 0, 120, 'Brunch']];
+const CLOSE = [[0, 7, 0, 45, 'Frühsport'], [0, 8, 30, 45, 'Arzttermin', 'b'], [0, 9, 0, 30, 'Elterngespräch', 'c'], [0, 9, 45, 60, 'Wochenmarkt'], [0, 12, 30, 60, 'Mittagessen'],
+  [0, 15, 0, 45, 'Kinderarzt', 'b'], [0, 18, 30, 90, 'Einkaufen'], [0, 20, 45, 75, 'Kino', 'c']];
 const SCENES_EXTRA = [
   ['kalender-voll-tag', 'kalender', 'tag', { events: FULL }],
   ['kalender-2wochen-tag', 'kalender', 'tag', { vars: TWO, events: FULL }],
   ['kalender-2wochen-nacht', 'kalender', 'nacht', { vars: TWO, events: FULL }],
   ['kalender-2wochen-monatswechsel', 'kalender', '2026-11-30T09:12:00', { vars: TWO, events: FULL }],
+  // Day line: an appointment is running; several close together; the day is over and tomorrow leads; nothing at all.
+  ['linie-laeuft-tag', 'linie', '2026-11-20T15:20:00', { events: RUN }],
+  ['linie-laeuft-abend', 'linie', '2026-11-20T19:12:00', { events: RUN }],
+  ['linie-dicht', 'linie', '2026-11-20T08:10:00', { events: CLOSE }],
+  ['linie-sehr-dicht', 'linie', '2026-11-20T08:10:00', { events: CLOSE.concat([[0, 9, 15, 30, 'Paket abholen'], [0, 10, 0, 30, 'Anruf Schule', 'b'], [0, 11, 15, 45, 'Apotheke']]) }],
+  ['linie-tag-vorbei', 'linie', '2026-11-20T22:40:00', { events: RUN }],
+  ['linie-leer', 'linie', 'tag', { events: [[0, 0, 0, 0, 'Feiertag']] }],
 ];
 for (const [name, kind, at, extra] of SCENES_EXTRA) await shoot(name, kind, at, extra);
 // Every landscape, drawn directly (the screensaver shows one after the other by the clock).

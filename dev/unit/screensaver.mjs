@@ -130,11 +130,12 @@ h = S.html('wetter', ctx({ hourly, daily }));
 assert.ok(/data-kind="wetter"/.test(h) && /cs-curve/.test(h) && /<rect /.test(h) && (h.match(/cs-wd"/g) || []).length === 5 && /11°/.test(h), 'weather: curve, rain, five days');
 assert.ok(/data-kind="wetter"/.test(S.html('wetter', ctx({ hourly: [], daily: [] }))) && !/cs-curve/.test(S.html('wetter', ctx({ hourly: [], daily: [] }))), 'weather without forecast: now alone');
 assert.ok(/data-kind="himmel"/.test(S.html('wetter', ctx({ wx: null }))), 'no weather entity: the sky');
-h = S.html('linie', ctx({ events }));
-assert.ok(/Zahnarzt/.test(h) && /cs-past/.test(h) && /cs-next/.test(h) && /in 1 Std\. 48 Min\./.test(h) && /cs-now/.test(h), 'day line: past, next, now');
+// The day line shows three hours back and fifteen ahead (#233, more in screensaver_dayline.mjs).
+h = S.html('linie', ctx({ events, now: new Date('2026-11-10T11:00:00') }));
+assert.ok(/Zahnarzt/.test(h) && /cs-past/.test(h) && /cs-lead/.test(h) && /in 7 Std\. 30 Min\./.test(h) && /cs-now/.test(h), 'day line: past, next, now');
 assert.ok(!/<i>"|Elternabend <i>/.test(h) && /Elternabend &lt;i&gt;/.test(h), 'appointment titles are escaped');
 h = S.html('linie', ctx({ events: [] }));
-assert.ok(/Heute nichts mehr/.test(h) && /Heute keine Termine/.test(h), 'day line without appointments');
+assert.ok(/Heute keine Termine/.test(h) && !/cs-ev/.test(h), 'day line without appointments');
 h = S.html('woche', ctx({ events, daily, bins: [{ label: 'Restmüll', days: 1 }] }));
 assert.ok((h.match(/class="cs-col[ "]/g) || []).length === 7 && /cs-today/.test(h) && /Restmüll/.test(h) && /ganztägig/.test(h) && /2 Termine · 1 Abholung/.test(h) && !/Zahnarzt/.test(h), 'week: seven days, events, waste; what is over today is gone');
 // #171: a waste integration gives the same pickup as a calendar event and as a sensor; it shows once.

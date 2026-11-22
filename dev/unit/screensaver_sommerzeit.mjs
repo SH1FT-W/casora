@@ -1,7 +1,7 @@
 // @deckt: custom_components/casora/scripts/local/46-screensaver.js#events,html
 // Screensavers across a clock change (46-screensaver.js): the week, the day line and the calendar request count days
 // by the calendar, not in 24-hour steps. Before, the week of 25.10. showed the 25th twice and lost the last day's
-// appointments; the day line of 29.03. started at seven.
+// appointments. The day line (a travelling window since #233) keeps the wall clock's hours across the change.
 //   node dev/unit/screensaver_sommerzeit.mjs
 process.env.TZ = 'Europe/Berlin';
 import assert from 'node:assert/strict';
@@ -29,14 +29,20 @@ assert.match(cols[2], /Zahnarzt/, 'the appointment of the 26th stands on the 26t
 assert.match(cols[6], /Sport/, 'half past midnight on the 30th stands on the 30th');
 assert.doesNotMatch(cols[5], /Sport/);
 
-// The day line on 29.03.2026 (clocks go forward): from 6 to 24 o'clock of that day.
-const spring = new Date(2026, 2, 29, 12, 0);
-const line = S.html('linie', ctx(spring, { events: [{ title: 'Frühstück', start: +new Date(2026, 2, 29, 6, 30), end: +new Date(2026, 2, 29, 7, 0), allDay: false }] }));
-assert.match(line, /Frühstück/, 'an appointment at half past six is on the line');
-const left = Number((line.match(/class="sv-dot[^"]*" style="left:([\d.]+)%/) || [])[1]);
-assert.ok(Math.abs(left - 0.5 / 18 * 100) < 0.2, 'half past six sits half an hour after the start: ' + left);
+// The day line across the night the clocks go forward (29.03.2026, 2 o'clock becomes 3): its window is fifteen real
+// hours ahead, the hours are the wall clock's (there is no 2, so 3 comes two real hours after midnight), and an
+// appointment sits where its real distance from now puts it.
+const eve = new Date(2026, 2, 28, 22, 0);
+const line = S.html('linie', ctx(eve, { events: [{ title: 'Frühstück', start: +new Date(2026, 2, 29, 8, 0), end: +new Date(2026, 2, 29, 8, 30), allDay: false }] }));
+assert.match(line, /Frühstück/, 'tomorrow morning is on the line in the evening');
+const ticks = [...line.matchAll(/class="cs-tick[^"]*" style="left:([\d.]+)%">([^<]*)</g)].map((m) => [m[2], Number(m[1])]);
+assert.deepEqual(ticks.map((t) => t[0]), ['21', 'So', '3', '6', '9', '12'], 'the wall clock\'s hours, midnight as the coming day');
+const step = (a, b) => Math.round((ticks[b][1] - ticks[a][1]) / 100 * 18 * 10) / 10;
+assert.deepEqual([step(0, 1), step(1, 2), step(2, 3)], [3, 2, 3], 'three real hours apart, two across the missing hour');
+const left = Number((line.match(/class="cs-seg[^"]*" style="left:([\d.]+)%/) || [])[1]);
+assert.ok(Math.abs(left - (3 + 9) / 18 * 100) < 0.1, 'eight o\'clock is nine real hours after ten in the evening: ' + left);
 const nowAt = Number((line.match(/class="cs-now" style="left:([\d.]+)%/) || [])[1]);
-assert.ok(Math.abs(nowAt - 6 / 18 * 100) < 0.2, 'noon sits at six of eighteen hours: ' + nowAt);
+assert.ok(Math.abs(nowAt - 3 / 18 * 100) < 0.1, 'now stands three hours into the window: ' + nowAt);
 
 // The calendar request: from midnight to midnight, whatever the clock does in between.
 const asked = [];

@@ -575,6 +575,10 @@
   // instead of grey plates: light by day, deep by night (cs-light; --ink, --ink2, --ink3, --plate, --line, --acc).
   var u = function (n) { return (n / 8.2).toFixed(3) + 'cqmin'; };
   var M = 72;
+  // The day line's window and its plates (#233): hours before and after now, the gap between two plates, and per
+  // layout a plate's width (both in % of the line) and how many rows a plate holds.
+  var LINE = { back: 3, ahead: 15, gap: 1.2, wide: { w: 24, rows: 5 }, tall: { w: 34, rows: 8 } };
+  S.LINE = LINE;
   var CSS = '.cs-sv{position:absolute;inset:0;overflow:hidden;container-type:size;text-align:left;'
     + '--ink:#F7F1E8;--ink2:rgba(247,241,232,.72);--ink3:rgba(247,241,232,.42);--plate:rgba(255,255,255,.09);--line:rgba(255,255,255,.17);--acc:#E08A5C;color:var(--ink);'
     + 'font-family:var(--primary-font-family, var(--ha-font-family, system-ui, sans-serif));-webkit-user-select:none;user-select:none;-webkit-font-smoothing:antialiased;}'
@@ -641,20 +645,42 @@
     + '.cs-sv .cs-curve{position:absolute;left:' + u(M) + ';right:' + u(M) + ';bottom:' + u(104) + ';height:' + u(230) + ';}.cs-sv .cs-curve svg{width:100%;height:100%;display:block;overflow:visible;}'
     + '.cs-sv .cs-pk{position:absolute;transform:translate(-50%, -130%);font-size:' + u(26) + ';font-weight:700;font-variant-numeric:tabular-nums;}.cs-sv .cs-pk.cs-lo{transform:translate(-50%, 35%);}'
     + '.cs-sv .cs-hours{position:absolute;left:0;right:0;bottom:-' + u(48) + ';display:flex;justify-content:space-between;font-size:' + u(23) + ';font-weight:600;color:rgba(255,255,255,.8);font-variant-numeric:tabular-nums;}'
-    // Day line
-    + '.cs-sv.cs-linie{background:linear-gradient(160deg, #173335 0%, #0F2224 100%);}.cs-sv.cs-linie.cs-light{background:linear-gradient(160deg, #E4EEEA 0%, #D2E3DD 100%);--acc:#2F7F76;}.cs-sv.cs-linie{--acc:#7FD0C4;}'
-    + '.cs-sv.cs-linie .cs-body{top:' + u(300) + ';}'
-    + '.cs-sv .cs-line{position:absolute;left:0;right:0;top:50%;height:' + u(10) + ';margin-top:-' + u(5) + ';border-radius:99px;background:var(--line);}'
-    + '.cs-sv .cs-line u{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--acc);}'
-    + '.cs-sv .cs-tick{position:absolute;top:50%;width:' + u(60) + ';margin:' + u(26) + ' 0 0 -' + u(30) + ';text-align:center;font-size:' + u(22) + ';font-weight:600;color:var(--ink3);font-variant-numeric:tabular-nums;}'
-    + '.cs-sv .cs-tick.cs-first{text-align:left;margin-left:0;}.cs-sv .cs-tick.cs-last{text-align:right;margin-left:-' + u(60) + ';}'
-    + '.cs-sv .cs-now{position:absolute;top:50%;width:' + u(32) + ';height:' + u(32) + ';margin:-' + u(16) + ' 0 0 -' + u(16) + ';border-radius:50%;background:var(--ink);border:' + u(7) + ' solid var(--acc);box-shadow:0 0 0 ' + u(12) + ' color-mix(in srgb, var(--acc) 26%, transparent);}'
-    + '.cs-sv .cs-ev{position:absolute;width:22%;margin-left:-11%;min-width:' + u(190) + ';background:var(--plate);border-radius:' + u(24) + ';padding:' + u(16) + ' ' + u(20) + ' ' + u(17) + ';}'
-    + '.cs-sv .cs-ev.cs-up{bottom:calc(50% + ' + u(40) + ');}.cs-sv .cs-ev.cs-down{top:calc(50% + ' + u(74) + ');}.cs-sv .cs-ev.cs-past{opacity:.5;}'
-    + '.cs-sv .cs-ev.cs-next{background:var(--acc);color:#10201F;}.cs-sv.cs-light .cs-ev.cs-next{color:#fff;}.cs-sv .cs-ev.cs-next span{color:inherit;opacity:.8;}'
-    + '.cs-sv .cs-ev b{display:block;font-size:' + u(25) + ';font-weight:700;letter-spacing:-.015em;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.cs-sv .cs-ev span{font-size:' + u(21) + ';font-weight:600;color:var(--ink2);font-variant-numeric:tabular-nums;}'
-    + '.cs-sv .sv-dot{position:absolute;top:50%;width:' + u(16) + ';height:' + u(16) + ';margin:-' + u(8) + ' 0 0 -' + u(8) + ';border-radius:50%;background:var(--ink);}.cs-sv .sv-dot.cs-past{opacity:.5;}'
-    + '.cs-sv .sv-empty{position:absolute;left:0;right:0;top:calc(50% + ' + u(96) + ');text-align:center;font-size:' + u(30) + ';font-weight:600;color:var(--ink2);}'
+    // Day line (#233): the line with its hours near the foot of the box, the appointments as plates standing on it.
+    // --cs-ly: the line's height over the body's foot (the fewer rows the tallest plate has, the higher, so the
+    // whole stands in the middle), --cs-pw: a plate's width (S.LINE).
+    + '.cs-sv.cs-linie{background:linear-gradient(160deg, #173335 0%, #0F2224 100%);--acc:#7FD0C4;--cs-pl:#21403F;--cs-pe:rgba(255,255,255,.17);--cs-gr:#132A2C;--cs-sh:none;}'
+    + '.cs-sv.cs-linie.cs-light{background:linear-gradient(160deg, #E4EEEA 0%, #D2E3DD 100%);--acc:#2F7F76;--cs-pl:#F7FBF9;--cs-pe:rgba(42,37,32,.24);--cs-gr:#DBE8E3;--cs-sh:0 ' + u(3) + ' ' + u(14) + ' rgba(28,44,40,.1);}'
+    + '.cs-sv.cs-linie .cs-body{top:' + u(250) + ';bottom:' + u(50) + ';--cs-pw:' + LINE.wide.w + '%;--cs-ly:calc(' + u(84) + ' + (' + LINE.wide.rows + ' - var(--cs-nw, 1)) * ' + u(35.5) + ');}'
+    // What is over is the quiet part and fades out at the left; what comes carries the accent.
+    + '.cs-sv .cs-line{position:absolute;left:0;right:0;bottom:calc(var(--cs-ly) - ' + u(5) + ');height:' + u(10) + ';border-radius:99px;background:linear-gradient(90deg, transparent 0%, var(--line) 9%);}'
+    + '.cs-sv .cs-line u{position:absolute;right:0;top:0;bottom:0;border-radius:99px;background:linear-gradient(90deg, var(--acc) 0%, var(--acc) 62%, color-mix(in srgb, var(--acc) 38%, transparent) 100%);}'
+    + '.cs-sv .cs-tick{position:absolute;top:calc(100% - var(--cs-ly) + ' + u(26) + ');width:' + u(80) + ';margin-left:-' + u(40) + ';text-align:center;font-size:' + u(22) + ';font-weight:600;color:var(--ink3);font-variant-numeric:tabular-nums;}'
+    // Midnight: the coming day's name, and a notch through the line.
+    + '.cs-sv .cs-tick.cs-day{color:var(--ink2);font-weight:700;letter-spacing:.07em;text-transform:uppercase;}'
+    + '.cs-sv .cs-tick.cs-day::before{content:"";position:absolute;left:50%;top:-' + u(46) + ';width:' + u(2) + ';height:' + u(40) + ';margin-left:-' + u(1) + ';border-radius:99px;background:var(--ink2);}'
+    // An appointment on the line: from its start to its end, set off from the line by a ring in the ground's colour.
+    + '.cs-sv .cs-seg{position:absolute;bottom:calc(var(--cs-ly) - ' + u(8) + ');height:' + u(16) + ';min-width:' + u(16) + ';border-radius:99px;background:var(--ink);box-shadow:0 0 0 ' + u(3) + ' var(--cs-gr);}'
+    + '.cs-sv .cs-seg.cs-past{background:color-mix(in srgb, var(--ink) 45%, var(--cs-gr));}'
+    + '.cs-sv .cs-now{position:absolute;bottom:calc(var(--cs-ly) - ' + u(16) + ');width:' + u(32) + ';height:' + u(32) + ';margin-left:-' + u(16) + ';border-radius:50%;background:var(--ink);border:' + u(7) + ' solid var(--acc);box-shadow:0 0 0 ' + u(12) + ' color-mix(in srgb, var(--acc) 26%, transparent);}'
+    // A plate stands on a thin post at its first appointment's start, like a flag; the corner at the post is tight.
+    + '.cs-sv .cs-stem{position:absolute;bottom:calc(var(--cs-ly) + ' + u(11) + ');width:' + u(2) + ';height:' + u(37) + ';border-radius:99px;background:var(--ink3);}'
+    + '.cs-sv .cs-ev{position:absolute;bottom:calc(var(--cs-ly) + ' + u(40) + ');width:var(--cs-pw);display:flex;flex-direction:column;padding:' + u(6) + ';'
+    +   'background:var(--cs-pl);border:' + u(1.5) + ' solid var(--cs-pe);border-radius:' + u(24) + ' ' + u(24) + ' ' + u(24) + ' ' + u(6) + ';box-shadow:var(--cs-sh);}'
+    + '.cs-sv .cs-r{min-width:0;padding:' + u(7) + ' ' + u(14) + ' ' + u(8) + ';border-radius:' + u(18) + ';display:flex;flex-direction:column;gap:' + u(1) + ';}'
+    + '.cs-sv .cs-r{position:relative;}.cs-sv .cs-r + .cs-r{margin-top:' + u(2) + ';}.cs-sv .cs-r + .cs-r::before{content:"";position:absolute;left:' + u(14) + ';right:' + u(14) + ';top:-' + u(1) + ';height:1px;background:var(--cs-pe);}'
+    + '.cs-sv .cs-r.cs-lead::before, .cs-sv .cs-r.cs-lead + .cs-r::before{display:none;}'
+    + '.cs-sv .cs-r b{display:block;font-size:' + u(25) + ';font-weight:700;letter-spacing:-.015em;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
+    + '.cs-sv .cs-r span{display:flex;align-items:center;gap:' + u(9) + ';font-size:' + u(21) + ';font-weight:600;line-height:1.2;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap;}'
+    + '.cs-sv .cs-r span i{flex:none;width:' + u(10) + ';height:' + u(10) + ';border-radius:50%;background:var(--cs-c);}'
+    + '.cs-sv .cs-ev.cs-past{background:color-mix(in srgb, var(--cs-pl) 50%, var(--cs-gr));border-color:color-mix(in srgb, var(--cs-pe) 55%, transparent);box-shadow:none;}'
+    + '.cs-sv .cs-r.cs-past b, .cs-sv .cs-r.cs-past span{color:var(--ink2);}.cs-sv .cs-r.cs-past span i{opacity:.6;}'
+    // What leads: the accent. Alone on its plate the whole plate, among others its row.
+    + '.cs-sv .cs-ev.cs-lead{background:var(--acc);border-color:transparent;}.cs-sv .cs-r.cs-lead{background:var(--acc);color:#10201F;}.cs-sv.cs-light .cs-r.cs-lead{color:#fff;}'
+    + '.cs-sv .cs-r.cs-lead span{color:inherit;}.cs-sv .cs-r.cs-lead span i{background:currentColor;opacity:.75;}'
+    // More appointments than a plate holds: how many have no row.
+    + '.cs-sv .cs-more{font-style:normal;padding:' + u(5) + ' ' + u(14) + ' ' + u(6) + ';font-size:' + u(21) + ';font-weight:700;line-height:1.2;color:var(--ink2);font-variant-numeric:tabular-nums;}'
+    // Two layouts of the plates, one for wide boxes and one for narrow ones (a plate takes another share of the line there).
+    + '.cs-sv .cs-lay.cs-tall{display:none;}'
     // Week
     + '.cs-sv.cs-woche{background:linear-gradient(160deg, #1B2538 0%, #111827 100%);--acc:#8DB6F0;}.cs-sv.cs-woche.cs-light{background:linear-gradient(160deg, #E6ECF4 0%, #D5DFEC 100%);--acc:#3E74B8;}'
     + '.cs-sv.cs-woche .cs-body{top:' + u(250) + ';bottom:' + u(56) + ';left:' + u(M - 14) + ';right:' + u(M - 14) + ';}'
@@ -776,7 +802,7 @@
     + '@container (aspect-ratio < 1){.cs-sv .cs-top{flex-direction:column;}.cs-sv .cs-wx{text-align:left;padding-top:0;}.cs-sv .cs-wx .cs-t{justify-content:flex-start;}'
     + '.cs-sv .cs-top .cs-time{font-size:' + u(190) + ';}.cs-sv .cs-words{font-size:' + u(118) + ';}.cs-sv .sv-bar{flex-direction:column;align-items:flex-start;}.cs-sv .cs-name{text-align:left;}'
     + '.cs-sv .sv-bar .cs-time{font-size:' + u(160) + ';}'
-    + '.cs-sv .sv-head{flex-direction:column-reverse;gap:' + u(34) + ';}.cs-sv .sv-head .cs-clock:last-child{text-align:left;}.cs-sv .cs-body{top:' + u(420) + ';}.cs-sv.cs-linie .cs-body{top:' + u(520) + ';}.cs-sv.cs-woche .cs-body{top:' + u(400) + ';}'
+    + '.cs-sv .sv-head{flex-direction:column-reverse;gap:' + u(34) + ';}.cs-sv .sv-head .cs-clock:last-child{text-align:left;}.cs-sv .cs-body{top:' + u(420) + ';}.cs-sv.cs-linie .cs-body{top:' + u(420) + ';bottom:' + u(60) + ';--cs-pw:' + LINE.tall.w + '%;--cs-ly:calc(' + u(168) + ' + (' + LINE.tall.rows + ' - var(--cs-nt, 1)) * ' + u(31) + ');}.cs-sv.cs-woche .cs-body{top:' + u(400) + ';}'
     // Weather: the clock leaves, the days go under the current weather, the curve stays at the bottom.
     + '.cs-sv.cs-wetter .cs-corner{display:none;}.cs-sv .cs-wk{left:' + u(M) + ';right:' + u(M) + ';width:auto;top:' + u(400) + ';}.cs-sv .cs-wd{height:' + u(64) + ';}'
     // Week: seven rows instead of seven columns.
@@ -785,7 +811,7 @@
     + '.cs-sv .cs-col .cs-n{width:' + u(70) + ';flex:none;margin:0;font-size:' + u(50) + ';}.cs-sv .cs-cw{width:' + u(150) + ';flex:none;margin:0;}'
     + '.cs-sv .cs-li{flex-direction:row;flex:1;min-width:0;margin:0;}.cs-sv .cs-e{flex:0 1 ' + u(230) + ';min-width:0;}.cs-sv .cs-none{margin:0;}'
     // Day line: narrower cards. Music and the house at rest: one under the other.
-    + '.cs-sv .cs-ev{width:30%;margin-left:-15%;min-width:0;padding:' + u(12) + ' ' + u(14) + ';}.cs-sv .cs-ev b{font-size:' + u(21) + ';}.cs-sv .cs-ev span{font-size:' + u(19) + ';}'
+    + '.cs-sv .cs-lay.cs-wide{display:none;}.cs-sv .cs-lay.cs-tall{display:block;}.cs-sv .cs-r{padding:' + u(6) + ' ' + u(10) + ' ' + u(7) + ';}.cs-sv .cs-r b{font-size:' + u(21) + ';}.cs-sv .cs-r span{font-size:' + u(19) + ';}'
     + '.cs-sv .cs-cover{left:50%;top:' + u(230) + ';width:' + u(480) + ';height:' + u(480) + ';margin:0 0 0 -' + u(240) + ';}.cs-sv .cs-meta{left:' + u(M + 8) + ';top:' + u(790) + ';transform:none;}.cs-sv .cs-meta h2{font-size:' + u(64) + ';}'
     + '.cs-sv .cs-left, .cs-sv.cs-calm .cs-left{position:static;display:block;padding:' + u(190) + ' ' + u(M + 8) + ' 0;text-align:left;}.cs-sv.cs-calm .cs-left{padding-top:' + u(380) + ';}'
     + '.cs-sv .cs-left .cs-time, .cs-sv.cs-calm .cs-left .cs-time{font-size:' + u(200) + ';margin-left:-' + u(10) + ';}.cs-sv.cs-calm .cs-say, .cs-sv.cs-calm .cs-ppl{justify-content:flex-start;}'
@@ -958,36 +984,98 @@
       + '<div class="cs-corner"><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div>'
       + week + curve + '</div>';
   };
-  // The day as one line from 6 to 24: what was, where now is, what comes; the next appointment big at the top.
-  DRAW.linie = function (ctx) {
-    var now = +ctx.now, d0 = new Date(ctx.now); d0.setHours(0, 0, 0, 0);
-    // 6 and 24 o'clock of that day by the calendar (on 29.03. and 25.10. the day is not 24 hours long).
-    var from = +new Date(d0.getFullYear(), d0.getMonth(), d0.getDate(), 6), to = +new Date(d0.getFullYear(), d0.getMonth(), d0.getDate() + 1);
-    var pos = function (t) { return Math.max(0, Math.min(100, (t - from) / (to - from) * 100)); };
-    var today = (ctx.events || []).filter(function (e) { return !e.allDay && sameDay(e.start, now) && e.start >= from; }).slice(0, 6);
-    var next = (ctx.events || []).filter(function (e) { return !e.allDay && e.start > now; })[0] || null;
-    var mins = next ? Math.round((next.start - now) / 60000) : null;
-    var inText = next ? (mins >= 60 ? T('in {h} Std. {m} Min.'.replace('{h}', Math.floor(mins / 60)).replace('{m}', mins % 60)) : T('in {m} Min.'.replace('{m}', mins))) : '';
-    var whenNext = next && !sameDay(next.start, now) ? dayName(next.start) + ' ' + clockOf(next.start) : inText;
-    var out = '<div class="cs-in">' + head(ctx, next ? next.title : T('Heute nichts mehr'), next ? whenNext : '', true)
-      + '<div class="cs-body"><div class="cs-line"><u style="width:' + pos(now).toFixed(1) + '%"></u></div>';
-    [6, 9, 12, 15, 18, 21, 24].forEach(function (h) { out += '<div class="cs-tick' + (h === 6 ? ' cs-first' : h === 24 ? ' cs-last' : '') + '" style="left:' + ((h - 6) / 18 * 100).toFixed(2) + '%">' + h + '</div>'; });
-    var last = { up: -100, down: -100 };
-    today.forEach(function (e, i) {
-      var p = pos(e.start), past = (e.end || e.start) < now;
-      // Above and below in turn; two on the same side keep their distance.
-      var side = i % 2 ? 'down' : 'up';
-      if (p - last[side] < 23.5) side = side === 'up' ? 'down' : 'up';
-      if (p - last[side] < 23.5) { out += '<div class="sv-dot' + (past ? ' cs-past' : '') + '" style="left:' + p.toFixed(1) + '%"></div>'; return; }
-      last[side] = p;
-      var left = Math.max(11, Math.min(89, p));
-      out += '<div class="sv-dot' + (past ? ' cs-past' : '') + '" style="left:' + p.toFixed(1) + '%"></div>'
-        + '<div class="cs-ev cs-' + side + (past ? ' cs-past' : '') + (e === next ? ' cs-next' : '') + '" style="left:' + left.toFixed(1) + '%"><b data-no-i18n>' + esc(e.title) + '</b><span>'
-        + esc(clockOf(e.start) + (e.end ? ' – ' + clockOf(e.end) : '')) + '</span></div>';
+  // The day line (#233). A window that travels with the clock: three hours back, fifteen ahead, the same scale at
+  // every hour. Now stands still at a sixth of the line, what is over leaves at the left (the finished day takes no
+  // room), the evening shows tomorrow morning. Cropping 6–24 to now–24 instead would change the scale every hour and
+  // end at midnight. S.dayLine is the model: { from, to, now (%), running, next, lead, items: [{ e, x, x2, past, lead }] }.
+  var endOf = function (e) { return e.end && e.end > e.start ? e.end : e.start; };
+  S.dayLine = function (events, now) {
+    var t = +now, h = 3600000, from = t - LINE.back * h, to = t + LINE.ahead * h;
+    var pos = function (x) { return (x - from) / (to - from) * 100; };
+    var timed = (events || []).filter(function (e) { return e && !e.allDay && isFinite(e.start); }).sort(function (a, b) { return a.start - b.start; });
+    // What leads: an appointment that is running (the one that ends first), else the next one.
+    var running = timed.filter(function (e) { return e.start <= t && endOf(e) > t; }).sort(function (a, b) { return endOf(a) - endOf(b); })[0] || null;
+    var next = timed.filter(function (e) { return e.start > t; })[0] || null;
+    var lead = running || next;
+    var items = timed.filter(function (e) { return e.start < to && endOf(e) > from; }).slice(0, 24).map(function (e) {
+      return { e: e, x: pos(e.start), x2: pos(endOf(e)), past: endOf(e) <= t, lead: e === lead };
     });
-    if (now >= from) out += '<div class="cs-now" style="left:' + pos(now).toFixed(1) + '%"></div>';
-    if (!today.length) out += '<div class="sv-empty">' + esc(T('Heute keine Termine')) + '</div>';
-    return out + '</div></div>';
+    return { from: from, to: to, now: pos(t), pos: pos, running: running, next: next, lead: lead, items: items };
+  };
+  // The plates: an appointment gets a plate of width w (%) at its start; those that begin while that plate would
+  // still stand there share it, a row each, the earliest on top (close appointments never shrink to a dot without
+  // a title). So plates never overlap. More rows than a plate holds: the least important go (what is over first,
+  // then the latest; never the one that leads) and are counted. → [{ left, x, rows: [it], more }]
+  S.plates = function (items, w, rows) {
+    var out = [], cur = null;
+    var weight = function (it) { return it.lead ? 3e9 : it.past ? it.x : 2e9 - it.x; };
+    items.forEach(function (it) {
+      var left = Math.max(0, Math.min(100 - w, it.x));
+      if (cur && left < cur.left + w + LINE.gap) { cur.rows.push(it); return; }
+      cur = { left: left, x: Math.max(0, Math.min(100, it.x)), rows: [it], more: 0 };
+      out.push(cur);
+    });
+    out.forEach(function (p) {
+      if (p.rows.length <= rows) return;
+      // Never a bare +1: the line that would say so takes a title's place, so at least two are counted.
+      var keep = p.rows.slice().sort(function (a, b) { return weight(b) - weight(a); }).slice(0, rows - 1);
+      p.more = p.rows.length - keep.length;
+      p.rows = p.rows.filter(function (it) { return keep.indexOf(it) > -1; });
+    });
+    return out;
+  };
+  DRAW.linie = function (ctx) {
+    // By the whole minute: the line moves on with the clock's digits, not with every repaint in between.
+    var now = Math.floor(+ctx.now / 60000) * 60000, m = S.dayLine(ctx.events, now), cals = ctx.cals || [];
+    var d0 = new Date(now), tomorrow = new Date(d0.getFullYear(), d0.getMonth(), d0.getDate() + 1);
+    var tone = function (e) { var i = cals.indexOf(e.cal); return TONES[(i < 0 ? 0 : i) % TONES.length]; };
+    // The headline: what is running leads (until when), else the next one (in how long; tomorrow or a later day
+    // with its time), else a calm line.
+    var title, sub = '';
+    if (m.running) {
+      var end = endOf(m.running);
+      title = m.running.title;
+      sub = T('jetzt') + ' · ' + T('bis {t}'.replace('{t}', (sameDay(end, now) ? '' : dayName(end, true) + ' ') + clockOf(end)));
+    } else if (m.next) {
+      var mins = Math.round((m.next.start - now) / 60000);
+      title = m.next.title;
+      sub = sameDay(m.next.start, now) ? (mins >= 60 ? T('in {h} Std. {m} Min.'.replace('{h}', Math.floor(mins / 60)).replace('{m}', mins % 60)) : T('in {m} Min.'.replace('{m}', mins)))
+        : sameDay(m.next.start, tomorrow) ? T('Morgen') + ' · ' + clockOf(m.next.start) : dayName(m.next.start) + ' ' + clockOf(m.next.start);
+    } else {
+      title = (ctx.events || []).some(function (e) { return !e.allDay && sameDay(e.start, now); }) ? T('Heute nichts mehr') : T('Heute keine Termine');
+    }
+    var pct = function (v) { return Math.max(0, Math.min(100, v)).toFixed(2); };
+    // The hours: every third one; midnight carries the coming day's name.
+    var ticks = '', c = new Date(m.from);
+    c.setMinutes(0, 0, 0);
+    for (var q = +c; q <= m.to; q += 3600000) {
+      var dq = new Date(q), hq = dq.getHours();
+      if (q < m.from || dq.getMinutes() || hq % 3) continue;
+      ticks += '<div class="cs-tick' + (hq ? '' : ' cs-day') + '" style="left:' + pct(m.pos(q)) + '%">' + esc(hq ? hq : dayName(q, true)) + '</div>';
+    }
+    var segs = m.items.map(function (it) {
+      var a = Math.max(0, it.x), b = Math.min(100, it.x2);
+      return '<div class="cs-seg' + (it.past ? ' cs-past' : '') + '" style="left:' + pct(a) + '%;width:' + pct(b - a) + '%"></div>';
+    }).join('');
+    var used = {};
+    var lay = function (name) {
+      var cfg = LINE[name], html = '';
+      used[name] = 1;
+      S.plates(m.items, cfg.w, cfg.rows).forEach(function (p) {
+        var one = p.rows.length === 1 && !p.more, cls = (p.rows.every(function (it) { return it.past; }) ? ' cs-past' : '') + (one && p.rows[0].lead ? ' cs-lead' : '');
+        used[name] = Math.max(used[name], p.rows.length + (p.more ? 1 : 0));
+        html += '<i class="cs-stem" style="left:' + pct(p.x) + '%"></i><div class="cs-ev' + cls + '" style="left:' + pct(p.left) + '%">' + p.rows.map(function (it) {
+          var e = it.e;
+          return '<div class="cs-r' + (it.past ? ' cs-past' : '') + (it.lead ? ' cs-lead' : '') + '"><b data-no-i18n>' + esc(e.title) + '</b><span><i style="--cs-c:' + esc(tone(e)) + '"></i>'
+            + esc(clockOf(e.start) + (e.end && e.end > e.start ? ' – ' + clockOf(e.end) : '')) + '</span></div>';
+        }).join('') + (p.more ? '<em class="cs-more">+' + Number(p.more) + '</em>' : '') + '</div>';
+      });
+      return '<div class="cs-lay cs-' + esc(name) + '">' + html + '</div>';
+    };
+    var wide = lay('wide'), tall = lay('tall');
+    return '<div class="cs-in">' + head(ctx, title, sub, true)
+      + '<div class="cs-body" style="--cs-nw:' + Number(used.wide) + ';--cs-nt:' + Number(used.tall) + '"><div class="cs-line"><u style="left:' + pct(m.now) + '%"></u></div>'
+      + ticks + segs + wide + tall + '<div class="cs-now" style="left:' + pct(m.now) + '%"></div></div></div>';
   };
   // Seven days side by side: weather, appointments, waste. Today stands out.
   var TONES = ['#4E9E95', '#5B8FC9', '#6AAE78', '#DE8A4E', '#E8B04A'];
