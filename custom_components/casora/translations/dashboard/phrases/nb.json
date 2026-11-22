@@ -5440,6 +5440,14 @@
     [
       "^Version (.+) übersprungen$",
       "Versjon {1} hoppet over"
+    ],
+    [
+      "^Noch (\\d+) Std\\. (\\d+) Min\\. bis Sonnenaufgang$",
+      "{1} t {2} min til soloppgang"
+    ],
+    [
+      "^Noch (\\d+) Min\\. bis Sonnenaufgang$",
+      "{1} min til soloppgang"
     ]
   ]
 }

@@ -2620,6 +2620,13 @@ const SECTIONS = [
           linie: "Day line", woche: "Week", musik: "Music", energie: "Energy flow", ruhe: "House at rest", kameras: "Cameras", kalender: "Calendar" },
         when: (v) => v.casora_screensaver != null && v.casora_screensaver !== "",
         hint: "Sky follows the sun and the weather. Landscapes are drawn, nothing is loaded. Photos shows this dashboard's room photos." },
+      // What the Calendar screensaver shows (#231): "" = the month (as before), "2w" = this week and the next from the
+      // locale's first weekday (46-screensaver.js S.calGrid). Offered where the calendar can come up.
+      { key: "casora_screensaver_calendar_range", sub: "chrome", label: "Calendar shows", type: "select", seg: true, auto: true, scope: "dashboard",
+        options: ["", "2w"],
+        optionLabels: { "": "Month", "2w": "Two weeks" },
+        when: (v) => v.casora_screensaver != null && v.casora_screensaver !== "" && (!v.casora_screensaver_kind || v.casora_screensaver_kind === "kalender"),
+        hint: "Two weeks shows this week and the next, with the time of every appointment." },
       // The room photos „Photos“ shows (day photo names); none = all. Picked on the Screensaver page under its preview,
       // never drawn as a field here; listed so a new room takes it over like the other dashboard settings.
       { key: "casora_screensaver_photos", sub: "chrome", label: "Screensaver photos", type: "text", auto: true, scope: "dashboard", when: () => false },
@@ -2632,6 +2639,11 @@ const SECTIONS = [
       { key: "casora_screensaver_tint", sub: "chrome", label: "Cover colour", type: "bool", boolDefault: false, auto: true, scope: "dashboard",
         when: (v) => v.casora_screensaver != null && v.casora_screensaver !== "",
         hint: "While music plays, the calm screensavers take on a soft tint in the main colour of the cover." },
+      // Burn-in protection (#230): on the tablet the screensaver's content wanders a few pixels three times a minute.
+      // On by default; off is stored as false (46-screensaver.js S.wanders). The preview never wanders.
+      { key: "casora_screensaver_wander", sub: "chrome", label: "Burn-in protection", type: "bool", boolDefault: true, auto: true, scope: "dashboard",
+        when: (v) => v.casora_screensaver != null && v.casora_screensaver !== "",
+        hint: "Moves the screensaver a few pixels every now and then, so nothing burns into the display. An LCD does not need it." },
       // Halten auf Kacheln (22-halten.js): leer = Schnellmenü. casora-core.js setzt daraus window._casoraHoldMode,
       // ans Handy geht es über casora_mobile_bg. Je Kachel überstimmbar (variables.hold_mode, Kachel-Inspektor).
       { key: "hold_mode", sub: "hold", label: "Hold on tiles", type: "select", auto: true, scope: "dashboard",

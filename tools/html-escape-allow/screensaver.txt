@@ -1,7 +1,7 @@
 # 46-screensaver.js (screensavers for wall tablets): the drawn landscapes and the sky are SVG built from numbers and
 # from the fixed SCENES and SKY tables; every text (time, date, weather, room and scene names) goes through esc().
-custom_components/casora/scripts/local/46-screensaver.js | re:^\(.*\)\.toFixed\(\d\)$ | number: SVG geometry computed by the code | 49
-custom_components/casora/scripts/local/46-screensaver.js | re:^(?:w|h|H|W|mx|my|mr|wy|th|k|s\.sun\.r|s\.seed)$ | number: size, position or index computed by the code | 32
+custom_components/casora/scripts/local/46-screensaver.js | re:^\(.*\)\.toFixed\(\d\)$ | number: SVG geometry computed by the code | 48
+custom_components/casora/scripts/local/46-screensaver.js | re:^(?:w|h|H|W|mx|my|mr|wy|th|k|s\.sun\.r|s\.seed)$ | number: size, position or index computed by the code | 31
 custom_components/casora/scripts/local/46-screensaver.js | d | SVG path built from numbers | 3
 custom_components/casora/scripts/local/46-screensaver.js | re:^(?:s\.sun\.c|s\.mist|s\.water\.[ab]|s\.sky\[0\]|sky\[[0-3]\]|col|c|mix\(L\.far, L\.near, .*\))$ | colour of the fixed SCENES / SKY tables (or mixed from two of them) | 20
 custom_components/casora/scripts/local/46-screensaver.js | id | element id built from the fixed scene id | 23
@@ -12,5 +12,6 @@ custom_components/casora/scripts/local/46-screensaver.js | re:^\(?wx(?: && wx)?\
 custom_components/casora/scripts/local/46-screensaver.js | re:^(?:base|x|y|new|pct\(X\(i(?:Hi|Lo)\)\))$ | number: position computed by the code (new Date(day).getDate() is the day of the month) | 9
 custom_components/casora/scripts/local/46-screensaver.js | re:^(?:color|TONES\[\(i \+ j\) % TONES\.length\]|TONE_C\[r\.tone\])$ | colour from the fixed tables of the module | 4
 custom_components/casora/scripts/local/46-screensaver.js | re:^(?:cls|side|GLYPH\[glyph\])$ | fixed class name or glyph of the module | 5
-custom_components/casora/scripts/local/46-screensaver.js | re:^(?:pic|out|week|rain|curve|cols|bar2|clock\(ctx\)|items\.join\(\'\'\)|head\(ctx.*\)|node\(.*\)|flow\(.*\))$ | markup built by the module itself: numbers and fixed values, every text through esc() | 21
+custom_components/casora/scripts/local/46-screensaver.js | re:^(?:pic|out|title|when|ticks|segs|wide|tall|week|rain|curve|cols|bar2|clock\(ctx\)|items\.join\(\'\'\)|head\(ctx.*\)|node\(.*\)|flow\(.*\))$ | markup built by the module itself: numbers and fixed values, every text through esc() | 26
+custom_components/casora/scripts/local/46-screensaver.js | re:^pct\(.*\)$ | number: a position on the day line in percent, clamped and rounded by the code | 7
 custom_components/casora/scripts/local/46-screensaver.js | re:^mmss\(m\.(?:pos|dur)\)$ | minutes:seconds built from a number | 2

@@ -8,8 +8,8 @@
 // waste dates, the playing media player, the energy settings, the bell, the dashboard's room photos); nothing is
 // loaded from another server. One that has nothing to show (no music playing, energy not set up) shows the sky; in the
 // alternation („mix“, the kinds picked in casora_screensaver_mix) it is skipped instead. The same drawing serves the Studio's preview (mount into any box): all sizes are
-// container units, so it looks the same small and full screen. The content wanders a few pixels every minute, so
-// nothing burns in.
+// container units, so it looks the same small and full screen. On the tablet the content wanders a few pixels three
+// times a minute, never together with the clock's digits, so nothing burns in (casora_screensaver_wander, false = off).
 //   window._casoraSaver.KINDS                  → [{ id, label, needs }]
 //   window._casoraSaver.words(lang, h, m)      → the time as people say it: [{ t, acc }] lines (nine languages)
 //   window._casoraSaver.dayShare(now, rise, set) → 0…1 share of the daylight that has passed, null at night
@@ -21,7 +21,9 @@
 //   window._casoraSaver.kindAt(kind, now, pool) → the kind on show
 //   window._casoraSaver.canStart() / start()   → start by hand (the dashboard's ⋯ menu), only where one may start
 // Studio settings beside the three above: casora_screensaver_mix (kinds that alternate, none = all),
-// casora_screensaver_cameras (none = automatic: the real cameras) / _calendars (none = all), casora_screensaver_tint (the playing cover's colour as a wash).
+// casora_screensaver_cameras (none = automatic: the real cameras) / _calendars (none = all), casora_screensaver_tint (the playing cover's colour as a wash),
+// casora_screensaver_wander (false = the content stands still, for displays that do not burn in),
+// casora_screensaver_calendar_range ('2w' = the calendar shows this week and the next instead of the month).
 (function () {
   if (window._casoraSaver) return;
   var S = window._casoraSaver = {};
@@ -573,6 +575,10 @@
   // instead of grey plates: light by day, deep by night (cs-light; --ink, --ink2, --ink3, --plate, --line, --acc).
   var u = function (n) { return (n / 8.2).toFixed(3) + 'cqmin'; };
   var M = 72;
+  // The day line's window and its plates (#233): hours before and after now, the gap between two plates, and per
+  // layout a plate's width (both in % of the line) and how many rows a plate holds.
+  var LINE = { back: 3, ahead: 15, gap: 1.2, wide: { w: 24, rows: 5 }, tall: { w: 34, rows: 8 } };
+  S.LINE = LINE;
   var CSS = '.cs-sv{position:absolute;inset:0;overflow:hidden;container-type:size;text-align:left;'
     + '--ink:#F7F1E8;--ink2:rgba(247,241,232,.72);--ink3:rgba(247,241,232,.42);--plate:rgba(255,255,255,.09);--line:rgba(255,255,255,.17);--acc:#E08A5C;color:var(--ink);'
     + 'font-family:var(--primary-font-family, var(--ha-font-family, system-ui, sans-serif));-webkit-user-select:none;user-select:none;-webkit-font-smoothing:antialiased;}'
@@ -639,20 +645,42 @@
     + '.cs-sv .cs-curve{position:absolute;left:' + u(M) + ';right:' + u(M) + ';bottom:' + u(104) + ';height:' + u(230) + ';}.cs-sv .cs-curve svg{width:100%;height:100%;display:block;overflow:visible;}'
     + '.cs-sv .cs-pk{position:absolute;transform:translate(-50%, -130%);font-size:' + u(26) + ';font-weight:700;font-variant-numeric:tabular-nums;}.cs-sv .cs-pk.cs-lo{transform:translate(-50%, 35%);}'
     + '.cs-sv .cs-hours{position:absolute;left:0;right:0;bottom:-' + u(48) + ';display:flex;justify-content:space-between;font-size:' + u(23) + ';font-weight:600;color:rgba(255,255,255,.8);font-variant-numeric:tabular-nums;}'
-    // Day line
-    + '.cs-sv.cs-linie{background:linear-gradient(160deg, #173335 0%, #0F2224 100%);}.cs-sv.cs-linie.cs-light{background:linear-gradient(160deg, #E4EEEA 0%, #D2E3DD 100%);--acc:#2F7F76;}.cs-sv.cs-linie{--acc:#7FD0C4;}'
-    + '.cs-sv.cs-linie .cs-body{top:' + u(300) + ';}'
-    + '.cs-sv .cs-line{position:absolute;left:0;right:0;top:50%;height:' + u(10) + ';margin-top:-' + u(5) + ';border-radius:99px;background:var(--line);}'
-    + '.cs-sv .cs-line u{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--acc);}'
-    + '.cs-sv .cs-tick{position:absolute;top:50%;width:' + u(60) + ';margin:' + u(26) + ' 0 0 -' + u(30) + ';text-align:center;font-size:' + u(22) + ';font-weight:600;color:var(--ink3);font-variant-numeric:tabular-nums;}'
-    + '.cs-sv .cs-tick.cs-first{text-align:left;margin-left:0;}.cs-sv .cs-tick.cs-last{text-align:right;margin-left:-' + u(60) + ';}'
-    + '.cs-sv .cs-now{position:absolute;top:50%;width:' + u(32) + ';height:' + u(32) + ';margin:-' + u(16) + ' 0 0 -' + u(16) + ';border-radius:50%;background:var(--ink);border:' + u(7) + ' solid var(--acc);box-shadow:0 0 0 ' + u(12) + ' color-mix(in srgb, var(--acc) 26%, transparent);}'
-    + '.cs-sv .cs-ev{position:absolute;width:22%;margin-left:-11%;min-width:' + u(190) + ';background:var(--plate);border-radius:' + u(24) + ';padding:' + u(16) + ' ' + u(20) + ' ' + u(17) + ';}'
-    + '.cs-sv .cs-ev.cs-up{bottom:calc(50% + ' + u(40) + ');}.cs-sv .cs-ev.cs-down{top:calc(50% + ' + u(74) + ');}.cs-sv .cs-ev.cs-past{opacity:.5;}'
-    + '.cs-sv .cs-ev.cs-next{background:var(--acc);color:#10201F;}.cs-sv.cs-light .cs-ev.cs-next{color:#fff;}.cs-sv .cs-ev.cs-next span{color:inherit;opacity:.8;}'
-    + '.cs-sv .cs-ev b{display:block;font-size:' + u(25) + ';font-weight:700;letter-spacing:-.015em;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.cs-sv .cs-ev span{font-size:' + u(21) + ';font-weight:600;color:var(--ink2);font-variant-numeric:tabular-nums;}'
-    + '.cs-sv .sv-dot{position:absolute;top:50%;width:' + u(16) + ';height:' + u(16) + ';margin:-' + u(8) + ' 0 0 -' + u(8) + ';border-radius:50%;background:var(--ink);}.cs-sv .sv-dot.cs-past{opacity:.5;}'
-    + '.cs-sv .sv-empty{position:absolute;left:0;right:0;top:calc(50% + ' + u(96) + ');text-align:center;font-size:' + u(30) + ';font-weight:600;color:var(--ink2);}'
+    // Day line (#233): the line with its hours near the foot of the box, the appointments as plates standing on it.
+    // --cs-ly: the line's height over the body's foot (the fewer rows the tallest plate has, the higher, so the
+    // whole stands in the middle), --cs-pw: a plate's width (S.LINE).
+    + '.cs-sv.cs-linie{background:linear-gradient(160deg, #173335 0%, #0F2224 100%);--acc:#7FD0C4;--cs-pl:#21403F;--cs-pe:rgba(255,255,255,.17);--cs-gr:#132A2C;--cs-sh:none;}'
+    + '.cs-sv.cs-linie.cs-light{background:linear-gradient(160deg, #E4EEEA 0%, #D2E3DD 100%);--acc:#2F7F76;--cs-pl:#F7FBF9;--cs-pe:rgba(42,37,32,.24);--cs-gr:#DBE8E3;--cs-sh:0 ' + u(3) + ' ' + u(14) + ' rgba(28,44,40,.1);}'
+    + '.cs-sv.cs-linie .cs-body{top:' + u(250) + ';bottom:' + u(50) + ';--cs-pw:' + LINE.wide.w + '%;--cs-ly:calc(' + u(84) + ' + (' + LINE.wide.rows + ' - var(--cs-nw, 1)) * ' + u(35.5) + ');}'
+    // What is over is the quiet part and fades out at the left; what comes carries the accent.
+    + '.cs-sv .cs-line{position:absolute;left:0;right:0;bottom:calc(var(--cs-ly) - ' + u(5) + ');height:' + u(10) + ';border-radius:99px;background:linear-gradient(90deg, transparent 0%, var(--line) 9%);}'
+    + '.cs-sv .cs-line u{position:absolute;right:0;top:0;bottom:0;border-radius:99px;background:linear-gradient(90deg, var(--acc) 0%, var(--acc) 62%, color-mix(in srgb, var(--acc) 38%, transparent) 100%);}'
+    + '.cs-sv .cs-tick{position:absolute;top:calc(100% - var(--cs-ly) + ' + u(26) + ');width:' + u(80) + ';margin-left:-' + u(40) + ';text-align:center;font-size:' + u(22) + ';font-weight:600;color:var(--ink3);font-variant-numeric:tabular-nums;}'
+    // Midnight: the coming day's name, and a notch through the line.
+    + '.cs-sv .cs-tick.cs-day{color:var(--ink2);font-weight:700;letter-spacing:.07em;text-transform:uppercase;}'
+    + '.cs-sv .cs-tick.cs-day::before{content:"";position:absolute;left:50%;top:-' + u(46) + ';width:' + u(2) + ';height:' + u(40) + ';margin-left:-' + u(1) + ';border-radius:99px;background:var(--ink2);}'
+    // An appointment on the line: from its start to its end, set off from the line by a ring in the ground's colour.
+    + '.cs-sv .cs-seg{position:absolute;bottom:calc(var(--cs-ly) - ' + u(8) + ');height:' + u(16) + ';min-width:' + u(16) + ';border-radius:99px;background:var(--ink);box-shadow:0 0 0 ' + u(3) + ' var(--cs-gr);}'
+    + '.cs-sv .cs-seg.cs-past{background:color-mix(in srgb, var(--ink) 45%, var(--cs-gr));}'
+    + '.cs-sv .cs-now{position:absolute;bottom:calc(var(--cs-ly) - ' + u(16) + ');width:' + u(32) + ';height:' + u(32) + ';margin-left:-' + u(16) + ';border-radius:50%;background:var(--ink);border:' + u(7) + ' solid var(--acc);box-shadow:0 0 0 ' + u(12) + ' color-mix(in srgb, var(--acc) 26%, transparent);}'
+    // A plate stands on a thin post at its first appointment's start, like a flag; the corner at the post is tight.
+    + '.cs-sv .cs-stem{position:absolute;bottom:calc(var(--cs-ly) + ' + u(11) + ');width:' + u(2) + ';height:' + u(37) + ';border-radius:99px;background:var(--ink3);}'
+    + '.cs-sv .cs-ev{position:absolute;bottom:calc(var(--cs-ly) + ' + u(40) + ');width:var(--cs-pw);display:flex;flex-direction:column;padding:' + u(6) + ';'
+    +   'background:var(--cs-pl);border:' + u(1.5) + ' solid var(--cs-pe);border-radius:' + u(24) + ' ' + u(24) + ' ' + u(24) + ' ' + u(6) + ';box-shadow:var(--cs-sh);}'
+    + '.cs-sv .cs-r{min-width:0;padding:' + u(7) + ' ' + u(14) + ' ' + u(8) + ';border-radius:' + u(18) + ';display:flex;flex-direction:column;gap:' + u(1) + ';}'
+    + '.cs-sv .cs-r{position:relative;}.cs-sv .cs-r + .cs-r{margin-top:' + u(2) + ';}.cs-sv .cs-r + .cs-r::before{content:"";position:absolute;left:' + u(14) + ';right:' + u(14) + ';top:-' + u(1) + ';height:1px;background:var(--cs-pe);}'
+    + '.cs-sv .cs-r.cs-lead::before, .cs-sv .cs-r.cs-lead + .cs-r::before{display:none;}'
+    + '.cs-sv .cs-r b{display:block;font-size:' + u(25) + ';font-weight:700;letter-spacing:-.015em;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
+    + '.cs-sv .cs-r span{display:flex;align-items:center;gap:' + u(9) + ';font-size:' + u(21) + ';font-weight:600;line-height:1.2;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap;}'
+    + '.cs-sv .cs-r span i{flex:none;width:' + u(10) + ';height:' + u(10) + ';border-radius:50%;background:var(--cs-c);}'
+    + '.cs-sv .cs-ev.cs-past{background:color-mix(in srgb, var(--cs-pl) 50%, var(--cs-gr));border-color:color-mix(in srgb, var(--cs-pe) 55%, transparent);box-shadow:none;}'
+    + '.cs-sv .cs-r.cs-past b, .cs-sv .cs-r.cs-past span{color:var(--ink2);}.cs-sv .cs-r.cs-past span i{opacity:.6;}'
+    // What leads: the accent. Alone on its plate the whole plate, among others its row.
+    + '.cs-sv .cs-ev.cs-lead{background:var(--acc);border-color:transparent;}.cs-sv .cs-r.cs-lead{background:var(--acc);color:#10201F;}.cs-sv.cs-light .cs-r.cs-lead{color:#fff;}'
+    + '.cs-sv .cs-r.cs-lead span{color:inherit;}.cs-sv .cs-r.cs-lead span i{background:currentColor;opacity:.75;}'
+    // More appointments than a plate holds: how many have no row.
+    + '.cs-sv .cs-more{font-style:normal;padding:' + u(5) + ' ' + u(14) + ' ' + u(6) + ';font-size:' + u(21) + ';font-weight:700;line-height:1.2;color:var(--ink2);font-variant-numeric:tabular-nums;}'
+    // Two layouts of the plates, one for wide boxes and one for narrow ones (a plate takes another share of the line there).
+    + '.cs-sv .cs-lay.cs-tall{display:none;}'
     // Week
     + '.cs-sv.cs-woche{background:linear-gradient(160deg, #1B2538 0%, #111827 100%);--acc:#8DB6F0;}.cs-sv.cs-woche.cs-light{background:linear-gradient(160deg, #E6ECF4 0%, #D5DFEC 100%);--acc:#3E74B8;}'
     + '.cs-sv.cs-woche .cs-body{top:' + u(250) + ';bottom:' + u(56) + ';left:' + u(M - 14) + ';right:' + u(M - 14) + ';}'
@@ -752,6 +780,14 @@
     + '.cs-sv .cs-ke i{flex:none;width:' + u(10) + ';height:' + u(10) + ';border-radius:50%;background:var(--cs-c);}'
     + '.cs-sv .cs-ke em{font-style:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}'
     + '.cs-sv .cs-kmore{font-size:' + u(19) + ';font-weight:700;color:var(--ink3);padding-left:' + u(18) + ';}'
+    // Two weeks: the span as the big thing, as large as its length leaves room beside the clock (--cs-res: what the
+    // clock and the margins take); each title with its time under it.
+    + '.cs-sv .cs-kh{--cs-res:' + u(2 * M + 24 + 390) + ';}'
+    + '.cs-sv .cs-km.cs-kr{white-space:nowrap;font-size:clamp(' + u(56) + ', calc((100cqw - var(--cs-res)) / var(--cs-n, 16) / .54), ' + u(92) + ');}'
+    + '.cs-sv .cs-kn{display:none;font-size:' + u(19) + ';font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink3);}'
+    + '.cs-sv .cs-k2 .cs-kl{gap:' + u(6) + ';}'
+    + '.cs-sv .cs-ke2{display:grid;grid-template-columns:auto minmax(0, 1fr);gap:0 ' + u(8) + ';align-items:center;font-size:' + u(20) + ';line-height:1.12;}'
+    + '.cs-sv .cs-ke2 small{grid-column:2;font-size:' + u(19) + ';font-weight:600;line-height:1.08;color:var(--ink2);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
     // The cover's colour as a soft wash from the top left (over the ground, under the content).
     + '.cs-sv .cs-tint{position:absolute;inset:0;pointer-events:none;background:radial-gradient(130% 110% at 12% 0%, var(--cs-t) 0%, transparent 72%);opacity:.42;transition:opacity 2s ease;}'
     + '.cs-sv.cs-light .cs-tint{opacity:.2;}'
@@ -766,7 +802,7 @@
     + '@container (aspect-ratio < 1){.cs-sv .cs-top{flex-direction:column;}.cs-sv .cs-wx{text-align:left;padding-top:0;}.cs-sv .cs-wx .cs-t{justify-content:flex-start;}'
     + '.cs-sv .cs-top .cs-time{font-size:' + u(190) + ';}.cs-sv .cs-words{font-size:' + u(118) + ';}.cs-sv .sv-bar{flex-direction:column;align-items:flex-start;}.cs-sv .cs-name{text-align:left;}'
     + '.cs-sv .sv-bar .cs-time{font-size:' + u(160) + ';}'
-    + '.cs-sv .sv-head{flex-direction:column-reverse;gap:' + u(34) + ';}.cs-sv .sv-head .cs-clock:last-child{text-align:left;}.cs-sv .cs-body{top:' + u(420) + ';}.cs-sv.cs-linie .cs-body{top:' + u(520) + ';}.cs-sv.cs-woche .cs-body{top:' + u(400) + ';}'
+    + '.cs-sv .sv-head{flex-direction:column-reverse;gap:' + u(34) + ';}.cs-sv .sv-head .cs-clock:last-child{text-align:left;}.cs-sv .cs-body{top:' + u(420) + ';}.cs-sv.cs-linie .cs-body{top:' + u(420) + ';bottom:' + u(60) + ';--cs-pw:' + LINE.tall.w + '%;--cs-ly:calc(' + u(168) + ' + (' + LINE.tall.rows + ' - var(--cs-nt, 1)) * ' + u(31) + ');}.cs-sv.cs-woche .cs-body{top:' + u(400) + ';}'
     // Weather: the clock leaves, the days go under the current weather, the curve stays at the bottom.
     + '.cs-sv.cs-wetter .cs-corner{display:none;}.cs-sv .cs-wk{left:' + u(M) + ';right:' + u(M) + ';width:auto;top:' + u(400) + ';}.cs-sv .cs-wd{height:' + u(64) + ';}'
     // Week: seven rows instead of seven columns.
@@ -775,7 +811,7 @@
     + '.cs-sv .cs-col .cs-n{width:' + u(70) + ';flex:none;margin:0;font-size:' + u(50) + ';}.cs-sv .cs-cw{width:' + u(150) + ';flex:none;margin:0;}'
     + '.cs-sv .cs-li{flex-direction:row;flex:1;min-width:0;margin:0;}.cs-sv .cs-e{flex:0 1 ' + u(230) + ';min-width:0;}.cs-sv .cs-none{margin:0;}'
     // Day line: narrower cards. Music and the house at rest: one under the other.
-    + '.cs-sv .cs-ev{width:30%;margin-left:-15%;min-width:0;padding:' + u(12) + ' ' + u(14) + ';}.cs-sv .cs-ev b{font-size:' + u(21) + ';}.cs-sv .cs-ev span{font-size:' + u(19) + ';}'
+    + '.cs-sv .cs-lay.cs-wide{display:none;}.cs-sv .cs-lay.cs-tall{display:block;}.cs-sv .cs-r{padding:' + u(6) + ' ' + u(10) + ' ' + u(7) + ';}.cs-sv .cs-r b{font-size:' + u(21) + ';}.cs-sv .cs-r span{font-size:' + u(19) + ';}'
     + '.cs-sv .cs-cover{left:50%;top:' + u(230) + ';width:' + u(480) + ';height:' + u(480) + ';margin:0 0 0 -' + u(240) + ';}.cs-sv .cs-meta{left:' + u(M + 8) + ';top:' + u(790) + ';transform:none;}.cs-sv .cs-meta h2{font-size:' + u(64) + ';}'
     + '.cs-sv .cs-left, .cs-sv.cs-calm .cs-left{position:static;display:block;padding:' + u(190) + ' ' + u(M + 8) + ' 0;text-align:left;}.cs-sv.cs-calm .cs-left{padding-top:' + u(380) + ';}'
     + '.cs-sv .cs-left .cs-time, .cs-sv.cs-calm .cs-left .cs-time{font-size:' + u(200) + ';margin-left:-' + u(10) + ';}.cs-sv.cs-calm .cs-say, .cs-sv.cs-calm .cs-ppl{justify-content:flex-start;}'
@@ -790,7 +826,16 @@
     + '.cs-sv .cs-ends{font-size:' + u(19) + ';}.cs-sv .cs-ends b{display:block;margin:0;font-size:' + u(27) + ';}.cs-sv .cs-ends span:nth-child(2){font-size:' + u(20) + ';text-align:center;}.cs-sv .cs-ends span:last-child{text-align:right;}'
     + '.cs-sv .cs-cams{grid-template-columns:repeat(var(--cs-pcols), minmax(0, 1fr));grid-template-rows:repeat(var(--cs-prows), minmax(0, 1fr));}'
     + '.cs-sv .cs-kh{flex-direction:column-reverse;gap:' + u(34) + ';}.cs-sv .cs-kc{text-align:left;}.cs-sv .cs-kg{top:' + u(380) + ';}.cs-sv .cs-km, .cs-sv .cs-ky{font-size:' + u(84) + ';}'
-    + '.cs-sv .cs-kl{flex-direction:row;flex-wrap:wrap;gap:' + u(6) + ';}.cs-sv .cs-ke em{display:none;}.cs-sv .cs-kmore{padding-left:0;}}';
+    + '.cs-sv .cs-kl{flex-direction:row;flex-wrap:wrap;gap:' + u(6) + ';}.cs-sv .cs-ke em{display:none;}.cs-sv .cs-kmore{padding-left:0;}'
+    // Two weeks: a column per week, a row per day (the number and its weekday at the left, the titles with their
+    // time in front beside them), so the titles stay readable on a narrow box.
+    + '.cs-sv .cs-kh{--cs-res:' + u(2 * M) + ';}'
+    + '.cs-sv .cs-kg.cs-k2{grid-template-columns:repeat(2, minmax(0, 1fr));grid-template-rows:repeat(7, minmax(0, 1fr));grid-auto-flow:column;column-gap:' + u(28) + ';}.cs-sv .cs-k2 .cs-kw{display:none;}'
+    + '.cs-sv .cs-k2 .cs-kd{display:grid;grid-template-columns:max(' + u(62) + ', calc(var(--cs-wd, 2) * ' + u(15.5) + ' + ' + u(8) + ')) minmax(0, 1fr);grid-template-rows:auto 1fr;column-gap:' + u(12) + ';row-gap:' + u(2) + ';padding:' + u(10) + ' 0 ' + u(4) + ';}'
+    + '.cs-sv .cs-k2 .cs-kd > b{margin-left:0;justify-self:start;}.cs-sv .cs-k2 .cs-kn{display:block;grid-column:1;grid-row:2;padding-left:' + u(6) + ';}'
+    + '.cs-sv .cs-k2 .cs-kl{grid-column:2;grid-row:1 / span 2;flex-direction:column;flex-wrap:nowrap;gap:' + u(3) + ';padding-top:' + u(4) + ';}'
+    + '.cs-sv .cs-k2 .cs-ke2{display:flex;gap:' + u(8) + ';}.cs-sv .cs-k2 .cs-ke em{display:block;}.cs-sv .cs-k2 .cs-ke2 small{order:1;flex:none;}.cs-sv .cs-k2 .cs-ke2 em{order:2;}'
+    + '.cs-sv .cs-k2 .cs-kmore{padding-left:' + u(18) + ';}}';
 
   var clock = function (ctx) {
     return '<div class="cs-clock"><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div>';
@@ -801,13 +846,19 @@
       + '<div class="cs-date">' + esc(dateText(ctx.now)) + (wx && wx.temp != null ? ' · ' + wx.temp + '° ' + esc(wx.text.toLowerCase()) : '') + '</div></div>'
       + (name ? '<div class="cs-name"><b data-no-i18n>' + esc(name) + '</b>' + esc(sub || '') + '</div>' : '') + '</div>';
   };
-  // The share of the night that has passed (0 at sunset, 1 at sunrise), from today's rise and set.
-  S.nightShare = function (now, rise, set) {
+  // The night around now, from today's rise and set: { start: the sunset it began with, end: the coming sunrise };
+  // null by day. Before midnight the sunrise is tomorrow's, after midnight the sunset was yesterday's.
+  S.nightSpan = function (now, rise, set) {
     var t = +now, day = 86400000;
     if (!isFinite(rise) || !isFinite(set) || set <= rise) return null;
-    if (t >= set) return Math.min(1, (t - set) / (rise + day - set));
-    if (t < rise) return Math.max(0, (t - (set - day)) / (rise - (set - day)));
+    if (t >= set) return { start: set, end: rise + day };
+    if (t < rise) return { start: set - day, end: rise };
     return null;
+  };
+  // The share of the night that has passed (0 at sunset, 1 at sunrise).
+  S.nightShare = function (now, rise, set) {
+    var n = S.nightSpan(now, rise, set);
+    return n ? Math.max(0, Math.min(1, (+now - n.start) / (n.end - n.start))) : null;
   };
   var STARS = (function () {
     var r = rng(7), out = '';
@@ -820,16 +871,23 @@
     himmel: function (ctx) {
       var sun = ctx.sun, share = sun ? S.dayShare(ctx.now, sun.rise, sun.set) : null;
       var sky = S.sky(sun ? share : 0.5), wx = ctx.wx;
-      var night = sun ? share == null : false, moonAt = night ? S.nightShare(ctx.now, sun.rise, sun.set) : null;
+      var night = sun ? share == null : false, span = night ? S.nightSpan(ctx.now, sun.rise, sun.set) : null;
+      var moonAt = span ? S.nightShare(ctx.now, sun.rise, sun.set) : null;
       var W = 1168, H = 300, x0 = 0, x1 = W, top = 34;
       // Quadratic curve from the left end over the top to the right end; the point for a share of the day.
       var at = function (t) { var a = 1 - t; return [a * a * x0 + 2 * a * t * (W / 2) + t * t * x1, a * a * H + 2 * a * t * (top * 2 - H) + t * t * H]; };
       var pts = function (to) { var d = ''; for (var i = 0; i <= 60; i++) { var p = at(to * i / 60); d += (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); } return d; };
       var p = share == null ? null : at(share), q = moonAt == null ? null : at(moonAt);
-      var left = sun && share != null ? Math.round((sun.set - +ctx.now) / 60000) : null;
+      // The minutes until the path's right end: sunset by day, the coming sunrise by night.
+      var left = sun && share != null ? Math.round((sun.set - +ctx.now) / 60000) : span ? Math.max(0, Math.round((span.end - +ctx.now) / 60000)) : null;
       // Whole sentences with placeholders: the translation works on the finished text.
-      var mid = share == null ? T('Nacht') : left >= 60 ? T('Noch {h} Std. {m} Min. Tageslicht'.replace('{h}', Math.floor(left / 60)).replace('{m}', left % 60))
+      var mid = left == null ? T('Nacht')
+        : span ? (left >= 60 ? T('Noch {h} Std. {m} Min. bis Sonnenaufgang'.replace('{h}', Math.floor(left / 60)).replace('{m}', left % 60)) : T('Noch {m} Min. bis Sonnenaufgang'.replace('{m}', left)))
+        : left >= 60 ? T('Noch {h} Std. {m} Min. Tageslicht'.replace('{h}', Math.floor(left / 60)).replace('{m}', left % 60))
         : T('Noch {m} Min. Tageslicht'.replace('{m}', left));
+      // The labels name the two ends of the path that is drawn: by day sunrise and sunset, by night (the moon's
+      // way) the sunset the night began with and the coming sunrise (#229).
+      var ends = span ? [T('Untergang'), span.start, T('Aufgang'), span.end] : sun ? [T('Aufgang'), sun.rise, T('Untergang'), sun.set] : null;
       return '<div class="cs-bg" style="background:linear-gradient(180deg, ' + sky[0] + ' 0%, ' + sky[1] + ' 36%, ' + sky[2] + ' 74%, ' + sky[3] + ' 100%)"></div>' + (night ? STARS : '') + '<div class="cs-in">'
         + '<div class="cs-top"><div><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div>'
         + (wx ? '<div class="cs-wx"><div class="cs-t"><img src="' + esc(wx.icon) + '" alt="">' + (wx.temp != null ? wx.temp + '°' : '') + '</div><p>' + esc(wx.text) + '</p></div>' : '') + '</div>'
@@ -841,7 +899,7 @@
           + (p ? '<path class="cs-done" d="' + pts(share) + '" fill="none" stroke="#FFE9BE" stroke-width="5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>'
             + '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="130" fill="url(#cs-glow)"/><circle class="cs-sun" cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="27" fill="#FFF6DF"/>' : '')
           + (q ? '<circle cx="' + q[0].toFixed(1) + '" cy="' + q[1].toFixed(1) + '" r="96" fill="url(#cs-mglow)"/><circle class="cs-moon" cx="' + q[0].toFixed(1) + '" cy="' + q[1].toFixed(1) + '" r="22" fill="#F1F4FF"/>' : '')
-          + '</svg></div><div class="cs-ends"><span>' + esc(T('Aufgang')) + ' <b>' + esc(hm(sun.rise)) + '</b></span><span>' + esc(mid) + '</span><span>' + esc(T('Untergang')) + ' <b>' + esc(hm(sun.set)) + '</b></span></div>' : '')
+          + '</svg></div><div class="cs-ends"><span>' + esc(ends[0]) + ' <b>' + esc(hm(ends[1])) + '</b></span><span>' + esc(mid) + '</span><span>' + esc(ends[2]) + ' <b>' + esc(hm(ends[3])) + '</b></span></div>' : '')
         + '</div>';
     },
     // A drawn landscape; a new one every ten minutes, dark ones by night.
@@ -926,36 +984,98 @@
       + '<div class="cs-corner"><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div>'
       + week + curve + '</div>';
   };
-  // The day as one line from 6 to 24: what was, where now is, what comes; the next appointment big at the top.
-  DRAW.linie = function (ctx) {
-    var now = +ctx.now, d0 = new Date(ctx.now); d0.setHours(0, 0, 0, 0);
-    // 6 and 24 o'clock of that day by the calendar (on 29.03. and 25.10. the day is not 24 hours long).
-    var from = +new Date(d0.getFullYear(), d0.getMonth(), d0.getDate(), 6), to = +new Date(d0.getFullYear(), d0.getMonth(), d0.getDate() + 1);
-    var pos = function (t) { return Math.max(0, Math.min(100, (t - from) / (to - from) * 100)); };
-    var today = (ctx.events || []).filter(function (e) { return !e.allDay && sameDay(e.start, now) && e.start >= from; }).slice(0, 6);
-    var next = (ctx.events || []).filter(function (e) { return !e.allDay && e.start > now; })[0] || null;
-    var mins = next ? Math.round((next.start - now) / 60000) : null;
-    var inText = next ? (mins >= 60 ? T('in {h} Std. {m} Min.'.replace('{h}', Math.floor(mins / 60)).replace('{m}', mins % 60)) : T('in {m} Min.'.replace('{m}', mins))) : '';
-    var whenNext = next && !sameDay(next.start, now) ? dayName(next.start) + ' ' + clockOf(next.start) : inText;
-    var out = '<div class="cs-in">' + head(ctx, next ? next.title : T('Heute nichts mehr'), next ? whenNext : '', true)
-      + '<div class="cs-body"><div class="cs-line"><u style="width:' + pos(now).toFixed(1) + '%"></u></div>';
-    [6, 9, 12, 15, 18, 21, 24].forEach(function (h) { out += '<div class="cs-tick' + (h === 6 ? ' cs-first' : h === 24 ? ' cs-last' : '') + '" style="left:' + ((h - 6) / 18 * 100).toFixed(2) + '%">' + h + '</div>'; });
-    var last = { up: -100, down: -100 };
-    today.forEach(function (e, i) {
-      var p = pos(e.start), past = (e.end || e.start) < now;
-      // Above and below in turn; two on the same side keep their distance.
-      var side = i % 2 ? 'down' : 'up';
-      if (p - last[side] < 23.5) side = side === 'up' ? 'down' : 'up';
-      if (p - last[side] < 23.5) { out += '<div class="sv-dot' + (past ? ' cs-past' : '') + '" style="left:' + p.toFixed(1) + '%"></div>'; return; }
-      last[side] = p;
-      var left = Math.max(11, Math.min(89, p));
-      out += '<div class="sv-dot' + (past ? ' cs-past' : '') + '" style="left:' + p.toFixed(1) + '%"></div>'
-        + '<div class="cs-ev cs-' + side + (past ? ' cs-past' : '') + (e === next ? ' cs-next' : '') + '" style="left:' + left.toFixed(1) + '%"><b data-no-i18n>' + esc(e.title) + '</b><span>'
-        + esc(clockOf(e.start) + (e.end ? ' – ' + clockOf(e.end) : '')) + '</span></div>';
+  // The day line (#233). A window that travels with the clock: three hours back, fifteen ahead, the same scale at
+  // every hour. Now stands still at a sixth of the line, what is over leaves at the left (the finished day takes no
+  // room), the evening shows tomorrow morning. Cropping 6–24 to now–24 instead would change the scale every hour and
+  // end at midnight. S.dayLine is the model: { from, to, now (%), running, next, lead, items: [{ e, x, x2, past, lead }] }.
+  var endOf = function (e) { return e.end && e.end > e.start ? e.end : e.start; };
+  S.dayLine = function (events, now) {
+    var t = +now, h = 3600000, from = t - LINE.back * h, to = t + LINE.ahead * h;
+    var pos = function (x) { return (x - from) / (to - from) * 100; };
+    var timed = (events || []).filter(function (e) { return e && !e.allDay && isFinite(e.start); }).sort(function (a, b) { return a.start - b.start; });
+    // What leads: an appointment that is running (the one that ends first), else the next one.
+    var running = timed.filter(function (e) { return e.start <= t && endOf(e) > t; }).sort(function (a, b) { return endOf(a) - endOf(b); })[0] || null;
+    var next = timed.filter(function (e) { return e.start > t; })[0] || null;
+    var lead = running || next;
+    var items = timed.filter(function (e) { return e.start < to && endOf(e) > from; }).slice(0, 24).map(function (e) {
+      return { e: e, x: pos(e.start), x2: pos(endOf(e)), past: endOf(e) <= t, lead: e === lead };
     });
-    if (now >= from) out += '<div class="cs-now" style="left:' + pos(now).toFixed(1) + '%"></div>';
-    if (!today.length) out += '<div class="sv-empty">' + esc(T('Heute keine Termine')) + '</div>';
-    return out + '</div></div>';
+    return { from: from, to: to, now: pos(t), pos: pos, running: running, next: next, lead: lead, items: items };
+  };
+  // The plates: an appointment gets a plate of width w (%) at its start; those that begin while that plate would
+  // still stand there share it, a row each, the earliest on top (close appointments never shrink to a dot without
+  // a title). So plates never overlap. More rows than a plate holds: the least important go (what is over first,
+  // then the latest; never the one that leads) and are counted. → [{ left, x, rows: [it], more }]
+  S.plates = function (items, w, rows) {
+    var out = [], cur = null;
+    var weight = function (it) { return it.lead ? 3e9 : it.past ? it.x : 2e9 - it.x; };
+    items.forEach(function (it) {
+      var left = Math.max(0, Math.min(100 - w, it.x));
+      if (cur && left < cur.left + w + LINE.gap) { cur.rows.push(it); return; }
+      cur = { left: left, x: Math.max(0, Math.min(100, it.x)), rows: [it], more: 0 };
+      out.push(cur);
+    });
+    out.forEach(function (p) {
+      if (p.rows.length <= rows) return;
+      // Never a bare +1: the line that would say so takes a title's place, so at least two are counted.
+      var keep = p.rows.slice().sort(function (a, b) { return weight(b) - weight(a); }).slice(0, rows - 1);
+      p.more = p.rows.length - keep.length;
+      p.rows = p.rows.filter(function (it) { return keep.indexOf(it) > -1; });
+    });
+    return out;
+  };
+  DRAW.linie = function (ctx) {
+    // By the whole minute: the line moves on with the clock's digits, not with every repaint in between.
+    var now = Math.floor(+ctx.now / 60000) * 60000, m = S.dayLine(ctx.events, now), cals = ctx.cals || [];
+    var d0 = new Date(now), tomorrow = new Date(d0.getFullYear(), d0.getMonth(), d0.getDate() + 1);
+    var tone = function (e) { var i = cals.indexOf(e.cal); return TONES[(i < 0 ? 0 : i) % TONES.length]; };
+    // The headline: what is running leads (until when), else the next one (in how long; tomorrow or a later day
+    // with its time), else a calm line.
+    var title, sub = '';
+    if (m.running) {
+      var end = endOf(m.running);
+      title = m.running.title;
+      sub = T('jetzt') + ' · ' + T('bis {t}'.replace('{t}', (sameDay(end, now) ? '' : dayName(end, true) + ' ') + clockOf(end)));
+    } else if (m.next) {
+      var mins = Math.round((m.next.start - now) / 60000);
+      title = m.next.title;
+      sub = sameDay(m.next.start, now) ? (mins >= 60 ? T('in {h} Std. {m} Min.'.replace('{h}', Math.floor(mins / 60)).replace('{m}', mins % 60)) : T('in {m} Min.'.replace('{m}', mins)))
+        : sameDay(m.next.start, tomorrow) ? T('Morgen') + ' · ' + clockOf(m.next.start) : dayName(m.next.start) + ' ' + clockOf(m.next.start);
+    } else {
+      title = (ctx.events || []).some(function (e) { return !e.allDay && sameDay(e.start, now); }) ? T('Heute nichts mehr') : T('Heute keine Termine');
+    }
+    var pct = function (v) { return Math.max(0, Math.min(100, v)).toFixed(2); };
+    // The hours: every third one; midnight carries the coming day's name.
+    var ticks = '', c = new Date(m.from);
+    c.setMinutes(0, 0, 0);
+    for (var q = +c; q <= m.to; q += 3600000) {
+      var dq = new Date(q), hq = dq.getHours();
+      if (q < m.from || dq.getMinutes() || hq % 3) continue;
+      ticks += '<div class="cs-tick' + (hq ? '' : ' cs-day') + '" style="left:' + pct(m.pos(q)) + '%">' + esc(hq ? hq : dayName(q, true)) + '</div>';
+    }
+    var segs = m.items.map(function (it) {
+      var a = Math.max(0, it.x), b = Math.min(100, it.x2);
+      return '<div class="cs-seg' + (it.past ? ' cs-past' : '') + '" style="left:' + pct(a) + '%;width:' + pct(b - a) + '%"></div>';
+    }).join('');
+    var used = {};
+    var lay = function (name) {
+      var cfg = LINE[name], html = '';
+      used[name] = 1;
+      S.plates(m.items, cfg.w, cfg.rows).forEach(function (p) {
+        var one = p.rows.length === 1 && !p.more, cls = (p.rows.every(function (it) { return it.past; }) ? ' cs-past' : '') + (one && p.rows[0].lead ? ' cs-lead' : '');
+        used[name] = Math.max(used[name], p.rows.length + (p.more ? 1 : 0));
+        html += '<i class="cs-stem" style="left:' + pct(p.x) + '%"></i><div class="cs-ev' + cls + '" style="left:' + pct(p.left) + '%">' + p.rows.map(function (it) {
+          var e = it.e;
+          return '<div class="cs-r' + (it.past ? ' cs-past' : '') + (it.lead ? ' cs-lead' : '') + '"><b data-no-i18n>' + esc(e.title) + '</b><span><i style="--cs-c:' + esc(tone(e)) + '"></i>'
+            + esc(clockOf(e.start) + (e.end && e.end > e.start ? ' – ' + clockOf(e.end) : '')) + '</span></div>';
+        }).join('') + (p.more ? '<em class="cs-more">+' + Number(p.more) + '</em>' : '') + '</div>';
+      });
+      return '<div class="cs-lay cs-' + esc(name) + '">' + html + '</div>';
+    };
+    var wide = lay('wide'), tall = lay('tall');
+    return '<div class="cs-in">' + head(ctx, title, sub, true)
+      + '<div class="cs-body" style="--cs-nw:' + Number(used.wide) + ';--cs-nt:' + Number(used.tall) + '"><div class="cs-line"><u style="left:' + pct(m.now) + '%"></u></div>'
+      + ticks + segs + wide + tall + '<div class="cs-now" style="left:' + pct(m.now) + '%"></div></div></div>';
   };
   // Seven days side by side: weather, appointments, waste. Today stands out.
   var TONES = ['#4E9E95', '#5B8FC9', '#6AAE78', '#DE8A4E', '#E8B04A'];
@@ -1083,27 +1203,58 @@
     var len = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
     return { start: new Date(d.getFullYear(), d.getMonth(), 1 - off), weeks: Math.ceil((off + len) / 7), month: d.getMonth() };
   };
+  // Two calendar weeks (#231, casora_screensaver_calendar_range '2w'): this week and the next, from the locale's first
+  // weekday. { start, weeks: 2, two: true }
+  S.twoWeekGrid = function (now, hass) {
+    var d = new Date(+now), off = (d.getDay() - firstDay(hass) % 7 + 7) % 7;
+    return { start: new Date(d.getFullYear(), d.getMonth(), d.getDate() - off), weeks: 2, month: null, two: true };
+  };
+  // The days the calendar screensaver shows (and asks the calendars for): the month, or two weeks when picked.
+  S.calGrid = function (now, hass, vars) {
+    return vars && vars.casora_screensaver_calendar_range === '2w' ? S.twoWeekGrid(now, hass) : S.monthGrid(now, hass);
+  };
+  // First and last day of a span as the language writes it (Intl puts the month once where both share it: de
+  // 16.–29. November, en 16–29 November); two months take their short names (30. Nov. – 13. Dez.).
+  S.spanText = function (from, to) {
+    var a = new Date(+from), b = new Date(+to);
+    var f = new Intl.DateTimeFormat(loc(), { day: 'numeric', month: a.getMonth() === b.getMonth() ? 'long' : 'short' });
+    // Across New Year Intl would add both years: the two days on their own then, the year stays out of the title.
+    var text = typeof f.formatRange === 'function' && a.getFullYear() === b.getFullYear() ? f.formatRange(a, b) : f.format(a) + ' – ' + f.format(b);
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  };
   DRAW.kalender = function (ctx) {
-    var g = S.monthGrid(ctx.now, ctx.hass), ev = ctx.events || [], cals = ctx.cals || [];
+    var g = S.calGrid(ctx.now, ctx.hass, ctx.vars), ev = ctx.events || [], cals = ctx.cals || [];
     var y = g.start.getFullYear(), m = g.start.getMonth(), d = g.start.getDate();
     var tone = function (e) { var i = cals.indexOf(e.cal); return TONES[(i < 0 ? 0 : i) % TONES.length]; };
     var month = new Intl.DateTimeFormat(loc(), { month: 'long' }).format(ctx.now);
-    // Titles a day has room for: two, one in a month of six weeks.
-    var room = g.weeks >= 6 ? 1 : 2;
-    var html = '<div class="cs-in"><div class="cs-kh"><div class="cs-kt"><div class="cs-km">' + esc(month.charAt(0).toUpperCase() + month.slice(1)) + '</div><div class="cs-ky">' + ctx.now.getFullYear() + '</div></div>'
+    // The big thing: the month and its year, or the two weeks' first and last day (--cs-n: its length, the
+    // stylesheet fits the size to it).
+    var span = g.two ? S.spanText(g.start, new Date(y, m, d + 13)) : '';
+    var title = g.two ? '<div class="cs-km cs-kr" style="--cs-n:' + Math.max(8, span.length) + '">' + esc(span) + '</div>'
+      : '<div class="cs-km">' + esc(month.charAt(0).toUpperCase() + month.slice(1)) + '</div><div class="cs-ky">' + ctx.now.getFullYear() + '</div>';
+    // Titles a day has room for: two, one in a month of six weeks; three with their times at two weeks.
+    var room = g.two ? 3 : g.weeks >= 6 ? 1 : 2;
+    var html = '<div class="cs-in"><div class="cs-kh"><div class="cs-kt">' + title + '</div>'
       + '<div class="cs-kc"><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div></div>'
-      + '<div class="cs-kg" style="--cs-weeks:' + Number(g.weeks) + '">';
-    for (var w = 0; w < 7; w++) html += '<div class="cs-kw">' + esc(dayName(+new Date(y, m, d + w), true)) + '</div>';
+      + '<div class="cs-kg' + (g.two ? ' cs-k2' : '') + '" style="--cs-weeks:' + Number(g.weeks) + ';--cs-wd:';
+    // --cs-wd: the longest weekday name (pt: „segunda“); the portrait layout of the two weeks makes room for it.
+    var names = [0, 1, 2, 3, 4, 5, 6].map(function (w) { return dayName(+new Date(y, m, d + w), true); });
+    var wd = Math.max.apply(null, names.map(function (n) { return n.length; }));
+    html += Number(wd) + '">';
+    names.forEach(function (n) { html += '<div class="cs-kw">' + esc(n) + '</div>'; });
     for (var i = 0; i < g.weeks * 7; i++) {
       var day = new Date(y, m, d + i), a = +day, b = +new Date(y, m, d + i + 1);
       var list = ev.filter(function (e) { return e.start < b && (e.end && e.end > e.start ? e.end : e.start + 1) > a; });
-      var cls = 'cs-kd' + (day.getMonth() !== g.month ? ' cs-kout' : '') + (sameDay(a, ctx.now) ? ' cs-ktoday' : b <= +ctx.now ? ' cs-kpast' : '');
+      var cls = 'cs-kd' + (!g.two && day.getMonth() !== g.month ? ' cs-kout' : '') + (sameDay(a, ctx.now) ? ' cs-ktoday' : b <= +ctx.now ? ' cs-kpast' : '');
       // Never „+1“: a single one left over takes the line itself.
       var show = list.length === room + 1 ? room + 1 : room;
       if (show > room && room === 1) show = 1;
-      html += '<div class="' + esc(cls) + '"><b>' + day.getDate() + '</b>' + (list.length ? '<div class="cs-kl">' + list.slice(0, show).map(function (e) {
-        return '<span class="cs-ke" style="--cs-c:' + esc(tone(e)) + '"><i></i><em data-no-i18n>' + esc(e.title) + '</em></span>';
-      }).join('') + (list.length > show ? '<span class="cs-kmore">+' + (list.length - show) + '</span>' : '') + '</div>' : '') + '</div>';
+      // Two weeks: the weekday in the cell too (the portrait layout has no row of weekdays), and each title's time.
+      html += '<div class="' + esc(cls) + '"><b>' + day.getDate() + '</b>' + (g.two ? '<small class="cs-kn">' + esc(names[i % 7]) + '</small>' : '')
+        + (list.length ? '<div class="cs-kl">' + list.slice(0, show).map(function (e) {
+          var when = g.two ? '<small>' + esc(e.allDay || e.start < a ? T('ganztägig') : clockOf(e.start)) + '</small>' : '';
+          return '<span class="cs-ke' + (g.two ? ' cs-ke2' : '') + '" style="--cs-c:' + esc(tone(e)) + '"><i></i><em data-no-i18n>' + esc(e.title) + '</em>' + when + '</span>';
+        }).join('') + (list.length > show ? '<span class="cs-kmore">+' + (list.length - show) + '</span>' : '') + '</div>' : '') + '</div>';
     }
     return html + '</div></div>';
   };
@@ -1140,8 +1291,8 @@
     var kind = o.kind || '';
     var need = function (list) { return !kind || list.indexOf(kind) > -1; };
     var cals = need(['linie', 'woche', 'kalender']) ? S.calendars(hass, vars.casora_screensaver_calendars) : [];
-    // The month calendar asks for its whole grid, the others for the coming eight days.
-    var grid = kind === 'kalender' ? S.monthGrid(now, hass) : null;
+    // The calendar asks for its whole grid (the month, or two weeks), the others for the coming eight days.
+    var grid = kind === 'kalender' ? S.calGrid(now, hass, vars) : null;
     var events = o.events !== undefined ? o.events : !cals.length ? [] : grid ? S.events(hass, cals, grid.weeks * 7, grid.start) : S.events(hass, cals, 8);
     var media = o.media !== undefined ? o.media : need(['musik']) || (S.on(vars.casora_screensaver_tint) && TINT_KINDS.indexOf(kind) > -1) ? S.playing(hass) : null;
     var cams = o.cams !== undefined ? o.cams : need(['kameras']) ? S.cameras(hass, vars.casora_screensaver_cameras).map(function (c) { c.shot = S.shot(c, now); return c; }) : [];
@@ -1184,9 +1335,17 @@
     var tintHtml = ctx.tint && ctx.media && TINT_KINDS.indexOf(k) > -1 ? '<div class="cs-tint" style="--cs-t:' + esc(ctx.tint) + '"></div>' : '';
     return '<div class="cs-sv cs-' + k + cls + '" data-kind="' + k + '"' + (tintHtml ? ' data-tint="1"' : '') + '>' + tintHtml + DRAW[k](ctx) + '</div>';
   };
+  // The wander against burn-in (#230). A step every twenty seconds, at :10, :30 and :50 of the minute: the glide of
+  // four seconds is over before the minute ends, so the layout never moves while the clock's digits change.
+  S.DRIFT_EVERY = 20000;
+  S.DRIFT_AT = 10000;
+  S.driftStep = function (ms) { return Math.floor((+ms - S.DRIFT_AT) / S.DRIFT_EVERY); };
+  S.driftAt = function (n) { return [(Math.sin(n / 3) * 10).toFixed(1) + 'px', (Math.cos(n / 4) * 8).toFixed(1) + 'px']; };
+  // The switch in the Studio: on unless it was turned off (stored only as false).
+  S.wanders = function (vars) { var v = vars && vars.casora_screensaver_wander; return !(v === false || v === 'false' || v === 0 || v === '0'); };
   S.mount = function (host, kind, o) {
     o = o || {};
-    var last = '', timer = 0, n = 0;
+    var last = '', timer = 0, step = null, minute = null, moved = false;
     if (!document.getElementById('cs-sv-css')) {
       var st = document.createElement('style');
       st.id = 'cs-sv-css';
@@ -1228,12 +1387,19 @@
       var html = S.html(k, ctx);
       api.kind = k;
       if (html !== last) { last = html; host.innerHTML = html; }
-      // Wander a few pixels so nothing burns in (not in a preview): one step every twenty seconds.
-      if (o.drift) {
-        var el = host.firstElementChild;
-        n = Math.floor(Date.now() / 20000);
-        if (el) { el.style.setProperty('--cs-dx', (Math.sin(n / 3) * 10).toFixed(1) + 'px'); el.style.setProperty('--cs-dy', (Math.cos(n / 4) * 8).toFixed(1) + 'px'); }
+      // Wander a few pixels so nothing burns in (not in a preview). o.drift: true, or a function asked every time
+      // (the Studio switch). A call that sees a new minute (the one that changes the digits) keeps the step it had,
+      // also when a throttled timer skipped the step's own moment: the step then follows with the next call.
+      var el = host.firstElementChild, t = +now, min = Math.floor(t / 60000);
+      if (typeof o.drift === 'function' ? o.drift() : o.drift) {
+        if (step == null || min === minute) step = S.driftStep(t);
+        var d = S.driftAt(step);
+        if (el) { el.style.setProperty('--cs-dx', d[0]); el.style.setProperty('--cs-dy', d[1]); moved = true; }
+      } else if (moved) {
+        if (el) { el.style.removeProperty('--cs-dx'); el.style.removeProperty('--cs-dy'); }
+        moved = false; step = null;
       }
+      minute = min;
     };
     update();
     timer = setInterval(update, o.every || 20000);
@@ -1255,7 +1421,7 @@
   // The settings of the dashboard: the first value found on a view's hero card.
   S.vars = function (cfg) {
     var out = {}, keys = ['casora_screensaver', 'casora_screensaver_kind', 'casora_screensaver_calendar', 'casora_screensaver_photos', 'casora_screensaver_mix',
-      'casora_screensaver_cameras', 'casora_screensaver_calendars', 'casora_screensaver_tint', 'weather_entity'];
+      'casora_screensaver_cameras', 'casora_screensaver_calendars', 'casora_screensaver_tint', 'casora_screensaver_wander', 'casora_screensaver_calendar_range', 'weather_entity'];
     ((cfg && cfg.views) || []).forEach(function (v) {
       var vars = ((((v.cards || [])[0]) || {}).variables) || {};
       keys.forEach(function (k) { if ((out[k] == null || out[k] === '' || (Array.isArray(out[k]) && !out[k].length)) && vars[k] != null && vars[k] !== '') out[k] = vars[k]; });
@@ -1382,7 +1548,7 @@
     ['pointerdown', 'touchstart', 'pointerup', 'touchend', 'mousedown', 'mouseup', 'click', 'contextmenu'].forEach(function (t) { layer.addEventListener(t, wake, { passive: false }); });
     layer.setAttribute('data-casora-window', ''); document.body.appendChild(layer);
     // Every five seconds: the cameras' pictures stay fresh (everything else only repaints when it changed).
-    live = S.mount(stage, null, { drift: true, every: 5000, kind: function () { return S.vars(config() || cfg).casora_screensaver_kind || 'mix'; },
+    live = S.mount(stage, null, { drift: function () { return S.wanders(S.vars(config() || cfg)); }, every: 5000, kind: function () { return S.vars(config() || cfg).casora_screensaver_kind || 'mix'; },
       context: function () { var c = config() || cfg; return { config: c, vars: S.vars(c) }; } });
   };
   S.show = show;

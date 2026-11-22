@@ -5447,6 +5447,14 @@
     [
       "^Version (.+) übersprungen$",
       "Versão {1} ignorada"
+    ],
+    [
+      "^Noch (\\d+) Std\\. (\\d+) Min\\. bis Sonnenaufgang$",
+      "Ainda {1} h {2} min até ao nascer do sol"
+    ],
+    [
+      "^Noch (\\d+) Min\\. bis Sonnenaufgang$",
+      "Ainda {1} min até ao nascer do sol"
     ]
   ]
 }

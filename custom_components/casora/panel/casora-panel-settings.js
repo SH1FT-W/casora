@@ -89,10 +89,10 @@
     { id: "saver", label: "Screensaver", icon: "clock", tone: "set-saver",
       sub: "What a wall tablet shows when nobody touches it.",
       blocks: [
-        { k: "saver", sec: "General", sub: "chrome", keys: ["casora_screensaver", "casora_screensaver_kind", "casora_screensaver_tint", "casora_screensaver_photos",
+        { k: "saver", sec: "General", sub: "chrome", keys: ["casora_screensaver", "casora_screensaver_kind", "casora_screensaver_calendar_range", "casora_screensaver_tint", "casora_screensaver_wander", "casora_screensaver_photos",
           "casora_screensaver_mix", "casora_screensaver_cameras", "casora_screensaver_calendars"], saver: true,
           title: "Screensaver", plain: "Pick a screensaver and after how long it starts. The picture shows what it looks like.",
-          kw: "bildschirmschoner screensaver wandtablet tablet uhr wortuhr himmel landschaft fotos leerlauf idle ruhe kameras kalender abwechslung coverfarbe cameras calendar" },
+          kw: "bildschirmschoner screensaver wandtablet tablet uhr wortuhr himmel landschaft fotos leerlauf idle ruhe kameras kalender abwechslung coverfarbe cameras calendar einbrennen einbrennschutz burn-in wandern lcd oled monat zwei wochen month two weeks" },
       ] },
     { id: "phone", label: "Phone", icon: "iphone", tone: "set-live",
       sub: "The dashboard on the phone, and progress on the lock screen.",
@@ -1719,9 +1719,13 @@
       const extra = () => { photos(); drawLists(); };
       extra();
       // The kind of the draft changes: the preview follows it (looked at while the preview is on the page).
+      // A setting the picture depends on changes in the draft (the calendar's range, the cover colour): drawn again.
+      const sig = () => JSON.stringify(typeof SV.vars === "function" ? SV.vars(draft()) : {});
+      let lastSig = sig();
       const watch = setInterval(() => {
         if (!stage.isConnected) { clearInterval(watch); live.destroy(); return; }
-        const p = picked();
+        const p = picked(), v = sig();
+        if (v !== lastSig) { lastSig = v; if (p === last) live.update(); }
         if (p === last) return;
         last = p;
         show = p || "mix"; live.update(); paint(); extra();

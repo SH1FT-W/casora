@@ -101,7 +101,7 @@ assert.equal(clockOf('12', 'de-DE'), '4:42', 'own 12-hour format wins');
 assert.ok(/class="cs-time">4:42</.test(S.html('himmel', S.context({ hass: { ...hass, locale: { time_format: 'language', language: 'en' } }, now: new Date('2026-11-10T16:42:00'), sun: null, rooms: [] }))),
   'the HA user language first, as the dashboard clock (use_12h in the templates)');
 h = S.html('himmel', ctx({ now: new Date('2026-11-10T22:00:00') }));
-assert.ok(!/cs-sun/.test(h) && /Nacht/.test(h), 'sky at night: no sun');
+assert.ok(!/cs-sun/.test(h) && /bis Sonnenaufgang/.test(h), 'sky at night: no sun, the middle counts to sunrise (#229)');
 h = S.html('himmel', ctx({ sun: null, wx: null }));
 assert.ok(/16:42/.test(h) && !/cs-arc/.test(h) && !/cs-wx/.test(h), 'sky without sun entity and weather: the time alone');
 h = S.html('land', ctx());
@@ -130,11 +130,12 @@ h = S.html('wetter', ctx({ hourly, daily }));
 assert.ok(/data-kind="wetter"/.test(h) && /cs-curve/.test(h) && /<rect /.test(h) && (h.match(/cs-wd"/g) || []).length === 5 && /11°/.test(h), 'weather: curve, rain, five days');
 assert.ok(/data-kind="wetter"/.test(S.html('wetter', ctx({ hourly: [], daily: [] }))) && !/cs-curve/.test(S.html('wetter', ctx({ hourly: [], daily: [] }))), 'weather without forecast: now alone');
 assert.ok(/data-kind="himmel"/.test(S.html('wetter', ctx({ wx: null }))), 'no weather entity: the sky');
-h = S.html('linie', ctx({ events }));
-assert.ok(/Zahnarzt/.test(h) && /cs-past/.test(h) && /cs-next/.test(h) && /in 1 Std\. 48 Min\./.test(h) && /cs-now/.test(h), 'day line: past, next, now');
+// The day line shows three hours back and fifteen ahead (#233, more in screensaver_dayline.mjs).
+h = S.html('linie', ctx({ events, now: new Date('2026-11-10T11:00:00') }));
+assert.ok(/Zahnarzt/.test(h) && /cs-past/.test(h) && /cs-lead/.test(h) && /in 7 Std\. 30 Min\./.test(h) && /cs-now/.test(h), 'day line: past, next, now');
 assert.ok(!/<i>"|Elternabend <i>/.test(h) && /Elternabend &lt;i&gt;/.test(h), 'appointment titles are escaped');
 h = S.html('linie', ctx({ events: [] }));
-assert.ok(/Heute nichts mehr/.test(h) && /Heute keine Termine/.test(h), 'day line without appointments');
+assert.ok(/Heute keine Termine/.test(h) && !/cs-ev/.test(h), 'day line without appointments');
 h = S.html('woche', ctx({ events, daily, bins: [{ label: 'Restmüll', days: 1 }] }));
 assert.ok((h.match(/class="cs-col[ "]/g) || []).length === 7 && /cs-today/.test(h) && /Restmüll/.test(h) && /ganztägig/.test(h) && /2 Termine · 1 Abholung/.test(h) && !/Zahnarzt/.test(h), 'week: seven days, events, waste; what is over today is gone');
 // #171: a waste integration gives the same pickup as a calendar event and as a sensor; it shows once.
@@ -257,3 +258,90 @@ console.log('screensaver: reading distance ok');
 // Energy: the balance row is centred like the flow above it (owner, 20.11.2026: it was bound to the left).
 assert.match(S.CSS, /\.cs-bal div\{[^}]*text-align:center/, 'energy balance values centred');
 console.log('screensaver: energy balance centred');
+// #229: by night the moon takes the path from tonight's sunset to the coming sunrise, and the two end labels name
+// exactly those two ends (they kept the sun's day times: sunrise left, sunset right).
+{
+  const sunT = { rise: Date.parse('2026-11-10T07:22:00'), set: Date.parse('2026-11-10T17:05:00') };
+  const at = (iso, sun) => S.html('himmel', S.context({ hass, now: new Date(iso), sun: sun || sunT, wx: null, rooms: [] }));
+  const ends = (html) => [...html.match(/class="cs-ends">(.*?)<\/div>/)[1].matchAll(/<span>(.*?)<\/span>/g)].map((m) => m[1].replace(/<[^>]+>/g, ''));
+  assert.deepEqual(ends(at('2026-11-10T13:00:00')), ['Aufgang 07:22', 'Noch 4 Std. 5 Min. Tageslicht', 'Untergang 17:05'], 'day: sunrise … sunset, as before');
+  assert.deepEqual(ends(at('2026-11-10T21:00:00')), ['Untergang 17:05', 'Noch 10 Std. 22 Min. bis Sonnenaufgang', 'Aufgang 07:22'], 'evening: tonight\'s sunset left, the coming sunrise right');
+  assert.deepEqual(ends(at('2026-11-10T06:40:00')), ['Untergang 17:05', 'Noch 42 Min. bis Sonnenaufgang', 'Aufgang 07:22'], 'after midnight: the same night, still sunset … sunrise');
+  const span = S.nightSpan(Date.parse('2026-11-10T21:00:00'), sunT.rise, sunT.set);
+  assert.deepEqual([span.start, span.end], [sunT.set, sunT.rise + 86400000], 'the night\'s two ends are the ones the moon\'s share is measured between');
+  assert.equal(S.nightSpan(Date.parse('2026-11-10T13:00:00'), sunT.rise, sunT.set), null, 'no night by day');
+}
+console.log('screensaver: sky labels by night ok');
+// #231: the Calendar screensaver can show two calendar weeks instead of the month (casora_screensaver_calendar_range
+// '2w'); the month stays the default, the event fetch follows the grid, a day shows as many titles as it has room for.
+{
+  const TWO = { casora_screensaver_calendar_range: '2w' };
+  const mon = { locale: { first_weekday: 'monday', time_format: '24' }, themes: {}, states: {} }, sunFirst = { ...mon, locale: { first_weekday: 'sunday', time_format: '24' } };
+  const ymd = (d) => [d.getFullYear(), d.getMonth() + 1, d.getDate()].join('-');
+  const sat = new Date('2026-11-21T08:00:00'), last = new Date('2026-11-30T08:00:00');
+  // The month stays what it was without the setting (nobody's layout changes on update).
+  assert.deepEqual([ymd(S.calGrid(sat, mon, {}).start), S.calGrid(sat, mon, {}).weeks], ['2026-10-26', 6], 'default: the month');
+  assert.deepEqual([ymd(S.calGrid(sat, mon, { casora_screensaver_calendar_range: 'x' }).start), S.calGrid(sat, mon, {}).two], ['2026-10-26', undefined], 'unknown value: the month');
+  // Two weeks: this week and the next from the locale's first weekday.
+  assert.deepEqual([ymd(S.calGrid(sat, mon, TWO).start), S.calGrid(sat, mon, TWO).weeks], ['2026-11-16', 2], '21 Nov, Monday first: 16–29 Nov');
+  assert.equal(ymd(S.calGrid(last, mon, TWO).start), '2026-11-30', '30 Nov is a Monday: 30 Nov – 13 Dec');
+  assert.equal(ymd(S.calGrid(sat, sunFirst, TWO).start), '2026-11-15', 'Sunday first: from the 15th');
+  assert.equal(ymd(S.calGrid(new Date('2026-11-22T08:00:00'), mon, TWO).start), '2026-11-16', 'a Sunday belongs to the week that began on Monday');
+  // The fetch asks for exactly the grid: fourteen days from the week's first day.
+  {
+    const asked = [];
+    const hassApi = { ...mon, states: { 'calendar.a': { state: 'off', attributes: {} } }, callApi: (m, p) => { asked.push(p); return new Promise(() => {}); } };
+    S.context({ hass: hassApi, now: sat, kind: 'kalender', vars: { ...TWO, casora_screensaver_calendars: ['calendar.a'] }, sun: null, wx: null, rooms: [] });
+    assert.equal(asked.length, 1);
+    const q = new URL('http://x/' + asked[0]).searchParams;
+    assert.deepEqual([ymd(new Date(q.get('start'))), ymd(new Date(q.get('end')))], ['2026-11-16', '2026-11-30'], 'the fetch covers the two weeks');
+  }
+  // What is drawn: fourteen days, none greyed as another month, the titles with their time.
+  const at = (d, h, m) => +new Date(2026, 10, d, h, m);
+  const ev = (d, h, m, title) => ({ title, start: at(d, h, m), end: at(d, h, m) + 3600000, allDay: false });
+  const events = [ev(21, 8, 30, 'A1'), ev(21, 10, 0, 'A2'), ev(21, 12, 0, 'A3'), ev(21, 18, 0, 'A4'),
+    ev(24, 8, 0, 'B1'), ev(24, 9, 0, 'B2'), ev(24, 10, 0, 'B3'), ev(24, 11, 0, 'B4'), ev(24, 12, 0, 'B5'),
+    { title: 'Ganz <b>', start: at(26, 0, 0), end: at(27, 0, 0), allDay: true }];
+  const draw = (vars, now) => S.html('kalender', S.context({ hass: mon, now: now || sat, vars, events, sun: null, wx: null, rooms: [] }));
+  const two = draw(TWO), month = draw({});
+  const cells = (html) => html.split('<div class="cs-kd').slice(1);
+  assert.equal(cells(two).length, 14, 'fourteen days');
+  assert.equal(cells(month).length, 42, 'the month: all its weeks, as before');
+  assert.ok(/cs-kg cs-k2/.test(two) && !/cs-k2|cs-ke2|cs-kr/.test(month) && !/cs-kout/.test(two), 'two weeks has its own layout and no days of another month');
+  assert.deepEqual(cells(two).map((c) => Number(c.match(/<b>(\d+)<\/b>/)[1])), [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29]);
+  const day = (html, n) => cells(html).find((c) => new RegExp('<b>' + n + '</b>').test(c));
+  const titles = (c) => [...c.matchAll(/<em data-no-i18n>(.*?)<\/em>/g)].map((m) => m[1]);
+  assert.deepEqual(titles(day(two, 21)), ['A1', 'A2', 'A3', 'A4'], 'four appointments: four titles');
+  assert.ok(!/cs-kmore/.test(day(two, 21)), 'never a bare +1 where the title fits');
+  assert.deepEqual(titles(day(two, 24)), ['B1', 'B2', 'B3'], 'five appointments: three titles …');
+  assert.match(day(two, 24), /cs-kmore">\+2</, '… and +2');
+  assert.match(day(two, 21), /<em data-no-i18n>A1<\/em><small>08:30<\/small>/, 'each title with its time');
+  assert.match(day(two, 26), /<em data-no-i18n>Ganz &lt;b&gt;<\/em><small>ganztägig<\/small>/, 'all day, and the title is escaped');
+  assert.deepEqual(titles(day(month, 21)), ['A1'], 'the month of six weeks keeps one title');
+  // The header names the span, in every language through Intl, also across a month and a year boundary.
+  const clean = (t) => t.replace(/[\u2009\u202f\u00a0]/g, ' ');
+  const head = (html) => clean(html.match(/class="cs-km cs-kr"[^>]*>(.*?)</)[1]);
+  const LOCS = { de: 'de-DE', en: 'en-GB', nl: 'nl-NL', fr: 'fr-FR', es: 'es-ES', it: 'it-IT', pt: 'pt-PT', pl: 'pl-PL', nb: 'nb-NO' };
+  for (const [l, tag] of Object.entries(LOCS)) {
+    win.casoraLocale = () => tag;
+    const same = head(draw(TWO)), cross = head(draw(TWO, last)), year = head(draw(TWO, new Date('2026-12-30T08:00:00')));
+    const fmt = (o, d) => new Intl.DateTimeFormat(tag, o).formatToParts(d).find((p) => p.type === 'month').value;
+    const nov = new Date(2026, 10, 16), dec = new Date(2026, 11, 13);
+    assert.ok(/16/.test(same) && /29/.test(same) && same.toLowerCase().split(fmt({ day: 'numeric', month: 'long' }, nov).toLowerCase()).length === 2, l + ': one month, named once: ' + same);
+    assert.ok(/30/.test(cross) && /13/.test(cross), l + ': both days across the month boundary: ' + cross);
+    if (!/^\d+\/\d+ . \d+\/\d+$/.test(cross)) assert.ok(cross.toLowerCase().includes(fmt({ day: 'numeric', month: 'short' }, nov).toLowerCase()) && cross.toLowerCase().includes(fmt({ day: 'numeric', month: 'short' }, dec).toLowerCase()), l + ': both months: ' + cross);
+    assert.ok(/28/.test(year) && /10/.test(year) && !/2026|2027/.test(year + cross + same), l + ': across the year, no year in the title: ' + year);
+  }
+  win.casoraLocale = () => 'de-DE';
+  assert.equal(head(draw(TWO)), '16.–29. November');
+  assert.equal(head(draw(TWO, last)), '30. Nov. – 13. Dez.');
+  win.casoraLocale = () => 'en-GB';
+  assert.match(head(draw(TWO)), /^16 ?– ?29 November$/);
+  delete win.casoraLocale;
+  // The size of the span follows its length (the stylesheet fits it beside the clock) and never goes under 56 units.
+  assert.match(two, /class="cs-km cs-kr" style="--cs-n:\d+"/);
+  const fit = S.CSS.match(/\.cs-km\.cs-kr\{[^}]*font-size:clamp\(([\d.]+)cqmin/);
+  assert.ok(fit && Number(fit[1]) * 8.2 >= 55.9, 'the span stays big');
+  assert.equal(S.vars({ views: [{ cards: [{ variables: TWO }] }] }).casora_screensaver_calendar_range, '2w', 'read from the hero card');
+}
+console.log('screensaver: calendar two weeks ok');
