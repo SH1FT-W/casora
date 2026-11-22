@@ -50,6 +50,17 @@ const wander = await P(`const r = p.shadowRoot, row = r.querySelector('[data-key
   await new Promise((ok) => setTimeout(ok, 400));
   return { was, vars: [...new Set(p._state.compact.rooms.map((x) => JSON.stringify(x.variables.casora_screensaver_wander ?? null)))] };`);
 await check('Schalter Einbrennschutz da, an; aus = false im Entwurf (jeder Raum)', wander.was === 'true' && wander.vars.length === 1 && wander.vars[0] === 'false', JSON.stringify(wander));
+// #231: the Calendar screensaver has a choice Month / Two weeks; the preview follows the draft.
+await P(`p.shadowRoot.querySelector('.cs-saver-chip[data-kind="kalender"]').click();`);
+await wait(1500);
+const range = await P(`const r = p.shadowRoot, row = r.querySelector('[data-key="casora_screensaver_calendar_range"]');
+  const opts = row ? [...row.querySelectorAll('.segopt')] : [];
+  const before = !!r.querySelector('.cs-saver-stage .cs-kg.cs-k2');
+  if (opts[1]) opts[1].click();
+  await new Promise((ok) => setTimeout(ok, 2000));
+  return { opts: opts.length, before, after: !!p.shadowRoot.querySelector('.cs-saver-stage .cs-kg.cs-k2'), cells: p.shadowRoot.querySelectorAll('.cs-saver-stage .cs-kd').length,
+    vars: [...new Set(p._state.compact.rooms.map((x) => JSON.stringify(x.variables.casora_screensaver_calendar_range ?? null)))] };`);
+await check('Kalender: Wahl Monat / Zwei Wochen, Vorschau zeigt nach dem Tipp 14 Tage (Entwurf)', range.opts === 2 && !range.before && range.after && range.cells === 14 && range.vars.length === 1 && range.vars[0] === '"2w"', JSON.stringify(range));
 const mid = await c.cmd({ type: 'lovelace/config', url_path: dash });
 await check('nichts gespeichert', JSON.stringify(mid) === JSON.stringify(before));
 await P('if (p._csDirty() || p._isDirty()) await p._csDiscardAll();').catch(() => {});
