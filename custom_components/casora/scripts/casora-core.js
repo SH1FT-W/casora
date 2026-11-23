@@ -3186,10 +3186,9 @@ window.casoraMenuGlass = {
         + (withDate ? window.casoraClockLinesHtml(timeHtml, esc(window.casoraClockDate(rootHass()))) : timeHtml) + '</casora-clock>';
     };
     /* A sensor.time without a usable value (unavailable, unknown, empty) counts as missing for camera alert timers. */
-    window.casoraTimeUnusable = function (states, id) {
-      const ent = states && states[id];
+    window.casoraTimeUnusable = function (states) {
+      const ent = states && states['sensor.time'];
       if (!ent) return true;
-      if (id !== 'sensor.time') return false;
       return ['unavailable', 'unknown', ''].includes(String(ent.state || ''));
     };
     const rootHass = () => { try { const ha = document.querySelector('home-assistant'); return (ha && ha.hass) || null; } catch (e) { return null; } };
