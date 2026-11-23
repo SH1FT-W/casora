@@ -90,6 +90,20 @@ const calTile = { variables: {} };
   console.log('ok Studio Agenda preview applies the calendar filter');
 }
 
+// Adding or removing a calendar in the draft must refresh the finder’s memoized list.
+{
+  const w = makeWindow({ waste: 'calendar.waste' });
+  const word = tileStateWord(w);
+  const settings = { calendars: [{ entity: 'calendar.b' }], calendar_filter: '' };
+  assert.equal(word('casora_calendar', calTile, null, states, { states }, settings), 'Visible');
+  settings.calendars.unshift({ entity: 'calendar.a' });
+  assert.equal(word('casora_calendar', calTile, null, states, { states }, settings), 'Termin-cccccc',
+    'adding a calendar refreshes the preview selection');
+  settings.calendars.splice(0, 1);
+  assert.equal(word('casora_calendar', calTile, null, states, { states }, settings), 'Visible',
+    'removing a calendar refreshes the preview selection');
+}
+
 // The waste calendar stays out of the Agenda preview, as on the dashboard.
 {
   const w = makeWindow({ waste: 'calendar.waste' });
