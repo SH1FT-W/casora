@@ -67,6 +67,11 @@ h = hass_with([st("sensor.rh", 70), st("sensor.t", 21), st("sensor.out_t", 20), 
 _, rooms, _ = raumklima.evaluate_rooms(h, [dict(ROOM, w=[])], "sensor.out_t", "sensor.out_rh", None)
 check("B-PY-10: mit feuchten Außenwerten wie bisher", rooms[0]["grund"] == "Feuchte 70 % · draußen feuchter", rooms[0]["grund"])
 
+# #235: the popup charts the outdoor room – the readings name their sensors (none without a reading).
+h = hass_with([st("sensor.rh", 50), st("sensor.t", 21), st("sensor.out_t", 5), st("sensor.out_rh", "unavailable")])
+aussen, _, _ = raumklima.evaluate_rooms(h, [dict(ROOM, w=[])], "sensor.out_t", "sensor.out_rh", None)
+check("#235: outdoor readings name their sensors", (aussen.get("t_id"), aussen.get("rh_id")) == ("sensor.out_t", None), aussen)
+
 # Long durations read as days, not „526 Std. 47 Min.“ (popup audit 26.10.2026).
 check("dauer minuten", raumklima._dur(12) == "12 Min.", raumklima._dur(12))
 check("dauer stunden", raumklima._dur(47 * 60 + 5) == "47 Std. 5 Min.", raumklima._dur(47 * 60 + 5))

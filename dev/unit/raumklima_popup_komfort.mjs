@@ -1,4 +1,4 @@
-// @deckt: custom_components/casora/scripts/local/05-standard-medien.js#_casoraVent,V.comfort,V.read,V.sensorsOf,V.sec,custom_components/casora/scripts/local/01-basis.js#casoraComfortLevel,casoraComfortWord,casoraComfortBands
+// @deckt: custom_components/casora/scripts/local/05-standard-medien.js#_casoraVent,V.comfort,V.read,V.sensorsOf,V.sec,V.outSeries,V.chartCfg,custom_components/casora/scripts/local/01-basis.js#casoraComfortLevel,casoraComfortWord,casoraComfortBands
 // #202 („Popup angleichen“): the room climate popup rated every room without an airing need „Gut“ – a bathroom at
 // 33 % and a bedroom at 22 °C too – and „Zu feucht“ from 65 % in every room alike. Now a room row without an airing
 // need says the word of its climate badges (room type, Studio values, the bathroom's hour above 70 %), „Zu feucht“
@@ -150,6 +150,53 @@ eq('rows: rooms with sensors pick the chart, the first one lit', rowsOf2(st, C).
 V.SEL.room = 'nichts'; V.SEL.span = '7d';
 eq('unknown pick: the first room with sensors', V.sec('chart', st, C, hass).includes('Verlauf · Bad EG'), true);
 eq('the chart is registered for the room and range', window._hpPlantCfg[V.chartKey('bad_eg', '7d')].source, 'stats');
-eq('no chart outdoors', V.sec('chart', st, { hide: [], scope: { key: 'garten', name: 'Garten' }, chart: true }, hass), '');
+
+// ── #235: an outdoor room (the garden's page) showed the stage only – no Verlauf, no lowest/highest. Now the house's
+//    outdoor sensors and every temperature sensor of the room's own HA area are charted. ──
+const outHouse = (aussen, extra) => {
+  const ids = { 'sensor.wetter_aussen_temperatur': ['temperature', 1.9], 'sensor.wetter_aussen_feuchte': ['humidity', 94], ...(extra || {}) };
+  const states = { 'sensor.casora_lueften': { entity_id: 'sensor.casora_lueften', state: 'ok', attributes: { rooms: [], aussen } } };
+  const entities = {};
+  for (const [id, [dc, v, area]] of Object.entries(ids)) { states[id] = sensor(id, dc, v); entities[id] = area ? { area_id: area } : {}; }
+  hass = { states, config: { unit_system: { temperature: '°C' } }, entities, devices: {},
+    areas: { garten: { area_id: 'garten', name: 'Garten' }, hof: { area_id: 'hof', name: 'Hof' } } };
+  return states;
+};
+const AUS = { t: 1.9, rh: 94, ah: 5.2, pm25: null, t_id: 'sensor.wetter_aussen_temperatur', rh_id: 'sensor.wetter_aussen_feuchte' };
+const hof = { key: 'hof', name: 'Hof', outdoor: true }, garten = { key: 'garten', name: 'Garten', outdoor: true };
+// No sensor of its own: the house's outdoor sensors, temperature and humidity like a room.
+st = outHouse(AUS);
+V.SEL.span = '24h';
+eq('outdoor: the house sensors behind the stage', V.outSeries(hof, AUS, hass).map((x) => [x.entity, x.name]),
+  [['sensor.wetter_aussen_temperatur', 'Temperatur'], ['sensor.wetter_aussen_feuchte', 'Luftfeuchtigkeit']]);
+eq('outdoor: temperature and humidity keep the switch', V.chartCfg(V.outSeries(hof, AUS, hass), '24h').switch, undefined);
+let oc = V.sec('chart', st, { hide: [], scope: hof, chart: true }, hass);
+eq('outdoor: a Verlauf with the range switch', [typeof oc === 'string' && oc.includes('Verlauf'), oc.includes('hp-chart-slot')], [true, true]);
+eq('outdoor: the chart is registered', window._hpPlantCfg[V.chartKey('out:hof', '24h')].series.map((x) => x.entity),
+  ['sensor.wetter_aussen_temperatur', 'sensor.wetter_aussen_feuchte']);
+// A garden with sensors of its own (outdoor-named ones too): every temperature in one chart with a legend.
+st = outHouse(AUS, { 'sensor.garten_temperatur': ['temperature', 2.4, 'garten'], 'sensor.beet_temperatur': ['temperature', 3.1, 'garten'],
+  'sensor.garten_feuchte': ['humidity', 90, 'garten'] });
+let os = V.outSeries(garten, AUS, hass);
+eq('garden: the house sensor and both of its own', os.map((x) => [x.entity, x.name]), [['sensor.wetter_aussen_temperatur', 'sensor.wetter_aussen_temperatur'],
+  ['sensor.beet_temperatur', 'sensor.beet_temperatur'], ['sensor.garten_temperatur', 'sensor.garten_temperatur']]);
+eq('garden: one chart with a legend', V.chartCfg(os, '7d').switch, false);
+eq('garden: four distinct colours at most', new Set(os.map((x) => x.color)).size, 3);
+// A backend that names no sensors (before the restart) and a garden with its own sensor: that one.
+st = outHouse({ t: 1.9, rh: 94 }, { 'sensor.garten_temperatur': ['temperature', 2.4, 'garten'] });
+eq('older backend: the garden\'s own sensor', V.outSeries(garten, { t: 1.9, rh: 94 }, hass).map((x) => x.entity), ['sensor.garten_temperatur']);
+eq('older backend, no own sensor: no chart', V.sec('chart', st, { hide: [], scope: hof, chart: true }, hass), '');
+// Lowest and highest of the range, per temperature sensor.
+st = outHouse(AUS, { 'sensor.garten_temperatur': ['temperature', 2.4, 'garten'] });
+const asked = [];
+window._casoraChartCard = { stats: (h, id, span) => { asked.push(id + '|' + span); return id.includes('garten') ? null : { min: { v: -1.2, t: 1 }, max: { v: 8.4, t: 2 } }; },
+  fmt: (h, id, v) => v + ' °C', at: () => 'wann' };
+let mm = V.sec('minmax', st, { hide: [], scope: garten, chart: true }, hass);
+eq('min/max: highest and lowest with sensor and time', mm.rows.map((r) => [r.label, r.value, r.sub]),
+  [['Höchster Wert', '8.4 °C', ['sensor.wetter_aussen_temperatur', 'wann']], ['Tiefster Wert', '-1.2 °C', ['sensor.wetter_aussen_temperatur', 'wann']]]);
+eq('min/max: titled by the range, asked per temperature sensor', [mm.group, asked], ['Letzte 24 Std.', ['sensor.wetter_aussen_temperatur|24h', 'sensor.garten_temperatur|24h']]);
+window._casoraChartCard.stats = () => null;
+eq('min/max: loading', V.sec('minmax', st, { hide: [], scope: garten }, hass).rows[0].label, 'Wird geladen …');
+eq('min/max: only outdoors', V.sec('minmax', house(five, 70), { hide: [], scope: null }, hass), '');
 
 console.log(`raumklima_popup_komfort: ${n} checks ok`);

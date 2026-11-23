@@ -425,6 +425,8 @@
     return new Date(t).toLocaleDateString(loc(), span === '30d' ? { day: 'numeric', month: 'numeric' } : { weekday: 'short' }).replace(/\.$/, '');
   };
 
+  M.at = at;
+
   M.sec = function (part, C, states, hass, el) {
     var UI = window._casoraUI;
     if (!UI || !C || !C.id) return '';

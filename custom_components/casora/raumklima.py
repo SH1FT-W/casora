@@ -209,7 +209,9 @@ def evaluate_rooms(hass: HomeAssistant, rooms: list[dict], out_t: str | None, ou
             "fenster": wo if r["w"] else None, "offen_min": om, "ziel_min": target,
             "heizt": heizt, "co2_krit": co2 is not None and co2 >= 2500,
         })
-    aussen = {"t": to, "rh": rho, "ah": round(aho, 1) if aho is not None else None, "pm25": pm}
+    # t_id/rh_id: the sensors behind the readings, for the outdoor room's chart in the popup (#235).
+    aussen = {"t": to, "rh": rho, "ah": round(aho, 1) if aho is not None else None, "pm25": pm,
+              "t_id": out_t if to is not None else None, "rh_id": out_rh if rho is not None else None}
     alerts = [f"{r['k']}|{r['status']}" for r in result if r["status"] in ("jetzt", "schliessen")]
     alerts += [f"{r['k']}|co2krit" for r in result if r["co2_krit"]]
     return aussen, result, alerts
