@@ -69,6 +69,9 @@ assert.deepEqual(EV.flowRows({ house: 0.4, imp: null }, { house: {}, imp: ['x'],
 assert.deepEqual(EV.flowRows({ solar: 3 }, solarOnly).map((r) => r.label), ['Solarerzeugung'], 'solar alone');
 
 // ── Loading: sources ride in the device request; without devices too ────────
+// The module asks the clock for „this week“: pinned to the fixture's week (the test went red on Monday 23 Nov 2026,
+// when the fixed rows of 16–18 Nov were last week's).
+Date.now = () => now;
 window.casoraChart = { nf: (v, dd) => v.toFixed(dd).replace('.', ','), hm: () => '15:00', uhr: (x) => x + ' Uhr', monLong: () => 'November' };
 window.casoraEnergyPrefs = () => full;
 const calls = [];
