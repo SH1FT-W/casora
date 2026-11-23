@@ -104,12 +104,24 @@ const rotationRow = (box, id) => listFor(box, 'casora_screensaver_mix').children
 const defaults = makePreview({ casora_screensaver_calendars: ['calendar.example_b'] });
 assert.ok(listFor(defaults.box, 'casora_screensaver_calendars'), 'default rotation exposes the shared calendar picker');
 assert.equal(calendarRow(defaults.box, 'calendar.example_b').attributes['aria-pressed'], 'true');
+assert.equal(calendarRow(defaults.box, 'calendar.example_a').attributes['aria-pressed'], 'false');
 for (const kind of ['kalender', 'linie', 'woche']) {
   defaults.box.querySelectorAll('.cs-saver-chip').find((chip) => chip.dataset.kind === kind).onclick();
   assert.ok(listFor(defaults.box, 'casora_screensaver_calendars'), `single ${kind} exposes the shared picker`);
 }
+defaults.box.querySelectorAll('.cs-saver-chip').find((chip) => chip.dataset.kind === 'kameras').onclick();
+assert.equal(listFor(defaults.box, 'casora_screensaver_calendars'), undefined, 'single Cameras does not expose the calendar picker');
 const empty = makePreview({}, {});
 assert.match(empty.box.textContent, /No calendar found\. The preview shows an example\./, 'no calendars keeps the example empty state');
+
+const severalCalendarKinds = makePreview({
+  casora_screensaver_mix: ['wort', 'kalender', 'linie', 'woche'],
+});
+assert.equal(
+  lists(severalCalendarKinds.box).filter((list) => list.dataset.key === 'casora_screensaver_calendars').length,
+  1,
+  'several calendar modes in rotation still show exactly one shared picker',
+);
 
 // With one non-calendar kind selected, the picker is hidden; enabling Calendar restores the same saved choice.
 const rotation = makePreview({
@@ -125,5 +137,6 @@ assert.equal(listFor(rotation.box, 'casora_screensaver_calendars'), undefined, '
 assert.deepEqual(rotation.variables.casora_screensaver_calendars, ['calendar.example_b'], 'hiding the picker retains the draft selection');
 rotationRow(rotation.box, 'kalender').onclick();
 assert.equal(calendarRow(rotation.box, 'calendar.example_b').attributes['aria-pressed'], 'true', 're-showing the picker restores the unchanged selection');
+assert.equal(calendarRow(rotation.box, 'calendar.example_a').attributes['aria-pressed'], 'false', 're-showing keeps the other calendar excluded');
 
 console.log('screensaver_calendar_picker: ok');
