@@ -1716,6 +1716,7 @@
       const lists = el("div", "cs-saver-lists");
       lists.style.cssText = "margin:14px 0 0;";
       wrap.appendChild(lists);
+      const calendarKinds = new Set(["kalender", "linie", "woche"]);
       const root = wrap.getRootNode && wrap.getRootNode();
       if (root && root.appendChild && !root.querySelector("#cs-saver-list-css")) {
         const st = document.createElement("style");
@@ -1812,10 +1813,9 @@
         host.appendChild(list);
       };
       const calendarPickerVisible = () => {
-        if (["kalender", "linie", "woche"].includes(show)) return true;
-        if (show !== "mix") return false;
-        const vars = typeof SV.vars === "function" ? SV.vars(draft()) : {};
-        return SV.selected(vars).some((kind) => ["kalender", "linie", "woche"].includes(kind));
+        if (calendarKinds.has(show)) return true;
+        if (show !== "mix" || typeof SV.vars !== "function" || typeof SV.selected !== "function") return false;
+        return SV.selected(SV.vars(draft())).some((kind) => calendarKinds.has(kind));
       };
       const drawLists = () => {
         lists.textContent = "";
