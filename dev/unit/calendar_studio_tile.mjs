@@ -114,18 +114,27 @@ const calTile = { variables: {} };
     'Visible', 'an empty draft does not fall back to the saved calendar selection');
 }
 
-// Changing the draft waste calendar refreshes automatic selection while the list is empty.
+// Clearing the draft waste calendar overrides the saved choice and keeps automatic discovery.
 {
   const w = makeWindow({ waste: 'calendar.waste' });
-  w.CASORA_SETTINGS = { calendars: [{ entity: 'calendar.a' }] };
+  w.CASORA_SETTINGS = { calendars: [{ entity: 'calendar.a' }], waste: { calendar: 'calendar.a' } };
   w.casoraSettings = () => w.CASORA_SETTINGS;
+  w.casoraDevice.waste = (hass, vars) => ({
+    calendar: vars && Object.prototype.hasOwnProperty.call(vars, 'trash_calendar')
+      ? 'calendar.waste'
+      : w.CASORA_SETTINGS.waste.calendar,
+  });
   const word = tileStateWord(w);
   const hass = { states, entities: {} };
-  const draft = { calendars: [], waste: { calendar: 'calendar.a' } };
-  assert.equal(word('casora_calendar', calTile, null, states, hass, draft), 'Visible');
-  draft.waste.calendar = 'calendar.b';
+  const draft = { calendars: [], waste: { calendar: '' } };
   assert.equal(word('casora_calendar', calTile, null, states, hass, draft), 'Termin-cccccc',
-    'automatic selection is recalculated when the draft waste calendar changes');
+    'clearing the draft waste calendar does not reuse the saved waste calendar');
+  assert.ok(w.casoraCalendars(hass, {
+    calendars: [], _casora_calendar_draft: true, _casora_waste_calendar: '',
+  }).some((cal) => cal.entity === 'calendar.a'), 'automatic selection includes the formerly configured calendar');
+  assert.ok(!w.casoraCalendars(hass, {
+    calendars: [], _casora_calendar_draft: true, _casora_waste_calendar: '',
+  }).some((cal) => cal.entity === 'calendar.waste'), 'automatic waste discovery remains active');
 }
 
 // The waste calendar stays out of the Agenda preview, as on the dashboard.

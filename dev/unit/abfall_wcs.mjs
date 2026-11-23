@@ -97,6 +97,27 @@ window.CASORA_SETTINGS = {};
   console.log('abfall_wcs: finder contract ok');
 }
 
+// An explicitly cleared draft calendar uses automatic waste discovery, not the saved calendar.
+{
+  const saved = 'calendar.side_calendar', detected = 'calendar.collection';
+  const h = {
+    states: {
+      [saved]: { entity_id: saved, state: 'off', attributes: { friendly_name: 'Side Calendar' } },
+      [detected]: { entity_id: detected, state: 'off', attributes: { friendly_name: 'Collection calendar' } },
+    },
+    entities: {
+      [saved]: { entity_id: saved, platform: 'remote_calendar', name: 'Side Calendar' },
+      [detected]: { entity_id: detected, platform: 'waste_collection_schedule', name: 'Collection calendar' },
+    },
+    devices: {},
+  };
+  window.CASORA_SETTINGS = { waste: { calendar: saved } };
+  assert.equal(D.waste(h, { trash_calendar: null }).calendar, detected,
+    'cleared calendar override bypasses saved value but preserves automatic waste discovery');
+  window.CASORA_SETTINGS = {};
+  console.log('abfall_wcs: cleared calendar override uses automatic discovery');
+}
+
 // ── A: names without the place ────────────────────────────────────────────────
 {
   let W = D.waste(wcs(), {});

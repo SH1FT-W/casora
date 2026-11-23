@@ -1,5 +1,5 @@
 // Screensaver gallery: every screensaver of 46-screensaver.js as a picture, without Home Assistant.
-//   node dev/qa/schoner-galerie.mjs [--root <checkout>] [--out <dir>] [--size 1280x800] [--nur <regex>] [--lang de]
+//   node dev/qa/schoner-galerie.mjs [--root <checkout>] [--out <dir>] [--size 1280x800] [--nur <regex>] [--lang de] [--check-calendar-filter]
 // Draws each kind with the module's own examples (S.sample) at a fixed day and night time into <out>/<kind>-<tag>.png
 // and the ten landscapes into land-<scene>.png. --root takes the module from another checkout (before / after).
 // After those the situations of SCENES_EXTRA (a setting, own appointments, another time): <name>.png.
@@ -16,6 +16,7 @@ const out = path.resolve(arg('out', '/tmp/casora-qa/schoner'));
 const [W, H] = arg('size', '1280x800').split('x').map(Number);
 const only = arg('nur', '') ? new RegExp(arg('nur', '')) : null;
 const lang = arg('lang', 'de');
+const checkCalendarFilter = process.argv.includes('--check-calendar-filter');
 fs.mkdirSync(out, { recursive: true });
 
 const comp = path.join(root, 'custom_components/casora');
@@ -133,8 +134,10 @@ const SCENES_EXTRA = [
   ['linie-leer', 'linie', 'tag', { events: [[0, 0, 0, 0, 'Feiertag']] }],
 ];
 for (const [name, kind, at, extra] of SCENES_EXTRA) await shoot(name, kind, at, extra);
-for (const k of ['linie', 'woche', 'kalender']) for (const t of ['tag', 'nacht']) {
-  await shoot(k + '-' + t + '-filter', k, t, { filterCheck: { hidden: 'Filtered fixture event', visible: 'Visible fixture event' } });
+if (checkCalendarFilter) {
+  for (const k of ['linie', 'woche', 'kalender']) for (const t of ['tag', 'nacht']) {
+    await shoot(k + '-' + t + '-filter', k, t, { filterCheck: { hidden: 'Filtered fixture event', visible: 'Visible fixture event' } });
+  }
 }
 // Every landscape, drawn directly (the screensaver shows one after the other by the clock).
 for (const id of scenes) {

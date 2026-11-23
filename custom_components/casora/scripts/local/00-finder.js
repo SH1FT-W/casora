@@ -564,7 +564,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     var weich = !!(window._casoraSoft && window._casoraSoft());
     // A configured calendar that is gone (renamed, removed) falls back to the detected one; it only
     // stays when nothing else is found, so the tile can still say the source is unreachable.
-    var calGiven = V.trash_calendar || cfg.calendar || null;
+    var calGiven = Object.prototype.hasOwnProperty.call(V, 'trash_calendar') ? V.trash_calendar : cfg.calendar || null;
     var calendar = (calGiven && S[calGiven] ? calGiven : null) || Object.keys(S).filter(function (eid) {
       return eid.indexOf('calendar.') === 0 && isWasteCalendar(hass, eid, null);
     }).sort()[0] || calGiven;
@@ -1632,11 +1632,11 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     var S = hass && hass.states;
     if (!S) return calAutoMemo.out;
     var E = hass.entities || {}, cfg = window.CASORA_SETTINGS || null;
-    var draftWaste = vars && vars._casora_calendar_draft ? vars._casora_waste_calendar || null : null;
+    var draftWaste = vars && vars._casora_calendar_draft ? String(vars._casora_waste_calendar || '') : null;
     if (calAutoMemo.S === S && calAutoMemo.E === E && calAutoMemo.cfg === cfg && calAutoMemo.draftWaste === draftWaste) return calAutoMemo.out;
     var wasteCal = null;
-    var wasteVars = vars && vars._casora_calendar_draft && vars._casora_waste_calendar
-      ? { trash_calendar: vars._casora_waste_calendar } : {};
+    var wasteVars = vars && vars._casora_calendar_draft
+      ? { trash_calendar: vars._casora_waste_calendar || null } : {};
     try { wasteCal = window.casoraDevice && window.casoraDevice.waste ? window.casoraDevice.waste(hass, wasteVars).calendar : null; } catch (e) { wasteCal = null; }
     var out = Object.keys(S).filter(function (id) {
       if (id.indexOf('calendar.') !== 0) return false;
