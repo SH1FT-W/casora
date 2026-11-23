@@ -1603,7 +1603,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
   // tile: false = shown only in the calendar popup (callers that list appointments leave it out).
   var CAL_PALETTE = ['#0A84FF', '#FF453A', '#30D158', '#BF5AF2', '#FF9F0A', '#64D2FF', '#FFD60A', '#FF375F'];
   var calNormMemo = typeof WeakMap === 'function' ? new WeakMap() : null;
-  var calAutoMemo = { S: null, E: null, cfg: null, out: [] };
+  var calAutoMemo = { S: null, E: null, cfg: null, draftWaste: null, out: [] };
   // Waste Collection Schedule's calendars (or the waste calendar Casora uses) are pickups, not appointments.
   function isWasteCalendar(hass, id, wasteCal) {
     var e = ((hass && hass.entities) || {})[id], st = ((hass && hass.states) || {})[id];
@@ -1632,7 +1632,8 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     var S = hass && hass.states;
     if (!S) return calAutoMemo.out;
     var E = hass.entities || {}, cfg = window.CASORA_SETTINGS || null;
-    if (calAutoMemo.S === S && calAutoMemo.E === E && calAutoMemo.cfg === cfg) return calAutoMemo.out;
+    var draftWaste = vars && vars._casora_calendar_draft ? vars._casora_waste_calendar || null : null;
+    if (calAutoMemo.S === S && calAutoMemo.E === E && calAutoMemo.cfg === cfg && calAutoMemo.draftWaste === draftWaste) return calAutoMemo.out;
     var wasteCal = null;
     var wasteVars = vars && vars._casora_calendar_draft && vars._casora_waste_calendar
       ? { trash_calendar: vars._casora_waste_calendar } : {};
@@ -1645,7 +1646,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     }).sort().map(function (id, n) {
       return { entity: id, name: (S[id].attributes || {}).friendly_name || id, color: CAL_PALETTE[n % CAL_PALETTE.length] };
     });
-    calAutoMemo = { S: S, E: E, cfg: cfg, out: out };
+    calAutoMemo = { S: S, E: E, cfg: cfg, draftWaste: draftWaste, out: out };
     return out;
   };
   // casora-calendars:end

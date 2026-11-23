@@ -114,6 +114,20 @@ const calTile = { variables: {} };
     'Visible', 'an empty draft does not fall back to the saved calendar selection');
 }
 
+// Changing the draft waste calendar refreshes automatic selection while the list is empty.
+{
+  const w = makeWindow({ waste: 'calendar.waste' });
+  w.CASORA_SETTINGS = { calendars: [{ entity: 'calendar.a' }] };
+  w.casoraSettings = () => w.CASORA_SETTINGS;
+  const word = tileStateWord(w);
+  const hass = { states, entities: {} };
+  const draft = { calendars: [], waste: { calendar: 'calendar.a' } };
+  assert.equal(word('casora_calendar', calTile, null, states, hass, draft), 'Visible');
+  draft.waste.calendar = 'calendar.b';
+  assert.equal(word('casora_calendar', calTile, null, states, hass, draft), 'Termin-cccccc',
+    'automatic selection is recalculated when the draft waste calendar changes');
+}
+
 // The waste calendar stays out of the Agenda preview, as on the dashboard.
 {
   const w = makeWindow({ waste: 'calendar.waste' });
