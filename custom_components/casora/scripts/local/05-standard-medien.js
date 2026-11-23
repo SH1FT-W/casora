@@ -48,12 +48,12 @@
   var haHass = function () { var ha = document.querySelector && document.querySelector('home-assistant'); return (ha && ha.hass) || null; };
   // Temperature and humidity sensors of an HA area (as find_rooms: own area, else the device's; no plant's readings),
   // one index per registry.
-  var IDX = { ents: null, map: null };
+  var IDX = { ents: null, map: null, omap: null };
   V.sensorsOf = function (hass, k) {
     var H = hass || {}, E = H.entities;
     if (!E || !k) return { rh: [], t: [] };
     if (IDX.ents !== E) {
-      var D = H.devices || {}, S = H.states || {}, map = {}, plants = {};
+      var D = H.devices || {}, S = H.states || {}, map = {}, omap = {}, plants = {};
       if (typeof window.casoraIsPlant === 'function') Object.keys(E).forEach(function (id) {
         var e = E[id];
         if (e && e.device_id && window.casoraIsPlant(H, id)) plants[e.device_id] = true;
@@ -62,16 +62,22 @@
         var e = E[id], st = S[id], dc = st && st.attributes && st.attributes.device_class;
         var key = dc === 'humidity' ? 'rh' : dc === 'temperature' ? 't' : null;
         if (!key || id.indexOf('sensor.') !== 0 || !e || e.hidden || e.entity_category || plants[e.device_id]) return;
-        if (OUTDOOR.test(id + ' ' + (st.attributes.friendly_name || ''))) return;
         var aid = e.area_id || (e.device_id && D[e.device_id] ? D[e.device_id].area_id : null);
         if (!aid) return;
-        var m = map[aid] || (map[aid] = { rh: [], t: [] });
+        // A sensor named outdoor is no room reading; an outdoor room's chart takes it (V.outSeries, #235).
+        var to = OUTDOOR.test(id + ' ' + (st.attributes.friendly_name || '')) ? omap : map;
+        var m = to[aid] || (to[aid] = { rh: [], t: [] });
         m[key].push(id);
       });
-      IDX = { ents: E, map: map };
+      IDX = { ents: E, map: map, omap: omap };
     }
     var r = IDX.map[k] || { rh: [], t: [] };
     return { rh: r.rh.slice().sort(), t: r.t.slice().sort() };
+  };
+  // Every temperature and humidity sensor of an HA area, the outdoor-named ones too.
+  var areaSensors = function (hass, aid) {
+    var a = V.sensorsOf(hass, aid), b = (IDX.omap && IDX.omap[aid]) || { rh: [], t: [] };
+    return { rh: a.rh.concat(b.rh).sort(), t: a.t.concat(b.t).sort() };
   };
   // The sensor whose reading is closest to the room's (the backend takes the median of several).
   var nearest = function (hass, ids, v) {
@@ -323,11 +329,39 @@
     if (h) out.push({ entity: h, name: 'Luftfeuchtigkeit', color: 'var(--casora-color-blue, #5B8FC9)', guides: b ? [b.hum_ideal_min, b.hum_ideal_max] : null });
     return out;
   };
+  /* Outdoor room (#235): its page had the stage only, no Verlauf and no lowest/highest. The lines are the house's
+     outdoor sensors (aussen.t_id/rh_id of sensor.casora_lueften, the readings the stage shows) and every temperature
+     sensor of the room's own HA area – a garden can have several. One temperature: temperature and humidity like a
+     room (the chart's switch). Several: the temperatures in one chart with a legend (at most four, richtlinien §7.1). */
+  var OUT_TONES = ['var(--casora-color-orange, #DE8A4E)', 'c1', 'c3', 'c4'];
+  var areaOf = function (hass, scope) {
+    var A = (hass && hass.areas) || {};
+    return Object.keys(A).filter(function (id) {
+      var n = (A[id] || {}).name;
+      return id === scope.key || slug(n) === scope.key || (!!scope.name && norm(n) === norm(scope.name));
+    })[0] || null;
+  };
+  V.outSeries = function (scope, out, hass) {
+    hass = hass || haHass();
+    if (!scope || !hass) return [];
+    var S = hass.states || {}, o = out || {}, aid = areaOf(hass, scope), own = aid ? areaSensors(hass, aid) : { rh: [], t: [] };
+    var uniq = function (l) { return l.filter(function (id, i) { return !!id && !!S[id] && l.indexOf(id) === i; }); };
+    var ts = uniq([o.t_id].concat(own.t)).slice(0, 4), h = uniq([o.rh_id].concat(own.rh))[0];
+    var fn = function (id) { return String((S[id].attributes || {}).friendly_name || id).trim(); };
+    if (ts.length > 1) return ts.map(function (id, i) { return { entity: id, name: fn(id), color: OUT_TONES[i], unit: unitOf(hass, id), guides: null }; });
+    var ser = [];
+    if (ts[0]) ser.push({ entity: ts[0], name: 'Temperatur', color: OUT_TONES[0], unit: unitOf(hass, ts[0]), guides: null });
+    if (h) ser.push({ entity: h, name: 'Luftfeuchtigkeit', color: 'var(--casora-color-blue, #5B8FC9)', unit: unitOf(hass, h), guides: null });
+    return ser;
+  };
   V.chartCfg = function (series, span) {
     var noEval = function (v) { return window.casoraNoEval ? window.casoraNoEval(v) : (typeof v === 'string' && /^\s*\[\[\[/.test(v) ? '\u200b' + v : v); };
-    return { type: 'custom:casora-chart', kind: 'line', span: span, height: window.innerWidth <= 760 ? 130 : 150, readout: 'own', plate: false,
+    var cfg = { type: 'custom:casora-chart', kind: 'line', span: span, height: window.innerWidth <= 760 ? 130 : 150, readout: 'own', plate: false,
       source: span === '24h' ? 'history' : 'stats', bucket: span === '24h' ? '15min' : span === '7d' ? '6h' : '1d',
       series: series.map(function (x) { return { entity: x.entity, name: noEval(x.name), color: x.color, guides: Array.isArray(x.guides) ? x.guides.map(Number) : undefined }; }) };
+    // Several sensors of one unit (an outdoor room's temperatures): one chart with a legend instead of the switch.
+    if (series.length > 1 && series[0].unit && series.every(function (x) { return x.unit === series[0].unit; })) cfg.switch = false;
+    return cfg;
   };
   // The room the chart shows: the one picked, else the first row with a sensor (the most urgent).
   var chartRoom = function (rooms, hass) {
@@ -478,8 +512,9 @@
       return pickable && typeof gh === 'string' ? gh.replace(/data-casora-mi="/g, 'data-casora-vroom="') : gh;
     }
     if (name === 'chart') {
-      if (mode !== 'house' && mode !== 'room') return '';
-      var cr = chartRoom(rooms, hass), ser = cr ? V.series(cr, hass) : [];
+      if (mode !== 'house' && mode !== 'room' && mode !== 'outdoor') return '';
+      var cr = mode === 'outdoor' ? { k: 'out:' + m.scope.key, n: m.scope.name } : chartRoom(rooms, hass);
+      var ser = mode === 'outdoor' ? V.outSeries(m.scope, o, hass) : cr ? V.series(cr, hass) : [];
       if (!ser.length || !window._hpPlantCfg) return '';
       var key = V.chartKey(cr.k, SEL.span);
       window._hpPlantCfg[key] = V.chartCfg(ser, SEL.span);
@@ -495,6 +530,25 @@
         + esc(title) + '</div>'
         + '<div class="hp-chart-slot" style="min-height:' + (window.innerWidth <= 760 ? 170 : 190) + 'px;margin:8px 0 0;pointer-events:auto;"></div>'
         + '<div style="margin-top:16px;">' + segHtml + '</div></div>';
+    }
+    // #235: lowest and highest of the outdoor room's temperatures over the Verlauf's range (the chart tile's statistics).
+    if (name === 'minmax') {
+      var CC = window._casoraChartCard;
+      if (mode !== 'outdoor' || !CC || !CC.stats) return '';
+      var hs = hass || haHass();
+      var tl = V.outSeries(m.scope, o, hs).filter(function (x) { return (((hs.states || {})[x.entity] || {}).attributes || {}).device_class === 'temperature'; });
+      if (!tl.length) return '';
+      remember(el);
+      var headT = { '24h': 'Letzte 24 Std.', '7d': 'Letzte 7 Tage', '30d': 'Letzte 30 Tage' }[SEL.span], now = Date.now(), rowsM = [], wait = false;
+      tl.forEach(function (x) {
+        var d = CC.stats(hs, x.entity, SEL.span, el), who = tl.length > 1 ? x.name : null;
+        if (d == null) { wait = true; return; }
+        var when = function (p) { return [who, CC.at ? CC.at(p.t, SEL.span, now) : null].filter(Boolean); };
+        if (d.max) rowsM.push({ icon: 'mdi:arrow-up-bold-outline', iconTone: 'bad', label: 'Höchster Wert', sub: when(d.max), value: CC.fmt(hs, x.entity, d.max.v) });
+        if (d.min) rowsM.push({ icon: 'mdi:arrow-down-bold-outline', iconTone: 'accent', label: 'Tiefster Wert', sub: when(d.min), value: CC.fmt(hs, x.entity, d.min.v) });
+      });
+      if (!rowsM.length) return wait ? UI.group([{ icon: 'mdi:timer-sand', label: 'Wird geladen …' }], headT) : '';
+      return UI.group(rowsM, headT);
     }
     if (name === 'empty') {
       /* DP-09: a hint row instead of an empty sheet – and never the other rooms (issue #54). */
@@ -580,12 +634,13 @@
     var K = window._casoraSoftKit, UIv = window._casoraUI;
     if (K && K.layout && UIv.v3 && UIv.v3() && UIv.stage) {
       // #202: the Verlauf under the stage; it watches nothing (a redraw would drop the chart), picks redraw it (V.pick).
-      C.chart = !!(window._hpPlantCfg && (m.mode === 'house' || m.mode === 'room'));
+      // #235: an outdoor room too, with its own sensors.
+      C.chart = !!(window._hpPlantCfg && (m.mode === 'house' || m.mode === 'room' || m.mode === 'outdoor'));
       var cardOf = function (n) { return { card: K.secCard(n === 'chart' ? [] : watch, 'return window._casoraVent ? window._casoraVent.sec(' + JSON.stringify(n) + ', states, ' + JSON.stringify(C) + ', hass, this) : "";', states) }; };
       var fv = { stage: cardOf('stage') };
       var Lv = m.mode === 'outdoor' ? ['out'] : m.mode === 'empty' ? ['empty'] : ['rooms'];
       if (C.chart && V.sec('chart', states, C)) Lv = ['chart'].concat(Lv);
-      var Rv = m.mode === 'outdoor' || m.mode === 'empty' ? [] : ['out', 'coach'];
+      var Rv = m.mode === 'outdoor' ? ['minmax'] : m.mode === 'empty' ? [] : ['out', 'coach'];
       // Sections that are empty now (no fine dust, no coach) stay out, as in the old columns.
       Rv = Rv.filter(function (n) { return !!V.sec(n, states, C); });
       Lv.concat(Rv).forEach(function (n) { fv[n] = cardOf(n); });
