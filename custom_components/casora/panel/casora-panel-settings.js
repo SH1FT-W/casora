@@ -1811,6 +1811,12 @@
         });
         host.appendChild(list);
       };
+      const calendarPickerVisible = () => {
+        if (["kalender", "linie", "woche"].includes(show)) return true;
+        if (show !== "mix") return false;
+        const vars = typeof SV.vars === "function" ? SV.vars(draft()) : {};
+        return SV.selected(vars).some((kind) => ["kalender", "linie", "woche"].includes(kind));
+      };
       const drawLists = () => {
         lists.textContent = "";
         const hass = this._hass;
@@ -1820,7 +1826,8 @@
             "Only the ones picked here take turns, five minutes each. One with nothing to show right now is skipped.", "");
         } else if (show === "kameras" && typeof SV.cameraChoices === "function") {
           cameraPicker(lists);
-        } else if (["kalender", "linie", "woche"].includes(show) && typeof SV.calendars === "function") {
+        }
+        if (calendarPickerVisible() && typeof SV.calendars === "function") {
           const S0 = (hass && hass.states) || {};
           pickList("casora_screensaver_calendars", SV.calendars(hass).map((id) => ({ id, label: String(((S0[id] || {}).attributes || {}).friendly_name || id), raw: true,
             icon: "mdi:calendar-blank-outline", tone: "#DE8A4E" })), "Calendars",
