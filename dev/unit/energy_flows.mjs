@@ -30,6 +30,7 @@ assert.equal(EV.sources({}), null);
 
 // ── Sums over the range ──────────────────────────────────────────────────
 const now = new Date(2026, 10, 18, 15, 10).getTime(); // Wednesday 18 Nov 2026
+Date.now = () => now; // Rendering and cache use the same clock as the fixtures.
 const week = EV.plan('week', now, 1);
 const d = (n) => new Date(2026, 10, n).getTime();
 const rows = {
