@@ -3194,7 +3194,10 @@
     "Today's electricity and gas cost side by side on the tile, or the usage in kWh. The popup shows the day, the week or the month: usage and cost of electricity and gas apart, standing charge and total, and a chart with bars per hour or day. Week and month come from Home Assistant's statistics of the daily counters. For smart meters without solar, e.g. Hildebrand Glow and Octopus Energy.": "Dagens kostnad for strøm og gass side om side på flisen, eller forbruket i kWh. Popupen viser dagen, uken eller måneden: forbruk og kostnad for strøm og gass hver for seg, fastledd og sum, med et diagram med søyler per time eller dag. Uke og måned kommer fra Home Assistants statistikk for dagstellerne. For smartmålere uten solceller, f.eks. Hildebrand Glow og Octopus Energy.",
     "Go back to Home and close popups after a while without use.": "Gå tilbake til Hjem og lukk popup etter en stund uten bruk.",
     "Close popups when idle": "Lukk popup ved inaktivitet",
-    "Tablets only. Closes an open popup after a while without use.": "Bare nettbrett. Lukker et åpent popup etter en stund uten bruk."
+    "Tablets only. Closes an open popup after a while without use.": "Bare nettbrett. Lukker et åpent popup etter en stund uten bruk.",
+    "More outdoor sensors": "Flere utesensorer",
+    "Add a temperature sensor": "Legg til en temperatursensor",
+    "For a garden, terrace or balcony: these temperature sensors join the chart in the popup, with the sensors of the room's area.": "For hage, terrasse eller balkong: disse temperatursensorene kommer med i diagrammet i popupen, sammen med sensorene i rommets område."
   },
   "patterns": [
     [

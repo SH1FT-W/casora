@@ -331,8 +331,9 @@
   };
   /* Outdoor room (#235): its page had the stage only, no Verlauf and no lowest/highest. The lines are the house's
      outdoor sensors (aussen.t_id/rh_id of sensor.casora_lueften, the readings the stage shows) and every temperature
-     sensor of the room's own HA area – a garden can have several. One temperature: temperature and humidity like a
-     room (the chart's switch). Several: the temperatures in one chart with a legend (at most four, richtlinien §7.1). */
+     sensor of the room's own HA area – a garden can have several. extra: sensors picked by hand on the tile (Studio
+     „More outdoor sensors“, variables.outdoor_sensors), before the area's. One temperature: temperature and humidity
+     like a room (the chart's switch). Several: the temperatures in one chart with a legend (at most four, richtlinien §7.1). */
   var OUT_TONES = ['var(--casora-color-orange, #DE8A4E)', 'c1', 'c3', 'c4'];
   var areaOf = function (hass, scope) {
     var A = (hass && hass.areas) || {};
@@ -341,12 +342,15 @@
       return id === scope.key || slug(n) === scope.key || (!!scope.name && norm(n) === norm(scope.name));
     })[0] || null;
   };
-  V.outSeries = function (scope, out, hass) {
+  V.outSeries = function (scope, out, hass, extra) {
     hass = hass || haHass();
     if (!scope || !hass) return [];
     var S = hass.states || {}, o = out || {}, aid = areaOf(hass, scope), own = aid ? areaSensors(hass, aid) : { rh: [], t: [] };
     var uniq = function (l) { return l.filter(function (id, i) { return !!id && !!S[id] && l.indexOf(id) === i; }); };
-    var ts = uniq([o.t_id].concat(own.t)).slice(0, 4), h = uniq([o.rh_id].concat(own.rh))[0];
+    var dcOf = function (id) { return ((S[id] || {}).attributes || {}).device_class; };
+    var ex = (Array.isArray(extra) ? extra : []).filter(function (id) { return typeof id === 'string'; });
+    var exH = ex.filter(function (id) { return dcOf(id) === 'humidity'; }), exT = ex.filter(function (id) { return exH.indexOf(id) < 0; });
+    var ts = uniq([o.t_id].concat(exT, own.t)).slice(0, 4), h = uniq([o.rh_id].concat(exH, own.rh))[0];
     var fn = function (id) { return String((S[id].attributes || {}).friendly_name || id).trim(); };
     if (ts.length > 1) return ts.map(function (id, i) { return { entity: id, name: fn(id), color: OUT_TONES[i], unit: unitOf(hass, id), guides: null }; });
     var ser = [];
@@ -514,7 +518,7 @@
     if (name === 'chart') {
       if (mode !== 'house' && mode !== 'room' && mode !== 'outdoor') return '';
       var cr = mode === 'outdoor' ? { k: 'out:' + m.scope.key, n: m.scope.name } : chartRoom(rooms, hass);
-      var ser = mode === 'outdoor' ? V.outSeries(m.scope, o, hass) : cr ? V.series(cr, hass) : [];
+      var ser = mode === 'outdoor' ? V.outSeries(m.scope, o, hass, C && C.extra) : cr ? V.series(cr, hass) : [];
       if (!ser.length || !window._hpPlantCfg) return '';
       var key = V.chartKey(cr.k, SEL.span);
       window._hpPlantCfg[key] = V.chartCfg(ser, SEL.span);
@@ -536,7 +540,7 @@
       var CC = window._casoraChartCard;
       if (mode !== 'outdoor' || !CC || !CC.stats) return '';
       var hs = hass || haHass();
-      var tl = V.outSeries(m.scope, o, hs).filter(function (x) { return (((hs.states || {})[x.entity] || {}).attributes || {}).device_class === 'temperature'; });
+      var tl = V.outSeries(m.scope, o, hs, C && C.extra).filter(function (x) { return (((hs.states || {})[x.entity] || {}).attributes || {}).device_class === 'temperature'; });
       if (!tl.length) return '';
       remember(el);
       var headT = { '24h': 'Letzte 24 Std.', '7d': 'Letzte 7 Tage', '30d': 'Letzte 30 Tage' }[SEL.span], now = Date.now(), rowsM = [], wait = false;
@@ -628,6 +632,9 @@
        where the page (view, phone filter) is the one the tile sits on. */
     var H = window.casoraPopupHide, m = V.model(states, variables);
     var C = { hide: H ? H.list(variables) : [], scope: m.scope };
+    // #235: sensors picked by hand for an outdoor room's chart.
+    var xs = variables && Array.isArray(variables.outdoor_sensors) ? variables.outdoor_sensors.filter(function (id) { return typeof id === 'string' && !!id; }) : [];
+    if (xs.length) C.extra = xs;
     var sec = function (n) { return '[[[ return window._casoraVent ? window._casoraVent.sec(' + JSON.stringify(n) + ', states, ' + JSON.stringify(C) + ') : ""; ]]]'; };
     /* Columns by mode: house and room left rooms, right outdoor air + coach; outdoor only the air; without sensors the hint. */
     /* Popup v3 (richtlinien §4 S7): the status stage on top of the left column, the same sections below (soft kit layout). */

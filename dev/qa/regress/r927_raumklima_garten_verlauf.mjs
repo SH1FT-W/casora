@@ -1,5 +1,5 @@
 // @zustand: arbeit
-// @deckt: custom_components/casora/scripts/local/05-standard-medien.js#_casoraVent,V.outSeries,V.sec,V.chartCfg,V.popup,V.pick custom_components/casora/scripts/local/27-chart.js#_casoraChartCard
+// @deckt: custom_components/casora/scripts/local/05-standard-medien.js#_casoraVent,V.outSeries,V.sec,V.chartCfg,V.popup,V.pick custom_components/casora/scripts/local/27-chart.js#_casoraChartCard custom_components/casora/scripts/casora-chart.js
 // #235: the Raumklima popup on an outdoor room's page (a garden) showed the stage only – outdoor temperature and
 // humidity, no Verlauf, no lowest and highest. Expected on a copy of qa-arbeit with a view „Garten“ (deleted at the
 // end; the backend's outdoor readings faked in this browser only, pointing at two real sensors with a history):
@@ -25,8 +25,14 @@ await need('room view with a casora_room header', head);
 head.name = 'Garten';
 const sr = G.cards.find((x) => x.type === 'custom:casora-smart-row');
 await need('room view with a tile row', sr);
-sr.cards.unshift({ type: 'custom:button-card', template: 'casora_vent', name: 'Raumklima' });
 const c = await ws();
+// A second tile with a sensor picked by hand (Studio „More outdoor sensors“): a temperature sensor outside the bedroom.
+const all0 = await c.cmd({ type: 'get_states' });
+const hand = (all0.find((x) => /^sensor\./.test(x.entity_id) && x.attributes.device_class === 'temperature' && x.attributes.state_class === 'measurement'
+  && isFinite(parseFloat(x.state)) && !/schlafzimmer/.test(x.entity_id)) || {}).entity_id;
+await need('test house: a second temperature sensor', hand, hand);
+sr.cards.unshift({ type: 'custom:button-card', template: 'casora_vent', name: 'Raumklima' },
+  { type: 'custom:button-card', template: 'casora_vent', name: 'Raumklima Hand', variables: { outdoor_sensors: [hand] } });
 const list = await c.cmd({ type: 'lovelace/dashboards/list' });
 if (!list.some((d) => d.url_path === URL)) await c.cmd({ type: 'lovelace/dashboards/create', url_path: URL, title: 'QA Garten', mode: 'storage', show_in_sidebar: false, require_admin: false });
 await c.cmd({ type: 'lovelace/config/save', url_path: URL, config: D });
@@ -52,7 +58,10 @@ const popup = () => {
   const rows = all.filter((n) => n.classList && n.classList.contains('hui-srow')).map((r) => r.innerText.replace(/\s+/g, ' ').trim());
   const cc = ch && ch._c;
   return { stage: stage ? stage.innerText.replace(/\s+/g, ' ').trim() : '', title: title ? title.textContent.trim() : '', span: cc && cc.span,
-    series: cc ? cc.series.map((x) => [x.entity, x.name]) : [], lines: ch && ch.shadowRoot ? ch.shadowRoot.querySelectorAll('path').length : 0, segs, rows,
+    series: cc ? cc.series.map((x) => [x.entity, x.name]) : [], sw: cc ? cc.switch : undefined,
+    // The legend stays inside the chart (long sensor names wrap).
+    lgFit: (() => { const lg = ch && ch.shadowRoot && ch.shadowRoot.querySelector('.lg'); if (!lg) return null;
+      const box = ch.getBoundingClientRect(); return [...lg.children].every((x) => x.getBoundingClientRect().right <= box.right + 1); })(), lines: ch && ch.shadowRoot ? ch.shadowRoot.querySelectorAll('path').length : 0, segs, rows,
     text: (p.shadowRoot || p).textContent ? '' : '', all: all.filter((n) => n.classList && n.classList.contains('hui-plate')).map((n) => n.innerText.replace(/\s+/g, ' ').trim().slice(0, 60)) };
 };
 const tile = () => window.__pierce('button-card').filter((b) => [].concat((b._config || {}).template || []).includes('casora_vent'))
@@ -81,7 +90,7 @@ const tapSpan = async (pg, sp, mobile) => {
   return true;
 };
 
-const run = async (pg, mobile, path) => {
+const run = async (pg, mobile, path, nth) => {
   usePage(pg);
   await dashboard(pg, URL + '/' + path, 1);
   // Two real sensors with a history stand in for the house's outdoor sensors.
@@ -91,7 +100,8 @@ const run = async (pg, mobile, path) => {
     aussen: { t: 1.9, rh: 94, ah: 5.2, pm25: null, t_id: ids.t[0], rh_id: ids.rh[0] } } } }, { sticky: true });
   const t = await stable(pg, tile);
   await need('room climate tile on the garden page', t.length, t);
-  if (mobile) await pg.touchscreen.tap(t[0].x, t[0].y); else await pg.mouse.click(t[0].x, t[0].y);
+  const tt = t[nth || 0] || t[0];
+  if (mobile) await pg.touchscreen.tap(tt.x, tt.y); else await pg.mouse.click(tt.x, tt.y);
   const p = await stable(pg, popup, undefined, { max: 12000, quiet: 1500, until: (v) => v && v.lines >= 1 && v.rows.some((r) => /^Höchster Wert/.test(r)) });
   return { p, ids };
 };
@@ -114,9 +124,15 @@ p = await stable(page, popup, undefined, { max: 12000, quiet: 1500, until: (v) =
 await check(`7 Tage: chart and statistics follow (${p && p.span})`, p && p.span === '7d' && p.segs[1].on && p.rows.some((r) => /^Höchster Wert/.test(r)), p);
 await page.keyboard.press('Escape');
 
-// An indoor room keeps its own popup: no lowest/highest block from the outdoor room.
-usePage(page);
-await dashboard(page, URL + '/schlafzimmer', 1);
+// The tile with a sensor picked by hand: it joins the outdoor temperature in one chart with a legend, with its own highest/lowest.
+({ p } = await run(page, false, 'garten', 1));
+console.log('    by hand', JSON.stringify(p && { series: p.series, sw: p.sw, rows: p.rows, lgFit: p.lgFit }));
+await check('by hand: the picked sensor in the chart after the outdoor temperature', p && p.series.length >= 2 && p.series[0][0] === ids.t[0] && p.series[1][0] === hand, p && p.series);
+await check('by hand: one chart with a legend (no switch)', p && p.sw === false, p && p.sw);
+await check('by hand: the legend fits the chart, long names wrap', p && p.lgFit === true, p && p.lgFit);
+await check('by hand: highest and lowest per sensor', p && p.rows.filter((r) => /^Höchster Wert/.test(r)).length >= 2, p && p.rows);
+if (SHOT) await page.screenshot({ path: SHOT + '/after-hand-desktop.png' });
+await page.keyboard.press('Escape');
 
 // Phone: the same on the garden's room page (stage → Verlauf → statistics), the range by finger.
 const ph = await open({ width: 393, height: 852, mobile: true, dark: true, theme: 'Casora' });

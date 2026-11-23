@@ -3194,7 +3194,10 @@
     "Today's electricity and gas cost side by side on the tile, or the usage in kWh. The popup shows the day, the week or the month: usage and cost of electricity and gas apart, standing charge and total, and a chart with bars per hour or day. Week and month come from Home Assistant's statistics of the daily counters. For smart meters without solar, e.g. Hildebrand Glow and Octopus Energy.": "O custo de hoje de eletricidade e gás lado a lado no mosaico, ou o consumo em kWh. O popup mostra o dia, a semana ou o mês: consumo e custo de eletricidade e gás em separado, termo fixo e total, com um gráfico de barras por hora ou por dia. A semana e o mês vêm das estatísticas dos contadores diários do Home Assistant. Para contadores inteligentes sem solar, p. ex. Hildebrand Glow e Octopus Energy.",
     "Go back to Home and close popups after a while without use.": "Voltar ao Início e fechar as janelas após algum tempo sem uso.",
     "Close popups when idle": "Fechar janelas quando inativo",
-    "Tablets only. Closes an open popup after a while without use.": "Só em tablets. Fecha uma janela aberta após algum tempo sem uso."
+    "Tablets only. Closes an open popup after a while without use.": "Só em tablets. Fecha uma janela aberta após algum tempo sem uso.",
+    "More outdoor sensors": "Mais sensores exteriores",
+    "Add a temperature sensor": "Adicionar um sensor de temperatura",
+    "For a garden, terrace or balcony: these temperature sensors join the chart in the popup, with the sensors of the room's area.": "Para jardim, terraço ou varanda: estes sensores de temperatura juntam-se ao gráfico do popup, com os sensores da área da divisão."
   },
   "patterns": [
     [

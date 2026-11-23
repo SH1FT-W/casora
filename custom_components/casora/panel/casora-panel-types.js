@@ -331,8 +331,14 @@ window.CASORA_TILE_TYPES = [
     ] },
   { id: "casora_solar_tip", label: "Solar tip", template: "casora_solar_tip", domains: ["binary_sensor"], ownData: true,
     icon: "sun", color: "var(--casora-color-yellow, #FFCC00)", fields: [ICON, TITLE] },
+  // #235: on an outdoor room's page the popup charts the house's outdoor sensors and the room area's own; outdoor_sensors
+  // adds sensors by hand (a garden whose sensors sit in no area or another one).
   { id: "casora_vent", label: "Room climate", template: "casora_vent", domains: ["binary_sensor", "sensor"], ownData: true,
-    icon: "wind", color: "var(--casora-color-teal, #00C3D0)", fields: [ICON, TITLE] },
+    icon: "wind", color: "var(--casora-color-teal, #00C3D0)", fields: [ICON, TITLE,
+      { key: "outdoor_sensors", type: "list", label: "More outdoor sensors", domains: ["sensor"], classes: ["temperature"],
+        placeholder: "Add a temperature sensor",
+        hint: "For a garden, terrace or balcony: these temperature sensors join the chart in the popup, with the sensors of the room's area." },
+    ] },
   // E05 (test 2): the tile finds its bins and calendar itself. The calendar is the one field a newcomer needs, so it
   // comes first; the optional bin sensor sits under More and lists only waste sensors (accept "waste"), not every sensor.
   { id: "casora_trash", label: "Waste collection", template: "casora_trash", domains: ["sensor"], ownData: true,

@@ -182,6 +182,22 @@ eq('garden: the house sensor and both of its own', os.map((x) => [x.entity, x.na
   ['sensor.beet_temperatur', 'sensor.beet_temperatur'], ['sensor.garten_temperatur', 'sensor.garten_temperatur']]);
 eq('garden: one chart with a legend', V.chartCfg(os, '7d').switch, false);
 eq('garden: four distinct colours at most', new Set(os.map((x) => x.color)).size, 3);
+// Sensors picked by hand on the tile (Studio „More outdoor sensors“): before the area's, each once, four at most.
+st = outHouse(AUS, { 'sensor.garten_temperatur': ['temperature', 2.4, 'garten'], 'sensor.teich_temperatur': ['temperature', 4, null],
+  'sensor.teich_feuchte': ['humidity', 80, null] });
+eq('by hand: house, picked, area', V.outSeries(garten, AUS, hass, ['sensor.teich_temperatur', 'sensor.garten_temperatur', 'sensor.fehlt', 7]).map((x) => x.entity),
+  ['sensor.wetter_aussen_temperatur', 'sensor.teich_temperatur', 'sensor.garten_temperatur']);
+eq('by hand, a room without an area of its own', V.outSeries(hof, AUS, hass, ['sensor.teich_temperatur']).map((x) => x.entity),
+  ['sensor.wetter_aussen_temperatur', 'sensor.teich_temperatur']);
+eq('by hand: a humidity sensor stands in when the house has none', V.outSeries(hof, { t: 1.9, t_id: 'sensor.wetter_aussen_temperatur' }, hass, ['sensor.teich_feuchte']).map((x) => [x.entity, x.name]),
+  [['sensor.wetter_aussen_temperatur', 'Temperatur'], ['sensor.teich_feuchte', 'Luftfeuchtigkeit']]);
+window._hpPlantCfg = {};
+V.sec('chart', st, { hide: [], scope: hof, chart: true, extra: ['sensor.teich_temperatur'] }, hass);
+eq('by hand: the popup\'s chart takes them', window._hpPlantCfg[V.chartKey('out:hof', '24h')].series.map((x) => x.entity), ['sensor.wetter_aussen_temperatur', 'sensor.teich_temperatur']);
+// The tile hands its list to the popup's sections; the Studio offers the field on the room climate tile.
+const src05 = read('custom_components/casora/scripts/local/05-standard-medien.js');
+eq('popup: variables.outdoor_sensors travel as C.extra', /variables\.outdoor_sensors[\s\S]{0,160}C\.extra = xs/.test(src05), true);
+eq('Studio: the field on the room climate tile', /id: "casora_vent"[\s\S]{0,300}key: "outdoor_sensors", type: "list"[\s\S]{0,120}classes: \["temperature"\]/.test(read('custom_components/casora/panel/casora-panel-types.js')), true);
 // A backend that names no sensors (before the restart) and a garden with its own sensor: that one.
 st = outHouse({ t: 1.9, rh: 94 }, { 'sensor.garten_temperatur': ['temperature', 2.4, 'garten'] });
 eq('older backend: the garden\'s own sensor', V.outSeries(garten, { t: 1.9, rh: 94 }, hass).map((x) => x.entity), ['sensor.garten_temperatur']);
