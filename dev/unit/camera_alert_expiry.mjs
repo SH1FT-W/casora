@@ -1,4 +1,4 @@
-// @deckt: dashboards/casora/button_card_templates.json#global
+// @deckt: dashboards/casora/button_card_templates.json#global custom_components/casora/scripts/casora-core.js#casoraTimeUnusable
 // A Ring-style camera alert must expire even when sensor.time is absent,
 // and also when sensor.time exists but has no usable value (unavailable, unknown, empty).
 import assert from 'node:assert/strict';
