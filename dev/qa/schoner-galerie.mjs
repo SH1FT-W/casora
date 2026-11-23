@@ -5,6 +5,7 @@
 // After those the situations of SCENES_EXTRA (a setting, own appointments, another time): <name>.png.
 import fs from 'node:fs';
 import path from 'node:path';
+import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import { chromium } from '../e2e/harness.mjs';
 
@@ -50,7 +51,7 @@ await page.evaluate(({ lang, dict }) => {
   const exact = (dict && (dict.exact || dict)) || {};
   window.casoraTr = (t) => exact[t] || t;
 }, { lang, dict });
-for (const f of ['scripts/local/06-kalender.js', 'scripts/local/46-screensaver.js']) {
+for (const f of ['scripts/local/06a-kalender-filter.js', 'scripts/local/06-kalender.js', 'scripts/local/46-screensaver.js']) {
   if (fs.existsSync(path.join(comp, f))) await page.addScriptTag({ url: '/' + f }).catch((e) => errors.push(f + ': ' + e));
 }
 const kinds = await page.evaluate(() => window._casoraSaver.KINDS.map((k) => k.id));
@@ -65,10 +66,16 @@ const shoot = async (name, kind, at, extra) => {
     if (window.__m) window.__m.destroy();
     const now = new Date(at), day = at.slice(0, 10);
     const night = now.getHours() >= 17 || now.getHours() < 7;
+    const filterCheck = extra && extra.filterCheck;
+    const filteredStart = +now + 60 * 60000;
     const base = { now, hass: { states: {}, themes: { darkMode: false }, locale: { language: document.documentElement.lang } },
       vars: Object.assign({ weather_entity: '' }, extra && extra.vars), sun: { rise: +new Date(day + 'T07:41:00'), set: +new Date(day + 'T16:34:00') },
       rooms: rooms.map((r) => ({ name: { living: 'Wohnzimmer', kitchen: 'Küche', bedroom: 'Schlafzimmer', dining: 'Esszimmer' }[r], url: '/casora_assets/rooms/' + r + '-demo' + (night ? '-night' : '') + '.jpg', ref: r })),
-      wx: undefined, events: [], hourly: [], daily: [], bins: extra && extra.bins ? extra.bins : [], media: undefined, energy: undefined, cams: [], bell: [], people: extra && extra.people ? extra.people : [] };
+      wx: undefined, events: filterCheck ? [
+        { title: filterCheck.hidden, start: filteredStart, end: filteredStart + 30 * 60000, allDay: false, cal: 'calendar.gallery' },
+        { title: filterCheck.visible, start: filteredStart + 30 * 60000, end: filteredStart + 90 * 60000, allDay: false, cal: 'calendar.gallery' },
+      ] : [], settings: filterCheck ? { calendar_filter: filterCheck.hidden } : {},
+      hourly: [], daily: [], bins: extra && extra.bins ? extra.bins : [], media: undefined, energy: undefined, cams: [], bell: [], people: extra && extra.people ? extra.people : [] };
     if (extra && extra.scene != null) { const D = Date; base.now = new D(+now); }
     // Own appointments: [day from today, hour, minute, minutes long (0 = all day), title, calendar].
     if (extra && extra.events) {
@@ -81,6 +88,11 @@ const shoot = async (name, kind, at, extra) => {
     window.__m = S.mount(box, kind, { context: () => base, sample: true, every: 3600000 });
   }, { kind, at: TIMES[at] || at, rooms, extra: extra || null });
   await page.waitForTimeout(350);
+  if (extra && extra.filterCheck) {
+    const text = await page.locator('#box').innerText();
+    assert.ok(!text.includes(extra.filterCheck.hidden), `${kind} must hide the filtered title`);
+    assert.ok(text.includes(extra.filterCheck.visible), `${kind} must keep the unfiltered title`);
+  }
   await page.screenshot({ path: path.join(out, name + '.png') });
   // Boxes whose content is cut off at the bottom or sticks out of the picture (a one-line title cut with … is meant).
   const cut = await page.evaluate(() => {
@@ -121,6 +133,9 @@ const SCENES_EXTRA = [
   ['linie-leer', 'linie', 'tag', { events: [[0, 0, 0, 0, 'Feiertag']] }],
 ];
 for (const [name, kind, at, extra] of SCENES_EXTRA) await shoot(name, kind, at, extra);
+for (const k of ['linie', 'woche', 'kalender']) for (const t of ['tag', 'nacht']) {
+  await shoot(k + '-' + t + '-filter', k, t, { filterCheck: { hidden: 'Filtered fixture event', visible: 'Visible fixture event' } });
+}
 // Every landscape, drawn directly (the screensaver shows one after the other by the clock).
 for (const id of scenes) {
   if (only && !only.test('land-' + id)) continue;

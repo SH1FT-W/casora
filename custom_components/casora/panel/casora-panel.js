@@ -6917,13 +6917,14 @@ const tileStateWord = (kind, tile, ent, states, hass, settings) => {
     const next = typeof window !== "undefined" && window.casoraCalendarNext;
     const cals = typeof window !== "undefined" && window.casoraCalendars;
     if (!allows || !next || !cals || !settings) return "";
-    // The Studio draft's calendar list counts when the tile has none of its own.
-    const vars = Array.isArray(V.calendars) && V.calendars.length ? V : { calendars: settings.calendars };
-    // The waste calendar from the Studio draft stays out, as on the dashboard (it is pickups, not appointments).
-    const wasteCal = settings.waste && settings.waste.calendar;
-    const waste = window.casoraDevice && window.casoraDevice.waste ? window.casoraDevice.waste(hass, wasteCal ? { trash_calendar: wasteCal } : null).calendar : null;
+    // Match Home's explicit tile list; an empty Settings draft returns to automatic selection, not saved settings.
+    const vars = Array.isArray(V.calendars) && V.calendars.length ? V
+      : Array.isArray(settings.calendars) ? {
+        calendars: settings.calendars, _casora_calendar_draft: true,
+        _casora_waste_calendar: settings.waste && settings.waste.calendar,
+      } : {};
     const calendarVars = Array.isArray(vars.calendars) ? { ...vars, calendars: vars.calendars.slice() } : vars;
-    const list = cals(hass, calendarVars).filter((c) => c.entity !== waste && c.entity !== wasteCal);
+    const list = cals(hass, calendarVars);
     const pick = next(states || {}, list, new Date(), (title, attrs) => allows(title, settings, attrs));
     if (pick) return String(pick.name);
     return window.casoraI18n && window.casoraI18n.t ? window.casoraI18n.t("No events") : "No events";

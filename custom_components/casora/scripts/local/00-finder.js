@@ -1621,18 +1621,22 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
   window.casoraCalendars = function (hass, vars) {
     var v = vars && vars.calendars;
     if (Array.isArray(v) && v.length) return calNorm(v);
-    var own = null;
-    try { own = window.casoraSettings ? window.casoraSettings().calendars : null; } catch (e) { own = null; }
-    if (Array.isArray(own) && own.length) {
-      var mine = calNorm(own);
-      if (mine.length) return mine;
+    if (!(vars && vars._casora_calendar_draft === true)) {
+      var own = null;
+      try { own = window.casoraSettings ? window.casoraSettings().calendars : null; } catch (e) { own = null; }
+      if (Array.isArray(own) && own.length) {
+        var mine = calNorm(own);
+        if (mine.length) return mine;
+      }
     }
     var S = hass && hass.states;
     if (!S) return calAutoMemo.out;
     var E = hass.entities || {}, cfg = window.CASORA_SETTINGS || null;
     if (calAutoMemo.S === S && calAutoMemo.E === E && calAutoMemo.cfg === cfg) return calAutoMemo.out;
     var wasteCal = null;
-    try { wasteCal = window.casoraDevice && window.casoraDevice.waste ? window.casoraDevice.waste(hass, {}).calendar : null; } catch (e) { wasteCal = null; }
+    var wasteVars = vars && vars._casora_calendar_draft && vars._casora_waste_calendar
+      ? { trash_calendar: vars._casora_waste_calendar } : {};
+    try { wasteCal = window.casoraDevice && window.casoraDevice.waste ? window.casoraDevice.waste(hass, wasteVars).calendar : null; } catch (e) { wasteCal = null; }
     var out = Object.keys(S).filter(function (id) {
       if (id.indexOf('calendar.') !== 0) return false;
       var e = E[id];

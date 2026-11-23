@@ -76,6 +76,7 @@
   };
   /* Nächster Termin aus den Kalender-Zuständen (message/start_time/all_day). Regel: casoraCalendarNext (06a). */
   K.next = function (states, variables) {
+    if (typeof window.casoraCalendarNext !== 'function') return null;
     return window.casoraCalendarNext(states, K.cals(variables), new Date(), K.allowsTitle);
   };
   K.tile = function (states, variables) {

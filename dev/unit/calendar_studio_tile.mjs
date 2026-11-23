@@ -1,7 +1,7 @@
-// Studio Agenda tile preview (#151): the calendar filter, the waste exclusion and the translated
+// Studio Agenda tile preview (#151): the calendar filter, automatic waste exclusion and translated
 // "No events" apply in the Studio, as on the dashboard. The Studio has no calendar module; the
 // title rule comes alone from scripts/local/06a-kalender-filter.js.
-// @deckt: custom_components/casora/panel/casora-panel.js#tileStateWord,_calendarSettings,_paintTile,custom_components/casora/panel/casora-panel-personal.js#_casoraPersonalGroups,custom_components/casora/panel/casora-panel-settings.js#_csDiscardAll
+// @deckt: custom_components/casora/panel/casora-panel.js#tileStateWord,_calendarSettings,_paintTile,custom_components/casora/panel/casora-panel-personal.js#_casoraPersonalGroups,custom_components/casora/panel/casora-panel-settings.js#_csDiscardAll,custom_components/casora/scripts/local/00-finder.js#casoraCalendars
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import { loadPanel } from './lib/testhaus.mjs';
@@ -71,15 +71,15 @@ const calTile = { variables: {} };
   const word = tileStateWord(w);
   const chosen = { calendars: [{ entity: 'calendar.b' }] };
   assert.equal(word('casora_calendar', calTile, null, states, { states: states }, chosen), 'Visible', 'configured list excludes unselected calendars');
-  assert.equal(word('casora_calendar', calTile, null, states, { states: states }, { calendars: [{ entity: 'calendar.waste' }] }), 'Keine Termine', 'configured waste stays excluded');
+  assert.equal(word('casora_calendar', calTile, null, states, { states: states }, { calendars: [{ entity: 'calendar.waste' }] }), 'Bins out', 'explicit waste selection matches the dashboard');
   assert.equal(word('casora_calendar', calTile, null, states, { states: states }, { calendars: [{ entity: 'calendar.a', tile: false }] }), 'Keine Termine', 'disabled tile calendar stays excluded');
   // As in Home Assistant, the hass object carries the states too (the finder reads both).
   const hass = { states, entities: { 'calendar.a': { hidden_by: 'user' } } };
   assert.equal(word('casora_calendar', calTile, null, states, hass, { calendars: [] }), 'Visible', 'automatic selection excludes hidden calendars');
   assert.equal(word('casora_calendar', calTile, null, states, hass, { calendars: [{ entity: 'calendar.a' }] }), 'Termin-cccccc', 'explicit selection includes hidden calendars');
   const ownTile = { variables: { calendars: [{ entity: 'calendar.b' }, { entity: 'calendar.waste' }] } };
-  assert.equal(word('casora_calendar', ownTile, null, states, hass, { calendars: [{ entity: 'calendar.a' }] }), 'Visible', 'tile list overrides configured calendars and excludes waste');
-  assert.equal(word('casora_calendar', { variables: { calendars: [{ entity: 'calendar.waste' }] } }, null, states, hass, chosen), 'Keine Termine', 'tile list cannot include waste');
+  assert.equal(word('casora_calendar', ownTile, null, states, hass, { calendars: [{ entity: 'calendar.a' }] }), 'Visible', 'tile list overrides configured calendars');
+  assert.equal(word('casora_calendar', { variables: { calendars: [{ entity: 'calendar.waste' }] } }, null, states, hass, chosen), 'Bins out', 'tile list selection matches the dashboard');
 }
 
 // Saved filter words hide the first title; the next calendar's title shows.
@@ -102,6 +102,16 @@ const calTile = { variables: {} };
   settings.calendars.splice(0, 1);
   assert.equal(word('casora_calendar', calTile, null, states, { states }, settings), 'Visible',
     'removing a calendar refreshes the preview selection');
+}
+
+// An emptied Settings draft uses the dashboard's automatic calendar list, not the saved list.
+{
+  const w = makeWindow({ waste: 'calendar.waste' });
+  w.CASORA_SETTINGS = { calendars: [{ entity: 'calendar.a' }] };
+  w.casoraSettings = () => w.CASORA_SETTINGS;
+  const word = tileStateWord(w);
+  assert.equal(word('casora_calendar', calTile, null, states, { states }, { calendars: [], calendar_filter: 'Termin-' }),
+    'Visible', 'an empty draft does not fall back to the saved calendar selection');
 }
 
 // The waste calendar stays out of the Agenda preview, as on the dashboard.

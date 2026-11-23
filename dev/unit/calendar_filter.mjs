@@ -73,4 +73,51 @@ for (const kind of ['linie', 'woche', 'kalender']) {
   const html = saver.html(kind, view);
   assert.ok(!html.includes('Termin-bbbbbb ffffff') && html.includes('Termin-gggggg'), `${kind} applies the shared Calendar filter`);
 }
+
+// Recorded mock decisions apply only to the exact calendar event they describe.
+{
+  const start = now - 3600000, end = now + 3600000;
+  const stateTime = (n) => {
+    const d = new Date(n);
+    return [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-')
+      + ' ' + [d.getHours(), d.getMinutes(), d.getSeconds()].map((v) => String(v).padStart(2, '0')).join(':');
+  };
+  const replayStates = {
+    'calendar.mock': { state: 'on', attributes: {
+      message: 'opaque replay title', start_time: stateTime(start), end_time: stateTime(end), all_day: false,
+      casora_filter_match: { message: { matches: ['private entry'] } },
+    } },
+  };
+  const replayEvents = [
+    { title: 'opaque replay title', start, end, allDay: false, cal: 'calendar.mock' },
+    { title: 'opaque replay title', start: end + 3600000, end: end + 7200000, allDay: false, cal: 'calendar.mock' },
+  ];
+  const view = saver.context({ kind: 'woche', now: new ClockDate(), hass: { states: replayStates }, events: replayEvents,
+    settings: { calendar_filter: 'private entry' }, rooms: [], sun: null, wx: null, daily: [], hourly: [], bins: [] });
+  assert.deepEqual(view.events.map((e) => e.start), [end + 3600000],
+    'the replay decision hides its matching occurrence but not another occurrence in the same calendar');
+}
 console.log('ok screensavers apply the filter');
+console.log('ok screensaver replay decisions stay with their matching event');
+
+// The calendar popup is intentionally outside the title filter.
+{
+  calendar.ev = [
+    { name: 'Termin-bbbbbb ffffff', start: new ClockDate(), end: new ClockDate(+new ClockDate() + 3600000), allDay: false, cal: 'calendar.mock_day' },
+    { name: 'Termin-gggggg', start: new ClockDate(+new ClockDate() + 7200000), end: new ClockDate(+new ClockDate() + 10800000), allDay: false, cal: 'calendar.mock_meeting' },
+  ];
+  const popup = calendar.html('day', { calendars: [] });
+  assert.ok(popup.includes('Termin-bbbbbb ffffff') && popup.includes('Termin-gggggg'),
+    'the popup continues to list a title hidden by the Calendar filter');
+}
+console.log('ok calendar popup remains unfiltered');
+
+// The tile renders safely during the brief startup gap before its shared rule loads.
+{
+  const isolatedWindow = { casoraSettings: () => settings, addEventListener() {} };
+  const isolatedContext = vm.createContext({ window: isolatedWindow, document: { querySelector: () => null }, setTimeout: () => 0, console, Date: ClockDate });
+  vm.runInContext(read('06-kalender.js'), isolatedContext);
+  assert.equal(isolatedWindow._casoraCalendar.tile(states, variables), 'Keine Termine',
+    'a missing shared rule does not throw during startup');
+}
+console.log('ok calendar tile tolerates a missing startup rule');
