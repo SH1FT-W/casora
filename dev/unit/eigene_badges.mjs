@@ -5,7 +5,7 @@
 // (popup = more-info, go to room = navigate on the desktop and the room filter on the phone), the shared template
 // subscriber (one subscription per template, release after the last watcher), the row cards in casora_room,
 // the phone's start page and the derived phone room page, the wrap option (badges_wrap → flex row) and
-// "Who sees this?" per badge (#90).
+// "Who sees this?" per badge (#90) and "Show when" per badge (#238).
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -175,6 +175,9 @@ class El {
   setAttribute(k, v) { this.attrs[k] = v; }
   getAttribute(k) { return this.attrs[k]; }
   appendChild(c) { this.children.push(c); c.parentNode = this; return c; }
+  append(...cs) { cs.forEach((c) => this.appendChild(c)); }
+  set innerHTML(v) { if (v === '') this.children = []; }
+  get innerHTML() { return ''; }
   querySelector() { return null; }
   querySelectorAll() { return []; }
   addEventListener() {}
@@ -399,6 +402,74 @@ window._casoraTemplates = sharedTP;
   assert.equal(q._bQuiet, false, 'quiet flag reset');
   who[1].setIds([]);
   assert.deepEqual(room.variables.custom_badges[1], { entity: 'light.b' }, 'everyone again: field gone');
+  room.variables.custom_badges = [];
+}
+
+// ── #238: "Show when" per own badge (conditions as a conditional card's, none = always) ──────────────
+{
+  const H = (st) => ({ user: { id: 'u1' }, states: Object.fromEntries(Object.entries(st).map(([id, v]) => [id, { entity_id: id, state: String(v), attributes: {} }])) });
+  const on = { condition: 'state', entity: 'binary_sensor.example_window', state: 'on' };
+  const shows = (conds, st) => CB.shows({ entity: 'light.x', conditions: conds }, H(st));
+  assert.equal(CB.shows({ entity: 'light.x' }, H({})), true, 'no conditions: always');
+  assert.equal(CB.shows({ entity: 'light.x', conditions: [] }, null), true, 'empty list: always');
+  assert.equal(shows([on], { 'binary_sensor.example_window': 'on' }), true, 'is');
+  assert.equal(shows([on], { 'binary_sensor.example_window': 'off' }), false, 'is, not met');
+  assert.equal(shows([on], {}), false, 'a missing entity is unavailable');
+  assert.equal(shows([{ condition: 'state', entity: 'sensor.example', state_not: ['idle', 'docked'] }], { 'sensor.example': 'cleaning' }), true, 'is not (list)');
+  assert.equal(shows([{ condition: 'state', entity: 'sensor.example', state_not: ['idle', 'docked'] }], { 'sensor.example': 'docked' }), false);
+  assert.equal(shows([{ condition: 'numeric_state', entity: 'sensor.example_t', above: 25 }], { 'sensor.example_t': '25.5' }), true, 'above');
+  assert.equal(shows([{ condition: 'numeric_state', entity: 'sensor.example_t', above: 25 }], { 'sensor.example_t': '25' }), false, 'above is strict');
+  assert.equal(shows([{ condition: 'numeric_state', entity: 'sensor.example_t', below: 5 }], { 'sensor.example_t': 'unavailable' }), false, 'no number: not met');
+  const two = [on, { condition: 'numeric_state', entity: 'sensor.example_t', below: 5 }];
+  assert.equal(shows(two, { 'binary_sensor.example_window': 'on', 'sensor.example_t': '7' }), false, 'all: both must hold');
+  assert.equal(shows([{ condition: 'or', conditions: two }], { 'binary_sensor.example_window': 'on', 'sensor.example_t': '7' }), true, 'any');
+  assert.equal(shows([{ condition: 'not', conditions: [{ condition: 'or', conditions: two }] }], { 'binary_sensor.example_window': 'on', 'sensor.example_t': '7' }), false, 'none');
+  assert.equal(shows([{ condition: 'not', conditions: [{ condition: 'or', conditions: two }] }], { 'binary_sensor.example_window': 'off', 'sensor.example_t': '7' }), true, 'none met');
+  assert.equal(shows([{ condition: 'screen', media_query: '(min-width: 800px)' }], {}), true, 'a kind the Studio never writes does not hide');
+  // The row follows the states: the badge has no card while its condition is not met.
+  const keep = window.loadCardHelpers;
+  window.loadCardHelpers = () => Promise.resolve({ createCardElement: () => ({ classList: { add() {} } }) });
+  const keepHass = hass; hass = null;
+  const row = Object.create(Row.prototype); row._items = []; row._config = {}; row.style = {}; row.isConnected = false;
+  row.appendChild = () => {}; row.removeChild = () => {};
+  let syncs = 0; const sync0 = row._sync; row._sync = function () { syncs++; return sync0.call(this); };
+  row.setConfig({ badges: [{ entity: 'light.a' }, { entity: 'light.b', conditions: [on] }] });
+  row.hass = H({ 'binary_sensor.example_window': 'off' });
+  assert.deepEqual(row._config.badges.map((b) => b.entity), ['light.a'], 'not met: hidden');
+  row.hass = H({ 'binary_sensor.example_window': 'on' });
+  assert.deepEqual(row._config.badges.map((b) => b.entity), ['light.a', 'light.b'], 'met: shown');
+  const before = syncs;
+  row.hass = H({ 'binary_sensor.example_window': 'on', 'sensor.other': 3 });
+  assert.equal(syncs, before, 'an unrelated state change does not rebuild the row');
+  row.hass = H({ 'binary_sensor.example_window': 'unavailable' });
+  assert.deepEqual(row._config.badges.map((b) => b.entity), ['light.a'], 'hidden again');
+  for (let n = 0; n < 6; n++) await Promise.resolve();
+  window.loadCardHelpers = keep; hass = keepHass;
+  assert.ok(/CB\.shows\(b, hassNowOf\(\)\)/.test(read('custom_components/casora/scripts/casora-core.js')), 'phone badge row asks the conditions');
+  // Studio: every badge block has the tile's "Show when" editor; a filled row is stored as conditions on the badge,
+  // the last row removed takes the field away.
+  const find = (el, ok, out = []) => { el.children.forEach((c) => { if (ok(c)) out.push(c); find(c, ok, out); }); return out; };
+  room.variables.custom_badges = [{ entity: 'light.a', name: 'A' }];
+  const q = studio();
+  q._hass = H({ 'binary_sensor.example_window': 'on', 'light.a': 'on' });
+  const rr = render(q);
+  assert.ok(rr.rows.includes('Show when'), '"Show when" in the badge block: ' + rr.rows.join(','));
+  const box = find(rr.fs, (c) => c.className === 'ownbadge-cond')[0];
+  assert.ok(find(box, (c) => c.className === 'condalways').length, 'without conditions: "Always"');
+  find(box, (c) => c.className === 'condadd')[0].onclick();
+  assert.equal(room.variables.custom_badges[0].conditions, undefined, 'an empty row stores nothing');
+  const entPick = q.combos.filter((c) => c.options.includes('binary_sensor.example_window')).pop();
+  assert.ok(entPick, 'entity picker of the new row');
+  entPick.onChange('binary_sensor.example_window');
+  assert.deepEqual(room.variables.custom_badges[0], { entity: 'light.a', name: 'A', conditions: [{ condition: 'state', entity: 'binary_sensor.example_window', state: 'on' }] }, 'stored on the badge');
+  find(box, (c) => c.className === 'conddel')[0].onclick();
+  assert.deepEqual(room.variables.custom_badges[0], { entity: 'light.a', name: 'A' }, 'last row removed: field gone');
+  assert.ok(find(box, (c) => c.className === 'condalways').length, '"Always" again');
+  // A stored badge opens with its rows and mode.
+  room.variables.custom_badges = [{ entity: 'light.a', conditions: [{ condition: 'or', conditions: two }] }];
+  const q2 = studio(); q2._hass = q._hass;
+  render(q2);
+  assert.equal(q2.combos.find((c) => c.opts && c.opts.labels && c.opts.labels.any === 'Any condition met').value, 'any', 'mode read back');
   room.variables.custom_badges = [];
 }
 

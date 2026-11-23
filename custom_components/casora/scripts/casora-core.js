@@ -18696,6 +18696,9 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   var hassUserOf = function () {
     try { var h = document.querySelector('home-assistant'); return (h && h.hass && h.hass.user) || null; } catch (e) { return null; }
   };
+  var hassNowOf = function () {
+    try { var h = document.querySelector('home-assistant'); return (h && h.hass) || null; } catch (e) { return null; }
+  };
 
   // room_chips-Auszug (Studio bis 1.0.9) → Variablen wie casora_room.
   function legacy(c) {
@@ -18736,12 +18739,13 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       || ownBadge(o);
   }
   // Own badges (#53) count as well: a room with only those had no badge row on the phone (#57).
-  // Only those this user sees (per badge "Who sees this?", #90).
+  // Only those this user sees (per badge "Who sees this?", #90) and whose "Show when" holds (#238).
   function ownBadge(o) {
     var CB = window._casoraCustomBadge;
     return Array.isArray(o.custom_badges) && o.custom_badges.some(function (b) {
       return !!b && typeof b === 'object' && ((typeof b.entity === 'string' && !!b.entity)
-        || (typeof b.template === 'string' && !!b.template.trim())) && (!CB || !CB.sees || CB.sees(b, hassUserOf()));
+        || (typeof b.template === 'string' && !!b.template.trim())) && (!CB || !CB.sees || CB.sees(b, hassUserOf()))
+        && (!CB || !CB.shows || CB.shows(b, hassNowOf()));
     });
   }
 

@@ -28329,6 +28329,15 @@ class CasoraPanel extends HTMLElement {
         }, "Badge");
       }
 
+      // #238: "Show when" per badge – the tile's condition editor, stored as conditions on the badge (the list a
+      // conditional card carries); none = always (29-eigene-badges.js hides the badge while they are not met).
+      const condBox = document.createElement("div");
+      condBox.className = "ownbadge-cond";
+      box.appendChild(condBox);
+      this._condEditor(condBox, { type: "conditional", conditions: Array.isArray(b.conditions) ? clone(b.conditions) : [] }, () => {}, {
+        own: { write: (conds) => patch(i, { conditions: conds && conds.length ? clone(conds) : "" }, false) },
+      });
+
       // Icon – the Studio's icons; "Automatic" = the device's own icon.
       const ic = this._combo(b.icon && !/^mdi:/.test(b.icon) ? b.icon : "", [ICON_DEFAULT].concat(CASORA_ICONS), "Automatic",
         (v) => patch(i, { icon: v === ICON_DEFAULT ? "" : v }, false), { icon: true });
@@ -28723,12 +28732,17 @@ class CasoraPanel extends HTMLElement {
   // und je Zeile Entität · Vergleich · Wert. Sonderfälle bleiben Text.
   // opts.plain: Kachel ohne Bedingung – „+ Bedingung“ legt die Hülle (type: conditional) an.
   // Die letzte Zeile entfernt nimmt die Hülle wieder ab; Kennung, „Wer sieht das?“ wandern mit.
+  // opts.own (#238, own badges): no tile and no wrapper – shell is { type: "conditional", conditions } beside the
+  // editor, body a container of its own, own.write(conditions) stores them. Without rows it reads „Always“.
   _condEditor(body, shell, changed, opts) {
     const o = opts || {};
-    const m = o.plain ? { mode: "all", rows: [] } : condModel(shell);
+    const own = o.own || null;
+    const plain = own ? !own.fresh && ![].concat(shell.conditions || []).length : !!o.plain;
+    const m = plain ? { mode: "all", rows: [] } : condModel(shell);
     if (!m) return;
     const tr = (x) => (window.casoraI18n ? window.casoraI18n.t(x) : x);
-    const key = this._tileKey(shell);
+    const key = own ? null : this._tileKey(shell);
+    const again = (fresh) => { own.fresh = fresh; body.innerHTML = ""; this._condEditor(body, shell, changed, o); };
     const swap = (from, to) => {
       const list = o.room && o.room.tiles;
       const at = list ? list.indexOf(from) : -1;
@@ -28740,6 +28754,7 @@ class CasoraPanel extends HTMLElement {
     };
     // Hülle anlegen: Bedingung leer (zeigt immer), die erste Zeile füllt sie.
     const wrap = () => {
+      if (own) return again(true);
       const sh = { type: "conditional", conditions: [], card: shell };
       if (shell.visibility !== undefined) { sh.visibility = shell.visibility; delete shell.visibility; }
       if (!swap(shell, sh)) return;
@@ -28750,6 +28765,7 @@ class CasoraPanel extends HTMLElement {
     };
     // Hülle abnehmen, wenn keine Bedingung mehr bleibt (nur eine Ebene, Kachel darin).
     const unwrap = () => {
+      if (own) { again(false); return true; }
       const inner = shell.card;
       if (!inner || inner.type === "conditional" || isContainerCard(inner)) return false;
       if (shell.visibility !== undefined) inner.visibility = shell.visibility;
@@ -28764,18 +28780,20 @@ class CasoraPanel extends HTMLElement {
     body.appendChild(box);
     const save = () => {
       condWrite(shell, m);
+      // A mode without a filled row („any“ of nothing) is no condition.
+      if (own) { own.write(m.rows.some((r) => r.entity) ? shell.conditions : []); changed(); return; }
       if (m.rows.some((r) => r.entity) && this._pendingFirstCond === key) this._pendingFirstCond = null;
       this._markDirty(); this._syncPreview(); changed();
     };
     const mode = this._combo(m.mode, ["all", "any", "none"], "", (v) => { m.mode = v || "all"; save(); },
       { fixed: true, labels: { all: "All conditions met", any: "Any condition met", none: "None of them met" } });
     const head = document.createElement("div");
-    head.className = o.plain ? "row condplain" : "row";
+    head.className = plain ? "row condplain" : "row";
     const hl = document.createElement("label"); hl.textContent = tr("Show when");
     const always = document.createElement("span");
     always.className = "condalways";
     always.textContent = tr("Always");
-    head.append(hl, o.plain ? always : mode.wrap);
+    head.append(hl, plain ? always : mode.wrap);
     box.appendChild(head);
     const ents = Object.keys((this._hass && this._hass.states) || {}).sort();
     const OPS = ["is", "isnot", "above", "below"];
@@ -28784,9 +28802,10 @@ class CasoraPanel extends HTMLElement {
     rows.className = "condrows";
     box.appendChild(rows);
     // Frisch angelegte Hülle: gleich eine leere Zeile zum Ausfüllen.
-    if (!o.plain && !m.rows.length && this._pendingFirstCond === key) {
+    if (!plain && !m.rows.length && (own ? own.fresh : this._pendingFirstCond === key)) {
       m.rows.push({ entity: "", op: "is", value: "on" });
     }
+    if (own) own.fresh = false;
     const draw = () => {
       rows.innerHTML = "";
       m.rows.forEach((r, i) => {
@@ -28894,7 +28913,7 @@ class CasoraPanel extends HTMLElement {
       add.type = "button"; add.className = "condadd";
       add.textContent = "+ " + tr("Condition");
       add.onclick = () => {
-        if (o.plain) return wrap();
+        if (plain) return wrap();
         m.rows.push({ entity: "", op: "is", value: "on" }); draw();
       };
       rows.appendChild(add);

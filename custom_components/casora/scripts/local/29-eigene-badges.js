@@ -1,7 +1,8 @@
 // ── Own badges (issue #53): any number of badges per room, from an entity or a Jinja template ──
 // The Studio stores them in the room's variables (custom_badges: [{name, icon, color, entity | template, tap,
 // navigate, navigate_filter, ask, users}]; tap 'run' runs a script, scene or button, ask: true asks first, #90;
-// users: the HA user ids who see this badge, empty or missing = everyone, #90). The badge
+// users: the HA user ids who see this badge, empty or missing = everyone, #90; conditions: "Show when" as a
+// conditional card stores it, missing = always, #238). The badge
 // row of casora_room (and, derived from it, the phone room page; the phone's start page via
 // casora_mobile_filter_badges) carries one card `custom:casora-custom-badges`, which draws one real button-card
 // per entry with the template casora_badge_custom – so every entry looks and behaves like the built-in badges
@@ -12,6 +13,7 @@
 //   window._casoraCustomBadge.view(badge, entity, value, hass) → what the template draws (title, sub, active …)
 //   window._casoraCustomBadge.popupVars(badge) → the badge's own popup as the Universal tile's variables (#60)
 //   window._casoraCustomBadge.sees(badge, user) → false when the badge's "Who sees this?" leaves this user out
+//   window._casoraCustomBadge.shows(badge, hass) → false while the badge's "Show when" conditions are not met
 //   <casora-custom-badges>  setConfig({badges, enabled, place}), .hass – the row card
 //
 // Tap "Own popup" (tap: 'own_popup', #60): the badge carries popup: {free_values, free_value_labels, free_chart,
@@ -125,6 +127,29 @@
     return 'cbv:' + k + ':' + hash(t) + t.length.toString(36);
   };
 
+  // One condition as a conditional card reads it (HA frontend validate-condition): state / state_not (one or a list),
+  // numeric_state above / below, or, and, not (none of them). A missing entity reads as unavailable. Kinds the
+  // Studio's editor never writes (screen, user …) do not hide a badge.
+  var condMet = function (c, S) {
+    if (!c || typeof c !== 'object') return true;
+    var kind = c.condition || (c.entity ? 'state' : '');
+    var sub = [].concat(c.conditions || []);
+    var met = function (x) { return condMet(x, S); };
+    if (kind === 'or') return sub.some(met);
+    if (kind === 'and') return sub.every(met);
+    if (kind === 'not') return !sub.some(met);
+    if (!c.entity) return true;
+    var st = S[c.entity] ? String(S[c.entity].state) : 'unavailable';
+    if (kind === 'numeric_state') {
+      var n = st.trim() === '' ? NaN : Number(st);
+      if (!isFinite(n)) return false;
+      return (c.above == null || n > Number(c.above)) && (c.below == null || n < Number(c.below));
+    }
+    if (kind !== 'state') return true;
+    var has = function (v) { return [].concat(v).map(String).indexOf(st) !== -1; };
+    return (c.state === undefined || has(c.state)) && (c.state_not === undefined || !has(c.state_not));
+  };
+
   window._casoraCustomBadge = {
     OFF: OFF,
     esc: esc,
@@ -135,6 +160,13 @@
       var l = b && b.users;
       if (!Array.isArray(l) || !l.length) return true;
       return !!(user && user.id && l.indexOf(user.id) !== -1);
+    },
+    // "Show when" of one badge (#238), as a tile's: every condition must hold, none = always.
+    shows: function (b, hass) {
+      var l = b && b.conditions;
+      if (!Array.isArray(l) || !l.length) return true;
+      var S = (hass && hass.states) || {};
+      return l.every(function (c) { return condMet(c, S); });
     },
     // badge: the stored entry; entity: the state object (entity badges); value: template result or null (loading).
     view: function (b, entity, value, hass) {
@@ -257,19 +289,26 @@
       this.style.display = 'contents';
       this._sync();
     }
-    // Only the badges this HA user sees (per badge "Who sees this?", #90); the user may arrive after setConfig.
+    // Only the badges this HA user sees (per badge "Who sees this?", #90) and whose "Show when" holds (#238); the
+    // user may arrive after setConfig, the conditions follow the states.
     _seen() {
       var h = this._hass || hassOf();
       var u = (h && h.user) || null;
       this._uid = (u && u.id) || '';
+      this._met = this._metOf(h);
       var CB = window._casoraCustomBadge;
-      this._config = { badges: (this._all || []).filter(function (b) { return CB.sees(b, u); }), place: this._place || 'room' };
+      this._config = { badges: (this._all || []).filter(function (b) { return CB.sees(b, u) && CB.shows(b, h); }), place: this._place || 'room' };
+    }
+    // Which badges with conditions show now, as one string: a state change redraws the row only when this changes.
+    _metOf(h) {
+      var CB = window._casoraCustomBadge;
+      return (this._all || []).map(function (b) { return Array.isArray(b.conditions) && b.conditions.length ? (CB.shows(b, h) ? '1' : '0') : '-'; }).join('');
     }
     get hass() { return this._hass; }
     set hass(h) {
       this._hass = h;
       var uid = (h && h.user && h.user.id) || '';
-      if (this._all && uid !== this._uid) { this._seen(); this._sync(); }
+      if (this._all && (uid !== this._uid || this._metOf(h) !== this._met)) { this._seen(); this._sync(); }
       this._items.forEach(function (it) { if (it.el) it.el.hass = h; });
     }
     getCardSize() { return 1; }
