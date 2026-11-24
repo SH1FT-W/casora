@@ -16675,6 +16675,11 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     return heads;
   }
 
+  // What the drawer shows, as a key: a changed key means the open drawer must be drawn again.
+  function rowsKey() {
+    return _rows.map(function (r) { return r.id + '|' + r.label; }).join('\n');
+  }
+
   function rebuild() {
     var EXN = excludes();
     var ok = function (r) { return !!r && !(r.entity && EXN[r.entity]) && !isHidden(r); };
@@ -16969,10 +16974,13 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         kept.push(e);
       });
 
+      // An open drawer was drawn from the rows it knew; a new row must show without reopening it.
+      var rowsBefore = rowsKey();
       _src = { live: live, events: kept };
       rebuild();
       _busy = null;
       announce();
+      if (_menu && _menu._redraw && rowsKey() !== rowsBefore) _menu._redraw();
       return _rows;
     });
 
