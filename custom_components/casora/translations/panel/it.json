@@ -3197,7 +3197,12 @@
     "Tablets only. Closes an open popup after a while without use.": "Solo tablet. Chiude una finestra aperta dopo un po' senza uso.",
     "More outdoor sensors": "Altri sensori esterni",
     "Add a temperature sensor": "Aggiungi un sensore di temperatura",
-    "For a garden, terrace or balcony: these temperature sensors join the chart in the popup, with the sensors of the room's area.": "Per giardino, terrazza o balcone: questi sensori di temperatura si aggiungono al grafico del popup, insieme ai sensori dell'area della stanza."
+    "For a garden, terrace or balcony: these temperature sensors join the chart in the popup, with the sensors of the room's area.": "Per giardino, terrazza o balcone: questi sensori di temperatura si aggiungono al grafico del popup, insieme ai sensori dell'area della stanza.",
+    "Smart Heating Control": "Smart Heating Control",
+    "A room of Smart Heating Control": "Una stanza di Smart Heating Control",
+    "For every room of Smart Heating Control": "Per ogni stanza di Smart Heating Control",
+    "Smart Heating Control integration not installed yet": "Integrazione Smart Heating Control non ancora installata",
+    "Room temperature, target and whether the room heats on the tile. The popup sets the target as a manual change, goes back to automatic or picks a level, and shows the decision, the manual change and the house mode; a row opens the schedule: the week at a glance with each slot's level, switching the profile and editing a profile's time slots. For the rooms of the Smart Heating Control integration.": "Temperatura della stanza, obiettivo e riscaldamento in corso sul riquadro. Il popup imposta l'obiettivo come modifica manuale, torna in automatico o sceglie un livello, e mostra la decisione, la modifica manuale e la modalità della casa; una riga apre la programmazione: la settimana a colpo d'occhio con il livello di ogni fascia, cambio di profilo e modifica delle fasce di un profilo. Per le stanze dell'integrazione Smart Heating Control."
   },
   "patterns": [
     [

@@ -62,7 +62,7 @@ def compose(fixture: dict, now: datetime, stress: dict | None = None, hacs: dict
     """Fixture plus the made-up devices, in the order async_setup_entry always used."""
     from . import (aquarium, befeuchter, co, coffee, dishwasher, ebike, energie, frigate, fussball, game_account, haustier,
                    halten, hubs, klingel, fridge, medien, kettle, live, maeher, mixed_lights, oven, shopping, smartmeter,
-                   testlimousine, testserver, testwagen, tumble, velair, waesche, wetter)
+                   smart_heating, testlimousine, testserver, testwagen, tumble, velair, waesche, wetter)
     if stress:
         merge(fixture, stress)
     # Demo house (dev/demo/demo_fixture.py sets "_demo"): without the German test devices (washers A/B with
@@ -126,6 +126,8 @@ def compose(fixture: dict, now: datetime, stress: dict | None = None, hacs: dict
         mixed_lights.join_house_group(fixture)
         # A made-up air conditioner planned by a Velair-like scheduler (community card #32), see velair.py.
         merge(fixture, velair.extra(now), "Testklimaanlage + Velair")
+        # A made-up room heated by a Smart-Heating-Control-like controller (community card #240), see smart_heating.py.
+        merge(fixture, smart_heating.extra(now), "Testheizraum + Smart Heating Control")
         # Two made-up kettles, BLE-like (only shows) and one with target and keep warm (community card #87), see kettle.py.
         merge(fixture, kettle.extra(now), "Testkocher/Testwasserkocher")
         # A made-up smoke and CO detector, Matter-like (community card #124), see co.py.

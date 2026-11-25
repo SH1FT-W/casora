@@ -3005,7 +3005,32 @@
     "erst lesen": "eerst lezen",
     "automatisch": "automatisch",
     "automatische Updates": "automatische updates",
-    "Zurückholen": "Terughalen"
+    "Zurückholen": "Terughalen",
+    "Höchsttemperatur": "Maximumtemperatuur",
+    "Sommer": "Zomer",
+    "Außerhalb der Heizzeit": "Buiten het stookseizoen",
+    "Ventilbewegung": "Kleppenoefening",
+    "Alle weit weg": "Iedereen ver weg",
+    "Unterwegs in der Nähe": "Onderweg in de buurt",
+    "Raum leer": "Ruimte leeg",
+    "Sensor ausgefallen": "Sensor uitgevallen",
+    "Früher Start": "Vroege start",
+    "Früher Stopp": "Vroege stop",
+    "Draußen warm": "Warm buiten",
+    "Alle Tage": "Elke dag",
+    "Werktage": "Werkdagen",
+    "Wochenende": "Weekend",
+    "Tagesprofile": "Dagprofielen",
+    "Gilt für jeden Tag mit diesem Profil": "Geldt voor elke dag met dit profiel",
+    "Kein aktives Profil an diesem Tag: der Raum hält den Frostschutz.": "Geen actief profiel op deze dag: de ruimte houdt de vorstbeveiliging aan.",
+    "Der Zeitplan kommt aus einem Zeitplan-Helfer und wird dort bearbeitet.": "Het schema komt uit een schemahelper en wordt daar bewerkt.",
+    "Der Zeitplan hat einen Fehler, bitte in Smart Heating Control prüfen.": "Het schema bevat een fout, controleer het in Smart Heating Control.",
+    "Entscheidung": "Beslissing",
+    "Am Gerät eingestellt": "Op het apparaat ingesteld",
+    "Bis zum nächsten Wechsel": "Tot de volgende wissel",
+    "Wartet": "Wacht",
+    "Ein Profil braucht mindestens ein Zeitfenster": "Een profiel heeft minstens één tijdvak nodig",
+    "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "Het schema is intussen gewijzigd, bewerk het opnieuw"
   },
   "patterns": [
     [
@@ -5455,6 +5480,10 @@
     [
       "^Noch (\\d+) Min\\. bis Sonnenaufgang$",
       "Nog {1} min tot zonsopkomst"
+    ],
+    [
+      "^(Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag) (\\d{1,2}:\\d\\d)$",
+      "{1} {2}"
     ]
   ]
 }

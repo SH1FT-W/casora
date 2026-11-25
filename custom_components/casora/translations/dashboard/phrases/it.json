@@ -3005,7 +3005,32 @@
     "erst lesen": "leggere prima",
     "automatisch": "automatico",
     "automatische Updates": "aggiornamenti automatici",
-    "Zurückholen": "Ripristina"
+    "Zurückholen": "Ripristina",
+    "Höchsttemperatur": "Temperatura massima",
+    "Sommer": "Estate",
+    "Außerhalb der Heizzeit": "Fuori stagione di riscaldamento",
+    "Ventilbewegung": "Esercizio valvole",
+    "Alle weit weg": "Tutti lontani",
+    "Unterwegs in der Nähe": "Fuori, nelle vicinanze",
+    "Raum leer": "Stanza vuota",
+    "Sensor ausgefallen": "Sensore guasto",
+    "Früher Start": "Avvio anticipato",
+    "Früher Stopp": "Arresto anticipato",
+    "Draußen warm": "Caldo fuori",
+    "Alle Tage": "Tutti i giorni",
+    "Werktage": "Giorni feriali",
+    "Wochenende": "Fine settimana",
+    "Tagesprofile": "Profili giornalieri",
+    "Gilt für jeden Tag mit diesem Profil": "Vale per ogni giorno con questo profilo",
+    "Kein aktives Profil an diesem Tag: der Raum hält den Frostschutz.": "Nessun profilo attivo in questo giorno: la stanza mantiene la protezione antigelo.",
+    "Der Zeitplan kommt aus einem Zeitplan-Helfer und wird dort bearbeitet.": "Il programma proviene da un aiutante di programmazione e si modifica lì.",
+    "Der Zeitplan hat einen Fehler, bitte in Smart Heating Control prüfen.": "Il programma ha un errore, controllalo in Smart Heating Control.",
+    "Entscheidung": "Decisione",
+    "Am Gerät eingestellt": "Impostato sul dispositivo",
+    "Bis zum nächsten Wechsel": "Fino al prossimo cambio",
+    "Wartet": "In attesa",
+    "Ein Profil braucht mindestens ein Zeitfenster": "Un profilo ha bisogno di almeno una fascia",
+    "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "Il programma è cambiato nel frattempo, modificalo di nuovo"
   },
   "patterns": [
     [
@@ -5455,6 +5480,10 @@
     [
       "^Noch (\\d+) Min\\. bis Sonnenaufgang$",
       "Ancora {1} min all’alba"
+    ],
+    [
+      "^(Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag) (\\d{1,2}:\\d\\d)$",
+      "{1} {2}"
     ]
   ]
 }

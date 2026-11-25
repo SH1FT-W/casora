@@ -3197,7 +3197,12 @@
     "Tablets only. Closes an open popup after a while without use.": "Bare nettbrett. Lukker et åpent popup etter en stund uten bruk.",
     "More outdoor sensors": "Flere utesensorer",
     "Add a temperature sensor": "Legg til en temperatursensor",
-    "For a garden, terrace or balcony: these temperature sensors join the chart in the popup, with the sensors of the room's area.": "For hage, terrasse eller balkong: disse temperatursensorene kommer med i diagrammet i popupen, sammen med sensorene i rommets område."
+    "For a garden, terrace or balcony: these temperature sensors join the chart in the popup, with the sensors of the room's area.": "For hage, terrasse eller balkong: disse temperatursensorene kommer med i diagrammet i popupen, sammen med sensorene i rommets område.",
+    "Smart Heating Control": "Smart Heating Control",
+    "A room of Smart Heating Control": "Et rom i Smart Heating Control",
+    "For every room of Smart Heating Control": "For hvert rom i Smart Heating Control",
+    "Smart Heating Control integration not installed yet": "Smart Heating Control-integrasjonen er ikke installert ennå",
+    "Room temperature, target and whether the room heats on the tile. The popup sets the target as a manual change, goes back to automatic or picks a level, and shows the decision, the manual change and the house mode; a row opens the schedule: the week at a glance with each slot's level, switching the profile and editing a profile's time slots. For the rooms of the Smart Heating Control integration.": "Romtemperatur, mål og om rommet varmes på flisen. Popupen setter målet som manuell endring, går tilbake til automatikk eller velger et nivå, og viser beslutningen, den manuelt satte endringen og husets modus; en rad åpner tidsplanen: uken på et øyeblikk med nivået for hvert tidsrom, bytte profil og redigere tidsrommene i en profil. For rommene i Smart Heating Control-integrasjonen."
   },
   "patterns": [
     [

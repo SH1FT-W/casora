@@ -2987,7 +2987,32 @@
     "erst lesen": "read first",
     "automatisch": "automatic",
     "automatische Updates": "automatic updates",
-    "Zurückholen": "Bring back"
+    "Zurückholen": "Bring back",
+    "Höchsttemperatur": "Maximum temperature",
+    "Sommer": "Summer",
+    "Außerhalb der Heizzeit": "Outside the heating season",
+    "Ventilbewegung": "Valve exercise",
+    "Alle weit weg": "Everyone far away",
+    "Unterwegs in der Nähe": "Out nearby",
+    "Raum leer": "Room empty",
+    "Sensor ausgefallen": "Sensor failed",
+    "Früher Start": "Early start",
+    "Früher Stopp": "Early stop",
+    "Draußen warm": "Warm outside",
+    "Alle Tage": "All days",
+    "Werktage": "Workdays",
+    "Wochenende": "Weekend",
+    "Tagesprofile": "Day profiles",
+    "Gilt für jeden Tag mit diesem Profil": "Applies to every day with this profile",
+    "Kein aktives Profil an diesem Tag: der Raum hält den Frostschutz.": "No active profile on this day: the room keeps the frost protection.",
+    "Der Zeitplan kommt aus einem Zeitplan-Helfer und wird dort bearbeitet.": "The schedule comes from a schedule helper and is edited there.",
+    "Der Zeitplan hat einen Fehler, bitte in Smart Heating Control prüfen.": "The schedule has an error, please check it in Smart Heating Control.",
+    "Entscheidung": "Decision",
+    "Am Gerät eingestellt": "Set on the device",
+    "Bis zum nächsten Wechsel": "Until the next change",
+    "Wartet": "Waiting",
+    "Ein Profil braucht mindestens ein Zeitfenster": "A profile needs at least one time slot",
+    "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "The schedule has changed in the meantime, please edit it again"
   },
   "patterns": [
     [
@@ -5437,6 +5462,10 @@
     [
       "^Noch (\\d+) Min\\. bis Sonnenaufgang$",
       "{1} min until sunrise"
+    ],
+    [
+      "^(Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag) (\\d{1,2}:\\d\\d)$",
+      "{1} {2}"
     ]
   ]
 }

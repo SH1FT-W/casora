@@ -543,6 +543,17 @@ window.CASORA_TILE_TYPES = [
       { key: "sparkline", label: "Trend on tile", type: "bool", advanced: true, tileLevel: true,
         hint: "A small line of the room temperature over the last 24 hours." },
       TITLE_NAME] },
+  // Smart Heating Control (community card, issue #240): a room of the HACS integration Smart Heating Control (domain
+  // advanced_climate), which has no climate entity – the tile's entity is the room's Decision sensor (casoraShcFind in
+  // 00-finder.js). Tile: room temperature, target and whether it heats; popup: the target on the dial (a manual change),
+  // Automatik and the levels as moons, a row opens the week (profiles with their days, switching the profile, editing a
+  // profile's slots) – scripts/local/51-smart-heating.js. Only offered when a room's Decision sensor is there.
+  { id: "casora_smart_heating", label: "Smart Heating Control", template: "casora_smart_heating", domains: ["sensor"],
+    icon: "smart_heating", color: "var(--casora-color-orange, #FF9F0A)", entityLabel: "Room", entityPlaceholder: "A room of Smart Heating Control",
+    onlyIf: (hass) => !!(window.casoraShcFind && window.casoraShcFind.present(hass)),
+    community: { desc: "Room temperature, target and whether the room heats on the tile. The popup sets the target as a manual change, goes back to automatic or picks a level, and shows the decision, the manual change and the house mode; a row opens the schedule: the week at a glance with each slot's level, switching the profile and editing a profile's time slots. For the rooms of the Smart Heating Control integration.",
+      needs: "advanced_climate", needsText: "For every room of Smart Heating Control", needsMissing: "Smart Heating Control integration not installed yet" },
+    fields: [ICON, TITLE_NAME] },
   // Chart (community card, card request #50): any numeric sensor with a state class (CPU load of System Monitor,
   // temperature, power, energy). Tile: value with unit and a 24 h sparkline; popup: Casora's own chart over
   // 24 h / 7 / 30 days / a year as a line or bars with up to four sensors and the statistics of the main one
@@ -762,7 +773,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   "window-closed", "heating_coil", "wind", "rooms", "soccer", "pulse", "lawn-mower", "coffee-maker", "paw",
   "coffee-espresso", "coffee-doppio", "coffee-cup", "coffee-cappuccino", "coffee-latte", "coffee-tall", "coffee-water",
   "coffee-milk", "coffee-tea", "chart", "velair", "list", "tasks", "grid", "cart", "universal", "kettle", "co", "heat_pump",
-  "coffee-milk", "coffee-tea", "chart", "velair", "list", "tasks", "grid", "cart", "universal", "kettle", "co", "map",
+  "coffee-milk", "coffee-tea", "chart", "velair", "list", "tasks", "grid", "cart", "universal", "kettle", "co", "map", "smart_heating",
 ].map((n) => [n, "/casora_assets/icons/" + n + ".svg"]));
 
 // Preview: show conditional cards (type: conditional) as the dashboard does –

@@ -61,6 +61,8 @@ const MIGRIERT = [
   { popup: 'Fußbodenheizung (Haus/Raum)', vorlagen: ['casora_popup_fbh'], file: '03-popups.js', from: '  F.v3 = function () {', to: '  /* Modus als iOS', stages: 4 },
   // S2 (live, off/unavailable), a heat/cool range as S7.
   { popup: 'Klimaanlage Velair', vorlagen: ['casora_popup_velair'], file: '31-velair.js', from: "    if (part === 'stage') {", to: "    if (part === 'quick') {", stages: 3 },
+  // S2: the room's target (− / + a manual change), Automatik and the levels as moons; unavailable keeps the dial greyed (#240).
+  { popup: 'Smart Heating Control', vorlagen: ['casora_popup_smart_heating'], file: '51-smart-heating.js', from: "    if (part === 'stage') {", to: "    if (part === 'quick') {", stages: 2 },
   // Water temperature as S7 (fallback rule: S6 would need a chart plate in the stage that is not redrawn), S1 light
   // without a probe; the temperature as the Verlauf (120).
   { popup: 'Aquarium, Becken, Aquarium-Licht', vorlagen: ['casora_aquarium', 'casora_popup_aquarium_tank', 'casora_aquarium_light'], file: '02-devices.js',

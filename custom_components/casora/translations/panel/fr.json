@@ -3197,7 +3197,12 @@
     "Tablets only. Closes an open popup after a while without use.": "Tablettes seulement. Ferme une fenêtre ouverte après un moment sans utilisation.",
     "More outdoor sensors": "Autres capteurs extérieurs",
     "Add a temperature sensor": "Ajouter un capteur de température",
-    "For a garden, terrace or balcony: these temperature sensors join the chart in the popup, with the sensors of the room's area.": "Pour le jardin, la terrasse ou le balcon : ces capteurs de température s'ajoutent au graphique du popup, avec les capteurs de la zone de la pièce."
+    "For a garden, terrace or balcony: these temperature sensors join the chart in the popup, with the sensors of the room's area.": "Pour le jardin, la terrasse ou le balcon : ces capteurs de température s'ajoutent au graphique du popup, avec les capteurs de la zone de la pièce.",
+    "Smart Heating Control": "Smart Heating Control",
+    "A room of Smart Heating Control": "Une pièce de Smart Heating Control",
+    "For every room of Smart Heating Control": "Pour chaque pièce de Smart Heating Control",
+    "Smart Heating Control integration not installed yet": "Intégration Smart Heating Control pas encore installée",
+    "Room temperature, target and whether the room heats on the tile. The popup sets the target as a manual change, goes back to automatic or picks a level, and shows the decision, the manual change and the house mode; a row opens the schedule: the week at a glance with each slot's level, switching the profile and editing a profile's time slots. For the rooms of the Smart Heating Control integration.": "Température de la pièce, consigne et chauffe en cours sur la tuile. Le popup règle la consigne comme changement manuel, revient en automatique ou choisit un niveau, et affiche la décision, le changement manuel et le mode de la maison ; une ligne ouvre le programme : la semaine en un coup d'œil avec le niveau de chaque plage, changement de profil et modification des plages d'un profil. Pour les pièces de l'intégration Smart Heating Control."
   },
   "patterns": [
     [

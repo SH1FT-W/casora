@@ -4431,3 +4431,44 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
   window.casoraSmartMeterFind = { kind: kind, all: all, of: of, field: field, fields: FIELD, keys: keys,
     present: function (hass) { return all(hass).length > 0; } };
 })();
+
+// ── Smart Heating Control: rooms of a heating schedule (community card, issue #240) ─────────────────────────
+// Smart Heating Control (HACS, sandreialexandru/Smart-Heating-Control, domain advanced_climate) is a controller, not a
+// device: a house device and one device per room, no climate entity of its own. Each room has a „Decision“ sensor
+// (translation_key decision) whose attributes carry what its own card reads: room and target temperature, heating,
+// level, manual change, schedule profiles with their days, the next change and an entity map of the room and the house.
+// Casora detects it ONLY by the platform advanced_climate in the entity registry (hass.entities), never by names.
+// Writes go through its services (set_override, clear_override, set_schedule) and the room's profile select.
+//   casoraShcFind.SOURCE           – the one table: platform, translation_keys, services
+//   casoraShcFind.present(hass)    – the integration is installed (an entity with platform advanced_climate)
+//   casoraShcFind.rooms(hass)      – the rooms' Decision sensors (sorted)
+//   casoraShcFind.isRoom(hass, id) – id is a room's Decision sensor
+(function () {
+  if (window.casoraShcFind) return;
+  var SOURCE = {
+    id: 'smart_heating_control', domain: 'advanced_climate', platforms: ['advanced_climate'],
+    // translation_key → role (custom_components/advanced_climate: entity.py ROOM_ENTITY_KEYS / HOUSE_ENTITY_KEYS)
+    keys: { sensor: { decision: 'decision' } },
+    // The keys of the Decision sensor's attributes „entities“ / „house_entities“ (entity.py entity_map).
+    roomKeys: { room: 'room_temperature', profile: 'schedule_profile', clear: 'clear_override' },
+    houseKeys: { mode: 'mode' },
+    services: { setOverride: 'set_override', clearOverride: 'clear_override', setSchedule: 'set_schedule' },
+  };
+  var memo = { R: null, list: [] };
+  var rooms = function (hass) {
+    var R = (hass && hass.entities) || {};
+    if (memo.R === R) return memo.list;
+    var out = [];
+    Object.keys(R).forEach(function (eid) {
+      var e = R[eid];
+      if (!e || e.disabled_by || SOURCE.platforms.indexOf(e.platform) < 0) return;
+      if ((SOURCE.keys[eid.split('.')[0]] || {})[e.translation_key] === 'decision') out.push(eid);
+    });
+    out.sort();
+    memo = { R: R, list: out };
+    return out;
+  };
+  window.casoraShcFind = { SOURCE: SOURCE, rooms: rooms,
+    present: function (hass) { return rooms(hass).length > 0; },
+    isRoom: function (hass, id) { return !!id && rooms(hass).indexOf(id) >= 0; } };
+})();

@@ -2998,7 +2998,32 @@
     "erst lesen": "les først",
     "automatisch": "automatisk",
     "automatische Updates": "automatiske oppdateringer",
-    "Zurückholen": "Hent tilbake"
+    "Zurückholen": "Hent tilbake",
+    "Höchsttemperatur": "Maksimumstemperatur",
+    "Sommer": "Sommermodus",
+    "Außerhalb der Heizzeit": "Utenfor fyringssesongen",
+    "Ventilbewegung": "Ventiltrening",
+    "Alle weit weg": "Alle langt borte",
+    "Unterwegs in der Nähe": "Ute i nærheten",
+    "Raum leer": "Rommet er tomt",
+    "Sensor ausgefallen": "Sensor feilet",
+    "Früher Start": "Tidlig oppstart",
+    "Früher Stopp": "Tidlig stopp",
+    "Draußen warm": "Varmt ute",
+    "Alle Tage": "Alle dager",
+    "Werktage": "Arbeidsdager",
+    "Wochenende": "Helg",
+    "Tagesprofile": "Dagsprofiler",
+    "Gilt für jeden Tag mit diesem Profil": "Gjelder for hver dag med denne profilen",
+    "Kein aktives Profil an diesem Tag: der Raum hält den Frostschutz.": "Ingen aktiv profil denne dagen: rommet holder frostsikringen.",
+    "Der Zeitplan kommt aus einem Zeitplan-Helfer und wird dort bearbeitet.": "Tidsplanen kommer fra en tidsplanhjelper og redigeres der.",
+    "Der Zeitplan hat einen Fehler, bitte in Smart Heating Control prüfen.": "Tidsplanen har en feil, sjekk den i Smart Heating Control.",
+    "Entscheidung": "Beslutning",
+    "Am Gerät eingestellt": "Stilt inn på enheten",
+    "Bis zum nächsten Wechsel": "Til neste endring",
+    "Wartet": "Venter",
+    "Ein Profil braucht mindestens ein Zeitfenster": "En profil trenger minst ett tidsvindu",
+    "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "Tidsplanen er endret i mellomtiden, rediger den på nytt"
   },
   "patterns": [
     [
@@ -5448,6 +5473,10 @@
     [
       "^Noch (\\d+) Min\\. bis Sonnenaufgang$",
       "{1} min til soloppgang"
+    ],
+    [
+      "^(Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag) (\\d{1,2}:\\d\\d)$",
+      "{1} {2}"
     ]
   ]
 }

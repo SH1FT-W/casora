@@ -3197,7 +3197,12 @@
     "Tablets only. Closes an open popup after a while without use.": "Solo tabletas. Cierra una ventana abierta tras un rato sin uso.",
     "More outdoor sensors": "Más sensores exteriores",
     "Add a temperature sensor": "Añadir un sensor de temperatura",
-    "For a garden, terrace or balcony: these temperature sensors join the chart in the popup, with the sensors of the room's area.": "Para jardín, terraza o balcón: estos sensores de temperatura se añaden al gráfico del popup, junto con los sensores del área de la habitación."
+    "For a garden, terrace or balcony: these temperature sensors join the chart in the popup, with the sensors of the room's area.": "Para jardín, terraza o balcón: estos sensores de temperatura se añaden al gráfico del popup, junto con los sensores del área de la habitación.",
+    "Smart Heating Control": "Smart Heating Control",
+    "A room of Smart Heating Control": "Una habitación de Smart Heating Control",
+    "For every room of Smart Heating Control": "Para cada habitación de Smart Heating Control",
+    "Smart Heating Control integration not installed yet": "Integración Smart Heating Control aún no instalada",
+    "Room temperature, target and whether the room heats on the tile. The popup sets the target as a manual change, goes back to automatic or picks a level, and shows the decision, the manual change and the house mode; a row opens the schedule: the week at a glance with each slot's level, switching the profile and editing a profile's time slots. For the rooms of the Smart Heating Control integration.": "Temperatura de la habitación, objetivo y si la habitación calienta en la tarjeta. La ventana fija el objetivo como cambio manual, vuelve a automático o elige un nivel, y muestra la decisión, el cambio manual y el modo de la casa; una fila abre el horario: la semana de un vistazo con el nivel de cada franja, cambio de perfil y edición de las franjas de un perfil. Para las habitaciones de la integración Smart Heating Control."
   },
   "patterns": [
     [

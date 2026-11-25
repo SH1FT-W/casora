@@ -770,6 +770,7 @@ function secSubRows(saved, present) {
 const FILTER_CATEGORIES = {
   casora_thermostat: "climate",
   casora_velair: "climate",
+  casora_smart_heating: "climate",
   casora_heat_pump: "climate",
   casora_air_purifier: "climate",
   // Wie CASORA_FILTER_CATEGORIES (casora-core.js): Jalousien gehören zu keinem Badge-Filter.
@@ -5822,6 +5823,9 @@ const TILE_MAIN_FIND = {
   // device for each of thousands of entities and the Studio hung).
   casora_heat_pump: { domain: "climate", anchors: (h) => (window.casoraHeatPumpFind ? Object.keys(h.states || {}).filter((id) => id.startsWith("climate.") && window.casoraHeatPumpFind.isPump(h, id)) : []) },
   casora_velair: { domain: "climate", anchors: (h) => (window.casoraVelairFind ? window.casoraVelairFind.climates(h) : []) },
+  // Smart Heating Control (community card #240): the Decision sensor of every room (casoraShcFind – platform
+  // advanced_climate, translation_key decision); its other sensors are no room of their own.
+  casora_smart_heating: { domain: "sensor", anchors: (h) => (window.casoraShcFind ? window.casoraShcFind.rooms(h) : []) },
   casora_fridge: { anchors: (h) => (window.casoraFridgeFind ? window.casoraFridgeFind.all(h).map((f) => f.anchor) : []) },
   // Oven: the anchor of every oven the shared finder knows (casoraOvenFind.all in 00-finder.js – Home Connect in HA core and
   // Home Connect Local, by the cavity temperature or an oven programme); operation_state alone is also a dishwasher's.
