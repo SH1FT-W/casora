@@ -157,15 +157,26 @@ for (const tile of map) {
   const s1 = await states();
   const both = ids.filter((id) => id in s1);
   const notKept = both.filter((id) => s1[id] === s0[id]);
-  await check(`${tile.id}: nach Neuladen sind alle ${ids.length} Schalter umgestellt (gespeichert)`, both.length === ids.length && !notKept.length, { notKept, missing: ids.filter((id) => !(id in s1)) });
-  for (const id of Object.keys(s1).reverse()) if (id in s0 && s1[id] !== s0[id]) { await flip(id); await wait(250); }
+  // A switch that hangs on another one (show_scenes_phone needs the scenes on) hides while its parent is off: it
+  // is checked below, once flipping its parent back shows it again.
+  const missing = ids.filter((id) => !(id in s1));
+  await check(`${tile.id}: nach Neuladen sind alle ${ids.length} Schalter umgestellt (gespeichert)`, both.length + missing.length === ids.length && !notKept.length, { notKept, missing });
+  const late = {};
+  for (let pass = 0; pass < 3; pass++) {
+    const cur = pass ? await states() : s1;
+    const todo = Object.keys(cur).reverse().filter((id) => id in s0 && cur[id] !== s0[id]);
+    missing.forEach((id) => { if (id in cur && !(id in late)) late[id] = cur[id] !== s0[id]; });
+    if (!todo.length) break;
+    for (const id of todo) { await flip(id); await wait(250); }
+  }
+  if (missing.length) await check(`${tile.id}: verdeckte Schalter erscheinen wieder, umgestellt gespeichert`, missing.every((id) => late[id] === true), { missing, late });
   const bar2 = await saveBar();
   await reopen();
   await openTile(tile.id);
   const s2 = await states();
   const back = ids.filter((id) => s2[id] !== s0[id]);
   await check(`${tile.id}: zurückgestellt und gespeichert`, bar2.clicked && !back.length, { back, bar2 });
-  flipped += both.length;
+  flipped += both.length + missing.length;
 }
 });
 await check('Schalter insgesamt umgestellt und zurück', flipped >= 45, flipped);

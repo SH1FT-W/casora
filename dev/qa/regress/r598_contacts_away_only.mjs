@@ -15,7 +15,9 @@ import { ws } from '../ws.mjs';
 const c = await ws();
 const S = await c.cmd({ type: 'get_states' });
 const R = await c.cmd({ type: 'config/entity_registry/list' });
-const hiddenReg = new Set(R.filter((e) => e.hidden_by || e.disabled_by || e.entity_category).map((e) => e.entity_id));
+// A heating controller's "window open" flag (Smart Heating Control, platform advanced_climate, #240) carries the
+// device class window but is no contact of the house: Casora does not count it, so it cannot be the test window.
+const hiddenReg = new Set(R.filter((e) => e.hidden_by || e.disabled_by || e.entity_category || e.platform === 'advanced_climate').map((e) => e.entity_id));
 const dc = (s) => String(s.attributes.device_class || '');
 const contacts = S.filter((s) => s.entity_id.startsWith('binary_sensor.') && ['door', 'window', 'garage_door', 'opening'].includes(dc(s)));
 const win = contacts.find((s) => dc(s) === 'window' && !hiddenReg.has(s.entity_id) && !Array.isArray(s.attributes.entity_id)
