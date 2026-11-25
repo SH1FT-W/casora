@@ -3197,7 +3197,9 @@
     "Tablets only. Closes an open popup after a while without use.": "Bare nettbrett. Lukker et åpent popup etter en stund uten bruk.",
     "More outdoor sensors": "Flere utesensorer",
     "Add a temperature sensor": "Legg til en temperatursensor",
-    "For a garden, terrace or balcony: these temperature sensors join the chart in the popup, with the sensors of the room's area.": "For hage, terrasse eller balkong: disse temperatursensorene kommer med i diagrammet i popupen, sammen med sensorene i rommets område."
+    "For a garden, terrace or balcony: these temperature sensors join the chart in the popup, with the sensors of the room's area.": "For hage, terrasse eller balkong: disse temperatursensorene kommer med i diagrammet i popupen, sammen med sensorene i rommets område.",
+    "Also show on the phone": "Vis også på telefonen",
+    "The Scenes badge then also stands in the badge row of Home on the phone. The Scenes button at the bottom stays.": "Scener-merket vises da også i merkeraden på Hjem på telefonen. Scener-knappen nederst blir værende."
   },
   "patterns": [
     [

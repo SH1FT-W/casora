@@ -3197,7 +3197,9 @@
     "Tablets only. Closes an open popup after a while without use.": "Alleen tablets. Sluit een open popup na een tijd zonder gebruik.",
     "More outdoor sensors": "Meer buitensensoren",
     "Add a temperature sensor": "Temperatuursensor toevoegen",
-    "For a garden, terrace or balcony: these temperature sensors join the chart in the popup, with the sensors of the room's area.": "Voor tuin, terras of balkon: deze temperatuursensoren komen in de grafiek van de pop-up, samen met de sensoren uit het gebied van de ruimte."
+    "For a garden, terrace or balcony: these temperature sensors join the chart in the popup, with the sensors of the room's area.": "Voor tuin, terras of balkon: deze temperatuursensoren komen in de grafiek van de pop-up, samen met de sensoren uit het gebied van de ruimte.",
+    "Also show on the phone": "Ook op de telefoon tonen",
+    "The Scenes badge then also stands in the badge row of Home on the phone. The Scenes button at the bottom stays.": "De badge Scènes staat dan ook in de badgerij van Thuis op de telefoon. De knop Scènes onderaan blijft."
   },
   "patterns": [
     [

@@ -6336,6 +6336,22 @@
             },
             {
               "type": "custom:button-card",
+              "template": "casora_badge_scene_group",
+              "entity": "input_select.casora_mobile_filter",
+              "tap_action": {
+                "action": "fire-dom-event",
+                "casora_filter": "[[[\n  // #243: the Home scenes on the phone, the same page the Scenes overlay shows (filter room_scenes).\n  const cur = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  return cur === 'room_scenes' ? 'all' : 'room_scenes';\n]]]\n",
+                "haptic": "selection"
+              },
+              "variables": {
+                "enabled": "[[[\n  // #243: only with \"Also show on the phone\" (show_scenes_phone) on the desktop's overview room, off by default;\n  // the Scenes button of the bar stays either way. Hidden and \"Who sees this?\" as on the desktop.\n  const _hv = variables.casora_hv;\n  if (!_hv || _hv.show_scenes_phone !== true) return false;\n  if ((window.casoraSeen ? window.casoraSeen(_hv, 'scenes', user, _hv.show_scenes) : _hv.show_scenes) !== true) return false;\n  return !!(window.casoraNavScenes ? window.casoraNavScenes(hass, _hv.scene_exclude) : []).length;\n]]]\n",
+                "row_entity": "input_select.casora_mobile_filter",
+                "scene_entities": "[[[\n  // Same list as the desktop's Home badge (SCENE_BADGE_EXPR in the Studio): the navigation's scenes, in scene_order.\n  const _hv = variables.casora_hv || {};\n  const ids = window.casoraNavScenes ? window.casoraNavScenes(hass, _hv.scene_exclude) : [];\n  const o = Array.isArray(_hv.scene_order) ? _hv.scene_order : [];\n  const at = (x) => { const i = o.indexOf(x); return i < 0 ? 999 : i; };\n  return ids.slice().sort((a, b) => at(a) - at(b));\n]]]\n",
+                "title": "[[[ const _hv = variables.casora_hv || {}; return _hv.scenes_title ]]]"
+              }
+            },
+            {
+              "type": "custom:button-card",
               "template": "casora_badge_updates",
               "variables": {
                 "enabled": "[[[ const _v = (variables.casora_hv || variables); return (window.casoraSeen?window.casoraSeen(_v,'updates',user,_v.show_updates):_v.show_updates) === true ]]]",

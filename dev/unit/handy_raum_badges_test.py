@@ -108,6 +108,19 @@ check((pb.home_badges(first) or {}).get("energy_power_entity") == "sensor.beispi
 check(pb.home_badges({"views": []}) is None, "no desktop rooms: None")
 plain = {"views": [{"path": "home", "cards": [{"type": "markdown"}, {}, {}]}]}
 check(pb.home_badges(plain) is None, "first view is no Casora room: None")
+# #243: the phone's Home Scenes badge lists the scenes like the desktop's, so the overview room hands over its
+# hidden scenes and their order (and the switch); a room page still gets no scene_ keys.
+sc = {"show_scenes": True, "show_scenes_phone": True, "scene_exclude": ["scene.beispiel_aus"],
+      "scene_order": ["scene.beispiel_b", "scene.beispiel_a"], "scene_colors": {"scene.beispiel_a": "#fff"},
+      "scene_entities": "[[[ return [] ]]]"}
+sdesk = {"views": [view("home", "Home", sc, [])] + desktop["views"][1:]}
+check(pb.home_badges(sdesk) == {"show_scenes": True, "show_scenes_phone": True,
+                                "scene_exclude": ["scene.beispiel_aus"],
+                                "scene_order": ["scene.beispiel_b", "scene.beispiel_a"]},
+      f"home with scenes: {pb.home_badges(sdesk)}")
+kdesk = {"views": [desktop["views"][0], view("kueche", "Küche", sc, [LIGHT])]}
+check(all(not k.startswith("scene_") for v in pb.room_badges(kdesk, mobile).values() for k in v["vars"]),
+      "room pages: no scene_ keys")
 
 print("Grenzfälle")
 check(pb.desktop_url_of("qa-haus-mobile") == "qa-haus", "Desktop-URL")
