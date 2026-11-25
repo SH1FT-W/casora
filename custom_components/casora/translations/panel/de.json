@@ -3199,7 +3199,12 @@
     "Add a temperature sensor": "Temperatursensor hinzufügen",
     "For a garden, terrace or balcony: these temperature sensors join the chart in the popup, with the sensors of the room's area.": "Für Garten, Terrasse oder Balkon: Diese Temperatursensoren kommen im Popup mit ins Diagramm, zusätzlich zu den Sensoren aus dem Bereich des Raums.",
     "Also show on the phone": "Auch auf dem Handy zeigen",
-    "The Scenes badge then also stands in the badge row of Home on the phone. The Scenes button at the bottom stays.": "Der Szenen-Badge steht dann auch am Handy in der Badge-Zeile von „Zuhause“. Der Knopf „Szenen“ unten bleibt."
+    "The Scenes badge then also stands in the badge row of Home on the phone. The Scenes button at the bottom stays.": "Der Szenen-Badge steht dann auch am Handy in der Badge-Zeile von „Zuhause“. Der Knopf „Szenen“ unten bleibt.",
+    "Smart Heating Control": "Smart Heating Control",
+    "A room of Smart Heating Control": "Ein Raum von Smart Heating Control",
+    "For every room of Smart Heating Control": "Für jeden Raum von Smart Heating Control",
+    "Smart Heating Control integration not installed yet": "Integration Smart Heating Control noch nicht installiert",
+    "Room temperature, target and whether the room heats on the tile. The popup sets the target as a manual change, goes back to automatic or picks a level, and shows the decision, the manual change and the house mode; a row opens the schedule: the week at a glance with each slot's level, switching the profile and editing a profile's time slots. For the rooms of the Smart Heating Control integration.": "Raumtemperatur, Ziel und ob der Raum heizt auf der Kachel. Im Popup stellst du das Ziel als manuelle Änderung ein, gehst zurück zur Automatik oder wählst eine Stufe und siehst die Entscheidung, die manuelle Änderung und den Hausmodus; eine Zeile öffnet den Zeitplan: die Woche auf einen Blick mit der Stufe je Zeitfenster, Profil wechseln und die Zeitfenster eines Profils bearbeiten. Für die Räume der Integration Smart Heating Control."
   },
   "patterns": [
     [

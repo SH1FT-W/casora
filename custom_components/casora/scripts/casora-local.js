@@ -261,6 +261,7 @@ const MODULES = [
   '49-security-detectors',
   '50-smart-meter',
   '50-waste-out',
+  '51-smart-heating',
 ];
 
 const START_MODULES = MODULES.slice(0, 5);

@@ -3005,7 +3005,32 @@
     "erst lesen": "ler primeiro",
     "automatisch": "automático",
     "automatische Updates": "atualizações automáticas",
-    "Zurückholen": "Repor"
+    "Zurückholen": "Repor",
+    "Höchsttemperatur": "Temperatura máxima",
+    "Sommer": "Verão",
+    "Außerhalb der Heizzeit": "Fora da época de aquecimento",
+    "Ventilbewegung": "Exercício das válvulas",
+    "Alle weit weg": "Todos longe",
+    "Unterwegs in der Nähe": "Fora, por perto",
+    "Raum leer": "Divisão vazia",
+    "Sensor ausgefallen": "Sensor avariado",
+    "Früher Start": "Arranque antecipado",
+    "Früher Stopp": "Paragem antecipada",
+    "Draußen warm": "Calor lá fora",
+    "Alle Tage": "Todos os dias",
+    "Werktage": "Dias úteis",
+    "Wochenende": "Fim de semana",
+    "Tagesprofile": "Perfis diários",
+    "Gilt für jeden Tag mit diesem Profil": "Aplica-se a cada dia com este perfil",
+    "Kein aktives Profil an diesem Tag: der Raum hält den Frostschutz.": "Nenhum perfil ativo neste dia: a divisão mantém a proteção antigelo.",
+    "Der Zeitplan kommt aus einem Zeitplan-Helfer und wird dort bearbeitet.": "O horário vem de um auxiliar de horário e é editado lá.",
+    "Der Zeitplan hat einen Fehler, bitte in Smart Heating Control prüfen.": "O horário tem um erro, verifica-o no Smart Heating Control.",
+    "Entscheidung": "Decisão",
+    "Am Gerät eingestellt": "Definido no dispositivo",
+    "Bis zum nächsten Wechsel": "Até à próxima mudança",
+    "Wartet": "Em espera",
+    "Ein Profil braucht mindestens ein Zeitfenster": "Um perfil precisa de pelo menos um intervalo",
+    "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "O horário mudou entretanto, edita-o novamente"
   },
   "patterns": [
     [
@@ -5455,6 +5480,10 @@
     [
       "^Noch (\\d+) Min\\. bis Sonnenaufgang$",
       "Ainda {1} min até ao nascer do sol"
+    ],
+    [
+      "^(Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag) (\\d{1,2}:\\d\\d)$",
+      "{1} {2}"
     ]
   ]
 }

@@ -163,7 +163,7 @@ def load_mock(tmp: Path, skip: str | None):
         (tmp / "casora_mock" / "skip.txt").write_text(skip, encoding="utf-8")
     ha_stubs()
     # Must match the setup modules in dev/casora_mock/__init__.py (a new one there needs a stub here).
-    for name in ("frigate", "klingel", "kamerabild", "coffee", "dishwasher", "live", "velair"):
+    for name in ("frigate", "klingel", "kamerabild", "coffee", "dishwasher", "live", "velair", "smart_heating"):
         sys.modules[f"casora_mock.{name}"] = types.ModuleType(f"casora_mock.{name}")
         sys.modules[f"casora_mock.{name}"].setup = lambda hass, mock: None
     spec = importlib.util.spec_from_file_location(

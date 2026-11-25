@@ -251,7 +251,7 @@ Kern-Integrationen (Schlüssel im Test geprüft):
 
 Nicht im Kern-Paket prüfbar (HACS), Casora liest `platform`/`translation_key`:
 `waste_collection_schedule`, `frigate`, `ha_washdata`, `home_connect_alt`/`homeconnect_ws`, `bambu_lab`,
-`anker_solix`, `pulse`, `udr7`, `teamtracker`, `bosch_ebike`, `velair`, `powercalc`, `browser_mod`, `hacs`, Kaffee-Integrationen
+`anker_solix`, `pulse`, `udr7`, `teamtracker`, `bosch_ebike`, `velair`, `advanced_climate`, `powercalc`, `browser_mod`, `hacs`, Kaffee-Integrationen
 (`delonghi_primadonna`, `delonghi_coffee`, `delonghi_coffeelink`, `jura`, `jura_wifi`, `melitta_barista`, `philips_homeid`;
 Schlüssel je Quelle in `25-coffee.js` `SOURCES`, Stand Quellcode 24.10.2026, Test `dev/unit/coffee_sources.mjs`),
 Auto-Integrationen.
@@ -430,6 +430,30 @@ Home Connect aus HACS (Wäsche/Spüler: `00-finder.js` `casoraLaundryFind.SOURCE
   `casora-panel-b-ux.js`; Tests `dev/unit/velair.mjs`, `dev/unit/community_first_use.mjs`,
   `dev/qa/regress/r331_velair_schedule.mjs`, Testhaus `dev/casora_mock/velair.py` (Entitäten unter `platform` `velair`,
   WebSocket-Befehle und Dienste nachgebaut). HACS, nicht im Kern prüfbar.
+
+- `advanced_climate` (Smart Heating Control, sandreialexandru/Smart-Heating-Control 2.7.0, Stand Quellcode 24.11.2026,
+  Community-Karte „Smart Heating Control“, #240): eine Steuerung, kein Gerät und keine `climate`-Entität – ein Gerät je
+  Haus und je Raum (Unter-Eintrag). Casora erkennt einen Raum nur über `platform` `advanced_climate` und
+  `translation_key` `decision` (`sensor`, Geräteklasse `enum`, Zustand = Regel aus `const.py` `RULES`). Alles Weitere lesen
+  Kachel und Popup aus den Attributen dieses Sensors (`sensor.py` `DecisionSensor`): `room_name`, `temperature_unit`,
+  `current_temperature`, `target_temperature`, `heating`/`heat_demand`, `window_open`, `preset`, `preset_names`, `levels`
+  (Temperatur je Stufe `home`/`sleep`/`eco`/`away`/`comfort`/`activity`), `min_temperature`/`max_temperature`, `override`
+  (`until`, `origin`, `preset`, `temperature`, `applied`, `interrupted`; `null` ohne manuelle Änderung), `profile` (heute),
+  `next_change` (ISO) + `next_preset`, `schedule` (Profil → `[{time "HH:MM", preset}]`), `profile_days` (Profil →
+  `{days: all|workday|weekend|[mon…sun], enabled}`), `schedule_editable`, `schedule_error`, `day_boundary`, `entities`/
+  `house_entities` (Schlüssel → Entitäts-ID, `entity.py` `entity_map`: `schedule_profile`, `room_temperature`, `mode` …).
+  Ein Zeitfenster gilt bis zum nächsten, vor dem ersten des Tages läuft das letzte des Vortags weiter; der Tag ohne aktives
+  Profil hält den Frostschutz (`schedule.py` `Schedule.lookup`/`profile_for`). Die Wochenansicht rechnet ohne Kalender und
+  Feiertage (Mo–Fr Werktage) und mit Tagesgrenze 00:00, nur heute gilt `profile`. Schreiben nur über die Dienste
+  `advanced_climate.set_override` (`entity_id` + `temperature` oder `preset`, Dauer nach den Optionen der Integration),
+  `clear_override` (`entity_id`), `set_schedule` (`entity_id` + `profiles` im Format von `schedule`; ohne `profile_days`
+  behalten die Profile ihre Tage; nur bei `schedule_editable`) und `select.select_option` auf dem Profil-Select des Raums
+  (`translation_key` `schedule_profile`: schaltet das Profil an, die aktiven derselben Tage aus). Nie `hass.data`/
+  `runtime_data` der Integration, nicht ihre WebSocket-Befehle (`advanced_climate/week`). Code: `00-finder.js`
+  `casoraShcFind` (Quelltabelle `SOURCE`), `51-smart-heating.js`, `casora-panel.js` `TILE_MAIN_FIND.casora_smart_heating`,
+  `casora-panel-b-ux.js`; Tests `dev/unit/smart_heating.mjs`, `dev/unit/community_first_use.mjs`,
+  `dev/qa/regress/r930_smart_heating.mjs`, Testhaus `dev/casora_mock/smart_heating.py` (Entitäten unter `platform`
+  `advanced_climate`, Dienste und Profil-Select nachgebaut). HACS, nicht im Kern prüfbar.
 
 - `xiaomi_ble` (Kern, xiaomi-ble 1.x, Stand 28.10.2026, Community-Karte „Wasserkocher“, #87): Smart Kettle YM-K1501,
   YM-K1501EU und V-SK152 kommen als Gerät mit Modell `YM-K1501`/`YM-K1501EU`/`V-SK152` (Name „Smart Kettle …“) und, aus

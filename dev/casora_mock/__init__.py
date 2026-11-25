@@ -100,6 +100,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if any(e.get("registry_platform") == "velair" for e in fixture["entities"]):
         from .velair import setup as velair_setup
         velair_setup(hass, mock)
+    # Smart Heating Control's services and profile select for the test room (smart_heating.py, #240).
+    if any(e.get("registry_platform") == "advanced_climate" for e in fixture["entities"]):
+        from .smart_heating import setup as smart_heating_setup
+        smart_heating_setup(hass, mock)
     from .live import setup as live_setup
     live_setup(hass, mock)
     mock.track_derived()

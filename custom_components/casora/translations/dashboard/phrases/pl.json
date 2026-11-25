@@ -3005,7 +3005,32 @@
     "erst lesen": "najpierw przeczytaj",
     "automatisch": "automatycznie",
     "automatische Updates": "automatyczne aktualizacje",
-    "Zurückholen": "Przywróć"
+    "Zurückholen": "Przywróć",
+    "Höchsttemperatur": "Temperatura maksymalna",
+    "Sommer": "Lato",
+    "Außerhalb der Heizzeit": "Poza sezonem grzewczym",
+    "Ventilbewegung": "Ćwiczenie zaworów",
+    "Alle weit weg": "Wszyscy daleko",
+    "Unterwegs in der Nähe": "Poza domem, w pobliżu",
+    "Raum leer": "Pokój pusty",
+    "Sensor ausgefallen": "Czujnik nie działa",
+    "Früher Start": "Wczesny start",
+    "Früher Stopp": "Wczesne zatrzymanie",
+    "Draußen warm": "Ciepło na zewnątrz",
+    "Alle Tage": "Wszystkie dni",
+    "Werktage": "Dni robocze",
+    "Wochenende": "Weekend",
+    "Tagesprofile": "Lista profili",
+    "Gilt für jeden Tag mit diesem Profil": "Dotyczy każdego dnia z tym profilem",
+    "Kein aktives Profil an diesem Tag: der Raum hält den Frostschutz.": "Brak aktywnego profilu w tym dniu: pokój utrzymuje ochronę przed zamarzaniem.",
+    "Der Zeitplan kommt aus einem Zeitplan-Helfer und wird dort bearbeitet.": "Harmonogram pochodzi z pomocnika harmonogramu i jest tam edytowany.",
+    "Der Zeitplan hat einen Fehler, bitte in Smart Heating Control prüfen.": "Harmonogram zawiera błąd, sprawdź go w Smart Heating Control.",
+    "Entscheidung": "Decyzja",
+    "Am Gerät eingestellt": "Ustawione na urządzeniu",
+    "Bis zum nächsten Wechsel": "Do następnej zmiany",
+    "Wartet": "Czeka",
+    "Ein Profil braucht mindestens ein Zeitfenster": "Profil potrzebuje co najmniej jednego przedziału",
+    "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "Harmonogram zmienił się w międzyczasie, edytuj go ponownie"
   },
   "patterns": [
     [
@@ -5455,6 +5480,10 @@
     [
       "^Noch (\\d+) Min\\. bis Sonnenaufgang$",
       "Jeszcze {1} min do wschodu słońca"
+    ],
+    [
+      "^(Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag) (\\d{1,2}:\\d\\d)$",
+      "{1} {2}"
     ]
   ]
 }

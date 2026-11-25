@@ -3005,7 +3005,32 @@
     "erst lesen": "leer primero",
     "automatisch": "automático",
     "automatische Updates": "actualizaciones automáticas",
-    "Zurückholen": "Recuperar"
+    "Zurückholen": "Recuperar",
+    "Höchsttemperatur": "Temperatura máxima",
+    "Sommer": "Verano",
+    "Außerhalb der Heizzeit": "Fuera de la temporada de calefacción",
+    "Ventilbewegung": "Ejercicio de válvulas",
+    "Alle weit weg": "Todos lejos",
+    "Unterwegs in der Nähe": "Fuera, cerca",
+    "Raum leer": "Habitación vacía",
+    "Sensor ausgefallen": "Sensor averiado",
+    "Früher Start": "Arranque anticipado",
+    "Früher Stopp": "Parada anticipada",
+    "Draußen warm": "Hace calor fuera",
+    "Alle Tage": "Todos los días",
+    "Werktage": "Días laborables",
+    "Wochenende": "Fin de semana",
+    "Tagesprofile": "Perfiles del día",
+    "Gilt für jeden Tag mit diesem Profil": "Se aplica a cada día con este perfil",
+    "Kein aktives Profil an diesem Tag: der Raum hält den Frostschutz.": "Ningún perfil activo este día: la habitación mantiene la protección antihielo.",
+    "Der Zeitplan kommt aus einem Zeitplan-Helfer und wird dort bearbeitet.": "El horario viene de un ayudante de horario y se edita allí.",
+    "Der Zeitplan hat einen Fehler, bitte in Smart Heating Control prüfen.": "El horario tiene un error, revísalo en Smart Heating Control.",
+    "Entscheidung": "Decisión",
+    "Am Gerät eingestellt": "Ajustado en el dispositivo",
+    "Bis zum nächsten Wechsel": "Hasta el próximo cambio",
+    "Wartet": "En espera",
+    "Ein Profil braucht mindestens ein Zeitfenster": "Un perfil necesita al menos una franja",
+    "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "El horario ha cambiado mientras tanto, edítalo de nuevo"
   },
   "patterns": [
     [
@@ -5455,6 +5480,10 @@
     [
       "^Noch (\\d+) Min\\. bis Sonnenaufgang$",
       "Quedan {1} min para el amanecer"
+    ],
+    [
+      "^(Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag) (\\d{1,2}:\\d\\d)$",
+      "{1} {2}"
     ]
   ]
 }

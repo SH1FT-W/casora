@@ -3199,7 +3199,12 @@
     "Add a temperature sensor": "Adicionar um sensor de temperatura",
     "For a garden, terrace or balcony: these temperature sensors join the chart in the popup, with the sensors of the room's area.": "Para jardim, terraço ou varanda: estes sensores de temperatura juntam-se ao gráfico do popup, com os sensores da área da divisão.",
     "Also show on the phone": "Mostrar também no telemóvel",
-    "The Scenes badge then also stands in the badge row of Home on the phone. The Scenes button at the bottom stays.": "O emblema Cenas aparece também na linha de emblemas de Casa no telemóvel. O botão Cenas em baixo mantém-se."
+    "The Scenes badge then also stands in the badge row of Home on the phone. The Scenes button at the bottom stays.": "O emblema Cenas aparece também na linha de emblemas de Casa no telemóvel. O botão Cenas em baixo mantém-se.",
+    "Smart Heating Control": "Smart Heating Control",
+    "A room of Smart Heating Control": "Uma divisão do Smart Heating Control",
+    "For every room of Smart Heating Control": "Para cada divisão do Smart Heating Control",
+    "Smart Heating Control integration not installed yet": "Integração Smart Heating Control ainda não instalada",
+    "Room temperature, target and whether the room heats on the tile. The popup sets the target as a manual change, goes back to automatic or picks a level, and shows the decision, the manual change and the house mode; a row opens the schedule: the week at a glance with each slot's level, switching the profile and editing a profile's time slots. For the rooms of the Smart Heating Control integration.": "Temperatura da divisão, objetivo e se a divisão aquece no cartão. A janela define o objetivo como mudança manual, volta ao automático ou escolhe um nível, e mostra a decisão, a mudança manual e o modo da casa; uma linha abre o horário: a semana num relance com o nível de cada intervalo, troca de perfil e edição dos intervalos de um perfil. Para as divisões da integração Smart Heating Control."
   },
   "patterns": [
     [

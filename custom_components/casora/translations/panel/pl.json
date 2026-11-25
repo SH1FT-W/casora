@@ -3199,7 +3199,12 @@
     "Add a temperature sensor": "Dodaj czujnik temperatury",
     "For a garden, terrace or balcony: these temperature sensors join the chart in the popup, with the sensors of the room's area.": "Dla ogrodu, tarasu lub balkonu: te czujniki temperatury trafiają na wykres w oknie, razem z czujnikami z obszaru pomieszczenia.",
     "Also show on the phone": "Pokaż także na telefonie",
-    "The Scenes badge then also stands in the badge row of Home on the phone. The Scenes button at the bottom stays.": "Odznaka Sceny pojawia się wtedy także w rzędzie odznak ekranu głównego na telefonie. Przycisk Sceny na dole zostaje."
+    "The Scenes badge then also stands in the badge row of Home on the phone. The Scenes button at the bottom stays.": "Odznaka Sceny pojawia się wtedy także w rzędzie odznak ekranu głównego na telefonie. Przycisk Sceny na dole zostaje.",
+    "Smart Heating Control": "Smart Heating Control",
+    "A room of Smart Heating Control": "Pokój ze Smart Heating Control",
+    "For every room of Smart Heating Control": "Dla każdego pokoju ze Smart Heating Control",
+    "Smart Heating Control integration not installed yet": "Integracja Smart Heating Control nie jest jeszcze zainstalowana",
+    "Room temperature, target and whether the room heats on the tile. The popup sets the target as a manual change, goes back to automatic or picks a level, and shows the decision, the manual change and the house mode; a row opens the schedule: the week at a glance with each slot's level, switching the profile and editing a profile's time slots. For the rooms of the Smart Heating Control integration.": "Temperatura w pokoju, cel i czy pokój grzeje na kafelku. Okno ustawia cel jako ręczną zmianę, wraca do trybu automatycznego lub wybiera poziom i pokazuje decyzję, ręczną zmianę oraz tryb domu; wiersz otwiera harmonogram: tydzień w skrócie z poziomem każdego przedziału, zmiana profilu i edycja przedziałów profilu. Dla pokoi integracji Smart Heating Control."
   },
   "patterns": [
     [

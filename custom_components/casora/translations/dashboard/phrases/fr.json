@@ -3005,7 +3005,32 @@
     "erst lesen": "à lire d'abord",
     "automatisch": "automatique",
     "automatische Updates": "mises à jour automatiques",
-    "Zurückholen": "Rétablir"
+    "Zurückholen": "Rétablir",
+    "Höchsttemperatur": "Température maximale",
+    "Sommer": "Été",
+    "Außerhalb der Heizzeit": "Hors saison de chauffage",
+    "Ventilbewegung": "Dégommage des vannes",
+    "Alle weit weg": "Tout le monde est loin",
+    "Unterwegs in der Nähe": "Sorti, à proximité",
+    "Raum leer": "Pièce vide",
+    "Sensor ausgefallen": "Capteur en panne",
+    "Früher Start": "Démarrage anticipé",
+    "Früher Stopp": "Arrêt anticipé",
+    "Draußen warm": "Chaud dehors",
+    "Alle Tage": "Tous les jours",
+    "Werktage": "Jours ouvrés",
+    "Wochenende": "Week-end",
+    "Tagesprofile": "Profils du jour",
+    "Gilt für jeden Tag mit diesem Profil": "S’applique à chaque jour avec ce profil",
+    "Kein aktives Profil an diesem Tag: der Raum hält den Frostschutz.": "Aucun profil actif ce jour-là : la pièce garde la protection antigel.",
+    "Der Zeitplan kommt aus einem Zeitplan-Helfer und wird dort bearbeitet.": "Le planning vient d’une entrée d’aide de planning et se modifie là-bas.",
+    "Der Zeitplan hat einen Fehler, bitte in Smart Heating Control prüfen.": "Le planning contient une erreur, vérifie-le dans Smart Heating Control.",
+    "Entscheidung": "Décision",
+    "Am Gerät eingestellt": "Réglé sur l’appareil",
+    "Bis zum nächsten Wechsel": "Jusqu’au prochain changement",
+    "Wartet": "En attente",
+    "Ein Profil braucht mindestens ein Zeitfenster": "Un profil a besoin d’au moins un créneau",
+    "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "Le planning a changé entre-temps, modifie-le à nouveau"
   },
   "patterns": [
     [
@@ -5455,6 +5480,10 @@
     [
       "^Noch (\\d+) Min\\. bis Sonnenaufgang$",
       "Encore {1} min avant le lever du soleil"
+    ],
+    [
+      "^(Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag) (\\d{1,2}:\\d\\d)$",
+      "{1} {2}"
     ]
   ]
 }

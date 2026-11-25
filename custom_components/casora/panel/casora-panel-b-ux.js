@@ -85,6 +85,7 @@
     casora_coffee: "kaffee kaffeemaschine vollautomat espresso coffee", casora_pet: "haustier hund katze tracker tractive pet dog cat",
     casora_chart: "diagramm chart verlauf graph statistik cpu prozessor server system monitor",
     casora_velair: "velair zeitplan klima klimaanlage heizung thermostat schedule climate",
+    casora_smart_heating: "smart heating control heizung heizplan zeitplan raum thermostat heizkörper heating schedule room radiator",
     casora_shopping: "einkaufsliste einkauf bring liste todo shopping list grocery",
     casora_heat_pump: "wärmepumpe waermepumpe heizung warmwasser verdichter kompressor vicare nibe daikin heat pump hot water compressor",
     casora_kettle: "wasserkocher kocher tee wasser xiaomi kettle",
@@ -745,6 +746,9 @@
       });
       // Velair (community card #32, when added): every climate Velair plans as this card instead of the plain thermostat.
       if (typeIds.has("casora_velair") && W.casoraVelairFind) W.casoraVelairFind.climates(h).forEach((id) => push(id, "", "casora_velair"));
+      // Smart Heating Control (community card #240, when added): one tile per room on its Decision sensor (casoraShcFind),
+      // named after the room (the sensor itself is „<room> Decision“).
+      if (typeIds.has("casora_smart_heating") && W.casoraShcFind) W.casoraShcFind.rooms(h).forEach((id) => push(id, String(((S[id] || {}).attributes || {}).room_name || ""), "casora_smart_heating"));
       // Shopping list (community card #82, when added): Bring! lists and to-do lists named like a shopping list – other
       // to-do lists (chores, projects) are picked in the tile's own field.
       if (typeIds.has("casora_shopping")) Object.keys(S).forEach((id) => {
