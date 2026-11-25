@@ -3197,7 +3197,9 @@
     "Tablets only. Closes an open popup after a while without use.": "Só em tablets. Fecha uma janela aberta após algum tempo sem uso.",
     "More outdoor sensors": "Mais sensores exteriores",
     "Add a temperature sensor": "Adicionar um sensor de temperatura",
-    "For a garden, terrace or balcony: these temperature sensors join the chart in the popup, with the sensors of the room's area.": "Para jardim, terraço ou varanda: estes sensores de temperatura juntam-se ao gráfico do popup, com os sensores da área da divisão."
+    "For a garden, terrace or balcony: these temperature sensors join the chart in the popup, with the sensors of the room's area.": "Para jardim, terraço ou varanda: estes sensores de temperatura juntam-se ao gráfico do popup, com os sensores da área da divisão.",
+    "Also show on the phone": "Mostrar também no telemóvel",
+    "The Scenes badge then also stands in the badge row of Home on the phone. The Scenes button at the bottom stays.": "O emblema Cenas aparece também na linha de emblemas de Casa no telemóvel. O botão Cenas em baixo mantém-se."
   },
   "patterns": [
     [

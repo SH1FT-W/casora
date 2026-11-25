@@ -700,7 +700,8 @@ const isFavoritesName = (n) => /^(favorites|favoriten)$/i.test(String(n || "").t
 const isFav = (sec) => !!sec && (((sec.variables || {}).favorites === true)
   || ((sec.variables || {}).favorites !== false && isFavoritesName(sec.name)));
 
-const PHONE_FILTERS = ["climate", "lights", "people", "media", "security", "energy"];
+// "scenes" (#243): only with "Also show on the phone" on Home (_miniModel); a tap shows the scenes page.
+const PHONE_FILTERS = ["climate", "lights", "people", "media", "security", "energy", "scenes"];
 
 // Reihenfolge der Badges ohne gespeichertes badge_order – genau so, wie das Dashboard sie
 // zeichnet (casora_room / casora_mobile_filter_badges, --casora-badge-order-*): Sicherheit
@@ -25052,7 +25053,8 @@ class CasoraPanel extends HTMLElement {
     }
     // Szenen als Badge der Home-Zeile (casora_badge_scene_group): steht dort hinter den sechs.
     // A room's own scenes badge lists its scene_entities (Home: an expression, all scenes of the navigation).
-    if (!forPhone && V.show_scenes === true) {
+    // #243: the phone's Home row shows it only with "Also show on the phone" (show_scenes_phone), off by default.
+    if (V.show_scenes === true && (!forPhone || V.show_scenes_phone === true)) {
       const H = this._hass;
       const own = Array.isArray(V.scene_entities);
       const ids = own ? V.scene_entities.filter((id) => typeof id === "string" && H.states[id])

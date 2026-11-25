@@ -39,6 +39,8 @@ CUSTOM_TEMPLATE = "casora_custom"
 _SKIP_PREFIX = ("notify_", "notification_", "casora_notify", "image", "weather_", "scene_",
                 "room_photo", "font")
 _SKIP_KEYS = {"scenes", "show_assist", "show_notifications", "show_now_playing_header"}
+# Only for the overview room (home_badges): what its Scenes badge needs on the phone (#243).
+_HOME_SCENE_KEYS = ("scene_exclude", "scene_order")
 
 
 def _js_lower(s: Any) -> str:
@@ -234,7 +236,14 @@ def home_badges(desktop_cfg: dict) -> dict | None:
     room = next((r for r in rooms if r.get("path") == "home"), rooms[0] if rooms else None)
     if not room or not room["is_room"]:
         return None
-    return badge_vars(room["variables"])
+    out = badge_vars(room["variables"])
+    # #243: the Scenes badge of the phone's start page ("Also show on the phone") lists the scenes like the
+    # desktop's Home badge, so it needs this dashboard's hidden scenes and their order (scene_ keys are skipped above).
+    for k in _HOME_SCENE_KEYS:
+        v = (room["variables"] or {}).get(k)
+        if isinstance(v, list) and v:
+            out[k] = v
+    return out
 
 
 # ─── WebSocket ────────────────────────────────────────────────────────────────

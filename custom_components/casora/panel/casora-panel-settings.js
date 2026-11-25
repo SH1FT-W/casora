@@ -135,7 +135,7 @@
           kw: "batterie batterien akku ausnahme ausnahmen warnung nicht melden battery" },
         { k: "scenes", sec: "Scenes", personal: ["scenes"], title: "Scenes",
           plain: "Which scene buttons appear here, and scenes Casora should never offer.",
-          kw: "szenen szene stimmung reihenfolge farbe ausblenden verstecken scenes" },
+          kw: "szenen szene stimmung reihenfolge farbe ausblenden verstecken handy badge scenes phone" },
         { k: "media", personal: ["media"], title: "Music and players",
           plain: "Which players the Now Playing bar shows and how they are named.",
           kw: "player medien musik wiedergabe now playing lautsprecher" },

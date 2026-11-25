@@ -360,6 +360,29 @@ customElements.whenDefined("casora-panel").then(() => {
     row.append(lab, combo.wrap);
     const head = card.querySelector(".chead");
     card.insertBefore(row, head ? head.nextSibling : card.firstChild);
+    // #243: on the phone the Home scenes sit behind the Scenes button of the bar. This switch also puts the badge
+    // into the badge row of the phone's Home (casora_mobile_filter_badges reads show_scenes_phone from the overview
+    // room, like show_scenes). Off by default; a draft like every field (_markDirty), the bar button stays.
+    const home = mode === "badge" && ((this._state && this._state.compact && this._state.compact.rooms) || [])[0];
+    if (home && home.variables) {
+      const prow = document.createElement("div");
+      prow.className = "row casora-scenephone";
+      prow.dataset.key = "show_scenes_phone";
+      const plab = document.createElement("label");
+      plab.textContent = "Also show on the phone";
+      prow.appendChild(plab);
+      prow.appendChild(this._boolSwitch(home.variables.show_scenes_phone === true, false, (v) => {
+        if (v === true) home.variables.show_scenes_phone = true;
+        else delete home.variables.show_scenes_phone;
+        this._markDirty();
+        this._rebuildPreview();
+      }, t("Also show on the phone")));
+      const hint = document.createElement("div");
+      hint.className = "hint casora-scenephone-hint";
+      hint.textContent = "The Scenes badge then also stands in the badge row of Home on the phone. The Scenes button at the bottom stays.";
+      card.insertBefore(hint, row.nextSibling);
+      card.insertBefore(prow, hint);
+    }
     return r;
   };
 });
