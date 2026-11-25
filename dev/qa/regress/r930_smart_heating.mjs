@@ -106,7 +106,8 @@ const TILE = (ent) => window.__pierce('button-card').filter((b) => [].concat((b.
   b.scrollIntoView({ block: 'center', inline: 'center' });
   const r = b.getBoundingClientRect();
   return { x: r.x + r.width * 0.5, y: r.y + r.height * 0.6, w: r.width, h: r.height, left: r.x, top: r.y,
-    state: ((b.shadowRoot && b.shadowRoot.querySelector('#state')) || {}).textContent || '' };
+    // casoraStateFit keeps the full and the short form in #state; the full one is .sf-f.
+    state: (() => { const st = b.shadowRoot && b.shadowRoot.querySelector('#state'); const f = st && st.querySelector('.sf-f'); return ((f || st) || {}).textContent || ''; })() };
 })[0] || null;
 const POPUP = () => {
   const vis = (n) => n.getBoundingClientRect().height > 0;
@@ -136,7 +137,7 @@ for (const [tag, o, url, mobile, act] of VIEWS) {
   const tapAt = async (pt) => { if (mobile) await page.touchscreen.tap(pt.x, pt.y); else await page.mouse.click(pt.x, pt.y); };
   const tapSel = async (sel, text) => {
     const pt = await page.evaluate(([s, t]) => {
-      const n = window.__pierce(s).find((x) => x.getBoundingClientRect().height > 0 && (!t || new RegExp(t).test((x.getAttribute('aria-label') || '') + ' ' + x.textContent.replace(/\s+/g, ' ').trim())));
+      const n = window.__pierce(s).find((x) => x.getBoundingClientRect().height > 0 && (!t || new RegExp(t).test(((x.getAttribute('aria-label') || '') + ' ' + x.textContent.replace(/\s+/g, ' ')).trim())));
       if (!n) return null; n.scrollIntoView({ block: 'center' }); const b = n.getBoundingClientRect(); return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
     }, [sel, text || null]);
     if (!pt) return false;

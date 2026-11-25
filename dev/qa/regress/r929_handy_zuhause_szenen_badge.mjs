@@ -31,8 +31,20 @@ let restored = false;
 atFinish(async () => { if (!restored) { restored = true; await save(d0); } });
 
 // Visible Scenes badges in the phone's badge row.
+// Only badges that are shown: not inside a faded-out wrapper (the Home row stays in the DOM at opacity 0 while a room
+// page is open). The badge row scrolls sideways, so a badge may sit right of the screen and still count.
 const sceneBadges = () => window.__pierce('button-card')
-  .filter((x) => [].concat((x._config || {}).template || []).includes('casora_badge_scene_group') && x.getBoundingClientRect().width > 0)
+  .filter((x) => {
+    if (![].concat((x._config || {}).template || []).includes('casora_badge_scene_group')) return false;
+    const r = x.getBoundingClientRect();
+    if (!(r.width > 0)) return false;
+    for (let n = x; n; n = n.parentNode || n.host) {
+      if (n.nodeType !== 1) continue;
+      const cs = getComputedStyle(n);
+      if (cs.visibility === 'hidden' || cs.display === 'none' || Number(cs.opacity) === 0) return false;
+    }
+    return true;
+  })
   .length;
 const phoneHome = async (want, label) => {
   const ph = await open({ width: 393, height: 852, mobile: true, dark: true });
