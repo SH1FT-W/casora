@@ -15181,6 +15181,18 @@ window.casoraMenuGlass = {
     var k = String(t == null ? '' : t).trim();
     return Object.prototype.hasOwnProperty.call(RAW, k) ? RAW[k] : (Object.prototype.hasOwnProperty.call(RAW, k.toLowerCase()) && /^[a-z_]+$/i.test(k) && k === k.toLowerCase() ? RAW[k.toLowerCase()] : t);
   };
+  // A fan's or air purifier's preset in words, one answer for tile and popup (Prüfrunde d03-14: the tile wrote „auto“,
+  // the popup „Auto“): HA's translation of the integration; if it gives only the raw value (auto, sleep), the usual
+  // names, else capitalised (Audit M8).
+  var PRESET = { auto: 'Auto', sleep: 'Schlafen', silent: 'Leise', quiet: 'Leise', night: 'Nacht', eco: 'Eco', smart: 'Smart', turbo: 'Turbo',
+    boost: 'Boost', normal: 'Normal', nature: 'Natur', manual: 'Manuell', favorite: 'Favorit', low: 'Niedrig', medium: 'Mittel', high: 'Hoch' };
+  window.casoraPresetLabel = function (hass, entity, p) {
+    var t = p;
+    try { if (hass && hass.formatEntityAttributeValue) t = hass.formatEntityAttributeValue(entity, 'preset_mode', p) || p; } catch (e) { t = p; }
+    if (String(t) !== String(p)) return t;
+    var k = String(p == null ? '' : p);
+    return Object.prototype.hasOwnProperty.call(PRESET, k.toLowerCase()) ? PRESET[k.toLowerCase()] : k.charAt(0).toUpperCase() + k.slice(1);
+  };
   // A raw value HA had no words for (V14, owner 14.11.2026: „Tür closed“, „cooking_oven_program_…“ in lists), Casora's own
   // fallback at one place: a state HA knows in the word list's words („closed“ → „Geschlossen“), else a snake_case code made
   // readable – the prefix all options share (cooking_oven_program_heating_mode_), the domain or the device name in front
