@@ -309,17 +309,12 @@
         };
         return b;
       };
-      const tog = (value, label, onChange) => {
-        const l = document.createElement("label");
-        l.className = "casora-tog";
-        const cb = document.createElement("input");
-        cb.type = "checkbox";
-        cb.setAttribute("role", "switch");
-        cb.checked = value;
-        cb.onchange = () => onChange(cb.checked);
-        l.appendChild(cb);
-        l.appendChild(document.createTextNode(label));
-        return l;
+      // A switch row like on every other settings page: the title says what „on“ does, the switch sits on the right
+      // (Prüfrunde u04-09: these rows had a checkbox with a word behind it on the left, and „Leave out“ on meant off).
+      const swRow = (list, title, on, onChange, sub) => {
+        const r = self._flowRow(list, { title, sub });
+        if (typeof self._boolSwitch === "function") r.row.appendChild(self._boolSwitch(on, false, onChange, window.casoraI18n ? window.casoraI18n.t(title) : title));
+        return r.row;
       };
 
       if (want("waste")) {
@@ -938,10 +933,9 @@
           Object.fromEntries(Object.entries({ 2: "From 2 devices", 3: "From 3 devices", 4: "From 4 devices", 0: "Never" })
             .map(([k, v]) => [k, window.casoraI18n ? window.casoraI18n.t(v) : v])),
           (v) => { B.group_min = Number(v) || 99; })], "Lights, blinds and locks of a room");
-        row(g, "Status LEDs", [tog(B.skip_leds !== false, "Leave out", (v) => { B.skip_leds = v; })],
-          "Router, access point and camera lights");
-        row(g, "Favorites on Home", [tog(B.favorites !== false, "Fill automatically", (v) => { B.favorites = v; })],
-          "Locks, lights and blinds of all rooms");
+        // skip_leds stays as stored (true or missing = left out); the switch shows the positive: LEDs are added.
+        swRow(g, "Add status LEDs", B.skip_leds === false, (v) => { B.skip_leds = !v; }, "Router, access point and camera lights");
+        swRow(g, "Favorites on Home", B.favorites !== false, (v) => { B.favorites = v; }, "Filled automatically with locks, lights and blinds of all rooms");
         if (B.order || B.group_min != null || B.skip_leds === false || B.favorites === false) {
           addRow(g, "Reset standard room", () => { S.basis = {}; });
         }
@@ -950,10 +944,10 @@
       if (want("umzug")) {
         // Find Hemma dashboards (migration)
         g = group("umzug", { header: "Hemma dashboards" });
-        row(g, "Hemma dashboards", [tog(!(S.umzug || {}).off, "Look for them automatically", (v) => {
+        swRow(g, "Look for Hemma dashboards", !(S.umzug || {}).off, (v) => {
           S.umzug = Object.assign({}, S.umzug || {});
           if (v) delete S.umzug.off; else S.umzug.off = true;
-        })], "Offers to move a Hemma dashboard when the Studio opens");
+        }, "Offers to move a Hemma dashboard when the Studio opens");
       }
     };
 
