@@ -187,16 +187,20 @@ When you open an [issue](https://github.com/SH1FT-W/casora/issues), add the diag
 
 Casora gets better with every bug report, every idea and every pull request. A big thank you to:
 
-- [**@stalakerob**](https://github.com/stalakerob): the most reports of all. The chart card and its heatmap, the Universal tile, own badges with their own popups, the energy flow, entity lists, Frigate streams, the room search, the volume step and the room climate per room type.
-- [**@Westerloer**](https://github.com/Westerloer): navigation, energy, blinds, climate, network, the history and the weather warnings, always with clear steps to reproduce.
-- [**@srsly88**](https://github.com/srsly88): from the very first issue on. Fuel prices, plants, waste and the phone layout, and a sharp eye on every corner of the new popups.
-- [**@ejetzass**](https://github.com/ejetzass): the most pull requests of all. Camera alerts, the 12-hour clock in the Studio, doorbell times, the white tone in mixed rooms, faster tests and a sturdier test setup, each with a test that proves it.
-- [**@Birdy2019**](https://github.com/Birdy2019): the security badge, blinds and gates that count as closed, the update badge, the date under the clock and swiping between rooms.
-- [**@vitidron**](https://github.com/vitidron): tireless testing of the Reolink doorbell, plus the Tractive, dishwasher and script button wishes and the Blinds badge that stays on Home.
+- [**@stalakerob**](https://github.com/stalakerob): the most reports of all. The chart card and its heatmap, the Universal tile, own badges with their own popups, the energy flow, entity lists, Frigate streams, the room search, the volume step, the room climate per room type with its own comfort rules and a popup for the garden, "show when" for own badges, and the sharp look at Casora's battery use.
+- [**@Westerloer**](https://github.com/Westerloer): navigation, energy, blinds, climate, network, the history, the weather warnings, new lamps in the lights overview and energy over longer periods, always with clear steps to reproduce.
+- [**@srsly88**](https://github.com/srsly88): from the very first issue on. Fuel prices, plants, waste and the phone layout, the smoke detector list and the UniFi network popup, and a sharp eye on every corner of the new popups.
+- [**@ejetzass**](https://github.com/ejetzass): the most pull requests of all. Camera alerts, the 12-hour clock in the Studio, doorbell times, the white tone in mixed rooms, Reolink visitor doorbells, a wall tablet that closes popups when idle, keyboard focus in popups, a whole series of screensaver ideas (moon on the sky arc, calmer burn-in wander, two calendar weeks, the day line), faster tests and a sturdier test setup, each with a test that proves it.
+- [**@Birdy2019**](https://github.com/Birdy2019): the security badge, blinds and gates that count as closed, the update badge, the date under the clock, swiping between rooms, the waste bin you confirm as put out, the media tile and the rooms in the menu bar.
+- [**@vitidron**](https://github.com/vitidron): tireless testing of the Reolink doorbell, plus the Tractive, dishwasher and script button wishes, the Blinds badge that stays on Home and the climate module.
 - [**@andreasgoetzke**](https://github.com/andreasgoetzke): the feels-like temperature, the weather curves and the e-bike live battery.
 - [**@chrischtili**](https://github.com/chrischtili): copying whole dashboards, scripts on a tile and the Bring! shopping list.
-- [**@gekberlin**](https://github.com/gekberlin): the thermostat and Velair extensions, the calendar card and the wish for clear robot vacuum errors.
-- [**@daxy01**](https://github.com/daxy01), [**@DarkWing982**](https://github.com/DarkWing982): finding the German words left in other languages.
+- [**@gekberlin**](https://github.com/gekberlin): the thermostat and Velair extensions, the calendar card, the wish for clear robot vacuum errors, the Smart Heating Control card and a layout for small 4 to 7 inch displays.
+- [**@daxy01**](https://github.com/daxy01): the Scenes badge on the phone's Home and the report that kept family phones from being locked out by a scene check meant for admins only.
+- [**@DarkWing982**](https://github.com/DarkWing982): finding the German words left in other languages, together with @daxy01.
+- [**@Strako80**](https://github.com/Strako80): smoke, water and motion detectors under Security and wrong energy values.
+- [**@domemshur**](https://github.com/domemshur): the Music Assistant wish and the category headings in phone rooms.
+- [**@Tokisuve**](https://github.com/Tokisuve): the smart meter card wish for electricity and gas.
 - [**@WhiteFawkes**](https://github.com/WhiteFawkes), [**@customstudioyandexru**](https://github.com/customstudioyandexru), [**@dnestico**](https://github.com/dnestico): the Studio undo, the kettle card, Cyrillic room names and the wish that started the Frigate card.
 
 </details>
