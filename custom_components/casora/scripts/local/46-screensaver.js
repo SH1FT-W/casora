@@ -549,15 +549,20 @@
   var dayName = function (ts, short) { return new Intl.DateTimeFormat(loc(), { weekday: short ? 'short' : 'long' }).format(new Date(ts)); };
   var sameDay = function (a, b) { var x = new Date(a), y = new Date(b); return x.getFullYear() === y.getFullYear() && x.getMonth() === y.getMonth() && x.getDate() === y.getDate(); };
 
-  // 12 hours like the dashboard's clock (#191): the HA user's time format, else the dashboard language.
-  var use12 = function (hass) {
+  // 12 hours like the dashboard's clock (#191): the dashboard's „12-hour clock“ switch (use_12h) first, then the HA
+  // user's time format, else the dashboard language.
+  var use12 = function (hass, vars) {
+    var v = vars && vars.use_12h;
+    if (v === true || v === 'true') return true;
+    if (v === false || v === 'false') return false;
     var f = hass && hass.locale && hass.locale.time_format;
     if (f === '12') return true;
     if (f === '24') return false;
     try { return !!new Intl.DateTimeFormat((hass && hass.locale && hass.locale.language) || (hass && hass.language) || loc(), { hour: 'numeric' }).resolvedOptions().hour12; } catch (e) { return false; }
   };
-  var timeText = function (now, hass) {
-    var h12 = use12(hass);
+  // Set by S.html for the screensaver being drawn: whether its times read in 12 hours.
+  var h12 = false;
+  var timeText = function (now) {
     var h = now.getHours();
     if (h12) h = ((h + 11) % 12) + 1;
     return (h12 ? String(h) : String(h).padStart(2, '0')) + ':' + String(now.getMinutes()).padStart(2, '0');
@@ -566,7 +571,7 @@
     var d = new Intl.DateTimeFormat(loc(), { weekday: 'long', day: 'numeric', month: 'long' }).format(now);
     return d.charAt(0).toUpperCase() + d.slice(1);
   };
-  var hm = function (ts) { return new Intl.DateTimeFormat(loc(), { hour: '2-digit', minute: '2-digit' }).format(new Date(ts)); };
+  var hm = function (ts) { return new Intl.DateTimeFormat(loc(), h12 ? { hour: 'numeric', minute: '2-digit', hour12: true } : { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(ts)); };
 
   // ── Drawing ──────────────────────────────────────────────────────────────
   // One unit is a hundredth of the box's shorter side (cqmin), so a preview and a wall tablet look the same.
@@ -838,11 +843,11 @@
     + '.cs-sv .cs-k2 .cs-kmore{padding-left:' + u(18) + ';}}';
 
   var clock = function (ctx) {
-    return '<div class="cs-clock"><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div>';
+    return '<div class="cs-clock"><div class="cs-time">' + esc(timeText(ctx.now)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div>';
   };
   var bar = function (ctx, name, sub) {
     var wx = ctx.wx;
-    return '<div class="cs-shade"></div><div class="sv-bar"><div><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div>'
+    return '<div class="cs-shade"></div><div class="sv-bar"><div><div class="cs-time">' + esc(timeText(ctx.now)) + '</div>'
       + '<div class="cs-date">' + esc(dateText(ctx.now)) + (wx && wx.temp != null ? ' · ' + wx.temp + '° ' + esc(wx.text.toLowerCase()) : '') + '</div></div>'
       + (name ? '<div class="cs-name"><b data-no-i18n>' + esc(name) + '</b>' + esc(sub || '') + '</div>' : '') + '</div>';
   };
@@ -889,7 +894,7 @@
       // way) the sunset the night began with and the coming sunrise (#229).
       var ends = span ? [T('Untergang'), span.start, T('Aufgang'), span.end] : sun ? [T('Aufgang'), sun.rise, T('Untergang'), sun.set] : null;
       return '<div class="cs-bg" style="background:linear-gradient(180deg, ' + sky[0] + ' 0%, ' + sky[1] + ' 36%, ' + sky[2] + ' 74%, ' + sky[3] + ' 100%)"></div>' + (night ? STARS : '') + '<div class="cs-in">'
-        + '<div class="cs-top"><div><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div>'
+        + '<div class="cs-top"><div><div class="cs-time">' + esc(timeText(ctx.now)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div>'
         + (wx ? '<div class="cs-wx"><div class="cs-t"><img src="' + esc(wx.icon) + '" alt="">' + (wx.temp != null ? wx.temp + '°' : '') + '</div><p>' + esc(wx.text) + '</p></div>' : '') + '</div>'
         + (sun ? '<div class="cs-arc"><svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true">'
           + '<defs><radialGradient id="cs-glow"><stop offset="0" stop-color="#FFF3D6" stop-opacity=".95"/><stop offset=".22" stop-color="#FFE0A6" stop-opacity=".55"/><stop offset="1" stop-color="#FFD9A0" stop-opacity="0"/></radialGradient>'
@@ -920,7 +925,7 @@
     wort: function (ctx) {
       var wx = ctx.wx, lines = S.words(langOf(), ctx.now.getHours(), ctx.now.getMinutes());
       return '<div class="cs-in"><div class="cs-words" data-no-i18n>' + lines.map(function (l) { return '<span' + (l.acc ? ' class="cs-acc"' : '') + '>' + esc(l.t) + '</span>'; }).join('') + '</div>'
-        + '<div class="cs-foot"><div><b>' + esc(timeText(ctx.now, ctx.hass)) + '</b> · ' + esc(dateText(ctx.now)) + '</div>'
+        + '<div class="cs-foot"><div><b>' + esc(timeText(ctx.now)) + '</b> · ' + esc(dateText(ctx.now)) + '</div>'
         + (wx && wx.temp != null ? '<div class="cs-fw"><img src="' + esc(wx.icon) + '" alt="">' + wx.temp + '°</div>' : '') + '</div></div>';
     },
   };
@@ -981,7 +986,7 @@
         + bar2 + '<em>' + (isFinite(hi2) ? Math.round(hi2) + '°' : '') + '</em></div>';
     }).join('') + '</div>' : '';
     return '<div class="cs-in"><div class="cs-wnow"><div class="cs-wt"><img src="' + esc(wx.icon) + '" alt=""><b>' + (wx.temp != null ? wx.temp + '°' : '') + '</b></div><p>' + esc(wx.text) + '</p></div>'
-      + '<div class="cs-corner"><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div>'
+      + '<div class="cs-corner"><div class="cs-time">' + esc(timeText(ctx.now)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div>'
       + week + curve + '</div>';
   };
   // The day line (#233). A window that travels with the clock: three hours back, fifteen ahead, the same scale at
@@ -1117,7 +1122,7 @@
     var pic = m.cover ? 'background-image:url(&quot;' + esc(cssUrl(m.cover)) + '&quot;)' : '';
     // Without a cover: a note on the cover's own colours.
     return (m.cover ? '<div class="cs-blur" style="' + pic + '"></div>' : '') + '<div class="cs-in"><div class="cs-cover"' + (pic ? ' style="' + pic + '"' : '') + '>' + (m.cover ? '' : NOTE) + '</div>'
-      + '<div class="cs-corner"><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div>'
+      + '<div class="cs-corner"><div class="cs-time">' + esc(timeText(ctx.now)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div>'
       + '<div class="cs-meta"><div class="cs-cap" data-no-i18n>' + esc(m.where) + '</div><h2 data-no-i18n>' + esc(m.title) + '</h2>' + (m.artist ? '<h3 data-no-i18n>' + esc(m.artist) + '</h3>' : '')
       + (pct != null ? '<div class="cs-prog"><u style="width:' + pct.toFixed(1) + '%"></u></div><div class="cs-tt"><span>' + mmss(m.pos) + '</span><span>' + mmss(m.dur) + '</span></div>' : '')
       + '</div></div>';
@@ -1162,7 +1167,7 @@
     var n = rows.filter(function (r) { return r.tone !== 'info'; }).length;
     var say = !rows.length ? T('Alles ruhig') : n ? T('Fast alles ruhig') : T('Alles ruhig');
     var small = !rows.length ? T('Nichts braucht dich') : n === 1 ? T('Eine Sache braucht dich') : n > 1 ? T('{n} Dinge brauchen dich'.replace('{n}', n)) : T('Zur Kenntnis');
-    return '<div class="cs-in"><div class="cs-left"><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div>'
+    return '<div class="cs-in"><div class="cs-left"><div class="cs-time">' + esc(timeText(ctx.now)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div>'
       + '<div class="cs-say">' + esc(say) + '<small>' + esc(small) + '</small></div>'
       + (people.length ? '<div class="cs-ppl">' + people.map(function (p) {
         return '<div class="cs-p' + (p.home ? '' : ' cs-away') + '"><i data-no-i18n>' + esc(p.name.charAt(0).toUpperCase()) + '</i><span data-no-i18n>' + esc(p.name) + '</span></div>';
@@ -1235,7 +1240,7 @@
     // Titles a day has room for: two, one in a month of six weeks; three with their times at two weeks.
     var room = g.two ? 3 : g.weeks >= 6 ? 1 : 2;
     var html = '<div class="cs-in"><div class="cs-kh"><div class="cs-kt">' + title + '</div>'
-      + '<div class="cs-kc"><div class="cs-time">' + esc(timeText(ctx.now, ctx.hass)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div></div>'
+      + '<div class="cs-kc"><div class="cs-time">' + esc(timeText(ctx.now)) + '</div><div class="cs-date">' + esc(dateText(ctx.now)) + '</div></div></div>'
       + '<div class="cs-kg' + (g.two ? ' cs-k2' : '') + '" style="--cs-weeks:' + Number(g.weeks) + ';--cs-wd:';
     // --cs-wd: the longest weekday name (pt: „segunda“); the portrait layout of the two weeks makes room for it.
     var names = [0, 1, 2, 3, 4, 5, 6].map(function (w) { return dayName(+new Date(y, m, d + w), true); });
@@ -1324,6 +1329,7 @@
   var isNight = function (ctx) { return ctx.sun ? S.dayShare(ctx.now, ctx.sun.rise, ctx.sun.set) == null : (ctx.now.getHours() < 7 || ctx.now.getHours() >= 20); };
   S.html = function (kind, ctx, pool) {
     var k = S.kindAt(kind, ctx.now, pool);
+    h12 = use12(ctx.hass, ctx.vars);
     // Nothing to show (no weather entity, nothing playing, energy not set up, no camera): the sky, with its own look.
     if ((k === 'wetter' && !ctx.wx) || (k === 'musik' && !ctx.media) || (k === 'energie' && !ctx.energy) || (k === 'kameras' && !(ctx.cams && ctx.cams.length))) k = 'himmel';
     // The screensavers with a ground of their own are light by day and deep by night (and with a dark theme).
@@ -1421,7 +1427,7 @@
   // The settings of the dashboard: the first value found on a view's hero card.
   S.vars = function (cfg) {
     var out = {}, keys = ['casora_screensaver', 'casora_screensaver_kind', 'casora_screensaver_calendar', 'casora_screensaver_photos', 'casora_screensaver_mix',
-      'casora_screensaver_cameras', 'casora_screensaver_calendars', 'casora_screensaver_tint', 'casora_screensaver_wander', 'casora_screensaver_calendar_range', 'weather_entity'];
+      'casora_screensaver_cameras', 'casora_screensaver_calendars', 'casora_screensaver_tint', 'casora_screensaver_wander', 'casora_screensaver_calendar_range', 'weather_entity', 'use_12h'];
     ((cfg && cfg.views) || []).forEach(function (v) {
       var vars = ((((v.cards || [])[0]) || {}).variables) || {};
       keys.forEach(function (k) { if ((out[k] == null || out[k] === '' || (Array.isArray(out[k]) && !out[k].length)) && vars[k] != null && vars[k] !== '') out[k] = vars[k]; });
