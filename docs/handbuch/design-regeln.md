@@ -152,6 +152,10 @@ Lange Zustände in Kacheln: `window.casoraStateFit(text)` (verkleinert bis zur M
 Studio heute: eigener Satz `--t-caption 12 · --t-foot 13 · --t-callout 15 · --t-body 17 · --t-title 22 ·
 --t-large 34` (`casora-panel.js`). Neue Studio-Regeln nehmen nur diese.
 
+Gilt (Einstellungsseiten, entschieden 26.11.2026): eine Zeilenform – Titel 13, Satz 12 direkt darunter, Feld darunter
+bzw. Schalter/Wert rechts – und ein „Erweitert“ (Wort 17/650 in Textfarbe mit „ ›“, offen „ ⌄“). Einzelheiten in
+[blaupause-studio-flaeche.md](blaupause-studio-flaeche.md) §3.
+
 Gilt (Studio-Schrift, entschieden 11.10.2026): Das Studio schreibt im Casora- und Nebel-Look **Inter**
 (`--casora-font-studio`, siehe § 0), Radien aus den Tokens (12/18/24/32, Studio-Sprache B). Ohne Casora-Theme fehlt das Token,
 dann bleibt es bei SF/System.
@@ -247,6 +251,8 @@ Kacheln selbst haben weiter keinen Druck (Regel oben).
 Gilt:
 - Auswahl (Modus, Programm, Profil) **ohne Haken**: aktive Zeile hinterlegen, Symbol in Farbe, inaktive
   Symbole grau. Baustein: `window._casoraSelRows(UI.group(rows, titel), aktivesLabel)` (`01-basis.js`).
+- Ein Aktionswort rechts in einer Popup-Zeile („Erledigt“, „Pausieren“) ist erlaubt: Akzentfarbe, allein statt Wert
+  oder Schalter, Nicht-Rückholbares in zwei Schritten am selben Ort (popup-richtlinien-v3.md §6.3, entschieden 26.11.2026).
 - Auf hinterlegter (heller) aktiver Zeile erben Pfeil, Schalter und Symbol die Schriftfarbe der Zeile
   (Funde DP-04/DP-06: Schalter 1,15:1, Pfeil 1,09:1 im Dunkeln).
 

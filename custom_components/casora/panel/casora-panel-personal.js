@@ -57,12 +57,13 @@
     + ".frow.casora-calrow .casora-pctl>input.fin.casora-short{flex:1 1 72px}"
     + ".frow.casora-calrow .casora-pctl>.casora-x{margin-left:auto}"
     + ".fgroup.casora-pfocus .flist{box-shadow:0 0 0 2px var(--casora-studio-done, #0a84ff);transition:box-shadow .3s}"
-    + ".frow.casora-pmore .rtext b{color:var(--casora-studio-link, #0a84ff);font-weight:500}"
-    + ".frow.casora-pmore .rchev{transform:rotate(90deg);transition:transform .2s}"
-    + ".frow.casora-pmore.open .rchev{transform:rotate(-90deg)}"
-    // Light: blue and red in the darker Apple tones so text stays ≥ 4.5:1.
-    + ":host(.is-light) .frow.casora-pmore .rtext b{color:var(--casora-studio-link, #0071e3)}"
-
+    // "Advanced" has one look everywhere (u03-08, owner 26.11.2026): like the settings page's disclosure row (.cn-adv) –
+    // the word bold in text colour, " ›" after it, " ⌄" when open; no chevron on the right.
+    + ".frow.casora-pmore .rtext b{color:var(--ink);font-size:var(--t-body);font-weight:650}"
+    + ".frow.casora-pmore .rtext b::after{content:' ›';color:var(--ink-2)}"
+    + ".frow.casora-pmore.open .rtext b::after{content:' ⌄'}"
+    + ".frow.casora-pmore .rchev{display:none}"
+    // Light: blue in the darker Apple tone so text stays ≥ 4.5:1.
     + ":host(.is-light) .casora-chip{background:var(--casora-studio-chip, rgba(118,118,128,.12))}:host(.is-light) .casora-chip.on{background:var(--casora-studio-link, #0071e3)}"
     + ":host(.is-light) .fgroup.casora-pfocus .flist{box-shadow:0 0 0 2px var(--casora-studio-link, #0071e3)}";
 

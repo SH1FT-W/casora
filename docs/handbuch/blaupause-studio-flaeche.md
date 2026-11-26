@@ -66,6 +66,17 @@ mit ihren Unterseiten gibt es nicht mehr.
   die Blocküberschrift), ein Hinweis zu einer Zeile steht in der Platte unter ihr, kein Satz wird mit „…“ gekürzt.
   Die Styles stehen zentral in `casora-panel-settings.js` (`.cn-block`), nicht je Block; Test
   `dev/qa/regress/r545_settings_grid.mjs` (alle Kacheln, „Erweitert“ und innere Ausklapper offen, 1440/1180/820/393).
+- **Ein „Erweitert“** (Entscheidung 26.11.2026, u03-08/u04-10/d04-05): überall dieselbe aufklappbare Zeile wie am
+  Seitenende (`.cn-adv`): das Wort fett in Textfarbe (17/650), dahinter „ ›“, offen „ ⌄“, darunter höchstens eine
+  graue Zeile mit dem Inhalt. Gilt auch für das Aufklappen in einer Platte (Uhr, Glocke: `.adv > .advsum` im
+  Abschnitts-Code) und für Abfall (`.casora-pmore`) – keine Akzent-Linkzeile, kein Pfeil rechts. Das Verhalten jeder
+  Stelle bleibt (zu, erst beim Öffnen gezeichnet bzw. offen gemerkt). Styles zentral in `casora-panel-settings.js`
+  und `casora-panel-personal.js`, Test `dev/unit/settings_one_form.mjs`.
+- **Eine Zeilenform** (Entscheidung 26.11.2026, d04-03): jede Einstellungszeile hat Titel 13 (`--t-foot`), den Satz
+  direkt darunter (12, `--t-caption`, bricht um), dann das Feld darunter bzw. Schalter oder Wert rechts – egal ob
+  Zeile aus `_flowRow`, `casora-prow` oder Feld eines Dashboard-Abschnitts (dessen Hinweis rückt unter den Titel,
+  `rowHints` in `trimCard`). Ein Satz zum ganzen Block steht unter der Platte. Zeilen mit Symbol sind Auswahl-Listen
+  (Kameras, Kalender) und behalten ihre Größe. Test `dev/unit/settings_one_form.mjs`.
 - **Gespeichert** wird über eine Leiste für alles; Verlassen mit Ungespeichertem fragt.
 - **Alte Wege** (Seiten-IDs wie `home`, `alerts`, Themen `t-*`, Fokus wie `security`) führen über `ROUTE` /
   `FOCUS_BLOCK` zur Kachel und zum Block – Sprünge aus dem Studio, der Glocke und gespeicherte Links bleiben gültig.

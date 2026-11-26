@@ -287,11 +287,20 @@
     + ".cn-advbody{padding:14px 0 0}"
     // A row's sentence wraps instead of being cut off (phone).
     + ".cn-block .frow .rtext b,.cn-block .frow .rtext span{white-space:normal!important;overflow:visible!important;text-overflow:clip!important}"
-    // One look for a fold inside a plate: a dashboard section's "Erweitert" like the "Erweitert" row of the waste block.
-    + ".cn-block .adv>.advsum{display:flex;flex-direction:row-reverse;justify-content:space-between;align-items:center;width:100%;min-height:44px}"
-    + ".cn-block .adv>.advsum span{color:var(--casora-studio-link,var(--accent));font-size:var(--t-callout);font-weight:500}"
-    + ":host(.is-light) .cn-block .adv>.advsum span{color:var(--casora-studio-link,#0071e3)}"
-    + ".cn-block .adv>.advsum svg{color:var(--ink-3)}"
+    // "Advanced" has one look everywhere (u03-08, owner 26.11.2026): the disclosure row of the page (.cn-adv) – the word
+    // bold in text colour, " ›" after it, " ⌄" when open. A dashboard section's fold (clock, bell) and the waste
+    // block's row (.casora-pmore, casora-panel-personal.js) draw the same; their behaviour stays.
+    + ".cn-block .adv>.advsum,.cn-block .adv.open>.advsum{display:flex;flex-direction:row;justify-content:flex-start;align-items:center;gap:0;width:100%;min-height:44px;padding:6px 0;box-sizing:border-box;color:var(--ink)}"
+    + ".cn-block .adv>.advsum>svg{display:none}"
+    + ".cn-block .adv>.advsum>span:not(.uxsum){font-size:var(--t-body);font-weight:650;color:var(--ink)}"
+    + ".cn-block .adv>.advsum>span:not(.uxsum)::after{content:' ›';color:var(--ink-2)}"
+    + ".cn-block .adv.open>.advsum>span:not(.uxsum)::after{content:' ⌄'}"
+    // One row form on the settings pages (d04-03, owner 26.11.2026): title 13 px, its sentence right under it (12 px),
+    // the field below or the control on the right – a flow row, a field of a dashboard section, a switch row alike.
+    // Rows with a symbol are choices in a list, not settings; they keep their size.
+    + ".cn-block .frow:not(.hasicon):not(.casora-pmore) .rtext b{font-size:var(--t-foot)}"
+    + ".cn-block .frow:not(.hasicon):not(.casora-pmore) .rtext span{font-size:var(--t-caption)}"
+    + ".cn-block .row label .lsub{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.4}"
     + ".cn-grid .cs-hubtile{min-height:96px}"
     // Start and topic pages have no "Applies to" line under the title: the fixed head height left an empty band of
     // ~40 px above "‹ Settings" (the pages with that line sat 16 px higher).
@@ -1278,6 +1287,22 @@
     // Trim a drawn section to one block: its own head goes (the block has a title; a section switch becomes a
     // labelled first row), sub keeps one part, keys keeps only those fields (and the hint under the last one).
     const DASH_SWITCH = { Scenes: "Show scenes on this dashboard" };
+    // One row form (d04-03): a field's hint right under its row becomes the row's sentence under the title, as on
+    // every other settings row (title, sentence, then the field). The element moves as it is (code that later
+    // updates its text keeps working); a row that already has a sentence keeps the hint under it.
+    const rowHints = (card) => {
+      [card, ...card.querySelectorAll(":scope > .subcard")].forEach((plate) => {
+        [...plate.children].forEach((h) => {
+          if (!h.classList.contains("hint")) return;
+          const row = h.previousElementSibling;
+          const lab = row && row.classList.contains("row") ? row.querySelector(":scope > label") : null;
+          if (!lab || lab.querySelector(".lsub")) return;
+          h.className = "lsub cn-rowhint";
+          lab.appendChild(h);
+        });
+      });
+    };
+    P._csRowHints = rowHints;
     const trimCard = (self, card, b) => {
       card.classList.remove("shut", "sel");
       card.classList.add("cn-card");
@@ -1325,6 +1350,7 @@
           h = c.nextElementSibling;
         }
       }
+      rowHints(card);
       // The "Add a field" button comes a beat later (microtask): it belongs to the whole section, keep it only
       // where the whole section is shown.
       if (b.sub || b.keys) queueMicrotask(() => card.querySelectorAll(":scope > .fieldadd").forEach((x) => x.remove()));
