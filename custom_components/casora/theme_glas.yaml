@@ -47,6 +47,9 @@ Casora Glas:
       badge-background: rgba(255,253,250,0.50)
       badge-active-color: rgba(255,253,250,0.80)
       casora-entity-background: rgba(255,253,250,0.50)
+      # Szenen-Pille: Glas wie die Kacheln (Casora hell macht sie kräftiger, d01-03)
+      casora-scene-off-bg: var(--casora-entity-background)
+      casora-scene-off-rim: var(--casora-tile-glass-rim)
       # Kachelstatus in Text 1 statt Text 2: auf Glas über hellen Fotostellen sonst < 4,5 : 1
       casora-entity-state: "#3A322B"
       casora-entity-background-active: rgba(255,253,250,0.72)

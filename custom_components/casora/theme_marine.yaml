@@ -21,6 +21,7 @@ Casora Marine:
       scrollbar-thumb-color: rgba(15,46,119,0.18)
       state-icon-color: rgba(28,40,66,0.62)
       state-off-color: rgba(28,40,66,0.30)
+      casora-scene-off-rim: inset 0 0 0 1px rgba(15,46,119,0.08), var(--casora-shadow-rest)
       casora-entity-name: rgba(28,40,66,0.92)
       casora-entity-name-active: rgba(20,30,53,0.94)
       casora-entity-state-active: rgba(31,58,110,0.96)

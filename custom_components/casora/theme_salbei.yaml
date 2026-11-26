@@ -40,6 +40,8 @@ Casora Salbei:
       casora-mobile-hero-floor: '#E0EBDE'
       casora-entity-background: rgba(217,230,215,0.82)
       casora-entity-background-active: rgba(238,250,236,1)
+      casora-scene-off-bg: rgba(206,220,203,0.96)
+      casora-scene-off-rim: inset 0 0 0 1px rgba(38,96,57,0.08), var(--casora-shadow-rest)
       casora-entity-active-tint: rgba(235,250,233,0.97)
       casora-entity-active-tint-mobile: rgba(235,250,233,1)
       casora-entity-hover-tint: rgba(235,250,233,0.60)

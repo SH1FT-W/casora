@@ -562,6 +562,10 @@ Casora:
       # Kacheln: inaktiv Sand, aktiv Creme mit warmem Schatten
       casora-entity-background: rgba(240,233,223,0.82)
       casora-entity-background-active: rgba(255,253,249,1)
+      # Szenen-Pille aus (Prüfrunde 26.11.2026 d01-03): auf hellen Raumfotos verschwamm sie – kräftigere, fast deckende
+      # Sandfläche und der Ruhe-Schatten der Kacheln mit feiner Kante. Dunkel wie bisher.
+      casora-scene-off-bg: rgba(231,222,210,0.96)
+      casora-scene-off-rim: inset 0 0 0 1px rgba(90,70,50,0.08), var(--casora-shadow-rest)
       casora-entity-active-tint: rgba(255,252,246,0.97)
       casora-entity-active-tint-mobile: rgba(255,252,246,1)
       casora-entity-hover-tint: rgba(255,252,246,0.60)

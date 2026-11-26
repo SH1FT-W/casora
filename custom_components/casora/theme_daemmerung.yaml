@@ -40,6 +40,8 @@ Casora Dämmerung:
       casora-mobile-hero-floor: '#E6E3EE'
       casora-entity-background: rgba(224,219,234,0.82)
       casora-entity-background-active: rgba(245,241,253,1)
+      casora-scene-off-bg: rgba(212,207,224,0.96)
+      casora-scene-off-rim: inset 0 0 0 1px rgba(53,37,98,0.08), var(--casora-shadow-rest)
       casora-entity-active-tint: rgba(243,239,252,0.97)
       casora-entity-active-tint-mobile: rgba(243,239,252,1)
       casora-entity-hover-tint: rgba(243,239,252,0.60)
