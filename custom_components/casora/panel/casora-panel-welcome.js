@@ -35,12 +35,13 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      // HEADLINE FEATURES: doorbell moment, living house photo (weather), Assist opens Casora popups, tablet wakes on motion
       nh: "Das nächste Level",
+      h0t: "Die Klingel kommt nach vorn", h0: "Klingelt es, zeigt jedes Dashboard das Livebild der Tür, auch aus dem Bildschirmschoner.",
+      h1t: "Wetter auf dem Foto", h1: "Regen, Schnee, Nebel und Wind ziehen leicht über das Raumfoto.",
+      h2t: "Assist zeigt das passende Popup", h2: "Frag nach dem wärmsten Raum oder der Kamera an der Tür, auch ohne KI-Modell.",
+      h3t: "Tablet wacht auf, wenn du kommst", h3: "Ein Bewegungsmelder beendet den Bildschirmschoner, nachts nur eine gedimmte Uhr.",
       n0t: "Großer Prüflauf", n0: "20 KI-Tester haben jede Funktion durchgeklickt, rund 150 Funde sind behoben.",
       n1t: "Zurück wie gewohnt", n1: "Die Zurück-Taste am Handy schließt erst das Popup und führt aus dem Raum nach Zuhause.",
-      n2t: "Schneller mit vielen Räumen", n2: "Räume entstehen erst, wenn du sie brauchst, mit deutlich weniger Speicher.",
-      n3t: "Karte Smart Heating Control", n3: "Ziel, Stufen und Wochenplan für jeden Raum.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -51,12 +52,13 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      // HEADLINE FEATURES: doorbell moment, living house photo (weather), Assist opens Casora popups, tablet wakes on motion
       nh: "The next level",
+      h0t: "The doorbell comes to the front", h0: "When it rings, every dashboard shows the door's live picture, even from the screensaver.",
+      h1t: "Weather on the photo", h1: "Rain, snow, fog and wind move lightly over the room photo.",
+      h2t: "Assist shows the matching popup", h2: "Ask for the warmest room or the camera at the door, no AI model needed.",
+      h3t: "The tablet wakes when you come in", h3: "A motion sensor ends the screensaver, at night only a dimmed clock.",
       n0t: "A big test round", n0: "20 AI testers clicked through every function, about 150 findings are fixed.",
       n1t: "Back as you expect", n1: "The phone's back button closes the popup first and leads from a room to Home.",
-      n2t: "Faster with many rooms", n2: "Rooms are built when you need them, with far less memory.",
-      n3t: "Smart Heating Control card", n3: "Target, levels and weekly schedule for every room.",
     },
     // Spanish: same keys as en (dev/unit/welcome_es.mjs); a missing key falls back to English.
     es: {
@@ -68,12 +70,13 @@
       w1t: "Habitación por habitación", w1: "Diseña tu panel con los dispositivos que ya tienes en Home Assistant.",
       w2t: "Asistente de dispositivos", w2: "Casora propone las tarjetas adecuadas para cada habitación y las añade por ti.",
       w3t: "Escritorio, tableta y móvil", w3: "Un panel que se adapta a cada pantalla, con su propio diseño para el móvil.",
-      // HEADLINE FEATURES: doorbell moment, living house photo (weather), Assist opens Casora popups, tablet wakes on motion
       nh: "El siguiente nivel",
+      h0t: "El timbre pasa al frente", h0: "Cuando suena, cada panel muestra la imagen en directo de la puerta, también desde el salvapantallas.",
+      h1t: "Tiempo en la foto", h1: "Lluvia, nieve, niebla y viento pasan suavemente sobre la foto de la habitación.",
+      h2t: "Assist muestra la ventana adecuada", h2: "Pregunta por la habitación más cálida o la cámara de la puerta, sin modelo de IA.",
+      h3t: "La tableta despierta al llegar", h3: "Un sensor de movimiento termina el salvapantallas; de noche, solo un reloj atenuado.",
       n0t: "Una gran ronda de pruebas", n0: "20 probadores con IA recorrieron cada función; unos 150 hallazgos están corregidos.",
       n1t: "Atrás como esperas", n1: "El botón atrás del móvil cierra primero el popup y lleva de una habitación a Casa.",
-      n2t: "Más rápido con muchas habitaciones", n2: "Las habitaciones se crean cuando las necesitas, con mucha menos memoria.",
-      n3t: "Tarjeta Smart Heating Control", n3: "Objetivo, niveles y horario semanal para cada habitación.",
     },
     fr: {
       welcomeTitle: "Bienvenue dans Casora",
@@ -87,12 +90,13 @@
       w2: "Casora propose les tuiles adaptées à chaque pièce et les ajoute pour toi.",
       w3t: "Ordinateur, tablette et téléphone",
       w3: "Un tableau de bord qui s'adapte à chaque écran, avec sa propre mise en page téléphone.",
-      // HEADLINE FEATURES: doorbell moment, living house photo (weather), Assist opens Casora popups, tablet wakes on motion
       nh: "Le niveau supérieur",
+      h0t: "La sonnette au premier plan", h0: "Quand on sonne, chaque tableau de bord montre l'image en direct de la porte, même depuis l'économiseur d'écran.",
+      h1t: "Météo sur la photo", h1: "Pluie, neige, brouillard et vent passent légèrement sur la photo de la pièce.",
+      h2t: "Assist affiche la fenêtre correspondante", h2: "Demande la pièce la plus chaude ou la caméra de la porte, sans modèle d'IA.",
+      h3t: "La tablette se réveille quand tu arrives", h3: "Un détecteur de mouvement arrête l'économiseur d'écran, la nuit seulement une horloge atténuée.",
       n0t: "Une grande campagne de tests", n0: "20 testeurs IA ont parcouru chaque fonction, environ 150 constats sont corrigés.",
       n1t: "Retour comme prévu", n1: "Le bouton retour du téléphone ferme d'abord le popup et ramène d'une pièce à Maison.",
-      n2t: "Plus rapide avec beaucoup de pièces", n2: "Les pièces se construisent quand tu en as besoin, avec bien moins de mémoire.",
-      n3t: "Carte Smart Heating Control", n3: "Consigne, niveaux et programme de la semaine pour chaque pièce.",
     },
     it: {
       welcomeTitle: "Ti diamo il benvenuto in Casora",
@@ -106,12 +110,13 @@
       w2: "Casora propone le schede adatte per ogni stanza e le aggiunge per te.",
       w3t: "Desktop, tablet e telefono",
       w3: "Una dashboard che si adatta a ogni schermo, con un layout dedicato per il telefono.",
-      // HEADLINE FEATURES: doorbell moment, living house photo (weather), Assist opens Casora popups, tablet wakes on motion
       nh: "Il livello successivo",
+      h0t: "Il campanello in primo piano", h0: "Quando suonano, ogni dashboard mostra l'immagine dal vivo della porta, anche dal salvaschermo.",
+      h1t: "Meteo sulla foto", h1: "Pioggia, neve, nebbia e vento passano leggeri sulla foto della stanza.",
+      h2t: "Assist mostra la finestra giusta", h2: "Chiedi la stanza più calda o la telecamera della porta, senza modello IA.",
+      h3t: "Il tablet si sveglia quando arrivi", h3: "Un sensore di movimento chiude il salvaschermo, di notte solo un orologio attenuato.",
       n0t: "Un grande giro di test", n0: "20 tester IA hanno provato ogni funzione, circa 150 problemi sono risolti.",
       n1t: "Indietro come ti aspetti", n1: "Il tasto indietro del telefono chiude prima il popup e riporta da una stanza a Casa.",
-      n2t: "Più veloce con molte stanze", n2: "Le stanze si costruiscono quando servono, con molta meno memoria.",
-      n3t: "Scheda Smart Heating Control", n3: "Obiettivo, livelli e programma settimanale per ogni stanza.",
     },
     nb: {
       welcomeTitle: "Velkommen til Casora",
@@ -125,12 +130,13 @@
       w2: "Casora foreslår passende fliser for hvert rom og legger dem inn.",
       w3t: "Skrivebord, nettbrett og mobil",
       w3: "Ett dashbord som tilpasser seg hver skjerm, med egen mobilvisning.",
-      // HEADLINE FEATURES: doorbell moment, living house photo (weather), Assist opens Casora popups, tablet wakes on motion
       nh: "Neste nivå",
+      h0t: "Ringeklokken kommer frem", h0: "Når det ringer, viser hvert dashbord direktebildet fra døren, også fra skjermspareren.",
+      h1t: "Vær på bildet", h1: "Regn, snø, tåke og vind glir lett over rombildet.",
+      h2t: "Assist viser riktig vindu", h2: "Spør etter det varmeste rommet eller kameraet ved døren, uten KI-modell.",
+      h3t: "Nettbrettet våkner når du kommer", h3: "En bevegelsessensor avslutter skjermspareren, om natten bare en dempet klokke.",
       n0t: "En stor testrunde", n0: "20 KI-testere klikket seg gjennom alle funksjoner, rundt 150 funn er rettet.",
       n1t: "Tilbake som forventet", n1: "Tilbake-knappen på mobilen lukker først popupen og fører fra et rom til Hjem.",
-      n2t: "Raskere med mange rom", n2: "Rom bygges når du trenger dem, med langt mindre minne.",
-      n3t: "Kort for Smart Heating Control", n3: "Mål, nivåer og ukeplan for hvert rom.",
     },
     nl: {
       welcomeTitle: "Welkom bij Casora",
@@ -144,12 +150,13 @@
       w2: "Casora stelt voor elke kamer passende tegels voor en bouwt ze in.",
       w3t: "Desktop, tablet en telefoon",
       w3: "Eén dashboard dat zich aan elk scherm aanpast, met een eigen telefoonweergave.",
-      // HEADLINE FEATURES: doorbell moment, living house photo (weather), Assist opens Casora popups, tablet wakes on motion
       nh: "Het volgende niveau",
+      h0t: "De deurbel komt naar voren", h0: "Als er wordt aangebeld, toont elk dashboard het livebeeld van de deur, ook vanuit de schermbeveiliging.",
+      h1t: "Weer op de foto", h1: "Regen, sneeuw, mist en wind trekken licht over de kamerfoto.",
+      h2t: "Assist toont het juiste venster", h2: "Vraag naar de warmste kamer of de camera bij de deur, zonder AI-model.",
+      h3t: "De tablet wordt wakker als je binnenkomt", h3: "Een bewegingssensor beëindigt de schermbeveiliging, 's nachts alleen een gedimde klok.",
       n0t: "Een grote testronde", n0: "20 AI-testers klikten door elke functie, ongeveer 150 bevindingen zijn opgelost.",
       n1t: "Terug zoals verwacht", n1: "De terugknop van de telefoon sluit eerst de popup en leidt van een kamer naar Thuis.",
-      n2t: "Sneller met veel kamers", n2: "Kamers worden opgebouwd wanneer je ze nodig hebt, met veel minder geheugen.",
-      n3t: "Kaart Smart Heating Control", n3: "Doel, niveaus en weekschema voor elke kamer.",
     },
     pl: {
       welcomeTitle: "Witaj w Casora",
@@ -163,12 +170,13 @@
       w2: "Casora proponuje pasujące kafelki dla każdego pokoju i dodaje je za ciebie.",
       w3t: "Komputer, tablet i telefon",
       w3: "Jeden pulpit, który dopasowuje się do każdego ekranu, z własnym układem na telefon.",
-      // HEADLINE FEATURES: doorbell moment, living house photo (weather), Assist opens Casora popups, tablet wakes on motion
       nh: "Kolejny poziom",
+      h0t: "Dzwonek na pierwszym planie", h0: "Gdy ktoś dzwoni, każdy pulpit pokazuje obraz na żywo spod drzwi, także z wygaszacza.",
+      h1t: "Pogoda na zdjęciu", h1: "Deszcz, śnieg, mgła i wiatr lekko przesuwają się po zdjęciu pokoju.",
+      h2t: "Assist pokazuje pasujące okno", h2: "Zapytaj o najcieplejszy pokój lub kamerę przy drzwiach, bez modelu AI.",
+      h3t: "Tablet budzi się, gdy wchodzisz", h3: "Czujnik ruchu kończy wygaszacz, w nocy tylko przyciemniony zegar.",
       n0t: "Duża runda testów", n0: "20 testerów AI przeklikało każdą funkcję, około 150 zgłoszeń jest poprawionych.",
       n1t: "Wstecz tak, jak trzeba", n1: "Przycisk wstecz w telefonie najpierw zamyka okno i prowadzi z pokoju do widoku Dom.",
-      n2t: "Szybciej przy wielu pokojach", n2: "Pokoje powstają, gdy ich potrzebujesz, przy dużo mniejszym zużyciu pamięci.",
-      n3t: "Karta Smart Heating Control", n3: "Cel, poziomy i plan tygodnia dla każdego pokoju.",
     },
     pt: {
       welcomeTitle: "Bem-vindo ao Casora",
@@ -182,12 +190,13 @@
       w2: "O Casora propõe os cartões certos para cada divisão e adiciona-os por ti.",
       w3t: "Computador, tablet e telemóvel",
       w3: "Um painel que se adapta a cada ecrã, com layout próprio para o telemóvel.",
-      // HEADLINE FEATURES: doorbell moment, living house photo (weather), Assist opens Casora popups, tablet wakes on motion
       nh: "O próximo nível",
+      h0t: "A campainha vem para a frente", h0: "Quando tocam, cada painel mostra a imagem em direto da porta, também a partir da proteção de ecrã.",
+      h1t: "Tempo na foto", h1: "Chuva, neve, nevoeiro e vento passam levemente sobre a foto da divisão.",
+      h2t: "O Assist mostra a janela certa", h2: "Pergunta pela divisão mais quente ou pela câmara da porta, sem modelo de IA.",
+      h3t: "O tablet acorda quando chegas", h3: "Um sensor de movimento termina a proteção de ecrã; à noite, só um relógio atenuado.",
       n0t: "Uma grande ronda de testes", n0: "20 testadores com IA percorreram cada função; cerca de 150 problemas estão corrigidos.",
       n1t: "Voltar como esperas", n1: "O botão voltar do telemóvel fecha primeiro o popup e leva de uma divisão a Casa.",
-      n2t: "Mais rápido com muitas divisões", n2: "As divisões são criadas quando precisas delas, com muito menos memória.",
-      n3t: "Cartão Smart Heating Control", n3: "Objetivo, níveis e horário semanal para cada divisão.",
     },
   };
   // Texts for a language: its own, English for anything it does not have (yet).
@@ -203,13 +212,12 @@
   /** After an update: the news of this version - replace on every release. */
   // An optional fourth value is a picture under the text (a file in assets/news, served under /casora_assets/news).
   const WHATS_NEW = [
-    // HEADLINE FEATURES: doorbell moment, living house photo (weather), Assist opens Casora popups, tablet wakes on motion
-    // (go first, one entry each with TEXT keys in all nine languages; keep the sheet at 4 to 6 entries and at least
-    // one picture, dev/unit/welcome_news_pictures.mjs).
+    ["mdi:doorbell-video", "h0t", "h0"],
+    ["mdi:weather-pouring", "h1t", "h1", "photo-weather.jpg"],
+    ["mdi:microphone-message", "h2t", "h2"],
+    ["mdi:tablet-dashboard", "h3t", "h3"],
     ["mdi:check-decagram-outline", "n0t", "n0"],
     ["mdi:arrow-left-circle-outline", "n1t", "n1"],
-    ["mdi:speedometer", "n2t", "n2"],
-    ["mdi:radiator", "n3t", "n3"],
   ];
   // A big release may set its own headline (a TEXT key); the version then stands small under it. null: "New in Casora x".
   const WHATS_NEW_HEAD = "nh";
