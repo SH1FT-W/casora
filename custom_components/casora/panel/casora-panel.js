@@ -1016,6 +1016,11 @@ function markPhoneManaged(cfg, showBell, showAssist, rooms) {
         else delete c.variables.show_notifications;
         if (showAssist === false) c.variables.show_assist = false;
         else delete c.variables.show_assist;
+        // Assist shows the matching popup (Controls › Screen), only when the rooms are known.
+        if (Array.isArray(rooms)) {
+          if (home && home.variables && home.variables.assist_popups === false) c.variables.assist_popups = false;
+          else delete c.variables.assist_popups;
+        }
         // Search field on Home (Studio: Controls › Phone › Show search), only when the rooms are known.
         if (Array.isArray(rooms)) {
           if (home && home.variables && home.variables.show_search === false) c.variables.show_search = false;
@@ -2578,6 +2583,11 @@ const SECTIONS = [
     fields: [
       { key: "show_assist", sub: "chrome", label: "Show Assist button", type: "bool",
         boolDefault: true, auto: true, scope: "dashboard" },
+      // Assist shows the matching popup (scripts/local/52-assist-show.js reads it from Home's room card, the phone's
+      // title card gets it on save in markPhoneManaged). Off = Assist only answers.
+      { key: "assist_popups", sub: "chrome", label: "Assist shows the matching popup", type: "bool",
+        boolDefault: true, auto: true, scope: "dashboard",
+        hint: "Asking Assist for a room's climate, the lights, a camera, the weather or a device's energy also opens that window here." },
       // Badge row on more lines (#53, badges_wrap): desktop, tablet and phone; off = one row that scrolls sideways.
       { key: "badges_wrap", sub: "chrome", label: "Wrap badges onto more lines", type: "bool",
         boolDefault: false, auto: true, scope: "dashboard",

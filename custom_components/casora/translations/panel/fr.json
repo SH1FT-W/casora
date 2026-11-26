@@ -756,6 +756,8 @@
     "Set Up Your Dashboard": "Configure ton tableau de bord",
     "Show": "Afficher",
     "Show Assist button": "Afficher le bouton Assist",
+    "Assist shows the matching popup": "Assist affiche la fenêtre correspondante",
+    "Asking Assist for a room's climate, the lights, a camera, the weather or a device's energy also opens that window here.": "Quand tu demandes à Assist le climat d'une pièce, les lumières, une caméra, la météo ou la consommation d'un appareil, la fenêtre correspondante s'ouvre aussi ici.",
     "Show on": "Afficher sur",
     "Show or hide the players, as the waveform does on the dashboard": "Afficher ou masquer les lecteurs, comme le fait la forme d'onde sur le tableau de bord",
     "Show rooms": "Afficher les pièces",

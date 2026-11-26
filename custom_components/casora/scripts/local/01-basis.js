@@ -1501,6 +1501,8 @@ window._casoraColGap = window._casoraColGap || function (keys) {
             if (o && o.conversation_id) A.convId = o.conversation_id;
             var sp = o && o.response && o.response.speech;
             finish((sp && sp.plain && sp.plain.speech) || '');
+            // Assist shows the matching popup (52-assist-show.js).
+            if (window._casoraAssistShow) window._casoraAssistShow.after();
           } else if (ev.type === 'error') {
             finish((ev.data && ev.data.message) || 'Fehler bei der Anfrage.', true);
           } else if (ev.type === 'run-end') {
@@ -1582,6 +1584,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
               if (o && o.conversation_id) A.convId = o.conversation_id;
               var sp = o && o.response && o.response.speech;
               finish((sp && sp.plain && sp.plain.speech) || 'Keine Antwort erhalten.');
+              if (window._casoraAssistShow) window._casoraAssistShow.after();
             } else if (ev.type === 'tts-end') {
               var url = d.tts_output && d.tts_output.url;
               if (url && A.audio) { try { A.audio.src = url; var p2 = A.audio.play(); if (p2 && p2.catch) p2.catch(function () {}); } catch (e) {} }

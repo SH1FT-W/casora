@@ -60,7 +60,7 @@
           kw: "uhr uhrzeit zeit 12 stunden 24 clock time zeitsensor suffix" },
         { k: "font", sec: "General", sub: "text", title: "Font", plain: "The typeface of this dashboard, or a font you bring yourself.",
           kw: "schrift schriftart font inter hanken eigene schrift hochladen" },
-        { k: "chrome", sec: "General", sub: "chrome", keys: ["show_assist", "badges_wrap", "casora_hide_header"],
+        { k: "chrome", sec: "General", sub: "chrome", keys: ["show_assist", "assist_popups", "badges_wrap", "casora_hide_header"],
           title: "Top bar and badges", adv: true,
           plain: "Assist button, the Home Assistant title bar and badges on several lines.",
           kw: "kopfzeile header assist taste badges umbrechen zeilen leiste" },
