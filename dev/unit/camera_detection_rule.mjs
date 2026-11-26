@@ -23,7 +23,7 @@ fresh();
 const skew = { [sensor]: { state: 'off', attributes: { friendly_name: 'Person' } } };
 assert.equal(alert(skew, 5), '');
 skew[sensor] = { state: 'on', last_changed: at(now + 20000), attributes: { friendly_name: 'Person' } };
-assert.equal(alert(skew, 5), 'Person', 'a change time slightly ahead of the browser clock is still a detection');
+assert.equal(alert(skew, 5), 'Person erkannt', 'a change time slightly ahead of the browser clock is still a detection');
 assert.equal(window.casoraDetectionAt(sensor, 'on', 'off', now + 20000, {}), now, 'the rule clamps a slightly future time to now');
 assert.equal(window.casoraDetectionAt(sensor, 'on', 'off', now + 3600000, {}), null, 'a time an hour ahead is no detection');
 
@@ -33,5 +33,5 @@ const shared = { [sensor]: { state: 'off', attributes: { friendly_name: 'Person'
 assert.equal(alert(shared, 1), '');
 shared[sensor] = { state: 'on', last_changed: at(now - 120000), attributes: { friendly_name: 'Person' } };
 assert.equal(alert(shared, 1), '', 'two minutes ago is outside the one-minute window');
-assert.equal(alert(shared, 10), 'Person', 'the ten-minute card shows the detection the short card saw first');
+assert.equal(alert(shared, 10), 'Person erkannt', 'the ten-minute card shows the detection the short card saw first');
 Date.now = realNow;

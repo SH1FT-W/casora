@@ -30,7 +30,7 @@ assert.equal(alert(seen('on', changed)), '', 'a sensor that is on again after th
 delete window._casoraListedCameraAlerts;
 now = started + 10 * 60000;
 assert.equal(alert(seen('off', changed)), '');
-assert.equal(alert(seen('on', new Date(now - 5000).toISOString())), 'Test motion', 'a real detection after the start still shows');
+assert.equal(alert(seen('on', new Date(now - 5000).toISOString())), 'Test motion erkannt', 'a real detection after the start still shows');
 
 // Known limit (pinned, not a promise): only when the page saw the sensor go straight from off to on (no unavailable in
 // between) four minutes after the start, outside the start window, does it show. A real restart passes through
@@ -38,7 +38,7 @@ assert.equal(alert(seen('on', new Date(now - 5000).toISOString())), 'Test motion
 delete window._casoraListedCameraAlerts;
 now = started + 5 * 60000;
 assert.equal(alert(seen('off', '2026-11-26T10:00:00+00:00')), '');
-assert.equal(alert(seen('on', new Date(started + 4 * 60000).toISOString())), 'Test motion', 'late return after the start window is not caught');
+assert.equal(alert(seen('on', new Date(started + 4 * 60000).toISOString())), 'Test motion erkannt', 'late return after the start window is not caught');
 Date.now = realNow;
 
 // A real restart passes through unavailable (or no state at all) before the sensor is on again. A detection needs off

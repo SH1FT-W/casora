@@ -36,7 +36,7 @@ for (const name of ['casora_camera', 'casora_frigate']) {
 
   // (1) Listed camera, no picture, fallback name on, live ring: the alert wins.
   states[ding].state = new Date(now).toISOString();
-  assert.equal(show(idle), 'Test Ding', `${name}: listed camera without picture shows the live alert, not „Kein Bild“`);
+  assert.equal(show(idle), 'Test Ding erkannt', `${name}: listed camera without picture shows the live alert, not „Kein Bild“`);
 
   // (2) Listed camera, no picture, no active alert: still „Kein Bild“.
   delete window._casoraListedCameraAlerts;
@@ -53,7 +53,7 @@ for (const name of ['casora_camera', 'casora_frigate']) {
   window.CASORA_SETTINGS = { cameras: [{ entity_id: camera, detection_triggers: [ding] }] };
   delete window._casoraListedCameraAlerts;
   states[ding].state = new Date(now).toISOString();
-  assert.equal(show({ entity_id: camera, state: 'recording' }), 'Test Ding', `${name}: recording is overridden by an alert`);
+  assert.equal(show({ entity_id: camera, state: 'recording' }), 'Test Ding erkannt', `${name}: recording is overridden by an alert`);
 
   // (5) Listed camera that is off, with a live alert: off is not overridden either, so it stays „Aus“.
   delete window._casoraListedCameraAlerts;

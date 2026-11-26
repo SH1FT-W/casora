@@ -20,7 +20,7 @@ const alert = () => window.casoraCameraAlert(hass, states, [camera], 5);
 
 assert.equal(alert(), '', 'off is no alert');
 states[person] = { state: 'on', last_changed: new Date(now).toISOString(), attributes: { friendly_name: 'Driveway Person' } };
-assert.equal(alert(), 'Driveway Person', 'off to on shows the Frigate sensor name');
+assert.equal(alert(), 'Driveway Person erkannt', 'off to on shows the Frigate sensor name');
 now += 301000;
 assert.equal(alert(), '', 'the Frigate alert expires after the window');
 

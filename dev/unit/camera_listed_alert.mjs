@@ -21,7 +21,7 @@ const states = {
 window.CASORA_SETTINGS = { cameras: [{ entity_id: camera, detection_triggers: [sensor, event] }] };
 assert.equal(window.casoraCameraAlert(hass, states, [camera], 5), '');
 states[sensor] = { state: 'on', last_changed: new Date(now).toISOString(), attributes: { friendly_name: 'Person' } };
-assert.equal(window.casoraCameraAlert(hass, states, [camera], 5), 'Person');
+assert.equal(window.casoraCameraAlert(hass, states, [camera], 5), 'Person erkannt');
 delete window._casoraListedCameraAlerts;
 states[sensor].state = 'unavailable';
 assert.equal(window.casoraCameraAlert(hass, states, [camera], 5), '');
@@ -32,7 +32,7 @@ window.casoraCameraAlert(hass, states, [camera], 5);
 states[sensor].state = 'on';
 assert.equal(window.casoraCameraAlert(hass, states, [camera], 5), '', 'unknown to on is not a detection');
 states[event].state = new Date(now).toISOString();
-assert.equal(window.casoraCameraAlert(hass, states, [camera], 5), 'Motion');
+assert.equal(window.casoraCameraAlert(hass, states, [camera], 5), 'Motion erkannt');
 for (const name of ['casora_camera', 'casora_reolink_doorbell', 'casora_frigate']) {
   delete window.casoraCameraAlert;
   const inheritedHelper = (template) => {
@@ -49,7 +49,7 @@ for (const name of ['casora_camera', 'casora_reolink_doorbell', 'casora_frigate'
   new Function('hass', 'states', 'entity', 'variables', helper.trim().slice(3, -3))({}, {}, {}, {});
   const render = new Function('hass', 'states', 'entity', 'variables', templates[name].state_display.trim().slice(3, -3));
   const result = render.call({}, hass, states, { entity_id: camera, state: 'idle' }, {});
-  assert.equal(result, 'Motion', `${name} shows the trigger's name`);
+  assert.equal(result, 'Motion erkannt', `${name} shows the trigger's name`);
 }
 assert.ok(templates.casora_camera.variables.casora_camera_alert_helper, 'camera tiles initialize the shared helper');
 now += 301000;
@@ -61,5 +61,5 @@ window.CASORA_SETTINGS.cameras[0].detection_triggers = [doorbell];
 states[doorbell] = { state: 'off', attributes: { friendly_name: 'Doorbell button' } };
 assert.equal(window.casoraCameraAlert(hass, states, [camera], 5), '');
 states[doorbell] = { state: 'on', last_changed: new Date(now).toISOString(), attributes: { friendly_name: 'Doorbell button' } };
-assert.equal(window.casoraCameraAlert(hass, states, [camera], 5), 'Doorbell button', 'binary doorbell uses its own name');
+assert.equal(window.casoraCameraAlert(hass, states, [camera], 5), 'Doorbell button erkannt', 'binary doorbell uses its own name');
 Date.now = realNow;
