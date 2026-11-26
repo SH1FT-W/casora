@@ -1,7 +1,8 @@
 // Studio help (test 2): E20 short answers to everyday tasks in the Studio (Help › "How do I …?" and the search finds
 // them by "Abfall", "Foto" …), not only the guide on GitHub; E18 after dragging tiles with Smart Sort on, the toast
-// offers "Keep my order".
+// offers "Keep my order". Prüfrunde u09-01: the list's button is a verb ("Öffnen"), not the cover state "Open" ("Offen").
 //   node dev/unit/studio_help_topics.mjs
+// @deckt: custom_components/casora/panel/casora-panel-b-mehr.js#_helpTopics
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -36,9 +37,14 @@ assert.ok(/if \(id === "howto"\) return this\._helpTopics\(\);/.test(hm));
 // Every text in every Studio language.
 for (const l of ['de', 'es', 'fr', 'it', 'nl', 'pl', 'pt', 'nb']) {
   const T = JSON.parse(read(`translations/panel/${l}.json`)).exact;
-  ['How do I …?', 'Show me', 'Keep my order', 'Help'].concat(H.flatMap((h) => [h.title, h.text]))
+  ['How do I …?', 'Show me', 'Keep my order', 'Help', 'Open topic'].concat(H.flatMap((h) => [h.title, h.text]))
     .forEach((k) => assert.ok(T[k], l + ': ' + k));
 }
+
+// u09-01: the list's button opens the topic; "Open" alone is the state of a cover ("Offen").
+assert.match(MEHR, /picks: HELP_TOPICS[^\n]*confirmLabel: tr\("Open topic"\)/, 'help list button is the verb');
+const DE = JSON.parse(read('translations/panel/de.json')).exact;
+assert.equal(DE['Open topic'], 'Öffnen');
 
 // E18
 const PLUS = read('panel/casora-panel-b-plus.js');

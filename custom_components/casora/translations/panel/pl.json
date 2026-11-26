@@ -3204,7 +3204,8 @@
     "A room of Smart Heating Control": "Pokój ze Smart Heating Control",
     "For every room of Smart Heating Control": "Dla każdego pokoju ze Smart Heating Control",
     "Smart Heating Control integration not installed yet": "Integracja Smart Heating Control nie jest jeszcze zainstalowana",
-    "Room temperature, target and whether the room heats on the tile. The popup sets the target as a manual change, goes back to automatic or picks a level, and shows the decision, the manual change and the house mode; a row opens the schedule: the week at a glance with each slot's level, switching the profile and editing a profile's time slots. For the rooms of the Smart Heating Control integration.": "Temperatura w pokoju, cel i czy pokój grzeje na kafelku. Okno ustawia cel jako ręczną zmianę, wraca do trybu automatycznego lub wybiera poziom i pokazuje decyzję, ręczną zmianę oraz tryb domu; wiersz otwiera harmonogram: tydzień w skrócie z poziomem każdego przedziału, zmiana profilu i edycja przedziałów profilu. Dla pokoi integracji Smart Heating Control."
+    "Room temperature, target and whether the room heats on the tile. The popup sets the target as a manual change, goes back to automatic or picks a level, and shows the decision, the manual change and the house mode; a row opens the schedule: the week at a glance with each slot's level, switching the profile and editing a profile's time slots. For the rooms of the Smart Heating Control integration.": "Temperatura w pokoju, cel i czy pokój grzeje na kafelku. Okno ustawia cel jako ręczną zmianę, wraca do trybu automatycznego lub wybiera poziom i pokazuje decyzję, ręczną zmianę oraz tryb domu; wiersz otwiera harmonogram: tydzień w skrócie z poziomem każdego przedziału, zmiana profilu i edycja przedziałów profilu. Dla pokoi integracji Smart Heating Control.",
+    "Open topic": "Otwórz"
   },
   "patterns": [
     [
