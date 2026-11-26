@@ -106,7 +106,10 @@ Zustand · Zusatz · Zusatz
 Statuszeile halten ihren Platz auch leer (ein Popup ohne Statuszeile, z. B. Licht, lässt die Zeile frei) –, und die
 Bühne beginnt in jedem Popup auf derselben Höhe: der Rahmen rückt den ersten sichtbaren Inhalt auf denselben Abstand
 unter den Kopf, auch wenn der Inhalt eine leere Karte darüber hat (casora-core.js `_paintSoft`, `_fitHeadGap`).
-Nur ein zweizeiliger Titel macht den Kopf höher. Test `r578_popup_head_uniform.mjs`.
+Nur ein zweizeiliger Titel macht den Kopf höher. Test `r578_popup_head_uniform.mjs`. Die Statuszeile bleibt
+dafür einzeilig (26.11.2026, d03-07): passt sie nicht, fallen die Zusätze von hinten ganz weg, mit ihrem „·“; der
+Zustand bleibt immer und endet nur allein mit „…“ (casora-core.js `headFit`, Test `dev/unit/kopf_eine_zeile.mjs`).
+Das Wichtigste steht deshalb vorn.
 
 Der Zustand steht nicht noch einmal groß auf der Bühne, **außer** als Wert (68 %, 21,2°) – die Bühne zeigt die
 Zahl, die Statuszeile das Wort.
