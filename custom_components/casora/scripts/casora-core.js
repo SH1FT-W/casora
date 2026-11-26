@@ -7215,6 +7215,12 @@ window.casoraMenuGlass = {
       animation: casora-popup-fade var(--casora-popup-enter, 260ms) ease-out;
     }
     .content::-webkit-scrollbar { display: none; }
+    /* Keyboard ring (WCAG 2.4.7): a scrolling .content is a tab stop. Only for a real keyboard (.kbd, set on focus
+       from window._casoraKbd); a tap or click that focuses it on open stays without a ring. */
+    .content.kbd:focus-visible {
+      outline: 2px solid var(--casora-focus-ring, var(--casora-accent, var(--primary-color, #94603B))) !important;
+      outline-offset: -2px;
+    }
     /* Page transition (_navBegin): the leaving page lies in the scroller, out of the flow. */
     :host([navigating]) .content { position: relative; }
     /* Scroll-Hinweis (01.10.2026): liegt unter dem Sheet-Rand noch Inhalt, blendet ein
@@ -8638,6 +8644,9 @@ window.casoraMenuGlass = {
         if (began) this.dismiss();
       });
 
+      // Focus ring only after Tab/arrow keys (D-09), not after a tap or click (Chrome reports :focus-visible then too).
+      this.content.addEventListener('focus', () => this.content.classList.toggle('kbd', !!window._casoraKbd));
+      this.content.addEventListener('blur', () => this.content.classList.remove('kbd'));
       this.content.addEventListener('pointerdown', (e) => {
         this._bgTap = { x: e.clientX, y: e.clientY,
                         slop: e.pointerType === 'mouse' ? 10 : 24 };

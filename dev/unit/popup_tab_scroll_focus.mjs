@@ -82,4 +82,22 @@ assert.match(more, /this\._syncScrollStop\(\)/, 'moreCheck syncs the tab stop');
 assert.match(src, /this\._moreRO\.observe\(this\._extra\)/, 'extra entities resize the scroll check');
 const fin = src.slice(src.indexOf("        this.removeAttribute('more-below');"), src.indexOf("this.surface.style.removeProperty('transform');"));
 assert.match(fin, /this\.content\.setAttribute\('tabindex', '-1'\)/, 'close resets the tab stop');
+
+// Visible keyboard ring (WCAG 2.4.7): .content keeps outline:none for tap/click, but a keyboard focus (.kbd, set on
+// focus from window._casoraKbd) shows a ring that beats the !important none.
+{
+  const ring = src.match(/\n    \.content\.kbd:focus-visible \{([^}]*)\}/);
+  assert.ok(ring, 'popup CSS has a .content.kbd:focus-visible rule');
+  assert.match(ring[1], /outline:\s*2px solid [^;]+!important/, 'ring is a visible outline that overrides outline:none !important');
+  const on = src.match(/this\.content\.addEventListener\('focus', \(\) => ([^;]+)\);/);
+  const off = src.match(/this\.content\.addEventListener\('blur', \(\) => ([^;]+)\);/);
+  assert.ok(on && off, 'content focus/blur set the keyboard class');
+  const cls = new Set();
+  const self = { content: { classList: { toggle: (c, v) => (v ? cls.add(c) : cls.delete(c)), remove: (c) => cls.delete(c) } } };
+  const run = (expr, kbd) => new Function('window', `return (${expr})`).call(self, { _casoraKbd: kbd });
+  run(on[1], true); assert.ok(cls.has('kbd'), 'Tab onto the content → ring');
+  run(off[1]); assert.ok(!cls.has('kbd'), 'blur removes it');
+  run(on[1], false); assert.ok(!cls.has('kbd'), 'tap/click focus (open) → no ring');
+}
+
 console.log('ok popup_tab_scroll_focus');
