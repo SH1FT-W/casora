@@ -27005,11 +27005,14 @@ class CasoraPanel extends HTMLElement {
         k.textContent = kindWord;
         el.querySelector(".mname").after(k);
       }
-      el.querySelector(".mstate").textContent =
+      const editRooms = this._state && this._state.compact && this._state.compact.rooms;
+      // A thermostat's room temperature reads the room headers: the desktop rooms, which the phone dashboard reads
+      // too (casoraPhoneRoom) – test round 26.11.2026 d02-06.
+      const tempRooms = ((((this._pair || {}).desktop || {}).compact || {}).rooms) || editRooms;
+      el.querySelector(".mstate").textContent = (window.casoraWithStudioRooms || ((r, f) => f()))(tempRooms, () =>
         // Casora: Zustandstext wie im Dashboard (state_display der Vorlage).
-        (window.casoraTileState && window.casoraTileState(tile, ent, this._hass, this._state && this._state.templates,
-          this._state && this._state.compact && this._state.compact.rooms))
-        || tileStateWord(kind, tile, ent, this._hass.states, this._hass);
+        (window.casoraTileState && window.casoraTileState(tile, ent, this._hass, this._state && this._state.templates, editRooms))
+        || tileStateWord(kind, tile, ent, this._hass.states, this._hass));
       // Wie in der Kachelliste: ohne Gerät zeigt das Dashboard nur den Namen.
       // Gerät fehlt in HA: wie die Dashboard-Kachel (casora_entity, Zustand casora_missing).
       const gone = tileEntityGone(tile, this._hass.states);

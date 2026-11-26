@@ -1009,6 +1009,22 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
       if (window._casoraHomeLightVars === H.home) { if (H.wasHome === undefined) delete window._casoraHomeLightVars; else window._casoraHomeLightVars = H.wasHome; }
     },
   };
+  // A thermostat's room temperature (window.casoraRoomTempOf) reads the dashboard's room headers – in the Studio the
+  // rooms being edited, Home ({ home }) last as on the dashboard (test round 26.11.2026 d02-06: the preview showed the
+  // thermostat's own 21,7°, the dashboard the room's 23,3°).
+  const studioTempRooms = (rooms) => {
+    const home = rooms.find((r) => r && r.path === "home") || rooms[0];
+    return rooms.map((r) => ({ vars: (r && r.variables) || {}, home: r === home }));
+  };
+  const withStudioRooms = (rooms, fn) => {
+    if (!Array.isArray(rooms)) return fn();
+    const was = window._casoraRoomTempSource;
+    window._casoraRoomTempSource = () => studioTempRooms(rooms);
+    try { return fn(); } finally {
+      if (was === undefined) delete window._casoraRoomTempSource; else window._casoraRoomTempSource = was;
+    }
+  };
+  window.casoraWithStudioRooms = withStudioRooms;
   window.casoraTileState = (tile, ent, hass, templates, rooms) => withHouseLights(rooms, () => tileState(tile, ent, hass, templates));
   const tileState = (tile, ent, hass, templates) => {
     // Entity list and Mehr (#59) have no entity: their text comes from the dashboard module.

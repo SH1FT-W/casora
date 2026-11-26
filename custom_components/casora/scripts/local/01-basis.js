@@ -800,31 +800,40 @@ window.casoraRoomTempOf = function (climateId, states, rooms) {
   return vals.length ? Math.round(vals.reduce(function (a, b) { return a + b; }, 0) / vals.length * 10) / 10 : null;
 };
 /* The sensors behind casoraRoomTempOf: the readable temp_sensor_N of the first room whose header lists the climate
-   entity ([] without one). */
+   entity, the overview ({ home: true }) only when no other room does ([] without one). */
 window.casoraRoomTempIds = function (climateId, states, rooms) {
   var S = states || {};
   if (typeof climateId !== 'string' || !climateId) return [];
   try {
+    /* The Studio's preview hands in the rooms being edited (casora-panel-types.js, casoraTileState). */
+    if (!rooms && typeof window._casoraRoomTempSource === 'function') rooms = window._casoraRoomTempSource();
     if (!rooms) {
       var cfg = window._casoraLovelaceCfg && window._casoraLovelaceCfg();
       var C = window._casoraRoomTempC;
       if (C && C.cfg === cfg && cfg) rooms = C.rooms;
       else {
         rooms = [];
-        if (cfg && Array.isArray(cfg.views)) cfg.views.forEach(function (v) {
-          (function find(x, d) {
-            if (!x || typeof x !== 'object' || d > 6) return;
-            if (Array.isArray(x)) { x.forEach(function (y) { find(y, d + 1); }); return; }
-            if ([].concat(x.template || []).indexOf('casora_room') > -1 && x.variables) { rooms.push({ vars: x.variables }); return; }
-            find(x.cards, d + 1);
-          })(v && v.cards, 0);
-        });
+        if (cfg && Array.isArray(cfg.views)) {
+          // The overview (path home, else the first view) lists every thermostat of the house (review 2026-11-26 u05-01).
+          var hv = cfg.views.filter(function (v) { return v && v.path === 'home'; })[0] || cfg.views[0];
+          cfg.views.forEach(function (v) {
+            (function find(x, d) {
+              if (!x || typeof x !== 'object' || d > 6) return;
+              if (Array.isArray(x)) { x.forEach(function (y) { find(y, d + 1); }); return; }
+              if ([].concat(x.template || []).indexOf('casora_room') > -1 && x.variables) { rooms.push({ vars: x.variables, home: v === hv }); return; }
+              find(x.cards, d + 1);
+            })(v && v.cards, 0);
+          });
+        }
         if (cfg && rooms.length) window._casoraRoomTempC = { cfg: cfg, rooms: rooms };
         if (!rooms.length && window.casoraPhoneRoom && window.casoraPhoneRoom.rooms) rooms = window.casoraPhoneRoom.rooms() || [];
       }
     }
-    for (var i = 0; i < rooms.length; i++) {
-      var V = (rooms[i] && rooms[i].vars) || {};
+    /* The rooms in their own order, the overview last: it reads its house sensor, a room listing the thermostat too
+       knows where it stands (review 2026-11-26 u05-01: the bath thermostat showed the house mean). */
+    var order = rooms.filter(function (r) { return !(r && r.home); }).concat(rooms.filter(function (r) { return r && r.home; }));
+    for (var i = 0; i < order.length; i++) {
+      var V = (order[i] && order[i].vars) || {};
       var mine = false;
       for (var k in V) if (/^climate_entity_\d+$/.test(k) && V[k] === climateId) { mine = true; break; }
       if (!mine) continue;
