@@ -4707,6 +4707,19 @@ const WEATHER_SVG = {
 };
 
 const TILE_TINT = "var(--casora-color-teal, #00C3D0)";
+// Weather glyph as the dashboard draws it (casora_room / casora_mobile_weather): the filled file when the design asks
+// for it (--casora-weather-glyph-fill: 1, Weich) and one exists (Prüfrunde d01-02: the preview showed the outline).
+const WEATHER_FILL = new Set(["cloudy", "partly-cloudy-day", "clear-night", "fog", "rain", "rain-heavy", "snow", "thunder",
+  "lightning-rainy", "weather-mixed"]);
+const weatherSrc = (cond, fill) => {
+  const f = WEATHER_SVG[String(cond || "").toLowerCase()];
+  return f ? "/casora_assets/weather/" + f + (fill && WEATHER_FILL.has(f) ? "-fill" : "") + ".svg" : null;
+};
+const weatherFillOn = () => {
+  try { return getComputedStyle(document.documentElement).getPropertyValue("--casora-weather-glyph-fill").trim() === "1"; } catch (e) { return false; }
+};
+// Circle of an unlocked lock tile, as casora_lock colors it (Weich: the warning orange; Prüfrunde d01-02).
+const LOCK_UNLOCKED_TINT = "var(--casora-lock-unlocked-color, var(--casora-popup-primary-color, #00c3d0))";
 
 // Fallback glyph per tile kind, for tiles that set no icon of their own.
 const TILE_ICON = {
@@ -11083,6 +11096,10 @@ class CasoraPanel extends HTMLElement {
         }
         .card.map.soft .mtile:not(.on) .mtgl circle { fill:#fff; }
         .card.map.soft .mtile:not(.on) .mtgl { opacity:1; }
+        /* Switch on (Prüfrunde d01-02): the dashboard's solid style, accent track with a white knob, not a dark cut-out. */
+        .card.map.soft .mtile.on .mtgl rect { fill:var(--casora-toggle-on-fill, var(--casora-lps-switch-on, #B67A50)); mask:none; }
+        .card.map.soft .mtile.on .mtgl circle { fill:#fff; }
+        .card.map.soft .mtile.on .mtgl { opacity:1; }
         /* Open wave: the dashboard's window below it (.mini-npreal.win). */
         .card.map.soft .mz-np { gap:0; max-height:none; overflow:visible; }
         /* The dashboard's own player strips (_npSoftInto) at the preview's scale: desktop/tablet sizes
@@ -25951,11 +25968,11 @@ class CasoraPanel extends HTMLElement {
       c.setAttribute("data-no-i18n", "");
       c.textContent = cond ? cond.charAt(0).toUpperCase() + cond.slice(1) : "";
       w.appendChild(t); w.appendChild(c);
-      const file = WEATHER_SVG[String((went && went.state) || "").toLowerCase()];
+      const wsrc = weatherSrc(went && went.state, weatherFillOn());
       const wg = document.createElement("img");
       wg.className = "mp-wglyph";
       wg.alt = "";
-      wg.src = file ? "/casora_assets/weather/" + file + ".svg" : iconUrl("weather");
+      wg.src = wsrc || iconUrl("weather");
       const wwrap = document.createElement("span");
       wwrap.className = "mp-wx";
       wwrap.appendChild(w);
@@ -26972,7 +26989,8 @@ class CasoraPanel extends HTMLElement {
           g.classList.toggle("spin", kind === "fan" && active);
           circle.style.setProperty("--sc", kind === "plant" && active
             ? "var(--casora-color-yellow, #FFCC00)"
-            : (TILE_COLOR[kind] || TILE_TINT));
+            : isLock && isUnlocked ? LOCK_UNLOCKED_TINT
+              : (TILE_COLOR[kind] || TILE_TINT));
         }
       }
       if (kind === "entity_actions") {
@@ -27058,7 +27076,7 @@ class CasoraPanel extends HTMLElement {
             + '<rect x="2" y="1" width="42" height="24" rx="12" fill="#fff"/>'
             + '<circle cx="32" cy="13" r="9" fill="#000"/></mask></defs>'
             + '<rect x="2" y="1" width="42" height="24" rx="12" fill="rgba(0,0,0,0.75)"'
-            + ' mask="url(#' + mid + ')"/></svg>'
+            + ' mask="url(#' + mid + ')"/><circle cx="32" cy="13" r="9" fill="none"/></svg>'
           : '<svg viewBox="0 0 46 26">'
             + '<rect x="2" y="1" width="42" height="24" rx="12" fill="none"'
             + ' stroke="rgba(255,255,255,0.8)" stroke-width="2"/>'
@@ -27389,11 +27407,11 @@ class CasoraPanel extends HTMLElement {
       wx.textContent = Math.round(deg) + "°";
       const wc = V.weather_entity && this._hass.states[V.weather_entity];
       const cond = wc ? String(wc.state || "").toLowerCase() : "";
-      const file = WEATHER_SVG[cond];
+      const wsrc = weatherSrc(cond, weatherFillOn());
       const g = document.createElement("img");
       g.className = "mini-wglyph";
       g.alt = "";
-      g.src = file ? "/casora_assets/weather/" + file + ".svg" : iconUrl("weather");
+      g.src = wsrc || iconUrl("weather");
       wx.appendChild(g);
       // Wetter → „Details anzeigen“: Zustand neben der Temperatur wie im Hero (nur Casora-Look,
       // per CSS an .card.map.soft gebunden; Hoch/Tief/Regen braucht die Vorhersage und fehlt hier).
