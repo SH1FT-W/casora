@@ -3289,11 +3289,11 @@
     ],
     [
       "^(.+) unscharf$",
-      "{1} desarmado"
+      "{=1} desarmado"
     ],
     [
       "^(.+) scharf · (.+)$",
-      "{1} armado · {2}"
+      "{=1} armado · {2}"
     ],
     [
       "^Wartet seit (.+)$",
@@ -3445,7 +3445,7 @@
     ],
     [
       "^(.+) Update verfügbar$",
-      "Atualização de {1} disponível"
+      "Atualização de {=1} disponível"
     ],
     [
       "^(.+) hat das Haus verlassen$",
@@ -3461,11 +3461,11 @@
     ],
     [
       "^(.+) ist gleich fertig$",
-      "{1} está quase pronto"
+      "{=1} está quase pronto"
     ],
     [
       "^(.+) läuft$",
-      "{1} a funcionar"
+      "{=1} a funcionar"
     ],
     [
       "^(.+) hat geklingelt$",
@@ -3477,23 +3477,23 @@
     ],
     [
       "^(.+) reinigt$",
-      "{1} a limpar"
+      "{=1} a limpar"
     ],
     [
       "^(.+) ist auf der Arbeit$",
-      "{1} está no trabalho"
+      "{=1} está no trabalho"
     ],
     [
       "^(.+) ist im (.+)$",
-      "{1} está em {2}"
+      "{=1} está em {=2}"
     ],
     [
       "^(.+) ist in der (.+)$",
-      "{1} está em {2}"
+      "{=1} está em {=2}"
     ],
     [
       "^(.+) ist am (.+)$",
-      "{1} está em {2}"
+      "{=1} está em {=2}"
     ],
     [
       "^(.+) ist bei (.+)$",
@@ -3505,7 +3505,7 @@
     ],
     [
       "^(.+) aktiv · (Zuhause|Abwesend|Nacht|Urlaub|Bypass)$",
-      "{1} ativo · {2}"
+      "{=1} ativo · {2}"
     ],
     [
       "^Alarm scharf – (.+)$",
@@ -3513,7 +3513,7 @@
     ],
     [
       "^(.+) braucht Wasser$",
-      "{1} precisa de água"
+      "{=1} precisa de água"
     ],
     [
       "^(.+) steht zu nass$",
@@ -3521,27 +3521,27 @@
     ],
     [
       "^(.+) braucht Dünger$",
-      "{1} precisa de adubo"
+      "{=1} precisa de adubo"
     ],
     [
       "^(.+) ist überdüngt$",
-      "{1} tem adubo a mais"
+      "{=1} tem adubo a mais"
     ],
     [
       "^(.+) braucht mehr Licht$",
-      "{1} precisa de mais luz"
+      "{=1} precisa de mais luz"
     ],
     [
       "^(.+) bekommt zu viel Sonne$",
-      "{1} apanha sol a mais"
+      "{=1} apanha sol a mais"
     ],
     [
       "^(.+) steht zu kalt$",
-      "{1} está com frio a mais"
+      "{=1} está com frio a mais"
     ],
     [
       "^(.+) steht zu warm$",
-      "{1} está com calor a mais"
+      "{=1} está com calor a mais"
     ],
     [
       "^(.+) steht in zu trockener Luft$",
@@ -3549,7 +3549,7 @@
     ],
     [
       "^(.+) steht in zu feuchter Luft$",
-      "{1}: ar demasiado húmido"
+      "{=1}: ar demasiado húmido"
     ],
     [
       "^(\\d+) Reinigungen$",
@@ -4281,11 +4281,11 @@
     ],
     [
       "^(.+) ausgeschaltet$",
-      "{1} desligado"
+      "{=1} desligado"
     ],
     [
       "^(.+) ausgelöst$",
-      "{1} disparado"
+      "{=1} disparado"
     ],
     [
       "^Vor (\\d+) Min\\.$",

@@ -3289,11 +3289,11 @@
     ],
     [
       "^(.+) unscharf$",
-      "{1} uitgeschakeld"
+      "{=1} uitgeschakeld"
     ],
     [
       "^(.+) scharf · (.+)$",
-      "{1} ingeschakeld · {2}"
+      "{=1} ingeschakeld · {2}"
     ],
     [
       "^Wartet seit (.+)$",
@@ -3445,7 +3445,7 @@
     ],
     [
       "^(.+) Update verfügbar$",
-      "{1} update beschikbaar"
+      "{=1} update beschikbaar"
     ],
     [
       "^(.+) hat das Haus verlassen$",
@@ -3461,11 +3461,11 @@
     ],
     [
       "^(.+) ist gleich fertig$",
-      "{1} is bijna klaar"
+      "{=1} is bijna klaar"
     ],
     [
       "^(.+) läuft$",
-      "{1} draait"
+      "{=1} draait"
     ],
     [
       "^(.+) hat geklingelt$",
@@ -3477,23 +3477,23 @@
     ],
     [
       "^(.+) reinigt$",
-      "{1} maakt schoon"
+      "{=1} maakt schoon"
     ],
     [
       "^(.+) ist auf der Arbeit$",
-      "{1} is op het werk"
+      "{=1} is op het werk"
     ],
     [
       "^(.+) ist im (.+)$",
-      "{1} is in {2}"
+      "{=1} is in {=2}"
     ],
     [
       "^(.+) ist in der (.+)$",
-      "{1} is in {2}"
+      "{=1} is in {=2}"
     ],
     [
       "^(.+) ist am (.+)$",
-      "{1} is bij {2}"
+      "{=1} is bij {=2}"
     ],
     [
       "^(.+) ist bei (.+)$",
@@ -3505,7 +3505,7 @@
     ],
     [
       "^(.+) aktiv · (Zuhause|Abwesend|Nacht|Urlaub|Bypass)$",
-      "{1} actief · {2}"
+      "{=1} actief · {2}"
     ],
     [
       "^Alarm scharf – (.+)$",
@@ -3513,7 +3513,7 @@
     ],
     [
       "^(.+) braucht Wasser$",
-      "{1} heeft water nodig"
+      "{=1} heeft water nodig"
     ],
     [
       "^(.+) steht zu nass$",
@@ -3521,27 +3521,27 @@
     ],
     [
       "^(.+) braucht Dünger$",
-      "{1} heeft voeding nodig"
+      "{=1} heeft voeding nodig"
     ],
     [
       "^(.+) ist überdüngt$",
-      "{1} is overbemest"
+      "{=1} is overbemest"
     ],
     [
       "^(.+) braucht mehr Licht$",
-      "{1} heeft meer licht nodig"
+      "{=1} heeft meer licht nodig"
     ],
     [
       "^(.+) bekommt zu viel Sonne$",
-      "{1} krijgt te veel zon"
+      "{=1} krijgt te veel zon"
     ],
     [
       "^(.+) steht zu kalt$",
-      "{1} staat te koud"
+      "{=1} staat te koud"
     ],
     [
       "^(.+) steht zu warm$",
-      "{1} staat te warm"
+      "{=1} staat te warm"
     ],
     [
       "^(.+) steht in zu trockener Luft$",
@@ -3549,7 +3549,7 @@
     ],
     [
       "^(.+) steht in zu feuchter Luft$",
-      "{1}: lucht te vochtig"
+      "{=1}: lucht te vochtig"
     ],
     [
       "^(\\d+) Reinigungen$",
@@ -4281,11 +4281,11 @@
     ],
     [
       "^(.+) ausgeschaltet$",
-      "{1} uitgeschakeld"
+      "{=1} uitgeschakeld"
     ],
     [
       "^(.+) ausgelöst$",
-      "{1} geactiveerd"
+      "{=1} geactiveerd"
     ],
     [
       "^Vor (\\d+) Min\\.$",

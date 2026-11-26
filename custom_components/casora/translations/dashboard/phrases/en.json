@@ -3271,11 +3271,11 @@
     ],
     [
       "^(.+) unscharf$",
-      "{1} disarmed"
+      "{=1} disarmed"
     ],
     [
       "^(.+) scharf · (.+)$",
-      "{1} armed · {2}"
+      "{=1} armed · {2}"
     ],
     [
       "^Wartet seit (.+)$",
@@ -3427,7 +3427,7 @@
     ],
     [
       "^(.+) Update verfügbar$",
-      "{1} update available"
+      "{=1} update available"
     ],
     [
       "^(.+) hat das Haus verlassen$",
@@ -3443,11 +3443,11 @@
     ],
     [
       "^(.+) ist gleich fertig$",
-      "{1} is almost done"
+      "{=1} is almost done"
     ],
     [
       "^(.+) läuft$",
-      "{1} running"
+      "{=1} running"
     ],
     [
       "^(.+) hat geklingelt$",
@@ -3459,23 +3459,23 @@
     ],
     [
       "^(.+) reinigt$",
-      "{1} cleaning"
+      "{=1} cleaning"
     ],
     [
       "^(.+) ist auf der Arbeit$",
-      "{1} is at work"
+      "{=1} is at work"
     ],
     [
       "^(.+) ist im (.+)$",
-      "{1} is at {2}"
+      "{=1} is at {=2}"
     ],
     [
       "^(.+) ist in der (.+)$",
-      "{1} is at {2}"
+      "{=1} is at {=2}"
     ],
     [
       "^(.+) ist am (.+)$",
-      "{1} is at {2}"
+      "{=1} is at {=2}"
     ],
     [
       "^(.+) ist bei (.+)$",
@@ -3487,7 +3487,7 @@
     ],
     [
       "^(.+) aktiv · (Zuhause|Abwesend|Nacht|Urlaub|Bypass)$",
-      "{1} active · {2}"
+      "{=1} active · {2}"
     ],
     [
       "^Alarm scharf – (.+)$",
@@ -3495,7 +3495,7 @@
     ],
     [
       "^(.+) braucht Wasser$",
-      "{1} needs water"
+      "{=1} needs water"
     ],
     [
       "^(.+) steht zu nass$",
@@ -3503,27 +3503,27 @@
     ],
     [
       "^(.+) braucht Dünger$",
-      "{1} needs fertilizer"
+      "{=1} needs fertilizer"
     ],
     [
       "^(.+) ist überdüngt$",
-      "{1} is over-fertilized"
+      "{=1} is over-fertilized"
     ],
     [
       "^(.+) braucht mehr Licht$",
-      "{1} needs more light"
+      "{=1} needs more light"
     ],
     [
       "^(.+) bekommt zu viel Sonne$",
-      "{1} gets too much sun"
+      "{=1} gets too much sun"
     ],
     [
       "^(.+) steht zu kalt$",
-      "{1} is too cold"
+      "{=1} is too cold"
     ],
     [
       "^(.+) steht zu warm$",
-      "{1} is too warm"
+      "{=1} is too warm"
     ],
     [
       "^(.+) steht in zu trockener Luft$",
@@ -3531,7 +3531,7 @@
     ],
     [
       "^(.+) steht in zu feuchter Luft$",
-      "{1}: air too humid"
+      "{=1}: air too humid"
     ],
     [
       "^(\\d+) Reinigungen$",
@@ -4263,11 +4263,11 @@
     ],
     [
       "^(.+) ausgeschaltet$",
-      "{1} turned off"
+      "{=1} turned off"
     ],
     [
       "^(.+) ausgelöst$",
-      "{1} triggered"
+      "{=1} triggered"
     ],
     [
       "^Vor (\\d+) Min\\.$",
