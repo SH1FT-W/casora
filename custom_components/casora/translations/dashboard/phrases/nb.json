@@ -3023,7 +3023,8 @@
     "Bis zum nächsten Wechsel": "Til neste endring",
     "Wartet": "Venter",
     "Ein Profil braucht mindestens ein Zeitfenster": "En profil trenger minst ett tidsvindu",
-    "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "Tidsplanen er endret i mellomtiden, rediger den på nytt"
+    "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "Tidsplanen er endret i mellomtiden, rediger den på nytt",
+    "Noch keine Geräte": "Ingen enheter ennå"
   },
   "patterns": [
     [

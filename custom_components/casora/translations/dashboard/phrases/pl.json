@@ -3030,7 +3030,8 @@
     "Bis zum nächsten Wechsel": "Do następnej zmiany",
     "Wartet": "Czeka",
     "Ein Profil braucht mindestens ein Zeitfenster": "Profil potrzebuje co najmniej jednego przedziału",
-    "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "Harmonogram zmienił się w międzyczasie, edytuj go ponownie"
+    "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "Harmonogram zmienił się w międzyczasie, edytuj go ponownie",
+    "Noch keine Geräte": "Jeszcze brak urządzeń"
   },
   "patterns": [
     [

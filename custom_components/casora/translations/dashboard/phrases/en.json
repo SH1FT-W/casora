@@ -3012,7 +3012,8 @@
     "Bis zum nächsten Wechsel": "Until the next change",
     "Wartet": "Waiting",
     "Ein Profil braucht mindestens ein Zeitfenster": "A profile needs at least one time slot",
-    "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "The schedule has changed in the meantime, please edit it again"
+    "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "The schedule has changed in the meantime, please edit it again",
+    "Noch keine Geräte": "No devices yet"
   },
   "patterns": [
     [
