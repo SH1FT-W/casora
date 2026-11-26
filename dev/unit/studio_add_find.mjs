@@ -3,7 +3,9 @@
 // same names get the device; E05 the waste tile asks for its calendar first and its optional sensor lists only
 // waste sensors; E06 the preview shows the waste text without an entity; E30 "Entity list" reads "Geräteliste";
 // T12 a new chart asks no random sensors and takes the sensor's name.
+// u08-03 plants are found in the device search.
 //   node dev/unit/studio_add_find.mjs
+// @deckt: custom_components/casora/panel/casora-panel-b-ux.js#BY_DOMAIN,WORDS,typeFor
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -162,4 +164,20 @@ const panel = () => {
   assert.equal(de['Entity list'], 'Geräteliste');
   ['Tile types', 'New tile of this type', 'Waste sensor', 'Scene'].forEach((k) => assert.ok(de[k], 'de: ' + k));
   console.log('ok add: wording');
+}
+
+// ── u08-03: plants are found by name and by "Pflanze", like "Other tile type › Plant" lists them ──
+{
+  const PL = 'plant.yucca_test';
+  const p = panel();
+  p._hass = { ...hass, states: { ...states, [PL]: st(PL, 'problem', { friendly_name: 'Yucca' }) },
+    entities: { ...entities, [PL]: { entity_id: PL, platform: 'plant', area_id: 'bath' } } };
+  const list = p._uxDevices();
+  const pl = list.find((c) => c.entity === PL);
+  assert.ok(pl, 'plant offered in the device search');
+  assert.equal(pl.type, 'plant', 'as a plant tile');
+  assert.equal(pl.area, 'Bath');
+  assert.equal(U.rankDevices(list, 'Yucca', 5)[0], pl, '"Yucca" finds it');
+  assert.equal(U.rankDevices(list, 'Pflanze', 5)[0], pl, '"Pflanze" finds it');
+  console.log('ok add: plants');
 }
