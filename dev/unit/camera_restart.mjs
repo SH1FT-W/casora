@@ -55,4 +55,12 @@ assert.equal(alert(seen('off', '2026-11-26T10:00:00+00:00')), '');
 const gone = { ...real }; delete gone[sensor];
 assert.equal(alert(gone), '');
 assert.equal(alert(seen('on', new Date(started + 4 * 60000).toISOString())), '', 'off, no state, on: shows nothing either');
+
+// An event is dated by its own time stamp (its state), not by last_changed: the state HA restores after a restart is the
+// old time stamp, so it cannot fake a detection, and a real event in the first minutes after the start must still count.
+const event = 'event.test_item_31';
+assert.equal(window.casoraDetectionAt(event, real[event].state, null, real[event].last_changed, hass), Date.parse(real[event].state), 'the restored event is dated by its old time stamp, not by the restart (the detection window drops it)');
+const quick = new Date(started + 20000).toISOString();
+now = started + 60000;
+assert.equal(window.casoraDetectionAt(event, quick, real[event].state, quick, hass), Date.parse(quick), 'an event fired a minute after the start is a detection');
 Date.now = realNow;

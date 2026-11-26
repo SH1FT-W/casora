@@ -15195,8 +15195,9 @@ window.casoraMenuGlass = {
     var now = Date.now();
     if (at > now) at = at - now <= 2 * 60000 ? now : null;
     if (at === null) return null;
-    // A change in HA's start window is the restart, not a detection (casoraSinceMs says null for such a time).
-    if (hass && typeof window.casoraSinceMs === 'function' && window.casoraSinceMs({ entity_id: id, last_changed: new Date(at).toISOString() }, hass) === null) return null;
+    // A binary_sensor change in HA's start window is the restart, not a detection (casoraSinceMs says null for such a time).
+    // An event is dated by its own time stamp: a restored one is old, so a real event just after the start still counts.
+    if (hass && String(id).indexOf('event.') !== 0 && typeof window.casoraSinceMs === 'function' && window.casoraSinceMs({ entity_id: id, last_changed: new Date(at).toISOString() }, hass) === null) return null;
     return at;
   };
 })();
