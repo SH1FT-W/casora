@@ -9742,8 +9742,10 @@ class CasoraPanel extends HTMLElement {
         }
         .tile.shut { padding-bottom:0; }
         .card.shut { padding-top:0; padding-bottom:0; }
+        /* 6px above and below inside the row's height (Prüfrunde d05-10): a one-line row stays --shut-h high, a
+           description that wraps grows the row instead of touching the hairlines. */
         .card.shut > .chead {
-          margin:0 calc(var(--card-pad-h) * -1); padding:0 var(--card-pad-h);
+          margin:0 calc(var(--card-pad-h) * -1); padding:6px var(--card-pad-h); box-sizing:border-box;
           min-height:var(--shut-h); align-content:center;
         }
 

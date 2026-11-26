@@ -521,7 +521,12 @@
     :host(.bmode.bdirty.phone:not(.flow)) .toprow > .bedited.mlink {
       display:inline-flex; position:absolute; top:calc(100% - 4px); margin:0 !important; z-index:3;
       font-size:12px; font-weight:600; line-height:1.2; color:var(--accent, #94603B); background:var(--bg, transparent); }
-    :host(.bmode.bdirty.phone:not(.flow)) .toprow > .bedited.mlink { top:calc(100% - 10px); padding:4px 10px; border-radius:999px;
+    /* Phone (Prüfrunde d05-08): the pill sat over the 44px search circle and almost on the Desktop/Tablet/Phone
+       switch. Its line is kept free below the header row, always, so nothing moves on the first change. */
+    :host(.bmode.phone:not(.flow)) .toprow { margin-bottom:26px; }
+    /* The page below the fixed header starts that much lower too (casora-panel.js pads it by a fixed 56px). */
+    :host(.bmode.phone:not(.split):not(.flow)) .body { padding-top:calc(max(8px, env(safe-area-inset-top, 0px)) + 56px + 26px + var(--casora-mobile-chrome-drop, 4px)); }
+    :host(.bmode.bdirty.phone:not(.flow)) .toprow > .bedited.mlink { top:calc(100% + 2px); padding:4px 10px; border-radius:999px;
       color:#f5f5f7; background:rgba(28,28,30,.72); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
       box-shadow:0 1px 4px rgba(0,0,0,.18); }
     :host(.is-light.bmode.bdirty.phone:not(.flow)) .toprow > .bedited.mlink { color:#1d1d1f; background:rgba(255,255,255,.86); }
