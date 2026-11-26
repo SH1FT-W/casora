@@ -74,6 +74,7 @@ Bis zur Wahl gilt der heutige Stand der Nachbarstellen, nicht die Empfehlung.
 | Meldung / Push-Meldung | alert / push notification | Benachrichtigung (nur HA-eigene) | „Keine Meldungen“ |
 | Handy | phone | Telefon, Smartphone, Mobil | „Handy-Layout“ |
 | Desktop / Tablet | desktop / tablet | Computer, PC | „Desktop-Einstellungen“ |
+| Wandtablet (Mehrzahl Wandtablets) | wall tablet | Wand-Tablet | „Was ein Wandtablet zeigt …“ |
 | Szene | scene | Stimmung | „Szene speichern“ |
 | Lampe (Gerät) / Beleuchtung (Bereich) | lamp / lighting | Leuchte, Licht für ein einzelnes Gerät in Popups (Entscheidung 03.11.2026) | Licht-Popup: Titel „Beleuchtung“, Liste „Lampen im Raum · 2 von 5 an“, Rad „Ø von 3 Lampen“, Haus „Räume · 4 von 17 Lampen an“ |
 | Design | design | Theme (nur „Hemma-Theme“ als Eigenname) | „Design wechseln“ |

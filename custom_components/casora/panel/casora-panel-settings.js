@@ -880,7 +880,7 @@
         let g = this._flowGroup(host, { header: t("Which AI"),
           footer: mcp
             ? t("Casora's AI features wait for your assistant: ask it to do Casora's open AI jobs. Casora Studio's own AI steps still need an AI task.")
-            : t("Empty: the default AI from Settings → AI tasks.") });
+            : t("Automatic: the default AI from Settings → AI tasks.") });
         ctlRow(this, g, t("Who answers"), t("An AI task in Home Assistant, or your own assistant connected over MCP."),
           [this._combo(mcp ? MCP : "task", ["task", MCP], "", (v) => {
             if (!v || v === (mcp ? MCP : "task")) return;
@@ -916,7 +916,7 @@
         ar.row.appendChild(area);
       } else if (page === "outdoor") {
         let g = this._flowGroup(host, { header: t("Outdoor values"),
-          footer: t("Empty: Casora finds outdoor sensors by their name.") });
+          footer: t("Automatic: Casora finds outdoor sensors by their name.") });
         ctlRow(this, g, t("Outdoor temperature"), t("A sensor outside, for ventilation and heating tips."), [entPick(this, cs, "outdoor_temperature", ["sensor"], ["temperature"])]);
         ctlRow(this, g, t("Outdoor humidity"), t("A sensor outside, for ventilation tips."), [entPick(this, cs, "outdoor_humidity", ["sensor"], ["humidity"])]);
         g = this._flowGroup(host, { header: t("Electricity price"),
