@@ -20010,7 +20010,8 @@
           "--casora-icon-fallback-color": "var(--casora-tone-heat, var(--casora-color-orange, #FF9F0A))"
         }
       ]
-    }
+    },
+    "name": "[[[\n  const esc = window.casoraEsc || ((t) => String(t ?? '').replace(/[&<>\"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', \"'\": '&#39;' }[c])));\n  /* Wie button-cards eigener Standard (Anzeigename, sonst Objekt-ID). Ohne Entität: Ersatzname der\n     Vorlage (variables.casora_default_name), nur wenn das Design --casora-tile-fallback-name: 1 setzt\n     (Weich, Fix-Runde 1 A-15) – sonst wie bisher ohne Namen. */\n  if (entity) {\n    const a = entity.attributes || {};\n    /* Smart Heating Control (Prüfrunde u08-01): the entity is the room's Decision sensor („Bad Entscheidung“) – the tile\n       is named after its room (room_name); popup title and the schedule page's head take the tile's name. */\n    const room = String(a.room_name || '').trim();\n    if (room) return esc(room);\n    return esc(a.friendly_name ? a.friendly_name : entity.entity_id.substr(entity.entity_id.indexOf('.') + 1));\n  }\n  let on = false;\n  try { on = (window.casoraRootVar || ((n) => getComputedStyle(document.documentElement).getPropertyValue(n)))('--casora-tile-fallback-name').trim() === '1'; } catch (e) {}\n  return on ? esc(variables.casora_default_name || '') : '';\n]]]\n"
   },
   "casora_popup_smart_heating": {
     "template": [

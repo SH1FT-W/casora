@@ -698,7 +698,8 @@
       const seen = new Set();
       // Config/diagnostic entities stay out, device_trackers not (HA marks them all diagnostic, issue #25).
       const category = I.listCategory || ((id, e) => e.entity_category);
-      const push = (id, name, suggested) => {
+      // first: the given name wins over the registry's (a Decision sensor's registry name is „Decision“, Prüfrunde u08-01).
+      const push = (id, name, suggested, first) => {
         if (seen.has(id) || !S[id]) return;
         const e = R[id];
         if (e && (e.hidden || category(id, e) || e.disabled_by)) return;
@@ -725,7 +726,7 @@
         const dv = e && e.device_id && D[e.device_id];
         // A scene is a scene, not an "Entity with buttons" (E15, T14).
         const scene = id.startsWith("scene.");
-        out.push({ entity: id, name: own || name || (S[id].attributes || {}).friendly_name || id, area: aid && A[aid] ? A[aid].name : "",
+        out.push({ entity: id, name: (first && name) || own || name || (S[id].attributes || {}).friendly_name || id, area: aid && A[aid] ? A[aid].name : "",
           dev: dv ? String(dv.name_by_user || dv.name || "") : "", scene,
           roomIndex: ri, type, kind: scene ? tr("Scene") : label(type), fresh: !used.has(id), suggested: !!suggested, here: ri === this._room,
           // Entität ohne Gerät, aber selbst einem Bereich zugeordnet: bewusst dorthin gelegt – zählt
@@ -750,7 +751,7 @@
       if (typeIds.has("casora_velair") && W.casoraVelairFind) W.casoraVelairFind.climates(h).forEach((id) => push(id, "", "casora_velair"));
       // Smart Heating Control (community card #240, when added): one tile per room on its Decision sensor (casoraShcFind),
       // named after the room (the sensor itself is „<room> Decision“).
-      if (typeIds.has("casora_smart_heating") && W.casoraShcFind) W.casoraShcFind.rooms(h).forEach((id) => push(id, String(((S[id] || {}).attributes || {}).room_name || ""), "casora_smart_heating"));
+      if (typeIds.has("casora_smart_heating") && W.casoraShcFind) W.casoraShcFind.rooms(h).forEach((id) => push(id, String(((S[id] || {}).attributes || {}).room_name || ""), "casora_smart_heating", true));
       // Shopping list (community card #82, when added): Bring! lists and to-do lists named like a shopping list – other
       // to-do lists (chores, projects) are picked in the tile's own field.
       if (typeIds.has("casora_shopping")) Object.keys(S).forEach((id) => {

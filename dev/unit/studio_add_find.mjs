@@ -181,3 +181,21 @@ const panel = () => {
   assert.equal(U.rankDevices(list, 'Pflanze', 5)[0], pl, '"Pflanze" finds it');
   console.log('ok add: plants');
 }
+
+// ── u08-01: a Smart Heating room is named after its room, also when the registry names the sensor „Decision“ ──
+{
+  const DEC = 'sensor.test_room_decision';
+  const keep = window.casoraShcFind, keepOn = window.casoraCommunityOn;
+  window.casoraShcFind = { present: () => true, rooms: () => [DEC] };
+  window.casoraCommunityOn = new Set(['casora_smart_heating']);
+  const p = panel();
+  p._hass = { ...hass, states: { ...states, [DEC]: st(DEC, 'schedule', { friendly_name: 'Test Room Decision', room_name: 'Test Room' }) },
+    entities: { ...entities, [DEC]: { entity_id: DEC, platform: 'advanced_climate', translation_key: 'decision', name: 'Decision' } } };
+  const c = p._uxDevices().find((x) => x.entity === DEC);
+  window.casoraShcFind = keep;
+  window.casoraCommunityOn = keepOn;
+  assert.ok(c, 'room offered');
+  assert.equal(c.type, 'casora_smart_heating');
+  assert.equal(c.name, 'Test Room', 'named after the room, not the registry name');
+  console.log('ok add: smart heating room name');
+}

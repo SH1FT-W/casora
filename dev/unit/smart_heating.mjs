@@ -331,6 +331,18 @@ assert.ok(day.label.indexOf('Heute') === 0, day.label);
 assert.equal(day.rows.filter((r) => r.active).length, 1, 'the slot running now is lit');
 assert.equal(today >= 0, true);
 
+// u08-01: a tile without its own name is named after the room (room_name), not „<room> Decision“ (friendly_name);
+// popup title and the schedule page's head take the tile's name.
+{
+  const TPL = JSON.parse(fs.readFileSync(new URL('../../dashboards/casora/button_card_templates.json', import.meta.url), 'utf8'));
+  // button-card: the tile's own template wins over the ones it inherits.
+  const expr = (TPL.casora_smart_heating.name || TPL.casora_entity.name).trim().replace(/^\[\[\[/, '').replace(/\]\]\]$/, '');
+  const nameOf = (st) => new Function('entity', 'variables', 'states', 'hass', expr)(st, {}, {}, null);
+  assert.equal(nameOf({ entity_id: ID, state: 'schedule', attributes: attrs({ friendly_name: 'Test Room Decision' }) }), 'Test Room');
+  assert.equal(nameOf({ entity_id: ID, state: 'unavailable', attributes: { friendly_name: 'Test Room Decision' } }), 'Test Room Decision',
+    'without room_name: the entity name as before');
+}
+
 // No emojis in the module (popup-richtlinien-v3 §4.8: MDI only).
 const src = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/51-smart-heating.js', import.meta.url), 'utf8');
 assert.ok(!/\p{Extended_Pictographic}/u.test(src), 'no emoji');
