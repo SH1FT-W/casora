@@ -1,4 +1,4 @@
-// @deckt: custom_components/casora/scripts/local/46-screensaver.js#wakeEntity,wakeScreen,wakePhase,wakeMsg,screenSwitch,nightSpot,nightHtml,wake,wakeNow,_wakeSync,vars
+// @deckt: custom_components/casora/scripts/local/46-screensaver.js#wakeEntity,wakeScreen,wakePhase,wakeMsg,wakeEdge,screenSwitch,_screenOn,hide,nightSpot,nightHtml,wake,wakeNow,_wakeSync,vars
 // Wake on presence (46-screensaver.js): a binary_sensor picked in the Studio (casora_screensaver_wake) ends the
 // screensaver when it turns on. By day Home shows, at night (22–5) only a dimmed clock. One subscribe_entities
 // subscription for that sensor, none while nothing is picked or on a phone; the outside API is
@@ -17,7 +17,7 @@ class FakeDate extends Date {
 }
 
 // A small page: one dashboard (hui-root), a hass with a connection that records subscriptions.
-const boot = ({ search = '?casora_saver=1', tablet = false, vars = {} } = {}) => {
+const boot = ({ search = '?casora_saver=1', tablet = false, vars = {}, fully = null } = {}) => {
   const subs = [], calls = [], pushed = [], timers = [];
   const el = () => {
     const e = { style: {}, children: [], attrs: {}, isConnected: true, innerHTML: '', removed: false,
@@ -33,7 +33,7 @@ const boot = ({ search = '?casora_saver=1', tablet = false, vars = {} } = {}) =>
     },
   };
   const hass = { states: { 'binary_sensor.hall_motion': { state: 'off', attributes: {} }, 'switch.tab_screen': { state: 'off', attributes: {} } },
-    entities: { 'switch.tab_screen': { platform: 'fully_kiosk', translation_key: 'screen_on' } }, devices: {}, locale: { time_format: '24' }, themes: {},
+    entities: { 'switch.tab_screen': { platform: 'fully_kiosk', translation_key: 'screen_on', area_id: 'hall' }, 'binary_sensor.hall_motion': { area_id: 'hall' } }, devices: {}, locale: { time_format: '24' }, themes: {},
     connection: conn, callService: (d, s, data) => { calls.push([d, s, data]); return Promise.resolve(); } };
   const cfg = { views: [{ path: 'home', cards: [{ variables: Object.assign({ casora_screensaver_kind: 'wort' }, vars) }] }, { path: 'kitchen', cards: [] }] };
   const rootEl = { isConnected: true, lovelace: { editMode: false, config: cfg } };
@@ -41,6 +41,7 @@ const boot = ({ search = '?casora_saver=1', tablet = false, vars = {} } = {}) =>
     querySelector: (t) => (t === 'hui-root' ? rootEl : t === 'home-assistant' ? { hass } : null), querySelectorAll: () => [] };
   const loc = { search, pathname: '/casora-dash/kitchen' };
   const win = { matchMedia: () => ({ matches: false }), addEventListener() {}, dispatchEvent() {}, casoraIsWallTablet: () => tablet };
+  if (fully) win.fully = fully;
   win.document = doc;
   const box = { window: win, document: doc, console, Intl, Date: FakeDate, Math, parseFloat, isFinite, isNaN, parseInt, String, Number, JSON, Object, Array, Promise,
     setInterval: (fn) => { timers.push(fn); return timers.length; }, clearInterval() {}, setTimeout: () => 0, clearTimeout() {}, location: loc,
@@ -48,7 +49,7 @@ const boot = ({ search = '?casora_saver=1', tablet = false, vars = {} } = {}) =>
   vm.createContext(box);
   vm.runInContext(SRC, box);
   const loop = timers[timers.length - 1];
-  return { S: win._casoraSaver, win, cfg, hass, subs, calls, pushed, loop, loc };
+  return { S: win._casoraSaver, win, doc, cfg, hass, subs, calls, pushed, loop, loc };
 };
 const tick = () => new Promise((ok) => setImmediate(ok));
 
@@ -71,7 +72,18 @@ const tick = () => new Promise((ok) => setImmediate(ok));
   // Fully Kiosk's screen switch: the only one; with several the one in the sensor's area; none = leave it.
   const ent = (area, extra) => Object.assign({ platform: 'fully_kiosk', translation_key: 'screen_on', area_id: area }, extra);
   const st = { 'switch.a_screen': { state: 'off' }, 'switch.b_screen': { state: 'off' }, [id]: { state: 'off' } };
-  assert.equal(S.screenSwitch({ entities: { 'switch.a_screen': ent('hall') }, states: st }, id), 'switch.a_screen');
+  assert.equal(S.screenSwitch({ entities: { 'switch.a_screen': ent('hall'), [id]: { area_id: 'hall' } }, states: st }, id), 'switch.a_screen');
+  // Review 26.11.: the only Fully tablet in the house is not this tablet when the sensor hangs elsewhere (or nowhere).
+  assert.equal(S.screenSwitch({ entities: { 'switch.a_screen': ent('hall') }, states: st }, id), null, 'sensor without a room: none');
+  assert.equal(S.screenSwitch({ entities: { 'switch.a_screen': ent('hall'), [id]: { area_id: 'kitchen' } }, states: st }, id), null, 'the only one, other room: none');
+  // Only a real off → on wakes, not unavailable/unknown → on, and not again within the gap.
+  assert.equal(S.wakeEdge('off', 'on', 0, 1e9), true);
+  assert.equal(S.wakeEdge('unavailable', 'on', 0, 1e9), false, 'unavailable → on (restart, dropout)');
+  assert.equal(S.wakeEdge('unknown', 'on', 0, 1e9), false);
+  assert.equal(S.wakeEdge(null, 'on', 0, 1e9), false, 'the first message');
+  assert.equal(S.wakeEdge('on', 'on', 0, 1e9), false);
+  assert.equal(S.wakeEdge('off', 'on', 1e9 - 10000, 1e9), false, 'flicker within the gap');
+  assert.equal(S.wakeEdge('off', 'on', 1e9 - S.WAKE_GAP, 1e9), true, 'after the gap');
   assert.equal(S.screenSwitch({ entities: { 'switch.a_screen': ent('hall'), 'switch.b_screen': ent('kitchen'), [id]: { area_id: 'kitchen' } }, states: st }, id), 'switch.b_screen');
   assert.equal(S.screenSwitch({ entities: { 'switch.a_screen': ent('hall'), 'switch.b_screen': ent('kitchen') }, states: st }, id), null, 'several, none in the room: none');
   assert.equal(S.screenSwitch({ entities: { 'switch.a_screen': { platform: 'other' } }, states: st }, id), null, 'not Fully Kiosk');
@@ -152,5 +164,74 @@ const tick = () => new Promise((ok) => setImmediate(ok));
   p.subs[0].cb({ c: { 'binary_sensor.hall_motion': { '+': { s: 'on' } } } });
   assert.equal(p.S.shown(), false, 'morning: woken');
   assert.equal(p.calls.length, 0, 'screen switch untouched');
+}
+
+
+// Review 26.11.: a tablet in use is left alone. No screensaver on show: only after the screensaver time untouched.
+{
+  clock = Date.parse('2026-11-23T10:00:00');
+  const p = boot({ search: '', tablet: true, vars: { casora_screensaver: '5', casora_screensaver_wake: 'binary_sensor.hall_motion' } });
+  p.loop();
+  await tick();
+  const fire = (s) => p.subs[0].cb({ c: { 'binary_sensor.hall_motion': { '+': { s } } } });
+  p.subs[0].cb({ a: { 'binary_sensor.hall_motion': { s: 'off' } } });
+  clock += 3 * 60000; // reading a recipe for three minutes, no touch
+  fire('on');
+  assert.deepEqual([...p.pushed], [], 'in use (3 of 5 minutes): stays on the recipe');
+  assert.equal(p.S.shown(), false);
+  assert.equal(p.calls.length, 0, 'no screen switch either');
+  clock += 3 * 60000; fire('off'); fire('on');
+  assert.deepEqual([...p.pushed], ['/casora-dash/home'], 'idle past the screensaver time: Home');
+  // A camera's live picture opened from the screensaver: the viewer's own motion does not close it.
+  clock += 60000;
+  p.S.show(p.cfg);
+  const lyr = p.doc.body.children[p.doc.body.children.length - 1];
+  let closed = 0;
+  lyr._close = () => { closed++; };
+  fire('off'); fire('on');
+  assert.equal(p.S.shown(), true, 'live camera: the screensaver stays');
+  assert.equal(closed, 0, 'and the camera stays open');
+  lyr._close = null;
+  clock += 60000; fire('off'); fire('on');
+  assert.equal(p.S.shown(), false, 'without the camera it wakes');
+  // unavailable → on (HA restart, dropout) and a flicker within the gap wake nothing.
+  clock += 60000;
+  p.S.show(p.cfg);
+  fire('unavailable'); fire('on');
+  assert.equal(p.S.shown(), true, 'unavailable → on: no wake');
+  fire('off'); fire('on');
+  assert.equal(p.S.shown(), false, 'a real off → on wakes');
+  p.S.show(p.cfg);
+  clock += 5000; fire('off'); fire('on');
+  assert.equal(p.S.shown(), true, 'again within 30 s: no wake');
+}
+
+// Review 26.11.: at night a Fully Kiosk screen is only switched on dimmed; its brightness comes back afterwards.
+{
+  clock = Date.parse('2026-11-23T23:10:00');
+  const log = [];
+  let bright = 180;
+  const fully = { turnScreenOn: () => log.push('on'), getScreenBrightness: () => bright, setScreenBrightness: (b) => { bright = b; log.push('b' + b); } };
+  const p = boot({ search: '', tablet: true, vars: { casora_screensaver_wake: 'binary_sensor.hall_motion' }, fully });
+  p.S.show(p.cfg);
+  assert.equal(p.S.wakeNow(new Date(clock)), 'night');
+  assert.deepEqual(log, ['b8', 'on'], 'dimmed first, then on');
+  assert.equal(p.calls.length, 0, 'no service call on the device itself');
+  p.S.hide();
+  assert.equal(bright, 180, 'brightness back after the night clock');
+  // Fully without brightness calls: the screen stays as it is at night.
+  const log2 = [];
+  const q = boot({ search: '', tablet: true, vars: { casora_screensaver_wake: 'binary_sensor.hall_motion' }, fully: { turnScreenOn: () => log2.push('on') } });
+  q.S.show(q.cfg);
+  q.S.wakeNow(new Date(clock));
+  assert.deepEqual(log2, [], 'cannot dim: not switched on');
+  assert.equal(q.S.shown(), true, 'the night clock still shows');
+  // Only the integration's switch: at night it stays off (a full backlight is no night clock); by day it goes on.
+  const r = boot({ search: '', tablet: true, vars: { casora_screensaver_wake: 'binary_sensor.hall_motion' } });
+  r.S.show(r.cfg);
+  r.S.wakeNow(new Date(clock));
+  assert.equal(r.calls.length, 0, 'night: switch left off');
+  r.S._screenOn(r.hass, 'binary_sensor.hall_motion', false);
+  assert.deepEqual(JSON.parse(JSON.stringify(r.calls)), [['switch', 'turn_on', { entity_id: 'switch.tab_screen' }]], 'day: switch on');
 }
 console.log('screensaver_wake: ok');

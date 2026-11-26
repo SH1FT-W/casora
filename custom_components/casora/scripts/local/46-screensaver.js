@@ -1443,8 +1443,12 @@
     if (Array.isArray(msg.r) && msg.r.indexOf(id) > -1) return 'unavailable';
     return null;
   };
-  // Fully Kiosk's „Screen“ switch for this tablet (HA's fully_kiosk integration), only if there is one: the only one,
-  // else the one in the wake sensor's area (the sensor hangs in the tablet's room). Null = leave the screen alone.
+  // Is this message a wake? Only a real off → on (not unavailable/unknown → on after a restart or a dropout), and
+  // not again within WAKE_GAP of the last one (a flickering sensor).
+  S.WAKE_GAP = 30000;
+  S.wakeEdge = function (prev, s, lastAt, now) { return prev === 'off' && s === 'on' && !(now - (lastAt || 0) < S.WAKE_GAP); };
+  // Fully Kiosk's „Screen“ switch (HA's fully_kiosk integration) of the tablet in the wake sensor's room: exactly one
+  // in the sensor's area, never „the only one in the house“ (that may be a tablet elsewhere). Null = leave it alone.
   S.screenSwitch = function (hass, sensor) {
     var R = (hass && hass.entities) || {}, D = (hass && hass.devices) || {}, S0 = (hass && hass.states) || {};
     var areaOf = function (id) { var r = R[id]; return r ? (r.area_id || (D[r.device_id] || {}).area_id || null) : null; };
@@ -1452,7 +1456,6 @@
       var r = R[id];
       return r && r.platform === 'fully_kiosk' && id.indexOf('switch.') === 0 && S0[id] && (r.translation_key === 'screen_on' || /_screen$/.test(id));
     }).sort();
-    if (list.length === 1) return list[0];
     var a = areaOf(sensor);
     var here = a ? list.filter(function (id) { return areaOf(id) === a; }) : [];
     return here.length === 1 ? here[0] : null;
@@ -1516,6 +1519,7 @@
   };
   var hide = function () {
     if (!layer) return;
+    if (layer._night) undim();
     if (layer._close) layer._close();
     if (live) { live.destroy(); live = null; }
     layer.remove();
@@ -1524,6 +1528,13 @@
     bump();
   };
   S.hide = hide;
+  // The brightness a night wake lowered on a Fully Kiosk screen comes back (screenOn below).
+  var undim = function () {
+    if (undimTo == null) return;
+    var b = undimTo;
+    undimTo = null;
+    try { window.fully.setScreenBrightness(b); } catch (e) { /* left dim until Fully resets it */ }
+  };
   var haptic = function (k) { if (typeof window.casoraHaptic === 'function') window.casoraHaptic(k); };
   // Over the screensaver: the live picture of a camera; a tap closes it.
   var LCSS = '.cs-sv-over{position:absolute;inset:0;z-index:2;color:#F6EFE6;font-family:var(--primary-font-family, var(--ha-font-family, system-ui, sans-serif));-webkit-user-select:none;user-select:none;}'
@@ -1643,16 +1654,24 @@
     return home && parts.length ? '/' + parts[0] + '/' + (home.path || '0') : null;
   };
   var norm = function (p) { return String(p || '').replace(/\/+$/, '') || '/'; };
-  // Someone came into the room (the wake sensor turned on). Only on a tablet at rest: while someone uses it (a touch
-  // in the last two minutes, a popup open) nothing changes.
+  // A tablet at rest: the screensaver is on show (without a camera's live picture someone opened from it), or the
+  // page is hidden (screen off), or nobody touched it for the screensaver time (10 minutes without one). Someone
+  // reading a recipe or watching a camera without touching it is not at rest.
+  var resting = function (vars) {
+    if (layer) return !layer._close;
+    if (document.hidden) return true;
+    var mins = S.minutes(vars && vars.casora_screensaver) || 10;
+    return Date.now() - lastUse >= mins * 60000;
+  };
+  // Someone came into the room (the wake sensor turned on). Only on a tablet at rest; a popup open: nothing changes.
   S.wakeNow = function (now) {
     var cfg = config();
     if (OFF || !cfg || (!FORCE && !isTablet())) return '';
     if (window.casoraPopup && window.casoraPopup.surface) return '';
-    if (!layer && Date.now() - lastUse < 120000) return '';
     var vars = S.vars(cfg), hass = hassOf();
-    if (S.wakeScreen(vars)) screenOn(hass, S.wakeEntity(vars));
+    if (!resting(vars)) return '';
     var phase = S.wakePhase((now || new Date()).getHours());
+    if (S.wakeScreen(vars)) screenOn(hass, S.wakeEntity(vars), phase === 'night');
     if (phase === 'night') {
       if (layer && layer._night) return phase;
       if (layer) hide();
@@ -1670,17 +1689,34 @@
     return phase;
   };
   // The screen of a Fully Kiosk tablet: its own JavaScript interface when the page runs in it, else the integration's
-  // „Screen“ switch (only one that is off; S.screenSwitch).
-  var screenOn = function (hass, sensor) {
-    try { if (window.fully && typeof window.fully.turnScreenOn === 'function') { window.fully.turnScreenOn(); return; } } catch (e) { /* not this device */ }
+  // „Screen“ switch in the sensor's room (only when it is off; S.screenSwitch). At night only dimmed: Fully's
+  // interface lowers the brightness first (the old one comes back when the night clock ends); where it cannot
+  // (the integration's switch, no brightness calls) the screen is left as it is, a dark screen stays dark.
+  var undimTo = null;
+  S.NIGHT_BRIGHTNESS = 8; // of 255
+  var screenOn = function (hass, sensor, night) {
+    var f = window.fully;
+    try {
+      if (f && typeof f.turnScreenOn === 'function') {
+        if (night) {
+          if (typeof f.setScreenBrightness !== 'function' || typeof f.getScreenBrightness !== 'function') return;
+          var b = Number(f.getScreenBrightness());
+          if (undimTo == null && isFinite(b) && b > S.NIGHT_BRIGHTNESS) undimTo = b;
+          f.setScreenBrightness(S.NIGHT_BRIGHTNESS);
+        }
+        f.turnScreenOn();
+        return;
+      }
+    } catch (e) { return; /* Fully refused: leave the screen */ }
+    if (night) return;
     var sw = S.screenSwitch(hass, sensor), st = sw && hass.states[sw];
     if (st && st.state === 'off' && typeof hass.callService === 'function') {
       Promise.resolve(hass.callService('switch', 'turn_on', { entity_id: sw })).catch(function () { /* the screen stays as it is */ });
     }
   };
   // One subscription for the picked sensor (subscribe_entities, only that entity): no polling. A new pick, or none,
-  // ends the old one. The first message is the current state and wakes nothing; only off → on does.
-  var wakeId = '', wakeUnsub = null, wakeLast = null, wakeGen = 0;
+  // ends the old one. The first message is the current state and wakes nothing; only off → on does (S.wakeEdge).
+  var wakeId = '', wakeUnsub = null, wakeLast = null, wakeGen = 0, wakeAt = 0;
   var wakeSync = function (cfg) {
     var hass = hassOf();
     var want = !OFF && cfg && (FORCE || isTablet()) ? S.wakeEntity(S.vars(cfg)) : '';
@@ -1694,13 +1730,14 @@
       if (s == null || gen !== wakeGen) return;
       var prev = wakeLast;
       wakeLast = s;
-      if (prev != null && prev !== 'on' && s === 'on') S.wakeNow();
+      if (S.wakeEdge(prev, s, wakeAt, Date.now())) { wakeAt = Date.now(); S.wakeNow(); }
     }, { type: 'subscribe_entities', entity_ids: [want] })).then(function (u) {
       if (gen !== wakeGen) { try { u(); } catch (e) { /* closed */ } return; }
       wakeUnsub = u;
     }, function () { /* refused: no retry loop; a new pick tries again */ });
   };
   S._wakeSync = wakeSync;
+  S._screenOn = screenOn;
   setInterval(function () {
     if (OFF) return;
     var cfg = config();

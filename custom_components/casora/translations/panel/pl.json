@@ -3208,7 +3208,7 @@
     "Wake on": "Wybudzaj przez",
     "Tablets only. When this sensor sees someone, the screensaver ends and Home shows. At night only a dimmed clock appears.": "Tylko tablety. Gdy ten czujnik kogoś zobaczy, wygaszacz się kończy i pojawia się Dom. W nocy pojawia się tylko przyciemniony zegar.",
     "Turn the screen on": "Włącz ekran",
-    "With Fully Kiosk Browser: also switches the tablet's screen on.": "Z Fully Kiosk Browser: włącza też ekran tabletu."
+    "With Fully Kiosk Browser: also switches the tablet's screen on. At night only dimmed, or not at all.": "Z Fully Kiosk Browser: włącza też ekran tabletu. W nocy tylko przyciemniony albo wcale."
   },
   "patterns": [
     [

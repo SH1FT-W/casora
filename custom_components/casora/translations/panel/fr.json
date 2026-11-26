@@ -3208,7 +3208,7 @@
     "Wake on": "Réveiller avec",
     "Tablets only. When this sensor sees someone, the screensaver ends and Home shows. At night only a dimmed clock appears.": "Tablettes uniquement. Quand ce capteur voit quelqu'un, l'économiseur d'écran s'arrête et l'accueil s'affiche. La nuit, seule une horloge tamisée apparaît.",
     "Turn the screen on": "Allumer l'écran",
-    "With Fully Kiosk Browser: also switches the tablet's screen on.": "Avec Fully Kiosk Browser : allume aussi l'écran de la tablette."
+    "With Fully Kiosk Browser: also switches the tablet's screen on. At night only dimmed, or not at all.": "Avec Fully Kiosk Browser : allume aussi l'écran de la tablette. La nuit seulement tamisé, ou pas du tout."
   },
   "patterns": [
     [

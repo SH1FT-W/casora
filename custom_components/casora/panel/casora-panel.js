@@ -2662,7 +2662,7 @@ const SECTIONS = [
         hint: "Tablets only. When this sensor sees someone, the screensaver ends and Home shows. At night only a dimmed clock appears." },
       { key: "casora_screensaver_wake_screen", sub: "chrome", label: "Turn the screen on", type: "bool", boolDefault: true, auto: true, scope: "dashboard",
         when: (v) => !!v.casora_screensaver_wake,
-        hint: "With Fully Kiosk Browser: also switches the tablet's screen on." },
+        hint: "With Fully Kiosk Browser: also switches the tablet's screen on. At night only dimmed, or not at all." },
       // Halten auf Kacheln (22-halten.js): leer = Schnellmenü. casora-core.js setzt daraus window._casoraHoldMode,
       // ans Handy geht es über casora_mobile_bg. Je Kachel überstimmbar (variables.hold_mode, Kachel-Inspektor).
       { key: "hold_mode", sub: "hold", label: "Hold on tiles", type: "select", auto: true, scope: "dashboard",

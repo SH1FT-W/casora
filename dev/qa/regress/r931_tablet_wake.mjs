@@ -53,6 +53,15 @@ await page.evaluate(() => window._casoraSaver.start());
 await wait(1000);
 await check('Bildschirmschoner läuft', await page.evaluate(() => window._casoraSaver.shown()));
 const hour = await page.evaluate(() => new Date().getHours());
+// Review 26.11.: unavailable → on (HA restart, a Zigbee dropout) is no wake; only a real off → on.
+await rest('POST', { state: 'unavailable', attributes: { friendly_name: 'QA Flur Bewegung', device_class: 'motion' } });
+await wait(1500);
+await rest('POST', { state: 'on', attributes: { friendly_name: 'QA Flur Bewegung', device_class: 'motion' } });
+await wait(2500);
+const flap = await page.evaluate(() => ({ shown: window._casoraSaver.shown(), night: !!document.querySelector('.cs-sv-layer .cs-night'), path: location.pathname }));
+await check('unavailable → on weckt nicht', flap.shown && !flap.night, JSON.stringify(flap));
+await rest('POST', { state: 'off', attributes: { friendly_name: 'QA Flur Bewegung', device_class: 'motion' } });
+await wait(1500);
 await rest('POST', { state: 'on', attributes: { friendly_name: 'QA Flur Bewegung', device_class: 'motion' } });
 await wait(2500);
 const after = await page.evaluate(() => ({ shown: window._casoraSaver.shown(), night: !!document.querySelector('.cs-sv-layer .cs-night'), path: location.pathname }));
