@@ -1059,6 +1059,8 @@
         + ".themecard[aria-disabled=true]{opacity:.45;cursor:not-allowed}"
         + ".bs-lock{margin:12px 4px 0;font-size:var(--t-foot);color:var(--ink-3,rgba(255,255,255,.5));text-align:center}"
         + ".flowin.casora-bwide{max-width:1180px}"
+        // Fill your rooms in the Studio's sheet (u01-08): the three choices side by side, as on the full page.
+        + "@container (min-width:640px){.flowin.fwide:has(.bs-fill){max-width:none}.flowin .themegrid.bs-fill{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}}"
         + ".bs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;text-align:left}"
         + ".bs-room{padding:14px;border-radius:var(--r-l);background:var(--casora-popup-row-fill,rgba(255,255,255,.08))}"
         + ".bs-room>b{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:var(--t-callout);font-weight:600;color:var(--ink);margin:0 2px 8px}"
@@ -1094,9 +1096,9 @@
         back: o.back,
       });
       css(this.shadowRoot);
-      s.box.classList.add("fwide");
+      s.box.classList.add("fwide", "casora-uwide");   // the sheet as wide as for the preview after it: three choices side by side (u01-08)
       s.box.style.setProperty("--fcols", 3);
-      const grid = el("div", "themegrid", s.body);
+      const grid = el("div", "themegrid bs-fill", s.body);
       let best = null;
       const cards = [];
       const paint = () => cards.forEach((c) => c.setAttribute("aria-checked", c.dataset.k === pick ? "true" : "false"));

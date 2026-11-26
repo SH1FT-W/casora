@@ -34,6 +34,9 @@ await check('step 1 is a sheet', (await mode()) === 'sheet', await mode());
 await need('to step 2', await primary(/^(Weiter|Continue)$/));
 await need('step 2: fill rooms', await until(() => window.__pierce('.themecard[data-k=auto]').some((e) => e.offsetParent)));
 await check('step 2 stays a sheet (no full page)', (await mode()) === 'sheet', await mode());
+await page.waitForTimeout(800);   // the sheet widens with a transition (.38 s)
+const tops = await H(() => window.__pierce('.themecard').filter((e) => e.offsetParent).map((e) => Math.round(e.getBoundingClientRect().top)));
+await check('step 2: the three choices side by side, as on the full page', tops.length === 3 && new Set(tops).size === 1, tops);
 await shot('u01-08 step 2 sheet');
 // Back: the same sheet with X again.
 await H(() => { const b = window.__pierce('.fnav').find((x) => x.offsetParent && /Back|Zurück/.test(x.getAttribute('aria-label') || '')); b && b.click(); });
