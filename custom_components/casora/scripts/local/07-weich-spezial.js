@@ -74,6 +74,8 @@
   };
   window._casoraMediaSoft = {
     srcRules: srcRules,
+    // The cover's accent for any player wheel (the media badge's too, Prüfrunde d03-13).
+    tint: tintCss,
     // pic: the cover being shown (null without one) – tints the play button.
     css: function (pic) {
       return '<style>'

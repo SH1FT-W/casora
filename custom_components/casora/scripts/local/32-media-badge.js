@@ -203,7 +203,8 @@
         console: UI.mediaConsole ? UI.mediaConsole(a, top.id) : null },
       svc: vol != null ? { domain: 'media_player', service: 'volume_set', field: 'volume_level', scale: [0, 1, 0.01], showPct: true, target: { entity_id: top.id } } : null,
       // One control per thing (review 2, DD-27): play/pause stays in the player's row of the list „Läuft“, no second pill.
-      extra: info });
+      // The ring in the cover's colour like the player's own popup (owner 01.11.2026; Prüfrunde d03-13: here it stayed blue).
+      extra: (pic && window._casoraMediaSoft && window._casoraMediaSoft.tint ? window._casoraMediaSoft.tint(pic) : '') + info });
   };
 
   B.sec = function (part, C, states, hass) {
