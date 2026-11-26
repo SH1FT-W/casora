@@ -29,12 +29,16 @@ async function glyph(page, i) {
     const ring = []; for (let a = 0; a < 360; a += 10) { const t = a * Math.PI / 180;
       ring.push(px(Math.min(W - 1, Math.round(W / 2 + 0.85 * R * Math.cos(t))), Math.min(H - 1, Math.round(H / 2 + 0.85 * R * Math.sin(t))))); }
     ring.sort((p, q) => (p[0] + p[1] + p[2]) - (q[0] + q[1] + q[2])); const bg = ring[ring.length >> 1];
-    let y0 = 1e9, y1 = -1, ink = 0;
+    // Ink as covered area, not colour distance: since d01-01 (26.11.2026, intended) the symbol is dark on light circles
+    // (green, yellow, orange) and white on the others, so the same stroke reads as more or less „ink“ by its colour
+    // alone. Each pixel counts by its share of the glyph's full contrast (dd / strongest dd).
+    let y0 = 1e9, y1 = -1, ink = 0, top = 0; const dds = [];
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       if ((x - W / 2) ** 2 + (y - H / 2) ** 2 > (0.78 * R) ** 2) continue;
       const p = px(x, y); const dd = (Math.abs(p[0] - bg[0]) + Math.abs(p[1] - bg[1]) + Math.abs(p[2] - bg[2])) / 3;
-      if (dd > 40) { y0 = Math.min(y0, y); y1 = Math.max(y1, y); ink += dd / 255; }
+      if (dd > 40) { y0 = Math.min(y0, y); y1 = Math.max(y1, y); dds.push(dd); top = Math.max(top, dd); }
     }
+    for (const dd of dds) ink += dd / top;
     return { h: y1 < 0 ? 0 : (y1 - y0 + 1) / s, ink: ink / s / s, cell: w };
   }, [png.toString('base64'), r.w]);
 }
