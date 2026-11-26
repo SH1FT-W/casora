@@ -280,7 +280,7 @@
 
     /* ── Handy: untere Leiste lesbar, auch dunkel ──────────────────── */
     :host(.bmode.phone) .bbar button:not(.bplus) { color:var(--ink, #1c1c1e); }
-    :host(.bmode.phone:not(.is-light)) .bbar { background:var(--pane-solid, rgba(29,31,37,.97)); }
+    :host(.bmode.phone) .bbar { background:var(--pane-solid, rgba(29,31,37,.97)); }
     :host(.bmode.phone:not(.is-light)) .bbar button:not(.bplus) { color:rgba(255,255,255,.92); }
     :host(.bmode.phone) .bscrim { animation:bFade .22s ease; }
     @keyframes bFade { from { opacity:0; } }
