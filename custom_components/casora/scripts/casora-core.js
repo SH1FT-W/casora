@@ -15614,7 +15614,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     var html = '<div class="cpn">'
       // Long file names and entity ids wrap instead of running out of the popup (fam-06).
       + '<style>.cpn{font-size:15px;line-height:1.5;color:var(--casora-popup-tiles-text-primary,var(--primary-text-color));text-align:left;white-space:normal;overflow-wrap:anywhere;min-width:0}'
-      + '.cpn code{word-break:break-all}'
+      + '.cpn code{overflow-wrap:anywhere}'
       + '.cpn p{margin:0 0 10px}.cpn ul{margin:0 0 10px;padding-left:20px}.cpn a{color:var(--casora-accent,var(--primary-color));word-break:break-word}'
       + '.cpn code{font-size:.92em;padding:1px 5px;border-radius:6px;background:var(--casora-popup-row-fill,rgba(127,127,127,.14))}'
       + '.cpn .when{font-size:13px;color:var(--casora-popup-tiles-text-secondary,var(--secondary-text-color));margin:0 0 14px}'

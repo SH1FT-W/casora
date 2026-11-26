@@ -39,7 +39,7 @@ function fakeHass({ admin = true, pending = ALL, related = {}, automations = {},
           case 'search/related': return related[m.item_id] || {};
           case 'automation/config': return { config: automations[m.entity_id] };
           case 'script/config': return { config: scripts[m.entity_id] };
-          case 'lovelace/dashboards/list': return Object.keys(dashboards).filter((u) => u !== '').map((u) => ({ url_path: u, mode: 'storage' }));
+          case 'lovelace/dashboards/list': return Object.keys(dashboards).filter((u) => u !== '').map((u) => ({ url_path: u, mode: 'storage', title: u === 'my-dash' ? 'My Dash' : undefined }));
           case 'lovelace/config': {
             const k = m.url_path || '';
             if (!(k in dashboards)) throw { code: 'config_not_found' };
@@ -123,7 +123,8 @@ const report = (log) => log.find((x) => x.type === 'casora/legacy/report');
   assert.deepEqual(r.kept, {
     casora_restart_toggle: { reason: 'in_use', by: ['automation.restart_button'] },
     casora_light_smart_toggle: { reason: 'in_use', by: ['script.mine'] },
-    casora_thermostat_overlay_toggle: { reason: 'in_use', by: ['dashboard my-dash'] },
+    // u09-12: the dashboard by its title (the notification names it), not „dashboard <url_path>“.
+    casora_thermostat_overlay_toggle: { reason: 'in_use', by: ['dashboard:My Dash'] },
     casora_actions_overlay_toggle: { reason: 'not_in_scripts_yaml' },
   });
   // A script id that only shares the beginning (…_toggle_2) is no use of the old one.

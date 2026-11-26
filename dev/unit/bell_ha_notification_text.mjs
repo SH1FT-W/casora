@@ -46,4 +46,7 @@ const html = opened[0].content.custom_fields.b;
 assert.ok(html.includes('<b>' + TITLE + '</b>'), 'full title in the content');
 P.showPn('n2');
 assert.ok(!opened[1].content.custom_fields.b.includes('<b>Kurz</b>'), 'a short title fits the head, not repeated');
+// u09-12: an ID in code breaks only where it has to, not in the middle of every word („dashboard-hem / ma“).
+assert.ok(!core.includes(".cpn code{word-break:break-all}"), 'no break-all for code in the notification popup');
+assert.ok(core.includes(".cpn code{overflow-wrap:anywhere}"), 'code wraps where it must');
 console.log('ok bell ha notification text');

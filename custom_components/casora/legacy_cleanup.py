@@ -106,6 +106,7 @@ TEXT: dict[str, dict[str, str]] = {
         "script": "1 Skript aus einer früheren Version",
         "file": "die Datei {path}",
         "end": "Casora braucht sie nicht mehr.",
+        "end_one": "Casora braucht das nicht mehr.",
         "kept": "Behalten hat Casora:",
         "file_failed": "Die Datei {path} ließ sich nicht löschen. Casora braucht sie nicht mehr, du kannst sie selbst löschen.",
         "in_use": "wird noch verwendet",
@@ -113,6 +114,7 @@ TEXT: dict[str, dict[str, str]] = {
         "not_in_scripts_yaml": "steht nicht in scripts.yaml",
         "failed": "ließ sich nicht löschen",
         "by": "von",
+        "dashboard": "Dashboard „{name}“",
         "and": "und",
     },
     "en": {
@@ -122,6 +124,7 @@ TEXT: dict[str, dict[str, str]] = {
         "script": "1 script from an earlier version",
         "file": "the file {path}",
         "end": "Casora no longer needs them.",
+        "end_one": "Casora no longer needs it.",
         "kept": "Casora kept:",
         "file_failed": "The file {path} could not be deleted. Casora no longer needs it, you can delete it yourself.",
         "in_use": "is still in use",
@@ -129,6 +132,7 @@ TEXT: dict[str, dict[str, str]] = {
         "not_in_scripts_yaml": "is not in scripts.yaml",
         "failed": "could not be deleted",
         "by": "by",
+        "dashboard": "dashboard \"{name}\"",
         "and": "and",
     },
     "es": {
@@ -138,6 +142,7 @@ TEXT: dict[str, dict[str, str]] = {
         "script": "1 script de una versión anterior",
         "file": "el archivo {path}",
         "end": "Casora ya no los necesita.",
+        "end_one": "Casora ya no lo necesita.",
         "kept": "Casora ha conservado:",
         "file_failed": "No se pudo eliminar el archivo {path}. Casora ya no lo necesita, puedes eliminarlo tú.",
         "in_use": "aún se usa",
@@ -145,6 +150,7 @@ TEXT: dict[str, dict[str, str]] = {
         "not_in_scripts_yaml": "no está en scripts.yaml",
         "failed": "no se pudo eliminar",
         "by": "en",
+        "dashboard": "panel «{name}»",
         "and": "y",
     },
     "fr": {
@@ -154,6 +160,7 @@ TEXT: dict[str, dict[str, str]] = {
         "script": "1 script d'une version précédente",
         "file": "le fichier {path}",
         "end": "Casora n'en a plus besoin.",
+        "end_one": "Casora n'en a plus besoin.",
         "kept": "Casora a conservé :",
         "file_failed": "Le fichier {path} n'a pas pu être supprimé. Casora n'en a plus besoin, tu peux le supprimer toi-même.",
         "in_use": "est encore utilisé",
@@ -161,6 +168,7 @@ TEXT: dict[str, dict[str, str]] = {
         "not_in_scripts_yaml": "n'est pas dans scripts.yaml",
         "failed": "n'a pas pu être supprimé",
         "by": "par",
+        "dashboard": "tableau de bord « {name} »",
         "and": "et",
     },
     "it": {
@@ -170,6 +178,7 @@ TEXT: dict[str, dict[str, str]] = {
         "script": "1 script di una versione precedente",
         "file": "il file {path}",
         "end": "Casora non ne ha più bisogno.",
+        "end_one": "Casora non ne ha più bisogno.",
         "kept": "Casora ha mantenuto:",
         "file_failed": "Non è stato possibile eliminare il file {path}. Casora non ne ha più bisogno, puoi eliminarlo tu.",
         "in_use": "è ancora in uso",
@@ -177,6 +186,7 @@ TEXT: dict[str, dict[str, str]] = {
         "not_in_scripts_yaml": "non è in scripts.yaml",
         "failed": "non è stato possibile eliminarlo",
         "by": "da",
+        "dashboard": "dashboard «{name}»",
         "and": "e",
     },
     "nl": {
@@ -186,6 +196,7 @@ TEXT: dict[str, dict[str, str]] = {
         "script": "1 script uit een eerdere versie",
         "file": "het bestand {path}",
         "end": "Casora heeft ze niet meer nodig.",
+        "end_one": "Casora heeft het niet meer nodig.",
         "kept": "Casora heeft behouden:",
         "file_failed": "Het bestand {path} kon niet worden verwijderd. Casora heeft het niet meer nodig, je kunt het zelf verwijderen.",
         "in_use": "wordt nog gebruikt",
@@ -193,6 +204,7 @@ TEXT: dict[str, dict[str, str]] = {
         "not_in_scripts_yaml": "staat niet in scripts.yaml",
         "failed": "kon niet worden verwijderd",
         "by": "door",
+        "dashboard": "dashboard „{name}”",
         "and": "en",
     },
     "pl": {
@@ -202,6 +214,7 @@ TEXT: dict[str, dict[str, str]] = {
         "script": "1 skrypt z wcześniejszej wersji",
         "file": "plik {path}",
         "end": "Casora już ich nie potrzebuje.",
+        "end_one": "Casora już tego nie potrzebuje.",
         "kept": "Casora zachowała:",
         "file_failed": "Nie udało się usunąć pliku {path}. Casora już go nie potrzebuje, możesz usunąć go samodzielnie.",
         "in_use": "jest nadal używany",
@@ -209,6 +222,7 @@ TEXT: dict[str, dict[str, str]] = {
         "not_in_scripts_yaml": "nie znajduje się w scripts.yaml",
         "failed": "nie udało się go usunąć",
         "by": "przez",
+        "dashboard": "pulpit „{name}”",
         "and": "i",
     },
     "pt": {
@@ -218,6 +232,7 @@ TEXT: dict[str, dict[str, str]] = {
         "script": "1 script de uma versão anterior",
         "file": "o ficheiro {path}",
         "end": "O Casora já não precisa deles.",
+        "end_one": "O Casora já não precisa dele.",
         "kept": "O Casora manteve:",
         "file_failed": "Não foi possível apagar o ficheiro {path}. O Casora já não precisa dele, podes apagá-lo tu.",
         "in_use": "ainda está em uso",
@@ -225,6 +240,7 @@ TEXT: dict[str, dict[str, str]] = {
         "not_in_scripts_yaml": "não está em scripts.yaml",
         "failed": "não foi possível apagá-lo",
         "by": "por",
+        "dashboard": "painel «{name}»",
         "and": "e",
     },
     "nb": {
@@ -234,6 +250,7 @@ TEXT: dict[str, dict[str, str]] = {
         "script": "1 skript fra en tidligere versjon",
         "file": "filen {path}",
         "end": "Casora trenger dem ikke lenger.",
+        "end_one": "Casora trenger det ikke lenger.",
         "kept": "Casora har beholdt:",
         "file_failed": "Filen {path} kunne ikke slettes. Casora trenger den ikke lenger, du kan slette den selv.",
         "in_use": "er fortsatt i bruk",
@@ -241,6 +258,7 @@ TEXT: dict[str, dict[str, str]] = {
         "not_in_scripts_yaml": "står ikke i scripts.yaml",
         "failed": "kunne ikke slettes",
         "by": "av",
+        "dashboard": "dashbord «{name}»",
         "and": "og",
     },
 }
@@ -250,11 +268,21 @@ def _lang(language: Any) -> dict[str, str]:
     return TEXT.get(str(language or "")[:2], TEXT["en"])
 
 
-def notification_text(news: dict, language: Any) -> tuple[str, str] | None:
+def _user_of(by: str, t: dict[str, str], names: dict[str, str]) -> str:
+    """What uses a kept script, in words: a dashboard by its title, an automation or script by its name."""
+    for lead in ("dashboard:", "dashboard "):  # "dashboard <url_path>" from reports before 26.11.30
+        if by.startswith(lead):
+            return t["dashboard"].format(name=by[len(lead):])
+    return names.get(by) or f"`{by}`"
+
+
+def notification_text(news: dict, language: Any, names: dict[str, str] | None = None) -> tuple[str, str] | None:
     """(title, message) for what happened, or None when there is nothing to tell.
 
-    news: {"theme": {"path": str, "removed": bool}?, "removed": [object_id], "kept": {object_id: {...}}}"""
+    news: {"theme": {"path": str, "removed": bool}?, "removed": [object_id], "kept": {object_id: {...}}}
+    names: entity_id -> friendly name, so kept scripts and what uses them read as words (u09-12)."""
     t = _lang(language)
+    names = names or {}
     removed = list(news.get("removed") or [])
     kept = dict(news.get("kept") or {})
     theme = news.get("theme") or None
@@ -266,15 +294,18 @@ def notification_text(news: dict, language: Any) -> tuple[str, str] | None:
     lines = []
     if parts:
         joined = parts[0] if len(parts) == 1 else f"{parts[0]} {t['and']} {parts[1]}"
-        lines.append(f"{t['intro']} {joined}. {t['end']}")
+        count = len(removed) + (1 if theme and theme.get("removed") else 0)
+        lines.append(f"{t['intro']} {joined}. {t['end_one'] if count == 1 else t['end']}")
     # E28 (test 2): what is gone is only counted – a list of script IDs means nothing to anyone (kept ones are
     # still named, the user may act on them).
     if kept:
         rows = []
         for o, info in kept.items():
             reason = t.get(str((info or {}).get("reason")), t["failed"])
-            by = [str(b) for b in (info or {}).get("by") or []][:5]
-            rows.append(f"- `script.{o}`: {reason}" + (f" ({t['by']} " + ", ".join(f"`{b}`" for b in by) + ")" if by else ""))
+            by = [_user_of(str(b), t, names) for b in (info or {}).get("by") or []][:5]
+            name = names.get(f"script.{o}")
+            label = f"{name} (`script.{o}`)" if name else f"`script.{o}`"
+            rows.append(f"- {label}: {reason}" + (f" ({t['by']} " + ", ".join(by) + ")" if by else ""))
         lines.append(t["kept"] + "\n" + "\n".join(rows))
     if theme and not theme.get("removed"):
         lines.append(t["file_failed"].format(path=f"`{theme['path']}`"))
@@ -336,7 +367,10 @@ async def _tell(hass: HomeAssistant, rt: _Cleanup) -> None:
     news = rt.data.get("news") or {}
     if rt.pending or not news:
         return
-    text = notification_text(news, hass.config.language)
+    ids = {f"script.{o}" for o in (news.get("kept") or {})}
+    ids |= {str(b) for i in (news.get("kept") or {}).values() for b in (i or {}).get("by") or []}
+    names = {e: st.name for e in ids if (st := hass.states.get(e)) is not None and st.name}
+    text = notification_text(news, hass.config.language, names)
     rt.data["news"] = {}
     await rt.save()
     if text:
