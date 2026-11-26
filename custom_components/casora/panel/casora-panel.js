@@ -2704,7 +2704,7 @@ const SECTIONS = [
         hint: "Pull down at the top of the phone's Home to show a search field: rooms, devices and scenes. On a computer, Cmd+K or Ctrl+K opens the same search." },
       { key: "room_groups", sub: "phone", label: "Group rooms by category on the phone", type: "bool",
         boolDefault: false, auto: true, scope: "dashboard",
-        hint: "Like Apple's Home app: Light, Climate, Security … each with a small heading. Off shows all devices under one heading." },
+        hint: "Like Apple's Home app: Light, Climate, Security … each with a small heading, in rooms with at least four tiles of two or more kinds. Off shows all devices under one heading." },
       { key: "performance", sub: "perf", label: "Performance mode", type: "select",
         auto: true, scope: "dashboard",
         options: ["", "auto", "on"],
@@ -10242,6 +10242,11 @@ class CasoraPanel extends HTMLElement {
           opacity:0.72; margin-top:18px; margin-bottom:-2px;
         }
         .miniphone .mp-head.mp-group.first { margin-top:14px; }
+        /* #245: why a room keeps one heading although "Group rooms by category" is on (Studio only, not on the phone). */
+        .miniphone .mp-rgnote {
+          margin:10px 2px 0; padding:6px 9px; border-radius:9px; font-size:11.5px; line-height:1.35;
+          color:rgba(255,255,255,0.82); background:rgba(255,255,255,0.10); border:1px dashed rgba(255,255,255,0.28);
+        }
         .miniphone .mp-head {
           display:flex; align-items:center; gap:4px; height:24px;
           color:#fff; font-size:var(--ph-head); font-weight:700;
@@ -26407,6 +26412,18 @@ class CasoraPanel extends HTMLElement {
           body.appendChild(row);
         });
       } else if (roomTiles.length) {
+        // #245: the switch is on but this room stays flat (filter-overlay.js _roomGroupSplit). Say why, here where
+        // people look, so nobody has to guess the rule. Only in the Studio preview, never on the phone.
+        if (RG && rgOn) {
+          const tr = (x) => (window.casoraI18n ? window.casoraI18n.t(x) : x);
+          const note = document.createElement("div");
+          note.className = "mp-rgnote";
+          note.dataset.rgnote = roomTiles.length < RG.minTiles ? "few" : "one-kind";
+          note.textContent = tr(roomTiles.length < RG.minTiles
+            ? "No category headings in this room: that needs at least four tiles."
+            : "No category headings in this room: all its tiles are of one kind.");
+          body.appendChild(note);
+        }
         if (scenes.length) {
           const head = document.createElement("div");
           head.className = "mp-head";
