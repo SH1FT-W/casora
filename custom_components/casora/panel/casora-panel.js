@@ -1140,6 +1140,9 @@ const markAutoHome = (room) => {
   room.name = HOME_ROOM_NAME;
   return room;
 };
+// ⌘Z goes to a text field only when it was typed into since it got the focus (u02-05).
+const fieldOwnsUndo = (t, typed) => !!t
+  && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || !!t.isContentEditable) && typed.has(t);
 // Anzeigename eines Raums (Liste, Editor, Vorschau, Versionen).
 const roomLabel = (room, rooms, hass) => {
   if (!room) return "";
@@ -13475,11 +13478,16 @@ class CasoraPanel extends HTMLElement {
       ev.preventDefault();
       this._save();
     });
+    // Fields typed into since they got the focus keep ⌘Z for themselves; an untouched field (the device field that
+    // opens by itself after adding a tile) has nothing to undo, so the Studio undoes (Prüfrunde u02-05).
+    const typed = new WeakSet();
+    const target = (ev) => (ev.composedPath ? ev.composedPath()[0] : ev.target);
+    this._gOn(document, "focusin", (ev) => { const t = target(ev); if (t) typed.delete(t); });
+    this._gOn(document, "input", (ev) => { const t = target(ev); if (t) typed.add(t); });
     this._gOn(document, "keydown", (ev) => {
       if (!(ev.metaKey || ev.ctrlKey) || ev.shiftKey || ev.altKey || String(ev.key).toLowerCase() !== "z") return;
       if (!this.isConnected || !(this._undoStack || []).length) return;
-      const t = ev.composedPath ? ev.composedPath()[0] : ev.target;
-      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+      if (fieldOwnsUndo(target(ev), typed)) return;
       ev.preventDefault();
       this._undo();
     });
