@@ -150,15 +150,21 @@ async def ws_get(hass: HomeAssistant, connection: websocket_api.ActiveConnection
 def camera_records(value: Any) -> list[dict[str, Any]]:
     """Cameras of the Studio: identity (entity, device, name) and detection triggers, nothing else.
 
-    A camera without a string entity_id is dropped; the trigger list keeps only non-empty strings.
+    A camera without a non-empty string entity_id is dropped, and so is a repeat of a camera (the first one
+    wins); the trigger list keeps each non-empty string once.
     """
     out: list[dict[str, Any]] = []
+    seen: set[str] = set()
     for camera in value if isinstance(value, list) else []:
-        if not isinstance(camera, dict) or not isinstance(camera.get("entity_id"), str):
+        if not isinstance(camera, dict):
             continue
+        entity_id = camera.get("entity_id")
+        if not isinstance(entity_id, str) or not entity_id or entity_id in seen:
+            continue
+        seen.add(entity_id)
         clean: dict[str, Any] = {k: camera[k] for k in ("entity_id", "device_id", "name") if isinstance(camera.get(k), str)}
         triggers = camera.get("detection_triggers")
-        kept = [t for t in triggers if isinstance(t, str) and t] if isinstance(triggers, list) else []
+        kept = list(dict.fromkeys(t for t in triggers if isinstance(t, str) and t)) if isinstance(triggers, list) else []
         if kept:
             clean["detection_triggers"] = kept
         out.append(clean)
