@@ -2376,6 +2376,15 @@ function expandPair(pair, parts) {
 // ─── form schema ──────────────────────────────────────────────────────────────
 
 const E = (key, label, domains) => ({ key, label, domains });
+// Choices of a wall tablet's own sensor (casora_screensaver_wake): the ones in the area of a Fully Kiosk tablet first
+// (HA's fully_kiosk integration knows its device and room), then the rest in the order they came.
+const tabletRoomFirst = (hass, list) => {
+  const R = (hass && hass.entities) || {}, D = (hass && hass.devices) || {};
+  const areaOf = (id) => { const r = R[id]; return r ? (r.area_id || (D[r.device_id] || {}).area_id || null) : null; };
+  const areas = new Set(Object.keys(R).filter((id) => R[id] && R[id].platform === "fully_kiosk").map(areaOf).filter(Boolean));
+  if (!areas.size) return list;
+  return list.filter((id) => areas.has(areaOf(id))).concat(list.filter((id) => !areas.has(areaOf(id))));
+};
 // Weather popup lists (#56), the same keys and order as casoraDevice.weatherChart/weatherRows (00-finder.js).
 const WEATHER_CURVES = ["temperature", "feels", "dew_point", "humidity", "wind", "gust", "cloud", "precipitation", "rain_chance", "solar", "uv"];
 const WEATHER_ROWS = ["feels", "dew_point", "gust", "cloud", "rain_chance", "rain_chance_today", "precipitation", "solar", "uv"];
@@ -2665,6 +2674,14 @@ const SECTIONS = [
       { key: "casora_screensaver_wander", sub: "chrome", label: "Burn-in protection", type: "bool", boolDefault: true, auto: true, scope: "dashboard",
         when: (v) => v.casora_screensaver != null && v.casora_screensaver !== "",
         hint: "Moves the screensaver a few pixels every now and then, so nothing burns into the display. An LCD does not need it." },
+      // Wake on presence (46-screensaver.js S.wakeNow): a motion, occupancy or presence sensor ends the screensaver
+      // before anyone touches the tablet; by day Home, at night (22–5) a dimmed clock. Empty = off. Tablets only.
+      { ...E("casora_screensaver_wake", "Wake on", ["binary_sensor"]), sub: "chrome", auto: true, scope: "dashboard",
+        classes: ["motion", "occupancy", "presence"], rank: tabletRoomFirst, placeholder: "Off",
+        hint: "Tablets only. When this sensor sees someone, the screensaver ends and Home shows. At night only a dimmed clock appears." },
+      { key: "casora_screensaver_wake_screen", sub: "chrome", label: "Turn the screen on", type: "bool", boolDefault: true, auto: true, scope: "dashboard",
+        when: (v) => !!v.casora_screensaver_wake,
+        hint: "With Fully Kiosk Browser: also switches the tablet's screen on. At night only dimmed, or not at all." },
       // Halten auf Kacheln (22-halten.js): leer = Schnellmenü. casora-core.js setzt daraus window._casoraHoldMode,
       // ans Handy geht es über casora_mobile_bg. Je Kachel überstimmbar (variables.hold_mode, Kachel-Inspektor).
       { key: "hold_mode", sub: "hold", label: "Hold on tiles", type: "select", auto: true, scope: "dashboard",
@@ -19908,7 +19925,9 @@ class CasoraPanel extends HTMLElement {
           const pinned = f.repeatKinds && this._slotKind.get(room.path + "|" + unitOf(f));
           const kind = pinned && f.repeatKinds.find((k) => k.id === pinned);
           const doms = (kind && kind.domains) || f.domains;
-          const c = this._combo(cur, this._rankedEntityList(doms, f.classes, room, cur, f.accept),
+          let pick = this._rankedEntityList(doms, f.classes, room, cur, f.accept);
+          if (typeof f.rank === "function") pick = f.rank(this._hass, pick);
+          const c = this._combo(cur, pick,
             f.placeholder || (ghosts.has(unitOf(f)) ? "Choose" : pickHint(doms)),
             (v) => {
               setVar(f.key, v, f);

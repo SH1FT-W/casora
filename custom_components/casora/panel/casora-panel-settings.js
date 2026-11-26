@@ -90,9 +90,9 @@
       sub: "What a wall tablet shows when nobody touches it.",
       blocks: [
         { k: "saver", sec: "General", sub: "chrome", keys: ["casora_screensaver", "casora_screensaver_kind", "casora_screensaver_calendar_range", "casora_screensaver_tint", "casora_screensaver_wander", "casora_screensaver_photos",
-          "casora_screensaver_mix", "casora_screensaver_cameras", "casora_screensaver_calendars"], saver: true,
+          "casora_screensaver_mix", "casora_screensaver_cameras", "casora_screensaver_calendars", "casora_screensaver_wake", "casora_screensaver_wake_screen"], saver: true,
           title: "Screensaver", plain: "Pick a screensaver and after how long it starts. The picture shows what it looks like.",
-          kw: "bildschirmschoner screensaver wandtablet tablet uhr wortuhr himmel landschaft fotos leerlauf idle ruhe kameras kalender abwechslung coverfarbe cameras calendar einbrennen einbrennschutz burn-in wandern lcd oled monat zwei wochen month two weeks" },
+          kw: "bildschirmschoner screensaver wandtablet tablet uhr wortuhr himmel landschaft fotos leerlauf idle ruhe kameras kalender abwechslung coverfarbe cameras calendar einbrennen einbrennschutz burn-in wandern lcd oled monat zwei wochen month two weeks aufwecken wecken bewegung präsenz anwesenheit wake motion presence occupancy fully kiosk nacht nachtuhr night" },
       ] },
     { id: "phone", label: "Phone", icon: "iphone", tone: "set-live",
       sub: "The dashboard on the phone, and progress on the lock screen.",

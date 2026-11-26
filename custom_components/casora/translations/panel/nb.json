@@ -3226,7 +3226,11 @@
     "1 device is in a room you did not pick.": "1 enhet er i et rom du ikke valgte.",
     "{1} devices are in rooms you did not pick.": "{1} enheter er i rom du ikke valgte.",
     "Studio tour": "Omvisning i Studio",
-    "Welcome screen": "Velkomstside"
+    "Welcome screen": "Velkomstside",
+    "Wake on": "Vekk ved",
+    "Tablets only. When this sensor sees someone, the screensaver ends and Home shows. At night only a dimmed clock appears.": "Bare nettbrett. Når denne sensoren ser noen, slutter skjermspareren og Hjem vises. Om natten vises bare en dempet klokke.",
+    "Turn the screen on": "Slå på skjermen",
+    "With Fully Kiosk Browser: also switches the tablet's screen on. At night only dimmed, or not at all.": "Med Fully Kiosk Browser: slår også på skjermen på nettbrettet. Om natten bare dempet, eller ikke i det hele tatt."
   },
   "patterns": [
     [

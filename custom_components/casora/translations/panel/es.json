@@ -3226,7 +3226,11 @@
     "1 device is in a room you did not pick.": "1 dispositivo está en una habitación que no elegiste.",
     "{1} devices are in rooms you did not pick.": "{1} dispositivos están en habitaciones que no elegiste.",
     "Studio tour": "Recorrido por el Studio",
-    "Welcome screen": "Pantalla de bienvenida"
+    "Welcome screen": "Pantalla de bienvenida",
+    "Wake on": "Despertar con",
+    "Tablets only. When this sensor sees someone, the screensaver ends and Home shows. At night only a dimmed clock appears.": "Solo tabletas. Cuando este sensor ve a alguien, el salvapantallas termina y aparece Inicio. De noche solo aparece un reloj atenuado.",
+    "Turn the screen on": "Encender la pantalla",
+    "With Fully Kiosk Browser: also switches the tablet's screen on. At night only dimmed, or not at all.": "Con Fully Kiosk Browser: también enciende la pantalla de la tableta. De noche solo atenuada, o nada."
   },
   "patterns": [
     [
