@@ -7,7 +7,7 @@
 //      binary sensors stay); the finder suggests the current level, never the advance warning; "Add tile" →
 //      "Weather warning" → the suggestion dialog lists the sensor, "Use" puts it on the tile (in memory only).
 //   2. Dashboard: the tile is active in the Severe colour, says "Warnungen · Schwere Warnung" and names the most
-//      severe warning plus the count ("Schweren Sturmböen · 1 weitere"); the popup lists both warnings with the
+//      severe warning plus the count ("Schwere Sturmböen · 1 weitere", the bell's name, u09-11); the popup lists both warnings with the
 //      region, and the bell builds one row per warning from the same list (casoraWarnings).
 // Nothing is saved: the tile lives only in the browser. DWD_BILDER=<folder>: pictures of tile and popup.
 import { open, studio, casoraDashboard, dashboard, check, need, finish, stable, usePage } from './lib.mjs';
@@ -93,7 +93,7 @@ const tile = await stable(page, () => {
     bell: W ? W.list(S, [el._config.entity]).map((w) => W.kind(w) + '/' + w.severity) : null };
 }, null, { max: 12000, quiet: 1000, until: (t) => !!t && /weitere/.test(t.state) });
 await check('Kachel: „Warnungen · Schwere Warnung“ (höchste DWD-Stufe 3)', tile && tile.name === 'Warnungen · Schwere Warnung', tile);
-await check('Kachel: schwerste Warnung plus Zähler („Schweren Sturmböen · 1 weitere“)', tile && /Schweren Sturmböen · 1 weitere/.test(tile.state), tile && tile.state);
+await check('Kachel: schwerste Warnung plus Zähler („Schwere Sturmböen · 1 weitere“)', tile && /Schwere Sturmböen · 1 weitere/.test(tile.state), tile && tile.state);
 await check('Kachel: Farbe der Stufe 3 (das Rot des Themes wie „Severe“)', tile && !!tile.red && tile.colour === tile.red, tile && [tile.colour, tile.red]);
 await check('Glocke: zwei Zeilen aus derselben Liste (Sturmböen/Severe, Gewitter/Moderate)', tile && tile.bell && tile.bell.join('|') === 'Schwere Sturmböen/Severe|Gewitter/Moderate', tile && tile.bell);
 const at = await page.evaluate(() => { const r = document.querySelector('home-assistant').shadowRoot.querySelector('.qa-r322').getBoundingClientRect();

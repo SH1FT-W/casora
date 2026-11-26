@@ -1,7 +1,10 @@
 // ⋯ menu (casora_settings_button): "Dashboard bearbeiten" opens the Studio, so only admins see it
 // (Prüfung 2 fam-07). The "Home Assistant" entry (E14, opened HA's sidebar) is gone for everyone since
 // 02.11.2026: in the Companion app a swipe from the edge opens that sidebar anyway.
+// Prüfrunde u09-13: the reload entry has a word of its own („Neu laden“). „Aktualisieren“ is also the update button,
+// and French/Dutch translate that as installing an update („Mettre à jour“, „Bijwerken“).
 //   node dev/unit/settings_menu_roles.mjs
+// @deckt: dashboards/casora/button_card_templates.json#casora_settings_button
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -33,5 +36,9 @@ assert.ok(!admin.includes('Home Assistant'), 'admin: no "Home Assistant" entry')
 const kid = run({ is_admin: false, id: 'k' });
 assert.ok(!kid.includes('Dashboard bearbeiten'), 'non-admin: no Studio entry (it did nothing)');
 assert.ok(!kid.includes('Home Assistant'), 'non-admin: no "Home Assistant" entry');
-assert.deepEqual(kid, ['Aktualisieren'], 'non-admin: only "Aktualisieren" is left');
+assert.deepEqual(kid, ['Neu laden'], 'non-admin: only "Neu laden" is left');
+for (const l of ['en', 'fr', 'nl', 'es', 'it', 'pl', 'pt', 'nb']) {
+  const ex = JSON.parse(fs.readFileSync(new URL(`../../custom_components/casora/translations/dashboard/phrases/${l}.json`, import.meta.url), 'utf8')).exact;
+  assert.ok(ex['Neu laden'] && ex['Neu laden'] !== ex['Aktualisieren'], l + ': reload is not the update word');
+}
 console.log('settings_menu_roles: ok');

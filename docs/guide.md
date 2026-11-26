@@ -8,6 +8,7 @@ Everything the [README](../README.md) leaves out: setting up, the Studio, moving
 - [The setup assistant](#the-setup-assistant)
 - [Working in Casora Studio](#working-in-casora-studio)
 - [Looks and fonts](#looks-and-fonts)
+- [Screensaver](#screensaver)
 - [What Casora recognises](#what-casora-recognises)
 - [Moving from Hemma](#moving-from-hemma)
 - [Removing Hemma](#removing-hemma)
@@ -46,7 +47,7 @@ Casora checks the requirements when you first open the Studio and links you to a
 
 The first time you open Casora Studio, it greets you with a short welcome. The setup assistant then walks you through these pages. **Back** works on every page, and nothing is created until the end.
 
-1. **Choose your look.** *Casora* is the default: warm linen, soft shadows and big round corners. *Casora Nebel* is the same design in cool grey with a petrol accent, and *Casora Glas* puts frosted glass over your room photos. The look is applied the moment you pick it. More in [Looks and fonts](#looks-and-fonts).
+1. **Choose your look.** *Casora* is the default: warm linen, soft shadows and big round corners. *Casora Nebel* is the same design in cool gray with a teal accent, *Casora Glas* puts frosted glass over your room photos, and *Casora Salbei*, *Casora Marine*, *Casora Dämmerung* and *Casora Farbe* recolor Casora. The look is applied the moment you pick it. More in [Looks and fonts](#looks-and-fonts).
 2. **Choose your font.** *Inter* is Casora's font. *Hanken Grotesk* is a little rounder, and *System font* uses the device's own (SF Pro on Apple devices). Each option shows a large specimen.
 3. **Smooth on every screen.** *Automatic* lets each device choose for itself, *All effects* keeps glass, blur and depth everywhere, and *Reduced effects* uses clear panels for older tablets. With *Automatic*, older wall tablets switch to reduced effects on their own.
 4. **Existing dashboard found.** This page only appears if Casora finds something to bring along: a Hemma dashboard (*Take over from Hemma*, see [Moving from Hemma](#moving-from-hemma)) or a Casora dashboard in YAML (*Import YAML dashboard*). Each is shown as a live preview. *Start from scratch* continues with the steps below.
@@ -69,15 +70,16 @@ Everything after the first setup happens in the Studio: rooms and room photos, t
 - **The dashboard's name** at the top opens the dashboard menu: switch to another dashboard or create one, and for this dashboard **Rename…**, **Icon…**, **Open on phone…**, **Phone layout** and **Delete…**.
 - **The ⋯ menu** contains **Move from Hemma…**, **Device assistant…**, **Import from YAML…**, **Setup assistant…**, **Quick tour**, **Keyboard shortcuts** and **Help…**. On a phone it also holds **Community cards…**.
 
-**Settings** opens a start page with a search and eight tiles. Each tile shows its settings right away, each with a short sentence on what it does; rarely needed ones sit under **Advanced** at the end of the tile. Entries marked *Only this dashboard* change only the dashboard you are editing; everything else applies to all your Casora dashboards.
+**Settings** opens a start page with a search and nine tiles. Each tile shows its settings right away, each with a short sentence on what it does; rarely needed ones sit under **Advanced** at the end of the tile. Entries marked *Only this dashboard* change only the dashboard you are editing; everything else applies to all your Casora dashboards.
 
 | Tile | What you set there |
 |---|---|
 | **Look & feel** | The design of all dashboards, and this dashboard's clock and font. Advanced: the top bar and badges. |
 | **Tapping & tablet** | What holding a tile and tapping a badge do, when busy tiles move to the front, and going back to Home on a wall tablet. Advanced: Home Assistant's own popups and plain panels for slow devices. |
+| **Screensaver** | What a wall tablet shows when nobody touches it: which screensaver, after how long, and the photos, cameras and calendars it uses. See [Screensaver](#screensaver). |
 | **Phone** | The dashboard on the phone (search, room groups, room photo, tile size) and Live Activities on the phone's lock screen. |
-| **Bell & messages** | What the bell shows on this dashboard, ventilation push notifications and a push for new versions. Advanced: wording and exceptions for all dashboards (zone wording, mailbox, batteries to ignore, doors and windows with two sensors, appliance care). |
-| **Home & devices** | Waste collection (your names for the bins), the calendars the calendar tile and its popup show, the scenes of this dashboard and doors and windows (hide single ones or give them a name of their own). Advanced: covers at night, scenes to hide, players and other devices. |
+| **Bell & messages** | What the bell shows on this dashboard, ventilation push notifications and a push for new versions. Advanced: wording and exceptions for all dashboards (zone wording, mailbox, doors and windows with two sensors, appliance care). |
+| **Home & devices** | One block per topic, folded until you open it: **Security** (smoke, water and motion detectors, which blinds and gates count as open at night), **Doors and windows** (group, rename or hide them), **Batteries** (the ones the bell should not warn about), **Scenes** (the scene buttons of this dashboard and scenes never to offer), **Music and players**, **Waste collection** (your names for the bins), **Calendars** (the ones the calendar tiles show), **Other devices** and **Room climate** (how each room's temperature and humidity are rated). |
 | **Weather, power & fuel** | This dashboard's weather source and chart values, outdoor temperature and humidity, your electricity price and fuel prices for the car popup. Leave the price empty and Casora uses the grid price from Home Assistant's Energy dashboard. |
 | **AI** | Which AI Casora uses, hints for the AI and a schedule for each AI feature. |
 | **Updates & setup** | The installed version and every version with its release notes (see [Updates](#updates)), and how Casora fills a new dashboard. Advanced: Hemma dashboards and [removing Hemma](#removing-hemma). |
@@ -89,12 +91,37 @@ The AI, outdoor and electricity price settings and the ventilation push are also
 | Look | What it is |
 |---|---|
 | **Casora** | The default. Warm linen and sand, large corners, soft shadows, in light and dark. Home Assistant's theme picker in your profile lists it under the same name. |
-| **Casora Nebel** | The same design in cool light grey with a petrol accent. |
+| **Casora Nebel** | The same design in cool light gray with a teal accent. |
 | **Casora Glas** | Casora with frosted glass over your room photos, in light and dark. In performance mode the glass surfaces turn opaque. |
+| **Casora Salbei** | Casora in sage green with a forest green accent. |
+| **Casora Marine** | Warm sand with navy blue; at night deep blue with sand gold. |
+| **Casora Dämmerung** | Gray lilac with a coral accent. |
+| **Casora Farbe** | Tiles that are on glow in the color of their device, a soft color wash. |
 
-All three follow Home Assistant's light and dark mode. You can change the look later in the Studio under **Settings › Look & feel › Design**; it applies to all dashboards at once. The legacy looks Hemma 2 and Hemma 1 were removed in 26.10.31; if you used one, Casora switches you to *Casora Glas* once and tells you.
+All designs follow Home Assistant's light and dark mode. You can change the look later in the Studio under **Settings › Look & feel › Design**; it applies to all dashboards at once. The legacy looks Hemma 2 and Hemma 1 were removed in 26.10.31; if you used one, Casora switches you to *Casora Glas* once and tells you.
 
 The font is **Inter** in every look. You can switch to Hanken Grotesk or the system font per dashboard under **Settings › Look & feel › Font**. With **Own font** you upload fonts you hold a licence for there as well (for example Gilroy, with **Upload font**). Casora doesn't ship commercial fonts itself.
+
+## Screensaver
+
+On a wall tablet Casora can show a screensaver after a time without a touch; a touch brings the dashboard back. Set it up in the Studio under **Settings › Screensaver**: **Start the screensaver** (off, or after 1 to 30 minutes) and which one. It only starts on tablets; a phone, even held sideways, never gets one. The picture next to the settings shows what it looks like.
+
+| Screensaver | What it shows |
+|---|---|
+| **Sky** | A sky that follows the sun and the weather, with the time |
+| **Landscapes** | Drawn landscapes, nothing is loaded from outside |
+| **Photos** | This dashboard's room photos (pick which ones below the preview) |
+| **Word clock** | The time in words |
+| **Weather** | The temperature large, the next days and the curve of the coming hours (needs a weather source) |
+| **Day line** | Today's appointments standing on a line through the day |
+| **Week** | Seven days with their appointments |
+| **Music** | What is playing, with the cover (only while something plays) |
+| **Energy flow** | How power flows between solar, house, grid and battery (needs energy set up) |
+| **House at rest** | The time, who is home and what asks for attention; calm in the middle when nothing does |
+| **Cameras** | A grid of snapshots; tap one for the live picture |
+| **Calendar** | The month like a wall calendar, or **Two weeks** with the time of every appointment |
+
+**One after the other** lets them take turns; below the preview you pick which ones, and the cameras and calendars they use. Ones with nothing to show (no camera, no music playing) are skipped; picked alone, such a one shows the sky. **Cover color** gives the calm screensavers a soft tint of the playing cover. **Burn-in protection** (on by default) moves the content a few pixels now and then, so nothing burns into the display; an LCD does not need it.
 
 ## What Casora recognises
 
@@ -158,7 +185,7 @@ Cards for devices that not every home has ship with Casora but stay out of **Add
 
 - **Add a card.** Every card has a preview of its tile and popup; tap it to see both large. Once added, the card appears in **Add a tile** for all your dashboards. Removing a card asks whether tiles that use it stay or go.
 - **Request a card.** Choose **Request a card…**, describe the device and what the tile and popup should show, and pick a few example entities. Casora prepares a GitHub issue with the kind of device, units, device classes and attribute names, but without entity names, rooms or places, and shows you the exact text first. You submit it on GitHub yourself. **Your requests** shows where each one stands: Open, Question (with the answer), In progress, Built or Declined.
-- **Available now:** Frigate camera, Reolink doorbell, Velair thermostat, chart, pet tracker (Tractive) and a large map of persons and zones. The robot lawn mower and the coffee machine started as community cards and are regular tiles now. Nothing is downloaded from outside your Home Assistant: new cards come with a Casora release. If a card is ever retired, it disappears from **Add a tile** first while existing tiles keep working.
+- **Available now:** Frigate camera, Reolink doorbell, Velair thermostat, Smart Heating Control, chart, pet tracker (Tractive), Bring! shopping list, kettle, area map (persons and zones, large in the popup), CO detector and Smart Meter (electricity and gas cost). The robot lawn mower and the coffee machine started as community cards and are regular tiles now. Nothing is downloaded from outside your Home Assistant: new cards come with a Casora release. If a card is ever retired, it disappears from **Add a tile** first while existing tiles keep working.
 - **Talking at the Reolink doorbell** is an experiment: turn on **Talk (experiment)** in the tile's settings. It needs HTTPS and the doorbell connected in your network (RTSP), and not every doorbell accepts it. With Home Assistant 2026.11 and its two-way audio (a Labs preview), Casora talks through Home Assistant's own player.
 
 ## When a device is missing
@@ -198,7 +225,7 @@ Casora can use an AI **you have already set up in Home Assistant** (Settings →
 - **Custom cards in popups:** AI adapts a card you paste in to Casora's look.
 - **Device assistant:** describe a device in a sentence and AI helps fill in the rest.
 
-**On the dashboard** (set up in the Studio under **Settings › Extras › AI**, or in Home Assistant under Settings → Devices & services → Casora → **Configure**)
+**On the dashboard** (set up in the Studio under **Settings › AI**, or in Home Assistant under Settings → Devices & services → Casora → **Configure**)
 
 | Feature | What it does |
 |---|---|
@@ -214,7 +241,7 @@ Casora can use an AI **you have already set up in Home Assistant** (Settings →
 
 The aquarium doctor and the bike check start from the aquarium and e-bike popups. Their button only appears when an AI task is set up, or when your own assistant answers (see [Use your own assistant for Casora's AI features](#use-your-own-assistant-for-casoras-ai-features)).
 
-**Schedules.** In the Studio under **Settings › Extras › AI › Automatic runs**, each feature gets its own schedule: **Off** (the AI only runs when you tap a button in a popup), **Automatic** or a day and time you pick. Automatic means the energy coach on Sundays at 18:00, the heating coach on Mondays at 07:00 (heating season only), the ventilation coach on Saturdays at 10:00 and the recipe on Mondays at 06:00. The update check runs daily or only when you ask. On a new install every schedule starts **Off**; an upgrade keeps what you had. AI answers in your Home Assistant language. **Hints for the AI** are added to every review, for example *"The bedroom window is tilted on purpose."*
+**Schedules.** In the Studio under **Settings › AI › Automatic runs**, each feature gets its own schedule: **Off** (the AI only runs when you tap a button in a popup), **Automatic** or a day and time you pick. Automatic means the energy coach on Sundays at 18:00, the heating coach on Mondays at 07:00 (heating season only), the ventilation coach on Saturdays at 10:00 and the recipe on Mondays at 06:00. The update check runs daily or only when you ask. On a new install every schedule starts **Off**; an upgrade keeps what you had. AI answers in your Home Assistant language. **Hints for the AI** are added to every review, for example *"The bedroom window is tilted on purpose."*
 
 > [!IMPORTANT]
 > **AI costs money.** AI calls run on your own provider account and API key, and your provider bills you for them. Before each AI step in the Studio, Casora shows an estimate based on list prices, and you can continue or cancel. The estimate is only a guide; your provider's bill is what counts. Casora picks a suitable model itself (a Sonnet-class model rather than an Opus-class one). If your current AI isn't strong enough, Casora can set up a separate *Casora AI* task with a stronger model, and your existing AI stays as it is. Nothing runs on a schedule unless you give that feature a schedule.
@@ -295,7 +322,7 @@ Renaming tiles that are already on a dashboard is not part of this: the names in
 
 The dashboard's AI features (coaches, camera description, plant and aquarium doctor, bike check, update check, recipe of the week) can be answered by your own assistant over MCP instead of an AI task. MCP only works one way: your assistant calls Home Assistant, Home Assistant cannot call your assistant. So Casora leaves the work as a job, and your assistant picks it up when you ask it to. You need the same kind of MCP server as above (one that can call actions, signed in as an administrator, for example [ha-mcp](https://github.com/homeassistant-ai/ha-mcp)).
 
-1. **Choose your assistant.** In the Studio under **Settings › Extras › AI › Which AI**, set **Who answers** to **Your own assistant (MCP)**. In Home Assistant's own options dialog (Devices & services → Casora → **Configure**) it is the entry **Your own assistant (MCP)** in the AI menus. The AI features then show up even without an AI task.
+1. **Choose your assistant.** In the Studio under **Settings › AI › Which AI**, set **Who answers** to **Your own assistant (MCP)**. In Home Assistant's own options dialog (Devices & services → Casora → **Configure**) it is the entry **Your own assistant (MCP)** in the AI menus. The AI features then show up even without an AI task.
 2. **Use a feature as usual.** Tap, for example, the plant doctor's button in a plant's popup. Casora gathers the plant's readings, writes the instructions and leaves a job. The popup says *Waiting for your assistant…*, and Casora fires the event `casora_ai_job` (`job_id`, `task_name`, `pending`), which an automation can use to remind you.
 3. **Ask your assistant:** *"Do Casora's open AI jobs."* It reads them with `casora.ai_jobs`:
 
@@ -416,6 +443,7 @@ Casora adds these actions to Home Assistant (Developer tools → Actions).
 | `casora.einrichten` | Create missing helpers again (Casora also does this at every start) |
 | `casora.umstellen` | Rename existing Hemma dashboards to Casora names (with a backup) |
 | `casora.setup_overview` | Read only: rooms, devices without an area and devices without a Casora tile, with a suggested tile type. For your own assistant over MCP, see [Set up with your own assistant over MCP](#set-up-with-your-own-assistant-over-mcp) |
+| `casora.setup_plan` | Read only: checks a proposed layout (device, room, tile type and name) and answers with a preview; changes no dashboard. See [Set up with your own assistant over MCP](#set-up-with-your-own-assistant-over-mcp) |
 | `casora.ai_generate` | Like `ai_task.generate_data`, but falls back to the first AI task when none is chosen. Used by Casora's AI steps |
 | `casora.ai_jobs`, `casora.ai_answer`, `casora.ai_cancel` | Read only / answer / drop the AI jobs that wait for your own assistant (admins, with a response). See [Use your own assistant for Casora's AI features](#use-your-own-assistant-for-casoras-ai-features) |
 | `casora.light_smart_toggle`, `casora.thermostat_overlay_toggle`, `casora.actions_overlay_toggle`, `casora.restart_toggle` | Used by Casora's tiles: turn a light group back on with the lamps that were on, open a tile's thermostat or action controls, restart a device after a confirming tap |

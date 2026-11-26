@@ -97,6 +97,23 @@ check("bold start without colon: rest is the text", prompt_items("- **Kettle pop
 check("plain item: title only", prompt_items("- just a line") == [{"title": "just a line", "text": ""}], prompt_items("- just a line"))
 check("limit 4", len(prompt_items(EN12)) == 4 and len(prompt_items(EN12, limit=2)) == 2)
 
+# u09-07: a beta's notes (26.11.30b7, shortened): "Good to know" and "Please test" are no news; a restart hint was
+# listed as a new feature and a long plain item was cut mid-sentence ("cannot read the stored...").
+B7 = ("Seventh beta: a new community card.\n\n### New\n"
+      "- **Smart Heating Control (#240):** a new community card for the integration, one tile per room.\n"
+      "  - The tile shows the room temperature and the target.\n"
+      "- **Scenes badge on the phone's Home (#243):** a new switch under Studio › Scenes.\n\n"
+      "### Good to know\n- Both need one restart of Home Assistant after the update (the update restarts it anyway).\n"
+      "- Smart Heating Control: if the integration reports that it cannot read the stored schedule, the card shows the schedule read-only, so it never overwrites your plan.\n\n"
+      "### Please test\n1. Smart Heating Control: add the tile.\n")
+it = prompt_items(B7)
+check("beta: only the news, no hints", [i["title"] for i in it] == ["Smart Heating Control", "Scenes badge on the phone's Home"], it)
+check("Hinweise/Notes sections are no news either", prompt_items("### Neu\n- **A:** b.\n\n### Hinweise\n- Neustart nötig.\n") == [{"title": "A", "text": "B"}],
+      prompt_items("### Neu\n- **A:** b.\n\n### Hinweise\n- Neustart nötig.\n"))
+long_plain = "- The tile now shows the schedule read-only when the integration cannot read it, so it never overwrites your plan with a default."
+t = prompt_items(long_plain)[0]["title"]
+check("a long plain item ends at a clause, not mid-sentence", not t.endswith("…") and t == "The tile now shows the schedule read-only when the integration cannot read it", t)
+
 
 def overview(**kw):
     base = {

@@ -5,6 +5,7 @@
 // level 1–4 ↔ Minor/Moderate/Severe/Extreme, a DWD sensor is active only with level > 0 and warning_count > 0;
 // the tile's name/colour/state expressions and the popup read that list, the Studio offers the sensor.
 //   node dev/unit/wetterwarnung_dwd.mjs
+// @deckt: custom_components/casora/scripts/local/01-basis.js#casoraWarnings,kind, dashboards/casora/button_card_templates.json#casora_weather_warning
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -117,7 +118,12 @@ assert.equal(fn(colour)(D, ent, {}, {}, vars([])), 'var(--casora-color-red, #FF4
 assert.equal(fn(colour)({ 'sensor.t': dwd(4, [{ ...STURM, level: 4 }]) }, ent, {}, {}, vars([])), 'var(--casora-color-purple, #9333ea)');
 window.casoraStateFit = (t) => t;
 const shown = fn(tile.state_display)(D, ent, {}, {}, vars([]));
-assert.match(shown, /Schweren Sturmböen · 1 weitere/, 'state: the headline of the most severe warning plus the count');
+// u09-11: the same name as the bell (casoraWarnings.kind, the event in the nominative), not „Schweren Sturmböen“.
+assert.match(shown, /Schwere Sturmböen · 1 weitere/, 'state: the kind of the most severe warning plus the count');
+assert.ok(!/headline\.match\(/.test(tile.state_display), 'tile: no headline parser of its own');
+assert.equal(W.kind({ headline: 'Gefahreninformation: Hochwasser an der Ems' }), 'Hochwasser an der Ems', 'NINA without „vor“: the headline');
+assert.equal(W.kind({ headline: 'Gefahreninformation: HOCHWASSER AN DER EMS - Testkreis 2026' }), 'Hochwasser an der Ems', 'NINA: lead-in, area and year off');
+assert.equal(W.kind({}), 'Wetterwarnung', 'nothing to go by: generic');
 for (const [name, src] of [['tile', JSON.stringify(tile)], ['popup', JSON.stringify(popup)]]) {
   assert.ok(src.includes('window.casoraWarnings'), name + ' reads casoraWarnings');
   assert.ok(!/s\.state === 'on'|severityToLevel|attributes\?\.severity/.test(src), name + ' has no parser of its own left');

@@ -3023,7 +3023,8 @@
     "Bis zum nächsten Wechsel": "Til neste endring",
     "Wartet": "Venter",
     "Ein Profil braucht mindestens ein Zeitfenster": "En profil trenger minst ett tidsvindu",
-    "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "Tidsplanen er endret i mellomtiden, rediger den på nytt"
+    "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "Tidsplanen er endret i mellomtiden, rediger den på nytt",
+    "Neuerungen auf Englisch": "Nyheter på engelsk"
   },
   "patterns": [
     [
@@ -5477,6 +5478,10 @@
     [
       "^(Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag) (\\d{1,2}:\\d\\d)$",
       "{1} {2}"
+    ],
+    [
+      "^Wetterwarnung: (.+)$",
+      "Farevarsel: {1}"
     ]
   ]
 }

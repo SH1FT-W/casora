@@ -240,7 +240,11 @@ def prompt_lines(md: str, limit: int = 3, width: int = 110) -> list[str]:
 
 
 # Section headings of the release notes (CHANGELOG.md / CHANGELOG.de.md, GitHub release) → priority in the prompt.
-_SECTION_RANK = {"new": 0, "neu": 0, "changed": 1, "geändert": 1, "geaendert": 1, "fixed": 2, "behoben": 2}
+_SECTION_RANK = {"new": 0, "neu": 0, "changed": 1, "geändert": 1, "geaendert": 1, "improved": 1, "verbessert": 1,
+                 "fixed": 2, "fixes": 2, "behoben": 2}
+# Sections with hints, not news ("needs a restart", test steps): never items of the prompt (u09-07).
+_SECTION_SKIP = {"good to know", "gut zu wissen", "please test", "bitte testen", "notes", "hinweise", "upgrade",
+                 "upgrading", "behind the scenes", "hinter den kulissen", "transition", "übergang"}
 _ISSUE_REF = re.compile(r"\s*\((?:#\d+(?:\s*,\s*)?)+\)")
 # Abbreviations whose dot does not end a sentence ("z. B.", "e.g.", "ca.").
 _ABBREV = {"z", "b", "e.g", "i.e", "ca", "bzw", "usw", "etc", "vgl", "nr", "d.h", "u.a", "inkl", "ggf", "max", "min", "approx"}
@@ -287,13 +291,16 @@ def prompt_items(md: str, limit: int = 4, width: int = 90) -> list[dict[str, str
     """Up to `limit` items for the update prompt, New before Changed before Fixed: the bold start of a
     top-level item as title (issue refs dropped) and the first sentence or clause of the rest, plain, cut."""
     found: list[tuple[int, int, dict[str, str]]] = []
-    rank = 0
+    rank: int | None = 0
     for raw in (md or "").splitlines():
         h = re.match(r"^#{2,6}\s+(.*)$", raw.strip())
         if h:
-            rank = _SECTION_RANK.get(_plain(h.group(1)).strip().lower(), 3)
+            # "Good to know", "Please test" or "Hinweise" hold hints such as "needs a restart" that read like a new
+            # feature in the prompt (u09-07): skipped. Other sections rank after New, Changed and Fixed.
+            name = _plain(h.group(1)).strip().lower()
+            rank = None if name in _SECTION_SKIP else _SECTION_RANK.get(name, 3)
             continue
-        if raw[:1] in (" ", "\t"):
+        if rank is None or raw[:1] in (" ", "\t"):
             continue  # nested item: details of the one above
         m = _BULLET.match(raw.strip())
         if not m:
@@ -304,7 +311,12 @@ def prompt_items(md: str, limit: int = 4, width: int = 90) -> list[dict[str, str
             title = _plain(head.group(1))
             rest = item[head.end():]
         else:
-            title, rest = _plain(item), ""
+            # A plain item: its first sentence, a long one up to its first clause, so it never stops mid-sentence.
+            title = _first_sentence(_ISSUE_REF.sub("", _plain(item))).rstrip(".").strip()
+            clause = re.split(r"[:;,]\s|\s[–-]\s", title, maxsplit=1)[0].strip()
+            if len(title) > width and len(clause) >= 12:
+                title = clause
+            rest = ""
         title = _ISSUE_REF.sub("", title).strip().rstrip(":.").strip()
         rest = _ISSUE_REF.sub("", _plain(rest)).lstrip(" :–-").strip()
         # Asides in brackets are details: "Oven tile (also in the device assistant) for …" → "Oven tile for …".

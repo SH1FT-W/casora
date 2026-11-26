@@ -3030,7 +3030,8 @@
     "Bis zum nächsten Wechsel": "Fino al prossimo cambio",
     "Wartet": "In attesa",
     "Ein Profil braucht mindestens ein Zeitfenster": "Un profilo ha bisogno di almeno una fascia",
-    "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "Il programma è cambiato nel frattempo, modificalo di nuovo"
+    "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "Il programma è cambiato nel frattempo, modificalo di nuovo",
+    "Neuerungen auf Englisch": "Novità in inglese"
   },
   "patterns": [
     [
@@ -5484,6 +5485,10 @@
     [
       "^(Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag) (\\d{1,2}:\\d\\d)$",
       "{1} {2}"
+    ],
+    [
+      "^Wetterwarnung: (.+)$",
+      "Allerta meteo: {1}"
     ]
   ]
 }

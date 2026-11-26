@@ -75,7 +75,8 @@
       var cfg;
       try { cfg = await ws(h, { type: 'lovelace/config', url_path: d.url_path, force: false }); } catch (e) { continue; }
       var dt = JSON.stringify(cfg) || '';
-      wanted.forEach(function (eid) { if (refs(dt, eid)) add(eid, 'dashboard ' + (d.url_path || 'lovelace')); });
+      // „dashboard:<title>“: the notification names the dashboard as people see it in the sidebar (u09-12).
+      wanted.forEach(function (eid) { if (refs(dt, eid)) add(eid, 'dashboard:' + String(d.title || d.url_path || 'Overview').slice(0, 200)); });
     }
     return by;
   }
