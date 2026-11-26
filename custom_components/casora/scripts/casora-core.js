@@ -8813,10 +8813,12 @@ window.casoraMenuGlass = {
       // Weich: Ring aus der auslösenden Kachel. Gemerkt wird die Kachel, nicht das Ergebnis –
       // Farbe und Symbol werden bei jedem Öffnen und nach einem Theme-Wechsel neu gelesen.
       // Ein neues Popup ohne angetippte Kachel bekommt keinen fremden Ring.
-      if (this._src) { this._ringSrc = this._src; this._ringLast = null; this._ringSo = null; }
+      // _ringSo: the state the tile showed when the popup opened (u07-01). Was null, so a first state change after opening
+      // (pause → play) did not count as one and the ring kept the colour of the open.
+      if (this._src) { this._ringSrc = this._src; this._ringLast = null; this._ringSo = this._src._stateObj || null; }
       // ‹ back to a page: its own tile again (colour, room label) – not the tile a sub page found (review 2, DD-09:
       // the blinds kept the single blind's label after ‹).
-      else if (data && data.__casoraRingSrc) { this._ringSrc = data.__casoraRingSrc; this._ringLast = null; this._ringSo = null; }
+      else if (data && data.__casoraRingSrc) { this._ringSrc = data.__casoraRingSrc; this._ringLast = null; this._ringSo = this._ringSrc._stateObj || null; }
       else if (!wasOpen) { this._ringSrc = null; this._ringLast = null; }
       var keepSrc = { value: this._ringSrc, writable: true, configurable: true, enumerable: false };
       try { if (data && typeof data === 'object') Object.defineProperty(data, '__casoraRingSrc', keepSrc); } catch (e) { /* frozen config */ }
