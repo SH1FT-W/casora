@@ -1127,6 +1127,8 @@ const shotLang = (url, hass) => (url && haLang(hass).indexOf("de") === 0 ? url.r
 const isHomeRoom = (room, rooms) => !!room && (room.path === "home"
   || (Array.isArray(rooms) && rooms[0] === room && !rooms.some((r) => r && r.path === "home")));
 const AUTO_HOME = "home";
+// Choose your rooms: the room tile with this name (case ignored), if there is one.
+const sameNameRoom = (tiles, name) => tiles.find((t) => String(t.dataset.name || "").toLowerCase() === String(name).toLowerCase()) || null;
 // Welcome screen: the line on Hemma dashboards found, by their number (Prüfrunde u01-10; translated by pattern).
 const hemmaFoundText = (n) => (n > 1
   ? "Casora found " + n + " dashboards of Hemma, its predecessor. Rooms, tiles and phone layout move over."
@@ -15247,8 +15249,22 @@ class CasoraPanel extends HTMLElement {
     adder.onclick = async () => {
       const picked = await this._ask({ title: "New room", value: "", placeholder: "Kitchen", confirmLabel: "Add" });
       const name = picked && String(typeof picked === "object" ? picked.value : picked).trim();
-      if (name && !tiles().some((t) => t.dataset.name.toLowerCase() === name.toLowerCase())) addRoom(name, true);
+      if (!name) return;
+      // A name that is already there: tick and show that room and say so (Prüfrunde u01-13), never silently nothing.
+      const had = sameNameRoom(tiles(), name);
+      if (had) {
+        had.setAttribute("aria-checked", "true");
+        count();
+        if (had.scrollIntoView) had.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        if (had.focus) had.focus();
+        this._flowError("A room with this name already exists.");
+        dupNote = true;
+        return;
+      }
+      if (dupNote) { this._flowError(""); dupNote = false; }
+      addRoom(name, true);
     };
+    let dupNote = false;
     if (!areas.length) {
       const note = document.createElement("p"); note.className = "ffoot";
       note.textContent = "You don't have any areas in Home Assistant yet, so here are a few to start with.";
