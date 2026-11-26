@@ -4,6 +4,123 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.11.30 – 27.11.2026
+
+Der größte Feinschliff, den Casora bisher hatte. Vor diesem Release haben 20 KI-Tester jede Funktion auf Testinstallationen durchgeklickt: Einrichtung, das Studio mit allen Einstellungen, Handy, Tablet und Desktop, jede Kachel und jedes Popup, Sicherheit, alle Sprachen und das Update von älteren Versionen. Sie haben mehr als 190 Funde gemeldet, rund 150 davon sind in diesem Release behoben. Dazu kommen sieben Betas mit einer Karte für Smart Heating Control, eigenen Badges nach Bedingung, einem Raumklima-Verlauf für den Garten, neuen Wahlmöglichkeiten beim Bildschirmschoner und den Korrekturen aus euren Meldungen.
+
+### Neu
+<!-- HEADLINE FEATURES: doorbell moment, living house photo (weather), Assist opens Casora popups, tablet wakes on motion -->
+
+- **Smart Heating Control (#240):** eine neue Community-Karte für die Integration [Smart Heating Control](https://github.com/sandreialexandru/Smart-Heating-Control), eine Kachel je Raum, benannt nach dem Raum. Die Kachel zeigt Raumtemperatur und Ziel („20,4° · Heizt auf 21°“). Das Popup hat ein Rad für das Ziel, „Automatisch“ für die Rückkehr zum Zeitplan, die Stufen (Zuhause, Eco und mehr) als Schnellwahl, dazu Zeitplan, Hausmodus, die aktuelle Entscheidung und die letzten 24 Stunden. „Zeitplan“ zeigt die Woche auf einen Blick, wechselt das Tagesprofil und bearbeitet die Zeitfenster eines Profils; Profilnamen stehen als Wörter da (Werktag, Wochenende, Homeoffice). Kann die Integration ihren gespeicherten Plan nicht lesen, zeigt die Karte ihn nur an, damit sie deinen Plan nie überschreibt. Danke an @gekberlin.
+- **Eigene Badges mit „Anzeigen, wenn“ (#238):** jedes eigene Badge bekommt den Bedingungs-Editor der Kacheln (Studio › Raum › Eigene Badges). Wähle alle, eine oder keine der Bedingungen; das Badge erscheint nur, solange sie erfüllt sind, und folgt dem Zustand ohne Neuladen, am Desktop und am Handy. Danke an @stalakerob.
+- **Raumklima im Garten (#235):** das Raumklima-Popup eines Außenraums (Garten, Terrasse, Balkon) bekommt den Verlauf über 24 Stunden, 7 oder 30 Tage mit höchster und tiefster Temperatur. Es nimmt die Außensensoren des Hauses und jeden Temperatursensor im Home-Assistant-Bereich des Raums, bis zu vier in einem Diagramm mit Legende. Das neue Feld „Weitere Außensensoren“ der Kachel nimmt weitere dazu, etwa einen Teich- oder Gewächshaussensor. Danke an @stalakerob.
+- **Kalender-Bildschirmschoner, zwei Wochen (#231):** Studio › Einstellungen › Bildschirmschoner › „Kalender zeigt“ bietet Monat (wie bisher) oder Zwei Wochen, mit dieser und der nächsten Woche und der Uhrzeit jedes Termins. Danke an @ejetzass.
+- **Bei Inaktivität Popups schließen (#216):** unter Studio › Einstellungen › Bedienen kann ein Wandtablet ein offenes Popup nach einer Weile ohne Bedienung schließen (standardmäßig aus). „Bei Inaktivität zu Zuhause zurückkehren“ wartet jetzt, solange ein Popup offen ist. Danke an @ejetzass.
+- **Szenen-Badge am Handy (#243):** stehen die Szenen als Badge auf Zuhause, setzt der neue Schalter „Auch auf dem Handy zeigen“ das Szenen-Badge auch in die Badge-Reihe von Zuhause am Handy. Der Szenen-Knopf unten bleibt. Standardmäßig aus. Danke an @daxy01.
+- **Melder einzeln:** Studio › Einstellungen › Haus & Geräte › Sicherheit hat zwei Schalter, „Rauchmelder“ (mit Gas und Kohlenmonoxid) und „Wassermelder“, und eine Liste „Zählt nicht“, die einzelne Melder überall weglässt.
+- **Einbrennschutz als Schalter (#230):** die Bildschirmschoner-Einstellungen haben einen Schalter „Einbrennschutz“, standardmäßig an. Ein LCD braucht ihn nicht. Danke an @ejetzass.
+- **Stopp im Jalousie-Popup:** Jalousien, die anhalten können, bekommen im Popup einen Stopp-Knopf wie im Schnellmenü, für eine einzelne Jalousie und für eine Gruppe.
+- **Tastatur in Popups (#246):** ein Tipp auf eine Kachel setzt den Tastaturfokus ins Popup, Tab bleibt darin, ein langes Popup scrollt mit der Tastatur und zeigt einen Fokusring. Touch und Screenreader arbeiten wie bisher. Danke an @ejetzass.
+
+### Verbessert
+- **Die Zurück-Taste am Handy:** Androids Zurück-Taste oder -Geste (und Zurück im Browser) schließt jetzt zuerst ein offenes Popup, geht von einer Popup-Unterseite eine Ebene zurück und führt aus einem Raum zurück nach Zuhause. Erst danach verlässt sie das Dashboard. Das gilt auch, nachdem Home Assistants eigener Detaildialog offen war.
+- **Schneller mit vielen Räumen:** Zuhause am Handy baut die Überschriften und Kachelreihen der Räume erst nach dem Laden, in ruhigen Momenten oder sobald du einen Raum öffnest. Am Desktop baut ein Raum „Aktuelle Wiedergabe“ und seine zugeklappten Badge-Reihen erst, wenn sie zu sehen sind; nach einem Gang durch 31 Räume sinkt der Speicher von 231 auf 103 MB. Raumfotos laden erst, wenn die Seite steht, eins nach dem anderen: 1 Bildanfrage statt 48 in den ersten drei Sekunden.
+- **Weniger Arbeit im Ruhezustand (#227):** Kacheln aktualisieren sich nur, wenn sich etwas ändert, das sie zeigen, eine Kachelreihe prüft sich nicht mehr bei jeder Zustandsänderung im Haus, ein Diagramm ohne Neues zeichnet nicht neu, und eine Kühlschrank-Kachel ohne Entität beobachtet nicht mehr das ganze Haus. In unserer Messung sank die Arbeit des Dashboards um ein Drittel bis die Hälfte. Danke an @stalakerob.
+- **Die Studio-Vorschau zeigt, was das Dashboard zeigt:** Fernseher, Apple TV, PlayStation und Kameras tragen in der Handy-Vorschau ihre eigenen Symbole, eine Raumseite zeigt die Szenen des Raums unter „Szenen“ und „Geräte“ wie am Handy, ein entriegeltes Schloss ist orange, Jalousien sagen „Alle geöffnet“, Pflanzen, Thermostate und das Vereinslogo sehen aus wie im Dashboard, ein Gerät ohne Verbindung bekommt den gestrichelten Warnrand, Badge-Texte nutzen die Übersetzung des Dashboards, und „Ansehen als“ lässt die Räume weg, die diese Person nicht sieht.
+- **Popups sagen alles einmal und gleich:** die Statuszeile im Kopf eines Popups bleibt einzeilig; Kamera-Kachel und Popup nennen denselben Zustand, und eine Kamera ohne Bild bietet „Erneut versuchen“; das Fahrzeug-Popup nennt das Schloss einmal; das Klima-Popup sagt „Feuchte gut“; das Wetter heißt überall „Teilweise bewölkt“; das Rezept-Popup zeigt Speiseplan und Einkaufsliste auf je einer Platte; das Medien-Popup markiert die gewählte Quelle, Video-Apps bekommen eigene Symbole, und die Kachel schreibt „Künstler · Titel“.
+- **Eine Regel für Farben:** Symbole auf Orange und Gelb sind überall dunkel (Kacheln, Badges, Szenen, Glocke, Popups); offene und gekippte Türen und Fenster sind orange, rot nur in der Alarmstufe; ein pausierter Player behält am Kopf-Schalter seine Gerätefarbe; „1 offline“ auf der Kameras-Kachel steht in der Offline-Warnfarbe; die Szenen-Pille hebt sich im hellen Design vom Raumfoto ab; die Symbole in den Glocken-Einstellungen sind blasse Kreise wie in den anderen Einstellungslisten.
+- **Wetter aus einer Quelle:** Raumkopf, Rad, „Jetzt“ in der Stundenvorschau und das Diagramm zeigen den Außensensor, wenn es einen gibt, sonst den Wetterdienst. Ein im Studio gewählter Sensor geht weiter vor.
+- **Einstellungen in einer Form:** eine Speicherleiste je Änderung statt bis zu drei Knöpfen, „Erweitert“ sieht auf jeder Seite gleich aus, jede Zeile hat Titel, einen Satz darunter und das Feld darunter oder den Schalter rechts, und Zahlenfelder sagen direkt am Feld, was nicht stimmt.
+- **Einrichtungsassistent:** der Umzug von vorhandenen Dashboards zählt eigene Schritte („Umzug 1 von 3“), „Dashboard erstellen“ aus dem Studio bleibt ein Fenster mit ✕, Zurück und Escape und zeigt seine drei Wahlmöglichkeiten nebeneinander, „Als Standard-Dashboard verwenden“ steht über der Vorschau, ein schon vorhandener Raumname wählt diesen Raum und sagt es, ohne gewählten Raum steht da, dass nur Zuhause angelegt wird, die Begrüßung zählt die gefundenen Hemma-Dashboards, und „Studio-Rundgang“ und „Willkommensseite“ haben klar verschiedene Namen, mit Symbolen im Hilfe-Menü.
+- **Tageslinien-Bildschirmschoner (#233):** ein laufender Termin führt („jetzt · bis 19:30“), die Linie zeigt 3 Stunden zurück und 15 voraus, die Farbe markiert, was noch kommt, nahe beieinanderliegende Termine teilen sich eine Platte, und jede Zeile hat einen Punkt in der Farbe ihres Kalenders. Danke an @ejetzass.
+- **Tablets:** bei genau 768 px (ein klassisches iPad hochkant) sind Raumleiste, Uhr und Player da, und auf schmalen Bildschirmen steht die Uhr neben der Raumleiste statt darunter.
+- **Badge-Reihen:** eine aufgeklappte Badge-Reihe wird je Gerät gemerkt; ein Tipp auf einem Bildschirm klappt sie nicht mehr auf allen anderen auf.
+
+### Behoben
+- **Benutzer ohne Admin-Rechte aus Home Assistant ausgesperrt (#244):** die Szenen-Kacheln fragten Home Assistant nach der Konfiguration jeder Szene, auch im Browser eines Benutzers ohne Admin-Rechte. Home Assistant zählte die abgewiesenen Anfragen als fehlgeschlagene Anmeldungen, mit IP-Sperre wurden so Handys von Familienmitgliedern gesperrt. Casora fragt jetzt nur im Browser eines Admins. Ist ein Gerät schon gesperrt, entferne es aus `ip_bans.yaml` und starte Home Assistant einmal neu. Danke an @daxy01 für die genaue Meldung.
+- **Wetterstationen unter Sicherheit (#220):** der Regensensor einer Wetterstation zählt nicht mehr als Wassermelder. Casora erkennt Regensensoren am Namen, am Gerät (Wetterstation, Ecowitt, Davis, Bresser und andere) oder an einem Gerät, das auch Wind oder Regen misst; echte Lecksensoren zählen weiter. Danke an @stalakerob.
+- **Handy-Leiste nach „Zurück“ (#221):** wer mit Androids Zurück-Taste zu Casora zurückkommt, während ein Raum offen war, findet die Leiste wieder mit Glocke und Menü. Danke an @stalakerob.
+- **Energie heute und diesen Monat (#223):** mit einem Zähler, der immer weiter zählt (etwa ein Shelly-3-Phasen-Zähler), zeigten Energie-Popup und Hausseite den Gesamtstand. Casora nimmt den Verbrauch von heute und diesem Monat jetzt aus der Langzeitstatistik von Home Assistant. Danke an @Strako80.
+- **Netzwerk-Popup mit udr7 (#226):** WLAN-Zeilen heißen nach ihrer SSID, Router und Switches ohne Client- oder CPU-Werte (etwa Flex Mini) stehen in der Liste, der Power-Cycle-Knopf eines PoE-Ports gilt nie als „Gerät neu starten“, und nur Datenraten zählen als Durchsatz. Danke an @srsly88.
+- **Melderlisten (#225):** ein Melder, der nach seinem Raum heißt, nennt den Raum nur einmal. Danke an @srsly88.
+- **Klingeln und Glocke (#215, #242):** eine Reolink-Besucherklingel zeigt „… hat geklingelt“ ohne zweite Zeile beim Loslassen, und ein neuer Eintrag erscheint sofort in der offenen Glocke. Danke an @ejetzass.
+- **Kamera-Hinweise (#237):** „Es hat geklingelt“ und „Bewegung erkannt“ enden pünktlich, auch wenn der Sensor für Uhrzeit und Datum keinen Wert hat. Danke an @ejetzass.
+- **Bildschirmschoner und Uhren (#228, #229, #230, #207, #179, #214):** die obere Leiste zeigt die Uhr des Geräts, wenn `sensor.time` nicht verfügbar ist, der Himmel nennt nachts Sonnenuntergang und den kommenden Sonnenaufgang, die Schritte des Einbrennschutzes fallen nicht mehr auf den Minutenwechsel, die Uhr-Vorschau im Studio gleicht dem Dashboard, und der Studio-Hinweis nach einer Vorlagen-Aktualisierung ist übersetzt. Danke an @ejetzass.
+- **Raumgruppen am Handy (#245):** die Hilfe zu „Räume am Handy nach Kategorien gliedern“ nennt die Regel (mindestens vier Kacheln von zwei Arten), und die Handy-Vorschau im Studio weist auf einen Raum hin, der ohne Überschriften bleibt. Danke an @domemshur.
+- **Energie-Bildschirmschoner:** die Werte unter der Linie stehen mittig wie der Fluss darüber.
+- **Aufräumen nach einem Neustart:** das einmalige Aufräumen der Skripte früherer Versionen wartet auf einem frisch gestarteten Home Assistant nicht mehr bis zu zwei Minuten.
+
+Aus der Prüfrunde, nach Bereichen:
+
+- **Studio:**
+  - Eine Kachel namens „Auto“ heißt nicht mehr plötzlich „Automatisch“, und ein geleerter Kachelname wird wieder der eigene Name der Kachel.
+  - Raum umbenennen prüft auf leere und doppelte Namen wie Raum hinzufügen.
+  - Rückgängig bleibt an seinem Platz, wenn Wiederholen erscheint, und ⌘Z in einem unberührten Feld macht die letzte Studio-Änderung rückgängig.
+  - Das Community-Fenster ist neben der Seitenleiste von Home Assistant nicht mehr abgeschnitten.
+  - Eine ausgeblendete Kachel sagt unter Sichtbarkeit „Ausgeblendet“, und die Zusammenfassung der Sichtbarkeit ist ganz lesbar.
+  - Einen schon ausgeblendeten Raum zu löschen fragt die einfache Frage.
+  - Die Vorschau bleibt nach dem Verlassen einer Kachel nicht abgedunkelt.
+  - Die Gerätesuche findet Pflanzen.
+  - Aus einem Bereich gefüllte Badges zählen als eine Änderung je Raum, und die Änderungsliste nennt Einstellungen beim Namen.
+  - Am Tablet hat der Inspektor wieder seine Überschrift; am Handy schiebt sich „Bearbeitet“ nicht mehr über den Suchknopf.
+  - „Wer sieht das“ nennt Licht-Badges, die das Licht einer ausgeblendeten Kachel weiter zeigen, mit „Dort auch ausblenden“.
+  - Das Bild des CO-Melders im Community-Katalog ist im dunklen Design sauber.
+- **Einstellungen:**
+  - Ausgeblendete Szenen bleiben auch von den Raumseiten am Handy fern.
+  - „Favoriten auf Zuhause“ lässt sich wieder ausschalten.
+  - „Alle Kacheln auf Automatisch“ ist übersetzt und antwortet auch beim zweiten Klick.
+  - Ein falscher Strompreis oder Suchradius wird an seinem Feld erklärt, und der behaltene Wert bleibt sichtbar.
+  - Der Zeitsensor bietet nur Sensoren an, die eine Uhrzeit zeigen, und das Zusatz-Feld der Uhr ist erklärt.
+  - Die Glocke auszuschalten erscheint in der Änderungsliste als Änderung der Glocke, und die Hilfe der Glocke kommt ohne Programmierbegriffe aus.
+  - Je ein Wort für Zuhause, Wandtablet und „Keine gewählt“, und die Hinweise passen zu ihren Feldern.
+  - Das Einstellungsblatt am Handy ist im hellen Design deckend.
+  - Beim Speichern einer Einstellung bleiben Abschnitte erhalten, die eine andere Casora-Version gespeichert hat; Raumarten überstehen so ein Zurückgehen und das Update danach.
+  - Der Bildschirmschoner folgt der 12-Stunden-Uhr, der Foto-Bildschirmschoner schreibt Raumnamen wie die Raumleiste, und der Kalender-Bildschirmschoner blendet die Tage des Vormonats ab.
+- **Handy:**
+  - Ein Raum ohne Kacheln zeigt den Leer-Hinweis statt einer leeren Seite, ebenso eine leere Favoriten-Reihe.
+  - Der ⋯-Knopf ist markiert, solange sein Menü offen ist.
+  - Der Räume-Knopf zeigt nie ein zweites Haus neben Zuhause.
+  - Szenennamen auf schmalen Bildschirmen werden an einer sinnvollen Stelle gekürzt, nicht mitten im Wort.
+  - „Neu laden“ im ⋯-Menü klingt nicht mehr nach einem Software-Update (Englisch, Französisch).
+  - Die Handy-Ansicht eines neuen leeren Dashboards heißt Zuhause.
+  - Benutzer ohne Admin-Rechte sehen „Noch keine Geräte“ ohne Verweis ins Studio.
+- **Kacheln und Popups:**
+  - Der Schalter der Thermostat-Kachel heizt auf das Ziel des Rads, nicht auf den Frostschutz von 5 °C.
+  - Ein Heizkörper zeigt die Temperatur seines eigenen Raums, nicht den Hausdurchschnitt.
+  - Licht-Kachel und Licht-Badge auf Zuhause nennen dieselbe Zahl, und unerreichbare Lampen heißen „Offline“, nie „Alle aus“.
+  - Das Jalousie-Popup sagt nicht mehr „6 von 6 geöffnet“ unter „Teilweise geöffnet“.
+  - Ein Lautsprecher-Popup nimmt die Wiedergabe-Farbe an, wenn die Wiedergabe gleich nach dem Öffnen weitergeht.
+  - Mit Alarm-Code ist das Code-Feld nicht mehr verdeckt und sagt „Erst Code eingeben“, wenn ein Modus ohne Code angetippt wird.
+  - Das Luftqualitäts-Popup zeigt kein leeres Rad „Unbekannt“ mehr, und der Modus des Luftreinigers steht in Worten da.
+  - Lüfterstufe 2 setzt 66 %, wie Home Assistant es bei drei Stufen erwartet; Popup und Schnellmenü zeigen dieselbe Stufe, denselben Lichtton und dieselbe Helligkeit.
+  - Eine Kachel ohne eigenes Symbol bekommt das Symbol ihrer Geräteart statt „?“, und das PlayStation-Symbol ist im hellen Design zu sehen.
+  - Das Schnellmenü zeigt die Restzeit eines Zeitschalters ganz.
+  - Die Dienstmonate im Abfall-Popup folgen einem Sensor für „Du bist dran“, und Auswahlseiten zeigen ihre Optionen mit dem Wort der Zeile.
+  - Der Lautstärke-Ring im Medien-Badge nimmt den Akzent des Covers wie das eigene Popup des Players.
+- **Sicherheit und Kameras:**
+  - Nach einem Update sagt das Sicherheits-Badge nie „Alles sicher“, solange seine Zählung noch fehlt.
+  - Eine gekippte Tür, deren Kippsensor zu ihrem Kontakt gehört, zählt als gekippt.
+  - Die Zeitleiste einer Offline-Kamera sagt „Keine Daten“ statt „Heute keine Bewegung“, und die Kameras-Kachel sieht offline aus, wenn alle Kameras es sind.
+  - Home Assistants eigener Jalousie-Dialog nutzt Casoras Jalousie-Farbe statt Blau.
+  - Mit geteilter Glocke heißt die Aktion für Benutzer ohne Admin-Rechte „Für alle ausblenden“.
+  - Das Licht-Badge auf Zuhause lässt Räume weg, die der Betrachter nicht sieht.
+- **Wetter und Klima:**
+  - Die Warnungs-Kachel nennt eine Warnung genauso wie die Glocke.
+  - Das Ende einer Warnung folgt der 12/24-Stunden-Uhr.
+- **Sprachen:**
+  - Die Glocke lässt Namen aus Home Assistant in jedem Satz, wie sie sind (Zonen, Saugroboter, Geräte, Pflanzen, Alarm).
+  - Wetterwarnungen und ihre Zeitspanne sind in Glocke und Warnungs-Popup übersetzt.
+  - Englisch schreibt durchgehend amerikanisch (color, recognize, canceled).
+  - „%“ rutscht nie allein in die nächste Zeile, und der Knopf in „Wie geht …?“ sagt „Öffnen“.
+  - Home-Assistant-Benachrichtigungen mit HTML zeigen sauberen Text, einfache Formatierung bleibt im Popup, und ein langer Titel ist ganz lesbar.
+  - Der Hinweis „Casora hat aufgeräumt“ nennt Skripte und Dashboards beim Namen.
+  - Nummerierte Feldnamen wie „Bewegungsmelder 1“ sind übersetzt.
+- **Update und Einrichtung:**
+  - Der Update-Hinweis listet nur echte Neuerungen aus den Notizen, ohne abgeschnittene Sätze, und kennzeichnet englische Notizen.
+  - Der Geräte-Assistent zählt Lampen in einer Lichtgruppe als schon benutzt.
+  - Die Einrichtungsvorschau zählt nur Geräte ohne Home-Assistant-Bereich als raumlos.
+- **Doku:** Anleitung, README und Website nennen alle sieben Designs, den Bildschirmschoner, die neun Einstellungskacheln, alle elf Community-Karten und `casora.setup_plan`, mit den richtigen Einstellungspfaden.
+
 ## 26.11.29 – 20.11.2026
 
 Neu gezeichnete Bildschirmschoner, Rauch- und Wassermelder unter Sicherheit, Müll als rausgestellt bestätigen, Energie über Tag, Woche und Monat, eine Smart-Meter-Karte und Korrekturen aus drei Betas.

@@ -4,6 +4,123 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.11.30 – 27.11.2026
+
+The biggest round of polish Casora has had. Before this release, 20 AI testers clicked through every function on test installations: setup, the Studio and all its settings, phone, tablet and desktop, every tile and popup, security, all languages and the update from older versions. They filed more than 190 findings, and about 150 of them are fixed in this release. On top come seven betas with a card for Smart Heating Control, own badges that show by condition, a room climate chart for the garden, new screensaver choices and the fixes you reported.
+
+### New
+<!-- HEADLINE FEATURES: doorbell moment, living house photo (weather), Assist opens Casora popups, tablet wakes on motion -->
+
+- **Smart Heating Control (#240):** a new community card for the [Smart Heating Control](https://github.com/sandreialexandru/Smart-Heating-Control) integration, one tile per room, named after the room. The tile shows the room temperature and the target ("20.4° · Heating to 21°"). The popup has a dial for the target, "Automatic" to go back to the schedule, the levels (Home, Eco and more) as quick picks, the schedule, the house mode, the current decision and the last 24 hours. "Schedule" shows the week at a glance, switches the day profile and edits a profile's time slots; profile names read as words (Workday, Weekend, Home office). If the integration cannot read its stored schedule, the card shows it read only, so it never overwrites your plan. Thanks to @gekberlin.
+- **Own badges with "Show when" (#238):** every own badge gets the condition editor of the tiles (Studio › room › Own badges). Choose all, any or none of the conditions; the badge appears only while they are met and follows the state without a reload, on the desktop and on the phone. Thanks to @stalakerob.
+- **Room climate in the garden (#235):** the room climate popup of an outdoor room (garden, terrace, balcony) gets the history chart over 24 hours, 7 or 30 days with the highest and lowest temperature. It takes the house's outdoor sensors and every temperature sensor in that room's Home Assistant area, up to four in one chart with a legend. The tile's new field "More outdoor sensors" adds others, for example a pond or greenhouse sensor. Thanks to @stalakerob.
+- **Calendar screensaver, two weeks (#231):** Studio › Settings › Screensaver › "Calendar shows" offers Month (as before) or Two weeks, with this week and the next and the time of every appointment. Thanks to @ejetzass.
+- **Close popups when idle (#216):** under Studio › Settings › Tapping & tablet a wall tablet can close an open popup after a while without use (off by default). "Return to Home when idle" now waits while a popup is open. Thanks to @ejetzass.
+- **Scenes badge on the phone (#243):** when scenes show as a badge on Home, the new switch "Also show on the phone" puts the Scenes badge into the badge row of the phone's Home as well. The Scenes button at the bottom stays. Off by default. Thanks to @daxy01.
+- **Detectors one by one:** Studio › Settings › Home & devices › Security has two switches, "Smoke detectors" (with gas and carbon monoxide) and "Water detectors", and a list "Not counted" that leaves out single detectors everywhere.
+- **Burn-in protection as a switch (#230):** the screensaver settings have a "Burn-in protection" switch, on by default. An LCD does not need it. Thanks to @ejetzass.
+- **Stop in the blinds popup:** blinds that can stop get a Stop button in their popup, as in the hold menu, for a single blind and for a group.
+- **Keyboard in popups (#246):** a tile tap moves the keyboard focus into the popup, Tab stays inside, a long popup scrolls by keyboard and shows a focus ring. Touch and screen readers work as before. Thanks to @ejetzass.
+
+### Improved
+- **The phone's back button:** Android's back button or gesture (and the browser's back) now closes an open popup first, goes up one level from a popup's sub page, and leads from a room back to Home. Only then does it leave the dashboard. This also works after Home Assistant's own detail dialog was open.
+- **Faster with many rooms:** the phone's Home builds the rooms' headings and tile rows after the page has loaded, in quiet moments or as soon as you open a room. On the desktop a room builds "Now playing" and its folded badge rows only when they show; after a walk through 31 rooms the memory use drops from 231 to 103 MB. Room photos load after the page stands, one after another: 1 picture request instead of 48 in the first three seconds.
+- **Less work while idle (#227):** tiles only update when something they show has changed, a tile row no longer checks itself on every state change in the house, a chart with nothing new no longer redraws, and a fridge tile without an entity no longer watches the whole house. In our measurement the dashboard's work dropped by a third to a half. Thanks to @stalakerob.
+- **The Studio preview matches the dashboard:** TVs, Apple TV, PlayStation and cameras carry their own icons in the phone preview, a phone room page shows the room's scenes under "Scenes" and "Devices" like the phone, an unlocked lock is orange, blinds say "All open", plants, thermostats and the football club logo look as on the dashboard, an offline device gets the dashed warning rim, badge texts use the dashboard's translation, and "View as" leaves out the rooms that person does not see.
+- **Popups say things once and the same way:** the status line in a popup's head stays on one line; the camera tile and its popup name the same state, and a camera that delivers no picture offers "Try again"; the car popup names the lock once; the climate popup says "Humidity good"; the weather says "Partly cloudy" everywhere; the recipe popup shows the meal plan and the shopping list on one plate each; the media popup marks the chosen source, video apps get their own icons and the tile reads "Artist · Title".
+- **One rule for colors:** symbols on orange and yellow are dark everywhere (tiles, badges, scenes, bell, popups); open and tilted doors and windows are orange, red only at alarm level; a paused player keeps its device color on the head switch; "1 offline" on the Cameras tile uses the offline warning color; the scene pill in the light design stands out from the room photo; the symbols in the bell settings are pale circles like the other settings lists.
+- **Weather from one source:** the room head, the dial, "Now" in the hourly preview and the chart all show the outdoor sensor if there is one, otherwise the weather service. A sensor you picked in the Studio still comes first.
+- **Settings in one form:** one save bar per change instead of up to three buttons, "Advanced" looks the same on every page, every row has its title, a sentence below and the field below or the switch on the right, and number fields say what is wrong right at the field.
+- **Setup assistant:** the move from existing dashboards counts its own steps ("Move 1 of 3"), "Create dashboard" from the Studio stays a sheet with ✕, Back and Escape and shows its three choices side by side, "Use as Default Dashboard" stands above the preview, a room name that already exists selects that room and says so, with no room picked it says that only Home is created, the welcome counts the Hemma dashboards it found, and "Studio tour" and "Welcome screen" have clearly different names with icons in the Help menu.
+- **Day line screensaver (#233):** a running appointment leads ("now · until 19:30"), the line shows 3 hours back and 15 ahead, the color marks what is still to come, appointments close to each other share one plate, and each row has a dot in its calendar's color. Thanks to @ejetzass.
+- **Tablets:** at exactly 768 px (a classic iPad upright) the room bar, the clock and the player are there, and on narrow screens the clock sits beside the room bar instead of under it.
+- **Badge rows:** an opened badge row is remembered per device, so a tap on one screen no longer opens it on every other screen.
+
+### Fixed
+- **Non-admin users locked out of Home Assistant (#244):** the scene tiles asked Home Assistant for every scene's configuration, also in the browser of a user without admin rights. Home Assistant counted the refused requests as failed logins, so with IP ban on, family members' phones got banned. Casora now asks only in an admin's browser. If a device was banned already, remove it from `ip_bans.yaml` and restart Home Assistant once. Thanks to @daxy01 for the detailed report.
+- **Weather stations under Security (#220):** a weather station's rain sensor no longer counts as a water detector. Casora recognizes rain sensors by name, by device (weather station, Ecowitt, Davis, Bresser and others) or by a device that also measures wind or rain; real leak sensors keep counting. Thanks to @stalakerob.
+- **Phone bar after "back" (#221):** coming back to Casora with Android's back button while a room was open no longer leaves the bar without the bell and the menu. Thanks to @stalakerob.
+- **Energy today and this month (#223):** with a meter that counts up forever (for example a Shelly 3-phase meter), the energy popup and the house page showed the meter's total reading. Casora now takes today's and this month's usage from Home Assistant's long-term statistics. Thanks to @Strako80.
+- **Network popup with udr7 (#226):** WLAN rows are named after their SSID, the router and switches without client or CPU values (for example Flex Mini) are listed, a PoE port's power cycle button is never taken as "restart device", and only data rates count as throughput. Thanks to @srsly88.
+- **Detector lists (#225):** a detector named after its room shows the room only once. Thanks to @srsly88.
+- **Doorbells and the bell (#215, #242):** a Reolink visitor doorbell shows "… rang" without a second row on release, and a new entry appears in the open bell right away. Thanks to @ejetzass.
+- **Camera alerts (#237):** "Someone rang" and "Motion detected" end on time even when the Time & Date sensor has no value. Thanks to @ejetzass.
+- **Screensavers and clocks (#228, #229, #230, #207, #179, #214):** the top bar shows the device clock when `sensor.time` is unavailable, the sky by night labels sunset and the coming sunrise, the burn-in steps no longer fall on the minute change, the Studio clock preview matches the dashboard, and the Studio notice after a template update is translated. Thanks to @ejetzass.
+- **Room groups on the phone (#245):** the help of "Group rooms by category on the phone" names the rule (at least four tiles of two kinds), and the Studio's phone preview notes a room that stays without headings. Thanks to @domemshur.
+- **Energy screensaver:** the values under the line are centered like the flow above them.
+- **Cleanup after a restart:** the one-time cleanup of scripts from earlier versions no longer waits up to two minutes on a freshly started Home Assistant.
+
+From the test round, by area:
+
+- **Studio:**
+  - A tile named "Auto" no longer turns into "Automatic", and an emptied tile name goes back to the tile's own name.
+  - Renaming a room checks for an empty or duplicate name, like adding one.
+  - Undo stays in place when Redo appears, and ⌘Z in an untouched field undoes the last Studio change.
+  - The Community window is no longer cut off beside Home Assistant's sidebar.
+  - A hidden tile says "Hidden" under visibility, and the visibility summary is readable in full.
+  - Deleting a room that is already hidden asks the plain question.
+  - The preview no longer stays dimmed after leaving a tile.
+  - The device search finds plants.
+  - Badges filled from an area count as one change per room, and the change list names settings by their name.
+  - On tablets the inspector has its title again; on the phone the "Edited" pill no longer covers the search button.
+  - "Who sees this" names light badges that still show a hidden tile's light, with "Hide it there too".
+  - The CO detector picture in the community catalog is clean in dark mode.
+- **Settings:**
+  - Hidden scenes stay off the phone's room pages.
+  - "Favorites on Home" can be switched off again.
+  - "Set all tiles to Automatic" is translated and answers on a second click.
+  - A wrong electricity price or search radius is explained at its field, and the kept value stays visible.
+  - The time sensor offers only sensors that show a time, and the clock's suffix field is explained.
+  - Turning off the bell shows as a bell change in the change list, and the bell help has no programming terms.
+  - One word each for Home, Wall tablet and "None chosen", and hints match their fields.
+  - The settings sheet on the phone is opaque in the light design.
+  - Saving a setting keeps sections that another Casora version stored, so room types survive a downgrade and the update after it.
+  - The screensaver follows the 12-hour clock, the photo screensaver writes room names like the room bar, and the calendar screensaver dims last month's days.
+- **Phone:**
+  - A room without tiles shows the empty hint instead of a blank page, also an empty favorites row.
+  - The ⋯ button is marked while its menu is open.
+  - The Rooms button never shows a second house next to Home.
+  - Scene names on narrow screens are cut at a sensible place, not mid word.
+  - "Reload" in the ⋯ menu no longer reads like a software update (English, French).
+  - A new empty dashboard's phone view is called Home.
+  - Users without admin rights see "No devices yet" without a link to the Studio.
+- **Tiles and popups:**
+  - The thermostat tile's switch heats to the dial's target, not to the 5 °C frost guard.
+  - A radiator shows its own room's temperature, not the house average.
+  - The Home light tile and the light badge give the same count, and unreachable lamps read "Offline", never "All off".
+  - The blinds popup no longer says "6 of 6 open" under "Partly open".
+  - A speaker popup takes the playing color when playback resumes right after opening.
+  - With an alarm code, the code field is no longer covered and says "Enter the code first" when a mode is tapped without one.
+  - The air quality popup shows no empty "Unknown" dial, and the air purifier's mode is in words.
+  - Fan level 2 sets 66 %, as Home Assistant expects for three speeds; popup and hold menu show the same level, light tone and brightness.
+  - A tile without its own icon gets the icon of its device type instead of "?", and the PlayStation icon is visible in the light design.
+  - The hold menu shows a timer's time left in full.
+  - The waste popup's duty months follow a your-turn sensor, and select pages show their options with the row's word.
+  - The media badge's volume ring takes the cover's accent like the player's own popup.
+- **Security and cameras:**
+  - After an update the security badge never says "All secure" while its count is still missing.
+  - A tilted door whose tilt sensor belongs to its contact counts as tilted.
+  - An offline camera's timeline says "No data" instead of "No motion today", and the Cameras tile looks offline when every camera is.
+  - Home Assistant's own blinds dialog uses Casora's blinds color instead of blue.
+  - With the shared bell, the action for users without admin rights reads "Hide for everyone".
+  - The light badge on Home leaves out rooms the viewer does not see.
+- **Weather and climate:**
+  - The warning tile names a warning the same way as the bell.
+  - A warning's end time follows the 12/24-hour clock.
+- **Languages:**
+  - The bell keeps names from Home Assistant as they are in every sentence (zones, vacuums, appliances, plants, alarm).
+  - Weather warnings and their time span in the bell and the warning popup are translated.
+  - English uses American spelling throughout (color, recognize, canceled).
+  - "%" never breaks onto its own line, and the "How do I …?" button says "Open topic".
+  - Home Assistant notifications with HTML show clean text, simple formatting stays in the popup, and a long title is readable in full.
+  - The "Casora cleaned up" notice names scripts and dashboards by their names.
+  - Numbered field names such as "Motion sensor 1" are translated.
+- **Update and setup:**
+  - The update prompt lists only real news from the notes, without cut sentences, and marks English notes as such.
+  - The device assistant counts lamps inside a light group as already used.
+  - The setup preview counts only devices without a Home Assistant area as roomless.
+- **Docs:** the guide, the README and the website name all seven designs, the screensaver, the nine settings tiles, all eleven community cards and `casora.setup_plan`, with the right settings paths.
+
 ## 26.11.29 – 20.11.2026
 
 Redrawn screensavers, smoke and water detectors under Security, waste you can mark as put out, energy over day, week and month, a Smart Meter card, and fixes from three betas.
