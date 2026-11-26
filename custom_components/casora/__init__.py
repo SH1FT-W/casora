@@ -411,6 +411,10 @@ async def _async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     from .live_activity import async_setup_live
 
     await async_setup_live(hass)
+    # Assist shows the matching popup (assist_show.py): sentence triggers, LLM API "Casora", websocket for the chat.
+    from .assist_show import async_setup_assist_show
+
+    await async_setup_assist_show(hass, entry)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     # Push bei neuen Casora-Versionen (update_push.py) – erst jetzt steht fest, ob HACS Casora verwaltet.
     hass.data[DOMAIN]["update_push"] = await async_start_update_push(hass, entry)
@@ -518,6 +522,9 @@ async def _async_teardown(hass: HomeAssistant, entry: ConfigEntry, *, remove_pan
     hass.data.get(DOMAIN, {}).pop("charging", None)
     hass.data.get(DOMAIN, {}).pop("notify_hidden", None)
     hass.data.get(DOMAIN, {}).pop("waste_out", None)
+    from .assist_show import async_unload_assist_show
+
+    async_unload_assist_show(hass)
     live = hass.data.get(DOMAIN, {}).pop("live", None)
     if live:
         live.stop()

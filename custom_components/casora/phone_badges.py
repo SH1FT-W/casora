@@ -38,7 +38,7 @@ CUSTOM_TEMPLATE = "casora_custom"
 # die Antwort soll klein bleiben.
 _SKIP_PREFIX = ("notify_", "notification_", "casora_notify", "image", "weather_", "scene_",
                 "room_photo", "font")
-_SKIP_KEYS = {"scenes", "show_assist", "show_notifications", "show_now_playing_header"}
+_SKIP_KEYS = {"scenes", "show_assist", "assist_popups", "show_notifications", "show_now_playing_header"}
 # Only for the overview room (home_badges): what its Scenes badge needs on the phone (#243).
 _HOME_SCENE_KEYS = ("scene_exclude", "scene_order")
 
