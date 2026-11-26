@@ -79,6 +79,24 @@ const house = (outdoor, own) => {
   assert.ok(watched(house(19.7)).has('sensor.qa_aussen_temperatur'), 'header watches the outdoor sensor it shows');
   assert.ok(watched(house('unavailable')).has('sensor.qa_aussen_temperatur'), 'and while it has no reading (comes back)');
   assert.ok(watched(house(19.7, 21.2)).has('sensor.qa_aussen_temperatur'), 'the outdoor sensor beside an own one too');
+  // Gate 26.11.2026 (r926, r341): button-card proxies the card's hass too, so the outdoor search through hass.states
+  // put every state of the house on the header's watch list (2565 of 2565) and redrew it on every change anywhere.
+  // The search reads Home Assistant's own hass; the card watches only what it shows.
+  {
+    const hh = house(19.7);
+    for (let i = 0; i < 200; i++) hh.states['sensor.qa_other_' + i] = { entity_id: 'sensor.qa_other_' + i, state: '1', attributes: {} };
+    const seen = new Set();
+    const proxy = new Proxy(hh.states, { get: (t, k) => { if (typeof k === 'string') seen.add(k); return t[k]; } });
+    const cardHass = Object.assign({}, hh, { states: proxy, entities: Object.assign({}, hh.entities) });
+    const prevQs = globalThis.document.querySelector;
+    globalThis.document.querySelector = (q) => (q === 'home-assistant' ? { hass: hh } : null);
+    try {
+      new Function('window', 'states', 'hass', 'variables', 'entity', 'user', src)(
+        window, proxy, cardHass, { hero_mode: true, show_icon: false }, hh.states[W], {});
+    } finally { globalThis.document.querySelector = prevQs; }
+    assert.ok(seen.has('sensor.qa_aussen_temperatur'), 'header still watches its outdoor sensor');
+    assert.ok(seen.size <= 5, `header watches only what it shows, not the house (${seen.size}: ${[...seen].slice(0, 8)})`);
+  }
   // The popup's wheel takes its „now“ from the same function.
   const pop = T.casora_weather.tap_action.casora_popup.content;
   assert.match(pop, /const _wxNow = window\.casoraDevice && window\.casoraDevice\.weatherNow \? window\.casoraDevice\.weatherNow\(hass, id, \{ temp: tsId \|\| '' \}\) : null;/);

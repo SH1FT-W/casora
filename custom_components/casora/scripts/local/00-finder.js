@@ -2598,9 +2598,14 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
      number of states). { entity, attribute?, value, unit } or null. */
   var wxOutC = null;
   // The outdoor temperature sensor weatherNow falls back on (outdoor()), cached per registry and number of states.
+  // The search goes through Home Assistant's own hass, not the card's: button-card notes every state a template reads
+  // through its hass as watched, so the weather header watched the whole house and redrew on every change anywhere
+  // (gate r926/r341, like the fridge in #227). The caller reads the sensor found through its own hass/states.
   function weatherOutdoor(hass) {
-    var S = (hass && hass.states) || {}, R = reg(hass), n = Object.keys(S).length;
-    if (!wxOutC || wxOutC.R !== R || wxOutC.n !== n) wxOutC = { R: R, n: n, id: outdoor(hass, 'temperature') };
+    var ha = typeof document !== 'undefined' && document.querySelector ? document.querySelector('home-assistant') : null;
+    var H = ha && ha.hass && ha.hass.states ? ha.hass : hass;
+    var S = (H && H.states) || {}, R = reg(H), n = Object.keys(S).length;
+    if (!wxOutC || wxOutC.R !== R || wxOutC.n !== n) wxOutC = { R: R, n: n, id: outdoor(H, 'temperature') };
     return wxOutC.id;
   }
   function weatherNow(hass, wid, opts, outT) {
