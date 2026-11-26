@@ -614,6 +614,9 @@
       const group = this._bGroup;
       const undo = { label: tr("Undo"), run: () => this._bUndoTo(group.snap) };
       clearTimeout(this._bSoftT);
+      // On a settings page the save bar there („Unsaved changes · Save settings“) already holds the change: no second
+      // „Save now“ beside it (Prüfrunde u03-05, u04-08: toast and bar stood on top of each other at the bottom).
+      if (soft && typeof this._csOwnsChanges === "function" && this._csOwnsChanges()) return;
       if (soft) {
         this._bSoftT = setTimeout(() => {
           const first = !this._bToldDone;

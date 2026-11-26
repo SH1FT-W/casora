@@ -1961,11 +1961,12 @@
       }
     };
     // A change to the dashboard while a page of the new structure is open belongs to the bar.
+    P._csOwnsChanges = function () { return !!this._csOpen && /^n-/.test(String(this._csPage || "")); };
     const markDirty = P._markDirty;
     P._markDirty = function () {
       const before = this._lastPrint;
       const r = markDirty.apply(this, arguments);
-      if (this._csOpen && !this._csLoadingDash && /^n-/.test(String(this._csPage || "")) && this._lastPrint !== before && before !== undefined) this._csDashTouched = true;
+      if (this._csOwnsChanges() && !this._csLoadingDash && this._lastPrint !== before && before !== undefined) this._csDashTouched = true;
       // A field may change without an event the bar listens to (a menu picks on mousedown, a slider writes a beat
       // after the last move): the bar follows every change of the dashboard.
       if (this._csOpen && this._lastPrint !== before && typeof this._csBar === "function") this._csBar();
@@ -2004,14 +2005,14 @@
       }
     };
 
-    // block: the key of a block on a tile page (e.g. "live"): only that block is drawn again. A live refresh every 5 s
-    // redrew the whole tile before, including the Studio's own drawing of this dashboard's phone section, for nothing.
     // After a refused save: the field with the wrong value in view and in focus (the message at the top may be out of sight).
     P._csFocusBad = function () {
       const f = this.shadowRoot && this.shadowRoot.querySelector('input[aria-invalid="true"]');
       if (!f) return;
       try { f.scrollIntoView({ block: "center" }); f.focus({ preventScroll: true }); } catch (e) { /* not drawn */ }
     };
+    // block: the key of a block on a tile page (e.g. "live"): only that block is drawn again. A live refresh every 5 s
+    // redrew the whole tile before, including the Studio's own drawing of this dashboard's phone section, for nothing.
     P._csRepaint = function (block) {
       if (block && this._csRepaintBlock(block)) return;
       // Page open (desktop with sidebar or phone in the new Studio, there without split): redraw.
