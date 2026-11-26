@@ -42,6 +42,8 @@ Casora Nebel:
       casora-mobile-hero-floor: '#EAEDF1'
       casora-entity-background: rgba(227,231,236,0.82)
       casora-entity-background-active: rgba(250,252,254,1)
+      casora-scene-off-bg: rgba(215,220,226,0.96)
+      casora-scene-off-rim: inset 0 0 0 1px rgba(59,69,81,0.08), var(--casora-shadow-rest)
       casora-entity-active-tint: rgba(248,250,253,0.97)
       casora-entity-active-tint-mobile: rgba(248,250,253,1)
       casora-entity-hover-tint: rgba(248,250,253,0.60)

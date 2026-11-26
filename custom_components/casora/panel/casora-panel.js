@@ -8430,7 +8430,8 @@ class CasoraPanel extends HTMLElement {
         }
         :host .scenecolor .swatch { width:16px; height:16px; }
         /* Benachrichtigungen: Symbol grau, solange der Schalter aus ist. */
-        :host .row:has(.sw[aria-checked="false"]) > label .rowicon { background-color:rgba(142,142,147,0.62); }
+        :host .row:has(.sw[aria-checked="false"]) > label .rowicon { background-color:var(--wash-faint, rgba(127,127,127,.1)); }
+        :host .row:has(.sw[aria-checked="false"]) > label .rowicon::after { background-color:var(--ink-3, rgba(127,127,127,.8)); }
 
         /* 11 · Abschneiden: Kacheltitel darf zweizeilig sein, der Zustand ebenfalls. */
         /* Titel vom Inhalt aus bemessen, der Zustand gibt zuerst nach – sonst wird ein
@@ -12133,6 +12134,11 @@ class CasoraPanel extends HTMLElement {
         .row > label.haslead { display:flex; align-items:center; gap:12px; }
         .row .rowicon { --sicon:29px; }
         :host(.phone) .row .rowicon { --sicon:30px; }
+        /* The bell's rows (test round 26.11.2026 d04-14): one kind of symbol in the settings lists – a pale circle in the
+           row's color with the symbol in that color, like the screensaver's „Take turns“ list (.cs-saver-ic); before a
+           filled square with a white symbol. Off: grey on a faint circle, like a left-out screensaver. */
+        .row .rowicon { --sicon:32px; border-radius:50%; background-color:color-mix(in srgb, var(--sc, var(--ink)) 18%, transparent); }
+        .row .rowicon::after { inset:calc(var(--sicon) * .22); background-color:var(--sc, var(--ink)); }
         .row:has(> label.haslead) { position:relative; }
         .row + .row:has(> label.haslead) { border-top-color:transparent; }
         .row + .row:has(> label.haslead)::before {

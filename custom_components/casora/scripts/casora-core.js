@@ -7785,14 +7785,18 @@ window.casoraMenuGlass = {
   // die Schlüsselwortliste greift nur, wenn die Kachel gerade keine Farbe zeigt (z. B. aus).
   // Ersatzfarbe, wenn die Kachel keine eigene Gerätefarbe zeigt – feste Zuordnung (Fix-Runde 1):
   // Gelb Licht/Szenen, Grün Energie/Pflanzen, Orange Heizung/Wetter, Türkis Klima/Jalousie/Allgemein,
-  // Rot Sicherheit/Alarm, Blau Netzwerk/Medien/Updates.
+  // Rot Sicherheit/Alarm, Blau Netzwerk/Updates, Medien in der Medienfarbe der Kachel.
   var RING_HUES = [
     [/thermostat|fbh|heiz|heat/, 'var(--casora-color-orange, #DE8A4E)'],
     [/light|licht|lamp|scene|szene/, 'var(--casora-color-yellow, #E8B04A)'],
     [/energy|energie|solar|power|battery|plant|pflanze/, 'var(--casora-color-green, #6AAE78)'],
     [/weather|wetter|nina/, 'var(--casora-color-orange, #DE8A4E)'],
     [/security|alarm|camera|kamera/, 'var(--casora-color-red, #D35A4E)'],
-    [/network|netz|update|media|music|tv/, 'var(--casora-color-blue, #5B8FC9)'],
+    // A player shows the tile's media colour (pink in Casora) like the playing tile – paused, the head switch turned
+    // blue while the tile was pink (decision 26.11.2026, test round u07-08: the switch in the device colour, the
+    // cover's colour only on the stage, 07-weich-spezial.js tintRule).
+    [/media|music|tv/, 'var(--casora-tile-media-color, var(--casora-color-blue, #5B8FC9))'],
+    [/network|netz|update/, 'var(--casora-color-blue, #5B8FC9)'],
     [/climate|temp|humid|air|vent|klima|cover|blind|shade|jalousie|calendar/, 'var(--casora-color-teal, #4E9E95)'],
   ];
   // „rgb(…)“, „rgba(…)“ oder „#rgb/#rrggbb“ → [r, g, b, a]; sonst null.
@@ -8064,17 +8068,18 @@ window.casoraMenuGlass = {
   }
   window._casoraInkOn = inkOn;
   // Notification list (owner, 01.11.2026, „B: alle weiß“, then „deutlich dunkler“ like his picture B): white symbols on
-  // every coloured circle, like iOS. A tone where white stays under 3 : 1 (green, orange) is filled clearly darker – the
-  // Casora theme's own deep shades (--casora-color-green-deep / -orange-deep), else the tone mixed 75 % with black; yellow
-  // (light) keeps its dark symbol. ink(fill) answers like inkOn. Kacheln and popups keep inkOn as it is.
+  // a coloured circle, like iOS. A green tone where white stays under 3 : 1 is filled clearly darker – the Casora theme's
+  // own deep shade (--casora-color-green-deep), else the tone mixed 75 % with black. Orange and yellow keep their colour
+  // and the dark symbol like the tiles, badges and popups (decision 26.11.2026, test round d01-01: the same door showed
+  // white on deep orange in the bell and dark on orange in the security popup). ink(fill) answers like inkOn.
   function notifyTone(tone, ink) {
     if (!tone) return tone;
     ink = ink || inkOn;
     var isWhite = function (f) { return !/glyph-dark|glyph-off/.test(String(ink(f) || '')); };
-    if (isWhite(tone) || /yellow|tone-light\b/.test(tone)) return tone;
+    if (isWhite(tone) || /yellow|orange|tone-heat\b|sec-warn\b|tone-light\b/.test(tone)) return tone;
     var mix = 'color-mix(in srgb, ' + tone + ' 75%, black)';
     if (!isWhite(mix)) return tone;
-    var deep = /tone-energy\b|color-green\b/.test(tone) ? 'green' : /tone-heat\b|color-orange\b|sec-warn\b/.test(tone) ? 'orange' : '';
+    var deep = /tone-energy\b|color-green\b/.test(tone) ? 'green' : '';
     return deep ? 'var(--casora-color-' + deep + '-deep, ' + mix + ')' : mix;
   }
   window._casoraNotifyTone = notifyTone;

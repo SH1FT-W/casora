@@ -30,7 +30,7 @@ Kacheln, Badges, Raumkarten, Menüs (Glocke, ⋯, Räume, Szenen, Raumleisten-Me
 | Menüs (abgeleitet) | `--casora-menu-row-radius` = Kreis/2 + Rand · `--casora-menu-radius` = Zeile + Rand · `--casora-menu-pad` | 18 + 8 = **26** · 26 + 8 = **34** · 8 px |
 | Druck | `--casora-press-scale` | `.97` auf Tasten (`transform: scale(var(--casora-press-scale, .97))`) |
 | Aktive Zeile (DP-07) | `--casora-soft-row-active` · `-active-shadow` · `-active-ink` · `-active-sub` | hell Creme + Ruhe-Schatten; dunkel Sand 14 %, helle Schrift |
-| Symbol auf Akzent | `--casora-soft-glyph` · `--casora-soft-glyph-dark` | nach Kontrast (Entscheidung 01.11.2026, Prüfung 2): Weiß, wo es auf der Gerätefarbe mindestens 3 : 1 hat (Blau, Türkis, Rot, Rosa, Violett), sonst die dunkle Glyphe (Gelb, Orange, Hellgrün, Mint, Neutral). Rechnet `inkOn()` in `casora-core.js` (Popup-Listen, Bühnen-Symbol, Kopf-Ring, Chips); für Text auf der Farbe mit 4,5 : 1 (`inkOn(fill, 4.5)`), auf durchscheinenden Flächen die Aus-Glyphe; löst „immer Weiß“ (11.10.) ab |
+| Symbol auf Akzent | `--casora-soft-glyph` · `--casora-soft-glyph-dark` | nach Kontrast (Entscheidung 01.11.2026, Prüfung 2): Weiß, wo es auf der Gerätefarbe mindestens 3 : 1 hat (Blau, Türkis, Rot, Rosa, Violett), sonst die dunkle Glyphe (Gelb, Orange, Hellgrün, Mint, Neutral). Rechnet `inkOn()` in `casora-core.js` (Popup-Listen, Bühnen-Symbol, Kopf-Ring, Chips), Kacheln, Badges und Glocke mit derselben Schwelle (§ 6, 26.11.2026); für Text auf der Farbe mit 4,5 : 1 (`inkOn(fill, 4.5)`), auf durchscheinenden Flächen die Aus-Glyphe; löst „immer Weiß“ (11.10.) ab |
 | Popup-Akzent | `--casora-popup-accent` · `--casora-popup-accent-ink` | vom Rahmen je Popup gesetzt = Gerätefarbe der Kachel (Schalter, Kopf-Kachel, aktive Symbole); zeigt der Kopf-Ring einen Fehler in Rot, bleibt der Akzent die Gerätefarbe (Fehler nur Ring und Bühne, 07.11.2026) |
 
 Symbol-Kacheln (abgerundetes Quadrat statt Kreis, Popups seit 1.3): Radius ≈ 30 % – Kopf 56/16, Handy 48/14,
@@ -209,9 +209,16 @@ Eigene SVG-Symbole über `mask-image` (`/casora_assets/icons/<name>.svg`), neue 
 
 Neue Kreisgrößen außerhalb dieser Liste nicht einführen (heute 13 Größen in Popups – Altlast).
 
-Gilt (seit 11.10.): Symbol auf einer Akzentfläche immer Weiß wie auf den Kacheln (`window._casoraInkOn(farbe)`
-liefert `--casora-soft-glyph`). Die Kontrastregel DP-17 (dunkle Tinte auf Gelb/Orange/Grün) ist zurückgenommen,
-weil sie zwischen Kachel und Popup uneinheitlich wirkte. Aus-Symbol `--casora-soft-glyph-off` .70.
+Gilt (Entscheidung 26.11.2026, Prüfrunde d01-01): Symbol auf einer Akzentfläche nach Kontrast, überall gleich –
+Weiß, wo es auf der Farbe mindestens 3 : 1 hat, sonst die dunkle Glyphe (Gelb, Orange, Hellgrün). Popups rechnen es mit
+`inkOn()` (siehe § 0), Kacheln (`casora_entity`, `--casora-tile-glyph-filter`) und Badges (`casora_badge_base`,
+`--casora-badge-on-glyph`) mit derselben Schwelle aus der Kreisfarbe (relative Farbe in CSS), die Glocke lässt Orange und
+Gelb stehen (`notifyTone`). Dasselbe Gerät zeigt sein Symbol auf Kachel, Badge, in der Glocke und im Popup gleich.
+Kacheln lesen die Farbe, in der der Kreis wirklich gemalt ist: Malt ein Zustand den Kreis selbst (`img_cell`
+`background`), nennt er dieselbe Farbe in `--casora-tile-glyph-ground`; in Casora Farbe (getönte Kachel, weißer Chip)
+zählt die Gerätefarbe wie bei `inkOn()` im Popup. Ein durchscheinender Kreis (Deckkraft unter 0,5: Kreis-Token der
+dunklen Designs, Kamera über dem Bild) behält das weiße Symbol. Regeltest `dev/unit/glyph_on_light_colours.mjs`.
+„Immer Weiß“ (11.10.) ist damit abgelöst. Aus-Symbol `--casora-soft-glyph-off` .70.
 
 ## 7. Bewegung
 

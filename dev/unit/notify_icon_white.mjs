@@ -1,6 +1,7 @@
-// Notification list (owner, 01.11.2026, „B: alle weiß“): every symbol on a coloured circle is white with at least 3 : 1;
-// green and orange are filled a step darker for it, yellow (light) keeps its dark symbol (white would need too much).
-// Kacheln and popups keep inkOn unchanged – only the list's rows go through notifyTone.
+// Notification list (owner, 01.11.2026, „B: alle weiß“): a symbol on a coloured circle is white with at least 3 : 1;
+// green is filled a step darker for it. Orange and yellow keep their colour and the dark symbol like tiles, badges and
+// popups (decision 26.11.2026, test round d01-01). Kacheln and popups keep inkOn – only the list's rows use notifyTone.
+// @deckt: custom_components/casora/scripts/casora-core.js#notifyTone,_casoraNotifyTone
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -27,19 +28,23 @@ const tones = {
   green: 'var(--casora-color-green, #6AAE78)', orange: 'var(--casora-color-orange, #DE8A4E)', blue: 'var(--casora-color-blue, #5B8FC9)',
   teal: 'var(--casora-color-teal, #4E9E95)', red: 'var(--casora-color-red, #D35A4E)', yellow: 'var(--casora-color-yellow, #FFCC00)',
 };
-for (const k of ['green', 'orange', 'blue', 'teal', 'red']) {
+for (const k of ['green', 'blue', 'teal', 'red']) {
   const t = notifyTone(tones[k], ink);
   assert.ok(white(t) >= 3, k + ': white ≥ 3 : 1 (' + white(t).toFixed(2) + ' on ' + t + ')');
 }
 assert.equal(notifyTone(tones.blue, ink), tones.blue, 'blue keeps its fill (white already 3 : 1)');
 // Owner, 01.11.2026 (picture B): clearly darker – the Casora theme's deep shades, else 75 % with black.
 assert.equal(notifyTone(tones.green, ink), 'var(--casora-color-green-deep, color-mix(in srgb, var(--casora-color-green, #6AAE78) 75%, black))', 'green clearly darker');
-assert.equal(notifyTone(tones.orange, ink), 'var(--casora-color-orange-deep, color-mix(in srgb, var(--casora-color-orange, #DE8A4E) 75%, black))', 'orange clearly darker');
+// Decision 26.11.2026 (d01-01): orange keeps its colour, the dark symbol like the same door in the security popup.
+assert.equal(notifyTone(tones.orange, ink), tones.orange, 'orange keeps its fill (dark symbol)');
+const secWarn = 'var(--casora-notify-sec-warn, var(--casora-security-warn-color, var(--casora-color-orange, #DE8A4E)))';
+assert.equal(notifyTone(secWarn, ink), secWarn, 'security warning (tilted door) keeps orange');
+assert.equal(notifyTone('var(--casora-tone-heat)', () => 'var(--casora-soft-glyph-dark)'), 'var(--casora-tone-heat)', 'heat tone (orange) too');
 assert.equal(notifyTone('var(--casora-tone-energy)', (f) => (/color-mix/.test(f) ? 'var(--casora-soft-glyph)' : 'var(--casora-soft-glyph-dark)')).slice(0, 30), 'var(--casora-color-green-deep,', 'tone tokens too');
 const theme = fs.readFileSync(new URL('../../custom_components/casora/theme_weich.yaml', import.meta.url), 'utf8');
 assert.match(theme, /casora-color-green-deep: "#4F8F5D"/, 'Casora theme: deep green');
 assert.match(theme, /casora-color-orange-deep: "#B96A33"/, 'Casora theme: deep orange');
-for (const hx of ['#4F8F5D', '#B96A33']) assert.ok(white(hx) >= 3, hx + ': white ≥ 3 : 1 (' + white(hx).toFixed(2) + ')');
+for (const hx of ['#4F8F5D']) assert.ok(white(hx) >= 3, hx + ': white ≥ 3 : 1 (' + white(hx).toFixed(2) + ')');
 assert.equal(notifyTone(tones.yellow, ink), tones.yellow, 'yellow (light) keeps the dark symbol');
 assert.equal(notifyTone('var(--casora-color-yellow, #E8B04A)', ink), 'var(--casora-color-yellow, #E8B04A)', 'theme yellow too (white would reach 3 : 1 at 75 %)');
 // Only the notification rows use it.

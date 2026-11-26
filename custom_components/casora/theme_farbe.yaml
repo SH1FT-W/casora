@@ -43,6 +43,8 @@ Casora Farbe:
       casora-mobile-hero-floor: '#F6EAE5'
       casora-entity-background: rgba(243,226,220,0.82)
       casora-entity-background-active: rgba(255,251,249,1)
+      casora-scene-off-bg: rgba(234,214,207,0.96)
+      casora-scene-off-rim: inset 0 0 0 1px rgba(96,38,96,0.08), var(--casora-shadow-rest)
       casora-entity-active-tint: rgba(255,248,246,0.97)
       casora-entity-active-tint-mobile: rgba(255,248,246,1)
       casora-entity-hover-tint: rgba(255,248,246,0.60)
