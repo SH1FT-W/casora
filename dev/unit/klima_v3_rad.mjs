@@ -34,7 +34,7 @@ const run = (id) => { seen.length = 0; const ent = { entity_id: id, ...states[id
 let r = run('sensor.qa_temp');
 assert.equal(r.st[0], 'chart'); assert.equal(r.st[1].unit, '°'); assert.equal(r.st[1].trend, 'Angenehm');
 assert.ok(r.st[1].ring.heat && r.st[1].ring.min <= 21.4 && r.st[1].ring.max >= 21.4, 'a room range around the value');
-assert.match(r.out.fields.hero, /^Angenehm · gut · /); assert.ok(!/\d/.test(r.out.fields.hero), 'line never shows a number');
+assert.match(r.out.fields.hero, /^Angenehm · Feuchte gut · /); assert.ok(!/\d/.test(r.out.fields.hero), 'line never shows a number');
 assert.equal(r.out.stage, 'stage'); assert.equal(r.out.quick, 'metric', 'the Verlauf under the wheel'); assert.deepEqual(r.out.right, ['read']);
 assert.ok(!/sensor\.qa_temp/.test(r.out.fields.read), 'the stage value is not in the list again');
 
@@ -42,7 +42,7 @@ assert.ok(!/sensor\.qa_temp/.test(r.out.fields.read), 'the stage value is not in
 r = run('sensor.qa_hum');
 assert.equal(r.st[0], 'chart'); assert.equal(r.st[1].value, '48'); assert.equal(r.st[1].unit, '%'); assert.equal(r.st[1].trend, 'Gut', 'the humidity badge\'s word');
 assert.deepEqual(r.st[1].ring.marks, [40, 60]); assert.equal(r.st[1].ring.min, 0); assert.equal(r.st[1].ring.max, 100);
-assert.match(r.out.fields.hero, /^Angenehm · gut · /);
+assert.match(r.out.fields.hero, /^Angenehm · Feuchte gut · /);
 
 // Air quality badge: the score fills the ring in its light; CO₂ 1200 (moderate) decides – in the middle; every reading a curve.
 r = run('sensor.qa_aq');
@@ -51,7 +51,7 @@ assert.equal(r.st[1].value, '1.200'); assert.equal(r.st[1].unit, 'ppm'); assert.
 const g = r.out.fields.metric.card.custom_fields.chart.card;
 assert.deepEqual(g.series.map((x) => x.entity), ['sensor.qa_co2', 'sensor.qa_pm25', 'sensor.qa_pm10'], 'every reading as a curve');
 assert.equal(g.selected, 'sensor.qa_co2', 'the deciding reading first');
-assert.match(r.out.fields.hero, /^Angenehm · gut · /);
+assert.match(r.out.fields.hero, /^Angenehm · Feuchte gut · /);
 // eCO2 of a VOC sensor (VOC device class, ppm) counts as CO₂: 400 ppm is no „Sehr schlecht“; two CO₂ sensors one curve.
 states['sensor.qa_voc_eco2'] = S(400, 'volatile_organic_compounds_parts', 'ppm');
 states['sensor.qa_co2'] = S(500, 'carbon_dioxide', 'ppm');
