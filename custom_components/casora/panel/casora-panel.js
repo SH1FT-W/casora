@@ -10304,7 +10304,7 @@ class CasoraPanel extends HTMLElement {
         .miniphone .mp-scenes.grid .mp-scene { width:100%; }
         .miniphone .mp-head.tappable { cursor:pointer; }
         /* Raum-Kategorien wie am Handy (filter-overlay.js _appendGroupHeader): kleiner und ruhiger. */
-        /* z3: same size, weight and ink as the phone's group heading (18 px, 700, full colour, the theme's
+        /* z3: same size, weight and ink as the phone's group heading (18 px, 700, full color, the theme's
            halo) – at 15 px and 72 % opacity "Jalousien"/"Sicherheit" were hard to read over the photo. */
         .miniphone .mp-head.mp-group { margin-top:18px; margin-bottom:-2px; }
         .miniphone .mp-head.mp-group.first { margin-top:14px; }

@@ -34,7 +34,7 @@ const tint = /const LOCK_UNLOCKED_TINT = "([^"]+)"/.exec(src);
 assert.ok(tint, 'LOCK_UNLOCKED_TINT exists');
 assert.ok(JSON.stringify(T.casora_lock).includes('"--casora-icon-color-current":"' + tint[1] + '"'),
   'preview lock circle = dashboard unlocked color (' + tint[1] + ')');
-assert.ok(/isLock && isUnlocked \? LOCK_UNLOCKED_TINT/.test(src), 'unlocked lock gets the tint');
+assert.ok(/isLock && (active && )?isUnlocked \? LOCK_UNLOCKED_TINT/.test(src), 'unlocked lock gets the tint');
 
 // 3. Switch on, solid style: accent track and white knob, like the dashboard's toggle.
 const onFill = /'var\(--casora-toggle-on-fill, var\(--casora-lps-switch-on, #B67A50\)\)'/.test(JSON.stringify(T));
