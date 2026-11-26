@@ -5923,6 +5923,9 @@
         },
         {
           "--casora-font-set": "[[[\n  const STACKS = {\n    inter:   '\"Inter\", -apple-system, BlinkMacSystemFont, system-ui, sans-serif',\n    hanken:  '\"Hanken Grotesk\", -apple-system, BlinkMacSystemFont, system-ui, sans-serif',\n    jakarta: '\"Inter\", -apple-system, BlinkMacSystemFont, system-ui, sans-serif',\n    system:  '-apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, sans-serif'\n  };\n  const link = (id, href) => {\n    let l = document.getElementById(id);\n    if (l && l.getAttribute('href') === href) return;\n    if (!l) { l = document.createElement('link'); l.id = id; l.rel = 'stylesheet'; document.head.appendChild(l); }\n    l.href = href;\n  };\n  const key = String(variables.font || '').trim().toLowerCase();\n  let want = STACKS[key] || '';\n  if (key === 'custom') {\n    /* Eigene Schrift (z. B. gekaufte Gilroy), im Studio hochgeladen – CSS schreibt fonts.py. */\n    const fam = String(variables.font_family || '').replace(/[\"'<>;{}\\\\]/g, '').trim();\n    link('casora-font-custom', '/local/casora/fonts/casora-fonts.css');\n    want = fam ? '\"' + fam + '\", ' + STACKS.inter : '';\n  }\n  /* Casoras Schriften immer bereitstellen – auch die Designs setzen sie (Inter, Hanken Grotesk). */\n  link('casora-font-faces', '/casora_assets/fonts/hanken-grotesk.css');\n  const ID = 'casora-font-v1';\n  let el = document.getElementById(ID);\n  if (!want) { if (el) el.remove(); return '0'; }\n  if (!el) {\n    el = document.createElement('style');\n    el.id = ID;\n    document.head.appendChild(el);\n  }\n  const css = 'html{--primary-font-family:' + want + ' !important;}';\n  if (el.textContent !== css) el.textContent = css;\n  return '1';\n]]]"
+        },
+        {
+          "--casora-photo-wx": "[[[\n  /* Living photo: rain, snow, fog and wind of the weather entity over the photo (scripts/local/52-photo-weather.js). */\n  const W = window._casoraPhotoWx;\n  return W ? W.attach(this, variables, hass, 'phone') : '0';\n]]]\n"
         }
       ]
     },
@@ -5940,7 +5943,8 @@
       "font_family": null,
       "hold_mode": null,
       "tile_sort": null,
-      "badge_tap": null
+      "badge_tap": null,
+      "photo_weather": null
     }
   },
   "casora_mobile_chrome": {
@@ -10336,6 +10340,9 @@
         },
         {
           "--casora-name-literal": "[[[\n  /* Name der Übersicht nach casoraRoomName (04.10.2026): ohne home_auto nicht übersetzen, z. B.\n     „Home“ auf Deutsch. Nur auf der Startseite (Filter „all“); Filter-Titel wie „Klima“ übersetzt\n     casora-i18n weiter. */\n  const f = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  const own = String(variables.home_name || '').trim();\n  const r = window.casoraRoomName ? window.casoraRoomName(own || 'Home',\n    { casora_auto_name: !own && variables.home_auto === true ? 'home' : undefined, name_literal: !!own || variables.name_literal === true }) : null;\n  const lit = f === 'all' && (r ? r.literal : (variables.name_literal === true && !!own));\n  const n = this.shadowRoot && this.shadowRoot.getElementById('name');\n  if (n) {\n    if (lit) {\n      n.setAttribute('data-no-i18n', '');\n      const want = r ? r.text : own;\n      /* Nur den Textknoten ändern: textContent löschte Lits Marker in #name, beim nächsten\n         Namen (z. B. Filter „Sicherheit“) warf button-card „nextSibling“ von null. */\n      const tn = n.textContent !== want && Array.from(n.childNodes).find((c) => c.nodeType === 3 && c.data.trim());\n      if (tn) tn.data = want;\n    } else n.removeAttribute('data-no-i18n');\n  }\n  return lit ? '1' : '0';\n]]]\n"
+        },
+        {
+          "--casora-photo-wx-src": "[[[\n  /* The phone's photo shell has no weather entity: the header names it for the living photo (52-photo-weather.js). */\n  const W = window._casoraPhotoWx;\n  return W && W.phoneWeather ? W.phoneWeather(variables.weather_entity || '') : '0';\n]]]\n"
         }
       ],
       "custom_fields": {
@@ -15508,6 +15515,9 @@
           "--casora-perf-set": "[[[\n  const p = window._casoraPerf;\n  return p ? p.dashboard(variables.performance) : '0';\n]]]\n"
         },
         {
+          "--casora-photo-wx": "[[[\n  /* Living photo: rain, snow, fog and wind of the weather entity over the photo (scripts/local/52-photo-weather.js). */\n  const W = window._casoraPhotoWx;\n  return W ? W.attach(this, variables, hass, 'room') : '0';\n]]]\n"
+        },
+        {
           "--casora-badge-enter-ease": "[[[\n  const st = states['input_select.casora_expanded_row']?.state;\n  return (st && st !== 'none')\n    ? 'var(--casora-ease-enter, cubic-bezier(0.34, 1.26, 0.44, 1))'\n    : 'cubic-bezier(0.4, 0, 0.2, 1)';\n]]]\n"
         },
         {
@@ -16797,7 +16807,8 @@
       "weather_feels_sensor": null,
       "security_sub_order": null,
       "climate_sub_order": null,
-      "badge_tap": null
+      "badge_tap": null,
+      "photo_weather": null
     }
   },
   "casora_scene_core": {

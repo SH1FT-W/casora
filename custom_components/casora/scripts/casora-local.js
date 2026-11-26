@@ -262,6 +262,7 @@ const MODULES = [
   '50-smart-meter',
   '50-waste-out',
   '51-smart-heating',
+  '52-photo-weather',
 ];
 
 const START_MODULES = MODULES.slice(0, 5);
