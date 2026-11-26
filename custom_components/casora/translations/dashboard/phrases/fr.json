@@ -461,7 +461,7 @@
     "Saugt & wischt Raum": "Aspire et lave la pièce",
     "Schalte alle Lichter aus": "Éteins toutes les lumières",
     "Scharfschaltung läuft": "Armement",
-    "Schlafzimmer Fenster ist offen": "La fenêtre de la chambre est ouverte",
+    "Fenster ist offen": "La fenêtre est ouverte",
     "Schließen": "Fermer",
     "Zurück": "Retour",
     "Schließt": "Se ferme",
@@ -3291,11 +3291,11 @@
     ],
     [
       "^(.+) unscharf$",
-      "{1} désarmée"
+      "{=1} désarmée"
     ],
     [
       "^(.+) scharf · (.+)$",
-      "{1} armée · {2}"
+      "{=1} armée · {2}"
     ],
     [
       "^Wartet seit (.+)$",
@@ -3447,67 +3447,67 @@
     ],
     [
       "^(.+) Update verfügbar$",
-      "Mise à jour de {1} disponible"
+      "Mise à jour de {=1} disponible"
     ],
     [
       "^(.+) hat das Haus verlassen$",
-      "{1} a quitté la maison"
+      "{=1} a quitté la maison"
     ],
     [
       "^(.+) ist angekommen$",
-      "{1} vient d'arriver"
+      "{=1} vient d'arriver"
     ],
     [
       "^(.+) ist gekippt$",
-      "{1} est entrouverte"
+      "{=1} est entrouverte"
     ],
     [
       "^(.+) ist gleich fertig$",
-      "{1} a bientôt fini"
+      "{=1} a bientôt fini"
     ],
     [
       "^(.+) läuft$",
-      "{1} en marche"
+      "{=1} en marche"
     ],
     [
       "^(.+) hat geklingelt$",
-      "{1} a sonné à la porte"
+      "{=1} a sonné à la porte"
     ],
     [
       "^(.+) hat fertig gereinigt$",
-      "{1} a fini de nettoyer"
+      "{=1} a fini de nettoyer"
     ],
     [
       "^(.+) reinigt$",
-      "{1} nettoie"
+      "{=1} nettoie"
     ],
     [
       "^(.+) ist auf der Arbeit$",
-      "{1} est au travail"
+      "{=1} est au travail"
     ],
     [
       "^(.+) ist im (.+)$",
-      "{1} est à {2}"
+      "{=1} est à {=2}"
     ],
     [
       "^(.+) ist in der (.+)$",
-      "{1} est à {2}"
+      "{=1} est à {=2}"
     ],
     [
       "^(.+) ist am (.+)$",
-      "{1} est à {2}"
+      "{=1} est à {=2}"
     ],
     [
       "^(.+) ist bei (.+)$",
-      "{1} est chez {2}"
+      "{=1} est chez {=2}"
     ],
     [
       "^(.+) umgeschaltet auf (.+)$",
-      "{1} passé sur {2}"
+      "{=1} passé sur {2}"
     ],
     [
       "^(.+) aktiv · (Zuhause|Abwesend|Nacht|Urlaub|Bypass)$",
-      "{1} active · {2}"
+      "{=1} active · {2}"
     ],
     [
       "^Alarm scharf – (.+)$",
@@ -3515,43 +3515,43 @@
     ],
     [
       "^(.+) braucht Wasser$",
-      "{1} a besoin d'eau"
+      "{=1} a besoin d'eau"
     ],
     [
       "^(.+) steht zu nass$",
-      "{1} est trop humide"
+      "{=1} est trop humide"
     ],
     [
       "^(.+) braucht Dünger$",
-      "{1} a besoin d'engrais"
+      "{=1} a besoin d'engrais"
     ],
     [
       "^(.+) ist überdüngt$",
-      "{1} a trop d'engrais"
+      "{=1} a trop d'engrais"
     ],
     [
       "^(.+) braucht mehr Licht$",
-      "{1} manque de lumière"
+      "{=1} manque de lumière"
     ],
     [
       "^(.+) bekommt zu viel Sonne$",
-      "{1} reçoit trop de soleil"
+      "{=1} reçoit trop de soleil"
     ],
     [
       "^(.+) steht zu kalt$",
-      "{1} a trop froid"
+      "{=1} a trop froid"
     ],
     [
       "^(.+) steht zu warm$",
-      "{1} a trop chaud"
+      "{=1} a trop chaud"
     ],
     [
       "^(.+) steht in zu trockener Luft$",
-      "{1} : air trop sec"
+      "{=1} : air trop sec"
     ],
     [
       "^(.+) steht in zu feuchter Luft$",
-      "{1} : air trop humide"
+      "{=1} : air trop humide"
     ],
     [
       "^(\\d+) Reinigungen$",
@@ -3575,7 +3575,7 @@
     ],
     [
       "^(.+) entriegelt$",
-      "{1} déverrouillée"
+      "{=1} déverrouillée"
     ],
     [
       "^Gestern, (.+)$",
@@ -4167,7 +4167,7 @@
     ],
     [
       "^(.+) ist offen$",
-      "{1} est ouverte"
+      "{=1} est ouverte"
     ],
     [
       "^(.+) nachfüllen$",
@@ -4283,11 +4283,11 @@
     ],
     [
       "^(.+) ausgeschaltet$",
-      "{1} éteint"
+      "{=1} éteint"
     ],
     [
       "^(.+) ausgelöst$",
-      "{1} déclenché"
+      "{=1} déclenché"
     ],
     [
       "^Vor (\\d+) Min\\.$",
@@ -4515,11 +4515,11 @@
     ],
     [
       "^(.+) Akku fast leer$",
-      "{1} batterie presque vide"
+      "{=1} batterie presque vide"
     ],
     [
       "^(.+) Akku schwach$",
-      "{1} batterie faible"
+      "{=1} batterie faible"
     ],
     [
       "^(\\d+) Wiedergaben$",
@@ -5423,7 +5423,7 @@
     ],
     [
       "^(.+) braucht Aufmerksamkeit$",
-      "{1} à vérifier"
+      "{=1} à vérifier"
     ],
     [
       "^KI: 1 Breaking Change$",

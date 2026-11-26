@@ -47,7 +47,7 @@ function fromFile(lang, german) {
   if (Object.prototype.hasOwnProperty.call(table.exact || {}, german)) return table.exact[german];
   for (const [pattern, out] of table.patterns || []) {
     const m = german.match(new RegExp(pattern));
-    if (m) return out.replace(/\{(\d+)\}/g, (_, i) => m[Number(i)]);
+    if (m) return out.replace(/\{=?(\d+)\}/g, (_, i) => m[Number(i)]);
   }
   return german;
 }

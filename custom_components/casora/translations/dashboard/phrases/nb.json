@@ -464,7 +464,7 @@
     "Saugt & wischt Raum": "Støvsuger & mopper rom",
     "Schalte alle Lichter aus": "Slå av alle lys",
     "Scharfschaltung läuft": "Armerer",
-    "Schlafzimmer Fenster ist offen": "Soveromsvinduet er åpent",
+    "Fenster ist offen": "Vinduet er åpent",
     "Schließen": "Lukk",
     "Zurück": "Tilbake",
     "Schließt": "Lukker",
@@ -3284,11 +3284,11 @@
     ],
     [
       "^(.+) unscharf$",
-      "{1} deaktivert"
+      "{=1} deaktivert"
     ],
     [
       "^(.+) scharf · (.+)$",
-      "{1} armert · {2}"
+      "{=1} armert · {2}"
     ],
     [
       "^Wartet seit (.+)$",
@@ -3440,67 +3440,67 @@
     ],
     [
       "^(.+) Update verfügbar$",
-      "{1} oppdatering tilgjengelig"
+      "{=1} oppdatering tilgjengelig"
     ],
     [
       "^(.+) hat das Haus verlassen$",
-      "{1} dro hjemmefra"
+      "{=1} dro hjemmefra"
     ],
     [
       "^(.+) ist angekommen$",
-      "{1} har kommet hjem"
+      "{=1} har kommet hjem"
     ],
     [
       "^(.+) ist gekippt$",
-      "{1} er vippet"
+      "{=1} er vippet"
     ],
     [
       "^(.+) ist gleich fertig$",
-      "{1} er snart ferdig"
+      "{=1} er snart ferdig"
     ],
     [
       "^(.+) läuft$",
-      "{1} kjører"
+      "{=1} kjører"
     ],
     [
       "^(.+) hat geklingelt$",
-      "{1} ringte på"
+      "{=1} ringte på"
     ],
     [
       "^(.+) hat fertig gereinigt$",
-      "{1} er ferdig med rengjøringen"
+      "{=1} er ferdig med rengjøringen"
     ],
     [
       "^(.+) reinigt$",
-      "{1} rengjør"
+      "{=1} rengjør"
     ],
     [
       "^(.+) ist auf der Arbeit$",
-      "{1} er på jobb"
+      "{=1} er på jobb"
     ],
     [
       "^(.+) ist im (.+)$",
-      "{1} er på {2}"
+      "{=1} er på {=2}"
     ],
     [
       "^(.+) ist in der (.+)$",
-      "{1} er på {2}"
+      "{=1} er på {=2}"
     ],
     [
       "^(.+) ist am (.+)$",
-      "{1} er på {2}"
+      "{=1} er på {=2}"
     ],
     [
       "^(.+) ist bei (.+)$",
-      "{1} er hos {2}"
+      "{=1} er hos {=2}"
     ],
     [
       "^(.+) umgeschaltet auf (.+)$",
-      "{1} byttet til {2}"
+      "{=1} byttet til {2}"
     ],
     [
       "^(.+) aktiv · (Zuhause|Abwesend|Nacht|Urlaub|Bypass)$",
-      "{1} aktiv · {2}"
+      "{=1} aktiv · {2}"
     ],
     [
       "^Alarm scharf – (.+)$",
@@ -3508,43 +3508,43 @@
     ],
     [
       "^(.+) braucht Wasser$",
-      "{1} trenger vann"
+      "{=1} trenger vann"
     ],
     [
       "^(.+) steht zu nass$",
-      "{1} står for vått"
+      "{=1} står for vått"
     ],
     [
       "^(.+) braucht Dünger$",
-      "{1} trenger gjødsel"
+      "{=1} trenger gjødsel"
     ],
     [
       "^(.+) ist überdüngt$",
-      "{1} er overgjødslet"
+      "{=1} er overgjødslet"
     ],
     [
       "^(.+) braucht mehr Licht$",
-      "{1} trenger mer lys"
+      "{=1} trenger mer lys"
     ],
     [
       "^(.+) bekommt zu viel Sonne$",
-      "{1} får for mye sol"
+      "{=1} får for mye sol"
     ],
     [
       "^(.+) steht zu kalt$",
-      "{1} står for kaldt"
+      "{=1} står for kaldt"
     ],
     [
       "^(.+) steht zu warm$",
-      "{1} står for varmt"
+      "{=1} står for varmt"
     ],
     [
       "^(.+) steht in zu trockener Luft$",
-      "{1}: for tørr luft"
+      "{=1}: for tørr luft"
     ],
     [
       "^(.+) steht in zu feuchter Luft$",
-      "{1}: for fuktig luft"
+      "{=1}: for fuktig luft"
     ],
     [
       "^(\\d+) Reinigungen$",
@@ -3568,7 +3568,7 @@
     ],
     [
       "^(.+) entriegelt$",
-      "{1} ulåst"
+      "{=1} ulåst"
     ],
     [
       "^Gestern, (.+)$",
@@ -4160,7 +4160,7 @@
     ],
     [
       "^(.+) ist offen$",
-      "{1} er åpen"
+      "{=1} er åpen"
     ],
     [
       "^(.+) nachfüllen$",
@@ -4276,11 +4276,11 @@
     ],
     [
       "^(.+) ausgeschaltet$",
-      "{1} slått av"
+      "{=1} slått av"
     ],
     [
       "^(.+) ausgelöst$",
-      "{1} utløst"
+      "{=1} utløst"
     ],
     [
       "^Vor (\\d+) Min\\.$",
@@ -4508,11 +4508,11 @@
     ],
     [
       "^(.+) Akku fast leer$",
-      "{1} batteri nesten tomt"
+      "{=1} batteri nesten tomt"
     ],
     [
       "^(.+) Akku schwach$",
-      "{1} batteri lavt"
+      "{=1} batteri lavt"
     ],
     [
       "^(\\d+) Wiedergaben$",
@@ -5416,7 +5416,7 @@
     ],
     [
       "^(.+) braucht Aufmerksamkeit$",
-      "{1} trenger oppmerksomhet"
+      "{=1} trenger oppmerksomhet"
     ],
     [
       "^KI: 1 Breaking Change$",

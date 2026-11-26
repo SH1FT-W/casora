@@ -1116,6 +1116,13 @@ class CasoraSmartRow extends HTMLElement {
     return hint;
   }
 
+  // A row without tiles gets the empty line, on the phone (scroll mode) too: the phone's "Favoriten" after "Leer
+  // beginnen" was a bare heading with no way on (Prüfrunde u01-04). Room sections on the phone home are hidden by the
+  // bottom nav, the room and category pages build their own grids, so it shows where the desktop row shows it.
+  _wantsEmptyHint() {
+    return !((this._config && this._config.cards) || []).length;
+  }
+
   // True when the empty-room hint exists and the design shows it (--casora-empty-row-display).
   _emptyHintShown() {
     const h = this._emptyHint;
@@ -1323,7 +1330,7 @@ class CasoraSmartRow extends HTMLElement {
     this._bootSetup();
     // Raum ohne Kacheln (Fix-Runde 1, A-16): dezente Leerzeile mit Weg ins Studio. Sichtbar nur,
     // wenn das Design --casora-empty-row-display setzt (Weich); sonst bleibt die Fläche leer wie bisher.
-    if (!(this._config.cards || []).length && !this._scrollMode) {
+    if (this._wantsEmptyHint()) {
       const hint = this._buildEmptyHint();
       container.appendChild(hint);
       this._emptyHint = hint;

@@ -461,7 +461,7 @@
     "Saugt & wischt Raum": "Zuigt & dweilt kamer",
     "Schalte alle Lichter aus": "Schakel alle lampen uit",
     "Scharfschaltung läuft": "Wordt ingeschakeld",
-    "Schlafzimmer Fenster ist offen": "Slaapkamerraam staat open",
+    "Fenster ist offen": "Raam staat open",
     "Schließen": "Sluiten",
     "Zurück": "Terug",
     "Schließt": "Sluit",
@@ -3291,11 +3291,11 @@
     ],
     [
       "^(.+) unscharf$",
-      "{1} uitgeschakeld"
+      "{=1} uitgeschakeld"
     ],
     [
       "^(.+) scharf · (.+)$",
-      "{1} ingeschakeld · {2}"
+      "{=1} ingeschakeld · {2}"
     ],
     [
       "^Wartet seit (.+)$",
@@ -3447,67 +3447,67 @@
     ],
     [
       "^(.+) Update verfügbar$",
-      "{1} update beschikbaar"
+      "{=1} update beschikbaar"
     ],
     [
       "^(.+) hat das Haus verlassen$",
-      "{1} heeft het huis verlaten"
+      "{=1} heeft het huis verlaten"
     ],
     [
       "^(.+) ist angekommen$",
-      "{1} is thuisgekomen"
+      "{=1} is thuisgekomen"
     ],
     [
       "^(.+) ist gekippt$",
-      "{1} staat op een kier"
+      "{=1} staat op een kier"
     ],
     [
       "^(.+) ist gleich fertig$",
-      "{1} is bijna klaar"
+      "{=1} is bijna klaar"
     ],
     [
       "^(.+) läuft$",
-      "{1} draait"
+      "{=1} draait"
     ],
     [
       "^(.+) hat geklingelt$",
-      "{1} heeft aangebeld"
+      "{=1} heeft aangebeld"
     ],
     [
       "^(.+) hat fertig gereinigt$",
-      "{1} is klaar met schoonmaken"
+      "{=1} is klaar met schoonmaken"
     ],
     [
       "^(.+) reinigt$",
-      "{1} maakt schoon"
+      "{=1} maakt schoon"
     ],
     [
       "^(.+) ist auf der Arbeit$",
-      "{1} is op het werk"
+      "{=1} is op het werk"
     ],
     [
       "^(.+) ist im (.+)$",
-      "{1} is in {2}"
+      "{=1} is in {=2}"
     ],
     [
       "^(.+) ist in der (.+)$",
-      "{1} is in {2}"
+      "{=1} is in {=2}"
     ],
     [
       "^(.+) ist am (.+)$",
-      "{1} is bij {2}"
+      "{=1} is bij {=2}"
     ],
     [
       "^(.+) ist bei (.+)$",
-      "{1} is bij {2}"
+      "{=1} is bij {=2}"
     ],
     [
       "^(.+) umgeschaltet auf (.+)$",
-      "{1} omgeschakeld naar {2}"
+      "{=1} omgeschakeld naar {2}"
     ],
     [
       "^(.+) aktiv · (Zuhause|Abwesend|Nacht|Urlaub|Bypass)$",
-      "{1} actief · {2}"
+      "{=1} actief · {2}"
     ],
     [
       "^Alarm scharf – (.+)$",
@@ -3515,43 +3515,43 @@
     ],
     [
       "^(.+) braucht Wasser$",
-      "{1} heeft water nodig"
+      "{=1} heeft water nodig"
     ],
     [
       "^(.+) steht zu nass$",
-      "{1} staat te nat"
+      "{=1} staat te nat"
     ],
     [
       "^(.+) braucht Dünger$",
-      "{1} heeft voeding nodig"
+      "{=1} heeft voeding nodig"
     ],
     [
       "^(.+) ist überdüngt$",
-      "{1} is overbemest"
+      "{=1} is overbemest"
     ],
     [
       "^(.+) braucht mehr Licht$",
-      "{1} heeft meer licht nodig"
+      "{=1} heeft meer licht nodig"
     ],
     [
       "^(.+) bekommt zu viel Sonne$",
-      "{1} krijgt te veel zon"
+      "{=1} krijgt te veel zon"
     ],
     [
       "^(.+) steht zu kalt$",
-      "{1} staat te koud"
+      "{=1} staat te koud"
     ],
     [
       "^(.+) steht zu warm$",
-      "{1} staat te warm"
+      "{=1} staat te warm"
     ],
     [
       "^(.+) steht in zu trockener Luft$",
-      "{1}: lucht te droog"
+      "{=1}: lucht te droog"
     ],
     [
       "^(.+) steht in zu feuchter Luft$",
-      "{1}: lucht te vochtig"
+      "{=1}: lucht te vochtig"
     ],
     [
       "^(\\d+) Reinigungen$",
@@ -3575,7 +3575,7 @@
     ],
     [
       "^(.+) entriegelt$",
-      "{1} ontgrendeld"
+      "{=1} ontgrendeld"
     ],
     [
       "^Gestern, (.+)$",
@@ -4167,7 +4167,7 @@
     ],
     [
       "^(.+) ist offen$",
-      "{1} staat open"
+      "{=1} staat open"
     ],
     [
       "^(.+) nachfüllen$",
@@ -4283,11 +4283,11 @@
     ],
     [
       "^(.+) ausgeschaltet$",
-      "{1} uitgeschakeld"
+      "{=1} uitgeschakeld"
     ],
     [
       "^(.+) ausgelöst$",
-      "{1} geactiveerd"
+      "{=1} geactiveerd"
     ],
     [
       "^Vor (\\d+) Min\\.$",
@@ -4515,11 +4515,11 @@
     ],
     [
       "^(.+) Akku fast leer$",
-      "{1} accu bijna leeg"
+      "{=1} accu bijna leeg"
     ],
     [
       "^(.+) Akku schwach$",
-      "{1} accu laag"
+      "{=1} accu laag"
     ],
     [
       "^(\\d+) Wiedergaben$",
@@ -5423,7 +5423,7 @@
     ],
     [
       "^(.+) braucht Aufmerksamkeit$",
-      "{1} heeft aandacht nodig"
+      "{=1} heeft aandacht nodig"
     ],
     [
       "^KI: 1 Breaking Change$",

@@ -461,7 +461,7 @@
     "Saugt & wischt Raum": "Aspirando y fregando habitación",
     "Schalte alle Lichter aus": "Apaga todas las luces",
     "Scharfschaltung läuft": "Armando",
-    "Schlafzimmer Fenster ist offen": "La ventana del dormitorio está abierta",
+    "Fenster ist offen": "La ventana está abierta",
     "Schließen": "Cerrar",
     "Zurück": "Atrás",
     "Schließt": "Cerrando",
@@ -3291,11 +3291,11 @@
     ],
     [
       "^(.+) unscharf$",
-      "{1} desarmada"
+      "{=1} desarmada"
     ],
     [
       "^(.+) scharf · (.+)$",
-      "{1} armada · {2}"
+      "{=1} armada · {2}"
     ],
     [
       "^Wartet seit (.+)$",
@@ -3447,67 +3447,67 @@
     ],
     [
       "^(.+) Update verfügbar$",
-      "Actualización de {1} disponible"
+      "Actualización de {=1} disponible"
     ],
     [
       "^(.+) hat das Haus verlassen$",
-      "{1} ha salido de casa"
+      "{=1} ha salido de casa"
     ],
     [
       "^(.+) ist angekommen$",
-      "{1} ha llegado a casa"
+      "{=1} ha llegado a casa"
     ],
     [
       "^(.+) ist gekippt$",
-      "{1} está inclinada"
+      "{=1} está inclinada"
     ],
     [
       "^(.+) ist gleich fertig$",
-      "{1} termina enseguida"
+      "{=1} termina enseguida"
     ],
     [
       "^(.+) läuft$",
-      "{1} en marcha"
+      "{=1} en marcha"
     ],
     [
       "^(.+) hat geklingelt$",
-      "{1} ha llamado al timbre"
+      "{=1} ha llamado al timbre"
     ],
     [
       "^(.+) hat fertig gereinigt$",
-      "{1} ha terminado de limpiar"
+      "{=1} ha terminado de limpiar"
     ],
     [
       "^(.+) reinigt$",
-      "{1} limpiando"
+      "{=1} limpiando"
     ],
     [
       "^(.+) ist auf der Arbeit$",
-      "{1} está en el trabajo"
+      "{=1} está en el trabajo"
     ],
     [
       "^(.+) ist im (.+)$",
-      "{1} está en {2}"
+      "{=1} está en {=2}"
     ],
     [
       "^(.+) ist in der (.+)$",
-      "{1} está en {2}"
+      "{=1} está en {=2}"
     ],
     [
       "^(.+) ist am (.+)$",
-      "{1} está en {2}"
+      "{=1} está en {=2}"
     ],
     [
       "^(.+) ist bei (.+)$",
-      "{1} está en {2}"
+      "{=1} está en {=2}"
     ],
     [
       "^(.+) umgeschaltet auf (.+)$",
-      "{1} cambiado a {2}"
+      "{=1} cambiado a {2}"
     ],
     [
       "^(.+) aktiv · (Zuhause|Abwesend|Nacht|Urlaub|Bypass)$",
-      "{1} activa · {2}"
+      "{=1} activa · {2}"
     ],
     [
       "^Alarm scharf – (.+)$",
@@ -3515,43 +3515,43 @@
     ],
     [
       "^(.+) braucht Wasser$",
-      "{1} necesita agua"
+      "{=1} necesita agua"
     ],
     [
       "^(.+) steht zu nass$",
-      "{1} está demasiado húmeda"
+      "{=1} está demasiado húmeda"
     ],
     [
       "^(.+) braucht Dünger$",
-      "{1} necesita abono"
+      "{=1} necesita abono"
     ],
     [
       "^(.+) ist überdüngt$",
-      "{1} tiene exceso de abono"
+      "{=1} tiene exceso de abono"
     ],
     [
       "^(.+) braucht mehr Licht$",
-      "{1} necesita más luz"
+      "{=1} necesita más luz"
     ],
     [
       "^(.+) bekommt zu viel Sonne$",
-      "{1} recibe demasiado sol"
+      "{=1} recibe demasiado sol"
     ],
     [
       "^(.+) steht zu kalt$",
-      "{1} está demasiado fría"
+      "{=1} está demasiado fría"
     ],
     [
       "^(.+) steht zu warm$",
-      "{1} tiene demasiado calor"
+      "{=1} tiene demasiado calor"
     ],
     [
       "^(.+) steht in zu trockener Luft$",
-      "{1}: aire demasiado seco"
+      "{=1}: aire demasiado seco"
     ],
     [
       "^(.+) steht in zu feuchter Luft$",
-      "{1}: aire demasiado húmedo"
+      "{=1}: aire demasiado húmedo"
     ],
     [
       "^(\\d+) Reinigungen$",
@@ -3575,7 +3575,7 @@
     ],
     [
       "^(.+) entriegelt$",
-      "{1} desbloqueada"
+      "{=1} desbloqueada"
     ],
     [
       "^Gestern, (.+)$",
@@ -4167,7 +4167,7 @@
     ],
     [
       "^(.+) ist offen$",
-      "{1} está abierta"
+      "{=1} está abierta"
     ],
     [
       "^(.+) nachfüllen$",
@@ -4283,11 +4283,11 @@
     ],
     [
       "^(.+) ausgeschaltet$",
-      "{1} apagado"
+      "{=1} apagado"
     ],
     [
       "^(.+) ausgelöst$",
-      "{1} activado"
+      "{=1} activado"
     ],
     [
       "^Vor (\\d+) Min\\.$",
@@ -4515,11 +4515,11 @@
     ],
     [
       "^(.+) Akku fast leer$",
-      "{1} batería casi agotada"
+      "{=1} batería casi agotada"
     ],
     [
       "^(.+) Akku schwach$",
-      "{1} batería baja"
+      "{=1} batería baja"
     ],
     [
       "^(\\d+) Wiedergaben$",
@@ -5423,7 +5423,7 @@
     ],
     [
       "^(.+) braucht Aufmerksamkeit$",
-      "{1} requiere atención"
+      "{=1} requiere atención"
     ],
     [
       "^KI: 1 Breaking Change$",

@@ -30,7 +30,7 @@ from openpyxl.worksheet.datavalidation import DataValidation
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TR = os.path.join(ROOT, "custom_components/casora/translations")
-SLOT = re.compile(r"\{\w+\}|%s|<[^>]+>")
+SLOT = re.compile(r"\{=?\w+\}|%s|<[^>]+>")
 COLS = ["Key", "Where", "Priority", "German", "English", "Translation", "Correct?", "Correction", "Comment"]
 FONT = "Arial"
 

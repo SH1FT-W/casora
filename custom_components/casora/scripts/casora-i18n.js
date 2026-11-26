@@ -294,8 +294,10 @@
     for (var i = 0; i < ph.re.length; i++) {
       var m = core.match(ph.re[i][0]);
       if (m) {
-        return ph.re[i][1].replace(/\{(\d)\}/g, function (x, n) {
+        return ph.re[i][1].replace(/\{(=?)(\d)\}/g, function (x, keep, n) {
           var g = m[+n] == null ? '' : m[+n];
+          // {=N}: a name people gave in HA (device, person, zone) stays as it is (V24, u09-14).
+          if (keep) return g;
           // Eingebettete Teile (Namen, Zustände, „Fertig gegen …“ vor „Uhr“) ebenfalls übersetzen.
           var sub = /[A-Za-zÄÖÜäöüß]/.test(g) ? one(g, t, (depth || 0) + 1) : null;
           // Teil mit „ · “ („Heute, 14:05 · 1 Std. 5 Min.“): die Stücke einzeln wie in seg().

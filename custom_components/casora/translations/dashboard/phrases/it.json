@@ -461,7 +461,7 @@
     "Saugt & wischt Raum": "Aspira e lava la stanza",
     "Schalte alle Lichter aus": "Spegni tutte le luci",
     "Scharfschaltung läuft": "Inserimento in corso",
-    "Schlafzimmer Fenster ist offen": "La finestra della camera da letto è aperta",
+    "Fenster ist offen": "La finestra è aperta",
     "Schließen": "Chiudi",
     "Zurück": "Indietro",
     "Schließt": "In chiusura",
@@ -3291,11 +3291,11 @@
     ],
     [
       "^(.+) unscharf$",
-      "{1} disinserito"
+      "{=1} disinserito"
     ],
     [
       "^(.+) scharf · (.+)$",
-      "{1} inserito · {2}"
+      "{=1} inserito · {2}"
     ],
     [
       "^Wartet seit (.+)$",
@@ -3447,67 +3447,67 @@
     ],
     [
       "^(.+) Update verfügbar$",
-      "Aggiornamento di {1} disponibile"
+      "Aggiornamento di {=1} disponibile"
     ],
     [
       "^(.+) hat das Haus verlassen$",
-      "{1} ha lasciato casa"
+      "{=1} ha lasciato casa"
     ],
     [
       "^(.+) ist angekommen$",
-      "{1} è arrivato a casa"
+      "{=1} è arrivato a casa"
     ],
     [
       "^(.+) ist gekippt$",
-      "{1} è a ribalta"
+      "{=1} è a ribalta"
     ],
     [
       "^(.+) ist gleich fertig$",
-      "{1} sta per finire"
+      "{=1} sta per finire"
     ],
     [
       "^(.+) läuft$",
-      "{1} in funzione"
+      "{=1} in funzione"
     ],
     [
       "^(.+) hat geklingelt$",
-      "{1} ha suonato al campanello"
+      "{=1} ha suonato al campanello"
     ],
     [
       "^(.+) hat fertig gereinigt$",
-      "{1} ha finito di pulire"
+      "{=1} ha finito di pulire"
     ],
     [
       "^(.+) reinigt$",
-      "{1} sta pulendo"
+      "{=1} sta pulendo"
     ],
     [
       "^(.+) ist auf der Arbeit$",
-      "{1} è al lavoro"
+      "{=1} è al lavoro"
     ],
     [
       "^(.+) ist im (.+)$",
-      "{1} è in {2}"
+      "{=1} è in {=2}"
     ],
     [
       "^(.+) ist in der (.+)$",
-      "{1} è a {2}"
+      "{=1} è a {=2}"
     ],
     [
       "^(.+) ist am (.+)$",
-      "{1} è a {2}"
+      "{=1} è a {=2}"
     ],
     [
       "^(.+) ist bei (.+)$",
-      "{1} è da {2}"
+      "{=1} è da {=2}"
     ],
     [
       "^(.+) umgeschaltet auf (.+)$",
-      "{1} passato a {2}"
+      "{=1} passato a {2}"
     ],
     [
       "^(.+) aktiv · (Zuhause|Abwesend|Nacht|Urlaub|Bypass)$",
-      "{1} attivo · {2}"
+      "{=1} attivo · {2}"
     ],
     [
       "^Alarm scharf – (.+)$",
@@ -3515,43 +3515,43 @@
     ],
     [
       "^(.+) braucht Wasser$",
-      "{1} ha bisogno d'acqua"
+      "{=1} ha bisogno d'acqua"
     ],
     [
       "^(.+) steht zu nass$",
-      "{1} è troppo bagnata"
+      "{=1} è troppo bagnata"
     ],
     [
       "^(.+) braucht Dünger$",
-      "{1} ha bisogno di concime"
+      "{=1} ha bisogno di concime"
     ],
     [
       "^(.+) ist überdüngt$",
-      "{1} ha troppo concime"
+      "{=1} ha troppo concime"
     ],
     [
       "^(.+) braucht mehr Licht$",
-      "{1} ha bisogno di più luce"
+      "{=1} ha bisogno di più luce"
     ],
     [
       "^(.+) bekommt zu viel Sonne$",
-      "{1} prende troppo sole"
+      "{=1} prende troppo sole"
     ],
     [
       "^(.+) steht zu kalt$",
-      "{1} ha troppo freddo"
+      "{=1} ha troppo freddo"
     ],
     [
       "^(.+) steht zu warm$",
-      "{1} ha troppo caldo"
+      "{=1} ha troppo caldo"
     ],
     [
       "^(.+) steht in zu trockener Luft$",
-      "{1}: aria troppo secca"
+      "{=1}: aria troppo secca"
     ],
     [
       "^(.+) steht in zu feuchter Luft$",
-      "{1}: aria troppo umida"
+      "{=1}: aria troppo umida"
     ],
     [
       "^(\\d+) Reinigungen$",
@@ -3575,7 +3575,7 @@
     ],
     [
       "^(.+) entriegelt$",
-      "{1} sbloccata"
+      "{=1} sbloccata"
     ],
     [
       "^Gestern, (.+)$",
@@ -4167,7 +4167,7 @@
     ],
     [
       "^(.+) ist offen$",
-      "{1} è aperta"
+      "{=1} è aperta"
     ],
     [
       "^(.+) nachfüllen$",
@@ -4283,11 +4283,11 @@
     ],
     [
       "^(.+) ausgeschaltet$",
-      "{1} spento"
+      "{=1} spento"
     ],
     [
       "^(.+) ausgelöst$",
-      "{1} attivato"
+      "{=1} attivato"
     ],
     [
       "^Vor (\\d+) Min\\.$",
@@ -4515,11 +4515,11 @@
     ],
     [
       "^(.+) Akku fast leer$",
-      "{1} batteria quasi esaurita"
+      "{=1} batteria quasi esaurita"
     ],
     [
       "^(.+) Akku schwach$",
-      "{1} batteria scarica"
+      "{=1} batteria scarica"
     ],
     [
       "^(\\d+) Wiedergaben$",
@@ -5423,7 +5423,7 @@
     ],
     [
       "^(.+) braucht Aufmerksamkeit$",
-      "{1} richiede attenzione"
+      "{=1} richiede attenzione"
     ],
     [
       "^KI: 1 Breaking Change$",
