@@ -3209,7 +3209,8 @@
     "1 device is in a room you did not pick.": "1 apparaat staat in een ruimte die je niet hebt gekozen.",
     "{1} devices are in rooms you did not pick.": "{1} apparaten staan in ruimtes die je niet hebt gekozen.",
     "Studio tour": "Rondleiding door de Studio",
-    "Welcome screen": "Welkomstscherm"
+    "Welcome screen": "Welkomstscherm",
+    "Step {1}": "Stap {1}"
   },
   "patterns": [
     [
