@@ -430,6 +430,11 @@ Casora Basis: &casora_theme
   state-media_player-inactive-color: rgba(255,255,255,0.3)
   state-vacuum-active-color: rgb(100,180,255)
   state-vacuum-inactive-color: rgba(255,255,255,0.3)
+  # HA's own cover dialog (redesigned in HA 2026.12, blue there) in the tone of Casora's blinds tile (Prüfrunde w04-01).
+  state-cover-active-color: var(--casora-popup-primary-color)
+  state-cover-open-color: var(--casora-popup-primary-color)
+  state-cover-opening-color: var(--casora-popup-primary-color)
+  state-cover-closing-color: var(--casora-popup-primary-color)
 
   # ----------------------------------------------------------------------------
   # Component colors
