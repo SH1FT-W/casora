@@ -1212,7 +1212,6 @@ class CasoraSmartRow extends HTMLElement {
 
   get hass() { return this._hass; }
 
-  // Verdeckt ab der ersten Überschrift, solange Home am Handy noch nicht aufgeräumt ist (siehe oben).
   // Builds postponed cards (slimDeferIndices) in config order; budgetMs null = all now, else stop after that long.
   // Returns how many were built.
   _buildDeferred(budgetMs) {
@@ -1261,6 +1260,7 @@ class CasoraSmartRow extends HTMLElement {
     else window.addEventListener('casora-local-loaded', start, { once: true });
   }
 
+  // Verdeckt ab der ersten Überschrift, solange Home am Handy noch nicht aufgeräumt ist (siehe oben).
   _bootSetup() {
     this._bootRelease();
     const cards = (this._config && this._config.cards) || [];
