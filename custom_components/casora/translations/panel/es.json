@@ -3204,7 +3204,10 @@
     "A room of Smart Heating Control": "Una habitación de Smart Heating Control",
     "For every room of Smart Heating Control": "Para cada habitación de Smart Heating Control",
     "Smart Heating Control integration not installed yet": "Integración Smart Heating Control aún no instalada",
-    "Room temperature, target and whether the room heats on the tile. The popup sets the target as a manual change, goes back to automatic or picks a level, and shows the decision, the manual change and the house mode; a row opens the schedule: the week at a glance with each slot's level, switching the profile and editing a profile's time slots. For the rooms of the Smart Heating Control integration.": "Temperatura de la habitación, objetivo y si la habitación calienta en la tarjeta. La ventana fija el objetivo como cambio manual, vuelve a automático o elige un nivel, y muestra la decisión, el cambio manual y el modo de la casa; una fila abre el horario: la semana de un vistazo con el nivel de cada franja, cambio de perfil y edición de las franjas de un perfil. Para las habitaciones de la integración Smart Heating Control."
+    "Room temperature, target and whether the room heats on the tile. The popup sets the target as a manual change, goes back to automatic or picks a level, and shows the decision, the manual change and the house mode; a row opens the schedule: the week at a glance with each slot's level, switching the profile and editing a profile's time slots. For the rooms of the Smart Heating Control integration.": "Temperatura de la habitación, objetivo y si la habitación calienta en la tarjeta. La ventana fija el objetivo como cambio manual, vuelve a automático o elige un nivel, y muestra la decisión, el cambio manual y el modo de la casa; una fila abre el horario: la semana de un vistazo con el nivel de cada franja, cambio de perfil y edición de las franjas de un perfil. Para las habitaciones de la integración Smart Heating Control.",
+    "No room picked – only Home will be created.": "Ninguna habitación elegida: solo se creará Casa.",
+    "1 device is in a room you did not pick.": "1 dispositivo está en una habitación que no elegiste.",
+    "{1} devices are in rooms you did not pick.": "{1} dispositivos están en habitaciones que no elegiste."
   },
   "patterns": [
     [

@@ -3204,7 +3204,10 @@
     "A room of Smart Heating Control": "Uma divisão do Smart Heating Control",
     "For every room of Smart Heating Control": "Para cada divisão do Smart Heating Control",
     "Smart Heating Control integration not installed yet": "Integração Smart Heating Control ainda não instalada",
-    "Room temperature, target and whether the room heats on the tile. The popup sets the target as a manual change, goes back to automatic or picks a level, and shows the decision, the manual change and the house mode; a row opens the schedule: the week at a glance with each slot's level, switching the profile and editing a profile's time slots. For the rooms of the Smart Heating Control integration.": "Temperatura da divisão, objetivo e se a divisão aquece no cartão. A janela define o objetivo como mudança manual, volta ao automático ou escolhe um nível, e mostra a decisão, a mudança manual e o modo da casa; uma linha abre o horário: a semana num relance com o nível de cada intervalo, troca de perfil e edição dos intervalos de um perfil. Para as divisões da integração Smart Heating Control."
+    "Room temperature, target and whether the room heats on the tile. The popup sets the target as a manual change, goes back to automatic or picks a level, and shows the decision, the manual change and the house mode; a row opens the schedule: the week at a glance with each slot's level, switching the profile and editing a profile's time slots. For the rooms of the Smart Heating Control integration.": "Temperatura da divisão, objetivo e se a divisão aquece no cartão. A janela define o objetivo como mudança manual, volta ao automático ou escolhe um nível, e mostra a decisão, a mudança manual e o modo da casa; uma linha abre o horário: a semana num relance com o nível de cada intervalo, troca de perfil e edição dos intervalos de um perfil. Para as divisões da integração Smart Heating Control.",
+    "No room picked – only Home will be created.": "Nenhuma divisão escolhida – só será criada Casa.",
+    "1 device is in a room you did not pick.": "1 dispositivo está numa divisão que não escolheste.",
+    "{1} devices are in rooms you did not pick.": "{1} dispositivos estão em divisões que não escolheste."
   },
   "patterns": [
     [

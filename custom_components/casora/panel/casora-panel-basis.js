@@ -194,6 +194,19 @@
   }
   const GROUP_NAME = { light: "Lights", cover: "Blinds", lock: "Locks" };
 
+  // The preview's foot (Prüfrunde u01-02, u01-14): devices without an HA area apart from devices in areas the user
+  // did not pick (both land in loose); rooms = picked rooms without Home.
+  function planFoot(p) {
+    const loose = p.loose || [];
+    return { noArea: loose.filter((it) => !it.area).length, notPicked: loose.filter((it) => !!it.area).length, rooms: Math.max(0, (p.rooms || []).length - 1) };
+  }
+  // „Mit 43 Kacheln anlegen (≈ 5 pro Raum)“ – der Schnitt über die Räume ohne Home, nur wenn es Räume gibt.
+  function createLabel(n, rooms) {
+    const per = rooms > 0 ? Math.round(n / rooms) : 0;
+    return tr(n === 1 ? "Create with 1 tile" : "Create with {1} tiles").replace("{1}", n)
+      + (n > 1 && per >= 1 ? " " + tr("(≈ {1} per room)").replace("{1}", per) : "");
+  }
+
   // Der Plan: {rooms: [{name, items: [{key, on, label, sub, tile}]}], loose: [...]}.
   // key = stabile Kennung für die Vorschau (Gerät oder Gruppe).
   function plan(hass, roomNames, r) {
@@ -945,7 +958,7 @@
     if (n > 1) return n + " × " + kind;
     return fold(kind) === fold(label) ? "" : kind;
   }
-  window.casoraBasis = { plan, kindLine, tilesOf, rules, DEFAULTS, shortName, fillBadges, energyProbe, housePower, housePowerOk, housePowerWhy, homeEnergyWhy, oldHouseTotal, wrongHousePower, roomPowerIds, homeSumIds, prefsHouse, prefsHomeVars, energyPrefsReady, openings, isCombo, addLight, houseLights, homeLightsWhy, homeClimateWhy, topUnits,
+  window.casoraBasis = { plan, planFoot, createLabel, kindLine, tilesOf, rules, DEFAULTS, shortName, fillBadges, energyProbe, housePower, housePowerOk, housePowerWhy, homeEnergyWhy, oldHouseTotal, wrongHousePower, roomPowerIds, homeSumIds, prefsHouse, prefsHomeVars, energyPrefsReady, openings, isCombo, addLight, houseLights, homeLightsWhy, homeClimateWhy, topUnits,
     dosingPumps, dosingFill, dosingSuggest, DOSE_MAPS };
 
   // KI kostet: Casora schätzt vor dem ersten Einsatz grob, was es über den API-Schlüssel
@@ -1162,14 +1175,10 @@
       s.body.insertBefore(grid, note);
       const count = () => p.rooms.reduce((n, room) => n + room.items.filter((x) => x.on).length, 0);
       let go = null;
-      // „Mit 43 Kacheln anlegen (≈ 5 pro Raum)“ – der Schnitt über die Räume ohne Home.
-      const rooms = Math.max(1, p.rooms.length - 1);
+      const foot = planFoot(p);
       const sync = () => {
-        const n = count();
         if (!go) return;
-        const per = Math.round(n / rooms);
-        go.textContent = tr(n === 1 ? "Create with 1 tile" : "Create with {1} tiles").replace("{1}", n)
-          + (n > 1 && per >= 1 ? " " + tr("(≈ {1} per room)").replace("{1}", per) : "");
+        go.textContent = createLabel(count(), foot.rooms);
         go.setAttribute("data-no-i18n", "");
       };
       p.rooms.forEach((room, ri) => {
@@ -1193,7 +1202,9 @@
         });
         upd();
       });
-      if (p.loose.length) el("div", "bs-foot", s.body, tr(p.loose.length === 1 ? "1 device has no room in Home Assistant – add it later with the device assistant." : "{1} devices have no room in Home Assistant – add them later with the device assistant.").replace("{1}", p.loose.length));
+      if (!foot.rooms) el("div", "bs-foot", s.body, tr("No room picked – only Home will be created."));
+      if (foot.noArea) el("div", "bs-foot", s.body, tr(foot.noArea === 1 ? "1 device has no room in Home Assistant – add it later with the device assistant." : "{1} devices have no room in Home Assistant – add them later with the device assistant.").replace("{1}", foot.noArea));
+      if (foot.notPicked) el("div", "bs-foot", s.body, tr(foot.notPicked === 1 ? "1 device is in a room you did not pick." : "{1} devices are in rooms you did not pick.").replace("{1}", foot.notPicked));
       go = this._flowButton(s.acts, "Create", () => o.go(tilesOf(p, this._hass)));
       sync();
     };
