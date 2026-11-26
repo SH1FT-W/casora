@@ -261,8 +261,13 @@
       return labelHtml('Heute') + '<div class="ctl" aria-busy="true"><div class="ctl-strip"><div class="ctl-track"></div></div><div class="ctl-ax"></div><div class="ctl-r"></div></div>';
     }
     if (!list.length) {
-      return labelHtml('Heute') + (UI && UI.group ? UI.group([{ icon: job.err ? 'mdi:alert-circle-outline' : 'mdi:check', iconTone: job.err ? 'warn' : null,
-        label: job.err ? 'Verlauf nicht abrufbar' : 'Heute keine Bewegung' }], null) : '');
+      // An offline camera saw nothing because it could not look: no reassuring tick (Prüfrunde u07-03).
+      var cs = hass && hass.states && hass.states[camId], cst = String((cs && cs.state) || '').toLowerCase();
+      var dead = cst === 'unavailable' || cst === 'unknown' || !!(window.casoraCamOffline && window.casoraCamOffline(camId, hass && hass.states));
+      var row = job.err ? { icon: 'mdi:alert-circle-outline', iconTone: 'warn', label: 'Verlauf nicht abrufbar' }
+        : dead ? { icon: 'mdi:cctv-off', iconTone: 'warn', label: 'Keine Daten · Kamera offline' }
+        : { icon: 'mdi:check', iconTone: null, label: 'Heute keine Bewegung' };
+      return labelHtml('Heute') + (UI && UI.group ? UI.group([row], null) : '');
     }
     var media = C.media(hass, camId);
     var pct = function (at) { return Math.max(0, Math.min(100, (at - start) / span * 100)); };
