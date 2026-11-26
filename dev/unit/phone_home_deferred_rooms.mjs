@@ -1,5 +1,5 @@
 // Phone Home builds its hidden room sections after the load (w02-02).  node dev/unit/phone_home_deferred_rooms.mjs
-// @deckt: custom_components/casora/scripts/smart-row.js#slimDeferIndices,_buildDeferred,_scheduleDeferred,casoraBuildDeferred
+// @deckt: custom_components/casora/scripts/smart-row.js#slimDeferIndices,_buildDeferred,_scheduleDeferred,casoraBuildDeferred,sectionIndices
 // Found in the 26.11.26 review: the phone's Home row drew every room's header and tiles (hidden by _slimHome) while
 // the page loaded, ~200 unseen button-cards with 30 rooms; load time grew with the number of rooms. Expected: the
 // cards of the hidden sections (room headers up to the next other header, scene rows) are not made during the
@@ -84,22 +84,27 @@ assert.equal(a._deferred.size, 0);
   assert.ok(a._cards[i].hass, 'card ' + i + ' got hass');
 });
 
-// 3) A filter (room page) builds everything at once, before the cards get the hass.
+// 3) A room page builds its own section at once, before the cards get the hass; a category page all the rest.
 made.length = 0;
 const b = mkRow();
 b._cardsCreated = true;
 b._initialized = false;
 b._scrollMode = true;
+b.parentNode = { localName: 'hui-root', lovelace: { config: { views: [{ cards: [nav] }] } } };
 const hass = { states: { 'input_select.casora_mobile_filter': { state: 'room_kitchen' } } };
 b.hass = hass;
-assert.equal(made.length, 6, 'a filter builds the hidden sections at once');
+assert.deepEqual(made.map((c) => cards.indexOf(c.cfg)), [5, 6], 'a room page builds its own section at once');
 assert.equal(b._cards[6].hass, hass, 'with the new hass');
+b.hass = { states: { 'input_select.casora_mobile_filter': { state: 'lights' } } };
+assert.equal(made.length, 6, 'a category page builds every hidden section');
 
 // 4) window.casoraBuildDeferred: every row, synchronously.
 made.length = 0;
 const c = mkRow();
 win._casoraSmartRows = new Set([c]);
-assert.equal(win.casoraBuildDeferred(), 6);
+assert.equal(win.casoraBuildDeferred('Attic'), 2, 'one room: its header and row');
+assert.equal(c._deferred.size, 4);
+assert.equal(win.casoraBuildDeferred(), 4);
 assert.equal(c._deferred.size, 0);
 assert.equal(win.casoraBuildDeferred(), 0, 'nothing left');
 console.log('phone_home_deferred_rooms: ok');

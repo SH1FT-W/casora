@@ -330,11 +330,25 @@ function slimDeferIndices(cards, nav, tr) {
   });
   return out;
 }
+// The indices of one room's section: its header up to the next header (a room page needs no other room).
+function sectionIndices(cards, name) {
+  const out = new Set();
+  let on = false;
+  (cards || []).forEach((c, i) => {
+    if (tplList(c).includes('casora_mobile_header')) on = c.name === name;
+    if (on) out.add(i);
+  });
+  return out;
+}
 window._casoraSlimDefer = slimDeferIndices;
-// Builds every row's postponed cards now (synchronous: the card elements and their configs are there on return).
-window.casoraBuildDeferred = function () {
+window._casoraSlimSection = sectionIndices;
+// Builds every row's postponed cards now (synchronous: the card elements and their configs are there on return);
+// with a room name only that room's section, the rest keeps coming on idle.
+window.casoraBuildDeferred = function (room) {
   let n = 0;
-  (window._casoraSmartRows || []).forEach((r) => { if (r._deferred && r._deferred.size) n += r._buildDeferred(null); });
+  (window._casoraSmartRows || []).forEach((r) => {
+    if (r._deferred && r._deferred.size) n += r._buildDeferred(null, room ? sectionIndices(r._config.cards, room) : null);
+  });
   return n;
 };
 
@@ -782,7 +796,12 @@ class CasoraSmartRow extends HTMLElement {
     // A room or category page reads the hidden sections: build them before the page's overlay gets this hass.
     if (this._deferred && this._deferred.size) {
       const f = hass && hass.states && hass.states['input_select.casora_mobile_filter'];
-      if (f && f.state && f.state !== 'all') this._buildDeferred(null);
+      if (f && f.state && f.state !== 'all') {
+        // A room page reads its own section only; a category page (lights, climate …) reads every room.
+        const nav = /^room_/.test(f.state) ? slimNavConfig(this) : null;
+        const room = nav && (nav.rooms || []).find((r) => r && r.key === f.state);
+        this._buildDeferred(null, room && room.name ? sectionIndices(this._config.cards, room.name) : null);
+      }
     }
 
     for (const card of this._cards) {
@@ -1212,14 +1231,15 @@ class CasoraSmartRow extends HTMLElement {
 
   get hass() { return this._hass; }
 
-  // Builds postponed cards (slimDeferIndices) in config order; budgetMs null = all now, else stop after that long.
-  // Returns how many were built.
-  _buildDeferred(budgetMs) {
+  // Builds postponed cards (slimDeferIndices) in config order; budgetMs null = all now, else stop after that long;
+  // only = a set of indices to build (the rest stays postponed). Returns how many were built.
+  _buildDeferred(budgetMs, only) {
     const d = this._deferred;
     if (!d || !d.size || !this._helpers) return 0;
     const t0 = performance.now();
     let n = 0;
     for (const i of [...d].sort((a, b) => a - b)) {
+      if (only && !only.has(i)) continue;
       if (budgetMs != null && n && performance.now() - t0 > budgetMs) break;
       d.delete(i);
       const wrapper = this._wrappers[i];
