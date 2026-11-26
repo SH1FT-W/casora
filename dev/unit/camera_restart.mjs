@@ -31,4 +31,28 @@ delete window._casoraListedCameraAlerts;
 now = started + 10 * 60000;
 assert.equal(alert(seen('off', changed)), '');
 assert.equal(alert(seen('on', new Date(now - 5000).toISOString())), 'Test motion', 'a real detection after the start still shows');
+
+// Known limit (pinned, not a promise): only when the page saw the sensor go straight from off to on (no unavailable in
+// between) four minutes after the start, outside the start window, does it show. A real restart passes through
+// unavailable, see the test below.
+delete window._casoraListedCameraAlerts;
+now = started + 5 * 60000;
+assert.equal(alert(seen('off', '2026-11-26T10:00:00+00:00')), '');
+assert.equal(alert(seen('on', new Date(started + 4 * 60000).toISOString())), 'Test motion', 'late return after the start window is not caught');
+Date.now = realNow;
+
+// A real restart passes through unavailable (or no state at all) before the sensor is on again. A detection needs off
+// right before on, so a sensor that returns late through unavailable is no detection, not even more than three minutes
+// after the start. The same rule misses a real detection that follows an outage; that is the price of the guard.
+Date.now = () => now;
+delete window._casoraListedCameraAlerts;
+now = started + 5 * 60000;
+assert.equal(alert(seen('off', '2026-11-26T10:00:00+00:00')), '');
+assert.equal(alert(seen('unavailable', new Date(started + 1000).toISOString())), '');
+assert.equal(alert(seen('on', new Date(started + 4 * 60000).toISOString())), '', 'off, unavailable, on: the late return through unavailable shows nothing');
+delete window._casoraListedCameraAlerts;
+assert.equal(alert(seen('off', '2026-11-26T10:00:00+00:00')), '');
+const gone = { ...real }; delete gone[sensor];
+assert.equal(alert(gone), '');
+assert.equal(alert(seen('on', new Date(started + 4 * 60000).toISOString())), '', 'off, no state, on: shows nothing either');
 Date.now = realNow;
