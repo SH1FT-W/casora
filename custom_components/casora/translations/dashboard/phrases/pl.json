@@ -5484,6 +5484,10 @@
     [
       "^(Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag) (\\d{1,2}:\\d\\d)$",
       "{1} {2}"
+    ],
+    [
+      "^Wetterwarnung: (.+)$",
+      "Ostrzeżenie pogodowe: {1}"
     ]
   ]
 }
