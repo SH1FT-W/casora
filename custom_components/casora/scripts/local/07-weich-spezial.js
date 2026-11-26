@@ -164,8 +164,11 @@
   AL.code = function (I) {
     var need = I.st === 'disarmed' ? I.needArm : I.needDis;
     if (!need) return '';
-    return '<style>.cal-code input::placeholder{letter-spacing:0;font-weight:500;font-size:15px;color:' + SUB + ';}</style>'
-      + '<div class="cal-code" style="display:flex;justify-content:center;margin:0 0 12px;">'
+    // Right under a wheel whose bottom moon („Scharf schalten“) hangs below it, the field keeps the distance the pill there
+    // keeps (u07-11: the moon reached 3 px into the field). Only margin-bottom inline, so the stage rule can set the top.
+    return '<style>.cal-code input::placeholder{letter-spacing:0;font-weight:500;font-size:15px;color:' + SUB + ';}'
+      + '.hui-stage.dial.mb > .hui-dl + style + .cal-code{margin-top:24px;}</style>'
+      + '<div class="cal-code" style="display:flex;justify-content:center;margin-bottom:12px;">'
       + '<input type="password" autocomplete="off" ' + (I.numeric ? 'inputmode="numeric" pattern="[0-9]*" ' : '') + 'placeholder="Code eingeben" aria-label="Code"'
       + ' ontouchstart="event.stopPropagation();" ontouchend="event.stopPropagation();if(this.getRootNode().activeElement!==this){this.focus();}"'
       + ' onclick="event.stopPropagation();" onkeydown="event.stopPropagation();" onkeyup="event.stopPropagation();" onkeypress="event.stopPropagation();"'

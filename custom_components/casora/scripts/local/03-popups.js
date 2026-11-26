@@ -1577,9 +1577,19 @@
   };
   /* Weich: Speiseplan mit Datums-Plakette (FR / 3) statt sieben gleicher Besteck-Symbole –
      der Tag ist die eigentliche Information. Heute in Akzentfarbe, Zeilen schlanker. */
-  var CAL_CSS = '<style>.hrw{display:flex;flex-direction:column;gap:8px;text-align:left;}'
-    + '.hrw-r{display:flex;align-items:center;gap:12px;min-height:var(--casora-soft-row-h, 58px);box-sizing:border-box;padding:var(--casora-soft-row-pad, 10px 16px 10px 10px);'
-    + 'border-radius:var(--casora-popup-row-radius, 24px);background:var(--casora-soft-row-fill, rgba(140,115,90,0.07));}'
+  // d03-11 (§6): one plate per section, rows without a gap and a hairline between them – the plate of UI.group
+  // (softGroup) from the same --casora-pv-* tokens; their fallbacks are the single pills of before.
+  // $B = the list, $R = its rows (fixed class names only).
+  var PLATE_RULES = '$B{display:flex;flex-direction:column;gap:var(--casora-pv-stack-gap, 8px);background:var(--casora-pv-stack-fill, transparent);'
+    + 'border-radius:var(--casora-pv-stack-radius, 0px);overflow:var(--casora-pv-stack-overflow, visible);}'
+    + '$R{position:relative;background:var(--casora-pv-row-fill, var(--casora-soft-row-fill, rgba(140,115,90,0.07)));'
+    + 'border-radius:var(--casora-pv-row-radius, var(--casora-popup-row-radius, 24px));}'
+    + '$R + $R::before{content:"";position:absolute;top:0;right:0;height:1px;pointer-events:none;'
+    + 'left:var(--casora-pv-divider-inset, 0px);background:var(--casora-pv-divider, transparent);}';
+  var PLATE_HRW = PLATE_RULES.replace(/\$B/g, '.hrw').replace(/\$R/g, '.hrw-r');
+  var PLATE_HRL = PLATE_RULES.replace(/\$B/g, '.hrl').replace(/\$R/g, '.hrl-r');
+  var CAL_CSS = '<style>.hrw{text-align:left;}' + PLATE_HRW
+    + '.hrw-r{display:flex;align-items:center;gap:12px;min-height:var(--casora-soft-row-h, 58px);box-sizing:border-box;padding:var(--casora-soft-row-pad, 10px 16px 10px 10px);}'
     + '.hrw-b{flex:none;width:var(--casora-soft-icon-size, 38px);height:var(--casora-soft-icon-size, 38px);border-radius:var(--casora-soft-icon-radius, 50%);display:flex;flex-direction:column;align-items:center;justify-content:center;'
     + 'background:var(--casora-soft-icon-off, rgba(140,115,90,0.12));color:var(--casora-popup-tiles-text-primary, #2E2721);line-height:1;}'
     // 10 px in full ink: 9 px at .7 fell to 2,7 : 1 (review 2, DD-18).
@@ -1734,12 +1744,10 @@
       + '.hrl-d .hrl-i{opacity:.45;}'
       + '.hrl-c{display:inline-flex;align-items:center;justify-content:center;line-height:0;flex:0 0 26px;width:26px;height:26px;pointer-events:none;}'
       + '</style>';
-    /* Weich: einzelne Sand-Pillen mit rundem Symbol, Etikett darüber (wie Leuchten im Licht-Popup). */
+    /* Weich: Etikett darüber, die Zeilen auf einer Platte wie UI.group (d03-11, §6); die Haken bleiben dieselben Zeilen. */
     var sf = window._casoraHH && window._casoraHH.on();
-    if (sf) css += '<style>.hrl{background:none;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;overflow:visible;'
-      + 'border-radius:0;display:flex;flex-direction:column;gap:8px;}'
-      + '.hrl-r{min-height:var(--casora-soft-row-h, 58px);box-sizing:border-box;padding:var(--casora-soft-row-pad, 10px 16px 10px 10px);border-radius:var(--casora-popup-row-radius, 24px);'
-      + 'background:var(--casora-soft-row-fill, rgba(140,115,90,0.07));transition:background-color .18s ease;}'
+    if (sf) css += '<style>.hrl{box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;}' + PLATE_HRL
+      + '.hrl-r{min-height:var(--casora-soft-row-h, 58px);box-sizing:border-box;padding:var(--casora-soft-row-pad, 10px 16px 10px 10px);transition:background-color .18s ease;}'
       + '.hrl-r + .hrl-r{border-top:none;}'
       + '@media (hover:hover){.hrl-r:hover{background:var(--casora-soft-row-hover, rgba(140,115,90,0.11));}}'
       + '.hrl-i{width:var(--casora-soft-icon-size, 38px);height:var(--casora-soft-icon-size, 38px);border-radius:var(--casora-soft-icon-radius, 50%);}'
