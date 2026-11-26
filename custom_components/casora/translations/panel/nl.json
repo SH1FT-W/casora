@@ -3234,7 +3234,10 @@
     "Wake on": "Wekken bij",
     "Tablets only. When this sensor sees someone, the screensaver ends and Home shows. At night only a dimmed clock appears.": "Alleen tablets. Ziet deze sensor iemand, dan stopt de schermbeveiliging en verschijnt Thuis. 's Nachts verschijnt alleen een gedimde klok.",
     "Turn the screen on": "Scherm inschakelen",
-    "With Fully Kiosk Browser: also switches the tablet's screen on. At night only dimmed, or not at all.": "Met Fully Kiosk Browser: zet ook het scherm van de tablet aan. 's Nachts alleen gedimd, of helemaal niet."
+    "With Fully Kiosk Browser: also switches the tablet's screen on. At night only dimmed, or not at all.": "Met Fully Kiosk Browser: zet ook het scherm van de tablet aan. 's Nachts alleen gedimd, of helemaal niet.",
+    "Weather on the photo": "Weer op de foto",
+    "Rain, snow, fog and wind outside move lightly over the room photo.": "Regen, sneeuw, mist en wind van buiten bewegen licht over de kamerfoto.",
+    "Rain, snow, fog and wind from the weather show lightly over the room photo. Clear weather shows nothing.": "Regen, sneeuw, mist en wind uit het weer zie je licht over de kamerfoto. Bij helder weer zie je niets."
   },
   "patterns": [
     [

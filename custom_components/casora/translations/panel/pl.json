@@ -3234,7 +3234,10 @@
     "Wake on": "Wybudzaj przez",
     "Tablets only. When this sensor sees someone, the screensaver ends and Home shows. At night only a dimmed clock appears.": "Tylko tablety. Gdy ten czujnik kogoś zobaczy, wygaszacz się kończy i pojawia się Dom. W nocy pojawia się tylko przyciemniony zegar.",
     "Turn the screen on": "Włącz ekran",
-    "With Fully Kiosk Browser: also switches the tablet's screen on. At night only dimmed, or not at all.": "Z Fully Kiosk Browser: włącza też ekran tabletu. W nocy tylko przyciemniony albo wcale."
+    "With Fully Kiosk Browser: also switches the tablet's screen on. At night only dimmed, or not at all.": "Z Fully Kiosk Browser: włącza też ekran tabletu. W nocy tylko przyciemniony albo wcale.",
+    "Weather on the photo": "Pogoda na zdjęciu",
+    "Rain, snow, fog and wind outside move lightly over the room photo.": "Deszcz, śnieg, mgła i wiatr z zewnątrz lekko przesuwają się po zdjęciu pokoju.",
+    "Rain, snow, fog and wind from the weather show lightly over the room photo. Clear weather shows nothing.": "Deszcz, śnieg, mgła i wiatr z pogody widać lekko na zdjęciu pokoju. Przy bezchmurnej pogodzie nic się nie pokazuje."
   },
   "patterns": [
     [

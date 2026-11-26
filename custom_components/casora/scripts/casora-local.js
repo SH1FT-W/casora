@@ -264,6 +264,7 @@ const MODULES = [
   '51-smart-heating',
   '52-assist-show',
   '52-klingel-moment',
+  '52-photo-weather',
 ];
 
 const START_MODULES = MODULES.slice(0, 5);

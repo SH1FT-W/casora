@@ -2170,7 +2170,8 @@ function syncPhoneHomePhoto(pair) {
     .filter((c) => c && c.template === MOBILE_SHELL);
   cards.forEach((c) => {
     const vars = { ...(c.variables || {}) };
-    ["image", "image_night"].forEach((k) => {
+    // photo_weather: the switch "Weather on the photo" (52-photo-weather.js reads it from this card on the phone).
+    ["image", "image_night", "photo_weather"].forEach((k) => {
       if (isSet(V[k])) vars[k] = V[k]; else delete vars[k];
     });
     if (Object.keys(vars).length) c.variables = vars; else delete c.variables;
@@ -2644,6 +2645,11 @@ const SECTIONS = [
       // every name. "All" stays first as before; a stored "rooms" (beta b4) is not an option and so shows the default.
       // Read from the room views like swipe_rooms. The phone's bottom bar is not affected. Drawn as its own block
       // "Room bar" under Settings › Look & feel.
+      // Living photo (scripts/local/52-photo-weather.js): rain, snow, fog and wind of the weather entity, lightly over
+      // the room photo. On by default, off is stored as false; the phone's shell gets it from Home (syncPhoneHomePhoto).
+      // Drawn as its own block "Weather on the photo" under Settings › Look & feel.
+      { key: "photo_weather", sub: "chrome", label: "Weather on the photo", type: "bool", boolDefault: true, auto: true, scope: "dashboard",
+        hint: "Rain, snow, fog and wind from the weather show lightly over the room photo. Clear weather shows nothing." },
       { key: "nav_names", sub: "chrome", label: "Show names", type: "select", seg: true, auto: true, scope: "dashboard",
         options: ["all", ""],
         optionLabels: { all: "All", "": "Home page as icon" },

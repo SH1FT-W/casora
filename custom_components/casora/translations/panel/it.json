@@ -3234,7 +3234,10 @@
     "Wake on": "Risveglia con",
     "Tablets only. When this sensor sees someone, the screensaver ends and Home shows. At night only a dimmed clock appears.": "Solo tablet. Quando questo sensore vede qualcuno, il salvaschermo termina e appare Home. Di notte appare solo un orologio attenuato.",
     "Turn the screen on": "Accendi lo schermo",
-    "With Fully Kiosk Browser: also switches the tablet's screen on. At night only dimmed, or not at all.": "Con Fully Kiosk Browser: accende anche lo schermo del tablet. Di notte solo attenuato, o per niente."
+    "With Fully Kiosk Browser: also switches the tablet's screen on. At night only dimmed, or not at all.": "Con Fully Kiosk Browser: accende anche lo schermo del tablet. Di notte solo attenuato, o per niente.",
+    "Weather on the photo": "Meteo sulla foto",
+    "Rain, snow, fog and wind outside move lightly over the room photo.": "Pioggia, neve, nebbia e vento di fuori scorrono leggeri sulla foto della stanza.",
+    "Rain, snow, fog and wind from the weather show lightly over the room photo. Clear weather shows nothing.": "Pioggia, neve, nebbia e vento del meteo appaiono leggeri sulla foto della stanza. Con il tempo sereno non appare nulla."
   },
   "patterns": [
     [

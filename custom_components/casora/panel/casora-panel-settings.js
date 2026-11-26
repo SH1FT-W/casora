@@ -56,6 +56,10 @@
         { k: "navbar", sec: "General", sub: "chrome", keys: ["nav_names"], title: "Room bar",
           plain: "The bar at the top with Home and your rooms, on desktop and tablet.",
           kw: "raumleiste leiste navigation räume namen zuhause haus symbol text room bar names home icon" },
+        // Living photo (52-photo-weather.js): one field of Controls › Screen, shown as a block of its own.
+        { k: "photowx", sec: "General", sub: "chrome", keys: ["photo_weather"], title: "Weather on the photo",
+          plain: "Rain, snow, fog and wind outside move lightly over the room photo.",
+          kw: "wetter foto raumfoto regen schnee nebel wind lebendig animation bewegung weather photo rain snow fog living" },
         { k: "time", sec: "Time", title: "Clock", plain: "Show the clock at the top left, as 12 or 24 hours.",
           kw: "uhr uhrzeit zeit 12 stunden 24 clock time zeitsensor suffix" },
         { k: "font", sec: "General", sub: "text", title: "Font", plain: "The typeface of this dashboard, or a font you bring yourself.",
