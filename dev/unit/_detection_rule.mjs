@@ -8,3 +8,6 @@ const cut = (open, from = 0) => {
   return core.slice(start, core.indexOf('\n})();', start) + 6);
 };
 new Function(cut('// The detection rule of the camera tile and the bell'))();
+const sinceStart = core.indexOf('  var startC = ');
+const sinceEnd = core.indexOf('    return t;\n  };', sinceStart) + '    return t;\n  };'.length;
+new Function(core.slice(sinceStart, sinceEnd))();

@@ -15182,7 +15182,8 @@ window.casoraMenuGlass = {
 })();
 // The detection rule of the camera tile and the bell: is this state of a detection trigger a detection, and since when (ms)?
 // A binary_sensor counts when it goes from off to on at `changed` (ISO text or ms); an event counts at its own time stamp
-// (its state). A time a little ahead of the browser clock counts as now. null = no detection.
+// (its state). A time a little ahead of the browser clock counts as now; with hass given, a time in HA's start window is the
+// restart. null = no detection.
 (function () {
   if (window.casoraDetectionAt) return;
   window.casoraDetectionAt = function (id, state, previous, changed, hass) {
@@ -15192,7 +15193,10 @@ window.casoraMenuGlass = {
     if (at === null || !isFinite(at)) return null;
     // A browser clock a little behind HA puts the change in the future: it still counts, as now. An hour ahead is not skew.
     var now = Date.now();
-    if (at > now) return at - now <= 2 * 60000 ? now : null;
+    if (at > now) at = at - now <= 2 * 60000 ? now : null;
+    if (at === null) return null;
+    // A change in HA's start window is the restart, not a detection (casoraSinceMs says null for such a time).
+    if (hass && typeof window.casoraSinceMs === 'function' && window.casoraSinceMs({ entity_id: id, last_changed: new Date(at).toISOString() }, hass) === null) return null;
     return at;
   };
 })();
@@ -16133,7 +16137,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     }
 
     if (listedDetection(id)) {
-      if (window.casoraDetectionAt(id, s, prev, Math.round(Number(entry.when) * 1000), hassOf()) === null) return null;
+      if (window.casoraDetectionAt(id, s, prev, Math.round(Number(entry.when) * 1000)) === null) return null;
       return { label: name + ' erkannt', icon: 'camera', tone: 'accent', passive: true };
     }
 
