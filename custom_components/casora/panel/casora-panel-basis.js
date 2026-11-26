@@ -1085,8 +1085,10 @@
     // Schritt „Räume füllen“: automatisch (vorausgewählt), mit KI oder leer.
     P._fillStep = async function (o) {
       let pick = o.pick || "auto";
+      // Same frame as the step before (Prüfrunde u01-08): from the Studio a sheet with X and Escape, in the first run
+      // the full page. A forced full page here kept "Choose your rooms" full too after "Back".
       const s = this._flowScreen({
-        full: true, icon: "rooms",
+        icon: "rooms",
         title: "Fill Your Rooms", step: ((I() || {}).setupStep || ((n) => [n, 3]))(2, o.setup),
         lede: "Casora can put your devices into the rooms right away – you check everything before it's created.",
         back: o.back,
