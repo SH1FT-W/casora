@@ -3375,14 +3375,15 @@ window.casoraMenuGlass = {
   // unterscheidet oft (An/Aus). Gilt für Elemente mit data-casora-mid="<voller Name>"; passt der Name,
   // bleibt er unverändert. casoraMidText ist die reine Kürzung (Test: dev/unit/name_mitte.mjs).
   if (typeof window.casoraMidText !== 'function') {
-    window.casoraMidText = function (full, keep) {
+    // sep goes between "…" and the kept end: '' on one line, '\n' in two-line names (the end then starts line 2).
+    window.casoraMidText = function (full, keep, sep) {
       const t = String(full == null ? '' : full);
       const words = t.trim().split(/\s+/);
       const last = words.length > 1 ? words[words.length - 1] : '';
       const tail = last && last.length <= 12 ? last : t.slice(-4);
       const head = t.slice(0, t.length - tail.length).replace(/\s+$/, '');
       const k = Math.max(1, Math.min(head.length, keep));
-      return head.slice(0, k).replace(/\s+$/, '') + '…' + tail;
+      return head.slice(0, k).replace(/\s+$/, '') + '…' + (sep || '') + tail;
     };
     window.casoraMidFit = function (root) {
       if (!root || !root.querySelectorAll) return;
@@ -3391,20 +3392,26 @@ window.casoraMenuGlass = {
         if (el.textContent !== full) el.textContent = full;
         const over = () => el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1;
         if (!el.clientWidth || !over()) return;
+        // Two-line names (scene grid, line-clamp 2): the browser may break after the first word and put the cut
+        // in the middle of line 2 ("WZ" / "Dreamv…An"). There the kept end goes on its own line 2 ("WZ Dream…" /
+        // "An"); pre-line keeps that break and wraps like normal otherwise (Prüfrunde u06-03).
+        const ws = el.style ? el.style.whiteSpace : '';
+        const sep = ws === 'normal' || ws === 'pre-line' ? '\n' : '';
+        if (sep && ws !== 'pre-line') el.style.whiteSpace = 'pre-line';
         // The longest cut that fits (k = 1 when none does). The text only grows with k, so bisection finds the
         // same k as stepping down from the top, with log2(n) layouts instead of up to n (each read forces one).
         let lo = 1, hi = full.length - 2, best = 0;
         if (hi < lo) return;
         while (lo <= hi) {
           const k = (lo + hi) >> 1;
-          el.textContent = window.casoraMidText(full, k);
+          el.textContent = window.casoraMidText(full, k, sep);
           if (over()) hi = k - 1; else { best = k; lo = k + 1; }
         }
         // No cut fits (the last word alone is too wide), or the head would keep fewer than 4 characters
         // ("A…Wohnzimmer"): keep the full name and let the CSS cut it at the end instead (Prüfrunde u06-03).
         const headLen = window.casoraMidText(full, full.length).lastIndexOf('…');
         if (best < Math.min(4, headLen)) { if (el.textContent !== full) el.textContent = full; return; }
-        const fit = window.casoraMidText(full, best);
+        const fit = window.casoraMidText(full, best, sep);
         if (el.textContent !== fit) el.textContent = fit;
       });
     };
