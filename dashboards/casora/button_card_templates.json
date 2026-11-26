@@ -16709,6 +16709,7 @@
       "notify_appliances": true,
       "notify_battery": true,
       "notify_doorbell": true,
+      "notify_doorbell_front": true,
       "notify_doors": true,
       "notify_locks": true,
       "notify_people": true,

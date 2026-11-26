@@ -453,6 +453,8 @@
     "Done": "Ferdig",
     "Door sensor": "Dørsensor",
     "Doorbell": "Ringeklokke",
+    "Bring the doorbell to the front": "Hent ringeklokken frem",
+    "When it rings, this dashboard wakes from the screensaver and shows the doorbell's camera large. Without a touch it closes again after a minute and a half.": "Når det ringer, våkner dette dashbordet fra skjermspareren og viser kameraet til ringeklokken stort. Uten berøring lukkes det igjen etter halvannet minutt.",
     "Doors": "Dører",
     "Drag to reorder": "Dra for å endre rekkefølgen",
     "Each light in the group becomes a sub-badge.": "Hvert lys i gruppen blir et undermerke.",

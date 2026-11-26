@@ -2779,6 +2779,10 @@ const SECTIONS = [
         always: true, ord: 3 },
       { key: "notify_doorbell", sub: "safety", glyph: "doorbell", tone: "var(--casora-color-teal, #00C3D0)", label: "Doorbell", type: "bool", boolDefault: true,
         always: true, ord: 4 },
+      // Doorbell moment (52-klingel-moment.js): only with a doorbell that has a camera on its device.
+      { key: "notify_doorbell_front", sub: "safety", glyph: "doorbell", tone: "var(--casora-color-teal, #00C3D0)", label: "Bring the doorbell to the front", type: "bool", boolDefault: true,
+        always: true, ord: 5.5, when: () => doorbellHere(),
+        hint: "When it rings, this dashboard wakes from the screensaver and shows the doorbell's camera large. Without a touch it closes again after a minute and a half." },
       { key: "notify_doors", sub: "safety", glyph: "door-open", tone: "var(--casora-popup-ui-warn, #FF9F0A)", label: "Doors", type: "bool", boolDefault: true,
         always: true, ord: 5 },
       { key: "notify_people", sub: "house", glyph: "person", tone: "var(--casora-popup-ui-good, #30D158)", label: "People", type: "bool", boolDefault: true,
@@ -4897,6 +4901,31 @@ let ACCENT_THEME = "";
 // Pulse installiert? (Schalter „Pulse“ unter Benachrichtigungen) – je Registry-Stand einmal geprüft.
 let PULSE_HERE = false;
 let pulseReg = null;
+// A doorbell with a camera? (switch „Bring the doorbell to the front“ under Notifications) – per registry state.
+// Asked when the section draws: the Studio may load before 00-finder.js or the states, so a „no“ is asked again
+// after a few seconds; a „yes“ holds until the registry changes.
+let DOORBELL_HERE = false;
+let doorReg = null, doorTried = 0, doorHass = null;
+function doorbellHere() {
+  const h = doorHass;
+  if (!h) return false;
+  if (h.entities === doorReg && (DOORBELL_HERE || Date.now() - doorTried < 3000)) return DOORBELL_HERE;
+  doorReg = h.entities;
+  doorTried = Date.now();
+  try { DOORBELL_HERE = doorbellWithCamera(h); } catch (e) { DOORBELL_HERE = false; }
+  return DOORBELL_HERE;
+}
+// The rule of 52-klingel-moment.js (bells): the module itself (it loads on dashboards), else the bell's doorbell rule
+// (00-finder.js casoraIsDoorbell) and a visible camera on the same device.
+function doorbellWithCamera(hass) {
+  const KM = window._casoraKlingelMoment;
+  if (KM && typeof KM.bells === "function") return Object.keys(KM.bells(hass)).length > 0;
+  const is = window.casoraIsDoorbell, R = hass.entities || {}, S = hass.states || {};
+  if (typeof is !== "function") return false;
+  const cams = new Set(Object.keys(R).filter((x) => x.startsWith("camera.") && S[x] && R[x] && R[x].device_id && !R[x].hidden && !R[x].disabled_by
+    && !/^snapshots_/.test(String(R[x].translation_key || ""))).map((x) => R[x].device_id));
+  return Object.keys(S).some((id) => /^(event|binary_sensor)\./.test(id) && R[id] && cams.has(R[id].device_id) && is(hass, id));
+}
 // Leistungsmodus für die Vorschau (Casora Glas: kein Blur, deckende Flächen wie im Dashboard).
 // Ist casora-core.js geladen, entscheidet es (Geräte-Pin, Studio-Einstellung, „auto“); sonst die
 // zuletzt dort gemerkte Wahl. Ohne Glas-Werte im Theme hat .perf in der Vorschau keine Wirkung.
@@ -7159,6 +7188,7 @@ class CasoraPanel extends HTMLElement {
       pulseReg = hass.entities;
       PULSE_HERE = Object.values(pulseReg || {}).some((e) => e && e.platform === "pulse");
     }
+    doorHass = hass;
     // Theme or mode changed: the preview follows the look right away.
     if (this._themeSeen !== hass.themes || this._themeSel !== hass.selectedTheme) {
       this._themeSeen = hass.themes;

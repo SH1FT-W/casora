@@ -453,6 +453,8 @@
     "Done": "Fine",
     "Door sensor": "Sensore porta",
     "Doorbell": "Campanello",
+    "Bring the doorbell to the front": "Porta il campanello in primo piano",
+    "When it rings, this dashboard wakes from the screensaver and shows the doorbell's camera large. Without a touch it closes again after a minute and a half.": "Quando suona, questa dashboard esce dal salvaschermo e mostra in grande la telecamera del campanello. Se nessuno la tocca, si richiude dopo un minuto e mezzo.",
     "Doors": "Porte",
     "Drag to reorder": "Trascina per riordinare",
     "Each light in the group becomes a sub-badge.": "Ogni luce del gruppo diventa un sotto-badge.",

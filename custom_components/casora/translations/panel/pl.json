@@ -453,6 +453,8 @@
     "Done": "Gotowe",
     "Door sensor": "Czujnik drzwi",
     "Doorbell": "Dzwonek do drzwi",
+    "Bring the doorbell to the front": "Pokaż dzwonek na pierwszym planie",
+    "When it rings, this dashboard wakes from the screensaver and shows the doorbell's camera large. Without a touch it closes again after a minute and a half.": "Gdy ktoś dzwoni, ten pulpit wychodzi z wygaszacza ekranu i pokazuje duży obraz z kamery dzwonka. Bez dotknięcia zamyka się po półtorej minuty.",
     "Doors": "Drzwi",
     "Drag to reorder": "Przeciągnij, aby zmienić kolejność",
     "Each light in the group becomes a sub-badge.": "Każde światło w grupie staje się pododznaką.",

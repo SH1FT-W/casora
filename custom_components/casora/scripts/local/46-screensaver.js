@@ -20,6 +20,7 @@
 //   window._casoraSaver.pool(vars, has)        → the kinds that take turns in „mix“ (picked, with something to show)
 //   window._casoraSaver.kindAt(kind, now, pool) → the kind on show
 //   window._casoraSaver.canStart() / start()   → start by hand (the dashboard's ⋯ menu), only where one may start
+//   window._casoraSaver.wake()                 → end it from outside (doorbell ring, 52-klingel-moment.js)
 // Studio settings beside the three above: casora_screensaver_mix (kinds that alternate, none = all),
 // casora_screensaver_cameras (none = automatic: the real cameras) / _calendars (none = all), casora_screensaver_tint (the playing cover's colour as a wash),
 // casora_screensaver_wander (false = the content stands still, for displays that do not burn in),
@@ -1553,6 +1554,20 @@
   };
   S.show = show;
   S.shown = function () { return !!layer; };
+  // Woken from outside (a doorbell ring, 52-klingel-moment.js): the screensaver fades as after a touch and the idle
+  // time starts again. True when one was showing.
+  S.wake = function () {
+    bump();
+    if (!layer) return false;
+    var l = layer, still = false;
+    try { still = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) { still = false; }
+    if (still) { hide(); return true; }
+    l.style.pointerEvents = 'none';
+    l.style.transition = 'opacity .24s ease';
+    l.style.opacity = '0';
+    setTimeout(function () { if (layer === l) hide(); }, 260);
+    return true;
+  };
   // Started by hand from the dashboard's ⋯ menu: on a tablet, also without a start time (owner, 13.11.2026).
   S.canStart = function () {
     if (OFF || layer) return false;

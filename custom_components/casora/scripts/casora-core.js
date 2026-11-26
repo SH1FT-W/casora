@@ -18157,8 +18157,11 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   var TYPES = ['safety', 'air', 'locks', 'alarm', 'doorbell', 'doors', 'people',
     'vacuum', 'appliances', 'plants', 'battery', 'pulse', 'updates', 'restart', 'ha'];
 
+  // „Bring the doorbell to the front“ (52-klingel-moment.js): on unless the dashboard says false.
+  var _doorbellFront = true;
   function configureFrom(V) {
     V = V || {};
+    _doorbellFront = V.notify_doorbell_front !== false;
     var types = {};
     TYPES.forEach(function (k) {
       if (V['notify_' + k] === false) types[k] = false;
@@ -18220,6 +18223,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     configureFrom: configureFrom,
     markAll: seal,
     get count() { return unread(); },
+    get doorbellFront() { return _doorbellFront; },
     get rows() { return _rows.slice(); },
     // Tests and the list as drawn: open or close a stack, the rows with open stacks unfolded.
     stack: function (key, open) { _openStacks[key] = open !== false; },
