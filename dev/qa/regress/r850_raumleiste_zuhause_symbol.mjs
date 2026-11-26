@@ -7,11 +7,11 @@
 // is the default: nothing stored = icon; the icon keeps the first view's own name (renamed to "Start" in 4). Expected:
 //  1. nothing stored, desktop and tablet, light and dark: Home a round 38 px button without text, aria-label
 //     "Zuhause", the rooms with their names
-//  2. Studio: block before Clock, badge, "Alle" | "Startseite als Symbol", the latter chosen, preview Home as a house
+//  2. Studio: block before Clock, badge, "Alle" | "Zuhause als Symbol", the latter chosen, preview Home as a house
 //     circle; picking "Alle" gives the preview's Home its text; "Save settings" stores nav_names "all" on every room
 //     view of this dashboard only
 //  3. Home with its text again (fewer rooms fit on desktop); the phone is unchanged; another dashboard untouched
-//  4. reloaded Studio shows "Alle"; a dashboard with the legacy value "rooms" (beta b4) shows "Startseite als Symbol"
+//  4. reloaded Studio shows "Alle"; a dashboard with the legacy value "rooms" (beta b4) shows "Zuhause als Symbol"
 //     in the Studio and the icon, named "Start", on the dashboard
 process.env.CASORA_THEME = process.env.CASORA_THEME || 'Casora';
 import { open, usePage, studio, casoraDashboards, casoraDashboard, dashboard, cards, check, need, finish, atFinish, shot } from './lib.mjs';
@@ -107,12 +107,14 @@ const block = () => page.evaluate(() => {
 await page.evaluate(() => window.__panel()._csShow('n-look', 'nb-navbar'));
 await page.waitForTimeout(1500);
 let b = await block();
-await check('Studio: block "Raumleiste" right before "Uhr", only this dashboard', b && b.title === 'Raumleiste' && b.next === 'nb-time' && /Nur dieses Dashboard/.test(b.badge || ''), b);
-// The chosen segment's label (data-v "" is the default "Startseite als Symbol", "all" is "Alle").
+// Since 38dc164fe (living house photo) the block "Wetter auf dem Foto" (nb-photowx) may stand between it and "Uhr".
+await check('Studio: block "Raumleiste" right before "Uhr", only this dashboard', b && b.title === 'Raumleiste' && /^nb-(time|photowx)$/.test(b.next || '') && /Nur dieses Dashboard/.test(b.badge || ''), b);
+// The chosen segment's label (data-v "" is the default "Zuhause als Symbol", "all" is "Alle"). The Studio says
+// "Zuhause" for Home since 8e6328182 (Prüfrunde d04-07, one word for Zuhause); it read "Startseite als Symbol" before.
 const onLabel = () => page.evaluate(() => [...window.__panel().shadowRoot.querySelectorAll('[data-pkey="nb-navbar"] .segopt.on')].map((o) => o.textContent.trim()));
-await check('Studio: "Namen zeigen" with exactly "Alle" | "Startseite als Symbol", the latter chosen with nothing stored', b && b.label === 'Namen zeigen'
-  && JSON.stringify(b.opts) === JSON.stringify(['Alle', 'Startseite als Symbol']) && JSON.stringify(b.on) === '[""]'
-  && JSON.stringify(await onLabel()) === '["Startseite als Symbol"]'
+await check('Studio: "Namen zeigen" with exactly "Alle" | "Zuhause als Symbol", the latter chosen with nothing stored', b && b.label === 'Namen zeigen'
+  && JSON.stringify(b.opts) === JSON.stringify(['Alle', 'Zuhause als Symbol']) && JSON.stringify(b.on) === '[""]'
+  && JSON.stringify(await onLabel()) === '["Zuhause als Symbol"]'
   && /Ohne den Text passt ein Raum mehr in die Leiste/.test(b.hint), b);
 await check('Studio preview: Home as a house circle, name kept as aria-label', b && b.mini && b.mini.icon && !b.mini.text && /Zuhause|Home/.test(b.mini.aria || ''), b && b.mini);
 await page.evaluate(() => window.__panel().shadowRoot.querySelector('[data-pkey="nb-navbar"] .segopt[data-v="all"]').click());
@@ -189,8 +191,8 @@ await studio(page, d.url);
 await page.evaluate(() => window.__panel()._csShow('n-look', 'nb-navbar'));
 await page.waitForTimeout(1500);
 b = await block();
-await check('legacy "rooms": Studio shows "Startseite als Symbol", preview with the house circle', b && JSON.stringify(b.on) === '[""]'
-  && JSON.stringify(await onLabel()) === '["Startseite als Symbol"]' && b.mini && b.mini.icon, b);
+await check('legacy "rooms": Studio shows "Zuhause als Symbol", preview with the house circle', b && JSON.stringify(b.on) === '[""]'
+  && JSON.stringify(await onLabel()) === '["Zuhause als Symbol"]' && b.mini && b.mini.icon, b);
 const leg = await view('Desktop light', home(d), DEVICES[0][1]);
 await iconChecks('legacy "rooms" Desktop light', leg, 'Start');
 c.close();
