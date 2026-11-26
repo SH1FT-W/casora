@@ -11,6 +11,11 @@ import { ws } from '../ws.mjs';
 
 const dash = await casoraDashboard((d) => JSON.stringify(d.config || {}).includes('casora_badge_scene'));
 await need('Casora-Dashboard mit Szenen-Badge und Handy-Gegenstück', dash && dash.phone);
+// Since bfd03bbf3 (Prüfrunde w02-03) a room card builds a collapsed sub-badge row only once it is the expanded one, and
+// since u05-09 each device keeps its own expanded row (a pick from this browser counts, not one sent over ws): every
+// desktop page opens the scenes row itself, so the scene sub-badges exist.
+const openScenes = (pg) => pg.evaluate(() => document.querySelector('home-assistant').hass.callService('input_select', 'select_option',
+  { entity_id: 'input_select.casora_expanded_row', option: 'scenes' })).then(() => pg.waitForTimeout(1500));
 const W = (pg, ms) => pg.waitForTimeout(ms);
 const BLUE = 'var(--casora-color-blue, #0088FF)';
 
@@ -27,6 +32,7 @@ let SCENE = null;
 {
   const o = await open({ width: 1440, height: 900, theme: 'Casora', dark: false });
   await dashboard(o.page, dash.url);
+  await openScenes(o.page);
   SCENE = await o.page.evaluate(() => { const b = window.__pierce('button-card').find((x) => [].concat((x._config || {}).template || []).includes('casora_badge_scene') && /^scene\./.test((x._config || {}).entity || ''));
     return b ? b._config.entity : null; });
   await o.browser.close();
@@ -74,7 +80,7 @@ const DESK = await running(await open({ width: 1440, height: 900, theme: 'Casora
 // Tablet ohne laufende Szene (so wie im Bericht): die Unter-Badge zeigt die Farbe trotzdem.
 const TAB = await open({ width: 1024, height: 768, touch: true, theme: 'Casora', dark: false });
 const PHONE = await running(await open({ width: 393, height: 852, mobile: true, theme: 'Casora', dark: false }));
-for (const o of [DESK, TAB]) await dashboard(o.page, dash.url);
+for (const o of [DESK, TAB]) { await dashboard(o.page, dash.url); await openScenes(o.page); }
 await dashboard(PHONE.page, dash.phone.url, 3);
 usePage(STUDIO.page);
 await studio(STUDIO.page, dash.url);
@@ -122,7 +128,7 @@ const stale = []; (function walk(o, at) { if (!o || typeof o !== 'object') retur
 await check('Studio räumt veraltete scene_colors an Karten weg (zentral nur in der Vorlage)', !stale.length, stale);
 
 // Nach Neuladen dasselbe.
-for (const o of [DESK, TAB]) await dashboard(o.page, dash.url);
+for (const o of [DESK, TAB]) { await dashboard(o.page, dash.url); await openScenes(o.page); }
 await dashboard(PHONE.page, dash.phone.url, 3);
 d = await until(DESK.page, deskColors, want('--casora-color-blue').d);
 await check('Desktop nach Neuladen blau', want('--casora-color-blue').d(d), d);
