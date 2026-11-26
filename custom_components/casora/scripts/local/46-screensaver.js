@@ -272,7 +272,12 @@
       var url = urlOf(ref, dark);
       if (!url || seen[url]) return;
       seen[url] = 1;
-      out.push({ name: String(v.title || vars.title || ''), url: url, ref: String(vars.image) });
+      // The name the room bar shows: the hero card's name (a view's title is its path, „kueche“), else the title.
+      var hero = (v.cards || [])[0] || {};
+      var own = typeof hero.name === 'string' && hero.name.indexOf('[[[') < 0 ? hero.name.trim() : '';
+      var name = own || String(v.title || vars.title || '');
+      if (own && typeof window.casoraRoomName === 'function') { try { name = window.casoraRoomName(own, vars).text || name; } catch (e) { /* the name as stored */ } }
+      out.push({ name: name, url: url, ref: String(vars.image) });
     });
     return out;
   };
@@ -778,7 +783,8 @@
     + '.cs-sv .cs-kw{font-size:' + u(21) + ';font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink3);padding:0 ' + u(8) + ' ' + u(14) + ';}'
     + '.cs-sv .cs-kd{min-width:0;min-height:0;overflow:hidden;padding:' + u(10) + ' ' + u(8) + ' ' + u(4) + ';border-top:' + u(2) + ' solid var(--line);display:flex;flex-direction:column;gap:' + u(5) + ';}'
     + '.cs-sv .cs-kd > b{display:grid;place-items:center;min-width:' + u(50) + ';height:' + u(50) + ';align-self:flex-start;margin-left:-' + u(9) + ';border-radius:99px;font-size:' + u(32) + ';font-weight:600;letter-spacing:-.03em;font-variant-numeric:tabular-nums;flex:none;}'
-    + '.cs-sv .cs-kd.cs-kout > b{color:var(--ink3);font-weight:500;}.cs-sv .cs-kd.cs-kpast > b{color:var(--ink2);}.cs-sv .cs-kd.cs-kpast .cs-kl{opacity:.55;}'
+    // A day of the next or last month stays dimmed, past or not (the 26th of October beside today, the 26th).
+    + '.cs-sv .cs-kd.cs-kpast > b{color:var(--ink2);}.cs-sv .cs-kd.cs-kout > b{color:var(--ink3);font-weight:500;}.cs-sv .cs-kd.cs-kpast .cs-kl{opacity:.55;}'
     + '.cs-sv .cs-kd.cs-ktoday > b{background:var(--acc);color:#fff;font-weight:700;}.cs-sv:not(.cs-light) .cs-kd.cs-ktoday > b{color:#191613;}'
     + '.cs-sv .cs-kl{display:flex;flex-direction:column;gap:' + u(3) + ';min-width:0;}'
     + '.cs-sv .cs-ke{display:flex;align-items:center;gap:' + u(8) + ';min-width:0;font-size:' + u(19.5) + ';font-weight:600;line-height:1.2;}'
