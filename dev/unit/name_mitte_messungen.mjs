@@ -31,8 +31,12 @@ const linear = (full, width) => {
   const e = elem(full, width);
   const over = () => e.scrollWidth > e.clientWidth + 1;
   if (!over()) return e.textContent;
-  for (let k = full.length - 2; k >= 1; k--) { e.textContent = M(full, k); if (!over()) break; }
-  return e.textContent;
+  for (let k = full.length - 2; k >= 1; k--) {
+    e.textContent = M(full, k);
+    // Too short a head, or nothing fits: the full name stays, the CSS cuts it at the end (u06-03).
+    if (!over()) return k < Math.min(4, M(full, full.length).lastIndexOf('…')) ? full : e.textContent;
+  }
+  return full;
 };
 
 const NAMES = ['WZ Dreamview Aus', 'Wohnzimmer Abendstimmung gemütlich An', 'Hauswirtschaftsraumlicht',

@@ -3393,13 +3393,17 @@ window.casoraMenuGlass = {
         if (!el.clientWidth || !over()) return;
         // The longest cut that fits (k = 1 when none does). The text only grows with k, so bisection finds the
         // same k as stepping down from the top, with log2(n) layouts instead of up to n (each read forces one).
-        let lo = 1, hi = full.length - 2, best = 1;
+        let lo = 1, hi = full.length - 2, best = 0;
         if (hi < lo) return;
         while (lo <= hi) {
           const k = (lo + hi) >> 1;
           el.textContent = window.casoraMidText(full, k);
           if (over()) hi = k - 1; else { best = k; lo = k + 1; }
         }
+        // No cut fits (the last word alone is too wide), or the head would keep fewer than 4 characters
+        // ("A…Wohnzimmer"): keep the full name and let the CSS cut it at the end instead (Prüfrunde u06-03).
+        const headLen = window.casoraMidText(full, full.length).lastIndexOf('…');
+        if (best < Math.min(4, headLen)) { if (el.textContent !== full) el.textContent = full; return; }
         const fit = window.casoraMidText(full, best);
         if (el.textContent !== fit) el.textContent = fit;
       });

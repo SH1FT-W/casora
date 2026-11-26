@@ -1,5 +1,6 @@
 // per-10 (1.3): lange Szenennamen am Handy in der Mitte kürzen („WZ Dream…Aus“), damit An/Aus lesbar bleibt.
 //   node dev/unit/name_mitte.mjs
+// @deckt: custom_components/casora/scripts/casora-core.js#casoraMidFit,casoraMidText
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 const core = fs.readFileSync(new URL('../../custom_components/casora/scripts/casora-core.js', import.meta.url), 'utf8');
@@ -29,4 +30,18 @@ const ok = { ...el, attrs: { 'data-casora-mid': 'Ambiente' }, textContent: 'Ambi
 Object.defineProperty(ok, 'scrollWidth', { get() { return 80; } });
 window.casoraMidFit({ querySelectorAll: () => [ok] });
 assert.equal(ok.textContent, 'Ambiente');
+// Prüfrunde u06-03 (360 px): the last word alone does not fit ("Ambiente Wohnzimmer" -> "A…Wohnzimmer", then cut
+// again by the CSS). When no cut fits, or the head would keep fewer than 4 characters, the full name stays and the
+// CSS cuts it at the end.
+const mk = (full, width) => ({ attrs: { 'data-casora-mid': full }, textContent: full, clientWidth: width, clientHeight: 20,
+  getAttribute(k) { return this.attrs[k]; }, get scrollWidth() { return this.textContent.length * 10; }, get scrollHeight() { return 20; } });
+const wide = mk('Ambiente Wohnzimmer', 90);
+window.casoraMidFit({ querySelectorAll: () => [wide] });
+assert.equal(wide.textContent, 'Ambiente Wohnzimmer', 'no cut fits: full name, got ' + wide.textContent);
+const short = mk('Ambiente Wohnzimmer', 140);
+window.casoraMidFit({ querySelectorAll: () => [short] });
+assert.equal(short.textContent, 'Ambiente Wohnzimmer', 'head of 3: full name, got ' + short.textContent);
+const four = mk('Ambiente Wohnzimmer', 150);
+window.casoraMidFit({ querySelectorAll: () => [four] });
+assert.equal(four.textContent, 'Ambi…Wohnzimmer');
 console.log('ok name_mitte');
