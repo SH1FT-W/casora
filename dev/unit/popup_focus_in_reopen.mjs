@@ -1,7 +1,7 @@
 // CasoraPopup focus on open: a tile tap calls open() twice (the second within ~100 ms, while already open). That
 // second call bumps _openGen and starts no new _focusIn, so the focus-in retries must not stop on it.
 //   node dev/unit/popup_focus_in_reopen.mjs
-// @deckt: custom_components/casora/scripts/casora-core.js#_focusIn
+// @deckt: custom_components/casora/scripts/casora-core.js#_focusIn,close
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -34,4 +34,7 @@ timers.length = 0; laidOut = false; active = tile;
 p._focusIn(); timers.shift().fn(); active = other; laidOut = true;
 timers.forEach((t) => t.fn());
 assert.equal(active, other, 'never takes the focus from somewhere else');
+// close() ends the round: a late retry of the closed opening does nothing (the reopen starts its own).
+const c = src.slice(src.indexOf('    close() {'), src.indexOf("this.setAttribute('closing', '');", src.indexOf('    close() {')));
+assert.match(c, /this\._focusRound = \(this\._focusRound \|\| 0\) \+ 1/, 'close ends the focus round');
 console.log('ok popup_focus_in_reopen');
