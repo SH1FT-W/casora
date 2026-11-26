@@ -1920,16 +1920,19 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     var isSlot = function (reg) { return !!reg && reg.platform === 'wetter' && reg.translation_key === 'warning'; };
     // Warning area: DWD region_name, the region attribute of a combined integration, else nothing.
     var region = function (st) { var a = attrs(st); return str(a.region_name || a.region) || null; };
-    // Kind of warning for the bell: a DWD event name ("SCHWERE STURMBÖEN" → "Schwere Sturmböen"), else the headline's
-    // "… vor STURMBÖEN", else the event, else generic. Only all-caps text is recased, word by word
-    // (German nouns), with short joining words kept small.
+    // Kind of warning for the bell, the warning tile and its popup (one name everywhere, u09-11): a DWD event name
+    // ("SCHWERE STURMBÖEN" → "Schwere Sturmböen"), else the headline's "… vor STURMBÖEN", else the event, else the
+    // headline itself without a lead-in like „Gefahreninformation:“ (NINA), else generic. Only all-caps text is
+    // recased, word by word (German nouns), with short joining words kept small.
     var SMALL = /^(mit|und|oder|von|vor|im|in|am|an|bei|bis|der|die|das|den|dem|des|with|and|or|of|de|y|o|con)$/;
     var kind = function (w) {
-      var m = str(w && w.headline).match(/vor (.+)$/i);
+      var hl = str(w && w.headline);
+      var m = hl.match(/vor (.+)$/i);
       var ev = str(w && w.event);
       // DWD names its events in capitals ("SCHWERE STURMBÖEN"); other sources (Meteoalarm "Moderate wind warning")
       // keep the headline first as before.
-      var t = ev && ev === ev.toUpperCase() && /[A-ZÄÖÜ]/.test(ev) ? ev : (m ? m[1] : ev);
+      var t = ev && ev === ev.toUpperCase() && /[A-ZÄÖÜ]/.test(ev) ? ev : (m ? m[1] : ev)
+        || hl.split(' - ')[0].replace(/\s*\d{4}$/, '').replace(/^[^:]{3,30}:\s+/, '');
       if (!t) return 'Wetterwarnung';
       if (t !== t.toUpperCase()) return t.charAt(0).toUpperCase() + t.slice(1);
       return t.toLowerCase().split(/(\s+)/).map(function (p, i) {
