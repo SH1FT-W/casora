@@ -1279,7 +1279,7 @@
   S.sample = function (ctx) {
     var now = +ctx.now, d0 = new Date(now); d0.setHours(0, 0, 0, 0);
     var at = function (day, h, m) { return +d0 + day * 86400000 + h * 3600000 + (m || 0) * 60000; };
-    if (!ctx.wx) ctx.wx = { temp: 11, text: T('Teils bewölkt'), icon: '/casora_assets/weather/partly-cloudy-day-fill.svg' };
+    if (!ctx.wx) ctx.wx = { temp: 11, text: T('Teilweise bewölkt'), icon: '/casora_assets/weather/partly-cloudy-day-fill.svg' };
     if (!ctx.hourly.length) ctx.hourly = Array.from({ length: 24 }, function (_, i) {
       return { datetime: new Date(now + i * 3600000).toISOString(), temperature: 7.5 + Math.cos((new Date(now + i * 3600000).getHours() - 15) / 24 * 2 * Math.PI) * 4, precipitation: [0, 0, 0.4, 1.3, 0.8, 0.2][i] || 0 };
     });

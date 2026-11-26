@@ -311,10 +311,12 @@
       tone: !allIds.length ? 'off' : lv === 'alarm' ? 'bad' : lv === 'warn' ? 'warn' : 'good',
       icon: win ? (openIds.length ? 'mdi:window-open-variant' : 'mdi:window-closed-variant') : (openIds.length ? 'mdi:door-open' : 'mdi:door-closed'),
       text: text, facts: allIds.length ? facts : [],
-      // Dial (richtlinien §4.8): one segment per door/window, green closed, orange tilted, red open.
+      // Dial (richtlinien §4.8 c): one segment per door/window, green closed; open or tilted in the security level like
+      // the stage and the rows – orange a warning, red only an alarm (Prüfrunde u07-07: open was always red).
       segs: allIds.map(function (id) {
         var op = openIds.indexOf(id) > -1, nm = S[id] && S[id].attributes && S[id].attributes.friendly_name;
-        return { ok: !op, tone: !op ? 'good' : tilted(id) ? 'warn' : 'bad', label: nm || id };
+        var al = op && window.casoraSecurityLevel && window.casoraSecurityLevel(hass, [id]) === 'alarm';
+        return { ok: !op, tone: !op ? 'good' : al ? 'bad' : 'warn', label: nm || id };
       }),
     });
   };

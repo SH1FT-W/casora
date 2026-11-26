@@ -205,6 +205,15 @@ assert.equal((out.match(/class="ctl-m /g) || []).length, 3);
 assert.ok(out.includes('Person erkannt') && out.includes('Aufnahmen'));
 assert.ok(!C.render({ list: ev }, 'camera.flur', ch, now).includes('Aufnahmen'));
 assert.ok(C.render({ list: null }, 'camera.garten', ch, now).includes('aria-busy'), 'loading: plate at full height');
+// Prüfrunde u07-03: no events and the camera offline → no reassuring tick „Heute keine Bewegung“.
+const rows0 = [];
+win._casoraUI = { label: (t) => '<b>' + t + '</b>', group: (r) => { rows0.push(...r); return 'G'; } };
+C.render({ list: [] }, 'camera.garten', { ...ch, states: { ...ch.states, 'camera.garten': { state: 'unavailable', attributes: {} } } }, now);
+C.render({ list: [] }, 'camera.garten', { ...ch, states: { ...ch.states, 'camera.garten': { state: 'idle', attributes: {} } } }, now);
+assert.equal(rows0[0].label, 'Keine Daten · Kamera offline', 'offline: says no data');
+assert.notEqual(rows0[0].icon, 'mdi:check', 'offline: no tick');
+assert.equal(rows0[1].label, 'Heute keine Bewegung', 'online and quiet: as before');
+delete win._casoraUI;
 // Clock as the HA user has it (12 or 24 hours, like the bell's timeline and the top bar): axis and readout.
 const r24 = C.render({ list: ev }, 'camera.garten', { ...ch, locale: { time_format: '24' } }, now);
 assert.ok(r24.includes('>06:00<') && !/ [AP]M/.test(r24), '24 h: 06:00');

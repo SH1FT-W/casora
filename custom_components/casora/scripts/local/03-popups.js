@@ -2582,7 +2582,7 @@
         if (fillS) { /* already the sentence */ }
         else if (r.tank != null) factsC.push({ label: r.ev ? 'Akku' : 'Tank', value: fmtN(Math.round(r.tank)) + ' %' });
         else if (r.tankL != null) factsC.push({ label: 'Tankinhalt', value: fmtN(r.tankL) + ' ' + r.tankLU });
-        if (lock) factsC.push({ label: 'Schloss', value: lock });
+        /* The lock stands in the head's status line (sec 'line'), not again in the wheel (Prüfrunde d03-02). */
         if (r.stamp) factsC.push({ label: 'Datenstand', value: ago(r.stamp) });
         /* With a picture (#89): the picture in the middle of the wheel, under it only the range; fill level, lock and the
            data age move to the head's status line (sec 'line', §3). */
@@ -2623,12 +2623,14 @@
       return out;
     }
     if (name === 'line') {
-      /* Head status line of the popup with a picture (#89, §3): lock first, then fill level and data age – the wheel
-         shows the range, the line never repeats it. */
+      /* Head status line of the v3 popup (#89, §3): the lock first. With a picture also fill level and data age – the
+         wheel shows the range, the line never repeats it; without a picture those two are the wheel's facts, the line
+         says only the lock (Prüfrunde d03-02: „Verriegelt“ stood in head, wheel and list). */
       var lockL = r.open.length ? r.open.join(', ') + ' offen' : (r.locked === false ? 'Nicht verriegelt' : r.locked ? 'Verriegelt' : null);
+      var picL = o.img && o.img !== 'auto' ? o.img !== 'none' : !!C.image(p, states, o.img || 'auto');
       /* Without range and own value the wheel says the fill level (stage above), the line does not repeat it. */
-      var fillL = r.range == null && !C.ownText(p, states) ? null : C.fillText(r);
-      var bitsL = [lockL, fillL, r.stamp ? 'Stand ' + ago(r.stamp) : null].filter(Boolean);
+      var fillL = !picL || (r.range == null && !C.ownText(p, states)) ? null : C.fillText(r);
+      var bitsL = [lockL, fillL, picL && r.stamp ? 'Stand ' + ago(r.stamp) : null].filter(Boolean);
       if (!bitsL.length) return '';
       var lvL = C.level(p, states);
       return UI.line(bitsL[0], bitsL.slice(1, 3), { tone: lockL && lvL ? (lvL === 2 ? 'bad' : 'warn') : null });
@@ -2656,7 +2658,8 @@
         value: name === 'state_s3' ? null : fmtN(r.tank) + ' %', valueTone: 'warn' });
       /* Keine Tür-/Fenster-/Schlosswerte (alles „unavailable“, Integration ohne Melder): kein „Alles zu“. */
       if (!dev.length && !r.known) dev.push({ icon: 'mdi:help-circle-outline', iconTone: 'rgba(255,255,255,0.18)', label: 'Keine Daten' });
-      if (!dev.length) dev.push({ icon: 'mdi:check-circle-outline', iconTone: 'good', label: r.locked == null ? 'Alles zu' : 'Alles zu und verriegelt',
+      /* v3: the lock stands in the head line – the list does not say it again (Prüfrunde d03-02). */
+      if (!dev.length) dev.push({ icon: 'mdi:check-circle-outline', iconTone: 'good', label: r.locked == null || name === 'state_s3' ? 'Alles zu' : 'Alles zu und verriegelt',
         sub: r.brake ? 'Feststellbremse angezogen' : null });
       /* Popup v3 (#89, richtlinien §8 exception): the odometer users asked for (BMW CarData „mileage“ too) stays as a row. */
       if (name === 'state_s3' && r.km != null) dev.push({ icon: 'mdi:counter', iconTone: 'rgba(255,255,255,0.18)', label: 'Kilometerstand', value: fmtN(r.km) + ' ' + r.kmU });
@@ -2756,14 +2759,12 @@
     if (HH && HH.on() && HH.layout) {
       /* Popup v3 „Bühne“: the head becomes the status stage (Soft, no localStorage casora_popup_variant other than 'v3'). */
       var v3C = !!(UI.stage && UI.soft && UI.soft()) && (function () { try { var vv = localStorage.getItem('casora_popup_variant'); return !vv || vv === 'v3'; } catch (e) { return true; } })();
-      /* With a picture the popup brings its own head status line (§3); without one it stays as it was. */
-      // An own photo counts as soon as it is set: its signed address may still be loading (casoraPhotoUrl repaints).
-      var picC = v3C && (vo.img !== 'auto' ? vo.img !== 'none' : !!C.image(p, states, vo.img));
-      var fc = { line: picC ? sec('line') : undefined, hero: v3C ? undefined : sec('hero'), stage: v3C ? sec('stage') : undefined, tank_s: v3C ? sec('tank_s') : undefined,
+      /* The popup brings its own head status line (§3, sec 'line'), with or without a picture (Prüfrunde d03-02). */
+      var fc = { line: v3C ? sec('line') : undefined, hero: v3C ? undefined : sec('hero'), stage: v3C ? sec('stage') : undefined, tank_s: v3C ? sec('tank_s') : undefined,
         state_s: sec(v3C ? 'state_s3' : 'state_s'), service_s: sec('service_s'),
         more: HH.moreCard(watch, 'const C = window._casoraCar, H = window._casoraHH;\n'
           + 'return C && H ? H.more("car", ["state", "service", "trips"].map(function (n) { return C.sec(n, ' + JSON.stringify(p) + ', states); })) : "";', entity.entity_id) };
-      return HH.layout({ entity: entity.entity_id, watch: watch, fields: fc, top: v3C ? (picC ? ['line'] : []) : undefined, stage: v3C ? 'stage' : null,
+      return HH.layout({ entity: entity.entity_id, watch: watch, fields: fc, top: v3C ? ['line'] : undefined, stage: v3C ? 'stage' : null,
         left: v3C ? ['tank_s', 'state_s'] : ['state_s'], right: ['service_s', 'more'], settings: entity.entity_id });
     }
     var colStyle = ':host { display: block; } ha-card { background: transparent !important; border: none !important;'

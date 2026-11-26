@@ -2015,7 +2015,12 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     var cc = home && window.casoraContacts ? window.casoraContacts(hass) : null;
     var house = [];
     if (cc) (cc.groups || []).forEach(function (g) {
-      (g.members || []).forEach(function (x) { if ((cc.excl || []).indexOf(x) < 0) house.push(x); });
+      (g.members || []).forEach(function (x) {
+        if ((cc.excl || []).indexOf(x) >= 0) return;
+        house.push(x);
+        // A contact's tilt sensor sits in excl, but openings() needs it to tell „tilted“ (Prüfrunde u07-05).
+        if (cc.tilt && cc.tilt[x]) house.push(cc.tilt[x]);
+      });
     });
     var ids = [];
     [v.alarm_entity, v.doors_entity, v.windows_entity, v.lock_entity, v.lock_entity_2].concat(arr(v.locks), arr(v.entities), cams, house)
