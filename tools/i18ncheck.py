@@ -82,8 +82,8 @@ FORMAL = {"es": re.compile(r"\b(usted|Usted|ustedes|Ustedes)\b"),
 # Same text in several languages: names, data-source credits, drink names, formats. Not a copied sentence.
 SAME_TEXT = {"Bosch Smart System", "Café au lait", "Café con leche", "Caffè crema doppio",
              "Data: Deutscher Wetterdienst (DWD)", "Data: Open Charge Map, CC BY 4.0", "Data: Tankerkönig, CC BY 4.0",
-             "Latte macchiato extra", "Latte macchiato triple", "Tankerkönig in Home Assistant",
-             "Team (Team Tracker)", "YYYY-MM-DD"}
+             "Latte macchiato extra", "Latte macchiato triple", "Smart Heating Control",
+             "Tankerkönig in Home Assistant", "Team (Team Tracker)", "YYYY-MM-DD"}
 # Per language: normal words there, but the same text as English or German (no native speaker has read them yet).
 SAME_TEXT_LANG = {"nb": {"Casora Kamera-KI", "Start café au lait", "Start café au lait?", "via Wi-Fi"},
                   "nl": {"AI: 1 breaking change", "AI: {1} breaking changes", "Mbit/s download", "Mbit/s upload"},

@@ -50,6 +50,7 @@ write(SRC, "phrases/en.json", {"exact": {
     "Fenster offen lassen?": "Leave window open?",
     "Zwei Wörter": "Two words",
     "Bosch Smart System": "Bosch Smart System",
+    "Smart Heating Control": "Smart Heating Control",
     "Mehr Licht an": "Turn more light on",
     "Heizung läuft weiter": "Heating keeps running",
 }, "patterns": [["^(\\d+) Türen offen$", "{1} doors and windows open"]]})
@@ -57,6 +58,7 @@ write(SRC, "phrases/nl.json", {"exact": {
     "Fenster offen lassen?": "Raam open laten?",
     "Zwei Wörter": "Two words",
     "Bosch Smart System": "Bosch Smart System",
+    "Smart Heating Control": "Smart Heating Control",
     "Mehr Licht an": "Turn more light on",
     "Heizung läuft weiter": "Heizung läuft weiter",
 }, "patterns": [["^(\\d+) Türen offen$", "{1} doors and windows open"]]})
@@ -100,6 +102,7 @@ check("phrases: pattern replacement copied from English flagged",
       any(e.startswith("phrases/nl.json") and "{1} doors and windows open" in e for e in hits), hits)
 check("phrases: 2-word copy not flagged", not flagged("Two words"), hits)
 check("phrases: allowlisted name not flagged", not flagged("Bosch Smart System"), hits)
+check("phrases: allowlisted integration name not flagged", not flagged("Smart Heating Control"), hits)
 check("phrases: translated text not flagged", not flagged("Raam open laten?"), hits)
 check("studio: copied English exact entry flagged",
       any(e.startswith("panel/nl.json") and "Turn more light on" in e for e in hits), hits)
