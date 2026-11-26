@@ -1,7 +1,7 @@
 // CasoraPopup keyboard focus: a scrolling .content is a tab stop; right after open (focus on .content) Tab and
 // Shift+Tab stay inside the popup.
 //   node dev/unit/popup_tab_scroll_focus.mjs
-// @deckt: custom_components/casora/scripts/casora-core.js#_syncScrollStop,_trapTab
+// @deckt: custom_components/casora/scripts/casora-core.js#_syncScrollStop,_trapTab,close
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -55,7 +55,15 @@ assert.equal(active, t.btn1, 'Tab → first focusable');
 active = t.content;
 assert.equal(tab(t.p, true), true, 'Shift+Tab prevented');
 assert.equal(active, t.btn2, 'Shift+Tab → last focusable');
-active = t.p.surface;
-tab(t.p, false);
-assert.equal(active, t.btn1, 'focus on the surface: Tab → first');
+
+// A 1px rounding difference is no scroll: no tab stop.
+t = make(false); t.content.scrollHeight = 101; t.p._syncScrollStop();
+assert.equal(t.content.getAttribute('tabindex'), '-1', 'rounding adds no tab stop');
+
+// Wiring: the scroll check (scroll, resize of content/container/extra, after open) syncs the tab stop; close resets it.
+const more = src.slice(src.indexOf('var moreCheck = () => {'), src.indexOf('this._moreCheck = moreCheck;'));
+assert.match(more, /this\._syncScrollStop\(\)/, 'moreCheck syncs the tab stop');
+assert.match(src, /this\._moreRO\.observe\(this\._extra\)/, 'extra entities resize the scroll check');
+const fin = src.slice(src.indexOf("        this.removeAttribute('more-below');"), src.indexOf("this.surface.style.removeProperty('transform');"));
+assert.match(fin, /this\.content\.setAttribute\('tabindex', '-1'\)/, 'close resets the tab stop');
 console.log('ok popup_tab_scroll_focus');

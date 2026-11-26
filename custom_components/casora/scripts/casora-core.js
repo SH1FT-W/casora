@@ -8583,6 +8583,7 @@ window.casoraMenuGlass = {
         this._moreRO = new ResizeObserver(moreCheck);
         this._moreRO.observe(this.content);
         this._moreRO.observe(this.container);
+        this._moreRO.observe(this._extra);
       }
     }
 
@@ -9562,7 +9563,7 @@ window.casoraMenuGlass = {
     }
     // A scrolling content area is a tab stop (keyboard scroll); otherwise -1 (focus on open still works).
     _syncScrollStop() {
-      var c = this.content, t = c.scrollHeight > c.clientHeight ? '0' : '-1';
+      var c = this.content, t = c.scrollHeight > c.clientHeight + 1 ? '0' : '-1'; // +1: rounding is no scroll
       if (c.getAttribute('tabindex') !== t) c.setAttribute('tabindex', t);
     }
     // Focusable controls of the open popup in document order, through the shadow roots of its cards.
@@ -9590,13 +9591,8 @@ window.casoraMenuGlass = {
       var f = this._focusables();
       if (!f.length) { e.preventDefault(); return; }
       var i = f.indexOf(a);
-      // Focus on the content or surface (set on open) that is no tab stop: Tab enters the list, not the page behind.
-      if (i < 0 && a && (a === this.content || a === this.surface)) {
-        e.preventDefault();
-        try { (e.shiftKey ? f[f.length - 1] : f[0]).focus(); } catch (x) { /* gone */ }
-        return;
-      }
-      if (i < 0 && a && this._owns(a)) return; // inside, but not a stop of ours (e.g. inside a card's own widget)
+      // Focus on the content (set on open) that is no tab stop: Tab enters the list below, not the page behind.
+      if (i < 0 && a && a !== this.content && this._owns(a)) return; // inside, but not a stop of ours (e.g. inside a card's own widget)
       var next = null;
       if (e.shiftKey) { if (i <= 0) next = f[f.length - 1]; }
       else if (i < 0 || i === f.length - 1) next = f[0];
@@ -9695,6 +9691,7 @@ window.casoraMenuGlass = {
         this.removeAttribute('open');
         this.removeAttribute('data-casora-charts-ready');
         this.removeAttribute('more-below');
+        this.content.setAttribute('tabindex', '-1');
         this.surface.style.removeProperty('transform');
         this.surface.style.removeProperty('transition');
         this.container.textContent = '';
