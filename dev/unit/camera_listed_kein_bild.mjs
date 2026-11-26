@@ -49,12 +49,11 @@ for (const name of ['casora_camera', 'casora_frigate']) {
   delete window._casoraListedCameraAlerts;
   assert.equal(show(idle), 'Kein Bild', `${name}: unlisted camera without picture keeps „Kein Bild“`);
 
-  // (4) Listed camera while recording: the Frigate tile shows the alert, the plain tile stays „Kein Bild“.
+  // (4) Listed camera while recording: the alert wins, nonstop recorders would never show it otherwise.
   window.CASORA_SETTINGS = { cameras: [{ entity_id: camera, detection_triggers: [ding] }] };
   delete window._casoraListedCameraAlerts;
   states[ding].state = new Date(now).toISOString();
-  assert.equal(show({ entity_id: camera, state: 'recording' }), name === 'casora_frigate' ? 'Test Ding' : 'Kein Bild',
-    `${name}: recording is overridden by an alert on the Frigate tile only`);
+  assert.equal(show({ entity_id: camera, state: 'recording' }), 'Test Ding', `${name}: recording is overridden by an alert`);
 
   // (5) Listed camera that is off, with a live alert: off is not overridden either, so it stays „Aus“.
   delete window._casoraListedCameraAlerts;
