@@ -881,7 +881,9 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   // T04 (test 2): lights and locks are the panel's own types (not in CASORA_TILE_TYPES), so the preview guessed
   // "Alle an"/"Entriegelt" while the dashboard counted "24 An"/"2 entriegelt" – their templates run here too.
   // u08-07: plants too (the preview said „Pflanze – Braucht Aufmerksamkeit“ beside the dashboard's „Yucca – Steht zu nass“).
-  const PANEL_OWN = ["casora_light", "casora_lock", "casora_plant"];
+  // z3: media, cameras and covers likewise – the preview gave every TV, Apple TV, PlayStation and the cameras tile
+  // the speaker/doorbell fallback, and a blinds group "Geöffnet" where the dashboard says "Alle geöffnet".
+  const PANEL_OWN = ["casora_light", "casora_lock", "casora_plant", "casora_media", "casora_cameras", "casora_cover"];
   PANEL_OWN.forEach((n) => OURS.add(n));
   const names = (t) => (Array.isArray(t) ? t : t ? [t] : []);
   const isOurs = (tile) => names(tile && tile.template).some((n) => OURS.has(n));
@@ -1110,6 +1112,37 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
       const tpl = resolve(templates, tile.template);
       const v = run(tpl.name, ctxFor(tile, ent, hass, tpl));
       return typeof v === "string" && v.trim() && !v.includes("<") ? v.trim() : null;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  // z3: casora_entity's state "casora_offline" (dashed warning rim, "Offline" in the warning colour, no switch) with
+  // the template chain's variables – show_offline: false (cameras tile) opts out there and here. Needs casoraTileOffline
+  // (casora-core.js); without it nothing is marked, as before.
+  window.casoraTileIsOffline = (tile, ent, hass, templates) => {
+    if (!ent || !isOurs(tile) || typeof window.casoraTileOffline !== "function") return false;
+    try {
+      const tpl = resolve(templates, tile.template);
+      if (tpl.variables.show_offline === undefined) return false;  // not a casora_entity tile
+      const ctx = ctxFor(tile, ent, hass, tpl);
+      if (ctx.variables.show_offline === false) return false;
+      return !!window.casoraTileOffline(ent, ctx.states, ctx.variables);
+    } catch (e) {
+      return false;
+    }
+  };
+
+  // z3: the club crest of the football tile, from its template's entity_picture (window._casoraFootball, loaded by
+  // needMedien) – the preview showed the grey ball where the dashboard shows the logo. A plain Casora icon is no crest.
+  const ART_TEMPLATES = new Set(["casora_football"]);
+  window.casoraTileArtUrl = (tile, ent, hass, templates) => {
+    if (!ent || !names(tile && tile.template).some((n) => ART_TEMPLATES.has(n))) return null;
+    try {
+      const tpl = resolve(templates, tile.template);
+      const url = run(tpl.entity_picture, ctxFor(tile, ent, hass, tpl));
+      if (!url || typeof url !== "string" || url.includes("[[[") || /\/casora_assets\/icons\/|^data:image\/svg\+xml/.test(url)) return null;
+      return url;
     } catch (e) {
       return null;
     }
