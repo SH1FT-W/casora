@@ -1006,7 +1006,7 @@
     b.textContent = "✦ " + tr(all.length ? "Add a stronger AI task in Home Assistant" : "Set up an AI in Home Assistant");
     const n = document.createElement("div"); n.className = "cc-upg-note";
     n.textContent = tr(all.length
-      ? "Pick a stronger model there. If Casora doesn't recognise your model, choose it under Settings → AI."
+      ? "Pick a stronger model there. If Casora doesn't recognize your model, choose it under Settings → AI."
       : "For example Anthropic, OpenAI or Google with an AI task. Casora then finds it by itself.");
     box.append(b, n);
     host.appendChild(box);
