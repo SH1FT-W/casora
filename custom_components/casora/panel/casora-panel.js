@@ -12135,7 +12135,7 @@ class CasoraPanel extends HTMLElement {
         .row .rowicon { --sicon:29px; }
         :host(.phone) .row .rowicon { --sicon:30px; }
         /* The bell's rows (test round 26.11.2026 d04-14): one kind of symbol in the settings lists – a pale circle in the
-           row's colour with the symbol in that colour, like the screensaver's „Take turns“ list (.cs-saver-ic); before a
+           row's color with the symbol in that color, like the screensaver's „Take turns“ list (.cs-saver-ic); before a
            filled square with a white symbol. Off: grey on a faint circle, like a left-out screensaver. */
         .row .rowicon { --sicon:32px; border-radius:50%; background-color:color-mix(in srgb, var(--sc, var(--ink)) 18%, transparent); }
         .row .rowicon::after { inset:calc(var(--sicon) * .22); background-color:var(--sc, var(--ink)); }
