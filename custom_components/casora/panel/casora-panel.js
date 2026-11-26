@@ -2751,7 +2751,7 @@ const SECTIONS = [
       // Always visible: without an entry the clock takes sensor.time, and that should show.
       { ...E("time_entity", "Time sensor", ["sensor"]), always: true, placeholder: "Automatic" },
       { key: "use_12h", label: "12-hour clock", type: "bool", boolDefault: clock12, always: true },
-      { ...T("time_suffix", "Suffix"),
+      { ...T("time_suffix", "Text after the time"), hint: "Shown right after the time, for example “h”.",
         auto: true, advanced: true, noAdd: true },
     ],
   },
@@ -2803,7 +2803,7 @@ const SECTIONS = [
         always: true, ord: 12 },
       // #70: notifications from scripts and automations (persistent_notification.create), live from HA.
       { key: "notify_ha", sub: "system", glyph: "bell", tone: "var(--casora-color-teal, #00C3D0)", label: "Home Assistant notifications", type: "bool", boolDefault: true,
-        always: true, ord: 12.1, hint: "What scripts and automations create with persistent_notification.create, and Home Assistant's own notices. Swiping one away in the bell dismisses it in Home Assistant too." },
+        always: true, ord: 12.1, hint: "Messages your automations and scripts create in Home Assistant, and Home Assistant's own notices. Swiping one away in the bell dismisses it in Home Assistant too." },
 
       // Hemma round #11d: one list of removed messages for everyone (notify_hidden.py). Off = per user as before.
       { key: "notification_hidden_shared", sub: "system", glyph: "bell", tone: "var(--casora-color-sand, #9A8672)", label: "Removed for all users", type: "bool", boolDefault: false,
@@ -17580,10 +17580,15 @@ class CasoraPanel extends HTMLElement {
       if (inner && typeof inner === "object" && inner.type) tiles.push(inner);
     }));
     const todo = tiles.filter((t) => !(t.variables && t.variables.size === "auto"));
-    if (!todo.length) return;
+    // Nothing left to change: say so instead of a click that does nothing (Prüfrunde u04-07).
+    if (!todo.length) {
+      if (typeof this._bToast === "function") this._bToast(trLabel("All tiles are already on Automatic."));
+      return;
+    }
     const res = await this._ask({
       title: "Set all tiles to Automatic?",
-      message: "{n} tiles get the size Automatic on the phone. Save afterwards to apply it.".replace("{n}", todo.length),
+      // Translated before the number goes in: the table knows the text with „{n}“ (Prüfrunde u04-03).
+      message: trLabel("{n} tiles get the size Automatic on the phone. Save afterwards to apply it.").replace("{n}", todo.length),
       confirmLabel: "Set to Automatic",
     });
     if (!res) return;
