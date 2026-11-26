@@ -15518,7 +15518,9 @@ class CasoraPanel extends HTMLElement {
       extras[FINGERPRINT_KEY] = fingerprintOf(bundle.templates);
       const cfg = expandAny(st, { extras, templates: bundle.templates });
       if (rooms) applyScenePick(cfg, rooms);
-      if (withTiles) { applyMotion(cfg, rooms); markPhoneManaged(cfg, undefined, undefined, rooms); }
+      if (withTiles) applyMotion(cfg, rooms);
+      // The overview's name (home_auto → "Zuhause") also on an empty phone layout ("Start empty", Prüfrunde u01-03).
+      if ((rooms || []).length) markPhoneManaged(cfg, undefined, undefined, rooms);
       applyKiosk(cfg, rooms || []);
       dropRetiredVars(cfg);
 
