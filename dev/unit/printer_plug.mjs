@@ -1,7 +1,7 @@
 // @deckt: 02-devices.js#_casoraPrint,_casoraLaundry; 01-basis.js#_hpPlantShow
 // Issue 130: the 3D printer popup (v3) makes its smart plug usable. The plug's power is the one Verlauf under the dial
-// (richtlinien §7.1) with the range switch 24 Std. · 7 Tage · 30 Tage (each segment a chart key of the shared chart
-// slot); the plug section (switch „Strom“ + power now, also in Soft) is the first list on the right. The phone reads
+// (richtlinien §7.1) with a fixed 24 Std. (d03-09: no range switch in a section; formerly 24 Std. · 7 Tage · 30 Tage);
+// the plug section (switch „Strom“ + power now, also in Soft) is the first list on the right. The phone reads
 // dial → Verlauf → camera → lists.
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -78,48 +78,20 @@ assert.deepEqual(left, ['stage', 'chart', 'plug3'], 'printer v3: left = dial, po
 assert.ok(!right.includes('plug3'), 'printer v3: plug not on the right (' + right.join(',') + ')');
 assert.ok(!right.includes('chart'), 'printer v3: no chart on the right');
 
-// The range switch: three segments, each the key of a chart config with its own span, all on the plug's power.
+// d03-09 (owner 26.11.2026): a Verlauf section shows a fixed 24 Std. (richtlinien §7.2); the range switch
+// 24 Std. · 7 Tage · 30 Tage belongs to an S6 stage and the reading page only – no segments in the section.
 const chartTpl = String(leftCard.custom_fields.chart);
 // A template: it mounts the chart again when the column is drawn anew (popup balancing its columns).
 assert.match(chartTpl, /^\[\[\[ if \(window\._hpStageChart\) window\._hpStageChart\(this, "sensor\.p_power"\); return /, 'Verlauf: remounts its chart');
 const chart = JSON.parse(chartTpl.replace(/^.*?; return /, '').replace(/; \]\]\]$/, ''));
 assert.match(chart, /hp-chart-slot/, 'Verlauf: the shared chart slot');
-assert.match(chart, /onclick="window\._hpPlantTap/, 'Verlauf: a tap on a segment reaches the chart switch (L.wrap)');
-const keys = [...chart.matchAll(/data-hp-metric="([^"]+)"/g)].map((m) => m[1].replace(/&quot;/g, '"'));
-assert.equal(keys.length, 3, 'Verlauf: three range segments (' + keys.join(',') + ')');
-assert.deepEqual(keys.map((k) => window._hpPlantCfg[k] && window._hpPlantCfg[k].span), ['24h', '7d', '30d'], 'Verlauf: 24 Std. · 7 Tage · 30 Tage');
-assert.match(chart, /class="hui-sg on" data-hp-metric="sensor\.p_power"/, 'Verlauf: 24 Std. chosen at first');
-assert.match(chart, />24 Std\.<.*>7 Tage<.*>30 Tage</, 'Verlauf: segment words like the reading page');
-
-// Owner (06.11.2026): a raw W line over 7/30 days is spiky and unreadable. With an energy meter on the plug the
-// 7/30-day ranges show the consumption per day as bars (statistics change per day, richtlinien §7.2 „Balken für
-// Summen je Zeitraum“); 24 Std. stays the power line.
-const c24 = window._hpPlantCfg[keys[0]];
+assert.doesNotMatch(chart, /hui-seg|data-hp-metric/, 'Verlauf: no range switch in the section');
+assert.doesNotMatch(chart, /7 Tage|30 Tage/, 'Verlauf: no 7/30-day words in the section');
+const c24 = window._hpPlantCfg['sensor.p_power'];
+assert.equal(c24.span, '24h', 'Verlauf: fixed 24 Std.');
 assert.equal(c24.kind, 'line', 'Verlauf 24 Std.: the power line');
 assert.equal(c24.series[0].entity, 'sensor.p_power', 'Verlauf 24 Std.: the plug power');
-assert.deepEqual(keys.slice(1), ['hwd7:sensor.p_energy', 'hwd30:sensor.p_energy'],
-  'Verlauf 7/30 Tage: the energy rows’ chart keys (' + keys.slice(1).join(',') + ')');
-keys.slice(1).forEach((k) => {
-  const cfg = window._hpPlantCfg[k];
-  assert.equal(cfg.kind, 'bar', 'Verlauf ' + k + ': bars per day, not a line');
-  assert.equal(cfg.source, 'change', 'Verlauf ' + k + ': statistics change per day');
-  assert.equal(cfg.series[0].entity, 'sensor.p_energy', 'Verlauf ' + k + ': the plug’s energy meter');
-  assert.equal(cfg.series[0].unit, 'kWh', 'Verlauf ' + k + ': kWh per day');
-  assert.equal(cfg.height, 120, 'Verlauf ' + k + ': plate height stays 120 (§7.1)');
-  assert.equal(window._hpPlantMeta[k][0], 'Verbrauch pro Tag', 'Verlauf ' + k + ': title „Verbrauch pro Tag“');
-});
-
-// Without an energy meter on the plug the ranges keep the smoothed power line (fallback).
-const V1 = Object.assign({}, V, { plug_entity: 'switch.p_plug2' });
-const pop1 = P.popup(ent, V1, states, hass);
-const chart1 = JSON.parse(String(pop1.custom_fields.left.card.custom_fields.chart).replace(/^.*?; return /, '').replace(/; \]\]\]$/, ''));
-const keys1 = [...chart1.matchAll(/data-hp-metric="([^"]+)"/g)].map((m) => m[1].replace(/&quot;/g, '"'));
-assert.deepEqual(keys1, ['sensor.p_power', 'pw7:sensor.p_power', 'pw30:sensor.p_power'],
-  'Verlauf without energy meter: power keys (' + keys1.join(',') + ')');
-keys1.forEach((k) => {
-  assert.equal(window._hpPlantCfg[k].kind, 'line', 'Verlauf without energy meter: ' + k + ' stays a line');
-  assert.equal(window._hpPlantCfg[k].series[0].entity, 'sensor.p_power', 'Verlauf without energy meter: ' + k + ' draws the plug power');
-});
+assert.ok(!window._hpPlantCfg['pw7:sensor.p_power'] && !window._hpPlantCfg['pw30:sensor.p_power'], 'Verlauf: no 7/30-day power charts registered');
 
 // The plug section: the switch and the power now, also in Soft (the plug is the printer's only power meter).
 const html = window._casoraLaundry.inner('plug', c, states);

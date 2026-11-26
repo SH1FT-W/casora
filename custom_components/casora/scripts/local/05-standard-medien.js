@@ -303,12 +303,11 @@
   };
 
   // ── Verlauf (#202, owner 16.11.2026): temperature and humidity of one room over 24 h / 7 / 30 days ──────────
-  // A section under the stage (richtlinien §7.1) with Casora's chart (casora-chart: 24 h from the history, 7/30 days
-  // from the long-term statistics, as the chart tile 27-chart.js) and the range switch under it. Temperature and
-  // humidity are two series with their own units: the chart's own switch picks one. The room type's comfort range
-  // (casoraComfortBands) stands as two dotted lines. On Home a tap on a room row picks the room; the choice and the
-  // range hold for the session (not saved).
-  var SPANS = ['24h', '7d', '30d'], SPAN_LABEL = { '24h': '24 Std.', '7d': '7 Tage', '30d': '30 Tage' };
+  // A section under the stage (richtlinien §7.1) with Casora's chart (casora-chart, as the chart tile 27-chart.js).
+  // d03-09 (owner 26.11.2026): a Verlauf section shows a fixed 24 Std. (§7.2), no range switch; 7/30 days are on the
+  // reading page. Temperature and humidity are two series with their own units: the chart's own switch picks one.
+  // The room type's comfort range (casoraComfortBands) stands as two dotted lines. On Home a tap on a room row picks
+  // the room; the choice holds for the session (not saved).
   var SEL = { room: null, span: '24h' }, PARTS = [];
   V.SEL = SEL;
   V.chartKey = function (k, span) { return 'casora_vent:' + k + '|' + span; };
@@ -380,13 +379,13 @@
     PARTS = PARTS.filter(function (e) { return e && e.isConnected; });
     PARTS.forEach(function (e) { try { if (window.casoraKick) window.casoraKick(e); } catch (er) { /* popup closed */ } });
   };
-  // Tap on a room row or a range segment. A finger tap counts on touchend (the popup's button-cards cancel the touch,
+  // Tap on a room row. A finger tap counts on touchend (the popup's button-cards cancel the touch,
   // no click follows on a phone, as 27-chart.js #58); a touch that moved is scrolling.
   var vHit = function (ev) {
     var p = (ev.composedPath && ev.composedPath()) || [];
     for (var i = 0; i < p.length; i++) {
       var n = p[i];
-      if (n && n.hasAttribute && (n.hasAttribute('data-casora-vroom') || n.hasAttribute('data-casora-vspan'))) return n;
+      if (n && n.hasAttribute && n.hasAttribute('data-casora-vroom')) return n;
     }
     return null;
   };
@@ -397,8 +396,7 @@
     ev.preventDefault(); ev.stopPropagation();
     if (ev.type === 'touchend') vTouchAt = Date.now();
     else if (Date.now() - vTouchAt < 700) return false;
-    var sp = n.getAttribute('data-casora-vspan'), rm = n.getAttribute('data-casora-vroom');
-    if (sp && SPAN_LABEL[sp]) SEL.span = sp;
+    var rm = n.getAttribute('data-casora-vroom');
     if (rm) SEL.room = rm;
     if (window.casoraHaptic) window.casoraHaptic('selection');
     window._casoraSuppressDismiss = Date.now() + 600;
@@ -524,7 +522,6 @@
       window._hpPlantCfg[key] = V.chartCfg(ser, SEL.span);
       if (window._hpPlantMeta) window._hpPlantMeta[key] = [ser[0].name, SEL.span, ser[0].color];
       if (el) { remember(el); if (window._hpStageChart) window._hpStageChart(el, key); }
-      var segHtml = UI.segments ? UI.segments(SPANS.map(function (sp) { return { label: SPAN_LABEL[sp], active: sp === SEL.span, attrs: { 'data-casora-vspan': sp } }; }), null) : '';
       var title = mode === 'house' && rooms.length > 1 ? 'Verlauf · ' + cr.n : 'Verlauf';
       return '<div style="font-family:var(--primary-font-family, system-ui);text-align:left;background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));'
         + 'border-radius:var(--casora-popup-row-radius, 20px);padding:16px;box-shadow:var(--casora-popup-plate-shadow, none);'
@@ -532,8 +529,7 @@
         + '<div style="font-size:var(--casora-h15-fs,17px);font-weight:var(--casora-h15-fw,700);letter-spacing:var(--casora-h15-ls,-0.01em);'
         + 'text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary, var(--primary-text-color)));padding:0 2px;">'
         + esc(title) + '</div>'
-        + '<div class="hp-chart-slot" style="min-height:' + (window.innerWidth <= 760 ? 170 : 190) + 'px;margin:8px 0 0;pointer-events:auto;"></div>'
-        + '<div style="margin-top:16px;">' + segHtml + '</div></div>';
+        + '<div class="hp-chart-slot" style="min-height:' + (window.innerWidth <= 760 ? 170 : 190) + 'px;margin:8px 0 0;pointer-events:auto;"></div></div>';
     }
     // #235: lowest and highest of the outdoor room's temperatures over the Verlauf's range (the chart tile's statistics).
     if (name === 'minmax') {

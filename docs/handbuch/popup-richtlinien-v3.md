@@ -92,7 +92,7 @@ Zustand · Zusatz · Zusatz
 | Symbol-Kachel | **entfällt** (die Bühne zeigt Farbe und Zustand) | – |
 | Etikett | **In jedem Popup**, immer **über** dem Titel: der Raum (aus dem Dashboard, sonst der HA-Bereich des Geräts; ein Badge in einer Raumkarte: dieser Raum); bei Sammel-Popups und Popups ohne einen Raum „Zuhause“ (setzt der Rahmen, wenn sonst nichts dasteht); auf Unterseiten die Seite davor (setzt der Rahmen, wenn die Seite ‹ hat) | 12/700, Großbuchstaben, Sperrung .06em, Text 2 |
 | Titel | Gerätename ohne Raum, höchstens 2 Zeilen, dann „…“ | 24/800, -0.02em (Handy 22) |
-| Statuszeile | Zustand fett in Text 1, dann höchstens 2 Zusätze in Text 2, „·“ getrennt, eine Zeitform (unter 1 Std. „vor 11 Min.“, sonst „seit 14:42“). In **jedem** Popup: hat der Inhalt keine eigene, zeigt der Rahmen den Zustand der Kachel-Entität (HAs Wort; ein Zustand der Wortliste in deren Wort – „Bereit“ statt „Leerlauf“, „An“ statt „Ein“ –, ein Rohwert ohne Übersetzung nie, dann „Seit 14:42“) | 14/500, Zustand 14/700 |
+| Statuszeile | Zustand fett in Text 1, dann höchstens 2 Zusätze in Text 2, „·“ getrennt, eine Zeitform (unter 1 Std. „vor 11 Min.“, sonst „seit 14:42“). Hat der Inhalt keine eigene, zeigt der Rahmen den Zustand der Kachel-Entität (HAs Wort; ein Zustand der Wortliste in deren Wort – „Bereit“ statt „Leerlauf“, „An“ statt „Ein“ –, ein Rohwert ohne Übersetzung nie, dann „Seit 14:42“). **Keine Pflicht**, wenn das Rad schon alles zeigt (Entscheidung 26.11.2026, d03-06): nennt das Rad Zustand **und** Zeit („Entriegelt · Zuletzt vor 18 Min.“), bleibt die Zeile leer (siehe unten „wiederholt nie den Bühnenwert“) | 14/500, Zustand 14/700 |
 | Hauptschalter | wie v2 Regel 2: schaltet, was die Kachel schaltet; nie bei Schloss, Alarm, Tor, Sirene | 51×31, Gerätefarbe |
 | ✕ | immer, rechts außen | Kreis 40 auf Zeilenfläche, Trefferfläche 44 |
 | ‹ | nur auf Unterseiten, links vor dem Etikett | Kreis 40 |
@@ -103,7 +103,7 @@ Zustand · Zusatz · Zusatz
 **Kopf-Knöpfe beim Darüberfahren** (13.11.2026): ✕, Zahnrad und ‹ teilen eine Regel – eine Scheibe in Symbolfarbe mit 10 %, nur auf Zeigegeräten (`@media (hover: hover)`). Test `dev/unit/popup_kopf_hover.mjs`.
 
 **Ein Kopf, eine Höhe** (Entscheidung 05.11.2026): Der Kopf ist in jedem Popup gleich hoch – Etikett-Zeile und
-Statuszeile halten ihren Platz auch leer (ein Popup ohne Statuszeile, z. B. Licht, lässt die Zeile frei) –, und die
+Statuszeile halten ihren Platz auch leer (ein Popup ohne Statuszeile, z. B. Licht, oder eins, dessen Rad Zustand und Zeit schon nennt, lässt die Zeile frei) –, und die
 Bühne beginnt in jedem Popup auf derselben Höhe: der Rahmen rückt den ersten sichtbaren Inhalt auf denselben Abstand
 unter den Kopf, auch wenn der Inhalt eine leere Karte darüber hat (casora-core.js `_paintSoft`, `_fitHeadGap`).
 Nur ein zweizeiliger Titel macht den Kopf höher. Test `r578_popup_head_uniform.mjs`.
@@ -139,7 +139,7 @@ keinem Raum zuordnet. Ein eigener Popup-Titel (`room_name`) gilt nur für die Se
 **Die Statuszeile wiederholt nie den Bühnenwert** (Entscheidung 01.11.2026): weder die Zahl der Bühne („513 W“) noch den
 Satz in der Rad-Mitte („Aktiviert · Zuhause“). Sie sagt etwas anderes in Worten – Energie: woher der Strom kommt („Bezug
 aus dem Netz · Akku bereit“, „Solar deckt 80 %“, „Netz offline“); Alarm und andere S7 ohne eigenes Wort: seit wann
-(„Seit 14:42“). Liest sich der erste Teil der Kopfzeile wie der Wert bzw. Satz der Bühne (auch HAs Zustandswort als Rückfall: „Aus“ im Kopf und im Rad, „Verriegelt“ zweimal), setzt der Rahmen „Seit 14:42“ dafür ein (`_dedupeHead`, Zeit der Kachel-Entität). Geprüft
+(„Seit 14:42“). Liest sich der erste Teil der Kopfzeile wie der Wert bzw. Satz der Bühne (auch HAs Zustandswort als Rückfall: „Aus“ im Kopf und im Rad, „Verriegelt“ zweimal), setzt der Rahmen „Seit 14:42“ dafür ein (`_dedupeHead`, Zeit der Kachel-Entität). Nennt das Rad schon eine Zeit („Zuletzt vor 18 Min.“, „Seit 19:40“), entfällt dieser Teil ganz, statt die Zeit ein zweites Mal zu sagen; bleibt kein Zusatz, ist die Statuszeile leer und hält nur ihren Platz (Entscheidung 26.11.2026, d03-06: Schloss, Waschmaschine, Trockner, Spüler, Drucker, Steckdose u. a. – kein Fehler). Geprüft
 von `popup-geo.mjs` („doppelt“: erster Teil der Kopfzeile = Wert bzw. Satz der Bühne). Umgekehrt nennt das Rad nicht noch
 einmal, was schon im Kopf steht: die Wetterwarnung zeigt ihr Gebiet nur in der Statuszeile, im Rad stehen Satz,
 „Bis …“ und bei mehreren die Zahl (14.11.2026, Test `warning_area_once.mjs`).
@@ -299,7 +299,7 @@ Die Listen sind die gruppierten Platten aus Variante B (Commit „Popup rework v
 | Zeile | mindestens 52 hoch, Innenabstand 12 / 16 / 12 / 12, Symbol 28 mit Radius 8 (12 + 8 = 20 konzentrisch) |
 | Symbol | aus: `--casora-soft-icon-off`; an/aktiv: Gerätefarbe mit weißer bzw. dunkler Glyphe (DP-17) |
 | Titel / Unterzeile | 15/700 / 13/500 in Text 2, Unterzeile einzeilig mit „…“ am Handy |
-| Rechts | Schalter (51×31) **oder** Wert 14/600 **oder** Wert + › **oder** ↗ – nie zwei Bedienteile |
+| Rechts | Schalter (51×31) **oder** Wert 14/600 **oder** Wert + › **oder** ↗ **oder** ein Aktionswort (§6.3) – nie zwei Bedienteile |
 | Überschrift | außen über der Platte, 13/600, Großbuchstaben, Sperrung .04em, Text 2, Einzug 16 (bündig mit dem Text), 8 bis zur Platte |
 | Abstand | 24 zwischen Abschnitten und zwischen den Spalten |
 | Reihenfolge | Bedienung → Zustand → Verlauf (v2 Regel 5, ohne Einstellungen §8) |
@@ -335,6 +335,19 @@ rechten Spalte und öffnet eine Unterseite – nur wenn es eingerichtet ist, son
 | Unterseite | eine Zeile je Kanal: Name, Unterzeile kurz („heute 1,5 ml · noch 61 T.“), dünner Balken für den Behälter, › |
 | Kanalseite | Zustand (Behälter, Reicht noch, Heute dosiert, Gesamt), Dosiermenge mit ± 0,1 / 0,5 und Schnellwahl, „Jetzt dosieren“ mit Rückfrage |
 
+### 6.3 Aktion in der Zeile (Entscheidung 26.11.2026, Muster vom 04.11.2026)
+
+Eine Zeile darf rechts statt Wert oder Schalter **ein kurzes Aktionswort in Akzentfarbe** tragen, wenn die Aktion genau
+zu dieser Zeile gehört und keine eigene Seite braucht. Das ist kein Textlink (§15.4), sondern ein Bedienteil der Zeile.
+
+| Teil | Regel |
+|---|---|
+| Wort | ein Verb oder Zustand, höchstens zwei Wörter: „Erledigt“ (Pflege: Teil getauscht/gereinigt), „Pausieren“ / „Abspielen“ (Medien-Badge, Abschnitt „Läuft“), „Neu starten“, „Bestätigen“, „Aktivieren“ |
+| Aussehen | 16/500 in Akzentfarbe (`actionTone: 'accent'`, `UI.group` Feld `action`), kein ›, kein Rahmen; läuft die Aktion, grau (`actionBusy`) |
+| Allein | ersetzt Wert und Schalter der Zeile – nie Wort **und** Wert/Schalter (§6 „nie zwei Bedienteile“); ein Balken darunter ist erlaubt |
+| Nicht rückholbar | zwei Schritte am selben Ort: das erste Tippen macht aus dem Wort die Rückfrage („Erledigt“ → „Zurücksetzen“, `confirm`), nach 4 s ohne zweites Tippen kehrt es zurück |
+| Unterzeile | wie §6 (einzeilig, am Handy mit „…“); das Wort rechts wird nie gekürzt |
+
 ## 7. Diagramme
 
 Grundlage ist Casoras eigene Diagrammkarte `custom:casora-chart` (`scripts/casora-chart.js`, Richtung A „ruhig“), in
@@ -367,7 +380,7 @@ Popups über `window._hpChartCfg(entity, titel, zeitraum, farbe, höhe)` (`01-ba
 | Linie | 2 px, Fläche darunter 12 % → 0, Hilfslinien gepunktet, Skala rechts mit 3 Werten (wie `casora-chart` heute) |
 | Balken | für Summen je Zeitraum (kWh je Tag, Verbrauch je Monat); Linie für Zustandsgrößen (Temperatur, Leistung, Feuchte) |
 | Ablesen | keine schwebende Blase: auf der Bühne liest die große Zahl mit (`readout: 'hero'`), im Abschnitt die Zahl im Plattenkopf (`readout: 'own'`) |
-| Zeitraum | Abschnitt: fest 24 Std.; läuft ein Programm: 4 Std. Umschalter nur auf der Bühne (S6) und der Messwertseite, als Segment unter dem Diagramm: **24 Std. · 7 Tage · 30 Tage** (Diagramm-Kachel zusätzlich „Jahr“) – Wörter wie `27-chart.js`. Energie-Unterseiten (Solar, Haus, Netz, Akku): **4 Std. · 24 Std.** (#195, `20-energie-fokus.js`); Solar und Haus öffnen auf 4 Std., Netz und Akku auf 24 Std. (geglättet auf 15 Min.), eine Wahl gilt für alle vier Seiten bis zum Neuladen (nicht gespeichert), Test `r819_energy_focus_span.mjs` |
+| Zeitraum | Abschnitt: fest 24 Std.; läuft ein Programm: 4 Std. **Ausnahmen** (Entscheidung 26.11.2026, d03-09), weil sich dort in 24 Std. kaum etwas bewegt: Batterien 30 Tage, Pflanzen 7 Tage, Energie-Sensoren 7 Tage. Ein Abschnitt hat **nie** einen Umschalter (3D-Drucker und Lüften hatten einen, entfernt; Tests `printer_plug.mjs`, `raumklima_popup_komfort.mjs`). Umschalter nur auf der Bühne (S6) und der Messwertseite, als Segment unter dem Diagramm: **24 Std. · 7 Tage · 30 Tage** (Diagramm-Kachel zusätzlich „Jahr“) – Wörter wie `27-chart.js`. Energie-Unterseiten (Solar, Haus, Netz, Akku): **4 Std. · 24 Std.** (#195, `20-energie-fokus.js`); Solar und Haus öffnen auf 4 Std., Netz und Akku auf 24 Std. (geglättet auf 15 Min.), eine Wahl gilt für alle vier Seiten bis zum Neuladen (nicht gespeichert), Test `r819_energy_focus_span.mjs` |
 | Abstände | Kopf → Diagramm 8, Diagramm → Segment 16, Innenabstand der Platte 16 |
 
 ### 7.3 Farben
@@ -514,10 +527,11 @@ Kopf, Hauptbereich und Aktionen-Reihe von v2 sind durch §3 bis §5 ersetzt, „
    Mit Schalter gibt es kein zweites Aus/An; einen Modus antippen schaltet ein.
 2. **Zeilen** (`UI.row.*`): Schalter-Zeile (echter Schalter; gesperrt grau mit Grund) · Wert-Zeile · Weiter-Zeile ›
    (öffnet eine Seite mit ‹) · Weg-Zeile ↗ (verlässt Casora) · Aktions- und Auswahl-Zeile ohne Pfeil (gewählt:
-   hinterlegt). In Sammel-Popups: Schalter schaltet, Zeile öffnet. **› heißt immer: öffnet eine Seite mit ‹.**
+   hinterlegt) · Zeile mit Aktionswort rechts in Akzentfarbe (§6.3). In Sammel-Popups: Schalter schaltet, Zeile öffnet. **› heißt immer: öffnet eine Seite mit ‹.**
 3. **Unterseiten** im selben Popup (`casoraPopup.sub`, `UI.page`): ‹ links, Etikett = Seite davor, kurzer Titel, kein
    fremder Hauptschalter, höchstens 2 Ebenen. Bearbeiten ist eine Unterseite mit „Speichern“.
-4. **Lange Listen**: ab 12 Zeilen die ersten 12 und „Alle (n) ›“. Keine Textlinks, keine einzelnen Fuß-Pillen.
+4. **Lange Listen**: ab 12 Zeilen die ersten 12 und „Alle (n) ›“. Keine Textlinks, keine einzelnen Fuß-Pillen (ein
+   Aktionswort in einer Zeile nach §6.3 ist kein Textlink).
 5. **Leer, aus, offline** (ergänzt §4.5): eine Leer-Zeile (`UI.empty`) genau dort, wo Inhalt fehlt, mit höchstens einer
    Aktion. Nicht erreichbar: Statuszeile sagt es, Bedienung grau, letzte Werte mit „zuletzt …“.
 6. **Breite**: 552 einspaltig, 900 bei zwei Spalten oder Bild, über `window.casoraPopupWidth('one' | 'two' | 'image')`.

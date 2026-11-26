@@ -170,8 +170,13 @@ V.SEL.span = '24h';
 eq('outdoor: the house sensors behind the stage', V.outSeries(hof, AUS, hass).map((x) => [x.entity, x.name]),
   [['sensor.wetter_aussen_temperatur', 'Temperatur'], ['sensor.wetter_aussen_feuchte', 'Luftfeuchtigkeit']]);
 eq('outdoor: temperature and humidity keep the switch', V.chartCfg(V.outSeries(hof, AUS, hass), '24h').switch, undefined);
+window._casoraUI.segments = (items) => items.map((i) => JSON.stringify(i.attrs || {}) + i.label).join('');
 let oc = V.sec('chart', st, { hide: [], scope: hof, chart: true }, hass);
-eq('outdoor: a Verlauf with the range switch', [typeof oc === 'string' && oc.includes('Verlauf'), oc.includes('hp-chart-slot')], [true, true]);
+eq('outdoor: a Verlauf', [typeof oc === 'string' && oc.includes('Verlauf'), oc.includes('hp-chart-slot')], [true, true]);
+// d03-09 (owner 26.11.2026): a Verlauf section shows a fixed 24 Std. (richtlinien §7.2), no range switch.
+eq('Verlauf section: no range switch', [/data-casora-vspan/.test(oc), /7 Tage|30 Tage/.test(oc)], [false, false]);
+eq('Verlauf section: fixed 24 Std.', window._hpPlantCfg[V.chartKey('out:hof', '24h')].span || V.SEL.span, '24h');
+delete window._casoraUI.segments;
 eq('outdoor: the chart is registered', window._hpPlantCfg[V.chartKey('out:hof', '24h')].series.map((x) => x.entity),
   ['sensor.wetter_aussen_temperatur', 'sensor.wetter_aussen_feuchte']);
 // A garden with sensors of its own (outdoor-named ones too): every temperature in one chart with a legend.
