@@ -4647,6 +4647,18 @@
     });
     return { on: on, tot: tot, pct: nb ? Math.round(sum / nb) : null };
   };
+  /* The brightness the dial shows for these lamps (0–100): the average of the dimmable ones that are on (all of them when
+     none is dimmable), 100 when only on/off lamps are on, 0 when all are off. One value for the dial and the hold menu
+     (window.casoraLightLevel, 22-halten.js; Prüfrunde w03-01: the hold menu said 100 % from the group's own brightness
+     beside the dial's 29 %). */
+  S.level = function (ids, states) {
+    var dim = ids.filter(function (id) { return dimmable(states[id]); });
+    var s = stat(dim.length ? dim : ids, states);
+    var lit = dim.filter(function (id) { return states[id].state === 'on'; });
+    var plainOn = dim.length > 0 && !lit.length && ids.some(function (id) { return states[id] && states[id].state === 'on' && !dimmable(states[id]); });
+    return s.on ? (s.pct != null ? s.pct : 100) : plainOn ? 100 : 0;
+  };
+  window.casoraLightLevel = S.level;
   // noPct: the v3 head – the dial shows the brightness (§3, detail round #4: „3 von 16 an · 73 %“ beside 73 %).
   var subline = function (s, oneLamp, noPct) {
     var p = s.pct != null && !noPct ? ' · ' + s.pct + ' %' : '';
@@ -4913,13 +4925,12 @@
   var v3Stage = function (ids, states, onlyOn, moons) {
     var UI = window._casoraUI;
     var dim = ids.filter(function (id) { return dimmable(states[id]); });
-    var s = stat(dim.length ? dim : ids, states);
     var lit = dim.filter(function (id) { return states[id].state === 'on'; });
     // Only on/off lamps lit beside dimmable ones (a device's status LED, owner 02.11.2026): the head said „1 von n an“
     // while the dial said „Aus“ with an empty ring. An on/off lamp is fully on – the dial shows 100 % with „An“; turning
     // still sets the dimmable lamps.
     var plainOn = dim.length > 0 && !lit.length && ids.some(function (id) { return states[id] && states[id].state === 'on' && !dimmable(states[id]); });
-    var v = s.on ? (s.pct != null ? s.pct : 100) : plainOn ? 100 : 0;
+    var v = S.level(ids, states);
     var target = lit.length ? lit : (onlyOn ? [] : dim);
     var ct = ids.filter(function (id) { return hasCt(states[id]); });
     var ctT = whiteTargets(ids, states, onlyOn);
