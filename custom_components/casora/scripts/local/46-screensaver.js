@@ -20,10 +20,13 @@
 //   window._casoraSaver.pool(vars, has)        → the kinds that take turns in „mix“ (picked, with something to show)
 //   window._casoraSaver.kindAt(kind, now, pool) → the kind on show
 //   window._casoraSaver.canStart() / start()   → start by hand (the dashboard's ⋯ menu), only where one may start
+//   window.casoraScreensaver.wake(reason)      → ends the screensaver from outside (presence, doorbell); true if one was on show
 // Studio settings beside the three above: casora_screensaver_mix (kinds that alternate, none = all),
 // casora_screensaver_cameras (none = automatic: the real cameras) / _calendars (none = all), casora_screensaver_tint (the playing cover's colour as a wash),
 // casora_screensaver_wander (false = the content stands still, for displays that do not burn in),
 // casora_screensaver_calendar_range ('2w' = the calendar shows this week and the next instead of the month).
+// casora_screensaver_wake (a binary_sensor: when it turns on the screensaver ends; by day Home, at night a dimmed clock),
+// casora_screensaver_wake_screen (false = leave a Fully Kiosk screen alone).
 (function () {
   if (window._casoraSaver) return;
   var S = window._casoraSaver = {};
@@ -1418,10 +1421,61 @@
     return api;
   };
 
+  // ── Wake on presence (casora_screensaver_wake) ─────────────────────────────
+  // A binary_sensor picked in the Studio (motion, occupancy, presence) ends the screensaver when it turns on, before
+  // anyone touches the tablet. By day the dashboard comes back on its Home view; at night (22–5) only a dimmed clock
+  // shows instead of a bright screen. Off while nothing is picked.
+  S.wakeEntity = function (vars) {
+    var v = vars && vars.casora_screensaver_wake;
+    return typeof v === 'string' && /^binary_sensor\.[a-z0-9_]+$/.test(v) ? v : '';
+  };
+  // Turn a Fully Kiosk screen on as well (on unless the Studio switch stored false).
+  S.wakeScreen = function (vars) { var v = vars && vars.casora_screensaver_wake_screen; return !(v === false || v === 'false' || v === 0 || v === '0'); };
+  // The start that fits the hour: morning 5–11, day 11–17 and evening 17–22 go to Home; night 22–5 the dim clock.
+  S.wakePhase = function (h) { h = Number(h); return h >= 22 || h < 5 ? 'night' : h < 11 ? 'morning' : h < 17 ? 'day' : 'evening'; };
+  // One message of subscribe_entities (compressed states): the entity's new state, or null when it brings none.
+  // a: added (the first message), c: changed ({ '+': { s } }), r: removed.
+  S.wakeMsg = function (msg, id) {
+    if (!msg || !id) return null;
+    if (msg.a && msg.a[id]) return String(msg.a[id].s);
+    var c = msg.c && msg.c[id];
+    if (c && c['+'] && c['+'].s != null) return String(c['+'].s);
+    if (Array.isArray(msg.r) && msg.r.indexOf(id) > -1) return 'unavailable';
+    return null;
+  };
+  // Fully Kiosk's „Screen“ switch for this tablet (HA's fully_kiosk integration), only if there is one: the only one,
+  // else the one in the wake sensor's area (the sensor hangs in the tablet's room). Null = leave the screen alone.
+  S.screenSwitch = function (hass, sensor) {
+    var R = (hass && hass.entities) || {}, D = (hass && hass.devices) || {}, S0 = (hass && hass.states) || {};
+    var areaOf = function (id) { var r = R[id]; return r ? (r.area_id || (D[r.device_id] || {}).area_id || null) : null; };
+    var list = Object.keys(R).filter(function (id) {
+      var r = R[id];
+      return r && r.platform === 'fully_kiosk' && id.indexOf('switch.') === 0 && S0[id] && (r.translation_key === 'screen_on' || /_screen$/.test(id));
+    }).sort();
+    if (list.length === 1) return list[0];
+    var a = areaOf(sensor);
+    var here = a ? list.filter(function (id) { return areaOf(id) === a; }) : [];
+    return here.length === 1 ? here[0] : null;
+  };
+  // The calm night clock: the time only, dim on black. Every ten minutes it stands somewhere else, together with a
+  // change of the digits, so nothing burns in.
+  S.nightSpot = function (now) {
+    var n = Math.floor(+now / 600000);
+    return [Math.round(Math.sin(n * 1.7) * 6), Math.round(Math.cos(n * 1.3) * 8)];
+  };
+  S.nightHtml = function (now, hass) {
+    var p = S.nightSpot(now);
+    return '<div class="cs-night" style="position:absolute;inset:0;display:grid;place-items:center;background:#000;">'
+      + '<div class="cs-night-t" data-no-i18n style="transform:translate(' + Number(p[0]) + 'vw,' + Number(p[1]) + 'vh);font-family:var(--primary-font-family, var(--ha-font-family, system-ui, sans-serif));'
+      + 'font-weight:200;font-size:min(22vw,34vh);line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:#A89C8F;opacity:.3;">'
+      + esc(timeText(now, hass)) + '</div></div>';
+  };
+
   // The settings of the dashboard: the first value found on a view's hero card.
   S.vars = function (cfg) {
     var out = {}, keys = ['casora_screensaver', 'casora_screensaver_kind', 'casora_screensaver_calendar', 'casora_screensaver_photos', 'casora_screensaver_mix',
-      'casora_screensaver_cameras', 'casora_screensaver_calendars', 'casora_screensaver_tint', 'casora_screensaver_wander', 'casora_screensaver_calendar_range', 'weather_entity'];
+      'casora_screensaver_cameras', 'casora_screensaver_calendars', 'casora_screensaver_tint', 'casora_screensaver_wander', 'casora_screensaver_calendar_range', 'weather_entity',
+      'casora_screensaver_wake', 'casora_screensaver_wake_screen'];
     ((cfg && cfg.views) || []).forEach(function (v) {
       var vars = ((((v.cards || [])[0]) || {}).variables) || {};
       keys.forEach(function (k) { if ((out[k] == null || out[k] === '' || (Array.isArray(out[k]) && !out[k].length)) && vars[k] != null && vars[k] !== '') out[k] = vars[k]; });
@@ -1438,7 +1492,9 @@
   // byHand: started from the ⋯ menu; it stays without a start time until a touch.
   var lastAct = Date.now(), layer = null, live = null, rootEl = null, lookedAt = 0, byHand = false;
   var bump = function () { lastAct = Date.now(); };
-  ['pointerdown', 'touchstart', 'keydown', 'wheel', 'scroll'].forEach(function (t) { window.addEventListener(t, bump, { capture: true, passive: true }); });
+  // The last real use (lastAct is also reset while no screensaver is set): a wake leaves a tablet in use alone.
+  var lastUse = Date.now(), used = function () { lastUse = Date.now(); bump(); };
+  ['pointerdown', 'touchstart', 'keydown', 'wheel', 'scroll'].forEach(function (t) { window.addEventListener(t, used, { capture: true, passive: true }); });
   window.addEventListener('location-changed', bump, true);
   var deep = function (root, tag, depth) {
     if (!root || depth > 10 || !root.querySelector) return null;
@@ -1508,7 +1564,8 @@
     layer.appendChild(box);
     haptic('light');
   };
-  var show = function (cfg) {
+  // night: the calm night clock instead of the screensaver (a wake at night, S.wakeNow).
+  var show = function (cfg, night) {
     if (layer) return;
     if (!document.getElementById('cs-sv-over-css')) {
       var st = document.createElement('style');
@@ -1547,6 +1604,15 @@
     };
     ['pointerdown', 'touchstart', 'pointerup', 'touchend', 'mousedown', 'mouseup', 'click', 'contextmenu'].forEach(function (t) { layer.addEventListener(t, wake, { passive: false }); });
     layer.setAttribute('data-casora-window', ''); document.body.appendChild(layer);
+    if (night) {
+      layer._night = true;
+      layer.style.background = '#000';
+      var paint = function () { stage.innerHTML = S.nightHtml(new Date(), hassOf()); };
+      paint();
+      var nt = setInterval(paint, 20000);
+      live = { destroy: function () { clearInterval(nt); stage.innerHTML = ''; } };
+      return;
+    }
     // Every five seconds: the cameras' pictures stay fresh (everything else only repaints when it changed).
     live = S.mount(stage, null, { drift: function () { return S.wanders(S.vars(config() || cfg)); }, every: 5000, kind: function () { return S.vars(config() || cfg).casora_screensaver_kind || 'mix'; },
       context: function () { var c = config() || cfg; return { config: c, vars: S.vars(c) }; } });
@@ -1559,9 +1625,86 @@
     return !!(config() && (FORCE || isTablet()));
   };
   S.start = function () { var cfg = config(); if (cfg && S.canStart()) { show(cfg); byHand = !!layer; } };
+  // From outside (wake on presence here, the doorbell elsewhere): ends the screensaver, as a touch would.
+  // reason: a short word for the log. Returns true when a screensaver was on show.
+  S.wake = function (reason) {
+    var was = !!layer;
+    if (layer) hide(); else bump();
+    S._lastWake = { reason: String(reason || ''), at: Date.now(), was: was };
+    return was;
+  };
+  window.casoraScreensaver = window.casoraScreensaver || {};
+  window.casoraScreensaver.wake = S.wake;
+  var homeOf = function (cfg) {
+    var views = (cfg && cfg.views) || [], home = null;
+    for (var i = 0; i < views.length; i++) if (views[i].path === 'home') { home = views[i]; break; }
+    home = home || views[0];
+    var parts = String(location.pathname).split('/').filter(Boolean);
+    return home && parts.length ? '/' + parts[0] + '/' + (home.path || '0') : null;
+  };
+  var norm = function (p) { return String(p || '').replace(/\/+$/, '') || '/'; };
+  // Someone came into the room (the wake sensor turned on). Only on a tablet at rest: while someone uses it (a touch
+  // in the last two minutes, a popup open) nothing changes.
+  S.wakeNow = function (now) {
+    var cfg = config();
+    if (OFF || !cfg || (!FORCE && !isTablet())) return '';
+    if (window.casoraPopup && window.casoraPopup.surface) return '';
+    if (!layer && Date.now() - lastUse < 120000) return '';
+    var vars = S.vars(cfg), hass = hassOf();
+    if (S.wakeScreen(vars)) screenOn(hass, S.wakeEntity(vars));
+    var phase = S.wakePhase((now || new Date()).getHours());
+    if (phase === 'night') {
+      if (layer && layer._night) return phase;
+      if (layer) hide();
+      show(cfg, true);
+      byHand = !!layer;
+      return phase;
+    }
+    S.wake('presence');
+    var home = homeOf(cfg);
+    if (home && norm(location.pathname) !== norm(home)) {
+      history.pushState(null, '', home);
+      window.dispatchEvent(new CustomEvent('location-changed', { detail: { replace: false } }));
+      bump();
+    }
+    return phase;
+  };
+  // The screen of a Fully Kiosk tablet: its own JavaScript interface when the page runs in it, else the integration's
+  // „Screen“ switch (only one that is off; S.screenSwitch).
+  var screenOn = function (hass, sensor) {
+    try { if (window.fully && typeof window.fully.turnScreenOn === 'function') { window.fully.turnScreenOn(); return; } } catch (e) { /* not this device */ }
+    var sw = S.screenSwitch(hass, sensor), st = sw && hass.states[sw];
+    if (st && st.state === 'off' && typeof hass.callService === 'function') {
+      Promise.resolve(hass.callService('switch', 'turn_on', { entity_id: sw })).catch(function () { /* the screen stays as it is */ });
+    }
+  };
+  // One subscription for the picked sensor (subscribe_entities, only that entity): no polling. A new pick, or none,
+  // ends the old one. The first message is the current state and wakes nothing; only off → on does.
+  var wakeId = '', wakeUnsub = null, wakeLast = null, wakeGen = 0;
+  var wakeSync = function (cfg) {
+    var hass = hassOf();
+    var want = !OFF && cfg && (FORCE || isTablet()) ? S.wakeEntity(S.vars(cfg)) : '';
+    if (want === wakeId) return;
+    if (wakeUnsub) { try { wakeUnsub(); } catch (e) { /* closed */ } }
+    wakeUnsub = null; wakeId = want; wakeLast = null;
+    var gen = ++wakeGen;
+    if (!want || !hass || !hass.connection || typeof hass.connection.subscribeMessage !== 'function') { if (!want) return; wakeId = ''; return; }
+    Promise.resolve(hass.connection.subscribeMessage(function (msg) {
+      var s = S.wakeMsg(msg, want);
+      if (s == null || gen !== wakeGen) return;
+      var prev = wakeLast;
+      wakeLast = s;
+      if (prev != null && prev !== 'on' && s === 'on') S.wakeNow();
+    }, { type: 'subscribe_entities', entity_ids: [want] })).then(function (u) {
+      if (gen !== wakeGen) { try { u(); } catch (e) { /* closed */ } return; }
+      wakeUnsub = u;
+    }, function () { /* refused: no retry loop; a new pick tries again */ });
+  };
+  S._wakeSync = wakeSync;
   setInterval(function () {
     if (OFF) return;
     var cfg = config();
+    if (cfg) wakeSync(cfg);
     if (!cfg) { if (layer) hide(); return; }
     var mins = S.minutes(S.vars(cfg).casora_screensaver);
     if ((!mins && !byHand) || (!FORCE && !isTablet())) { if (layer) hide(); bump(); return; }
