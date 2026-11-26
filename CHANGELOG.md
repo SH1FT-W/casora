@@ -4,6 +4,13 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.11.31 – 26.11.2026
+
+Hotfix for 26.11.30.
+
+### Fixed
+- **Symbols on tiles:** on some devices (for example the Home Assistant app on iPhone) the colored circles of tiles stayed empty, without their symbol. The dark symbol on orange and yellow circles used a color calculation those browsers could not resolve. Tiles show their white symbol again everywhere; badges, popups and the bell keep the dark symbol.
+
 ## 26.11.30 – 27.11.2026
 
 Four new things first: the doorbell comes to the front when it rings, the weather moves over the room photo, Assist opens the matching Casora popup, and a wall tablet wakes when someone comes in. Around them, the biggest round of polish Casora has had. Before this release, 20 AI testers clicked through every function on test installations: setup, the Studio and all its settings, phone, tablet and desktop, every tile and popup, security, all languages and the update from older versions. They filed more than 190 findings, and about 150 of them are fixed in this release. On top come seven betas with a card for Smart Heating Control, own badges that show by condition, a room climate chart for the garden, new screensaver choices and the fixes you reported.

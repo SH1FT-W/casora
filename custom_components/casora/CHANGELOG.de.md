@@ -4,6 +4,13 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.11.31 – 26.11.2026
+
+Hotfix für 26.11.30.
+
+### Behoben
+- **Symbole auf Kacheln:** Auf manchen Geräten (zum Beispiel in der Home-Assistant-App auf dem iPhone) blieben die farbigen Kreise der Kacheln leer, ohne Symbol. Das dunkle Symbol auf orangen und gelben Kreisen nutzte eine Farbberechnung, die diese Browser nicht auflösen konnten. Kacheln zeigen ihr Symbol wieder überall weiß; Badges, Popups und die Glocke behalten das dunkle Symbol.
+
 ## 26.11.30 – 27.11.2026
 
 Vorneweg vier Neuheiten: die Türklingel kommt beim Klingeln nach vorn, das Wetter zieht über das Raumfoto, Assist öffnet das passende Casora-Popup, und ein Wandtablet wacht auf, wenn jemand hereinkommt. Drumherum der größte Feinschliff, den Casora bisher hatte. Vor diesem Release haben 20 KI-Tester jede Funktion auf Testinstallationen durchgeklickt: Einrichtung, das Studio mit allen Einstellungen, Handy, Tablet und Desktop, jede Kachel und jedes Popup, Sicherheit, alle Sprachen und das Update von älteren Versionen. Sie haben mehr als 190 Funde gemeldet, rund 150 davon sind in diesem Release behoben. Dazu kommen sieben Betas mit einer Karte für Smart Heating Control, eigenen Badges nach Bedingung, einem Raumklima-Verlauf für den Garten, neuen Wahlmöglichkeiten beim Bildschirmschoner und den Korrekturen aus euren Meldungen.

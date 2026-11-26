@@ -55,47 +55,19 @@ const check = (name, ink) => {
   assert.ok(isWhite(ink(hex(colours.teal))), name + ': white on teal');
 };
 
-// Tiles (casora_entity): the picture's shadow in the ink, the picture itself shifted out of the clipped circle.
+// Tiles (casora_entity), hotfix 26.11.31: the dark symbol was drawn as a shadow in a relative colour while the picture
+// moved out of the circle. Browsers that could not resolve that colour (the iOS app) showed empty coloured circles.
+// Until a computed colour replaces it, tiles keep the white symbol: no variable defines the shadow or the shift, so the
+// states' var(--casora-tile-glyph-filter) / var(--casora-tile-glyph-shift) fall back to none and the symbol stays put.
 const es = T.casora_entity.extra_styles;
-check('tile', channels(es, '--casora-tile-glyph-filter'));
-assert.match(es, /--casora-tile-glyph-filter: drop-shadow\(160px 0 0 rgb\(from var\(--casora-tile-glyph-ground/);
-assert.match(es, /--casora-tile-glyph-shift: -160px 0;/);
-// Fix round 26.11.2026: the source is the colour the circle is really painted in. A translucent circle (the dark themes'
-// circle token, Casora Farbe's white chip, the camera's circle over its picture) keeps the white symbol: rgb(from …)
-// alone dropped the alpha and turned a 0.08 white into a light circle with a dark symbol.
-const tileInk = channels(es, '--casora-tile-glyph-filter');
-for (const a of [[255, 240, 220, 0.08], [255, 229, 220, 0.08], [255, 255, 255, 0.28], [0, 0, 0, 0.2]]) {
-  assert.ok(isWhite(tileInk(a)), 'tile: white on the translucent circle ' + a.join(','));
-}
-assert.ok(isDark(tileInk([...hex(colours.yellow), 1])), 'tile: dark on an opaque yellow circle');
-assert.match(es, /rgb\(from var\(--casora-tile-glyph-ground, color-mix\(in srgb, var\(--casora-icon-color-current, var\(--casora-icon-circle-bg, #8E8E93\)\) var\(--casora-tile-tone-share, 0%\), var\(--casora-icon-circle-bg, #8E8E93\)\)\)/,
-  'ground: the device colour where the tile is toned (Casora Farbe: chip over the device colour, like inkOn in the popup), else the circle');
-assert.match(es, /@supports \(color: rgb\(from red r g b\)\)/, 'only where relative colours work, else white as before');
-assert.match(es, /img\[src\^="data:image\/svg"\]:not\(\[src\*="%3Cstyle"\]\)/, 'only single-colour Casora icons');
-// Every active state that cancels the picture filter puts the two in (filter and shift always together).
-let n = 0;
+assert.ok(!/--casora-tile-glyph-filter\s*:/.test(es), 'tile: no relative-colour shadow for the symbol');
+assert.ok(!/--casora-tile-glyph-shift\s*:/.test(es), 'tile: the symbol is never moved out of its circle');
 for (const [k, v] of Object.entries(T)) {
-  for (const st of [v.styles, ...(v.state || []).map((s) => s.styles)]) {
-    const ep = st && st.entity_picture;
-    if (!Array.isArray(ep)) continue;
-    const f = ep.find((o) => 'filter' in o), tr = ep.find((o) => 'translate' in o);
-    if (f && f.filter === 'none !important') assert.fail(k + ': picture filter none instead of the glyph filter');
-    if (f && /casora-tile-glyph-filter/.test(f.filter)) { n++; assert.ok(tr && /casora-tile-glyph-shift/.test(tr.translate), k + ': shift with the filter'); }
-    if (tr && /casora-tile-glyph-shift/.test(tr.translate)) assert.ok(f && /casora-tile-glyph-filter/.test(f.filter), k + ': filter with the shift');
-    // The glyph reads the colour the circle is painted in: a state that paints the circle inline names the same colour
-    // as the ground; one whose circle is neither inline nor --casora-icon-circle-bg on the card names the circle token.
-    if (f && /casora-tile-glyph-filter/.test(f.filter)) {
-      const kv = (l) => Object.assign({}, ...(Array.isArray(l) ? l : []).filter((o) => o && typeof o === 'object'));
-      const ic = kv(st.img_cell), card = kv(st.card);
-      const bg = ic.background ?? ic['background-color'];
-      if (bg != null) assert.equal(ic['--casora-tile-glyph-ground'], bg, k + ': ground = the inline circle colour');
-      else if (!('--casora-icon-circle-bg' in card)) assert.equal(ic['--casora-tile-glyph-ground'], 'var(--casora-icon-circle-bg)', k + ': ground = the circle token');
-    }
+  const all = JSON.stringify(v);
+  for (const m of all.matchAll(/var\(--casora-tile-glyph-(filter|shift)([^)]*)\)/g)) {
+    assert.ok(!m[2] || !/drop-shadow|translate|px/.test(m[2]), k + ': no fallback that moves or recolours the symbol');
   }
 }
-assert.ok(n >= 30, 'active states of the tiles (' + n + ')');
-const lockOn = T.casora_lock.state.find((s) => s.styles && s.styles.entity_picture);
-assert.ok(lockOn.styles.entity_picture.some((o) => /casora-tile-glyph-filter/.test(o.filter || '')), 'lock tile (the report)');
 
 // Badges: the on state's glyph (--casora-badge-glyph „initial“) falls back to the circle's ink.
 const bs = T.casora_badge_base.extra_styles;
