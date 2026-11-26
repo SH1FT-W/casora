@@ -3,7 +3,7 @@
 // yellow everywhere. Tiles and badges now pick the symbol from their circle's colour with the inkOn rule (white where it
 // keeps 3 : 1, else the dark glyph), the bell keeps orange (notify_icon_white.mjs).
 //   node dev/unit/glyph_on_light_colours.mjs
-// @deckt: dashboards/casora/button_card_templates.json#casora_entity,casora_badge_base,casora_lock,casora_badge_light_group,casora_badge_lock_group
+// @deckt: dashboards/casora/button_card_templates.json#casora_entity,casora_badge_base,casora_lock,casora_badge_light_group,casora_badge_lock_group,casora_scene_core
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -83,4 +83,8 @@ check('badge', channels(bs, '--casora-badge-on-glyph'));
 const all = JSON.stringify(T);
 assert.ok(!all.includes('var(--casora-badge-glyph, #fff)'), 'no badge glyph falls back to plain white');
 assert.ok(all.includes('var(--casora-badge-glyph, var(--casora-badge-on-glyph, #fff))'));
+// Scene pills and scene tiles: the symbol in the circle through inkOn as well (white on yellow before).
+const sc = JSON.stringify(T.casora_scene_core);
+assert.ok(sc.includes("const onInk = (window._casoraInkOn && window._casoraInkOn(tint)) || '#ffffff';"), 'scene: inkOn on the scene colour');
+assert.ok(sc.includes("const ink = 'color-mix(in srgb, ' + onInk + ' ' + _ring + ', ' + tint + ')';"), 'scene: ink in the circle');
 console.log('glyph_on_light_colours: ok');
