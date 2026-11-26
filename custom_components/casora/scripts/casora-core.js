@@ -231,6 +231,70 @@
   });
 })();
 
+// Room card lazy fields (w02-03): every desktop room card (casora_room) carried its own hidden "Now playing" (~38
+// cards) and all collapsed sub-badge rows (lights, climate, security, energy, media, people, scenes), and Home Assistant
+// keeps every visited view: 31 rooms grew to 640,000 nodes and 230 MB. Such a field now holds an empty stand-in
+// (casora-lazy-field) until it is first needed: its display style is not "none" and, for a sub-badge row, that row
+// is the expanded one (input_select.casora_expanded_row). From then on button-card keeps the real card as before
+// (its div with id, grid area and styles is there all along, so layout and the code that looks for it are unchanged).
+(function () {
+  if (!window.customElements || window.__casoraLazyFields) return;
+  window.__casoraLazyFields = true;
+  // Field → the expanded-row value that opens it (null: display alone decides).
+  var LAZY = { now_playing: null, badges_climate: 'climate', badges_presence: 'presence', badges_media: 'media',
+    badges_lights: 'lights', badges_security: 'security', badges_energy: 'energy', badges_scenes: 'scenes' };
+  var STUB = { card: { type: 'custom:casora-lazy-field' }, do_not_eval: true };
+  if (typeof HTMLElement === 'function' && !customElements.get('casora-lazy-field')) {
+    try {
+      customElements.define('casora-lazy-field', class extends HTMLElement {
+        setConfig() { /* stand-in, nothing to draw */ }
+        set hass(h) { /* stand-in */ }
+        get hass() { return null; }
+      });
+    } catch (e) { /* defined meanwhile */ }
+  }
+  var isRoom = function (cfg) { return [].concat((cfg && cfg.template) || []).indexOf('casora_room') > -1; };
+  customElements.whenDefined('button-card').then(function () {
+    var C = customElements.get('button-card');
+    var P = C && C.prototype;
+    if (!P || P.__casoraLazyFields || typeof P._buildCustomFields !== 'function' || typeof P._getTemplateOrValue !== 'function') return;
+    P.__casoraLazyFields = true;
+    var orig = P._buildCustomFields;
+    // The field's display as the card would style it ('none' keeps the stand-in).
+    var shown = function (card, st, key) {
+      var list = card._config.styles && card._config.styles.custom_fields && card._config.styles.custom_fields[key];
+      if (!Array.isArray(list)) return true;
+      for (var i = 0; i < list.length; i++) {
+        var o = list[i];
+        if (o && Object.prototype.hasOwnProperty.call(o, 'display')) {
+          var v;
+          try { v = card._getTemplateOrValue(st, o.display); } catch (e) { return true; }
+          return String(v == null ? '' : v).trim() !== 'none';
+        }
+      }
+      return true;
+    };
+    P._buildCustomFields = function (st) {
+      var cfg = this._config, cf = cfg && cfg.custom_fields;
+      if (!cf || !isRoom(cfg)) return orig.apply(this, arguments);
+      var open = this.__casoraLazyOpen || (this.__casoraLazyOpen = {});
+      var h = this._hass, exp = h && h.states && h.states['input_select.casora_expanded_row'];
+      var expanded = exp && exp.state;
+      var swapped = null;
+      for (var key in LAZY) {
+        if (open[key] || !cf[key] || !cf[key].card) continue;
+        var cat = LAZY[key];
+        if ((cat === null || expanded === cat) && shown(this, st, key)) { open[key] = true; continue; }
+        if (!swapped) swapped = Object.assign({}, cf);
+        swapped[key] = STUB;
+      }
+      if (!swapped) return orig.apply(this, arguments);
+      cfg.custom_fields = swapped;
+      try { return orig.apply(this, arguments); } finally { cfg.custom_fields = cf; }
+    };
+  });
+})();
+
 // Haptik (14.10.2026): casoraHaptic('light'|'selection'|'medium'|'success') – HA-Companion-App vibriert.
 // Tipp-Handler hängen oft an touchend UND click: ein zweiter Impuls binnen 250 ms entfällt (Klick-Echo).
 window.casoraHaptic = window.casoraHaptic || function (kind) {
