@@ -169,8 +169,13 @@
   };
   // Blinds left out of the climate devices (collected here for the „Jalousien“ row of the climate popup).
   var blindsOut = [];
+  // Per category: the room tile rows still building when it was read (see roomsOf); P.sec draws again once they are.
+  var building = {};
   var roomsOf = function (cat) {
     if (cat === 'climate') blindsOut = [];
+    building[cat] = null;
+    // The room sections are built after the load (smart-row.js, w02-02); the hub reads their tiles.
+    if (typeof window.casoraBuildDeferred === 'function') window.casoraBuildDeferred();
     var ov = deep(haRoot(), function (n) { return n.localName === 'casora-filter-overlay' && n._config && n._config.filter_category === cat; }, 1)[0];
     var found = ov && typeof ov._findContainerAndSelf === 'function' ? ov._findContainerAndSelf() : null;
     var container = found && found.container;
@@ -186,6 +191,9 @@
       }
       var sr = kid.querySelector && (kid.localName === 'casora-smart-row' ? kid : kid.querySelector('casora-smart-row'));
       if (!sr || pending === null) { if (sr) pending = null; continue; }
+      /* A room row just made by casoraBuildDeferred (or still loading) builds its tiles a moment later (_init awaits
+         the card helpers and a frame): note it, so the hub draws again when it is done (review of w02-02). */
+      if (!sr._cardsCreated && typeof sr.whenBuilt === 'function') (building[cat] = building[cat] || []).push(sr.whenBuilt());
       var tiles = (sr._wrappers || []).map(function (w) {
         return w.localName === 'button-card' ? w : (w.querySelector && w.querySelector('button-card'));
       }).filter(function (b) { return b && b._config && !offOnPhone(b._config) && catOf(b._config) === cat; })
@@ -538,7 +546,12 @@
   };
   /* The rows mirror Home's badges, which may draw their new state after this card (fam-03: locked, the sentence still
      said „Schloss offen“). Look again shortly after each update; when the badges changed since, draw again. */
-  var sigOf = function (s) { return [s.sub].concat(s.chips.map(function (c) { return c.title + ':' + c.sub; })).join('|'); };
+  // The rooms too: a room row that built after the first draw (w02-02) changes them, not the overview.
+  var sigOf = function (s) {
+    return [s.sub].concat(s.chips.map(function (c) { return c.title + ':' + c.sub; }), (s.rooms || []).map(function (r) {
+      return r.name + '>' + r.tiles.map(function (t) { return t.title + ':' + t.sub; }).join(',');
+    })).join('|');
+  };
   var recheck = function (cat, el, sig) {
     if (!el || typeof el.requestUpdate !== 'function') return;
     [350, 1200].forEach(function (ms, i) {
@@ -558,6 +571,16 @@
     if (part === 'hero' || part === 'stage') memo[cat] = null;
     var s = P.scan(cat);
     recheck(cat, el, sigOf(s));
+    // Room rows still building when read: draw again once they are (once per scan and card).
+    var wait = building[cat];
+    if (wait && el && typeof el.requestUpdate === 'function' && el._casoraHubWait !== wait) {
+      el._casoraHubWait = wait;
+      Promise.all(wait).then(function () {
+        if (!el.isConnected || el._casoraHubWait !== wait) return;
+        memo[cat] = null;
+        el.requestUpdate();
+      });
+    }
     if (part === 'hero') return UI.line(s.sub || TITLE[cat] || '', [], {});
     if (part === 'stage') return stageOf(cat, s, states || (hass && hass.states) || {}, hass);
     if (part !== 'list') return '';

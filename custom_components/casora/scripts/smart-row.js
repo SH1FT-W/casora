@@ -306,6 +306,52 @@ function slimNavConfig(el) {
   return found && found.slim_home !== false ? found : null;
 }
 
+// ── Phone Home builds its room sections later (w02-02) ─────────────────────────
+// The phone's Home row carries every room's header and tile row, hidden by casora-mobile-nav (_slimHome): with
+// 30 rooms that was ~200 button-cards drawn while the page loads, none of them seen. Those cards are now made
+// after the load (DEFER_AFTER_MS past casora-local-loaded, a few per idle slot), or at once when something needs
+// them: a filter (room or category page, whose overlay reads the section configs), the phone hub
+// (window.casoraBuildDeferred) or the row's own filter change. Their wrappers (data-idx, slim marks) exist from
+// the start. Pure rule, same as _slimHome in 04-navigation.js: the cards from a room's (or the scenes') header up
+// to the next other header, and scene rows.
+const DEFER_AFTER_MS = 1500;
+function slimDeferIndices(cards, nav, tr) {
+  const out = new Set();
+  if (!nav || nav.slim_home === false || !Array.isArray(cards)) return out;
+  if (!cards.some((c) => c && c.type === 'custom:casora-filter-overlay')) return out;
+  const t = tr || ((x) => x);
+  const names = new Set(['Szenen', 'Scenes', t('Szenen')]);
+  (nav.rooms || []).forEach((r) => { if (r && r.name) names.add(r.name); });
+  let hiding = false;
+  cards.forEach((c, i) => {
+    const tl = tplList(c);
+    if (tl.includes('casora_mobile_header')) hiding = names.has(c.name);
+    if (hiding || tl.includes('casora_scene_row')) out.add(i);
+  });
+  return out;
+}
+// The indices of one room's section: its header up to the next header (a room page needs no other room).
+function sectionIndices(cards, name) {
+  const out = new Set();
+  let on = false;
+  (cards || []).forEach((c, i) => {
+    if (tplList(c).includes('casora_mobile_header')) on = c.name === name;
+    if (on) out.add(i);
+  });
+  return out;
+}
+window._casoraSlimDefer = slimDeferIndices;
+window._casoraSlimSection = sectionIndices;
+// Builds every row's postponed cards now (synchronous: the card elements and their configs are there on return);
+// with a room name only that room's section, the rest keeps coming on idle.
+window.casoraBuildDeferred = function (room) {
+  let n = 0;
+  (window._casoraSmartRows || []).forEach((r) => {
+    if (r._deferred && r._deferred.size) n += r._buildDeferred(null, room ? sectionIndices(r._config.cards, room) : null);
+  });
+  return n;
+};
+
 class CasoraSmartRow extends HTMLElement {
   constructor() {
     super();
@@ -336,6 +382,7 @@ class CasoraSmartRow extends HTMLElement {
 
   connectedCallback() {
     (window._casoraSmartRows = window._casoraSmartRows || new Set()).add(this);
+    if (this._deferred && this._deferred.size) this._scheduleDeferred();
     if (!this._onVisChange) {
       this._onVisChange = (ev) => {
         const el = ev.composedPath ? ev.composedPath()[0] : ev.target;
@@ -744,6 +791,17 @@ class CasoraSmartRow extends HTMLElement {
     if (!this._cardsCreated) {
       if (!this._initializing) this._init();
       return;
+    }
+
+    // A room or category page reads the hidden sections: build them before the page's overlay gets this hass.
+    if (this._deferred && this._deferred.size) {
+      const f = hass && hass.states && hass.states['input_select.casora_mobile_filter'];
+      if (f && f.state && f.state !== 'all') {
+        // A room page reads its own section only; a category page (lights, climate …) reads every room.
+        const nav = /^room_/.test(f.state) ? slimNavConfig(this) : null;
+        const room = nav && (nav.rooms || []).find((r) => r && r.key === f.state);
+        this._buildDeferred(null, room && room.name ? sectionIndices(this._config.cards, room.name) : null);
+      }
     }
 
     for (const card of this._cards) {
@@ -1205,6 +1263,68 @@ class CasoraSmartRow extends HTMLElement {
 
   get hass() { return this._hass; }
 
+  // Resolves once the row has made its cards and wrappers (_init done; at once if it is). The phone hub reads a
+  // room row right after casoraBuildDeferred made it, before its own build ran (w02-02).
+  whenBuilt() {
+    if (this._cardsCreated) return Promise.resolve();
+    return new Promise((r) => { (this._builtWaiters = this._builtWaiters || []).push(r); });
+  }
+
+  _markBuilt() {
+    const w = this._builtWaiters;
+    this._builtWaiters = null;
+    if (w) w.forEach((r) => r());
+  }
+
+  // Builds postponed cards (slimDeferIndices) in config order; budgetMs null = all now, else stop after that long;
+  // only = a set of indices to build (the rest stays postponed). Returns how many were built.
+  _buildDeferred(budgetMs, only) {
+    const d = this._deferred;
+    if (!d || !d.size || !this._helpers) return 0;
+    const t0 = performance.now();
+    let n = 0;
+    for (const i of [...d].sort((a, b) => a - b)) {
+      if (only && !only.has(i)) continue;
+      if (budgetMs != null && n && performance.now() - t0 > budgetMs) break;
+      d.delete(i);
+      const wrapper = this._wrappers[i];
+      if (!wrapper) continue;
+      let card = null;
+      try {
+        card = this._helpers.createCardElement(this._config.cards[i]);
+      } catch (e) {
+        console.warn('casora-smart-row: failed to create card', this._config.cards[i], e);
+      }
+      if (!card) continue;
+      this._cards[i] = card;
+      this._haCards[i] = null;
+      // The boot veil's dots stay the wrapper's last child (_bootMark).
+      const dots = wrapper.querySelector && wrapper.querySelector(':scope > .casora-boot-wait');
+      wrapper.insertBefore(card, dots || null);
+      if (this._hass) card.hass = this._hass;
+      n++;
+    }
+    return n;
+  }
+
+  // After the load: the postponed cards a few at a time while the browser is idle.
+  _scheduleDeferred() {
+    if (!this._deferred || !this._deferred.size || this._deferPending) return;
+    this._deferPending = true;
+    const idle = window.requestIdleCallback
+      ? (fn) => window.requestIdleCallback(fn, { timeout: 2000 })
+      : (fn) => setTimeout(fn, 50);
+    const step = () => {
+      if (!this.isConnected || !this._deferred.size) { this._deferPending = false; return; }
+      this._buildDeferred(8);
+      if (this._deferred.size) idle(step);
+      else this._deferPending = false;
+    };
+    const start = () => setTimeout(() => idle(step), DEFER_AFTER_MS);
+    if (window._casoraLocalLoaded) start();
+    else window.addEventListener('casora-local-loaded', start, { once: true });
+  }
+
   // Verdeckt ab der ersten Überschrift, solange Home am Handy noch nicht aufgeräumt ist (siehe oben).
   _bootSetup() {
     this._bootRelease();
@@ -1328,6 +1448,10 @@ class CasoraSmartRow extends HTMLElement {
     this.shadowRoot.appendChild(track);
     this._container = container;
     this._bootSetup();
+    // Phone Home: the hidden room sections are built after the load (slimDeferIndices).
+    this._deferred = new Set();
+    this._deferIdx = this._scrollMode
+      ? slimDeferIndices(this._config.cards, slimNavConfig(this), window.casoraTr) : new Set();
     // Raum ohne Kacheln (Fix-Runde 1, A-16): dezente Leerzeile mit Weg ins Studio. Sichtbar nur,
     // wenn das Design --casora-empty-row-display setzt (Weich); sonst bleibt die Fläche leer wie bisher.
     if (this._wantsEmptyHint()) {
@@ -1341,9 +1465,10 @@ class CasoraSmartRow extends HTMLElement {
 
     // Sort disabled: render in config order, no detection or reordering.
     if (!this._sortEnabled) {
-      this._cards = this._config.cards.map((cfg) => {
+      this._cards = this._config.cards.map((cfg, i) => {
         // Same rule as the sorted path below: an off card is never built.
         if (isCardDisabled(cfg, this._scrollMode, this._hass && this._hass.user)) return null;
+        if (this._deferIdx.has(i)) { this._deferred.add(i); return null; }
         try {
           const card = this._helpers.createCardElement(cfg);
           card.hass = this._hass;
@@ -1381,6 +1506,8 @@ class CasoraSmartRow extends HTMLElement {
       this._initialized  = true;
       this._initializing = false;
       this._updateWrapperVisibility();
+      this._markBuilt();
+      this._scheduleDeferred();
       return;
     }
 
@@ -1399,7 +1526,9 @@ class CasoraSmartRow extends HTMLElement {
       const cfg = this._config.cards[i];
       let card = null;
       const off = isCardDisabled(cfg, this._scrollMode, this._hass && this._hass.user);
-      if (!off) {
+      const later = !off && this._deferIdx.has(i);
+      if (later) this._deferred.add(i);
+      if (!off && !later) {
         try {
           card = this._helpers.createCardElement(cfg);
         } catch (e) {
@@ -1457,6 +1586,8 @@ class CasoraSmartRow extends HTMLElement {
 
     this._cardsCreated = true;
     this._initializing = false;
+    this._markBuilt();
+    this._scheduleDeferred();
 
     container.addEventListener('pointerdown', () => {
       if (this._sortTimer !== null) this._scheduleSort();
