@@ -16,6 +16,11 @@
     } catch (e) { return "0"; }
   })();
   const SEEN_KEY = "casora.seenVersion";
+  // YY.M.N with an optional beta bK: numbers compared in order, a beta before its release (26.11.30b7 < 26.11.30).
+  const verParts = (v) => { const m = /^(\d+)\.(\d+)\.(\d+)(?:b(\d+))?/.exec(String(v || "")); return m ? [+m[1], +m[2], +m[3], m[4] === undefined ? Infinity : +m[4]] : null; };
+  const verCmp = (a, b) => { const x = verParts(a), y = verParts(b); if (!x || !y) return 0; for (let i = 0; i < 4; i++) { if (x[i] !== y[i]) return x[i] < y[i] ? -1 : 1; } return 0; };
+  // The version this browser saw before (for "Everything new since …" after skipping releases), read once on load.
+  const SEEN_BEFORE = (() => { try { return localStorage.getItem(SEEN_KEY); } catch (e) { return null; } })();
   // Keys only the Studio writes once someone has been in it: its intro (casora-panel-b-plus.js) or welcome (casora-panel.js).
   const STUDIO_USED = /^casora\.(studio\.intro|welcomed)$/;
   const CHANGELOG_URL = "https://github.com/SH1FT-W/casora/blob/main/CHANGELOG.md";
@@ -26,6 +31,7 @@
       whatsNewTitle: "Neu in Casora {version}",
       continue: "Weiter",
       all: "Alle Änderungen",
+      allSince: "Alle Neuerungen seit {version}",
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
@@ -41,6 +47,7 @@
       whatsNewTitle: "New in Casora {version}",
       continue: "Continue",
       all: "All changes",
+      allSince: "Everything new since {version}",
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
@@ -57,6 +64,7 @@
       whatsNewTitle: "Novedades de Casora {version}",
       continue: "Continuar",
       all: "Todos los cambios",
+      allSince: "Todas las novedades desde {version}",
       w1t: "Habitación por habitación", w1: "Diseña tu panel con los dispositivos que ya tienes en Home Assistant.",
       w2t: "Asistente de dispositivos", w2: "Casora propone las tarjetas adecuadas para cada habitación y las añade por ti.",
       w3t: "Escritorio, tableta y móvil", w3: "Un panel que se adapta a cada pantalla, con su propio diseño para el móvil.",
@@ -72,6 +80,7 @@
       whatsNewTitle: "Nouveautés de Casora {version}",
       continue: "Continuer",
       all: "Tous les changements",
+      allSince: "Toutes les nouveautés depuis {version}",
       w1t: "Pièce par pièce",
       w1: "Conçois ton tableau de bord avec les appareils que tu as déjà dans Home Assistant.",
       w2t: "Assistant appareils",
@@ -90,6 +99,7 @@
       whatsNewTitle: "Novità di Casora {version}",
       continue: "Continua",
       all: "Tutte le modifiche",
+      allSince: "Tutte le novità dalla {version}",
       w1t: "Stanza per stanza",
       w1: "Progetta la tua dashboard con i dispositivi che hai già in Home Assistant.",
       w2t: "Assistente dispositivi",
@@ -108,6 +118,7 @@
       whatsNewTitle: "Nytt i Casora {version}",
       continue: "Fortsett",
       all: "Alle endringer",
+      allSince: "Alt nytt siden {version}",
       w1t: "Rom for rom",
       w1: "Lag dashbordet ditt med enhetene du allerede har i Home Assistant.",
       w2t: "Enhetsveiviser",
@@ -126,6 +137,7 @@
       whatsNewTitle: "Nieuw in Casora {version}",
       continue: "Verder",
       all: "Alle wijzigingen",
+      allSince: "Alles nieuw sinds {version}",
       w1t: "Kamer voor kamer",
       w1: "Ontwerp je dashboard met de apparaten die je al in Home Assistant hebt.",
       w2t: "Apparaatassistent",
@@ -144,6 +156,7 @@
       whatsNewTitle: "Nowości w Casora {version}",
       continue: "Dalej",
       all: "Wszystkie zmiany",
+      allSince: "Wszystkie nowości od {version}",
       w1t: "Pokój po pokoju",
       w1: "Zaprojektuj swój pulpit z urządzeń, które już masz w Home Assistant.",
       w2t: "Asystent urządzeń",
@@ -162,6 +175,7 @@
       whatsNewTitle: "Novidades do Casora {version}",
       continue: "Continuar",
       all: "Todas as alterações",
+      allSince: "Todas as novidades desde a {version}",
       w1t: "Divisão a divisão",
       w1: "Desenha o teu painel com os dispositivos que já tens no Home Assistant.",
       w2t: "Assistente de dispositivos",
@@ -206,6 +220,8 @@
     try {
       const seen = localStorage.getItem(SEEN_KEY);
       if (seen === VERSION) return null;
+      // Prüfrunde w01-04: back on an older version after a newer one (downgrade) shows nothing.
+      if (seen !== null && verCmp(seen, VERSION) > 0) return null;
       if (seen !== null) return "whatsNew";
       // Only the Studio's own marks (its intro or welcome seen in this browser) mean "used before": a new device
       // where only the dashboard ran has casora.* keys from its scripts, and its user gets the short welcome.
@@ -255,6 +271,12 @@
     @keyframes cw-up{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}
     @media (prefers-reduced-motion: reduce){.cw-scrim,.cw-sheet{animation:none}}`;
 
+  // Prüfrunde w01-04: after skipping releases the popup lists only this one's points; the link then names the gap.
+  const sinceText = (L) => {
+    const p = verParts(SEEN_BEFORE), v = verParts(VERSION);
+    const skipped = p && v && verCmp(SEEN_BEFORE, VERSION) < 0 && !(p[0] === v[0] && p[1] === v[1] && p[2] >= v[2] - 1);
+    return skipped && L.allSince ? L.allSince.replace("{version}", String(SEEN_BEFORE).replace(/b\d+$/, "")) : L.all;
+  };
   const newsTitle = (L) => (WHATS_NEW_HEAD && L[WHATS_NEW_HEAD]) || L.whatsNewTitle.replace("{version}", VERSION);
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
 
@@ -272,7 +294,7 @@
       <h2 id="cw-t">${esc(mode === "welcome" ? L.welcomeTitle : newsTitle(L))}</h2>${mode !== "welcome" && WHATS_NEW_HEAD ? `<div class="cw-ver">Casora ${esc(VERSION)}</div>` : ""}
       <ul>${list.map(([icon, t, x, img]) => `<li><ha-icon icon="${icon}"></ha-icon><span><b>${esc(L[t])}</b><br>${esc(L[x])}${img ? `<img class="cw-pic" src="${NEWS_IMG}${esc(img)}?v=${esc(VERSION)}" alt="" loading="lazy">` : ""}</span></li>`).join("")}</ul>
       <button class="cw-go">${esc(L.continue)}</button>
-      ${mode === "welcome" ? "" : `<a class="cw-all" href="${CHANGELOG_URL.replace(/\.md$/, String(lang || "").toLowerCase().split(/[-_]/)[0] === "de" ? ".de.md" : ".md")}" target="_blank" rel="noreferrer">${esc(L.all)}</a>`}
+      ${mode === "welcome" ? "" : `<a class="cw-all" href="${CHANGELOG_URL.replace(/\.md$/, String(lang || "").toLowerCase().split(/[-_]/)[0] === "de" ? ".de.md" : ".md")}" target="_blank" rel="noreferrer">${esc(sinceText(L))}</a>`}
       </div></div>`;
     const close = () => { markSeen(); host.remove(); document.removeEventListener("keydown", onKey, true); };
     const onKey = (ev) => { if (ev.key === "Escape") { ev.stopPropagation(); close(); } };

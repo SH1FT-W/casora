@@ -130,7 +130,7 @@ Redrawn screensavers, smoke and water detectors under Security, waste you can ma
 
   ![The redrawn screensavers](https://raw.githubusercontent.com/SH1FT-W/casora/main/docs/images/news-26.11.29-screensavers.webp)
 
-- **Smoke and water detectors under Security (#209):** smoke, water, gas and carbon monoxide detectors count in the security badge on Home and in their room. The badge's popup has its own rows "Smoke detectors" and "Water detectors"; a detector that reports leads the badge in red with its room. Detectors that an integration files as diagnostic entities (for example wM-Bus via wmbusmeters) count too. Motion sensors can be switched on under Studio › Settings › Security and then count only while nobody is home. Thanks to @Strako80.
+- **Smoke and water detectors under Security (#209):** smoke, water, gas and carbon monoxide detectors count in the security badge on Home and in their room. The badge's popup has its own rows "Smoke detectors" and "Water detectors"; a detector that reports leads the badge in red with its room. Detectors that an integration files as diagnostic entities (for example wM-Bus via wmbusmeters) count too. Motion sensors can be switched on under Studio › Settings › Home & devices › Security and then count only while nobody is home. Thanks to @Strako80.
 - **Waste put out (#211):** on the pickup day or the evening before, a tap on the waste tile's icon confirms that the bins are out. The tile and the bell's waste entry rest until the next pickup, on every device and for every account. Thanks to @Birdy2019.
 - **Energy per day, week and month (#210):** the house's energy popup shows home consumption, grid import, feed-in and solar production in kWh for today, this week or this month. Thanks to @Westerloer.
 - **Community card "Smart Meter" (#208):** today's cost or usage of electricity and gas on the tile; day, week and month as stacked bars in the popup, calculated from the long-term statistics of the daily sensors. Thanks to @Tokisuve.
@@ -153,7 +153,7 @@ Room climate rated by room type, a clearer security badge, Casora follows rename
 
   ![The Room climate popup rates each room by its type](https://raw.githubusercontent.com/SH1FT-W/casora/main/docs/images/news-26.11.28-room-climate.webp)
 
-- **Renamed entity IDs (#206):** when you change an entity ID in Home Assistant, Casora follows it in all its dashboards and settings, including scene picks. Before it writes, it saves a version you can restore in Studio › Versions. Thanks to Niels for the report.
+- **Renamed entity IDs (#206):** when you change an entity ID in Home Assistant, Casora follows it in all its dashboards and settings, including scene picks. Before it writes, it saves a version you can restore in Rewind in the Studio (the clock next to Undo). Thanks to Niels for the report.
 - **Security badge:** with several findings, the most important one is written out ("Door open", "Lock jammed") and the rest stay as icons. A jammed lock leads and turns the badge red. A disarmed alarm shows as a small shield after the real findings.
 - **Undo in the bell:** after "Remove all" the bell stays open with "All notifications removed", an Undo button and a 10 second bar.
 - **Weather warnings (#196):** a weather warning tile collects every warning slot of its device on its own ("Gusts · 2 more"), the popup lists every active warning, and the bell shows one line per warning with a green all clear once none is left. Thanks to Niels.
