@@ -1120,7 +1120,9 @@ const haLang = (hass) => {
   const h = hass || (document.querySelector("home-assistant") || {}).hass;
   return String((h && ((h.locale && h.locale.language) || h.language)) || "en");
 };
-const homeRoomWord = (hass) => ({ de: "Zuhause", es: "Casa" })[haLang(hass).slice(0, 2)] || "Home";
+// Other languages: the Studio's own word for "Home" (pl "Dom", nl "Thuis"), as the dashboard translates it
+// (Prüfrunde d05-03: preview and inspector said "Home", the dashboard "Dom").
+const homeRoomWord = (hass) => ({ de: "Zuhause", es: "Casa" })[haLang(hass).slice(0, 2)] || (window.casoraI18n && window.casoraI18n.t("Home")) || "Home";
 // Vorschaubilder im Assistenten gibt es englisch und deutsch (…-de.webp) – passend zur HA-Sprache.
 const shotLang = (url, hass) => (url && haLang(hass).indexOf("de") === 0 ? url.replace(/\.webp$/, "-de.webp") : url);
 // rooms: die Raumliste – ohne Pfad „home“ ist der erste Raum die Übersicht.
