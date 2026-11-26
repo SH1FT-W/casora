@@ -3207,7 +3207,10 @@
     "Room temperature, target and whether the room heats on the tile. The popup sets the target as a manual change, goes back to automatic or picks a level, and shows the decision, the manual change and the house mode; a row opens the schedule: the week at a glance with each slot's level, switching the profile and editing a profile's time slots. For the rooms of the Smart Heating Control integration.": "Temperatura w pokoju, cel i czy pokój grzeje na kafelku. Okno ustawia cel jako ręczną zmianę, wraca do trybu automatycznego lub wybiera poziom i pokazuje decyzję, ręczną zmianę oraz tryb domu; wiersz otwiera harmonogram: tydzień w skrócie z poziomem każdego przedziału, zmiana profilu i edycja przedziałów profilu. Dla pokoi integracji Smart Heating Control.",
     "Open topic": "Otwórz",
     "What holding this tile does. Same as dashboard follows Settings › Tapping & tablet › Hold and sort tiles.": "Co robi przytrzymanie tego kafelka. „Jak pulpit” działa według Ustawienia › Dotyk i tablet › Przytrzymanie i sortowanie kafelków.",
-    "Casora won't look for Hemma dashboards anymore – switch it back on under Settings › Updates & setup › Advanced › Hemma dashboards.": "Casora nie będzie już szukać pulpitów Hemma – włącz to ponownie w Ustawienia › Aktualizacje i konfiguracja › Zaawansowane › Pulpity Hemma."
+    "Casora won't look for Hemma dashboards anymore – switch it back on under Settings › Updates & setup › Advanced › Hemma dashboards.": "Casora nie będzie już szukać pulpitów Hemma – włącz to ponownie w Ustawienia › Aktualizacje i konfiguracja › Zaawansowane › Pulpity Hemma.",
+    "At most {n} km": "Najwyżej {n} km",
+    "At least {n} km": "Co najmniej {n} km",
+    "The sensor decides": "Decyduje czujnik"
   },
   "patterns": [
     [

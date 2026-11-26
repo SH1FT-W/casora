@@ -3031,7 +3031,9 @@
     "Wartet": "En espera",
     "Ein Profil braucht mindestens ein Zeitfenster": "Un perfil necesita al menos una franja",
     "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "El horario ha cambiado mientras tanto, edítalo de nuevo",
-    "Neuerungen auf Englisch": "Novedades en inglés"
+    "Neuerungen auf Englisch": "Novedades en inglés",
+    "Werktag": "Día laborable",
+    "Homeoffice": "Teletrabajo"
   },
   "patterns": [
     [

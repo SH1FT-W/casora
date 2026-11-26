@@ -658,6 +658,8 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     return {
       bins: bins, calendar: calendar, reminder: V.trash_reminder || cfg.reminder || null,
       months: months, duty: duty, days: days, calendarPopup: calPopup !== false,
+      // The duty comes from the „your turn“ sensor, not from the months (Prüfrunde u08-05: the popup's month bar).
+      dutyBySensor: !!(dutyEnt && S[dutyEnt]),
       next: nextBins.length ? { label: nextBins.map(function (b) { return b.label; }).join(' + '),
                                 first: nextBins[0].label, count: nextBins.length,
                                 tint: nextBins[0].tint, color: nextBins[0].color } : null,

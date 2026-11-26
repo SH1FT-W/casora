@@ -878,11 +878,13 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   const OWN_DATA = new Set(["casora_trash"]);
   // T04 (test 2): lights and locks are the panel's own types (not in CASORA_TILE_TYPES), so the preview guessed
   // "Alle an"/"Entriegelt" while the dashboard counted "24 An"/"2 entriegelt" – their templates run here too.
-  ["casora_light", "casora_lock"].forEach((n) => OURS.add(n));
+  // u08-07: plants too (the preview said „Pflanze – Braucht Aufmerksamkeit“ beside the dashboard's „Yucca – Steht zu nass“).
+  const PANEL_OWN = ["casora_light", "casora_lock", "casora_plant"];
+  PANEL_OWN.forEach((n) => OURS.add(n));
   const names = (t) => (Array.isArray(t) ? t : t ? [t] : []);
   const isOurs = (tile) => names(tile && tile.template).some((n) => OURS.has(n));
   // Also tile types with a template list (underfloor heating: casora_thermostat + casora_popup_fbh).
-  const OURS_ANY = new Set((window.CASORA_TILE_TYPES || []).flatMap((t) => names(t.template)));
+  const OURS_ANY = new Set((window.CASORA_TILE_TYPES || []).flatMap((t) => names(t.template)).concat(["casora_plant"]));
   const isOursAny = (tile) => names(tile && tile.template).some((n) => OURS_ANY.has(n));
 
   function resolve(templates, list, seen = new Set()) {

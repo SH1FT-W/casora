@@ -3,7 +3,9 @@
 // same names get the device; E05 the waste tile asks for its calendar first and its optional sensor lists only
 // waste sensors; E06 the preview shows the waste text without an entity; E30 "Entity list" reads "Geräteliste";
 // T12 a new chart asks no random sensors and takes the sensor's name.
+// u08-03 plants are found in the device search.
 //   node dev/unit/studio_add_find.mjs
+// @deckt: custom_components/casora/panel/casora-panel-b-ux.js#BY_DOMAIN,WORDS,typeFor
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -162,4 +164,51 @@ const panel = () => {
   assert.equal(de['Entity list'], 'Geräteliste');
   ['Tile types', 'New tile of this type', 'Waste sensor', 'Scene'].forEach((k) => assert.ok(de[k], 'de: ' + k));
   console.log('ok add: wording');
+}
+
+// ── u08-03: plants are found by name and by "Pflanze", like "Other tile type › Plant" lists them ──
+{
+  const PL = 'plant.yucca_test';
+  const p = panel();
+  p._hass = { ...hass, states: { ...states, [PL]: st(PL, 'problem', { friendly_name: 'Yucca' }) },
+    entities: { ...entities, [PL]: { entity_id: PL, platform: 'plant', area_id: 'bath' } } };
+  const list = p._uxDevices();
+  const pl = list.find((c) => c.entity === PL);
+  assert.ok(pl, 'plant offered in the device search');
+  assert.equal(pl.type, 'plant', 'as a plant tile');
+  assert.equal(pl.area, 'Bath');
+  assert.equal(U.rankDevices(list, 'Yucca', 5)[0], pl, '"Yucca" finds it');
+  assert.equal(U.rankDevices(list, 'Pflanze', 5)[0], pl, '"Pflanze" finds it');
+  console.log('ok add: plants');
+}
+
+// ── u08-01: a Smart Heating room is named after its room, also when the registry names the sensor „Decision“ ──
+{
+  const DEC = 'sensor.test_room_decision';
+  const keep = window.casoraShcFind, keepOn = window.casoraCommunityOn;
+  window.casoraShcFind = { present: () => true, rooms: () => [DEC] };
+  window.casoraCommunityOn = new Set(['casora_smart_heating']);
+  const p = panel();
+  p._hass = { ...hass, states: { ...states, [DEC]: st(DEC, 'schedule', { friendly_name: 'Test Room Decision', room_name: 'Test Room' }) },
+    entities: { ...entities, [DEC]: { entity_id: DEC, platform: 'advanced_climate', translation_key: 'decision', name: 'Decision' } } };
+  const c = p._uxDevices().find((x) => x.entity === DEC);
+  window.casoraShcFind = keep;
+  window.casoraCommunityOn = keepOn;
+  assert.ok(c, 'room offered');
+  assert.equal(c.type, 'casora_smart_heating');
+  assert.equal(c.name, 'Test Room', 'named after the room, not the registry name');
+  console.log('ok add: smart heating room name');
+}
+
+// ── u08-07: the Studio preview of a plant tile says what the dashboard says, with the plant's name ──
+{
+  const templates = JSON.parse(read('dashboards/casora/button_card_templates.json'));
+  globalThis.DOMParser = class { parseFromString(t) { return { body: { textContent: t, querySelectorAll: () => [] } }; } };
+  const PL = 'plant.yucca_test';
+  const ent = st(PL, 'problem', { friendly_name: 'Yucca', problems: [{ sensor_type: 'moisture', status: 'high' }], moisture_status: 'High' });
+  const h2 = { ...hass, states: { ...states, [PL]: ent } };
+  const tile = { type: 'custom:button-card', template: 'casora_plant', entity: PL, variables: {} };
+  assert.equal(window.casoraTileState(tile, ent, h2, templates), 'Steht zu nass', 'same words as the dashboard tile');
+  assert.equal(window.casoraTileName(tile, ent, h2, templates), 'Yucca', 'named like the plant, not „Pflanze“');
+  console.log('ok preview: plant');
 }

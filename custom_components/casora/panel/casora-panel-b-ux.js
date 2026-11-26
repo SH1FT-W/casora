@@ -75,13 +75,15 @@
   const BY_DOMAIN = { light: "light", climate: "thermostat", media_player: "media", fan: "fan", cover: "cover", lock: "lock",
     vacuum: "vacuum", humidifier: "humidifier", camera: "casora_camera", alarm_control_panel: "casora_alarm", switch: "casora_switch",
     input_boolean: "entity_actions", script: "entity_actions", scene: "entity_actions", button: "entity_actions",
-    input_button: "entity_actions", remote: "entity_actions", lawn_mower: "casora_lawn_mower" };
+    input_button: "entity_actions", remote: "entity_actions", lawn_mower: "casora_lawn_mower",
+    // u08-03: plants as well, like "Other tile type › Plant" lists them.
+    plant: "plant" };
   const ADD_DOMAINS = Object.keys(BY_DOMAIN);
   const OWN_CARDS = new Set(["casora_lawn_mower", "casora_coffee", "casora_pet"]);
   // Alltagswörter je Kachelart – „Licht“ findet auch „Stehlampe“.
   const WORDS = { light: "licht lampe leuchte light lamp", cover: "jalousie rollladen rollo markise blind", thermostat: "heizung thermostat klima heating",
     media: "fernseher tv musik lautsprecher speaker", lock: "schloss tür tuer lock", vacuum: "sauger staubsauger saugroboter vacuum",
-    casora_switch: "schalter steckdose switch plug", fan: "ventilator lüfter fan", casora_camera: "kamera camera", casora_alarm: "alarm sicherheit",
+    casora_switch: "schalter steckdose switch plug", plant: "pflanze pflanzen blume zimmerpflanze gießen giessen plant flower", fan: "ventilator lüfter fan", casora_camera: "kamera camera", casora_alarm: "alarm sicherheit",
     casora_coffee: "kaffee kaffeemaschine vollautomat espresso coffee", casora_pet: "haustier hund katze tracker tractive pet dog cat",
     casora_chart: "diagramm chart verlauf graph statistik cpu prozessor server system monitor",
     casora_velair: "velair zeitplan klima klimaanlage heizung thermostat schedule climate",
@@ -696,7 +698,8 @@
       const seen = new Set();
       // Config/diagnostic entities stay out, device_trackers not (HA marks them all diagnostic, issue #25).
       const category = I.listCategory || ((id, e) => e.entity_category);
-      const push = (id, name, suggested) => {
+      // first: the given name wins over the registry's (a Decision sensor's registry name is „Decision“, Prüfrunde u08-01).
+      const push = (id, name, suggested, first) => {
         if (seen.has(id) || !S[id]) return;
         const e = R[id];
         if (e && (e.hidden || category(id, e) || e.disabled_by)) return;
@@ -723,7 +726,7 @@
         const dv = e && e.device_id && D[e.device_id];
         // A scene is a scene, not an "Entity with buttons" (E15, T14).
         const scene = id.startsWith("scene.");
-        out.push({ entity: id, name: own || name || (S[id].attributes || {}).friendly_name || id, area: aid && A[aid] ? A[aid].name : "",
+        out.push({ entity: id, name: (first && name) || own || name || (S[id].attributes || {}).friendly_name || id, area: aid && A[aid] ? A[aid].name : "",
           dev: dv ? String(dv.name_by_user || dv.name || "") : "", scene,
           roomIndex: ri, type, kind: scene ? tr("Scene") : label(type), fresh: !used.has(id), suggested: !!suggested, here: ri === this._room,
           // Entität ohne Gerät, aber selbst einem Bereich zugeordnet: bewusst dorthin gelegt – zählt
@@ -748,7 +751,7 @@
       if (typeIds.has("casora_velair") && W.casoraVelairFind) W.casoraVelairFind.climates(h).forEach((id) => push(id, "", "casora_velair"));
       // Smart Heating Control (community card #240, when added): one tile per room on its Decision sensor (casoraShcFind),
       // named after the room (the sensor itself is „<room> Decision“).
-      if (typeIds.has("casora_smart_heating") && W.casoraShcFind) W.casoraShcFind.rooms(h).forEach((id) => push(id, String(((S[id] || {}).attributes || {}).room_name || ""), "casora_smart_heating"));
+      if (typeIds.has("casora_smart_heating") && W.casoraShcFind) W.casoraShcFind.rooms(h).forEach((id) => push(id, String(((S[id] || {}).attributes || {}).room_name || ""), "casora_smart_heating", true));
       // Shopping list (community card #82, when added): Bring! lists and to-do lists named like a shopping list – other
       // to-do lists (chores, projects) are picked in the tile's own field.
       if (typeIds.has("casora_shopping")) Object.keys(S).forEach((id) => {

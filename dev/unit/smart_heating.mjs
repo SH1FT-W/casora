@@ -184,7 +184,7 @@ sec('rows');
 let rows = groups[0].rows;
 const sched = rows.find((r) => r.label === 'Zeitplan');
 assert.ok(sched && sched.page === 'shc-plan|' + ID, 'row „Zeitplan ›“ opens the week');
-assert.ok(/workday/.test(sched.sub));
+assert.ok(/^Werktag/.test(sched.sub), 'u08-06: the profile in words, not its key: ' + sched.sub);
 assert.ok(rows.find((r) => r.label === 'Modus' && r.value === 'Automatik' && r.entity === MODE), 'the house mode');
 assert.ok(rows.find((r) => r.label === 'Entscheidung' && r.value === 'Zeitplan'), 'the decision');
 assert.ok(!rows.some((r) => /^Manuell/.test(r.label)), 'no manual change → no row');
@@ -235,15 +235,21 @@ assert.ok(/class="lbl">Woche</.test(html), 'the week');
 assert.equal((html.match(/data-casora-mi="shc-day:/g) || []).length, 7);
 const profs = groups.find((g) => g.label === 'Tagesprofile');
 assert.ok(profs, 'profiles section');
-const late = profs.rows.find((r) => r.label === 'late');
+const late = profs.rows.find((r) => r.label === 'Late');
 assert.equal(late.sub, 'Mi, Fr');
 assert.equal(late.action, 'Aktivieren');
 assert.deepEqual(late.svc, H.svc.profile(SEL, 'late'), 'switching the profile = the room\'s profile select');
-assert.equal(profs.rows.find((r) => r.label === 'workday').value, 'Aktiv');
+assert.equal(profs.rows.find((r) => r.label === 'Werktag').value, 'Aktiv');
+assert.deepEqual(profs.rows.map((r) => r.label), ['Werktag', 'Wochenende', 'Late'], 'u08-06: no raw profile keys');
+assert.equal(H.profileName('home_office'), 'Homeoffice');
+assert.equal(H.profileName('late_shift'), 'Late shift');
+assert.equal(H.profileName('Spätschicht'), 'Spätschicht', 'a name the user wrote stays');
+// u08-06: the page's status line names today's profile, not the Decision sensor's last change („Gerade eben“).
+assert.equal(lines[0].main, 'Werktag', 'plan status line');
 // Monday's slots: editable rows of the profile, „Zeitfenster hinzufügen“.
 assert.ok(tap('shc-day:' + ID + '|0'));
 html = sec('plan');
-let day = groups.find((g) => /workday/.test(g.label || '') && g.label !== 'Tagesprofile');
+let day = groups.find((g) => /Werktag/.test(g.label || '') && g.label !== 'Tagesprofile');
 assert.ok(day, groups.map((g) => g.label).join(','));
 assert.deepEqual(day.rows.filter((r) => r.entity && r.entity.indexOf('shc-edit:') === 0).map((r) => r.entity),
   ['shc-edit:' + ID + '|workday|0', 'shc-edit:' + ID + '|workday|1', 'shc-edit:' + ID + '|workday|2']);
@@ -255,7 +261,7 @@ tap('shc-edit:' + ID + '|workday|1');
 tap('shc-step:' + ID + '|start|-');
 tap('shc-step:' + ID + '|level|+');
 html = sec('plan');
-assert.ok(/Zeitfenster bearbeiten · workday/.test(html), 'the editor');
+assert.ok(/Zeitfenster bearbeiten · Werktag/.test(html), 'the editor');
 assert.ok(/05:45/.test(html) && /Komfort/.test(html), 'start and level in the editor');
 calls.length = 0;
 tap('shc-save:' + ID);
@@ -324,6 +330,18 @@ day = groups[groups.length - 1];
 assert.ok(day.label.indexOf('Heute') === 0, day.label);
 assert.equal(day.rows.filter((r) => r.active).length, 1, 'the slot running now is lit');
 assert.equal(today >= 0, true);
+
+// u08-01: a tile without its own name is named after the room (room_name), not „<room> Decision“ (friendly_name);
+// popup title and the schedule page's head take the tile's name.
+{
+  const TPL = JSON.parse(fs.readFileSync(new URL('../../dashboards/casora/button_card_templates.json', import.meta.url), 'utf8'));
+  // button-card: the tile's own template wins over the ones it inherits.
+  const expr = (TPL.casora_smart_heating.name || TPL.casora_entity.name).trim().replace(/^\[\[\[/, '').replace(/\]\]\]$/, '');
+  const nameOf = (st) => new Function('entity', 'variables', 'states', 'hass', expr)(st, {}, {}, null);
+  assert.equal(nameOf({ entity_id: ID, state: 'schedule', attributes: attrs({ friendly_name: 'Test Room Decision' }) }), 'Test Room');
+  assert.equal(nameOf({ entity_id: ID, state: 'unavailable', attributes: { friendly_name: 'Test Room Decision' } }), 'Test Room Decision',
+    'without room_name: the entity name as before');
+}
 
 // No emojis in the module (popup-richtlinien-v3 §4.8: MDI only).
 const src = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/51-smart-heating.js', import.meta.url), 'utf8');

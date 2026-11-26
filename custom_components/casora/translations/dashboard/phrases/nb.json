@@ -3024,7 +3024,9 @@
     "Wartet": "Venter",
     "Ein Profil braucht mindestens ein Zeitfenster": "En profil trenger minst ett tidsvindu",
     "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "Tidsplanen er endret i mellomtiden, rediger den på nytt",
-    "Neuerungen auf Englisch": "Nyheter på engelsk"
+    "Neuerungen auf Englisch": "Nyheter på engelsk",
+    "Werktag": "Arbeidsdag",
+    "Homeoffice": "Hjemmekontor"
   },
   "patterns": [
     [

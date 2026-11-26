@@ -3013,7 +3013,9 @@
     "Wartet": "Waiting",
     "Ein Profil braucht mindestens ein Zeitfenster": "A profile needs at least one time slot",
     "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "The schedule has changed in the meantime, please edit it again",
-    "Neuerungen auf Englisch": "What's new, in English"
+    "Neuerungen auf Englisch": "What's new, in English",
+    "Werktag": "Workday",
+    "Homeoffice": "Home office"
   },
   "patterns": [
     [

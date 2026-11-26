@@ -8,8 +8,8 @@ import assert from 'node:assert/strict';
 const read = (p) => fs.readFileSync(new URL('../../custom_components/casora/panel/' + p, import.meta.url), 'utf8');
 const ux = read('casora-panel-b-ux.js');
 // Geräteliste des „+“-Blatts: Name = Registry-Name, sonst Vorschlag, sonst friendly_name; beide suchbar.
-const push = ux.slice(ux.indexOf('const push = (id, name, suggested) => {'), ux.indexOf('sugg.forEach((x) => push('));
-assert.ok(/const own = e && typeof e\.name === "string" && e\.name\.trim\(\);/.test(push) && push.includes('name: own || name ||'), 'Registry-Name zuerst');
+const push = ux.slice(ux.indexOf('const push = (id, name, suggested, first) => {'), ux.indexOf('sugg.forEach((x) => push('));
+assert.ok(/const own = e && typeof e\.name === "string" && e\.name\.trim\(\);/.test(push) && push.includes('name: (first && name) || own || name ||'), 'Registry-Name zuerst (außer bei first: Smart-Heating-Raum, u08-01)');
 assert.ok(push.includes('((S[id].attributes || {}).friendly_name || "")'), 'friendly_name bleibt suchbar');
 assert.ok(push.includes('loose: !!(e && !e.device_id && e.area_id)') && ux.includes('c.fresh && (c.suggested || c.loose)'), 'Entität ohne Gerät mit Bereich ist „neu“');
 // Behaviour of the extracted push function (category: the panel's listCategory, here the plain registry value)

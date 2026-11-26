@@ -3207,7 +3207,10 @@
     "Room temperature, target and whether the room heats on the tile. The popup sets the target as a manual change, goes back to automatic or picks a level, and shows the decision, the manual change and the house mode; a row opens the schedule: the week at a glance with each slot's level, switching the profile and editing a profile's time slots. For the rooms of the Smart Heating Control integration.": "Kamertemperatuur, doel en of de kamer verwarmt op de tegel. De popup stelt het doel in als handmatige wijziging, gaat terug naar automatisch of kiest een niveau, en toont de beslissing, de handmatige wijziging en de modus van het huis; een regel opent het schema: de week in één oogopslag met het niveau per tijdvak, profiel wisselen en de tijdvakken van een profiel bewerken. Voor de kamers van de Smart Heating Control-integratie.",
     "Open topic": "Openen",
     "What holding this tile does. Same as dashboard follows Settings › Tapping & tablet › Hold and sort tiles.": "Wat vasthouden op deze tegel doet. „Zoals dashboard” volgt Instellingen › Tikken & tablet › Tegels vasthouden en sorteren.",
-    "Casora won't look for Hemma dashboards anymore – switch it back on under Settings › Updates & setup › Advanced › Hemma dashboards.": "Casora zoekt niet meer naar Hemma-dashboards – weer inschakelen onder Instellingen › Updates & inrichting › Geavanceerd › Hemma-dashboards."
+    "Casora won't look for Hemma dashboards anymore – switch it back on under Settings › Updates & setup › Advanced › Hemma dashboards.": "Casora zoekt niet meer naar Hemma-dashboards – weer inschakelen onder Instellingen › Updates & inrichting › Geavanceerd › Hemma-dashboards.",
+    "At most {n} km": "Hoogstens {n} km",
+    "At least {n} km": "Minstens {n} km",
+    "The sensor decides": "De sensor beslist"
   },
   "patterns": [
     [

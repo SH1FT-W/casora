@@ -3031,7 +3031,9 @@
     "Wartet": "En attente",
     "Ein Profil braucht mindestens ein Zeitfenster": "Un profil a besoin d’au moins un créneau",
     "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "Le planning a changé entre-temps, modifie-le à nouveau",
-    "Neuerungen auf Englisch": "Nouveautés en anglais"
+    "Neuerungen auf Englisch": "Nouveautés en anglais",
+    "Werktag": "Jour ouvré",
+    "Homeoffice": "Télétravail"
   },
   "patterns": [
     [

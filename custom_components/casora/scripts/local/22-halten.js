@@ -24,6 +24,15 @@
   var TIMERS = 'sensor.casora_timers';
   var MINUTES = [[15, '15 Min.'], [30, '30 Min.'], [60, '1 Std.'], [120, '2 Std.']];
   var TOGGLE = /^(light|switch|input_boolean|fan|humidifier)$/;
+  // The lamps behind a light group, groups in it resolved (as _casoraLightScope's expand in 01-basis.js); only known ones.
+  var leaves = function (id, S, seen) {
+    seen = seen || {};
+    if (seen[id] || !S[id]) return [];
+    seen[id] = 1;
+    var ms = (S[id].attributes || {}).entity_id;
+    if (!Array.isArray(ms)) return [id];
+    return ms.reduce(function (acc, x) { return acc.concat(leaves(x, S, seen)); }, []);
+  };
 
   // ── Modell: was das Menü für eine Entität zeigt (ohne DOM) ────────────────
   // o: { admin, device, timers (Attribut timers von sensor.casora_timers oder null), unit,
@@ -94,6 +103,12 @@
         var modes = a.supported_color_modes || [];
         var dim = modes.some(function (x) { return x !== 'onoff'; });
         var cur = s === 'on' && num(a.brightness) != null ? Math.round(num(a.brightness) / 2.55) : null;
+        // A light group: the value of the popup's dial (its lamps, window.casoraLightLevel in 03-popups.js), not the
+        // group's own brightness – HA reported 100 % for a group whose lit lamps the dial averaged to 29 % (Prüfrunde w03-01).
+        if (s === 'on' && Array.isArray(a.entity_id) && typeof window.casoraLightLevel === 'function') {
+          var lamps = leaves(id, S);
+          if (lamps.length) cur = window.casoraLightLevel(lamps, S);
+        }
         if (dim) {
           m.quick.push({ kind: 'pills', label: 'Helligkeit', value: pct(cur), items: [25, 50, 100].map(function (p) {
             return svc(p + ' %', null, 'light.turn_on', { brightness_pct: p }, { on: cur != null && Math.abs(cur - p) <= 3 });
