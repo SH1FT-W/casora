@@ -7531,6 +7531,12 @@ window.casoraMenuGlass = {
       animation: casora-popup-fade var(--casora-popup-enter, 260ms) ease-out;
     }
     .content::-webkit-scrollbar { display: none; }
+    /* Keyboard ring (WCAG 2.4.7): a scrolling .content is a tab stop. Only for a real keyboard (.kbd, set on focus
+       from window._casoraKbd); a tap or click that focuses it on open stays without a ring. */
+    .content.kbd:focus-visible {
+      outline: 2px solid var(--casora-focus-ring, var(--casora-accent, var(--primary-color, #94603B))) !important;
+      outline-offset: -2px;
+    }
     /* Page transition (_navBegin): the leaving page lies in the scroller, out of the flow. */
     :host([navigating]) .content { position: relative; }
     /* Scroll-Hinweis (01.10.2026): liegt unter dem Sheet-Rand noch Inhalt, blendet ein
@@ -9000,6 +9006,9 @@ window.casoraMenuGlass = {
         if (began) this.dismiss();
       });
 
+      // Focus ring only after Tab/arrow keys (D-09), not after a tap or click (Chrome reports :focus-visible then too).
+      this.content.addEventListener('focus', () => this.content.classList.toggle('kbd', !!window._casoraKbd));
+      this.content.addEventListener('blur', () => this.content.classList.remove('kbd'));
       this.content.addEventListener('pointerdown', (e) => {
         this._bgTap = { x: e.clientX, y: e.clientY,
                         slop: e.pointerType === 'mouse' ? 10 : 24 };
@@ -9029,6 +9038,7 @@ window.casoraMenuGlass = {
       var moreCheck = () => {
         var c = this.content;
         if (!c || !this.hasAttribute('open')) return;
+        this._syncScrollStop();
         var more = c.scrollHeight - c.scrollTop - c.clientHeight > 12;
         if (more !== this.hasAttribute('more-below')) this.toggleAttribute('more-below', more);
       };
@@ -9038,6 +9048,7 @@ window.casoraMenuGlass = {
         this._moreRO = new ResizeObserver(moreCheck);
         this._moreRO.observe(this.content);
         this._moreRO.observe(this.container);
+        this._moreRO.observe(this._extra);
       }
     }
 
@@ -10010,12 +10021,13 @@ window.casoraMenuGlass = {
     // Focus into the sheet once it is open (not onto a control: a mouse/touch opening shows no focus ring), unless
     // something inside already took it (a search field).
     _focusIn() {
-      var self = this, gen = this._openGen;
+      // Own round, not _openGen: a tile tap calls open() a second time while already open, which must not stop these.
+      var self = this, round = this._focusRound = (this._focusRound || 0) + 1;
       // Again after the sheet is laid out (it is held invisible until then, and a hidden element takes no focus); only
       // while nobody moved the focus elsewhere meanwhile.
       [0, 120, 450, 1000].forEach(function (ms) {
         setTimeout(function () {
-          if (self._openGen !== gen || !self.hasAttribute('open') || self.hasAttribute('closing')) return;
+          if (self._focusRound !== round || !self.hasAttribute('open') || self.hasAttribute('closing')) return;
           var a = deepFocus();
           if (a && self._owns(a)) return;
           if (a && a !== document.body && a !== document.documentElement && !(self._focusBack || []).includes(a)) return;
@@ -10026,6 +10038,11 @@ window.casoraMenuGlass = {
     _owns(n) {
       for (; n; n = n.parentNode || n.host) if (n === this) return true;
       return false;
+    }
+    // A scrolling content area is a tab stop (keyboard scroll); otherwise -1 (focus on open still works).
+    _syncScrollStop() {
+      var c = this.content, t = c.scrollHeight > c.clientHeight + 1 ? '0' : '-1'; // +1: rounding is no scroll
+      if (c.getAttribute('tabindex') !== t) c.setAttribute('tabindex', t);
     }
     // Focusable controls of the open popup in document order, through the shadow roots of its cards.
     _focusables() {
@@ -10052,9 +10069,16 @@ window.casoraMenuGlass = {
       var f = this._focusables();
       if (!f.length) { e.preventDefault(); return; }
       var i = f.indexOf(a);
-      if (i < 0 && a && this._owns(a)) return; // inside, but not a stop of ours (e.g. inside a card's own widget)
+      // Focus on the content (set on open) that is no tab stop: Tab enters the list below, not the page behind.
+      if (i < 0 && a && a !== this.content && this._owns(a)) return; // inside, but not a stop of ours (e.g. inside a card's own widget)
       var next = null;
-      if (e.shiftKey) { if (i <= 0) next = f[f.length - 1]; }
+      if (i < 0 && a === this.content) {
+        // Same order as when the content is a tab stop (a long popup): Tab to its first control, Shift+Tab to the
+        // head's last one; wrap only when there is none on that side.
+        var c = this.content, inC = function (n) { for (; n; n = n.parentNode || n.host) if (n === c) return true; return false; };
+        var below = f.filter(inC), above = f.filter(function (n) { return !inC(n); });
+        next = e.shiftKey ? above[above.length - 1] || f[f.length - 1] : below[0] || f[0];
+      } else if (e.shiftKey) { if (i <= 0) next = f[f.length - 1]; }
       else if (i < 0 || i === f.length - 1) next = f[0];
       if (!next) return;
       e.preventDefault();
@@ -10173,6 +10197,7 @@ window.casoraMenuGlass = {
       // Focus back to where it was before the popup opened (its tile), if it is still in the popup or nowhere.
       var back = this._focusBack, now = deepFocus();
       this._focusBack = null;
+      this._focusRound = (this._focusRound || 0) + 1; // late focus-in retries of this opening stop here
       if ((!now || now === document.body || now === document.documentElement || this._owns(now)) && back && back.length) focusBack(back);
 
       this.removeAttribute('shown');
@@ -10188,6 +10213,7 @@ window.casoraMenuGlass = {
         this.removeAttribute('open');
         this.removeAttribute('data-casora-charts-ready');
         this.removeAttribute('more-below');
+        this.content.setAttribute('tabindex', '-1');
         this.surface.style.removeProperty('transform');
         this.surface.style.removeProperty('transition');
         this.container.textContent = '';
