@@ -351,6 +351,8 @@
     + ".cs-num{display:flex;align-items:center;gap:8px}"
     + ".cs-num input{width:110px;padding:7px 12px;border-radius:var(--r-m);border:none;background:var(--field, var(--casora-studio-field, rgba(118,118,128,.18)));color:inherit;font:inherit;text-align:right}"
     + ".cs-num span{font-size:var(--t-callout);color:var(--ink-2)}"
+    + ".cs-num input.cs-bad{box-shadow:inset 0 0 0 2px var(--casora-popup-ui-bad, #FF453A)}"
+    + ".rtext span.cs-ferr{display:block;color:var(--casora-popup-ui-bad, #FF453A);font-size:var(--t-foot);margin-top:2px;white-space:normal}"
     + ".casora-pctl>button.ghost{padding:7px 13px;font-size:var(--t-foot)}"
     + ".frow .sw{margin-left:auto;flex:none}"
     + ".cs-empty{font-size:var(--t-foot);color:var(--ink-2)}"
@@ -560,9 +562,19 @@
       if (cs.busy) return false;
       if (!this._csDirty()) return true;
       const price = cs.O && cs.O.price_kwh;
-      if (price !== undefined && (typeof price !== "number" || isNaN(price) || price < 0 || price > 2)) {
+      if (priceBad(price)) {
         cs.err = t("The electricity price must be between 0 and 2 €/kWh.");
         this._csRepaint();
+        this._csFocusBad();
+        return false;
+      }
+      // The radius of fuel prices (1–25 km) and of charging stations (1 to the server's maximum).
+      const chMax = (cs.ch && cs.ch.radius_max) || 50;
+      const radiusErr = tankenDirty(cs) && radiusBad(cs.F.radius, 25) ? 25 : chargingDirty(cs) && radiusBad(cs.C.radius, chMax) ? chMax : 0;
+      if (radiusErr) {
+        cs.err = t("The radius must be between 1 and {n} km.").replace("{n}", radiusErr);
+        this._csRepaint();
+        this._csFocusBad();
         return false;
       }
       // Security › „Counts as closed up to“ (issue 138, casora-panel-personal.js): whole percent 0–20.
@@ -856,6 +868,21 @@
     };
     const decimalSep = (self) => (1.5).toLocaleString(String((self._hass && self._hass.locale && self._hass.locale.language)
       || (self._hass && self._hass.language) || "en")).charAt(1);
+    // A number field that holds a value it cannot take says so at the field: red rim and a line under the row's title
+    // (Prüfrunde u04-04/u04-06: the price's error stood at the top of the page, out of sight; the radius was cut short
+    // to 25 without a word).
+    const numBad = (row, inp, bad, msg) => {
+      inp.setAttribute("aria-invalid", bad ? "true" : "false");
+      inp.classList.toggle("cs-bad", !!bad);
+      const txt = row.querySelector(".rtext");
+      let m = txt && txt.querySelector(".cs-ferr");
+      if (bad && txt && !m) { m = el("span", "cs-ferr"); m.setAttribute("role", "alert"); txt.appendChild(m); }
+      if (m) { m.textContent = bad ? msg : ""; m.hidden = !bad; }
+    };
+    const priceBad = (v) => v !== undefined && (typeof v !== "number" || isNaN(v) || v < 0 || v > 2);
+    const radiusBad = (v, max) => !(typeof v === "number" && isFinite(v) && v >= 1 && v <= max);
+    // The value typed in a radius field: a number with one decimal, NaN for anything else (kept, so saving refuses it).
+    const radiusOf = (text) => { const v = Number(String(text).trim().replace(",", ".")); return text.trim() && isFinite(v) ? Math.round(v * 10) / 10 : NaN; };
     const notifyLabel = (id) => {
       const s = String(id).replace(/^notify\./, "").replace(/^mobile_app_/, "").replace(/_/g, " ").trim();
       return s ? s.charAt(0).toUpperCase() + s.slice(1) : id;
@@ -950,12 +977,15 @@
           sub.setAttribute("data-no-i18n", "");
           sub.hidden = O.price_kwh != null;
         }
+        const priceMsg = t("Only 0 to 2 €/kWh.");
         inp.oninput = () => {
           const v = inp.value.trim().replace(",", ".");
           if (!v) delete O.price_kwh; else O.price_kwh = /^\d*\.?\d+$/.test(v) ? Number(v) : NaN;
           if (sub) sub.hidden = !!v;
+          numBad(pr.row, inp, priceBad(O.price_kwh), priceMsg);
           this._csBar();
         };
+        if (priceBad(O.price_kwh)) { if (isNaN(O.price_kwh)) inp.value = ""; numBad(pr.row, inp, true, priceMsg); }
         wrap.append(inp, el("span", "", "€/kWh"));
         pr.row.appendChild(wrap);
       } else if (page === "update_push") {
@@ -1065,13 +1095,15 @@
       const rin = el("input", "cs-ch-radius");
       rin.type = "text";
       rin.inputMode = "decimal";
-      rin.value = String(C.radius).replace(".", decimalSep(this));
+      rin.value = isFinite(C.radius) ? String(C.radius).replace(".", decimalSep(this)) : "";
       rin.setAttribute("aria-label", t("Radius"));
+      const chMax = ch.radius_max || 50, chMsg = t("Only 1 to {n} km.").replace("{n}", chMax);
       rin.oninput = () => {
-        const v = Number(rin.value.trim().replace(",", "."));
-        if (isFinite(v) && v > 0) C.radius = Math.max(1, Math.min(ch.radius_max || 50, Math.round(v * 10) / 10));
+        C.radius = radiusOf(rin.value);
+        numBad(rr.row, rin, radiusBad(C.radius, chMax), chMsg);
         this._csBar();
       };
+      if (radiusBad(C.radius, chMax)) numBad(rr.row, rin, true, chMsg);
       wrap.append(rin, el("span", "", "km"));
       rr.row.appendChild(wrap);
       host.appendChild(el("p", "cs-lede", t("Data: Open Charge Map and its data providers, CC BY 4.0. No live availability and hardly any prices.")));
@@ -1170,13 +1202,15 @@
         const rin = el("input", "cs-tk-radius");
         rin.type = "text";
         rin.inputMode = "decimal";
-        rin.value = String(F.radius).replace(".", decimalSep(this));
+        rin.value = isFinite(F.radius) ? String(F.radius).replace(".", decimalSep(this)) : "";
         rin.setAttribute("aria-label", t("Radius"));
+        const tkMsg = t("Only 1 to {n} km.").replace("{n}", 25);
         rin.oninput = () => {
-          const v = Number(rin.value.trim().replace(",", "."));
-          if (isFinite(v) && v > 0) F.radius = Math.max(1, Math.min(25, Math.round(v * 10) / 10));
+          F.radius = radiusOf(rin.value);
+          numBad(rr.row, rin, radiusBad(F.radius, 25), tkMsg);
           this._csBar();
         };
+        if (radiusBad(F.radius, 25)) numBad(rr.row, rin, true, tkMsg);
         wrap.append(rin, el("span", "", "km"));
         rr.row.appendChild(wrap);
         const st = tk.status || {};
@@ -1972,6 +2006,12 @@
 
     // block: the key of a block on a tile page (e.g. "live"): only that block is drawn again. A live refresh every 5 s
     // redrew the whole tile before, including the Studio's own drawing of this dashboard's phone section, for nothing.
+    // After a refused save: the field with the wrong value in view and in focus (the message at the top may be out of sight).
+    P._csFocusBad = function () {
+      const f = this.shadowRoot && this.shadowRoot.querySelector('input[aria-invalid="true"]');
+      if (!f) return;
+      try { f.scrollIntoView({ block: "center" }); f.focus({ preventScroll: true }); } catch (e) { /* not drawn */ }
+    };
     P._csRepaint = function (block) {
       if (block && this._csRepaintBlock(block)) return;
       // Page open (desktop with sidebar or phone in the new Studio, there without split): redraw.
