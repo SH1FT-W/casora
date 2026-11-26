@@ -431,8 +431,10 @@ async function pruefen() {
     res.bild = it.id + (HANDY ? '-handy' : IPAD ? '-ipad' : '') + (DARK ? '' : '-hell') + '.png';
     await pg.screenshot({ path: path.join(arg('bilder'), res.bild) }).catch(() => { res.bild = null; });
   };
+  // Always sent, also when HA's helper already holds o: the open row is per device (u05-09, casora-core _casoraRow),
+  // a fresh browser shows 'none' for a value a person set, and only this browser's own select_option opens it.
   const setRow = async (opt) => { await pg.evaluate((o) => { const h = document.querySelector('home-assistant').hass;
-    if (h.states['input_select.casora_expanded_row'] && h.states['input_select.casora_expanded_row'].state !== o)
+    if (h.states['input_select.casora_expanded_row'])
       return h.callService('input_select', 'select_option', { entity_id: 'input_select.casora_expanded_row', option: o }); }, opt).catch(() => {}); await sleep(1600); };
   const go = async (path) => {
     if (at === path) { await closeAll(); return; }

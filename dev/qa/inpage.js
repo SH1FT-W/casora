@@ -428,7 +428,9 @@
     if (!h || !UI_ENTITY.test(entity)) return false;
     const [d] = entity.split('.');
     const st = h.states[entity];
-    if (!st || st.state === value) return !!st;
+    // The expanded badge row is per device (u05-09, casora-core _casoraRow): HA's state may already be value while
+    // this browser shows another, so its select_option is always sent.
+    if (!st || (st.state === value && entity !== 'input_select.casora_expanded_row')) return !!st;
     if (d === 'input_select') await h.callService('input_select', 'select_option', { entity_id: entity, option: value });
     else if (d === 'input_boolean') await h.callService('input_boolean', value === 'on' ? 'turn_on' : 'turn_off', { entity_id: entity });
     else if (d === 'input_text') await h.callService('input_text', 'set_value', { entity_id: entity, value });

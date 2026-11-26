@@ -66,6 +66,19 @@ const house = (outdoor, own) => {
     window, h.states, h, { hero_mode: true, show_icon: false }, h.states[W], {});
   assert.match(String(html), /20°/, 'header: the outdoor sensor rounded (19,7 → 20°)');
   assert.doesNotMatch(String(html), /19°/, 'not the service\'s 18,9');
+  // Review 26.11.2026: weatherNow reads hass.states, which button-card does not watch. The header has to read its
+  // source (and the outdoor sensor, also while it has no reading) through the `states` proxy, the one that fills
+  // _monitoredEntities, or a new outdoor value never redraws it (header 19°, a freshly opened wheel 20°).
+  const watched = (hh) => {
+    const seen = new Set();
+    const proxy = new Proxy(hh.states, { get: (t, k) => { seen.add(k); return t[k]; } });
+    new Function('window', 'states', 'hass', 'variables', 'entity', 'user', src)(
+      window, proxy, hh, { hero_mode: true, show_icon: false }, hh.states[W], {});
+    return seen;
+  };
+  assert.ok(watched(house(19.7)).has('sensor.qa_aussen_temperatur'), 'header watches the outdoor sensor it shows');
+  assert.ok(watched(house('unavailable')).has('sensor.qa_aussen_temperatur'), 'and while it has no reading (comes back)');
+  assert.ok(watched(house(19.7, 21.2)).has('sensor.qa_aussen_temperatur'), 'the outdoor sensor beside an own one too');
   // The popup's wheel takes its „now“ from the same function.
   const pop = T.casora_weather.tap_action.casora_popup.content;
   assert.match(pop, /const _wxNow = window\.casoraDevice && window\.casoraDevice\.weatherNow \? window\.casoraDevice\.weatherNow\(hass, id, \{ temp: tsId \|\| '' \}\) : null;/);

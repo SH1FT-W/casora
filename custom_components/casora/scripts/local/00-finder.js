@@ -2590,15 +2590,17 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
      entity's attribute). outT: the outdoor sensor when the caller has it (undefined: looked up, cached per registry and
      number of states). { entity, attribute?, value, unit } or null. */
   var wxOutC = null;
+  // The outdoor temperature sensor weatherNow falls back on (outdoor()), cached per registry and number of states.
+  function weatherOutdoor(hass) {
+    var S = (hass && hass.states) || {}, R = reg(hass), n = Object.keys(S).length;
+    if (!wxOutC || wxOutC.R !== R || wxOutC.n !== n) wxOutC = { R: R, n: n, id: outdoor(hass, 'temperature') };
+    return wxOutC.id;
+  }
   function weatherNow(hass, wid, opts, outT) {
     var o = opts || {}, S = (hass && hass.states) || {};
     var src = weatherSources(hass, wid, o);
     if (o.temp && src.temperature && src.temperature.entity === o.temp) return src.temperature;
-    if (outT === undefined) {
-      var R = reg(hass), n = Object.keys(S).length;
-      if (!wxOutC || wxOutC.R !== R || wxOutC.n !== n) wxOutC = { R: R, n: n, id: outdoor(hass, 'temperature') };
-      outT = wxOutC.id;
-    }
+    if (outT === undefined) outT = weatherOutdoor(hass);
     var v = outT && S[outT] ? wxNum(S[outT].state) : null;
     if (v != null) return { entity: outT, value: v, unit: String((S[outT].attributes || {}).unit_of_measurement || '') };
     return src.temperature || null;
@@ -2791,7 +2793,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     deviceOf: deviceOf, entities: entities, map: map, companionPlug: companionPlug, byKey: byKey,
     waste: waste, wasteDates: wasteDates, wasteDown: wasteDown, siblings: siblings, dayStart: dayStart, onHours: onHours, lastOn: lastOn, keyAny: keyAny, network: network, netRate: netRate, netFields: netFields, netValue: netValue,
     contacts: contacts, outdoor: outdoor, openings: openings,
-    weatherSources: weatherSources, weatherNow: weatherNow, weatherChart: weatherChart, weatherRows: weatherRows, weatherChoice: weatherChoice,
+    weatherSources: weatherSources, weatherNow: weatherNow, weatherOutdoor: weatherOutdoor, weatherChart: weatherChart, weatherRows: weatherRows, weatherChoice: weatherChoice,
     weatherOptions: weatherOptions, weatherNames: WX_NAMES, weatherMaxCurves: WX_MAX_CURVES,
   };
 })();
