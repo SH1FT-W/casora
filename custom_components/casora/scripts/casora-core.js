@@ -1625,6 +1625,30 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
     var r = Number(refreshS) > 0 ? Number(refreshS) : 10;
     return isFinite(ms) && ms <= (2 * r + 5) * 1000;
   };
+  // u07-04: whether a still picture is a real one – the camera popup says „Kein Bild“ (with „Erneut versuchen“) like the
+  // tile does, instead of an empty grey area. A failed or empty answer, or an all-black / one-colour placeholder
+  // (as the tile's check), is no picture. A check that cannot run (no createImageBitmap) counts as a picture.
+  window.casoraCamBlankPixels = function (px) {
+    var hi = [0, 0, 0], lo = [255, 255, 255];
+    for (var i = 0; i < px.length; i += 4) for (var k = 0; k < 3; k++) { hi[k] = Math.max(hi[k], px[i + k]); lo[k] = Math.min(lo[k], px[i + k]); }
+    return Math.max(hi[0], hi[1], hi[2]) < 14 || Math.max(hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]) < 6;
+  };
+  window.casoraCamHasPicture = function (url) {
+    if (!url) return Promise.resolve(false);
+    var u = url.charAt(0) === '/' ? window.location.origin + url : url;
+    return fetch(u, { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.blob() : null; })
+      .then(function (b) {
+        if (!b || !b.size) return false;
+        if (!window.createImageBitmap) return true;
+        return createImageBitmap(b).then(function (bm) {
+          var c = document.createElement('canvas'); c.width = 8; c.height = 8;
+          var x = c.getContext('2d'); x.drawImage(bm, 0, 0, 8, 8);
+          return !window.casoraCamBlankPixels(x.getImageData(0, 0, 8, 8).data);
+        }).catch(function () { return false; });
+      })
+      .catch(function () { return false; });
+  };
   window.casoraCamAge = function (ms, refreshS) {
     if (!isFinite(ms)) return '';
     if (window.casoraCamFresh(ms, refreshS)) return 'Aktuell';
@@ -8825,6 +8849,7 @@ window.casoraMenuGlass = {
       try { if (this._cfgCurrent && typeof this._cfgCurrent === 'object') Object.defineProperty(this._cfgCurrent, '__casoraRingSrc', keepSrc); } catch (e) { /* frozen */ }
       // Gerät fehlt: Die Kachel nennt eine Entität, die es (nicht mehr) gibt – z. B. nach einem Umzug
       // mit umbenannten Geräten. Dann zeigt jedes Popup statt Leere einen Hinweis (_checkEmpty).
+      this._camWord = null;
       this._missingId = this._src ? missingEntityOf(this._src) : null;
       this._src = null;
       this._hasHeader = hasHeader;
@@ -9081,6 +9106,12 @@ window.casoraMenuGlass = {
       // Detail round #8: a tile without an entity (waste, updates, vehicle …) or whose entity has no word and no change
       // since HA's start says what its tile says („Restmüll morgen“, „Aktuell“) – §3: a status line in every popup.
       if (!cur) { var tw = this._tileWord(); if (tw) put(tw); return; }
+      // u07-04: a camera says what its tile says („Kein Bild“, „Aktuell“, „Zeichnet auf“) – the tile knows whether a
+      // picture comes, HA's state („Bereit“) does not. The popup's own „Kein Bild“ (no picture there) wins (_camWord).
+      if (String(cur.entity_id || '').indexOf('camera.') === 0) {
+        var cw = this._camWord || this._tileWord();
+        if (cw) { put(cw); return; }
+      }
       // A lamp's popup: its dial already says „An“/„Aus“ and the brightness, and the lamp is marked in its room's list
       // – no second state word under the name (owner, 01.11.2026).
       if (String(cur.entity_id || '').indexOf('light.') === 0) return;
