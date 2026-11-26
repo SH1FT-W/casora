@@ -8573,6 +8573,7 @@ window.casoraMenuGlass = {
       var moreCheck = () => {
         var c = this.content;
         if (!c || !this.hasAttribute('open')) return;
+        this._syncScrollStop();
         var more = c.scrollHeight - c.scrollTop - c.clientHeight > 12;
         if (more !== this.hasAttribute('more-below')) this.toggleAttribute('more-below', more);
       };
@@ -9559,6 +9560,11 @@ window.casoraMenuGlass = {
       for (; n; n = n.parentNode || n.host) if (n === this) return true;
       return false;
     }
+    // A scrolling content area is a tab stop (keyboard scroll); otherwise -1 (focus on open still works).
+    _syncScrollStop() {
+      var c = this.content, t = c.scrollHeight > c.clientHeight ? '0' : '-1';
+      if (c.getAttribute('tabindex') !== t) c.setAttribute('tabindex', t);
+    }
     // Focusable controls of the open popup in document order, through the shadow roots of its cards.
     _focusables() {
       var out = [];
@@ -9584,6 +9590,12 @@ window.casoraMenuGlass = {
       var f = this._focusables();
       if (!f.length) { e.preventDefault(); return; }
       var i = f.indexOf(a);
+      // Focus on the content or surface (set on open) that is no tab stop: Tab enters the list, not the page behind.
+      if (i < 0 && a && (a === this.content || a === this.surface)) {
+        e.preventDefault();
+        try { (e.shiftKey ? f[f.length - 1] : f[0]).focus(); } catch (x) { /* gone */ }
+        return;
+      }
       if (i < 0 && a && this._owns(a)) return; // inside, but not a stop of ours (e.g. inside a card's own widget)
       var next = null;
       if (e.shiftKey) { if (i <= 0) next = f[f.length - 1]; }
