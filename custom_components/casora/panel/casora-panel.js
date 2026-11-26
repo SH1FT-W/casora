@@ -19032,6 +19032,7 @@ class CasoraPanel extends HTMLElement {
         }
         const gt = document.createElement("h3");
         gt.textContent = H.label;
+        if (H.literal) gt.setAttribute("data-no-i18n", "");
         gh.appendChild(gt);
         if (H.blurb) {
           const gp = document.createElement("p");
@@ -20020,7 +20021,9 @@ class CasoraPanel extends HTMLElement {
         back.onclick = () => this._popRow();
         const grp = GROUPS.find((x) => x.id === this._sel.group);
         const h3 = document.createElement("h3");
-        h3.textContent = (grp && this._headFor(grp, room).label) || this._sel.label || home;
+        const H = grp && this._headFor(grp, room);
+        h3.textContent = (H && H.label) || this._sel.label || home;
+        if (H && H.label && H.literal) h3.setAttribute("data-no-i18n", "");
         bar.appendChild(back);
         bar.appendChild(h3);
         const ownHead = hit.querySelector(".chead, .thead");
@@ -21993,12 +21996,15 @@ class CasoraPanel extends HTMLElement {
       const type = tile && tileTypeAny(tile);
       // A tile whose template the panel does not know still has a name.
       // Name aus der Kachel (nach Umbenennen aktuell), sonst der beim Auswählen gemerkte.
-      if (!type) return { ...grp, label: (tile.name && String(tile.name).trim()) || sel.label || grp.label };
+      if (!type) return { ...grp, label: (tile.name && String(tile.name).trim()) || sel.label || grp.label, literal: true };
+      const cn = type.id === "custom" && (customTileName(tile, this._hass && this._hass.states) || {}).name;
+      const own = cn || (tile.name && tile.name.trim());
       return {
         icon: TILE_ICON[type.id] || grp.icon,
         color: TILE_COLOR[type.id] || TILE_TINT,
-        label: (type.id === "custom" && (customTileName(tile, this._hass && this._hass.states) || {}).name)
-          || (tile.name && tile.name.trim()) || type.label,
+        label: own || type.label,
+        // A name someone gave (or read from the card) is not a Studio word: „Auto“ stays „Auto“ (Prüfrunde u02-01).
+        literal: !!own,
         blurb: type.blurb,
       };
     }
@@ -25684,8 +25690,12 @@ class CasoraPanel extends HTMLElement {
     const h3 = room && this._sel && this._sel.group === "tiles" && this.shadowRoot.querySelector(".detailbar h3");
     if (h3) {
       const grp = GROUPS.find((x) => x.id === "tiles");
-      const lab = grp && this._headFor(grp, room).label;
-      if (lab && h3.textContent !== lab) h3.textContent = lab;
+      const H = grp && this._headFor(grp, room);
+      const lab = H && H.label;
+      if (lab && h3.textContent !== lab) {
+        h3.toggleAttribute("data-no-i18n", !!H.literal);
+        h3.textContent = lab;
+      }
     }
     const mount = this.$("mapmount");
     if (!mount || !mount.firstChild) return;
@@ -26992,7 +27002,8 @@ class CasoraPanel extends HTMLElement {
       // die Kachel „Beleuchtung“ in englischer Oberfläche „Lighting“ (07.10.2026, r68).
       const nm = tile.name && typeof window.casoraTr === "function" ? window.casoraTr(String(tile.name)) : tile.name;
       el.querySelector(".mname").textContent = nm || own || (type && type.label) || "Tile";
-      if (own) el.querySelector(".mname").setAttribute("data-no-i18n", "");
+      // Own name: already through the dashboard translation (or literal), never the Studio's word list (u02-01).
+      if (own || nm) el.querySelector(".mname").setAttribute("data-no-i18n", "");
       // Vergleich 06.10. (#f9): Ohne eigenen Namen heißt die Kachel wie das Gerät („P1S“) – darunter klein
       // die Kachelart („3D-Drucker“), damit man sie erkennt. Nur in der Vorschau, das Dashboard bleibt gleich.
       // Heißt die Kachel schon wie ihre Art („Waschmaschine“), keine Doppelung.
@@ -29034,6 +29045,8 @@ class CasoraPanel extends HTMLElement {
     nameEl.textContent = shown + " ";
     // Gelesene Namen (Entität, Kartentitel) sind keine Casora-Texte: nicht übersetzen.
     if (isCustom && shown !== CUSTOM_DEFAULT_NAME) nameEl.setAttribute("data-no-i18n", "");
+    // Nor is a name someone typed (u02-01: a tile named „Auto“ is not the option „Automatic“).
+    else if (!isCustom && !contDesc && !carousel && tile.name && tile.name.trim()) nameEl.setAttribute("data-no-i18n", "");
     title.appendChild(nameEl);
     const sub = document.createElement("span");
     sub.className = "kind";
