@@ -16670,13 +16670,11 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     var heads = [], byKey = {};
     (events || []).forEach(function (e) {
       if (!e) return;
-      if (e.passive) {
-        heads.push(Object.assign({}, e, { members: [e], count: 1, stackKey: e.id }));
-        return;
-      }
       var k = e.entity ? 'e:' + e.entity : 'l:' + e.label;
+      // Detections stack per trigger only: the same text from another trigger is another row.
+      if (e.passive) k = 'p:' + (e.entity || e.id);
       var h = byKey[k];
-      if (!h) {
+      if (!h && !e.passive) {
         h = heads.filter(function (x) {
           return x.label === e.label && x.members.some(function (m) { return Math.abs(m.when - e.when) < DEDUPE_MS; });
         })[0];
@@ -17174,7 +17172,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         entity: r.passive ? null : (r.entity || null),
         image: r.image,
         imageFit: r.imageFit,
-        tappable: !r.passive && !!(r.entity || r.opens || many),
+        tappable: many || (!r.passive && !!(r.entity || r.opens)),
         // A stack: how many, and a chevron that points down (closed) or up (open). Tapping opens it.
         endHtml: many ? '<span class="casora-nst-n">' + Number(r.count) + '</span>' : null,
         noChev: many,
@@ -18137,6 +18135,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     markAll: seal,
     get count() { return unread(); },
     get rows() { return _rows.slice(); },
+    sections: sections,
     // Tests and the list as drawn: open or close a stack, the rows with open stacks unfolded.
     stack: function (key, open) { _openStacks[key] = open !== false; },
     get shown() { var g = ordered(); return unfold(g.fresh).concat(unfold(g.old)); },

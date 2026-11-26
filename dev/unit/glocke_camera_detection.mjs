@@ -63,9 +63,8 @@ assert.equal(rows.find(row => row.entity === restart), undefined, 'unavailable b
 assert.equal(rows.find(row => row.entity === absent), undefined, 'missing predecessor does not invent a detection');
 assert.ok(calls.some(c => c.type === 'logbook/get_events' && c.entity_ids.includes(id)), 'listed detection is watched');
 const detections = rows.filter(row => row.entity === id);
-assert.equal(detections.length, 2, 'each off-to-on detection has its own non-opening row');
-assert.ok(detections.every(row => row.count === 1), 'detection rows do not become expandable stacks');
+assert.equal(detections.length, 1, 'repeated detections of one trigger stack into one row');
+assert.equal(detections[0].count, 2, 'the stack counts each off-to-on detection');
 assert.equal(detections[0].label, 'Person erkannt');
-assert.equal(detections[0].passive, true, 'detection row is passive: no tap target');
-assert.ok(!detections[0].opens, 'passive row opens nothing');
+assert.ok(!detections[0].opens, 'the stack opens no device');
 assert.equal(rows.find(row => row.entity === event)?.label, 'Motion erkannt', 'event detection uses its own name');
