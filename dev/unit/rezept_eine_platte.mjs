@@ -3,7 +3,7 @@
 // (softGroup: --casora-pv-stack-gap/-fill/-radius, --casora-pv-row-fill/-radius, --casora-pv-divider/-inset). The
 // shopping rows stay the same tappable rows (data-casora-svc ticks the item, data-hr-done folds, repaint by id).
 //   node dev/unit/rezept_eine_platte.mjs
-// @deckt: 03-popups.js#R.calSoft,R.todoHtml,CAL_CSS,PLATE_CSS
+// @deckt: 03-popups.js#R.calSoft,R.todoHtml,CAL_CSS,PLATE_RULES
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';

@@ -1579,15 +1579,16 @@
      der Tag ist die eigentliche Information. Heute in Akzentfarbe, Zeilen schlanker. */
   // d03-11 (§6): one plate per section, rows without a gap and a hairline between them – the plate of UI.group
   // (softGroup) from the same --casora-pv-* tokens; their fallbacks are the single pills of before.
-  var PLATE_CSS = function (box, row) {
-    return box + '{display:flex;flex-direction:column;gap:var(--casora-pv-stack-gap, 8px);background:var(--casora-pv-stack-fill, transparent);'
-      + 'border-radius:var(--casora-pv-stack-radius, 0px);overflow:var(--casora-pv-stack-overflow, visible);}'
-      + row + '{position:relative;background:var(--casora-pv-row-fill, var(--casora-soft-row-fill, rgba(140,115,90,0.07)));'
-      + 'border-radius:var(--casora-pv-row-radius, var(--casora-popup-row-radius, 24px));}'
-      + row + ' + ' + row + '::before{content:"";position:absolute;top:0;right:0;height:1px;pointer-events:none;'
-      + 'left:var(--casora-pv-divider-inset, 0px);background:var(--casora-pv-divider, transparent);}';
-  };
-  var CAL_CSS = '<style>.hrw{text-align:left;}' + PLATE_CSS('.hrw', '.hrw-r')
+  // $B = the list, $R = its rows (fixed class names only).
+  var PLATE_RULES = '$B{display:flex;flex-direction:column;gap:var(--casora-pv-stack-gap, 8px);background:var(--casora-pv-stack-fill, transparent);'
+    + 'border-radius:var(--casora-pv-stack-radius, 0px);overflow:var(--casora-pv-stack-overflow, visible);}'
+    + '$R{position:relative;background:var(--casora-pv-row-fill, var(--casora-soft-row-fill, rgba(140,115,90,0.07)));'
+    + 'border-radius:var(--casora-pv-row-radius, var(--casora-popup-row-radius, 24px));}'
+    + '$R + $R::before{content:"";position:absolute;top:0;right:0;height:1px;pointer-events:none;'
+    + 'left:var(--casora-pv-divider-inset, 0px);background:var(--casora-pv-divider, transparent);}';
+  var PLATE_HRW = PLATE_RULES.replace(/\$B/g, '.hrw').replace(/\$R/g, '.hrw-r');
+  var PLATE_HRL = PLATE_RULES.replace(/\$B/g, '.hrl').replace(/\$R/g, '.hrl-r');
+  var CAL_CSS = '<style>.hrw{text-align:left;}' + PLATE_HRW
     + '.hrw-r{display:flex;align-items:center;gap:12px;min-height:var(--casora-soft-row-h, 58px);box-sizing:border-box;padding:var(--casora-soft-row-pad, 10px 16px 10px 10px);}'
     + '.hrw-b{flex:none;width:var(--casora-soft-icon-size, 38px);height:var(--casora-soft-icon-size, 38px);border-radius:var(--casora-soft-icon-radius, 50%);display:flex;flex-direction:column;align-items:center;justify-content:center;'
     + 'background:var(--casora-soft-icon-off, rgba(140,115,90,0.12));color:var(--casora-popup-tiles-text-primary, #2E2721);line-height:1;}'
@@ -1745,7 +1746,7 @@
       + '</style>';
     /* Weich: Etikett darüber, die Zeilen auf einer Platte wie UI.group (d03-11, §6); die Haken bleiben dieselben Zeilen. */
     var sf = window._casoraHH && window._casoraHH.on();
-    if (sf) css += '<style>.hrl{box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;}' + PLATE_CSS('.hrl', '.hrl-r')
+    if (sf) css += '<style>.hrl{box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;}' + PLATE_HRL
       + '.hrl-r{min-height:var(--casora-soft-row-h, 58px);box-sizing:border-box;padding:var(--casora-soft-row-pad, 10px 16px 10px 10px);transition:background-color .18s ease;}'
       + '.hrl-r + .hrl-r{border-top:none;}'
       + '@media (hover:hover){.hrl-r:hover{background:var(--casora-soft-row-hover, rgba(140,115,90,0.11));}}'
