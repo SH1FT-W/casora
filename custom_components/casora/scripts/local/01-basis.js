@@ -402,6 +402,10 @@ window._casoraHouseLightsOf = function (rooms, states) {
   (rooms || []).forEach(function (r) {
     var V = r && r.vars;
     if (!V || V.show_lights === false) return;
+    // A room this person does not see ("Who sees this?", casora_users) is not in their house's lights either, as it
+    // is not in their room bar (Prüfrunde u10-03). The Studio has no viewer: casoraSeesRoute is the dashboard's.
+    if (Array.isArray(V.casora_users) && V.casora_users.length && window.casoraSeesRoute
+      && !window.casoraSeesRoute({ users: V.casora_users })) return;
     var slots = [];
     for (var i = 1; i <= 10; i++) if (typeof V['light_entity_' + i] === 'string' && V['light_entity_' + i]) slots.push(V['light_entity_' + i]);
     var grp = typeof V.light_group_entity === 'string' && V.light_group_entity ? V.light_group_entity : null;
