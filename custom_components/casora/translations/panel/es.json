@@ -757,7 +757,7 @@
     "Show": "Mostrar",
     "Show Assist button": "Mostrar botón de Assist",
     "Assist shows the matching popup": "Assist muestra la ventana adecuada",
-    "Asking Assist for a room's climate, the lights, a camera, the weather or a device's energy also opens that window here.": "Si preguntas a Assist por el clima de una habitación, las luces, una cámara, el tiempo o el consumo de un aparato, aquí también se abre esa ventana.",
+    "Asking Assist for a room's climate, the lights, a camera, the weather or a device's energy also opens that window here. Off on every dashboard: Assist no longer knows Casora's questions either.": "Si preguntas a Assist por el clima de una habitación, las luces, una cámara, el tiempo o el consumo de un aparato, aquí también se abre esa ventana. Si está desactivado en todos los paneles, Assist tampoco entiende ya las preguntas de Casora.",
     "Show on": "Mostrar en",
     "Show or hide the players, as the waveform does on the dashboard": "Mostrar u ocultar los reproductores, como hace la forma de onda en el panel",
     "Show rooms": "Mostrar habitaciones",

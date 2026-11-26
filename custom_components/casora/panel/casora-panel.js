@@ -2584,10 +2584,11 @@ const SECTIONS = [
       { key: "show_assist", sub: "chrome", label: "Show Assist button", type: "bool",
         boolDefault: true, auto: true, scope: "dashboard" },
       // Assist shows the matching popup (scripts/local/52-assist-show.js reads it from Home's room card, the phone's
-      // title card gets it on save in markPhoneManaged). Off = Assist only answers.
+      // title card gets it on save in markPhoneManaged). Off = Assist only answers; off on every Casora dashboard (or no
+      // Assist button) also removes Casora's sentences from HA's Assist (assist_show.py dashboards_state).
       { key: "assist_popups", sub: "chrome", label: "Assist shows the matching popup", type: "bool",
         boolDefault: true, auto: true, scope: "dashboard",
-        hint: "Asking Assist for a room's climate, the lights, a camera, the weather or a device's energy also opens that window here." },
+        hint: "Asking Assist for a room's climate, the lights, a camera, the weather or a device's energy also opens that window here. Off on every dashboard: Assist no longer knows Casora's questions either." },
       // Badge row on more lines (#53, badges_wrap): desktop, tablet and phone; off = one row that scrolls sideways.
       { key: "badges_wrap", sub: "chrome", label: "Wrap badges onto more lines", type: "bool",
         boolDefault: false, auto: true, scope: "dashboard",

@@ -6,7 +6,8 @@
 // popup“ (variables.assist_popups on Home, false = off). The chat stays one tap away: the popup's ‹ goes back to it.
 //   window._casoraAssistShow.plan(target, idx, hass) → { how: device|route|room|lights|weather|contacts, … } or null
 //   window._casoraAssistShow.enabled(cfg)            → false when the dashboard switched it off
-//   window._casoraAssistShow.after()                 – called by the chat after each answer
+//   window._casoraAssistShow.fromHa(intentOutput)    → a target from HA's own answer (its weather intent) or null
+//   window._casoraAssistShow.after(intentOutput)     – called by the chat after each answer
 (function () {
   if (window._casoraAssistShow) return;
   var X = window._casoraAssistShow = {};
@@ -86,6 +87,15 @@
     return null;
   };
 
+  // HA's own intents keep their sentences (assist_show.py takes none of them). "Show me the weather" is HA's
+  // HassGetWeather: its answer names the weather entity in data.success, which is enough for the weather popup.
+  X.fromHa = function (o) {
+    var r = o && o.response, d = r && r.data;
+    var ok = d && Array.isArray(d.success) ? d.success.filter(function (x) { return x && x.type === 'entity' && x.id; }) : [];
+    if (!r || r.response_type === 'error' || ok.length !== 1 || dom(ok[0].id) !== 'weather') return null;
+    return { view: 'weather', entity_id: ok[0].id };
+  };
+
   X.run = function (p) {
     var P = window.casoraPopup, S = window._casoraSearch, A = window._casoraAssist;
     if (!p || !P) return false;
@@ -117,14 +127,14 @@
     return false;
   };
 
-  X.after = function () {
+  X.after = function (o) {
     var h = hassNow(), S = window._casoraSearch;
     if (!h || !h.connection || !S || !S._configNow) return;
     var cfg = S._configNow();
     if (!cfg || !S.isCasoraCfg(cfg) || !X.enabled(cfg)) return;
     var asked = Date.now();
     h.connection.sendMessagePromise({ type: 'casora/assist/take' }).then(function (r) {
-      var t = r && r.target;
+      var t = (r && r.target) || X.fromHa(o);
       if (!t) return;
       var idx;
       try { idx = S.index(cfg, h, h.user, { url: (String(location.pathname || '').split('/').filter(Boolean)[0]) || '' }); } catch (e) { return; }

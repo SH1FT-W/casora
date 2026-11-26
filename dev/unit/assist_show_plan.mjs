@@ -98,7 +98,27 @@ await new Promise((r) => setImmediate(r));
 timers.splice(0).forEach((f) => f());
 assert.deepEqual(opened, ['camera.tuer']);
 
-// The chat calls it after each answer (text and voice).
+// "Show me the weather" stays HA's own intent (HassGetWeather, not a Casora sentence): its answer names the
+// weather entity, and that opens the weather popup.
+const haWeather = { response: { response_type: 'query_answer', data: { success: [{ type: 'entity', name: 'Home', id: 'weather.home' }], failed: [] } } };
+assert.deepEqual(X.fromHa(haWeather), { view: 'weather', entity_id: 'weather.home' });
+assert.equal(X.fromHa({ response: { response_type: 'action_done', data: { success: [{ type: 'entity', id: 'light.decke' }] } } }), null, 'a switched light opens nothing');
+assert.equal(X.fromHa({ response: { response_type: 'error', data: { code: 'no_intent_match' } } }), null);
+assert.equal(X.fromHa(undefined), null);
+window._casoraNotifyOpenViaCard = (_a, _b, card) => opened.push(card.template + ':' + card.entity);
+next = null;
+X.after(haWeather);
+await new Promise((r) => setImmediate(r));
+timers.splice(0).forEach((f) => f());
+assert.deepEqual(opened, ['camera.tuer', 'casora_weather:weather.home'], 'the weather popup from HA\'s answer');
+// Casora's own target wins over HA's answer.
+next = { view: 'camera', entity_id: 'camera.tuer' };
+X.after(haWeather);
+await new Promise((r) => setImmediate(r));
+timers.splice(0).forEach((f) => f());
+assert.deepEqual(opened, ['camera.tuer', 'casora_weather:weather.home', 'camera.tuer']);
+
+// The chat calls it after each answer (text and voice) with HA's intent output.
 const basis = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/01-basis.js', import.meta.url), 'utf8');
-assert.equal((basis.match(/window\._casoraAssistShow\.after\(\)/g) || []).length, 2, 'text and voice answer hook');
+assert.equal((basis.match(/window\._casoraAssistShow\.after\(o\)/g) || []).length, 2, 'text and voice answer hook');
 console.log('assist_show_plan OK');

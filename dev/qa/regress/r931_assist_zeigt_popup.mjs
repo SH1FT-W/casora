@@ -8,6 +8,8 @@
 //     popup opens
 //   - a question HA answers by itself ("Wie spät ist es?"): the answer, the chat stays
 //   - Studio switch off (Home's assist_popups: false): the answer only, the chat stays; the dashboard is restored
+//   - review: switch off on every Casora dashboard: Casora's sentences leave HA's Assist (HA answers by itself,
+//     not "… Lichtern sind an."); all dashboards are restored
 import { open, usePage, casoraDashboard, dashboard, check, need, finish, atFinish } from './lib.mjs';
 import { ws } from '../ws.mjs';
 
@@ -55,9 +57,15 @@ await check('lights: the light popup opens instead of the chat (' + r.title + ')
 const hasWeather = await page.evaluate(() => {
   const S = window._casoraSearch, h = document.querySelector('home-assistant').hass;
   const idx = S.index(S._configNow(), h, h.user, { url: location.pathname.split('/').filter(Boolean)[0] });
-  return idx.devices.some((d) => d.id.indexOf('weather.') === 0);
+  return (idx.devices.find((d) => d.id.indexOf('weather.') === 0) || {}).id || null;
 });
 if (hasWeather) {
+  // Casora's answers only see what is exposed to Assist (as HA's own intents): expose the weather for this check.
+  const c5 = await ws();
+  const was = (((await c5.cmd({ type: 'homeassistant/expose_entity/list' })).exposed_entities || {})[hasWeather] || {}).conversation === true;
+  await c5.cmd({ type: 'homeassistant/expose_entity', assistants: ['conversation'], entity_ids: [hasWeather], should_expose: true });
+  c5.close();
+  if (!was) atFinish(async () => { const c6 = await ws(); await c6.cmd({ type: 'homeassistant/expose_entity', assistants: ['conversation'], entity_ids: [hasWeather], should_expose: false }); c6.close(); });
   r = await ask('Zeig mir das Wetter');
   await check('weather: the answer names the temperature (' + r.answer + ')', /^(Draußen|It is .* outside)/.test(r.answer), r);
   await check('weather: the weather popup opens (' + r.title + ')', r.title && r.title !== 'Assist', r);
@@ -76,6 +84,35 @@ await save(d1);
 await dashboard(page, dash.url, 2);
 await page.waitForFunction(() => !!(window._casoraAssist && window._casoraAssistShow), null, { timeout: 20000 });
 r = await ask('Zeig mir alle Lichter');
-await check('switched off: the answer only, the chat stays (' + r.title + ')', r.title === 'Assist' && LIGHTS.test(r.answer), r);
+await check('switched off here: the chat stays (' + r.title + ')', r.title === 'Assist', r);
+
+// Off on every Casora dashboard: the sentences are removed (assist_show.py re-reads the dashboards on each save).
+const c3 = await ws();
+const kinds = (await c3.cmd({ type: 'casora/dashboards/kinds' })).dashboards || {};
+const saved = {};
+const offAll = (o, d) => {
+  if (!o || typeof o !== 'object' || d > 12) return;
+  if (Array.isArray(o)) { o.forEach((x) => offAll(x, d + 1)); return; }
+  const t = [].concat(o.template || []);
+  if (t.includes('casora_room') || t.includes('casora_mobile_weather')) o.variables = { ...(o.variables || {}), assist_popups: false };
+  ['views', 'cards', 'card', 'sections'].forEach((k) => { if (o[k]) offAll(o[k], d + 1); });
+};
+for (const [url, k] of Object.entries(kinds)) {
+  if (!k || (k.kind !== 'wide' && k.kind !== 'mobile') || url === dash.url) continue;
+  const cfg = await c3.cmd({ type: 'lovelace/config', url_path: url });
+  saved[url] = JSON.parse(JSON.stringify(cfg));
+  offAll(cfg, 0);
+  await c3.cmd({ type: 'lovelace/config/save', url_path: url, config: cfg });
+}
+c3.close();
+atFinish(async () => {
+  const c4 = await ws();
+  for (const [url, cfg] of Object.entries(saved)) await c4.cmd({ type: 'lovelace/config/save', url_path: url, config: cfg });
+  c4.close();
+});
+console.log('    switched off on ' + (Object.keys(saved).length + 1) + ' Casora dashboard(s)');
+await new Promise((res) => setTimeout(res, 1500));
+r = await ask('Zeig mir alle Lichter');
+await check('off everywhere: HA answers by itself, not Casora (' + r.answer + ')', !LIGHTS.test(r.answer) && r.answer.length > 0 && r.title === 'Assist', r);
 
 await finish();

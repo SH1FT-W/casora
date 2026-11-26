@@ -10,8 +10,14 @@ Two ways in, one target:
     sentence and remember the target.
   * LLM conversation agents: an LLM API "Casora" with one tool, casora_show (select it in the agent's options).
 Either way the target is kept per user for a short time; Casora's chat fetches it right after its own Assist run
-(websocket casora/assist/take) and opens the popup only when the open dashboard shows that thing. Nobody else asks,
-so nothing changes for anyone who never uses Assist.
+(websocket casora/assist/take) and opens the popup only when the open dashboard shows that thing.
+
+Limits (the sentences act on all of HA's Assist, satellites included):
+  * the sentences are registered only while a Casora dashboard shows the Assist button and has the Studio switch
+    "Assist shows the matching popup" on (re-read on every dashboard save); none of them is a sentence HA's own
+    intents understand, so HA's answers stay HA's.
+  * answers and the LLM tool only see entities exposed to Assist and, per user, what Casora's "Who sees this?"
+    shows that user (a request without a user, from a satellite, sees no limited entity).
 
 Target: {"view": climate|lights|energy|camera|weather|security|room, "area_id"?, "area"?, "entity_id"?}.
 The matching logic below works on plain dicts (snapshot()), so dev/unit/assist_show_test.py runs without HA.
@@ -52,14 +58,12 @@ SENTENCES: dict[str, list[str]] = {
         "zeig [mir] das (raumklima|klima) (im|in der|in|vom) {area}",
         "show [me] the climate (in|of) [the] {area}",
     ],
-    "lights_all": [
+    # One trigger for the house and a room: HA runs every trigger whose sentence matches, and "lichter im haus" fits
+    # "{area}" too. resolve("lights") tells the house words (HOUSE) from a room.
+    "lights": [
         "zeig [mir] alle lichter",
-        "zeig [mir] [die] lichter im (haus|ganzen haus)",
-        "show [me] all [the] lights",
-        "show [me] [the] lights in the (house|whole house)",
-    ],
-    "lights_area": [
         "zeig [mir] [alle|die] lichter (im|in der|in) {area}",
+        "show [me] all [the] lights",
         "show [me] [all] [the] lights in [the] {area}",
     ],
     "energy": [
@@ -77,9 +81,10 @@ SENTENCES: dict[str, list[str]] = {
         "show [me] the camera (at|in|on|by) [the] {name}",
         "show [me] the {name} camera",
     ],
+    # Only sentences HA's own intents do not understand: "show me the weather" is HassGetWeather, its answer stays
+    # HA's (the chat opens the weather popup from that answer, 52-assist-show.js X.fromHa).
     "weather": [
         "zeig [mir] das wetter",
-        "show [me] the weather",
     ],
     "security": [
         "zeig [mir] die sicherheit",
@@ -96,6 +101,11 @@ SENTENCES: dict[str, list[str]] = {
 OUTDOOR = re.compile(r"(aussen|garten|balkon|terrasse|outdoor|outside|garden|balcony|terrace|patio|draussen)")
 ARTICLES = {"der", "die", "das", "dem", "den", "des", "im", "in", "am", "an", "vom", "von", "the", "a", "an", "my",
             "mein", "meine", "meinem", "meiner", "unser", "unsere"}
+# "Lights in the house": every light, not a room (unless a room is called exactly that).
+HOUSE = {"haus", "ganzen haus", "ganze haus", "wohnung", "ganzen wohnung", "ganze wohnung", "house", "whole house",
+         "home", "the house", "the whole house", "flat", "apartment"}
+# A room's temperature: values outside this range are fridges, freezers, printer nozzles, boilers, not the room.
+ROOM_RANGE_C = (8.0, 40.0)
 PERIODS = {"heute": "day", "today": "day", "diese woche": "week", "this week": "week",
            "diesen monat": "month", "this month": "month"}
 
@@ -188,19 +198,45 @@ WEATHER_WORDS = {
 
 # ── Resolving a request ───────────────────────────────────────────────────────
 
-def _temps(snap: dict) -> list[dict]:
-    """Indoor temperature sensors with a value and an area."""
+def _celsius(value: float, unit: Any) -> float:
+    return (value - 32) * 5 / 9 if str(unit or "").strip().upper().endswith("F") else value
+
+
+def _median(vals: list[float]) -> float:
+    v = sorted(vals)
+    m = len(v) // 2
+    return v[m] if len(v) % 2 else (v[m - 1] + v[m]) / 2
+
+
+def room_temps(snap: dict) -> dict[str, dict]:
+    """area_id → {"value", "unit", "entity_id"}: the temperature of each indoor room.
+
+    A thermostat's current_temperature first (climate entities measure the room); without one the median of the
+    room's temperature sensors that read like a room (ROOM_RANGE_C), so a fridge, freezer, printer nozzle, aquarium
+    or boiler in the same area neither wins "warmest/coldest" nor pulls the room's value.
+    """
     names = {a["id"]: a.get("name", "") for a in snap["areas"]}
-    out = []
+    lo, hi = ROOM_RANGE_C
+    found: dict[str, dict[str, list[dict]]] = {}
     for e in snap["entities"]:
-        if e.get("domain") != "sensor" or e.get("device_class") != "temperature" or not e.get("area_id"):
+        area = e.get("area_id")
+        if not area or e.get("category") or e.get("hidden") or OUTDOOR.search(fold(names.get(area, ""))):
             continue
-        if e.get("category") or e.get("hidden"):
+        if e.get("domain") == "climate":
+            v, kind = _float((e.get("attributes") or {}).get("current_temperature")), "climate"
+        elif e.get("domain") == "sensor" and e.get("device_class") == "temperature":
+            v, kind = _float(e.get("state")), "sensor"
+        else:
             continue
-        v = _float(e.get("state"))
-        if v is None or OUTDOOR.search(fold(names.get(e["area_id"], ""))):
+        if v is None or not lo <= _celsius(v, e.get("unit")) <= hi:
             continue
-        out.append({**e, "value": v})
+        found.setdefault(area, {}).setdefault(kind, []).append({**e, "value": v})
+    out: dict[str, dict] = {}
+    for area, kinds in found.items():
+        rows = kinds.get("climate") or kinds["sensor"]
+        mid = _median([r["value"] for r in rows])
+        near = min(rows, key=lambda r: abs(r["value"] - mid))
+        out[area] = {"value": mid, "unit": near.get("unit") or "°C", "entity_id": near["entity_id"]}
     return out
 
 
@@ -211,25 +247,30 @@ def resolve(kind: str, slots: dict, snap: dict, lang: str | None) -> tuple[str, 
     area_of = {a["id"]: a for a in areas}
 
     if kind in ("climate_warm", "climate_cold"):
-        by_area: dict[str, list[dict]] = {}
-        for e in _temps(snap):
-            by_area.setdefault(e["area_id"], []).append(e)
-        if not by_area:
+        temps = room_temps(snap)
+        if not temps:
             return ("Ich finde keine Temperatursensoren in deinen Räumen." if de
                     else "I can't find any temperature sensors in your rooms."), None
-        avg = {k: sum(x["value"] for x in v) / len(v) for k, v in by_area.items()}
-        pick = (max if kind == "climate_warm" else min)(avg, key=lambda k: avg[k])
-        sensor = sorted(by_area[pick], key=lambda x: x["value"], reverse=kind == "climate_warm")[0]
-        unit = sensor.get("unit") or "°C"
+        pick = (max if kind == "climate_warm" else min)(temps, key=lambda k: temps[k]["value"])
+        room = temps[pick]
         name = area_of[pick]["name"]
-        value = _num(avg[pick], lang) + " " + unit
+        value = _num(room["value"], lang) + " " + room["unit"]
         if de:
             word = "wärmsten" if kind == "climate_warm" else "kältesten"
             speech = f"Am {word} ist es gerade im Raum {name} mit {value}."
         else:
             word = "warmest" if kind == "climate_warm" else "coldest"
             speech = f"The {word} room right now is {name} at {value}."
-        return speech, {"view": "climate", "area_id": pick, "area": name, "entity_id": sensor["entity_id"]}
+        return speech, {"view": "climate", "area_id": pick, "area": name, "entity_id": room["entity_id"]}
+
+    if kind == "lights":
+        # "Lichter im Haus" is the house, unless a room has exactly that name.
+        said = fold(slots.get("area", ""))
+        exact = said and any(fold(x) == said for a in areas for x in [a.get("name", "")] + list(a.get("aliases") or []))
+        if not said or (said in {fold(w) for w in HOUSE} and not exact):
+            kind = "lights_all"
+        else:
+            kind = "lights_area"
 
     if kind in ("climate_area", "lights_area", "room"):
         area = match_area(slots.get("area", ""), areas)
@@ -240,15 +281,15 @@ def resolve(kind: str, slots: dict, snap: dict, lang: str | None) -> tuple[str, 
         if kind == "room":
             return (f"Hier ist {name}." if de else f"Here is {name}."), {"view": "room", "area_id": area["id"], "area": name}
         if kind == "climate_area":
-            t = [e for e in _temps(snap) if e["area_id"] == area["id"]]
+            t = room_temps(snap).get(area["id"])
             if t:
-                v = _num(sum(x["value"] for x in t) / len(t), lang) + " " + (t[0].get("unit") or "°C")
+                v = _num(t["value"], lang) + " " + t["unit"]
                 speech = f"Im Raum {name} sind es {v}." if de else f"It is {v} in {name}."
             else:
                 speech = f"Hier ist das Raumklima von {name}." if de else f"Here is the climate of {name}."
             target = {"view": "climate", "area_id": area["id"], "area": name}
             if t:
-                target["entity_id"] = t[0]["entity_id"]
+                target["entity_id"] = t["entity_id"]
             return speech, target
         lights = [e for e in ents if e.get("domain") == "light" and e.get("area_id") == area["id"] and not e.get("hidden")]
         on = sum(1 for e in lights if e.get("state") == "on")
@@ -333,7 +374,7 @@ def kind_for_tool(args: dict) -> tuple[str, dict]:
             return "climate_area", {"area": area}
         return ("climate_cold" if str(args.get("extreme") or "") == "coldest" else "climate_warm"), {}
     if view == "lights":
-        return ("lights_area", {"area": area}) if area else ("lights_all", {})
+        return ("lights", {"area": area}) if area else ("lights_all", {})
     if view == "room":
         return "room", {"area": area}
     if view in ("camera", "energy"):
@@ -343,24 +384,105 @@ def kind_for_tool(args: dict) -> tuple[str, dict]:
 
 # ── HA side ───────────────────────────────────────────────────────────────────
 
-def snapshot(hass) -> dict:
-    """Areas and entities as plain dicts (states with their registry area, device and category)."""
+def sees(entity_id: str, user_id: str | None, users: dict[str, set] | None) -> bool:
+    """Casora's "Who sees this?" of a tile (casora_entity_users): no list = everyone; a request without a user (a
+    voice satellite) does not get what is limited to some users."""
+    allowed = (users or {}).get(entity_id)
+    return not allowed or (user_id is not None and user_id in allowed)
+
+
+def dashboards_state(configs: list) -> tuple[bool, dict[str, set]]:
+    """(wanted, users) from Casora's dashboards (dashboard_kinds.dashboard_kind wide/mobile).
+
+    wanted: some Casora dashboard shows the Assist button and has "Assist shows the matching popup" on (Home's room
+    card or the phone's title card, like 52-assist-show.js X.enabled). users: entity → user ids that see its tile,
+    from every room's casora_entity_users; an entity listed on several dashboards is seen only by users on all lists.
+    """
+    from .dashboard_kinds import dashboard_kind
+
+    wanted = False
+    users: dict[str, set] = {}
+    for cfg in configs:
+        if dashboard_kind(cfg) not in ("wide", "mobile"):
+            continue
+        off = False
+
+        def walk(o: Any, depth: int) -> None:
+            nonlocal off
+            if depth > 12:
+                return
+            if isinstance(o, list):
+                for x in o:
+                    walk(x, depth + 1)
+                return
+            if not isinstance(o, dict):
+                return
+            tpl = o.get("template")
+            tpls = tpl if isinstance(tpl, list) else [tpl]
+            var = o.get("variables") if isinstance(o.get("variables"), dict) else {}
+            if any(t in ("casora_room", "casora_mobile_weather") for t in tpls):
+                if var.get("assist_popups") is False or var.get("show_assist") is False:
+                    off = True
+            eu = var.get("casora_entity_users")
+            if isinstance(eu, dict):
+                for eid, ids in eu.items():
+                    if isinstance(ids, list) and ids:
+                        ids = {str(i) for i in ids}
+                        users[eid] = (users[eid] & ids) if eid in users else ids
+            for k in ("views", "cards", "card", "sections"):
+                if k in o:
+                    walk(o[k], depth + 1)
+
+        walk(cfg, 0)
+        wanted = wanted or not off
+    return wanted, users
+
+
+def snapshot(hass, user_id: str | None = None) -> dict:
+    """Areas and the entities Assist may talk about, as plain dicts (state, registry area, device, category).
+
+    Only entities exposed to Assist (Settings > Voice assistants > Expose; HA's own intents see no others, and an
+    LLM gets nothing else) and, for this user, not hidden by Casora's "Who sees this?".
+    """
     from homeassistant.helpers import area_registry as ar
     from homeassistant.helpers import device_registry as dr
     from homeassistant.helpers import entity_registry as er
 
+    try:
+        from homeassistant.components.homeassistant import async_should_expose
+    except ImportError:  # HA moved it: tell nothing rather than everything
+        async_should_expose = None
+
+    def exposed(entity_id: str) -> bool:
+        if async_should_expose is None:
+            return False
+        try:
+            return bool(async_should_expose(hass, "conversation", entity_id))
+        except Exception:  # noqa: BLE001 - exposure unknown: not exposed
+            return False
+
+    users = hass.data.get(DOMAIN, {}).get("assist_users") or {}
     areg, dreg, ereg = ar.async_get(hass), dr.async_get(hass), er.async_get(hass)
     areas = [{"id": a.id, "name": a.name, "aliases": sorted(a.aliases or [])} for a in areg.async_list_areas()]
     ents = []
     for st in hass.states.async_all():
+        if not sees(st.entity_id, user_id, users) or not exposed(st.entity_id):
+            continue
         ent = ereg.async_get(st.entity_id)
         dev = dreg.async_get(ent.device_id) if ent and ent.device_id else None
+        unit = st.attributes.get("unit_of_measurement")
+        attrs: dict = {}
+        if st.domain == "weather":
+            attrs = {k: st.attributes.get(k) for k in ("temperature", "temperature_unit")}
+        elif st.domain == "climate":
+            attrs = {"current_temperature": st.attributes.get("current_temperature")}
+            unit = hass.config.units.temperature_unit
         ents.append({
             "entity_id": st.entity_id, "domain": st.domain, "state": st.state,
             "name": st.attributes.get("friendly_name") or st.entity_id,
             "device_class": st.attributes.get("device_class"),
-            "unit": st.attributes.get("unit_of_measurement"),
-            "attributes": {k: st.attributes.get(k) for k in ("temperature", "temperature_unit")} if st.domain == "weather" else {},
+            "unit": unit,
+            "attributes": attrs,
             "area_id": (ent.area_id if ent and ent.area_id else (dev.area_id if dev else None)),
             "device_id": ent.device_id if ent else None,
             "device": (dev.name_by_user or dev.name) if dev else "",
@@ -422,7 +544,7 @@ async def async_answer(hass, kind: str, slots: dict, lang: str | None, user_id: 
     if kind == "energy":
         said = fold(slots.get("_said", ""))
         slots.setdefault("_period", next((p for w, p in PERIODS.items() if fold(w) in said), None))
-    snap = snapshot(hass)
+    snap = snapshot(hass, user_id)
     speech, target = resolve(kind, slots, snap, lang)
     if target and target["view"] == "energy":
         used = await _energy_used(hass, target["entity_id"], target.get("period") or "week")
@@ -518,59 +640,112 @@ def _register_ws(hass) -> None:
     websocket_api.async_register_command(hass, ws_take)
 
 
+async def _async_dashboards(hass) -> tuple[bool, dict[str, set]]:
+    """dashboards_state() of every dashboard Lovelace knows; (False, {}) when they cannot be read."""
+    from .dashboard_kinds import UNREADABLE, async_dashboard_configs
+
+    try:
+        configs = await async_dashboard_configs(hass)
+    except Exception:  # noqa: BLE001 - no Lovelace data: no sentences
+        _LOGGER.debug("Casora Assist: dashboards not readable", exc_info=True)
+        return False, {}
+    return dashboards_state([c for c in configs.values() if c is not UNREADABLE])
+
+
+class _Runtime:
+    """What async_setup_assist_show set up: the sentence triggers follow the dashboards' switch."""
+
+    def __init__(self, hass) -> None:
+        self.hass = hass
+        self.removes: list = []         # LLM API, event listeners
+        self.triggers = None            # remove callback of the sentence triggers while they are registered
+        self.closed = False
+        self._lock = None
+
+    async def async_refresh(self) -> None:
+        """Read the dashboards; register or remove the sentences to match (only while conversation is loaded)."""
+        import asyncio
+
+        if self._lock is None:
+            self._lock = asyncio.Lock()
+        async with self._lock:
+            if self.closed:
+                return
+            wanted, users = await _async_dashboards(self.hass)
+            self.hass.data.setdefault(DOMAIN, {})["assist_users"] = users
+            wanted = wanted and "conversation" in self.hass.config.components
+            if wanted and self.triggers is None:
+                try:
+                    self.triggers = await _async_setup_triggers(self.hass)
+                except Exception:  # noqa: BLE001 - Assist without Casora's sentences, nothing else changes
+                    _LOGGER.warning("Casora's Assist sentences could not be registered", exc_info=True)
+            elif not wanted and self.triggers is not None:
+                rm, self.triggers = self.triggers, None
+                rm()
+
+    def close(self) -> None:
+        self.closed = True
+        for rm in self.removes + ([self.triggers] if self.triggers else []):
+            try:
+                rm()
+            except Exception:  # noqa: BLE001
+                _LOGGER.debug("remove failed", exc_info=True)
+        self.removes, self.triggers = [], None
+
+
 async def async_setup_assist_show(hass, entry) -> None:
-    """Sentence triggers, LLM API and the chat's websocket. The triggers wait for conversation to load."""
+    """Chat websocket, LLM API "Casora" and the sentence triggers. Never stops Casora's setup: anything HA changed
+    under it only costs this feature (a warning in the log)."""
+    try:
+        await _async_setup(hass)
+    except Exception:  # noqa: BLE001
+        _LOGGER.warning("Casora: Assist shows the matching popup is not available", exc_info=True)
+
+
+async def _async_setup(hass) -> None:
     from homeassistant.const import EVENT_COMPONENT_LOADED
     from homeassistant.core import callback
+    from homeassistant.helpers.start import async_at_started
 
     data = hass.data.setdefault(DOMAIN, {})
     _pending(hass)
     if not data.get("assist_ws"):
         _register_ws(hass)
         data["assist_ws"] = True
-    removes: list = []
-    data["assist_removes"] = removes
+    old = data.pop("assist_rt", None)
+    if isinstance(old, _Runtime):
+        old.close()
+    rt = data["assist_rt"] = _Runtime(hass)
 
-    api = _api(hass)
-    if api:
-        llm, inst = api
-        try:
-            removes.append(llm.async_register_api(hass, inst))
-        except Exception:  # noqa: BLE001 - an API of that id already there (reload): keep it
-            _LOGGER.debug("Casora LLM API not registered", exc_info=True)
-
-    async def start() -> None:
-        if data.get("assist_removes") is not removes:
-            return
-        try:
-            rm = await _async_setup_triggers(hass)
-        except Exception:  # noqa: BLE001 - Assist without Casora's sentences, nothing else changes
-            _LOGGER.warning("Casora's Assist sentences could not be registered", exc_info=True)
-            return
-        if rm:
-            removes.append(rm)
-
-    if "conversation" in hass.config.components:
-        await start()
-        return
+    # The LLM API only acts where a user picked "Casora" in an LLM agent's options.
+    try:
+        api = _api(hass)
+        if api:
+            llm, inst = api
+            rt.removes.append(llm.async_register_api(hass, inst))
+    except Exception:  # noqa: BLE001 - an API of that id already there, or HA's llm helper changed
+        _LOGGER.debug("Casora LLM API not registered", exc_info=True)
 
     @callback
-    def loaded(event) -> None:
-        if event.data.get("component") == "conversation":
-            unsub()
-            removes.remove(unsub)
-            hass.async_create_task(start())
+    def changed(event=None) -> None:
+        # A dashboard saved (the Studio switch, a new Casora dashboard), conversation loaded later, HA started.
+        if event is not None and event.event_type == EVENT_COMPONENT_LOADED \
+                and event.data.get("component") != "conversation":
+            return
+        hass.async_create_task(rt.async_refresh())
 
-    unsub = hass.bus.async_listen(EVENT_COMPONENT_LOADED, loaded)
-    removes.append(unsub)
+    rt.removes.append(hass.bus.async_listen("lovelace_updated", changed))
+    rt.removes.append(hass.bus.async_listen(EVENT_COMPONENT_LOADED, changed))
+    if not hass.is_running:
+        rt.removes.append(async_at_started(hass, lambda _hass: changed()))
+    await rt.async_refresh()
 
 
 def async_unload_assist_show(hass) -> None:
     """Remove the sentence triggers and the LLM API (the websocket stays until the restart)."""
     data = hass.data.get(DOMAIN, {})
-    for rm in data.pop("assist_removes", None) or []:
-        try:
-            rm()
-        except Exception:  # noqa: BLE001
-            _LOGGER.debug("remove failed", exc_info=True)
+    rt = data.pop("assist_rt", None)
+    if isinstance(rt, _Runtime):
+        rt.close()
     data.pop("assist_pending", None)
+    data.pop("assist_users", None)
