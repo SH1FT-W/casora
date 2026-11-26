@@ -63,7 +63,7 @@ const need = (keys) => keys.forEach((k) => assert.ok(de[k], 'de.json: ' + k));
   assert.ok(/\{ id: "look", label: "Look & feel"/.test(set) && /mk\("look", "palette", "Look & feel", \(b\) => this\._bOpenSettings\(b, "t-look"\)\)/.test(b), 'Thema „Aussehen“ führt zum Design');
   assert.ok(/\{ id: "use", label: "Tapping & tablet"/.test(set) && /label: "General", title: "Controls"/.test(main), 'Kachel „Bedienen“');
   assert.ok(!/section\.card\[data-k="General"\][\s\S]{0,400}casora-looks/.test(add), 'Design-Auswahl nicht mehr im Abschnitt „Bedienung“');
-  assert.ok(/\["design", "Design", "design theme look/.test(mehr) && /way\("Settings", "Design"\)/.test(mehr), '⌘K: Design unter Einstellungen');
+  assert.ok(/\["design", "Design", "design theme look/.test(mehr) && /way\("Settings", "Look & feel", "Design"\)/.test(mehr), '⌘K: Design unter Einstellungen › Aussehen (Prüfrunde d01-05)');
   // Felder unter „Bedienung“ gelten wirklich je Dashboard
   const gen = main.slice(main.indexOf('label: "General", title: "Controls"'), main.indexOf('label: "Weather"'));
   const keys = gen.match(/key: "[^"]+"/g) || [];
