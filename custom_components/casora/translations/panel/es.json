@@ -934,6 +934,7 @@
     "This month": "Este mes",
     "Tile": "Tarjeta",
     "Time sensor": "Sensor de tiempo",
+    "Only needed if the clock should follow another sensor that shows a time. Empty: automatic.": "Solo hace falta si el reloj debe seguir a otro sensor que muestre una hora. Vacío: automático.",
     "Today": "Hoy",
     "Up to date": "Al día",
     "Which part of the room to edit": "Qué parte de la habitación editar",

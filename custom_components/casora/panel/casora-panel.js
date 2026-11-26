@@ -2749,7 +2749,8 @@ const SECTIONS = [
       { key: "show_date", label: "Show date", type: "bool", boolDefault: false, always: true,
         hint: "Weekday and date in small type under the time." },
       // Always visible: without an entry the clock takes sensor.time, and that should show.
-      { ...E("time_entity", "Time sensor", ["sensor"]), always: true, placeholder: "Automatic" },
+      { ...E("time_entity", "Time sensor", ["sensor"]), accept: "clock", always: true, placeholder: "Automatic",
+        hint: "Only needed if the clock should follow another sensor that shows a time. Empty: automatic." },
       { key: "use_12h", label: "12-hour clock", type: "bool", boolDefault: clock12, always: true },
       { ...T("time_suffix", "Text after the time"), hint: "Shown right after the time, for example “h”.",
         auto: true, advanced: true, noAdd: true },
@@ -5760,14 +5761,22 @@ const isWasteEntity = (h, id, dom) => {
   if (dom === "sensor" && (st.attributes || {}).daysTo !== undefined) return true;
   return WASTE_WORD.test(id + " " + ((st.attributes || {}).friendly_name || ""));
 };
+// A sensor the top bar's clock can show (Prüfrunde u03-06: the time sensor offered every sensor, a temperature too):
+// the Time & Date sensors, or a state that holds a time „HH:MM“ (alone or beside a date, as the clock reads it).
+function isClockSensor(h, id) {
+  if (/^sensor\.time(_|$)/.test(id)) return true;
+  const st = h && h.states && h.states[id];
+  return !!st && /(^|,\s*)\d{1,2}:\d{2}(\s*(,|$))/.test(String(st.state || "").trim());
+}
 const ACCEPT_RULES = {
   weather_warning: isWarningLevelSensor,
   group: isGroupEntity,
   waste: (h, id) => isWasteEntity(h, id, "sensor"),
   waste_calendar: (h, id) => isWasteEntity(h, id, "calendar"),
+  clock: isClockSensor,
 };
 // accept rules that keep ONLY their hits (the rest add to the domain list), and rules that only sort their hits first.
-const ACCEPT_ONLY = new Set(["group", "waste"]);
+const ACCEPT_ONLY = new Set(["group", "waste", "clock"]);
 const ACCEPT_FIRST = new Set(["waste_calendar"]);
 
 // The main entity a new tile suggests: by the integration's translation_key (language-independent, however
@@ -23158,6 +23167,8 @@ class CasoraPanel extends HTMLElement {
     const h = this._hass;
     const R = (h && h.entities) || {}, D = (h && h.devices) || {};
     const list = this._entityList(domains, classes, accept);
+    // A list that keeps only its own kind (ACCEPT_ONLY) still offers the value already chosen, fitting or not.
+    if (cur && ACCEPT_ONLY.has(accept) && h && h.states && h.states[cur] && !list.includes(cur)) list.unshift(cur);
     const area = room ? this._roomArea(room) : null;
     const areaOf = (e) => { const r = R[e]; return r && (r.area_id || (D[r.device_id] || {}).area_id); };
     // Gruppen haben oft keinen Bereich: der Raumname in Kennung oder Name zählt wie er.
