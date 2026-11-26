@@ -15182,14 +15182,18 @@ window.casoraMenuGlass = {
 })();
 // The detection rule of the camera tile and the bell: is this state of a detection trigger a detection, and since when (ms)?
 // A binary_sensor counts when it goes from off to on at `changed` (ISO text or ms); an event counts at its own time stamp
-// (its state). null = no detection.
+// (its state). A time a little ahead of the browser clock counts as now. null = no detection.
 (function () {
   if (window.casoraDetectionAt) return;
   window.casoraDetectionAt = function (id, state, previous, changed, hass) {
     var at = null;
     if (String(id).indexOf('binary_sensor.') === 0 && state === 'on' && previous === 'off') at = typeof changed === 'number' ? changed : Date.parse(changed);
     if (String(id).indexOf('event.') === 0) at = Date.parse(state);
-    return at !== null && isFinite(at) ? at : null;
+    if (at === null || !isFinite(at)) return null;
+    // A browser clock a little behind HA puts the change in the future: it still counts, as now. An hour ahead is not skew.
+    var now = Date.now();
+    if (at > now) return at - now <= 2 * 60000 ? now : null;
+    return at;
   };
 })();
 /* Sicherheits-Symbole an einer Stelle (03.10.2026): Kontakt-/Schloss-/Alarm-Unter-Badges
