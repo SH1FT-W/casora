@@ -4468,6 +4468,10 @@ const SOFT_BADGE_ICON = {
   alert: "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M12%2C1L3%2C5V11C3%2C16.55%206.84%2C21.74%2012%2C23C17.16%2C21.74%2021%2C16.55%2021%2C11V5M11%2C7H13V13H11M11%2C15H13V17H11%22/%3E%3C/svg%3E",
   ok: "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M10%2C17L6%2C13L7.41%2C11.59L10%2C14.17L16.59%2C7.58L18%2C9M12%2C1L3%2C5V11C3%2C16.55%206.84%2C21.74%2012%2C23C17.16%2C21.74%2021%2C16.55%2021%2C11V5L12%2C1Z%22/%3E%3C/svg%3E",
 };
+// casora_badge_scene_group: mdi:palette.
+SOFT_BADGE_ICON.scenes = "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="'
+  + 'M17.5,12A1.5,1.5 0 0,1 16,10.5A1.5,1.5 0 0,1 17.5,9A1.5,1.5 0 0,1 19,10.5A1.5,1.5 0 0,1 17.5,12M14.5,8A1.5,1.5 0 0,1 13,6.5A1.5,1.5 0 0,1 14.5,5A1.5,1.5 0 0,1 16,6.5A1.5,1.5 0 0,1 14.5,8M9.5,8A1.5,1.5 0 0,1 8,6.5A1.5,1.5 0 0,1 9.5,5A1.5,1.5 0 0,1 11,6.5A1.5,1.5 0 0,1 9.5,8M6.5,12A1.5,1.5 0 0,1 5,10.5A1.5,1.5 0 0,1 6.5,9A1.5,1.5 0 0,1 8,10.5A1.5,1.5 0 0,1 6.5,12M12,3A9,9 0 0,0 3,12A9,9 0 0,0 12,21A1.5,1.5 0 0,0 13.5,19.5C13.5,19.11 13.35,18.76 13.11,18.5C12.88,18.23 12.73,17.88 12.73,17.5A1.5,1.5 0 0,1 14.23,16H16A5,5 0 0,0 21,11C21,6.58 16.97,3 12,3Z'
+  + '"/></svg>');
 const iconUrl = (name) => {
   const n = String(name || "").trim();
   if (isIconPath(n)) return n;
@@ -4705,6 +4709,11 @@ const WEATHER_SVG = {
 };
 
 const TILE_TINT = "var(--casora-color-teal, #00C3D0)";
+// Open lock, as casora_lock's state "unlocked" sets --casora-icon-color-current.
+const LOCK_OPEN_TINT = "var(--casora-lock-unlocked-color, var(--casora-popup-primary-color, #00c3d0))";
+// Inactive icon colour as the dashboard mixes it (casora_entity #img-cell::before): the theme's off ink
+// at --casora-icon-off-mix over the device colour – Weich draws every off icon in its off grey.
+const offInk = (c) => "color-mix(in srgb, var(--casora-icon-off-ink, transparent) var(--casora-icon-off-mix, 0%), " + c + ")";
 
 // Fallback glyph per tile kind, for tiles that set no icon of their own.
 const TILE_ICON = {
@@ -4912,6 +4921,12 @@ const perfLook = () => {
 // Weich-Look: theme_weich.yaml setzt casora-popup-layout: soft (Standard und Glas nicht).
 // Gelesen an <html>, wo HA das aktive Theme in der Fassung des Hell/Dunkel-Modus ablegt –
 // dasselbe Signal, nach dem sich die Popups des echten Dashboards richten.
+// casora_entity's toggle reads the same root variable (casoraRootVar('--casora-toggle-style')).
+const solidToggle = () => {
+  try {
+    return getComputedStyle(document.documentElement).getPropertyValue("--casora-toggle-style").trim() === "solid";
+  } catch (e) { return false; }
+};
 const softLook = () => {
   try {
     return getComputedStyle(document.documentElement).getPropertyValue("--casora-popup-layout").trim() === "soft";
@@ -10237,10 +10252,9 @@ class CasoraPanel extends HTMLElement {
         .miniphone .mp-scenes.grid .mp-scene { width:100%; }
         .miniphone .mp-head.tappable { cursor:pointer; }
         /* Raum-Kategorien wie am Handy (filter-overlay.js _appendGroupHeader): kleiner und ruhiger. */
-        .miniphone .mp-head.mp-group {
-          height:20px; font-size:15px; font-weight:600; letter-spacing:-0.2px;
-          opacity:0.72; margin-top:18px; margin-bottom:-2px;
-        }
+        /* z3: same size, weight and ink as the phone's group heading (18 px, 700, full colour, the theme's
+           halo) – at 15 px and 72 % opacity "Jalousien"/"Sicherheit" were hard to read over the photo. */
+        .miniphone .mp-head.mp-group { margin-top:18px; margin-bottom:-2px; }
         .miniphone .mp-head.mp-group.first { margin-top:14px; }
         .miniphone .mp-head {
           display:flex; align-items:center; gap:4px; height:24px;
@@ -10947,6 +10961,15 @@ class CasoraPanel extends HTMLElement {
         .mtile.on .mname { color:#1d1d1f; }
         .mtile.on .mstate { color:rgba(0,0,0,0.55); }
         .mtile.missingdev .mstate { color:var(--casora-color-orange, #FF9F0A); }
+        /* z3: offline device as casora_entity's state casora_offline: dashed warning rim, state in the warning colour. */
+        .mtile.offline {
+          outline:1.5px dashed color-mix(in srgb, var(--casora-security-warn-color, var(--casora-color-orange, #DE8A4E)) 80%, transparent);
+          outline-offset:-1.5px;
+        }
+        .mtile.offline .mstate {
+          color:var(--casora-entity-offline-color, var(--casora-popup-ui-warn, var(--casora-color-orange-deep, #B96A33))) !important;
+          font-weight:600;
+        }
 
         /* Vorschau im Weich-Look (.card.map.soft, gesetzt solange das aktive HA-Theme
            --casora-popup-layout: soft trägt). Die Nachbildung oben ist für die dunklen
@@ -11122,6 +11145,14 @@ class CasoraPanel extends HTMLElement {
           font-weight:var(--casora-hero-title-weight, 700);
         }
         .card.map.soft .miniphone :is(.mp-wtemp, .mp-head, .mp-clabel) { color:var(--primary-text-color); }
+        /* z3: room page headings ("Szenen", "Geräte", categories) as filter-overlay.js draws them. */
+        .card.map.soft .miniphone .mp-head {
+          color:var(--casora-mobile-title-color, var(--primary-text-color));
+          text-shadow:var(--casora-mobile-title-halo, none);
+        }
+        .card.map.soft .miniphone .mp-head.mp-group {
+          color:var(--casora-room-group-ink, var(--casora-mobile-title-color, var(--primary-text-color)));
+        }
         .card.map.soft .miniphone :is(.mp-wcond, .mp-cvalue, .mp-chev) { color:var(--casora-text-2, var(--secondary-text-color)); }
         .card.map.soft .miniphone .mp-wglyph { filter:var(--casora-hero-weather-glyph-filter, none); }
         .card.map.soft .miniphone .mp-pbell path { fill:var(--casora-chrome-ink, #fff); }
@@ -24485,6 +24516,74 @@ class CasoraPanel extends HTMLElement {
     });
   }
 
+  // z3: the scenes of a phone room page as the dashboard lists them (filter-overlay.js _appendRoomScenes →
+  // _casoraSC.list with room and room_entities, no scene list of its own): every visible scene of the room's area –
+  // the area named like the room, else the area most of the room's tiles are in – and none when no area is found.
+  // _sceneListForRoom starts from the open wide room's own scene list (Home's), so the room page came out empty.
+  _phoneRoomSceneList(name, tiles) {
+    const H = this._hass || {};
+    const states = H.states || {};
+    const ents = H.entities || {};
+    const devices = H.devices || {};
+    const areas = H.areas || {};
+    const areaOf = (eid) => {
+      const e = ents[eid] || {};
+      return e.area_id || (e.device_id ? (devices[e.device_id] || {}).area_id : null) || null;
+    };
+    const want = String(name || "").trim().toLowerCase();
+    let areaIds = new Set(Object.keys(areas)
+      .filter((id) => want && String((areas[id] || {}).name || "").trim().toLowerCase() === want));
+    if (!areaIds.size) {
+      const count = {};
+      const walk = (x, d) => {
+        if (!x || d > 6 || typeof x !== "object") return;
+        if (Array.isArray(x)) { x.forEach((y) => walk(y, d + 1)); return; }
+        Object.keys(x).forEach((k) => {
+          const y = x[k];
+          if (typeof y === "string") {
+            if ((k === "entity" || k === "entity_id" || /^entity_|_entity(_\d+)?$/.test(k)) && states[y]) {
+              const a = areaOf(y);
+              if (a) count[a] = (count[a] || 0) + 1;
+            }
+          } else walk(y, d + 1);
+        });
+      };
+      walk(tiles || [], 0);
+      const best = Object.keys(count).sort((a, b) => count[b] - count[a])[0];
+      if (best) areaIds = new Set([best]);
+    }
+    if (!areaIds.size) return [];
+    const inRoom = new Set(Object.keys(ents).filter((eid) => areaIds.has(areaOf(eid))));
+    const leaves = (eid, seen) => {
+      if (!eid || seen.has(eid)) return [];
+      seen.add(eid);
+      const m = ((states[eid] || {}).attributes || {}).entity_id;
+      return Array.isArray(m) ? m.flatMap((x) => leaves(x, seen)) : [eid];
+    };
+    const nameOf = (id) => (states[id] && states[id].attributes && states[id].attributes.friendly_name)
+      || id.replace("scene.", "").replace(/_/g, " ");
+    // Not filtered by "hidden in every dashboard" (settings scenes.exclude): that list only trims the phone bar's
+    // scene menu (04-navigation.js), the room page shows those scenes too.
+    const sets = window.customIcons || {};
+    const usable = (ic) => !!ic && (ic.indexOf("mdi:") === 0 || Object.prototype.hasOwnProperty.call(sets, ic.split(":")[0]));
+    return Object.keys(states)
+      .filter((id) => id.startsWith("scene.") && !id.startsWith("scene.casora"))
+      .filter((id) => { const re = ents[id]; return !!re && !(re.hidden || re.hidden_by || re.disabled || re.disabled_by); })
+      // #142 as in _casoraSC.list: a scene with an area of its own shows there only, else where its devices are.
+      .filter((id) => {
+        if (inRoom.has(id)) return true;
+        if (areaOf(id)) return false;
+        const targets = ((states[id] || {}).attributes || {}).entity_id;
+        return Array.isArray(targets) && targets.some((t) => typeof t === "string"
+          && (inRoom.has(t) || leaves(t, new Set()).some((l) => inRoom.has(l))));
+      })
+      .sort((a, b) => nameOf(a).localeCompare(nameOf(b)))
+      .map((id) => {
+        const ic = (states[id].attributes && states[id].attributes.icon) || "";
+        return { id, label: nameOf(id), icon: usable(ic) ? ic : "mdi:layers" };
+      });
+  }
+
   _sceneCatalog() {
     const states = (this._hass && this._hass.states) || {};
     const reg = (this._hass && this._hass.entities) || {};
@@ -24738,6 +24837,7 @@ class CasoraPanel extends HTMLElement {
       out.push({
         id: "lights", label: "Lights", icon: "light", color: LIGHT, dim: !lit,
         text: tot <= 1 ? (lit ? "On" : "Off") : !lit ? "All off" : lit === tot ? "All on" : lit + " on",
+        dash: window.casoraLightTallyText ? window.casoraLightTallyText({ on: lit, tot }) : null,
         subs: (hl ? hl.subs : lights).map((e) => {
           const l = st(e) || {};
           const br = l.attributes && l.attributes.brightness;
@@ -25088,8 +25188,11 @@ class CasoraPanel extends HTMLElement {
         return { icon: "scenes", color: studioIcon("scenes"), dim: !isOn(id),
           label: (s.attributes && s.attributes.friendly_name) || id, text: ago(s.state), raw: true };
       });
-      if (!own || ids.length) out.push({ id: "scenes", label: "Scenes", icon: "scenes", color: studioIcon("scenes"),
-        dim: !act, text: act ? act + " active" : "None active", subs });
+      // z3: symbol and colour as casora_badge_scene_group draws it (mdi:palette in --casora-scene-badge-color,
+      // full strength also with no scene running) – it was the pale stack symbol.
+      if (!own || ids.length) out.push({ id: "scenes", label: "Scenes", icon: SOFT_BADGE_ICON.scenes,
+        color: "var(--casora-scene-badge-color, #C29CFF)", text: act ? act + " active" : "None active",
+        dash: act ? act + " aktiv" : "Keine aktiv", subs });
     }
     // Updates badge on Home (#167): the dashboard hides it while nothing waits; here it stays, dimmed, so it can be found.
     if (V.show_updates === true) {
@@ -26356,7 +26459,10 @@ class CasoraPanel extends HTMLElement {
         body.appendChild(csub);
       }
 
-      const scenes = this._scenesMode() !== "off" ? this._sceneListForRoom(roomPop) : [];
+      // z3: the phone's room page lists the room's scenes whatever the scenes setting of the start page says
+      // (filter-overlay.js _appendRoomScenes, only config.scenes === false hides them) – with scenes "off" the
+      // preview dropped the section and its "Szenen"/"Geräte" headings.
+      const scenes = this._phoneRoomSceneList(roomPop, sec ? sec.tiles : []);
       if (scenes.length) {
         const sgroup = document.createElement("div");
         sgroup.className = "mp-scenegroup";
@@ -26367,7 +26473,8 @@ class CasoraPanel extends HTMLElement {
         shead.appendChild(Object.assign(document.createElement("span"), { textContent: "Scenes" }));
         sgroup.appendChild(shead);
         const srow = document.createElement("div");
-        srow.className = "mp-scenes";
+        // The room page lays its scenes out in two columns (casora_scene_row, layout: grid).
+        srow.className = "mp-scenes grid";
         srow.dataset.jump = "Scenes";
         this._paintSceneChips(srow, scenes, wideV.scene_colors || {});
         sgroup.appendChild(srow);
@@ -26752,7 +26859,11 @@ class CasoraPanel extends HTMLElement {
       const t = document.createElement("span");
       t.className = "ptext";
       // Sicherheit „Kurz“: Symbole mit Zahl (HTML aus casoraSecuritySummary, Texte darin maskiert).
-      if (b.html) { t.innerHTML = b.html; t.setAttribute("data-no-i18n", ""); } else t.textContent = b.text;
+      if (b.html) { t.innerHTML = b.html; t.setAttribute("data-no-i18n", ""); }
+      // z3: the dashboard badge's own German words through the dashboard translation (casoraTr knows "1 an" →
+      // "1 allumée", "Keine aktiv" → "Aucune active"); the panel's English key lost number and gender.
+      else if (b.dash && typeof window.casoraTr === "function") { t.textContent = window.casoraTr(b.dash); t.setAttribute("data-no-i18n", ""); }
+      else t.textContent = b.text;
       col.appendChild(t);
     }
     // H5 (Weich-Audit): Weich-Badges tragen das Symbol weiß im farbigen Kreis wie am Dashboard.
@@ -26923,7 +27034,9 @@ class CasoraPanel extends HTMLElement {
       } else {
         const face = (tile.variables || {}).entity_picture;
         const art = kind === "media" ? mediaArtUrl(ent, this._hass.states)
-          : kind === "game" ? gameActivity(ent).art : "";
+          : kind === "game" ? gameActivity(ent).art
+          // z3: the football tile's club crest, as its template's entity_picture draws it.
+          : (window.casoraTileArtUrl && window.casoraTileArtUrl(tile, ent, this._hass, this._state && this._state.templates)) || "";
         if (face) {
           el.querySelector(".mglyph").remove();
           circle.classList.add("art", "face");
@@ -26937,7 +27050,9 @@ class CasoraPanel extends HTMLElement {
           const g = el.querySelector(".mglyph");
           if (!active) {
             const ic = this._inactiveIconColor(tile, ent, kind);
-            if (ic) g.style.setProperty("--ic", ic);
+            // z3: like #img-cell::before in casora_entity – the off state in the theme's off ink
+            // (--casora-icon-off-mix, Weich 100 %), not the device colour (a dark lamp read yellow).
+            if (ic) g.style.setProperty("--ic", offInk(ic));
           }
           const tv = tile.variables || {};
           const isOpen = !!ent && /^(open|opening)$/i.test(ent.state);
@@ -26970,6 +27085,8 @@ class CasoraPanel extends HTMLElement {
           g.classList.toggle("spin", kind === "fan" && active);
           circle.style.setProperty("--sc", kind === "plant" && active
             ? "var(--casora-color-yellow, #FFCC00)"
+            // z3: an open lock in the colour casora_lock gives it (Weich: orange warning), not teal.
+            : isLock && active && isUnlocked ? LOCK_OPEN_TINT
             : (TILE_COLOR[kind] || TILE_TINT));
         }
       }
@@ -27022,6 +27139,10 @@ class CasoraPanel extends HTMLElement {
         // emptyWord: a type whose entity is simply optional (flexible tile) says nothing instead.
         el.querySelector(".mstate").textContent = typeof type.emptyWord === "string" ? type.emptyWord : "Automatic";
       }
+      // z3: an unavailable device as the dashboard marks it (casora_entity, state casora_offline).
+      const offline = !gone && !!window.casoraTileIsOffline
+        && window.casoraTileIsOffline(tile, ent, this._hass, this._state && this._state.templates);
+      if (offline) el.classList.add("offline");
       const ring = tileProgressOn(tile, ent);
       if (ring) {
         const pr = document.createElement("span");
@@ -27046,12 +27167,18 @@ class CasoraPanel extends HTMLElement {
         el.querySelector(".mtop").appendChild(pr);
         el.classList.add("hasring");
       }
-      if (!ring && !gone && tileToggleOn(tile, type, ent)) {
+      if (!ring && !gone && !offline && tileToggleOn(tile, type, ent)) {
         const sw = document.createElement("span");
         sw.className = "mtgl";
         sw.dataset.mk = "tg:" + this._tileKey(tile);
         const mid = "mtg" + ti;
-        sw.innerHTML = active
+        // z3: a theme with casora-toggle-style: solid (Weich) draws the switch as casora_entity's toggle does –
+        // filled track in --casora-toggle-on-fill (orange-brown), white knob – not the dark cut-out one.
+        sw.innerHTML = active && solidToggle()
+          ? '<svg class="solid" viewBox="0 0 46 26">'
+            + '<rect x="2" y="1" width="42" height="24" rx="12" style="fill:var(--casora-toggle-on-fill, var(--casora-lps-switch-on, #B67A50))"/>'
+            + '<circle cx="32" cy="13" r="10" fill="#fff"/></svg>'
+          : active
           ? '<svg viewBox="0 0 46 26"><defs><mask id="' + mid + '">'
             + '<rect x="2" y="1" width="42" height="24" rx="12" fill="#fff"/>'
             + '<circle cx="32" cy="13" r="9" fill="#000"/></mask></defs>'
