@@ -10053,7 +10053,7 @@ class CasoraPanel extends HTMLElement {
         }
         .miniphone .mp-wcond {
           display:block; color:rgba(255,255,255,0.92);
-          font-size:14px; font-weight:520; text-transform:capitalize;
+          font-size:14px; font-weight:520;
         }
 
         .miniphone .mp-badges {
