@@ -3966,6 +3966,7 @@ const SETUP_KEY = "casora.setup.progress";
 const THEME_COLS = 4;
 // The setup assistant counts its steps from the first screen (V21): look, font, effects, rooms, fill, preview.
 // The "existing dashboard found" choice in between is a fork, not a step. Without it, rooms/fill/preview are 1-3 of 3.
+// The move to Casora (casora-panel-umzug.js) counts on its own, "Move 1 of 3" (owner, 26.11.2026, u01-11).
 const SETUP_STEPS = 6;
 const SETUP_LEAD = 3;
 // Step n of the rooms part (1-3): inside the whole assistant it comes after the look, font and effects.
@@ -14436,7 +14437,8 @@ class CasoraPanel extends HTMLElement {
       st.className = "fstep";
       st.setAttribute("data-no-i18n", "");
       const t = (x) => (window.casoraI18n ? window.casoraI18n.t(x) : x);
-      st.textContent = t("Step {1} of {2}").replace("{1}", opts.step[0]).replace("{2}", opts.step[1]);
+      // stepText: a path that counts on its own ("Move {1} of {2}", u01-11), else the assistant's "Step".
+      st.textContent = t(opts.stepText || "Step {1} of {2}").replace("{1}", opts.step[0]).replace("{2}", opts.step[1]);
       box.appendChild(st);
     }
     const h = document.createElement("h1");
@@ -16147,6 +16149,8 @@ class CasoraPanel extends HTMLElement {
         + (plusHome ? "Home and " : "")
         + `${nOwn} room${nOwn === 1 ? "" : "s"}.`
         + (opts.fromYaml ? " Your original dashboard hasn't changed." : ""),
+      // u01-11: the move counts its own steps (its done page is the last one).
+      step: opts.step, stepText: opts.stepText,
     });
     // The real thing, live: the desktop dashboard and, in front, the phone layout.
     s.box.classList.add("fwide");
