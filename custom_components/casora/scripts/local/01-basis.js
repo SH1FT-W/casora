@@ -2417,6 +2417,12 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     } catch (e) { return null; }
   }
   var cache = { host: null, panel: null, at: 0 }, t0 = Date.now();
+  /* The narrow pill's left margin inside the content (content starts at left): 20 px from the edge, or 12 px after
+     the clock's right edge when a clock stands in that row (d05-09). */
+  window._casoraPillLeft = function (left) {
+    var cr = Number(window._casoraClockRight) || 0;
+    return Math.max(20, cr > 0 ? Math.round(cr - left + 12) : 0);
+  };
   setInterval(function () {
     if (document.hidden) return;
     /* Casora (06.10.2026): Die Suche durch den ganzen Baum samt Shadow-DOM lief alle 3 s
@@ -2454,7 +2460,9 @@ window._casoraColGap = window._casoraColGap || function (keys) {
        links fast bis zum Rand, und die Pille in diesem Bereich zentrieren. */
     var narrow = w - 2 * RESERVE < 420;
     if (narrow) {
-      var RIGHT = 232, LEFT = 20;
+      /* d05-09 (owner, 26.11.2026): the clock is not hidden under the pill any more – the pill starts beside it
+         (window._casoraClockRight, measured by the clock guard below; 0 without a clock). */
+      var RIGHT = 232, LEFT = window._casoraPillLeft(left);
       left += LEFT;
       w = Math.max(240, w - LEFT - RIGHT);
       max = w;
@@ -2504,14 +2512,18 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     if (age > 30000 || (els.bar && !els.bar.isConnected)
         || (age > 4000 && (!els.bar || !els.times.length || els.times.some(function (t) { return !t.isConnected; })))) find();
     var b = els.bar && els.bar.getBoundingClientRect();
+    // d05-09: the right edge of the clock in the pill's row, for the narrow pill to start beside it (_casoraPillLeft).
+    var cr = 0;
     els.times.forEach(function (t) {
       if (!t.isConnected) return;
       var r = t.getBoundingClientRect();
+      if (r.width > 0 && (!b || (r.bottom > b.top && r.top < b.bottom))) cr = Math.max(cr, r.right);
       var hit = b && b.width > 0 && r.width > 0 && r.right + 12 > b.left && r.left < b.right + 12
         && r.bottom > b.top && r.top < b.bottom;
       var want = hit ? 'hidden' : '';
       if (t.style.visibility !== want) t.style.visibility = want;
     });
+    window._casoraClockRight = cr;
   }, 700);
 })();
 
