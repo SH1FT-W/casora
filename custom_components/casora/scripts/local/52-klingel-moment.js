@@ -261,7 +261,7 @@
       if (!add || add.s === undefined) return;
       var prev = seen[id], next = { s: add.s, lc: typeof add.lc === 'number' ? add.lc : (typeof add.lu === 'number' ? add.lu : null) };
       seen[id] = next;
-      if (M.isRing(id, prev, next)) { try { M.ring(id); } catch (e) { console.warn('Casora doorbell moment:', e); } }
+      if (M.isRing(id, prev, next)) { try { M.ring(id); } catch (e) { console.warn(e); } }
     });
     if (msg.r) msg.r.forEach(function (id) { delete seen[id]; });
   };

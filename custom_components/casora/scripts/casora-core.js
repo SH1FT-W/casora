@@ -319,7 +319,7 @@
   });
 })();
 
-// Room card lazy fields (w02-03): every desktop room card (casora_room) carried its own hidden "Now playing" (~38
+// Room card lazy fields (w02-03): every desktop room card (casora_room) carried its own hidden „Now playing“ (~38
 // cards) and all collapsed sub-badge rows (lights, climate, security, energy, media, people, scenes), and Home Assistant
 // keeps every visited view: 31 rooms grew to 640,000 nodes and 230 MB. Such a field now holds an empty stand-in
 // (casora-lazy-field) until it is first needed: its display style is not "none" and, for a sub-badge row, that row
@@ -3579,7 +3579,7 @@ window.casoraMenuGlass = {
         const over = () => el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1;
         if (!el.clientWidth || !over()) return;
         // Two-line names (scene grid, line-clamp 2): the browser may break after the first word and put the cut
-        // in the middle of line 2 ("WZ" / "Dreamv…An"). There the kept end goes on its own line 2 ("WZ Dream…" /
+        // in the middle of line 2 („WZ“ / „Dreamv…An“). There the kept end goes on its own line 2 ("WZ Dream…" /
         // "An"); pre-line keeps that break and wraps like normal otherwise (Prüfrunde u06-03).
         const ws = el.style ? el.style.whiteSpace : '';
         const sep = ws === 'normal' || ws === 'pre-line' ? '\n' : '';
@@ -3594,7 +3594,7 @@ window.casoraMenuGlass = {
           if (over()) hi = k - 1; else { best = k; lo = k + 1; }
         }
         // No cut fits (the last word alone is too wide), or the head would keep fewer than 4 characters
-        // ("A…Wohnzimmer"): keep the full name and let the CSS cut it at the end instead (Prüfrunde u06-03).
+        // („A…Wohnzimmer“): keep the full name and let the CSS cut it at the end instead (Prüfrunde u06-03).
         const headLen = window.casoraMidText(full, full.length).lastIndexOf('…');
         if (best < Math.min(4, headLen)) { if (el.textContent !== full) el.textContent = full; return; }
         const fit = window.casoraMidText(full, best, sep);

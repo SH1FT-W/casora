@@ -59,6 +59,9 @@ atFinish(() => page.evaluate(() => {
   clearInterval(q.forward); q.unsubscribe?.(); q.tile.remove();
   window.casoraPopup?.close(); delete window.__doorbellTime;
 }));
+// The doorbell moment (52-klingel-moment.js, 26.11.2026) would open the camera popup on this test ring and cover the
+// tile below; this test is about the tile's time text, so the moment is switched off here as the Studio switch would.
+await page.evaluate(() => window._casoraNotify && window._casoraNotify.configureFrom(Object.assign({}, window._casoraNotifyCfg || {}, { notify_doorbell_front: false })));
 await page.evaluate(() => document.querySelector('home-assistant').hass.callService(
   'casora_mock', 'klingel_druecken', { dauer: 2, person: 2 }));
 await page.waitForFunction(() => ['visitor', 'person', 'motion'].every((k) =>
