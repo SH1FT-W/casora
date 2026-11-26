@@ -7624,7 +7624,7 @@ class CasoraPanel extends HTMLElement {
         :host(.is-light) :is(.line.warn, .card > .cdesc.drift) { color:var(--casora-studio-warn, #b25000); }
         :host(.is-light) .condadd { color:var(--casora-studio-link, #0071e3); }
         :host(.is-light:not(.phone)) .seg { background:var(--casora-studio-chip, rgba(118,118,128,0.12)); }
-        :host(.is-light:not(.phone)) .segthumb { background:#ffffff; box-shadow:0 1px 3px rgba(0,0,0,0.12), 0 0 0 .5px rgba(0,0,0,0.04); }
+        :host(.is-light:not(.phone)) .segthumb, :host(.phone.is-light) :is(.flist, section.cn-card) .segthumb { background:#ffffff; box-shadow:0 1px 3px rgba(0,0,0,0.12), 0 0 0 .5px rgba(0,0,0,0.04); }
         :host(.is-light:not(.phone)) .shot { background:var(--casora-studio-chip, rgba(118,118,128,0.12)); }
         :host(.is-light:not(.phone)) .shot:not(.empty) .shotover { background:rgba(0,0,0,0.30); }
         :host(.is-light) .status.warn { color:var(--casora-studio-warn, #c93400); }
@@ -7718,6 +7718,13 @@ class CasoraPanel extends HTMLElement {
           color-scheme:light;
         }
         :host(.phone.is-light) .bg { opacity:1; }
+        /* On the white plates (flow lists, settings sections) a white field or segment track had no surface
+           (Prüfrunde d04-02): there they get the grey of the desktop light profile, the selected segment stays white. */
+        :host(.phone.is-light) :is(.flist, section.cn-card) {
+          --field:var(--casora-studio-phone-field-on-plate, rgba(118,118,128,0.12));
+          --field-hi:var(--casora-studio-phone-field-hi-on-plate, rgba(118,118,128,0.18));
+        }
+        :host(.phone.is-light) :is(.flist, section.cn-card) .seg { background:var(--field); }
         :host(.phone.is-light) .bgwrap::after {
           content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
           background:linear-gradient(to bottom, rgba(242,242,247,0.14) 0%,
@@ -12970,6 +12977,22 @@ class CasoraPanel extends HTMLElement {
         }
         :host(:not(.narrow)) .inspector .row:not(:has(> .sw)):not(:has(> .chipwrap)):has(> .combo) > .drop:not(.blank) { margin-right:30px; }
         :host(.phone) .row:not(:has(> .chipwrap)):has(> .combo) > .drop:not(.blank) { margin-right:30px; }
+        /* Tablet (narrow, not phone): the settings pages stack label and field like the desktop, so the ✕ goes into
+           the field there too instead of a column of its own that made the field end early (Prüfrunde d04-13). */
+        :host(.narrow:not(.phone)) .cn-block .row:not(:has(> .sw)):not(:has(> .chipwrap)):is(:has(> .combo), :has(> input)):has(> .drop:not(.blank)) {
+          grid-template-columns:minmax(0,1fr);
+        }
+        :host(.narrow:not(.phone)) .cn-block .row:not(:has(> .sw)):not(:has(> .chipwrap)):is(:has(> .combo), :has(> input)):has(> .drop:not(.blank)) > label {
+          grid-column:1; grid-row:1;
+        }
+        :host(.narrow:not(.phone)) .cn-block .row:not(:has(> .sw)):not(:has(> .chipwrap)):is(:has(> .combo), :has(> input)):has(> .drop:not(.blank)) > :is(.combo, input) {
+          grid-column:1; grid-row:2; min-width:0;
+        }
+        :host(.narrow:not(.phone)) .cn-block .row:not(:has(> .sw)):not(:has(> .chipwrap)):is(:has(> .combo), :has(> input)) > .drop:not(.blank) {
+          display:grid; grid-column:1; grid-row:2; justify-self:end; align-self:center;
+          position:relative; z-index:2; margin-right:4px;
+        }
+        :host(.narrow:not(.phone)) .cn-block .row:not(:has(> .sw)):not(:has(> .chipwrap)):has(> .combo) > .drop:not(.blank) { margin-right:30px; }
         :host .row:has(> .drop:not(.blank)) > .combo > input { padding-right:66px; }
         :host(.phone) .row:has(> .drop:not(.blank)) > .combo > input { padding-right:76px; }
         :host .row:has(> .drop:not(.blank)) > input { padding-right:42px; }
