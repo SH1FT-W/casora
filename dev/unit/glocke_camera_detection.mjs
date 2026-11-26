@@ -1,5 +1,6 @@
 // @deckt: custom_components/casora/scripts/casora-core.js#_casoraNotify
 import assert from 'node:assert/strict';
+import './_detection_rule.mjs';
 import fs from 'node:fs';
 
 const core = fs.readFileSync(new URL('../../custom_components/casora/scripts/casora-core.js', import.meta.url), 'utf8');

@@ -4,6 +4,7 @@
 // keep „Kein Bild“. Runs for casora_camera and casora_frigate (same rule in both).
 //   node dev/unit/camera_listed_kein_bild.mjs
 import assert from 'node:assert/strict';
+import './_detection_rule.mjs';
 import fs from 'node:fs';
 
 const templates = JSON.parse(fs.readFileSync(new URL('../../dashboards/casora/button_card_templates.json', import.meta.url)));

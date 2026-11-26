@@ -1,6 +1,7 @@
 // @deckt: dashboards/casora/button_card_templates.json#global
 // A Frigate object sensor listed as a trigger: off to on is the alert, the restart is not.
 import assert from 'node:assert/strict';
+import './_detection_rule.mjs';
 import fs from 'node:fs';
 
 const templates = JSON.parse(fs.readFileSync(new URL('../../dashboards/casora/button_card_templates.json', import.meta.url)));

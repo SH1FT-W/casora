@@ -15180,6 +15180,18 @@ window.casoraMenuGlass = {
     return s ? s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ') : ALL.unknown;
   };
 })();
+// The detection rule of the camera tile and the bell: is this state of a detection trigger a detection, and since when (ms)?
+// A binary_sensor counts when it goes from off to on at `changed` (ISO text or ms); an event counts at its own time stamp
+// (its state). null = no detection.
+(function () {
+  if (window.casoraDetectionAt) return;
+  window.casoraDetectionAt = function (id, state, previous, changed, hass) {
+    var at = null;
+    if (String(id).indexOf('binary_sensor.') === 0 && state === 'on' && previous === 'off') at = typeof changed === 'number' ? changed : Date.parse(changed);
+    if (String(id).indexOf('event.') === 0) at = Date.parse(state);
+    return at !== null && isFinite(at) ? at : null;
+  };
+})();
 /* Sicherheits-Symbole an einer Stelle (03.10.2026): Kontakt-/Schloss-/Alarm-Unter-Badges
    (casora_badge_contact_group) und das Mitteilungszentrum nehmen dasselbe Symbol für denselben
    Zustand. Alarm-Modi wie im Alarm-Popup (casora_badge_security: Zuhause/Abwesend/Nacht/Urlaub/
@@ -16117,8 +16129,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     }
 
     if (listedDetection(id)) {
-      if (id.indexOf('binary_sensor.') === 0 && (prev !== 'off' || s !== 'on')) return null;
-      if (id.indexOf('event.') === 0 && !isFinite(Date.parse(s))) return null;
+      if (window.casoraDetectionAt(id, s, prev, Math.round(Number(entry.when) * 1000), hassOf()) === null) return null;
       return { label: name + ' erkannt', icon: 'camera', tone: 'accent', passive: true };
     }
 

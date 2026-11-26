@@ -1,6 +1,7 @@
 // @deckt: dashboards/casora/button_card_templates.json#casora_camera_alert_helper
 // Ring-style doorbell alerts use the same state word as the other doorbell tile.
 import assert from 'node:assert/strict';
+import './_detection_rule.mjs';
 import fs from 'node:fs';
 
 const read = (path) => fs.readFileSync(new URL('../../' + path, import.meta.url), 'utf8');

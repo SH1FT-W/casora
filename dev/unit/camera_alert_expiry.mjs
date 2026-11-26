@@ -1,6 +1,7 @@
 // @deckt: dashboards/casora/button_card_templates.json#global
 // A Ring-style camera alert must expire even when sensor.time is absent.
 import assert from 'node:assert/strict';
+import './_detection_rule.mjs';
 import fs from 'node:fs';
 import { testhaus } from './lib/testhaus.mjs';
 
