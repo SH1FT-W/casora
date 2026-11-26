@@ -22248,6 +22248,9 @@ class CasoraPanel extends HTMLElement {
   _popRow() {
     if (!this._sel) return;
     this._sel = null;
+    // Desktop Studio: back shows the room, so the group goes back too – like removing the selected tile (r160) –
+    // or the veil stays over the preview with nothing selected (Prüfrunde u02-12). The phone stays in its list.
+    if (this.classList.contains("bmode") && !this.classList.contains("phone")) this._group = GROUPS[0].id;
     this._navDir = -1;
     this._toListScroll = true;
     this._renderForm();
