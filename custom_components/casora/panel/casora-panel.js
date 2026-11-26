@@ -18096,16 +18096,23 @@ class CasoraPanel extends HTMLElement {
     requestAnimationFrame(() => this._playTabs(before));
   }
 
+  // Another room already has this name or its path (adding, renaming; Prüfrunde u02-03). `self` is left out.
+  _roomNameTaken(v, self) {
+    const rooms = (this._state && this._state.compact && this._state.compact.rooms) || [];
+    const n = String(v || "").trim();
+    if (!n) return false;
+    return rooms.some((r) => r !== self && (r.path === slug(n)
+      || String(r.name || "").trim().toLowerCase() === n.toLowerCase()
+      || (isDefaultHomeName(n) && isHomeRoom(r, rooms) && isDefaultHomeName(r.name))));
+  }
+
   async _addRoom() {
     const rooms = this._state.compact.rooms;
     const picked = await this._ask({
       title: "New room", value: "", placeholder: "Kitchen", confirmLabel: "Add", icons: true,
       message: "A room is its own page on desktop and tablet, and a section further down the page on the phone.",
       emptyHint: "Enter a name for the room.",
-      validate: (v) => (rooms.some((r) => r.path === slug(v)
-        || String(r.name || "").trim().toLowerCase() === v.toLowerCase()
-        || (isDefaultHomeName(v) && isHomeRoom(r, rooms) && isDefaultHomeName(r.name)))
-        ? "A room with this name already exists." : ""),
+      validate: (v) => (this._roomNameTaken(v) ? "A room with this name already exists." : ""),
     });
     if (!picked) return;
     const name = picked.value;
@@ -18174,7 +18181,9 @@ class CasoraPanel extends HTMLElement {
     const rooms = this._state.compact.rooms;
       const r = rooms[i];
       if (id === "rename") {
-        const name = await this._ask({ title: "Rename room", value: this._roomLabel(r), confirmLabel: "Rename" });
+        const name = await this._ask({ title: "Rename room", value: this._roomLabel(r), confirmLabel: "Rename",
+          emptyHint: "Enter a name for the room.",
+          validate: (v) => (this._roomNameTaken(v, r) ? "A room with this name already exists." : "") });
         if (!name) return;
         keepRoomGlyph(r, name);
         if (this._isHomeRoom(i)) setHomeName(r, name, this._hass); else r.name = storedRoomName(name, false);
@@ -19801,6 +19810,12 @@ class CasoraPanel extends HTMLElement {
             return;
           }
           if (f.key === "__name") {
+            // Same rule as adding a room (u02-03): no second room of the same name.
+            if (this._roomNameTaken(v, room)) {
+              input.value = roomLabel(room, this._state.compact.rooms, this._hass);
+              this._status("A room with this name already exists.", "err");
+              return;
+            }
             if (v) keepRoomGlyph(room, v);
             const was = room.name;
             // Übersicht: „Zuhause“/„Home“/leer ist der Standardname – gespeichert als „Home“.
