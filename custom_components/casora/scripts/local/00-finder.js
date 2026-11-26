@@ -2555,7 +2555,11 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
       g.curves.forEach(function (k) {
         if (k === 'temperature') {
           var own = t ? (t.attribute ? { entity: wid, attribute: 'temperature', unit: t.unit } : { entity: t.entity }) : null;
-          var base = o.temp && t && t.entity === o.temp ? own : g.curves.length > 1 ? own || (outT ? { entity: outT } : null) : outT ? { entity: outT } : own && !own.attribute ? own : null;
+          // u08-04: an outdoor sensor with a reading is „now“ everywhere (wheel, header), so also next to other curves.
+          var outOk = !!(outT && S[outT] && wxNum(S[outT].state) != null);
+          var base = o.temp && t && t.entity === o.temp ? own
+            : g.curves.length > 1 ? (outOk ? { entity: outT } : own || (outT ? { entity: outT } : null))
+            : outT ? { entity: outT } : own && !own.attribute ? own : null;
           if (base) { series.push(Object.assign({ name: WX_NAMES.temperature, color: '#FF9F0A' }, base)); used.c2 = 1; }
           return;
         }
@@ -2579,6 +2583,25 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     });
     if (!out.length) return null;
     return { key: out[0].key, series: out[0].series, feels: out[0].curves.indexOf('feels') > -1, groups: out };
+  }
+  /* u08-04 (owner, 26.11.2026): every „now“ temperature of the weather (room header, the popup's wheel and „Jetzt“, the
+     chart) from one source: the own sensor chosen in the Studio (opts.temp, issue 115), else the outdoor sensor
+     (outdoor(), as the chart draws it) while it has a reading, else the weather service (its device's sensor, else the
+     entity's attribute). outT: the outdoor sensor when the caller has it (undefined: looked up, cached per registry and
+     number of states). { entity, attribute?, value, unit } or null. */
+  var wxOutC = null;
+  function weatherNow(hass, wid, opts, outT) {
+    var o = opts || {}, S = (hass && hass.states) || {};
+    var src = weatherSources(hass, wid, o);
+    if (o.temp && src.temperature && src.temperature.entity === o.temp) return src.temperature;
+    if (outT === undefined) {
+      var R = reg(hass), n = Object.keys(S).length;
+      if (!wxOutC || wxOutC.R !== R || wxOutC.n !== n) wxOutC = { R: R, n: n, id: outdoor(hass, 'temperature') };
+      outT = wxOutC.id;
+    }
+    var v = outT && S[outT] ? wxNum(S[outT].state) : null;
+    if (v != null) return { entity: outT, value: v, unit: String((S[outT].attributes || {}).unit_of_measurement || '') };
+    return src.temperature || null;
   }
   // Rows for the popup's "Details" group (UI.group objects), each with `after` = the label of the standard row it
   // follows (null: at the end, `first`: on top). The standard rows (humidity, wind, pressure, UV, visibility)
@@ -2768,7 +2791,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     deviceOf: deviceOf, entities: entities, map: map, companionPlug: companionPlug, byKey: byKey,
     waste: waste, wasteDates: wasteDates, wasteDown: wasteDown, siblings: siblings, dayStart: dayStart, onHours: onHours, lastOn: lastOn, keyAny: keyAny, network: network, netRate: netRate, netFields: netFields, netValue: netValue,
     contacts: contacts, outdoor: outdoor, openings: openings,
-    weatherSources: weatherSources, weatherChart: weatherChart, weatherRows: weatherRows, weatherChoice: weatherChoice,
+    weatherSources: weatherSources, weatherNow: weatherNow, weatherChart: weatherChart, weatherRows: weatherRows, weatherChoice: weatherChoice,
     weatherOptions: weatherOptions, weatherNames: WX_NAMES, weatherMaxCurves: WX_MAX_CURVES,
   };
 })();
