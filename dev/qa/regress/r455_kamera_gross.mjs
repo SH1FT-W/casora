@@ -7,11 +7,29 @@
 // with a visible „Verkleinern“ key; key / Esc / history back → preview again, popup still open.
 // CASORA_SHOTS=<dir>: also writes one picture of the popup per view (before/after comparisons).
 // Builds the dashboard qa-kamera-gross with the test camera and removes it again.
+// The mock's test cameras only deliver a one-colour placeholder, which the popup shows as „Kein Bild“ since u07-04
+// (nothing to enlarge); so the test camera's stills come from page.route as a real picture (colour gradient, as r95).
+import zlib from 'node:zlib';
 import { open, usePage, casoraDashboard, dashboard, cards, check, need, finish, atFinish } from './lib.mjs';
 import fs from 'node:fs';
 import { ws } from '../ws.mjs';
 
 const URL_PATH = 'qa-kamera-gross';
+
+// Small PNG with a colour gradient (not one colour, else it counts as a placeholder).
+const T = []; for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; T[n] = c >>> 0; }
+const crc = (b) => { let r = 0xffffffff; for (const x of b) r = T[(r ^ x) & 255] ^ (r >>> 8); return (r ^ 0xffffffff) >>> 0; };
+const chunk = (ty, d) => { const l = Buffer.alloc(4); l.writeUInt32BE(d.length); const td = Buffer.concat([Buffer.from(ty), d]);
+  const c = Buffer.alloc(4); c.writeUInt32BE(crc(td)); return Buffer.concat([l, td, c]); };
+function png(w = 160, h = 90) {
+  const raw = Buffer.alloc((w * 3 + 1) * h);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const o = y * (w * 3 + 1) + 1 + x * 3; raw[o] = x * 255 / w; raw[o + 1] = y * 255 / h; raw[o + 2] = 128; }
+  const ih = Buffer.alloc(13); ih.writeUInt32BE(w, 0); ih.writeUInt32BE(h, 4); ih[8] = 8; ih[9] = 2;
+  return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ih),
+    chunk('IDAT', zlib.deflateSync(raw)), chunk('IEND', Buffer.alloc(0))]);
+}
+const STILL = png();
 const SHOTS = process.env.CASORA_SHOTS || '';
 const c0 = await ws();
 const st = await c0.cmd({ type: 'get_states' });
@@ -66,6 +84,8 @@ for (const [vn, o] of [['desktop-hell', { dark: false }], ['desktop-dunkel', { d
   const { page } = await open(o);
   touch = !!o.mobile;
   usePage(page);
+  await page.route('**/api/camera_proxy/**', (r) => (new URL(r.request().url()).pathname.endsWith('/' + CAM)
+    ? r.fulfill({ status: 200, contentType: 'image/png', body: STILL }) : r.continue()));
   await dashboard(page, URL_PATH + '/raum', 2);
   const tile = (await cards(page, 'casora_camera'))[0];
   await need(vn + ': Kamera-Kachel', tile);
