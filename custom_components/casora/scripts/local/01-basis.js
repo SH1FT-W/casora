@@ -859,6 +859,38 @@ window.casoraThermoHistoryOf = function (climateId, sensor, states) {
   var rs = window.casoraRoomTempIds ? window.casoraRoomTempIds(climateId, S) : [];
   return rs.length === 1 ? { entity: rs[0], attribute: null } : own;
 };
+/* The target a thermostat that is off switches on at (blueprint v2, stage 2): the last target it had while on (remembered
+   per page in window._casoraThermoLast, also from the tile), else its own target above the minimum, else 20 °C – not
+   the device's frost guard of 5 °C. Reading it while the thermostat is on remembers that target. */
+window.casoraThermoOnTarget = function (entity) {
+  var a = (entity && entity.attributes) || {}, id = entity && entity.entity_id;
+  var num = function (v) { var n = parseFloat(v); return isNaN(n) ? null : n; };
+  var target = num(a.temperature), tMin = num(a.min_temp);
+  if (tMin == null) tMin = 5;
+  var last = window._casoraThermoLast || (window._casoraThermoLast = {});
+  if (id && entity.state !== 'off' && entity.state !== 'unavailable' && entity.state !== 'unknown' && target != null) last[id] = target;
+  return id && last[id] != null ? last[id] : (target != null && target > tMin ? target : 20);
+};
+/* What the thermostat tile's switch (and its icon tap) sends, { service, data } (test round 26.11.2026 u05-02: the switch
+   set „Heizen“ at the frost guard's 5 °C, the popup's dial promised „Einschalten auf 20,0 °C“). On: any mode but off
+   switches off. Off: the helper's mode where the device knows it, else heat, else its first mode; heating a single
+   thermostat with a target goes on at casoraThermoOnTarget like the dial's first +. */
+window.casoraThermoToggle = function (entity, states) {
+  var st = entity && entity.state, id = entity && entity.entity_id, a = (entity && entity.attributes) || {};
+  var onT = window.casoraThermoOnTarget(entity);   // also remembers the target while on (the tile renders this)
+  if (st && ['off', 'unavailable', 'unknown'].indexOf(st) < 0) return { service: 'climate.set_hvac_mode', data: { entity_id: id, hvac_mode: 'off' } };
+  var modes = (a.hvac_modes || []).filter(function (m) { return m !== 'off'; });
+  var hs = (states || {})['input_select.casora_thermostat_mode'];
+  var want = (hs && hs.state) || 'heat';
+  var mode = !modes.length || modes.indexOf(want) > -1 ? want : modes.indexOf('heat') > -1 ? 'heat' : modes[0];
+  var mem = a.member_entities || a.entity_id;
+  var grp = Array.isArray(mem) && mem.length > 1;
+  var hasTarget = a.temperature != null || (Number(a.supported_features) & 1) === 1;
+  if (st === 'off' && mode === 'heat' && modes.indexOf('heat') > -1 && !grp && hasTarget) {
+    return { service: 'climate.set_temperature', data: { entity_id: id, temperature: onT, hvac_mode: 'heat' } };
+  }
+  return { service: 'climate.set_hvac_mode', data: { entity_id: id, hvac_mode: mode } };
+};
 window.casoraPopupTitle = function (card, variables, def, defaults) {
   var V = variables || {};
   var own = String(V.room_name || '').trim();

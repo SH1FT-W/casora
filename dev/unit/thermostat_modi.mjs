@@ -7,6 +7,8 @@ import assert from 'node:assert/strict';
 const T = JSON.parse(fs.readFileSync(new URL('../../custom_components/casora/panel/casora-templates.json', import.meta.url), 'utf8')).templates;
 const body = (s) => s.replace(/^\s*\[\[\[/, '').replace(/\]\]\]\s*$/, '');
 const tpl = T.casora_thermostat;
+// The tile's own rule without the dashboard module (casoraThermoToggle: thermostat_einschalten.mjs).
+globalThis.window = globalThis;
 const ent = (state, attrs = {}) => ({ entity_id: 'climate.x', state, attributes: { hvac_modes: ['off', 'heat', 'auto'], temperature: 21, ...attrs } });
 const toggle = (e, helper) => new Function('entity', 'states', 'variables', body(tpl.variables.toggle_service_data))(
   e, helper ? { 'input_select.casora_thermostat_mode': { state: helper } } : {}, {});
