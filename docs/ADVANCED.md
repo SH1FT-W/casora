@@ -73,7 +73,7 @@ wallpaper ends up carrying the demo house's colors. Serve the photos from
 
 #### Design
 
-- In Casora Studio pick the design under **Settings › Look & feel › Design**: **Casora** (the default), **Casora Nebel** (the same design in cool grey with a petrol accent) or **Casora Glas** (frosted glass over the room photos). It applies to all dashboards; the setup assistant asks for it at the start.
+- In Casora Studio pick the design under **Settings › Look & feel › Design**: **Casora** (the default), **Casora Nebel** (the same design in cool gray with a teal accent), **Casora Glas** (frosted glass over the room photos), **Casora Salbei** (sage green), **Casora Marine** (sand and navy blue), **Casora Dämmerung** (gray lilac with a coral accent) or **Casora Farbe** (tiles that are on in the color of their device). It applies to all dashboards; the setup assistant asks for it at the start.
 - Home Assistant's theme picker in your profile lists the Casora designs too. A theme picked there wins in that browser.
 - The legacy looks **Hemma 2** and **Hemma 1** (earlier *Casora Standard* and *Casora Glass*) were removed in 26.10.31: a saved choice moves to **Casora Glas** by itself. The old name *Casora Weich* moves to **Casora**.
 
