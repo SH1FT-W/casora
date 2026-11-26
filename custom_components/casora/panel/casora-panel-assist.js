@@ -50,6 +50,14 @@
       if (typeof v === "string" && /^[a-z_]+\.[a-z0-9_]+$/.test(v) && states[v]) used.add(v);
       return v;
     });
+    // A light group on the dashboard already shows its members (nested groups too, Prüfrunde u01-01).
+    const open = [...used];
+    while (open.length) {
+      const id = open.pop();
+      if (!/^(light|group)\./.test(id)) continue;
+      const m = ((states[id] || {}).attributes || {}).entity_id;
+      (Array.isArray(m) ? m : []).forEach((x) => { if (typeof x === "string" && states[x] && !used.has(x)) { used.add(x); open.push(x); } });
+    }
     return used;
   }
 
