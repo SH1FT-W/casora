@@ -335,13 +335,17 @@
       new Set(Object.keys(V0).concat(Object.keys(V1))).forEach((v) => {
         if (OWN_VAR.test(v) || wide.has(v) || J(V0[v]) === J(V1[v])) return;
         if (renamed && ofRename(v)) return;
-        if (BADGE_VAR.test(v) && !RENAME_VAR.test(v)) badgeKeys.push(v); else otherKeys.push(v);
+        // casora_badges_auto marks badges filled from the HA area on loading (#57): part of the badges, not a
+        // "room setting" of its own (Prüfrunde u02-06).
+        if ((BADGE_VAR.test(v) || v === "casora_badges_auto") && !RENAME_VAR.test(v)) badgeKeys.push(v); else otherKeys.push(v);
       });
       if (badgeKeys.length) {
         // Only a badge name changed: word for word ("Climate → Air"), otherwise generic.
         const m = badgeKeys.length === 1 && /^(climate|lights|people|media|security|energy)_title$/.exec(badgeKeys[0]);
         const bid = m && m[1];
+        const filled = V1.casora_badges_auto && !V0.casora_badges_auto;
         const txt = bid ? tr("Badge renamed") + ": " + (V0[bid + "_title"] || tr(BADGE_TITLE[bid])) + " → " + (V1[bid + "_title"] || tr(BADGE_TITLE[bid])) + " · " + n
+          : filled ? tr("Badges filled in from the area") + ": " + n
           : tr("Badges changed") + ": " + n;
         add(txt, copyVars((v) => badgeKeys.indexOf(v) >= 0));
       }
