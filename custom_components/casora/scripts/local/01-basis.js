@@ -534,9 +534,13 @@ window._casoraLightScope = function (entity, states, hass, vars) {
   /* The house tile is Home's light badge (_casoraHomeLightVarsOf): it takes the badge's variables and goes the badge's
      way below. Not once the badge's way resolved the rooms (house_rooms, the popup it opened), and not for a tile whose
      own list was picked by hand (lights without light_rooms_auto). */
-  if (variables.house === true && !isArr(variables.house_rooms)
+  /* d05-02 (owner, 26.11.2026): a tile on the house's HA group (Home's light badge's light_group_entity) is the house
+     tile too, also without house: true (a group picked as one light: „Beleuchtung 4 an“ under the badge's „1 an“). */
+  var houseEid = typeof eid === 'string' && eid.indexOf('light.') === 0;
+  if ((variables.house === true || (houseEid && !variables.popup_group && !variables.group_entity)) && !isArr(variables.house_rooms)
       && !(isArr(variables.lights) && variables.lights.length > 0 && variables.light_rooms_auto !== true)) {
     var hv = window._casoraHomeLightVars ? window._casoraHomeLightVars() : null;
+    if (hv && variables.house !== true && hv.light_group_entity !== eid) hv = null;
     if (hv) {
       /* Lazily: button-card's variables are a proxy that evaluates each one on read, and the tile's active_override
          calls back in here (a loop the card shows as an error). The popup goes on with these variables, so the
