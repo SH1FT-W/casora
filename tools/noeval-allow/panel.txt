@@ -37,5 +37,5 @@ custom_components/casora/panel/casora-panel.js | out.variables: vars | the card'
 custom_components/casora/panel/casora-panel.js | t.name: String(friendly).trim().split(/\s+/)[0] || String(id).split(".").pop().replace(/_/g, " ") | person tile of the Studio preview only (_paintTile), never stored or given to button-card | 1
 custom_components/casora/panel/casora-panel.js | t.title: hid ? (go ? trLabel(go) + " – " : "") + trLabel("Hidden on the dashboard") : go | DOM element tooltip, not a card config | 1
 custom_components/casora/panel/casora-panel.js | t.variables: Object.assign({}, t.variables || {}, { size: "auto" }) | the tile's own stored variables plus a fixed size | 1
-custom_components/casora/panel/casora-panel.js | tile.name: nameIn.value.trim() | text the admin typed in the Studio | 1
+custom_components/casora/panel/casora-panel.js | tile.name: v || nameIn.placeholder || "" | text the admin typed in the Studio, else the type's own default name (placeholder) | 1
 custom_components/casora/panel/casora-panel.js | tile.variables: tile.variables || {} | the tile's own stored variables carried over | 1
