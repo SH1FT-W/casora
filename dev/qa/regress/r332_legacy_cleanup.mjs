@@ -173,8 +173,10 @@ const text = note ? note.message : '';
 // Since 26.11 (E28) removed scripts are only counted, their IDs mean nothing to the user; kept ones stay named.
 await check('notification counts 2 removed scripts (no IDs) and names the theme file', /\b2 /.test(text) && text.includes('themes/casora-themes.yaml')
   && gone.every((o) => !text.includes('script.' + o)), text);
+// Since d3f11573f (Prüfrunde u09-12) the users of a kept script read as words: an automation by its name, a
+// dashboard as 'dashboard "<title>"' (before: `automation.qa_r332…` and `dashboard <url_path>` in code).
 await check('notification names the kept scripts and why', KEPT.every((o) => text.includes('script.' + o))
-  && text.includes('automation.qa_r332') && text.includes('`dashboard '), text);
+  && text.includes('QA r332 uses an old Casora script') && text.includes('dashboard "'), text);
 const issues = (await c.cmd({ type: 'repairs/list_issues' })).issues.filter((i) => i.domain === 'casora');
 const ids = issues.map((i) => i.issue_id);
 await check('repair notice for the kept script', ids.includes('kept_scripts')
