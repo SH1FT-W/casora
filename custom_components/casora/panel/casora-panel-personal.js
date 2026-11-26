@@ -311,9 +311,10 @@
       };
       // A switch row like on every other settings page: the title says what „on“ does, the switch sits on the right
       // (Prüfrunde u04-09: these rows had a checkbox with a word behind it on the left, and „Leave out“ on meant off).
+      // _boolSwitch reports its default (false here) as undefined; the rows store plain true/false, so pass !!v.
       const swRow = (list, title, on, onChange, sub) => {
         const r = self._flowRow(list, { title, sub });
-        if (typeof self._boolSwitch === "function") r.row.appendChild(self._boolSwitch(on, false, onChange, window.casoraI18n ? window.casoraI18n.t(title) : title));
+        if (typeof self._boolSwitch === "function") r.row.appendChild(self._boolSwitch(on, false, (v) => onChange(!!v), window.casoraI18n ? window.casoraI18n.t(title) : title));
         return r.row;
       };
 
