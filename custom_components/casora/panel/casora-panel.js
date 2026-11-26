@@ -3984,9 +3984,6 @@ const SETUP_STEPS = 6;
 const SETUP_LEAD = 3;
 // Step n of the rooms part (1-3): inside the whole assistant it comes after the look, font and effects.
 const setupStep = (n, inSetup) => (inSetup ? [SETUP_LEAD + n, SETUP_STEPS] : [n, 3]);
-// Look, font and effects come before the fork: the move path (casora-panel-umzug.js) has other steps after it, so
-// they say "Step 1" without a total; "of 6" would promise a way the move does not take (Prüfrunde u01-11).
-const leadStep = (n) => [n];
 function setupLoad() {
   try {
     const v = JSON.parse(localStorage.getItem(SETUP_KEY) || "null");
@@ -14453,8 +14450,7 @@ class CasoraPanel extends HTMLElement {
       st.className = "fstep";
       st.setAttribute("data-no-i18n", "");
       const t = (x) => (window.casoraI18n ? window.casoraI18n.t(x) : x);
-      st.textContent = opts.step[1] ? t("Step {1} of {2}").replace("{1}", opts.step[0]).replace("{2}", opts.step[1])
-        : t("Step {1}").replace("{1}", opts.step[0]);
+      st.textContent = t("Step {1} of {2}").replace("{1}", opts.step[0]).replace("{2}", opts.step[1]);
       box.appendChild(st);
     }
     const h = document.createElement("h1");
@@ -14989,7 +14985,7 @@ class CasoraPanel extends HTMLElement {
 
     const s = this._flowScreen({
       full: true, icon: "palette",
-      title: "Choose Your Look", step: leadStep(1),
+      title: "Choose Your Look", step: [1, SETUP_STEPS],
       lede: "Casora is designed around its theme. You can change it later in the Studio under Settings → Design.",
       // Erststart: zurück zur Begrüßung; aus dem Menü: Schließen zurück ins Studio.
       back: this._dashUrl ? null : () => this._welcomeScreen(),
@@ -15056,7 +15052,7 @@ class CasoraPanel extends HTMLElement {
     let pick = firstRunFont !== null ? firstRunFont : "";
     const s = this._flowScreen({
       full: true, icon: "font",
-      title: "Choose Your Font", step: leadStep(2),
+      title: "Choose Your Font", step: [2, SETUP_STEPS],
       lede: "The lettering for titles, tiles and numbers. You can change it later in the Studio.",
       back: () => this._themeStep(),
     });
@@ -15119,7 +15115,7 @@ class CasoraPanel extends HTMLElement {
     let pick = firstRunPerf !== null ? firstRunPerf : "auto";
     const s = this._flowScreen({
       full: true, icon: "bolt",
-      title: "Smooth on Every Screen", step: leadStep(3),
+      title: "Smooth on Every Screen", step: [3, SETUP_STEPS],
       lede: "Glass and blur look best but take power. Casora can choose for each device.",
       back: () => this._fontStep(() => this._perfStep(next)),
     });

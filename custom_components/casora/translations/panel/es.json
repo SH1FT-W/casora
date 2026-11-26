@@ -3209,8 +3209,7 @@
     "1 device is in a room you did not pick.": "1 dispositivo está en una habitación que no elegiste.",
     "{1} devices are in rooms you did not pick.": "{1} dispositivos están en habitaciones que no elegiste.",
     "Studio tour": "Recorrido por el Studio",
-    "Welcome screen": "Pantalla de bienvenida",
-    "Step {1}": "Paso {1}"
+    "Welcome screen": "Pantalla de bienvenida"
   },
   "patterns": [
     [
