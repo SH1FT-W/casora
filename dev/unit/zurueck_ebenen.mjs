@@ -154,15 +154,68 @@ function browser() {
   assert.equal(p.gone, false);
 }
 
-// 9. HA's own dialog over a popup (its entry state is HA's): a back there is HA's, the popup stays.
+// HA's dialog manager (home-assistant-frontend 20260930 to 20261028, make-dialog-manager): opening a dialog with
+// history keeps the entry below and only adds a flag ({...state, opensDialog: true}, so Casora's mark stays), then
+// pushes { dialog }; a second dialog over it replaces that entry. Its X closes with history.back().
+const haOpen = (H, tag = 'ha-more-info-dialog') => {
+  if (H.state && H.state.dialog) { H.replaceState({ dialog: tag }); return; }
+  H.replaceState({ ...(H.state || {}), opensDialog: true });
+  H.pushState({ dialog: tag }, '');
+};
+
+// 9. HA's own dialog over a popup: a back there is HA's (its dialog closes), the popup stays; the next back closes it.
 {
   const { H, B, back } = browser();
   let closed = 0;
   B.push('popup', () => { closed++; });
-  H.replaceState({ dialog: 'ha-more-info-dialog', open: false });
-  H.pushState({ dialog: 'ha-more-info-dialog', open: true }, '');
+  haOpen(H);
   back();
   assert.equal(closed, 0, 'HA closes its dialog, the popup stays');
+  assert.deepEqual(B.layers(), ['popup']);
+  back();
+  assert.equal(closed, 1, 'the next back closes the popup');
+  assert.equal(H.at, 0);
+}
+
+// 9b. Review 26.11.: a more-info opened and closed on the dashboard before a popup leaves its flag on the dashboard's
+// entry; back still closes the popup (and the history is not left below an open popup).
+{
+  const { H, B, back } = browser();
+  let closed = 0;
+  haOpen(H);
+  back();                                   // HA's X / back: the more-info is gone
+  B.push('popup', () => { closed++; });
+  back();
+  assert.equal(closed, 1, 'back closes the popup');
+  assert.deepEqual(B.layers(), []);
+  assert.equal(H.at, 0);
+}
+
+// 9c. Review 26.11.: a more-info over a popup (or its sub page, or a phone room) keeps the layer's mark, so the X
+// afterwards still takes the entry back – no dead entry, no double back.
+{
+  const { H, B, flush, back } = browser();
+  let closed = 0;
+  const p = B.push('popup', () => { closed++; });
+  haOpen(H);
+  back();                                   // the more-info closes
+  assert.ok(H.state && H.state.casoraBack, 'the popup entry still carries its mark');
+  B.release(p);                             // X on the popup
+  flush();
+  assert.equal(H.at, 0, 'X takes the popup entry back');
+  assert.equal(closed, 0);
+  const { H: H2, B: B2, flush: flush2 } = browser();
+  B2.push('room', () => {});
+  const pop = B2.push('popup', () => {});
+  B2.push('page', () => {});
+  haOpen(H2);
+  haOpen(H2, 'ha-dialog-confirm');          // a second HA dialog over the first: HA replaces its entry
+  H2.back(); flush2();
+  B2.release(pop);
+  flush2();
+  assert.equal(H2.at, 1, 'popup and sub page entries taken back, the room entry stays');
+  assert.deepEqual(B2.layers(), ['room']);
+  void back;
 }
 
 // 10. Another page's entries (left and come back): a back that lands below every layer closes them all.

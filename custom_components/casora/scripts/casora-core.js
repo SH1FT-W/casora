@@ -6816,7 +6816,8 @@ window.casoraMenuGlass = {
 //   the entries stay behind as dead ones.
 // - popstate: the entry landed on decides. A live layer's entry: every layer above it goes. A dead entry of this page
 //   load: every layer at or above its depth. Any other entry: all layers go – except HA's own dialog entries (its more
-//   info over a popup), which are HA's business.
+//   info over a popup), which are HA's business. HA keeps the entry below its dialog ({...state, opensDialog: true}),
+//   so a layer's mark survives a more-info over it (docs/ha-annahmen.md).
 // - While a go() of ours is on its way, pushes and releases wait for it (never a push before that back arrived).
 // Only in the top window: the Studio's preview frame keeps no history. model() is pure (dev/unit/zurueck_ebenen.mjs).
 (function () {

@@ -63,6 +63,41 @@ await back();
 const e2 = await read();
 await check('back in a room: Home, still on the dashboard', e2.filter === 'all' && e2.path === home, e2);
 
+// 2b. Review 26.11.: HA's own more-info (its dialog manager adds entries and flags the one below). Opened and closed
+// on the dashboard before a popup: back still closes the popup. Opened over a popup: back closes only HA's dialog,
+// and the popup's X afterwards takes its entry back (step 3's last back proves no entry is left behind).
+const moreInfo = () => page.evaluate(() => {
+  const id = Object.keys(document.querySelector('home-assistant').hass.states)[0];
+  document.querySelector('home-assistant').dispatchEvent(new CustomEvent('hass-more-info',
+    { detail: { entityId: id, casoraNative: true }, bubbles: true, composed: true }));
+});
+const haDialog = () => page.evaluate(() => !!(history.state && history.state.dialog));
+await moreInfo();
+await page.waitForTimeout(1500);
+await need('HA more-info open on the dashboard', await haDialog(), null);
+await back();
+await check('back closes HA more-info, still on the dashboard', !(await haDialog()) && (await read()).path === home, await read());
+await popup('Nach more-info');
+await page.waitForTimeout(1200);
+await back();
+const g0 = await read();
+await check('after a more-info on the dashboard, back still closes the popup', !g0.open && g0.path === home && !(g0.layers && g0.layers.length), g0);
+await popup('Mit more-info');
+await page.waitForTimeout(1200);
+await moreInfo();
+await page.waitForTimeout(1500);
+await need('HA more-info open over the popup', await haDialog(), null);
+await back();
+const g1 = await read();
+await check('back over the popup closes only HA more-info', !(await haDialog()) && g1.open && g1.path === home, g1);
+await page.evaluate(() => {
+  const pop = window.__pierce('casora-popup').find((p) => p.hasAttribute('open'));
+  pop.shadowRoot.querySelector('.header-close').click();
+});
+await page.waitForTimeout(1500);
+const g2 = await page.evaluate(() => ({ mark: !!(history.state && history.state.casoraBack), layers: window.casoraBack.layers() }));
+await check('X after a more-info takes the popup entry back', !g2.mark && !g2.layers.length, g2);
+
 // 3. Closed by its X: no entry left behind – the next back leaves the dashboard at once.
 await popup('X');
 await page.waitForTimeout(1200);
