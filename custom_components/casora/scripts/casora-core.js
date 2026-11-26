@@ -17411,6 +17411,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     });
   }
   window.casoraUserGuard = userGuard;
+  // The rule itself, for callers that must know before they move anything (doorbell moment, 52-klingel-moment.js).
+  window.casoraHiddenForUser = hiddenForUser;
 
   // 07.10.2026: „Wer sieht das?“ für Listen, die Casora selbst zusammenstellt („Alles aus“ im
   // Licht-Popup, Verbraucher im Energie-Popup). Die Dashboard-Konfiguration wird je Dashboard

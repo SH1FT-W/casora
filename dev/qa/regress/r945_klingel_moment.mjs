@@ -6,7 +6,7 @@
 //   2. Wall tablet with the screensaver on (?casora_saver=1): a ring ends the screensaver and opens the doorbell popup
 //      with the live picture (<casora-klingel-live>); without a touch it closes after the ring window (shortened here)
 //      and the screensaver comes back.
-//   3. A second ring right after it closed: nothing opens (debounce).
+//   3. A second ring within the debounce of the last ring (shortened here to outlast the ring window): nothing opens.
 //   4. A popup open before the ring: after the ring window that popup is back.
 //   5. Someone touches it (a key): it stays open after the ring window.
 //   6. Someone typing in a text field: nothing opens, the field keeps the focus.
@@ -32,7 +32,7 @@ await need('Testklingel im Testhaus (Mock)', await page.evaluate(([c, b]) => {
 const watching = await stable(page, () => (window._casoraKlingelMoment && window._casoraKlingelMoment.watching()) || [],
   null, { max: 20000, quiet: 500, until: (v) => v.length > 0 });
 await check('1. Klingel wird beobachtet (nur Klingeln mit Kamera)', watching.includes(BELL), watching);
-// Short windows for the test (the product uses 90 s and 30 s).
+// Short windows for the test (the product uses 90 s and 10 s; here the debounce outlasts the ring window on purpose).
 await page.evaluate(() => { window._casoraKlingelMoment._ringMs = 5000; window._casoraKlingelMoment._quietMs = 15000; });
 
 const state = () => page.evaluate(() => {
@@ -68,12 +68,12 @@ await check('2. Ohne Berührung: Popup schließt nach dem Klingelfenster, Bildsc
 await page.evaluate(() => window._casoraSaver.wake());
 await closePop();
 
-// 3. Debounce: a ring right after it closed does not open it again.
+// 3. Debounce: a ring within the debounce of the last ring does not open it again (r946: after it, it does).
 await page.waitForTimeout(800);
 await ring();
 await page.waitForTimeout(5000);
 s = await state();
-await check('3. Gleich danach erneut geklingelt: nichts öffnet sich (entprellt)', !s.open, s);
+await check('3. Kurz nach dem letzten Klingeln erneut geklingelt: nichts öffnet sich (entprellt)', !s.open, s);
 await quiet();
 
 // 4. A popup open before: back after the ring window.

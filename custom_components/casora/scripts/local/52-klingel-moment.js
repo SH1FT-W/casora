@@ -3,16 +3,18 @@
 // screensaver and opens the popup of the doorbell's camera: the Reolink doorbell popup with live picture, sound, talk and
 // quick replies (24-klingel.js), else the camera's own popup, else the camera large (18-ziele.js openCamera). Nobody
 // touches it: it closes itself after the ring window and the dashboard goes back to where it was (the popup open
-// before, the screensaver that was showing). A second ring while it is open only extends it; a ring shortly after it
-// closed does not open it again. Nothing opens while someone is typing (Studio, search, any field), on a hidden page,
-// in the Studio or while the dashboard is being edited.
+// before, the screensaver that was showing). A second ring while it is open only extends it; a ring within a few seconds
+// of the last one (the button pressed twice, closed by hand right away) does not open it again, a later ring always
+// does. Nothing opens while someone is typing (Studio, search, any field), on a hidden page, in the Studio, while the
+// dashboard is being edited, or when the doorbell or its camera is hidden for the signed-in user („Wer sieht das?“):
+// then nothing happens at all, no hint, the screensaver stays.
 // Doorbells are the bell's own (window.casoraIsDoorbell, 00-finder.js): event entities with device_class doorbell,
 // the Reolink visitor sensor, an occupancy „ding“ sensor. Only a doorbell with a camera on its device takes part.
 // Setting per dashboard (Studio › Settings › Bell & messages): notify_doorbell_front, on unless false. It arrives through
 // the bell's configureFrom (desktop: the room card, phone: the desktop twin), window._casoraNotify.doorbellFront.
 // Idle cost: one subscribe_entities for the doorbells only (pushed by HA, no polling), plus a check every minute
 // whether the registry changed. Nothing runs between rings.
-//   window._casoraKlingelMoment.isRing(id, prev, next, now) → did this state change ring? ({s, lc} in seconds)
+//   window._casoraKlingelMoment.isRing(id, prev, next)    → did this state change ring? ({s, lc} in seconds)
 //   window._casoraKlingelMoment.decide(o)                  → 'open' | 'extend' | 'skip'
 //   window._casoraKlingelMoment.camOf(hass, id)            → the camera on the doorbell's device, or null
 //   window._casoraKlingelMoment.bells(hass)                → { doorbell id: camera id } of the house
@@ -22,8 +24,8 @@
   if (window._casoraKlingelMoment && typeof window._casoraKlingelMoment.decide === 'function') return;
   var M = window._casoraKlingelMoment = {};
   var RING_MS = 90000;      // the ring window: closes itself after this without a touch
-  var QUIET_MS = 30000;     // after it closed, another ring of the same doorbell within this does not reopen it
-  var FRESH_MS = 120000;    // a change older than this is a reconnect or restart, not a ring
+  var QUIET_MS = 10000;     // a ring of the same doorbell within this of its last ring does not open it again
+  var FRESH_MS = 120000;    // event: a press time this far from the change itself is a restored value, not a ring
   M.RING_MS = RING_MS;
   M.QUIET_MS = QUIET_MS;
   var bad = function (s) { return s == null || s === '' || s === 'unknown' || s === 'unavailable'; };
@@ -31,33 +33,34 @@
   // ── Pure rules ──────────────────────────────────────────────────────────
   // prev/next: { s: state, lc: last_changed in seconds }. event.*: the state is the time of the last press, a new time
   // is a ring (unknown → a time is the first press since the start; unavailable → anything is the entity coming back).
-  // binary_sensor: off → on. Either way the change itself must be fresh.
-  M.isRing = function (id, prev, next, now) {
+  // binary_sensor: off → on. Only live changes come here (a reconnect delivers a fresh baseline 'a', not a change), so
+  // the device's own clock is never asked: wall tablets often run minutes off. An event's press time is compared with
+  // its own last_changed instead, both HA server times: far apart means a restored old value, not a press.
+  M.isRing = function (id, prev, next) {
     if (!next || bad(next.s) || !prev || prev.s === 'unavailable' || prev.s === next.s) return false;
-    var at = typeof next.lc === 'number' && isFinite(next.lc) ? next.lc * 1000 : null;
     var dom = String(id || '').split('.')[0];
     if (dom === 'event') {
-      var t = Date.parse(next.s);
-      if (isFinite(t)) at = t;
-    } else if (dom === 'binary_sensor') {
-      if (next.s !== 'on' || prev.s !== 'off') return false;
-    } else return false;
-    return at == null || Math.abs((now || Date.now()) - at) <= FRESH_MS;
+      var t = Date.parse(next.s), lc = typeof next.lc === 'number' && isFinite(next.lc) ? next.lc * 1000 : null;
+      return !(isFinite(t) && lc != null && Math.abs(lc - t) > FRESH_MS);
+    }
+    return dom === 'binary_sensor' && next.s === 'on' && prev.s === 'off';
   };
 
-  // o: { on (setting), cam, hidden, typing, studio, editing, active (the moment's popup is still open), last (when the
-  // last moment of this doorbell ended, ms), now }.
+  // o: { on (setting), cam, hidden, userHidden (doorbell or camera hidden for this user), typing, studio, editing,
+  // active (the moment's popup is still open), last (when this doorbell last rang, ms), now }.
   M.decide = function (o) {
     o = o || {};
-    if (o.on === false || !o.cam || o.studio || o.editing || o.hidden) return 'skip';
+    if (o.on === false || !o.cam || o.studio || o.editing || o.hidden || o.userHidden) return 'skip';
     if (o.active) return 'extend';
     if (o.typing) return 'skip';
     if (o.last && (o.now || Date.now()) - o.last < (M._quietMs || QUIET_MS)) return 'skip';
     return 'open';
   };
 
-  // The live camera of the doorbell's device: the Reolink one (sub before main, 24-klingel.js liveCam), else a camera
-  // that is no snapshot camera. Hidden or disabled cameras do not count.
+  // The live camera of the doorbell's device: the Reolink one (sub before main, 24-klingel.js liveCam), else a live
+  // camera (Ring live_view before the rest). Cameras that show the past never count: Reolink snapshots_*, Ring
+  // last_recording (upgraded installs keep it enabled next to live_view; casoraCamStill: „not now“). Hidden or disabled
+  // cameras do not count either.
   M.camOf = function (hass, id) {
     var R = (hass && hass.entities) || {}, S = (hass && hass.states) || {}, me = R[id];
     if (!me || !me.device_id) return null;
@@ -65,7 +68,7 @@
     Object.keys(R).forEach(function (x) {
       var e = R[x];
       if (!e || x.indexOf('camera.') !== 0 || e.device_id !== me.device_id || !S[x] || e.hidden || e.disabled_by) return;
-      if (/^snapshots_/.test(String(e.translation_key || ''))) return;
+      if (/^snapshots_|(^|_)last_recording$/.test(String(e.translation_key || ''))) return;
       list.push(x);
     });
     if (!list.length) return null;
@@ -73,7 +76,8 @@
       var live = list.filter(function (x) { try { return KL.liveCam(hass, x); } catch (e) { return false; } });
       if (live.length) return live[0];
     }
-    list.sort(function (a, b) { return (R[a].translation_key === 'sub' ? 0 : 1) - (R[b].translation_key === 'sub' ? 0 : 1) || (a < b ? -1 : 1); });
+    var rank = function (x) { var k = String(R[x].translation_key || ''); return k === 'sub' ? 0 : /^live(_|$)/.test(k) ? 1 : 2; };
+    list.sort(function (a, b) { return rank(a) - rank(b) || (a < b ? -1 : 1); });
     return list[0];
   };
 
@@ -112,7 +116,8 @@
     var ll = window._casoraLLEl;
     return !!(ll && ll.lovelace && ll.lovelace.editMode);
   };
-  var ended = {};      // doorbell id → when its last moment ended (ms)
+  var rang = {};       // doorbell id → when it last rang (ms)
+  var checking = {};   // doorbell id → its „Wer sieht das?“ check is running
   var cur = null;      // the moment on screen: { id, cam, cfg, prev, saver, timer, touched }
   var touch = function () { if (cur) cur.touched = true; };
   // Still the moment's popup? The popup may redraw itself with a new config (resize, live parts), so the same title
@@ -131,7 +136,6 @@
     cur = null;
     clearTimeout(m.timer);
     unhook();
-    ended[m.id] = Date.now();
     if (!auto) return;
     var P = window.casoraPopup;
     if (P && same(P.current, m.cfg)) P.close();
@@ -155,6 +159,12 @@
     var m = { id: id, cam: cam, cfg: null, prev: P.current || null, saver: !!(SV && SV.shown && SV.shown()), timer: 0, touched: false };
     cur = m;
     if (SV && typeof SV.wake === 'function') SV.wake();
+    // Nothing came on screen: the screensaver that was showing comes back, as if nothing happened.
+    var gaveUp = function () {
+      if (cur !== m) return;
+      cur = null;
+      if (m.saver && SV && typeof SV.start === 'function' && !P.current) SV.start();
+    };
     var KL = window._casoraKlingel, Z = window._casoraZiele, via = window._casoraNotifyOpenViaCard;
     var settle = function (c) {
       m.cfg = c;
@@ -170,12 +180,12 @@
         var c = P.current;
         if (c && c !== m.prev) return settle(c);
         if (++n < 25) return void setTimeout(wait, 80);
-        cur = null; ended[id] = Date.now();
+        gaveUp();
       })();
     };
     var last = function () {
       if (Z && typeof Z.openCamera === 'function' && Z.openCamera(cam)) return took();
-      cur = null;
+      gaveUp();
     };
     if (typeof via !== 'function') return last();
     // The doorbell's tile on this dashboard (same popup, same header), else the tile type built for it, else the camera.
@@ -185,27 +195,57 @@
       via(cam, function (ok2) { if (ok2) took(); else last(); }, { type: 'custom:button-card', template: tpl, entity: cam }, true);
     });
   };
-  M.ring = function (id) {
-    var h = hassOf(), cfg = cfgOf();
-    var cam = bells[id] || (h ? M.camOf(h, id) : null);
+  // „Wer sieht das?“ (R-01): is the doorbell or its camera hidden for the signed-in user on this dashboard? The same
+  // rule and the same remembered dashboard config as the tile's guard (casoraHiddenForUser, casora-core.js), asked
+  // before anything moves, so a hidden doorbell neither wakes the screen nor shows the guard's hint.
+  var userHidden = function (ids, cb) {
+    var h = hassOf(), hid = window.casoraHiddenForUser;
+    if (!h || !h.callWS || typeof hid !== 'function' || typeof window._casoraCfgOnce !== 'function') return cb(false);
+    var seg = (location.pathname || '').split('/').filter(Boolean), uid = h.user && h.user.id;
+    Promise.resolve(window._casoraCfgOnce(h, seg[0] || 'lovelace')).then(function (cfg) {
+      return ids.some(function (x) { return !!hid(cfg, x, uid); });
+    }, function () { return false; }).then(cb, function () { cb(false); });
+  };
+  var input = function (id, cam, uh) {
     var N = window._casoraNotify;
-    var d = M.decide({
-      on: !(N && N.doorbellFront === false) && casoraDash(cfg),
+    return {
+      on: !(N && N.doorbellFront === false) && casoraDash(cfgOf()),
       cam: cam,
+      userHidden: !!uh,
       hidden: !!document.hidden,
       typing: M.typing(document),
       studio: /^\/casora-studio/.test(location.pathname),
       editing: editing(),
       active: !!(cur && cur.id === id && (own() || !cur.cfg)),
-      last: ended[id] || 0,
+      last: rang[id] || 0,
       now: Date.now(),
-    });
+    };
+  };
+  // Returns at once what it will do ('open' once the user check passed, 'extend', 'skip'); M.lastDecision() tells what
+  // the ring finally did.
+  M.ring = function (id) {
+    var h = hassOf();
+    var cam = bells[id] || (h ? M.camOf(h, id) : null);
+    if (checking[id]) return 'skip';
+    var d = M.decide(input(id, cam, false));
+    if (d !== 'skip') rang[id] = Date.now();
+    M._last = d;
     if (d === 'extend') { if (cur.cfg) arm(cur); return d; }
     if (d !== 'open') return d;
-    if (cur) finish(false);
-    open(id, cam);
+    checking[id] = true;
+    userHidden([id, cam], function (uh) {
+      checking[id] = false;
+      // Asked again: something may have changed while the config came (typing started, another ring opened it).
+      var d2 = M.decide(Object.assign(input(id, cam, uh), { last: 0 }));
+      M._last = d2;
+      if (d2 === 'extend') { if (cur.cfg) arm(cur); return; }
+      if (d2 !== 'open') return;
+      if (cur) finish(false);
+      open(id, cam);
+    });
     return d;
   };
+  M.lastDecision = function () { return M._last || null; };
   // Tests: the doorbells being watched, and shorter windows (M._ringMs, M._quietMs).
   M.watching = function () { return unsub ? Object.keys(bells) : []; };
   M.current = function () { return cur ? { id: cur.id, cam: cur.cam, touched: cur.touched, shown: !!cur.cfg, own: own(), prev: !!cur.prev, saver: cur.saver } : null; };
@@ -215,14 +255,13 @@
   var bells = {}, key = '', unsub = null, seen = {}, reg = null, conn = null;
   var onMsg = function (msg) {
     if (!msg) return;
-    var now = Date.now();
     if (msg.a) Object.keys(msg.a).forEach(function (id) { var x = msg.a[id] || {}; seen[id] = { s: x.s, lc: x.lc }; });
     if (msg.c) Object.keys(msg.c).forEach(function (id) {
       var add = (msg.c[id] || {})['+'];
       if (!add || add.s === undefined) return;
       var prev = seen[id], next = { s: add.s, lc: typeof add.lc === 'number' ? add.lc : (typeof add.lu === 'number' ? add.lu : null) };
       seen[id] = next;
-      if (M.isRing(id, prev, next, now)) { try { M.ring(id); } catch (e) { console.warn('Casora doorbell moment:', e); } }
+      if (M.isRing(id, prev, next)) { try { M.ring(id); } catch (e) { console.warn('Casora doorbell moment:', e); } }
     });
     if (msg.r) msg.r.forEach(function (id) { delete seen[id]; });
   };
