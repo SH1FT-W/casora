@@ -1,5 +1,5 @@
 // @deckt: custom_components/casora/scripts/casora-core.js#casoraDetectionAt, dashboards/casora/button_card_templates.json#global
-// The shared detection rule as the camera tile shows it: clock skew.
+// The shared detection rule as the camera tile shows it: clock skew and one cache for cards with different windows.
 import assert from 'node:assert/strict';
 import './_detection_rule.mjs';
 import fs from 'node:fs';
@@ -27,4 +27,11 @@ assert.equal(alert(skew, 5), 'Person', 'a change time slightly ahead of the brow
 assert.equal(window.casoraDetectionAt(sensor, 'on', 'off', now + 20000, {}), now, 'the rule clamps a slightly future time to now');
 assert.equal(window.casoraDetectionAt(sensor, 'on', 'off', now + 3600000, {}), null, 'a time an hour ahead is no detection');
 
+// One cache: the short card draws after its own window passed, the long card still sees the detection.
+fresh();
+const shared = { [sensor]: { state: 'off', attributes: { friendly_name: 'Person' } } };
+assert.equal(alert(shared, 1), '');
+shared[sensor] = { state: 'on', last_changed: at(now - 120000), attributes: { friendly_name: 'Person' } };
+assert.equal(alert(shared, 1), '', 'two minutes ago is outside the one-minute window');
+assert.equal(alert(shared, 10), 'Person', 'the ten-minute card shows the detection the short card saw first');
 Date.now = realNow;
