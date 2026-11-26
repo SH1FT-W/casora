@@ -210,6 +210,10 @@ Weiß, wo es auf der Farbe mindestens 3 : 1 hat, sonst die dunkle Glyphe (Gelb, 
 `inkOn()` (siehe § 0), Kacheln (`casora_entity`, `--casora-tile-glyph-filter`) und Badges (`casora_badge_base`,
 `--casora-badge-on-glyph`) mit derselben Schwelle aus der Kreisfarbe (relative Farbe in CSS), die Glocke lässt Orange und
 Gelb stehen (`notifyTone`). Dasselbe Gerät zeigt sein Symbol auf Kachel, Badge, in der Glocke und im Popup gleich.
+Kacheln lesen die Farbe, in der der Kreis wirklich gemalt ist: Malt ein Zustand den Kreis selbst (`img_cell`
+`background`), nennt er dieselbe Farbe in `--casora-tile-glyph-ground`; in Casora Farbe (getönte Kachel, weißer Chip)
+zählt die Gerätefarbe wie bei `inkOn()` im Popup. Ein durchscheinender Kreis (Deckkraft unter 0,5: Kreis-Token der
+dunklen Designs, Kamera über dem Bild) behält das weiße Symbol. Regeltest `dev/unit/glyph_on_light_colours.mjs`.
 „Immer Weiß“ (11.10.) ist damit abgelöst. Aus-Symbol `--casora-soft-glyph-off` .70.
 
 ## 7. Bewegung
