@@ -151,6 +151,92 @@
   });
 })();
 
+// The expanded badge row, per device (u05-09, owner 26.11.2026). The badges' sub-rows open on the helper
+// input_select.casora_expanded_row – one value for the whole house, so a badge tapped on one phone opened the row on
+// the wall tablet too, and a fresh page showed whatever someone else had left open. Like the phone's filter
+// (_casoraFilter), each device now keeps its own value (localStorage) and the helper is rewritten on the way into
+// every Casora button-card (the lazy-hass setter below), which leaves the templates untouched. Every select_option on
+// the helper this browser sends (a badge's tap, anything through HA's connection) is this device's pick: kept here,
+// the cards redraw at once, and the call still reaches HA for automations. A change by another person's device is
+// not followed; one by no person (context without user_id: Casora's own "media" when playback starts, an automation)
+// after this device's last pick is, as before. A state without any context (not from HA) is shown as it is.
+(function () {
+  if (window._casoraRow) return;
+  var ENTITY = 'input_select.casora_expanded_row';
+  var KEY = 'casora_expanded_row';
+  var val = null, at = 0;
+  try {
+    var s = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (s && typeof s.v === 'string') { val = s.v; at = Number(s.at) || 0; }
+  } catch (e) { /* private mode */ }
+  var save = function () { try { localStorage.setItem(KEY, JSON.stringify({ v: val, at: at })); } catch (e) { /* private mode */ } };
+  var cards = typeof Set === 'function' ? new Set() : null;
+  var rawOf = typeof WeakMap === 'function' ? new WeakMap() : null;
+  var outs = typeof WeakSet === 'function' ? new WeakSet() : null;
+  var tsOf = function (iso) { var t = Date.parse(iso || ''); return isFinite(t) ? t : 0; };
+  // The value this device shows for the helper's state raw.
+  var want = function (raw) {
+    if (!raw.context) return raw.state;
+    if (val === null) return raw.context.user_id ? 'none' : raw.state;
+    if (!raw.context.user_id && tsOf(raw.last_changed) > at) { val = raw.state; at = tsOf(raw.last_changed); save(); }
+    return val;
+  };
+  var entIn = null, entKey = null, entOut = null, lastIn = null, lastWant = null, lastOut = null;
+  var redraw = function () {
+    if (!cards) return;
+    cards.forEach(function (c) {
+      if (!c.isConnected) { cards.delete(c); return; }
+      if (c.__casoraRowRaw) { try { c.hass = c.__casoraRowRaw; } catch (e) { /* card gone */ } }
+    });
+  };
+  var set = function (v) {
+    v = String(v == null ? 'none' : v) || 'none';
+    val = v; at = Date.now(); save();
+    redraw();
+    return v;
+  };
+  // Watches what this browser sends: a select_option on the helper (service_data or target) is this device's pick.
+  var watch = function (conn) {
+    if (!conn || conn.__casoraRow || typeof conn.sendMessagePromise !== 'function') return;
+    conn.__casoraRow = true;
+    var send = conn.sendMessagePromise;
+    conn.sendMessagePromise = function (msg) {
+      try {
+        if (msg && msg.type === 'call_service' && msg.domain === 'input_select' && msg.service === 'select_option') {
+          var d = msg.service_data || {}, ids = [].concat(d.entity_id || (msg.target || {}).entity_id || []);
+          if (ids.length === 1 && ids[0] === ENTITY && d.option != null) set(d.option);
+        }
+      } catch (e) { /* never in the way of the call */ }
+      return send.apply(this, arguments);
+    };
+  };
+  var apply = function (hass, card) {
+    if (!hass || !hass.states) return hass;
+    var ent = hass.states[ENTITY];
+    if (!ent) return hass;
+    if (outs && outs.has(hass)) return hass;   // rewritten further up (a card in a card): its parent redraws it
+    watch(hass.connection);
+    if (card && cards) { card.__casoraRowRaw = hass; cards.add(card); }
+    var raw = (rawOf && rawOf.get(ent)) || ent;
+    var v = want(raw);
+    if (raw.state === v && ent === raw) return hass;
+    var key = v + '|' + at;
+    if (raw !== entIn || key !== entKey) {
+      entOut = raw.state === v ? raw : Object.assign({}, raw, { state: v, last_changed: at ? new Date(at).toISOString() : raw.last_changed });
+      if (rawOf && entOut !== raw) rawOf.set(entOut, raw);
+      entIn = raw; entKey = key;
+    }
+    if (hass === lastIn && entOut === lastWant) return lastOut;
+    var states = Object.assign({}, hass.states);
+    states[ENTITY] = entOut;
+    var out = Object.assign({}, hass, { states: states });
+    if (outs) outs.add(out);
+    lastIn = hass; lastWant = entOut; lastOut = out;
+    return out;
+  };
+  window._casoraRow = { ENTITY: ENTITY, apply: apply, set: set, get: function () { return val; } };
+})();
+
 // button-card lazy hass (#227): Home Assistant hands every card a new hass object for every state change in the
 // house. button-card then copies that object twice per card (its template `hass`) and runs an update cycle that
 // ends without a redraw, because nothing the card watches changed. With ~180 cards on a Casora Home that was the largest idle cost of the page,
@@ -214,6 +300,8 @@
       set: function (h) {
         var old = inner.get.call(this), mon = this._monitoredEntities;
         var k, c, mine = !!this._config && casoraCard(this);
+        // u05-09: this device's expanded badge row instead of the house-wide helper.
+        if (mine && h && window._casoraRow) h = window._casoraRow.apply(h, this);
         if (mine && h && old && h.states && old.states && this._initialSetupComplete && Array.isArray(mon) && this._cards
             && stampOf(old) === stampOf(h)) {
           var a = old.states, b = h.states, i = mon.length;
