@@ -2397,7 +2397,9 @@ window._casoraColGap = window._casoraColGap || function (keys) {
 (function () {
   if (window._casoraPillPlace) return;
   window._casoraPillPlace = true;
-  var fine = window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 769px)');
+  /* From 768 px, where the phone redirect ends (max-width 767px, casora-redirect.js); 769 left 768 without a bar
+     (Prüfrunde d05-01). */
+  var fine = window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 768px)');
   var RESERVE = 275;   // runde Knöpfe rechts (und gleich viel links, damit die Pille mittig bleibt)
   function walk(root, sel, out, d) {
     if (!root || d > 10 || !root.querySelectorAll) return;
