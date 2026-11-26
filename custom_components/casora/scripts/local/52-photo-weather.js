@@ -5,7 +5,7 @@
 // it (46-screensaver.js, _casoraSaver.weather: unavailable or unknown = no weather).
 // Cost: one canvas per photo, drawn at half resolution with at most FPS frames a second (rain, snow, wind; the fog is a
 // still CSS gradient without a frame loop). Nothing runs while the page is hidden, the screensaver covers the dashboard,
-// prefers-reduced-motion is set, the performance mode is on or the Studio switch „Weather on the photo“ is off
+// prefers-reduced-motion is set, the performance mode is on or the Studio switch „Weather effects on the dashboard“ is off
 // (variable photo_weather, stored only as false; the phone's shell gets it from Home on save).
 // The layer sits between the photo and everything on it (z-index -9 inside the hero card), so text and tiles stay on
 // top; its strength is capped (MAX) and it fades out where the title sits (desktop: left edge, phone: the dissolve).

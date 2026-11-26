@@ -246,7 +246,7 @@ const st = (state, attributes = {}) => ({ entity_id: 'weather.home', state, attr
     assert.ok('photo_weather' in T[tpl].variables, tpl + ' declares photo_weather');
   }
   const panel = rd('custom_components/casora/panel/casora-panel.js');
-  assert.match(panel, /key: "photo_weather", sub: "chrome", label: "Weather on the photo", type: "bool", boolDefault: true/, 'Studio field, on by default');
+  assert.match(panel, /key: "photo_weather", sub: "chrome", label: "Weather effects on the dashboard", type: "bool", boolDefault: true/, 'Studio field, on by default');
   assert.match(panel, /\["image", "image_night", "photo_weather"\]/, 'phone shell gets the switch from Home');
   assert.match(rd('custom_components/casora/panel/casora-panel-settings.js'), /k: "photowx", sec: "General", sub: "chrome", keys: \["photo_weather"\]/, 'block under Look & feel');
 }

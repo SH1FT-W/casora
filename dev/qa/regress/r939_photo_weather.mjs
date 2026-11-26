@@ -11,7 +11,7 @@
 //   - while the screensaver shows, the layer is hidden and draws nothing
 //   - prefers-reduced-motion: no layer
 //   - phone 393 (WebKit): snow gives the phone's photo shell (casora_mobile_bg) the layer, masked to the photo
-//   - Studio: Settings › Look & feel has the block "Weather on the photo" with one switch, on by default, in English
+//   - Studio: Settings › Look & feel has the block "Weather effects on the dashboard" with one switch, on by default, in English
 //     and German
 // Nothing is stored in HA: the weather is put under the page with fakeStates.
 import { open, usePage, casoraDashboard, dashboard, studio, fakeStates, check, need, finish } from './lib.mjs';
@@ -156,8 +156,8 @@ for (const lang of ['en', 'de']) {
     const sw = [...blk.querySelectorAll('[role="switch"]')];
     return { title: (blk.querySelector('.cn-bhead b') || {}).textContent || '', n: sw.length, on: sw[0] && sw[0].getAttribute('aria-checked') };
   });
-  const want = lang === 'de' ? /Wetter auf dem Foto/ : /Weather on the photo/;
-  await check('Studio ' + lang + ': block "Weather on the photo" with one switch, on', B && want.test(B.title) && B.n === 1 && B.on === 'true', B);
+  const want = lang === 'de' ? /Wettereffekte auf dem Dashboard/ : /Weather effects on the dashboard/;
+  await check('Studio ' + lang + ': block "Weather effects on the dashboard" with one switch, on', B && want.test(B.title) && B.n === 1 && B.on === 'true', B);
   await o.browser.close().catch(() => {});
 }
 
