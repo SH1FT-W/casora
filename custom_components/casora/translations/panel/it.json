@@ -1968,8 +1968,6 @@
     "Automatic: {x}": "Automatico: {x}",
     "Change": "Cambia",
     "Electricity price": "Prezzo dell'elettricità",
-    "Empty: Casora finds outdoor sensors by their name.": "Vuoto: Casora trova i sensori esterni dal nome.",
-    "Empty: the default AI from Settings → AI tasks.": "Vuoto: l'IA predefinita da Impostazioni → Attività IA.",
     "For all dashboards: your home, the bell, new dashboards and Casora's options.": "Per tutte le dashboard: la tua casa, la campanella, le nuove dashboard e le opzioni di Casora.",
     "for all dashboards": "per tutte le dashboard",
     "Given to every analysis, e.g. “The bedroom windows are tilted on purpose.”": "Viene aggiunto a ogni analisi, ad es. “Le finestre della camera da letto sono a ribalta di proposito.”",
@@ -2511,7 +2509,6 @@
     "Keeps the time left in step with the appliance.": "Mantiene il tempo rimanente allineato con l'elettrodomestico.",
     "Sends a sample activity (42%, 25 minutes left) to the saved recipients. It disappears after two minutes.": "Invia un'attività di esempio (42 %, 25 minuti rimanenti) ai destinatari salvati. Sparisce dopo due minuti.",
     "Save the recipients first.": "Salva prima i destinatari.",
-    "Choose a recipient first.": "Scegli prima un destinatario.",
     "Send a test": "Invia una prova",
     "Sending…": "Invio…",
     "Send test": "Invia prova",
@@ -3216,7 +3213,14 @@
     "Casora won't look for Hemma dashboards anymore – switch it back on under Settings › Updates & setup › Advanced › Hemma dashboards.": "Casora non cercherà più dashboard Hemma – riattivalo in Impostazioni › Aggiornamenti e configurazione › Avanzate › Dashboard Hemma.",
     "At most {n} km": "Al massimo {n} km",
     "At least {n} km": "Almeno {n} km",
-    "The sensor decides": "Decide il sensore"
+    "The sensor decides": "Decide il sensore",
+    "Automatic: Casora finds outdoor sensors by their name.": "Automatico: Casora trova i sensori esterni dal nome.",
+    "Automatic: the default AI from Settings → AI tasks.": "Automatico: l'IA predefinita da Impostazioni → Attività IA.",
+    "Choose a phone under “Show live activities on” above and save.": "Scegli sopra un telefono in «Mostra attività live su» e salva.",
+    "Badges filled in from the area": "Badge completati dall'area",
+    "Hidden – nobody sees this tile on the dashboard.": "Nascosta – nessuno vede questa scheda nella dashboard.",
+    "Leave out status LEDs": "Tralascia i LED di stato",
+    "Fill Favorites on Home automatically": "Riempi automaticamente i preferiti in Casa"
   },
   "patterns": [
     [

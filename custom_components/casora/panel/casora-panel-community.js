@@ -190,9 +190,17 @@
     const base = "/casora_assets/community/" + t.id;
     const light = { tile: t.community.preview || (base + ".webp"), popup: t.community.previewPopup || (base + "-popup.webp") };
     if (!dark || !t.community.darkShots || t.community.preview) return { ...light, light };
+    if (t.community.darkShots === "popup") return { tile: light.tile, popup: base + "-popup-dark.webp", light };
     return { tile: base + "-dark.webp", popup: base + "-popup-dark.webp", light };
   };
-  W.casoraCommunity = { issueUrl, describe, wishBody, status, cards, usage, dropTiles, load, save, REPO, LABEL_WISH, shots, isDark };
+  // Width of the Studio beside HA's sidebar and the gaps left/right of it in the window (a panel that measures 0
+  // before it is drawn: the whole window).
+  const studioArea = (rect, winW) => {
+    const w = rect && rect.width > 300 ? rect.width : winW;
+    const left = rect && rect.width > 300 ? Math.max(0, rect.left) : 0;
+    return { room: w, left, right: Math.max(0, winW - left - w) };
+  };
+  W.casoraCommunity = { issueUrl, describe, wishBody, status, cards, usage, dropTiles, load, save, REPO, LABEL_WISH, shots, isDark, studioArea };
   if (typeof module !== "undefined" && module.exports) module.exports = W.casoraCommunity;
   if (typeof customElements === "undefined") return;
 
@@ -475,9 +483,12 @@
           box.insertBefore(host, acts);
           // Tablet/desktop (owner, 03.11.2026): the cards as a grid – two columns, three in a window of 1500 px and more.
           const st = box.closest && box.closest(".askstack");
-          // The window the dialog sits in (its host can measure 0 before it is drawn: then the browser window).
-          const pw = st && st.parentElement ? st.parentElement.clientWidth : 0;
-          const room = pw > 300 ? pw : W.innerWidth;
+          // The Studio's own area, not the browser window: the dialog pane is fixed over the whole window, so a wide
+          // dialog centred there ran under HA's sidebar (Prüfrunde u02-02). Measure the panel and centre inside it.
+          const area = studioArea(this.getBoundingClientRect ? this.getBoundingClientRect() : null, W.innerWidth);
+          const room = area.room;
+          const pane = st && st.closest && st.closest(".askpane");
+          if (pane && area.left) { pane.style.paddingLeft = (area.left + 24) + "px"; pane.style.paddingRight = (area.right + 24) + "px"; }
           // Phone and narrow windows keep the list as before.
           const grid = room < 700 ? null : el("div", "comgrid");
           if (grid) {

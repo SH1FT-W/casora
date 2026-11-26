@@ -70,7 +70,7 @@ for (const l of ['de', 'es', 'fr', 'it', 'nb', 'nl', 'pl', 'pt']) {
 const de = JSON.parse(read('custom_components/casora/translations/panel/de.json')).exact;
 assert.equal(de['Room bar'], 'Raumleiste');
 assert.equal(de['Show names'], 'Namen zeigen');
-assert.equal(de['Home page as icon'], 'Startseite als Symbol');
+assert.equal(de['Home page as icon'], 'Zuhause als Symbol');
 // The first view's name is the user's own ("Start", "Home" ...): neither the label nor the bar hard-codes it.
 for (const l of ['de', 'es', 'fr', 'it', 'nb', 'nl', 'pl', 'pt']) {
   const ex = JSON.parse(read('custom_components/casora/translations/panel/' + l + '.json')).exact;

@@ -346,13 +346,17 @@
         if (renamed && ofRename(v)) return;
         const named = dashSetting(v, ctx) && settingText(v, V1[v], ctx);
         if (named) { add(named, copyVars((x) => x === v)); return; }
-        if (BADGE_VAR.test(v) && !RENAME_VAR.test(v)) badgeKeys.push(v); else otherKeys.push(v);
+        // casora_badges_auto marks badges filled from the HA area on loading (#57): part of the badges, not a
+        // "room setting" of its own (Prüfrunde u02-06).
+        if ((BADGE_VAR.test(v) || v === "casora_badges_auto") && !RENAME_VAR.test(v)) badgeKeys.push(v); else otherKeys.push(v);
       });
       if (badgeKeys.length) {
         // Only a badge name changed: word for word ("Climate → Air"), otherwise generic.
         const m = badgeKeys.length === 1 && /^(climate|lights|people|media|security|energy)_title$/.exec(badgeKeys[0]);
         const bid = m && m[1];
+        const filled = V1.casora_badges_auto && !V0.casora_badges_auto;
         const txt = bid ? tr("Badge renamed") + ": " + (V0[bid + "_title"] || tr(BADGE_TITLE[bid])) + " → " + (V1[bid + "_title"] || tr(BADGE_TITLE[bid])) + " · " + n
+          : filled ? tr("Badges filled in from the area") + ": " + n
           : tr("Badges changed") + ": " + n;
         add(txt, copyVars((v) => badgeKeys.indexOf(v) >= 0));
       }
@@ -509,6 +513,10 @@
     /* Magnifier and redo in the toolbar (desktop/tablet) */
     :host(.bmode) #msearch, :host(.bmode) #mredo { display:none; }
     :host(.bmode:not(.phone)) #mredo.has { display:grid; }
+    /* Redo keeps its place next to undo, greyed out like undo when there is nothing to redo: appearing only after the
+       first undo pushed undo aside, and the second click on the same spot redid it (Prüfrunde u02-04). */
+    :host(.bmode:not(.phone):not(.flow)) #mredo { display:grid; }
+    :host(.bmode:not(.phone)) #mredo:disabled { opacity:.62; cursor:default; }
     /* Search as a visible entry: field "Search … ⌘K" (phone: magnifier next to "Done") */
     :host(.bmode) #msearch { display:inline-flex; align-items:center; gap:8px; height:34px; min-width:0; padding:0 12px 0 10px;
       margin-right:8px; border-radius:999px; border:0; font:inherit; font-size:14px; color:var(--ink-2, inherit); cursor:text;

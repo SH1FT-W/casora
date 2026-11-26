@@ -1968,8 +1968,6 @@
     "Automatic: {x}": "Automatycznie: {x}",
     "Change": "Zmień",
     "Electricity price": "Cena prądu",
-    "Empty: Casora finds outdoor sensors by their name.": "Puste: Casora znajduje czujniki zewnętrzne po nazwie.",
-    "Empty: the default AI from Settings → AI tasks.": "Puste: domyślna AI z Ustawienia → Zadania AI.",
     "For all dashboards: your home, the bell, new dashboards and Casora's options.": "Dla wszystkich pulpitów: twój dom, dzwonek, nowe pulpity i opcje Casory.",
     "for all dashboards": "dla wszystkich pulpitów",
     "Given to every analysis, e.g. “The bedroom windows are tilted on purpose.”": "Dołączane do każdej analizy, np. „Okna w sypialni są celowo uchylone.”",
@@ -2511,7 +2509,6 @@
     "Keeps the time left in step with the appliance.": "Utrzymuje pozostały czas w zgodzie z urządzeniem.",
     "Sends a sample activity (42%, 25 minutes left) to the saved recipients. It disappears after two minutes.": "Wysyła przykładową aktywność (42%, jeszcze 25 minut) do zapisanych odbiorców. Znika po dwóch minutach.",
     "Save the recipients first.": "Najpierw zapisz odbiorców.",
-    "Choose a recipient first.": "Najpierw wybierz odbiorcę.",
     "Send a test": "Wyślij test",
     "Sending…": "Wysyłanie…",
     "Send test": "Wyślij test",
@@ -3216,7 +3213,14 @@
     "Casora won't look for Hemma dashboards anymore – switch it back on under Settings › Updates & setup › Advanced › Hemma dashboards.": "Casora nie będzie już szukać pulpitów Hemma – włącz to ponownie w Ustawienia › Aktualizacje i konfiguracja › Zaawansowane › Pulpity Hemma.",
     "At most {n} km": "Najwyżej {n} km",
     "At least {n} km": "Co najmniej {n} km",
-    "The sensor decides": "Decyduje czujnik"
+    "The sensor decides": "Decyduje czujnik",
+    "Automatic: Casora finds outdoor sensors by their name.": "Automatycznie: Casora znajduje czujniki zewnętrzne po nazwie.",
+    "Automatic: the default AI from Settings → AI tasks.": "Automatycznie: domyślna AI z Ustawienia → Zadania AI.",
+    "Choose a phone under “Show live activities on” above and save.": "Wybierz powyżej telefon w „Pokazuj aktywności na żywo na” i zapisz.",
+    "Badges filled in from the area": "Odznaki uzupełnione z obszaru",
+    "Hidden – nobody sees this tile on the dashboard.": "Ukryty – nikt nie widzi tego kafelka na pulpicie.",
+    "Leave out status LEDs": "Pomiń diody stanu",
+    "Fill Favorites on Home automatically": "Wypełniaj automatycznie ulubione na „Dom”"
   },
   "patterns": [
     [

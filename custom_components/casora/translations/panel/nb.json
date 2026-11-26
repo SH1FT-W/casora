@@ -1969,8 +1969,6 @@
     "Automatic: {x}": "Automatisk: {x}",
     "Change": "Endre",
     "Electricity price": "Strømpris",
-    "Empty: Casora finds outdoor sensors by their name.": "Tomt: Casora finner utesensorer ut fra navnet.",
-    "Empty: the default AI from Settings → AI tasks.": "Tomt: standard-KI fra Innstillinger → KI-oppgaver.",
     "For all dashboards: your home, the bell, new dashboards and Casora's options.": "For alle dashbord: hjemmet ditt, bjellen, nye dashbord og Casoras alternativer.",
     "for all dashboards": "for alle dashbord",
     "Given to every analysis, e.g. “The bedroom windows are tilted on purpose.”": "Sendes med i hver analyse, f.eks. «Soveromsvinduene står vippet med vilje.»",
@@ -2512,7 +2510,6 @@
     "Keeps the time left in step with the appliance.": "Holder gjenstående tid i takt med apparatet.",
     "Sends a sample activity (42%, 25 minutes left) to the saved recipients. It disappears after two minutes.": "Sender en eksempelaktivitet (42%, 25 minutter igjen) til de lagrede mottakerne. Den forsvinner etter to minutter.",
     "Save the recipients first.": "Lagre mottakerne først.",
-    "Choose a recipient first.": "Velg en mottaker først.",
     "Send a test": "Send en test",
     "Sending…": "Sender…",
     "Send test": "Send test",
@@ -3216,7 +3213,14 @@
     "Casora won't look for Hemma dashboards anymore – switch it back on under Settings › Updates & setup › Advanced › Hemma dashboards.": "Casora ser ikke lenger etter Hemma-dashbord – slå det på igjen under Innstillinger › Oppdateringer og oppsett › Avansert › Hemma-dashbord.",
     "At most {n} km": "Høyst {n} km",
     "At least {n} km": "Minst {n} km",
-    "The sensor decides": "Sensoren bestemmer"
+    "The sensor decides": "Sensoren bestemmer",
+    "Automatic: Casora finds outdoor sensors by their name.": "Automatisk: Casora finner utesensorer ut fra navnet.",
+    "Automatic: the default AI from Settings → AI tasks.": "Automatisk: standard-KI fra Innstillinger → KI-oppgaver.",
+    "Choose a phone under “Show live activities on” above and save.": "Velg en telefon under «Vis direkteaktiviteter på» ovenfor og lagre.",
+    "Badges filled in from the area": "Merker fylt ut fra området",
+    "Hidden – nobody sees this tile on the dashboard.": "Skjult – ingen ser denne flisen i dashbordet.",
+    "Leave out status LEDs": "Utelat status-LED-er",
+    "Fill Favorites on Home automatically": "Fyll favoritter på Hjem automatisk"
   },
   "patterns": [
     [

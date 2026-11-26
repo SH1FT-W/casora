@@ -43,7 +43,7 @@ const read = () => page.evaluate(() => {
   const chips = window.__pierce('.cs-wrap .casora-chip').filter(vis).map((b) => ({ id: b.title, label: b.textContent.trim(), on: b.classList.contains('on') }));
   const devices = window.__pierce('.cs-wrap .cs-live-row').filter(vis).map((r) => ({ id: r.dataset.device,
     title: r.querySelector('.rtext b')?.textContent.trim(), sub: r.querySelector('.rtext > span')?.textContent.trim(),
-    on: r.querySelector('.fswitch')?.getAttribute('aria-checked') }));
+    on: r.querySelector('.sw')?.getAttribute('aria-checked') }));
   const log = window.__pierce('.cs-wrap .cs-live-log').filter(vis).map((r) => ({ title: r.querySelector('.rtext b')?.textContent.trim(),
     text: r.querySelector('.rtext > span')?.textContent.trim(), pct: r.querySelector('.cs-live-pct')?.textContent.trim() || '' }));
   const probe = window.__pierce('.cs-wrap .cs-live-probe button.ghost').find(vis);
@@ -86,7 +86,7 @@ const saveNow = async () => {
   await page.waitForTimeout(1200);
 };
 const devId = s.devices[0].id;
-const toggle = () => page.evaluate((id) => window.__pierce('.cs-wrap .cs-live-row').find((r) => r.dataset.device === id).querySelector('.fswitch').click(), devId);
+const toggle = () => page.evaluate((id) => window.__pierce('.cs-wrap .cs-live-row').find((r) => r.dataset.device === id).querySelector('.sw').click(), devId);
 await toggle();
 await saveNow();
 let srv = await (async () => { const c = await ws(); const r = await c.cmd({ type: 'casora/live/get' }); c.close(); return r; })();

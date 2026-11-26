@@ -1968,8 +1968,6 @@
     "Automatic: {x}": "Automatisch: {x}",
     "Change": "Wijzigen",
     "Electricity price": "Stroomprijs",
-    "Empty: Casora finds outdoor sensors by their name.": "Leeg: Casora vindt buitensensoren op hun naam.",
-    "Empty: the default AI from Settings → AI tasks.": "Leeg: de standaard-AI uit Instellingen → AI-taken.",
     "For all dashboards: your home, the bell, new dashboards and Casora's options.": "Voor alle dashboards: je huis, de bel, nieuwe dashboards en Casora's opties.",
     "for all dashboards": "voor alle dashboards",
     "Given to every analysis, e.g. “The bedroom windows are tilted on purpose.”": "Wordt aan elke analyse meegegeven, bijv. “De ramen in de slaapkamer staan bewust op een kier.”",
@@ -2511,7 +2509,6 @@
     "Keeps the time left in step with the appliance.": "Houdt de resterende tijd gelijk met het apparaat.",
     "Sends a sample activity (42%, 25 minutes left) to the saved recipients. It disappears after two minutes.": "Stuurt een voorbeeldactiviteit (42%, nog 25 minuten) naar de opgeslagen ontvangers. Die verdwijnt na twee minuten.",
     "Save the recipients first.": "Sla eerst de ontvangers op.",
-    "Choose a recipient first.": "Kies eerst een ontvanger.",
     "Send a test": "Een test versturen",
     "Sending…": "Versturen…",
     "Send test": "Test versturen",
@@ -3216,7 +3213,14 @@
     "Casora won't look for Hemma dashboards anymore – switch it back on under Settings › Updates & setup › Advanced › Hemma dashboards.": "Casora zoekt niet meer naar Hemma-dashboards – weer inschakelen onder Instellingen › Updates & inrichting › Geavanceerd › Hemma-dashboards.",
     "At most {n} km": "Hoogstens {n} km",
     "At least {n} km": "Minstens {n} km",
-    "The sensor decides": "De sensor beslist"
+    "The sensor decides": "De sensor beslist",
+    "Automatic: Casora finds outdoor sensors by their name.": "Automatisch: Casora vindt buitensensoren op hun naam.",
+    "Automatic: the default AI from Settings → AI tasks.": "Automatisch: de standaard-AI uit Instellingen → AI-taken.",
+    "Choose a phone under “Show live activities on” above and save.": "Kies hierboven een telefoon bij „Live-activiteiten tonen op” en sla op.",
+    "Badges filled in from the area": "Badges aangevuld uit de ruimte",
+    "Hidden – nobody sees this tile on the dashboard.": "Verborgen – niemand ziet deze tegel in het dashboard.",
+    "Leave out status LEDs": "Statusleds weglaten",
+    "Fill Favorites on Home automatically": "Favorieten op Thuis automatisch vullen"
   },
   "patterns": [
     [

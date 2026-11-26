@@ -69,7 +69,7 @@
   window.__casoraStudioLive = { COLORS, KIND_LABEL, GRADE_LABEL, PHASE_LABEL, DEFAULTS, deviceSub, cleanDevices, draftOf, settingsOf, logLine,
     saveDevices, sentText };
 
-  const CSS = ".cs-live-row .fswitch{margin-left:auto;flex:none}"
+  const CSS = ".cs-live-row>.sw{margin-left:auto;flex:none}"
     // Phone: wrap sublines (kind · source · grade) and explanations instead of „Home Connect (HAC…“.
     + ".cs-wrap .frow.cs-live-row .rtext span,.cs-wrap .frow.cs-live-opt .rtext span,.cs-wrap .frow.cs-live-opt .rtext b{white-space:normal;overflow:visible;text-overflow:clip}"
     // Per-device settings: select/switch on the right in the same row (like „Umkreis“ on the Tanken page).
@@ -162,8 +162,9 @@
       });
       return box;
     };
+    // The settings' own switch (.sw, like every other settings row), not the larger iOS one (Prüfrunde d04-06).
     const fswitch = (on, onChange) => {
-      const sw = el("button", "fswitch");
+      const sw = el("button", "sw");
       sw.type = "button";
       sw.setAttribute("role", "switch");
       sw.setAttribute("aria-checked", on ? "true" : "false");
@@ -269,7 +270,7 @@
       g = this._flowGroup(host, { header: t("Test"),
         footer: t("Sends a sample activity (42%, 25 minutes left) to the saved recipients. It disappears after two minutes.") });
       const unsaved = JSON.stringify((L.targets || []).slice().sort()) !== JSON.stringify((lv.targets || []).slice().sort());
-      const probeSub = cs.lvProbe ? cs.lvProbe : (unsaved ? t("Save the recipients first.") : (lv.targets || []).length ? null : t("Choose a recipient first."));
+      const probeSub = cs.lvProbe ? cs.lvProbe : (unsaved ? t("Save the recipients first.") : (lv.targets || []).length ? null : t("Choose a phone under “Show live activities on” above and save."));
       const pr = this._flowRow(g, { title: t("Send a test"), sub: probeSub });
       pr.row.classList.add("casora-prow", "cs-live-probe");
       const pc = el("div", "casora-pctl");
@@ -305,7 +306,7 @@
           footer: t("Test house only: plays a whole cycle on the device within a minute – start, progress, done, off.") });
         const noTargets = unsaved || !(lv.targets || []).length;
         const tr = this._flowRow(g, { title: t("Start a test run"),
-          sub: unsaved ? t("Save the recipients first.") : !(lv.targets || []).length ? t("Choose a recipient first.") : null });
+          sub: unsaved ? t("Save the recipients first.") : !(lv.targets || []).length ? t("Choose a phone under “Show live activities on” above and save.") : null });
         tr.row.classList.add("casora-prow", "cs-live-run");
         const tc = el("div", "casora-pctl");
         tc.appendChild(this._combo(cs.lvRunDev, runDevs.map((f) => f.device_id), "", (v) => { if (v) cs.lvRunDev = v; }, { fixed: true, labels: runLabels }).wrap);

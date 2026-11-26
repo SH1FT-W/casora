@@ -1968,8 +1968,6 @@
     "Automatic: {x}": "Automatique : {x}",
     "Change": "Modifier",
     "Electricity price": "Prix de l'électricité",
-    "Empty: Casora finds outdoor sensors by their name.": "Vide : Casora trouve les capteurs extérieurs par leur nom.",
-    "Empty: the default AI from Settings → AI tasks.": "Vide : l'IA par défaut de Paramètres → Tâches IA.",
     "For all dashboards: your home, the bell, new dashboards and Casora's options.": "Pour tous les tableaux de bord : ta maison, la cloche, les nouveaux tableaux de bord et les options de Casora.",
     "for all dashboards": "pour tous les tableaux de bord",
     "Given to every analysis, e.g. “The bedroom windows are tilted on purpose.”": "Transmis à chaque analyse, p. ex. « Les fenêtres de la chambre sont entrouvertes volontairement. »",
@@ -2511,7 +2509,6 @@
     "Keeps the time left in step with the appliance.": "Garde le temps restant synchronisé avec l'appareil.",
     "Sends a sample activity (42%, 25 minutes left) to the saved recipients. It disappears after two minutes.": "Envoie une activité d'exemple (42 %, encore 25 minutes) aux destinataires enregistrés. Elle disparaît après deux minutes.",
     "Save the recipients first.": "Enregistre d'abord les destinataires.",
-    "Choose a recipient first.": "Choisis d'abord un destinataire.",
     "Send a test": "Envoyer un test",
     "Sending…": "Envoi…",
     "Send test": "Envoyer un test",
@@ -3216,7 +3213,14 @@
     "Casora won't look for Hemma dashboards anymore – switch it back on under Settings › Updates & setup › Advanced › Hemma dashboards.": "Casora ne cherchera plus de tableaux de bord Hemma – réactive-le sous Réglages › Mises à jour et configuration › Avancé › Tableaux de bord Hemma.",
     "At most {n} km": "{n} km au maximum",
     "At least {n} km": "{n} km au minimum",
-    "The sensor decides": "Le capteur décide"
+    "The sensor decides": "Le capteur décide",
+    "Automatic: Casora finds outdoor sensors by their name.": "Automatique : Casora trouve les capteurs extérieurs par leur nom.",
+    "Automatic: the default AI from Settings → AI tasks.": "Automatique : l'IA par défaut de Paramètres → Tâches IA.",
+    "Choose a phone under “Show live activities on” above and save.": "Choisis plus haut un téléphone dans « Afficher les activités en direct sur » et enregistre.",
+    "Badges filled in from the area": "Badges complétés depuis la pièce",
+    "Hidden – nobody sees this tile on the dashboard.": "Masquée – personne ne voit cette tuile dans le tableau de bord.",
+    "Leave out status LEDs": "Laisser de côté les LED d'état",
+    "Fill Favorites on Home automatically": "Remplir automatiquement les favoris sur Maison"
   },
   "patterns": [
     [

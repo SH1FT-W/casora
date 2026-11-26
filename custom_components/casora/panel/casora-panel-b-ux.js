@@ -1101,6 +1101,8 @@
       const users = this._mUsersCache || [];
       const names = ids.map((id) => (users.find((u) => u.id === id) || {}).name).filter(Boolean);
       const surf = SV.surfaces || V.surfaces;
+      // A tile switched off is seen by nobody, whatever else is set (Prüfrunde u02-07).
+      if (V.enabled === false || SV.enabled === false) return tr("Hidden");
       const parts = [];
       parts.push(ids.length ? (names.length ? fill(tr("Only {names}"), { names: names.join(", ") }) : tr("Only some people")) : tr("Everyone"));
       parts.push(surf === "phone" ? tr("phone only") : surf === "desktop" ? tr("desktop only") : tr("everywhere"));
@@ -1195,6 +1197,7 @@
       const ids = usersOf(shell);
       const names = ids.map((id) => ((this._mUsersCache || []).find((u) => u.id === id) || {}).name).filter(Boolean);
       const surf = SV.surfaces || V.surfaces;
+      if (V.enabled === false || SV.enabled === false) return tr("Hidden – nobody sees this tile on the dashboard.");
       const who = ids.length ? fill(tr("Visible only to {names}"), { names: names.join(", ") || tr("some people") }) : tr("Everyone sees this tile");
       const where = surf === "phone" ? tr("on the phone only") : surf === "desktop" ? tr("on the desktop only") : tr("on desktop and phone");
       let out = who + " – " + where + ".";
@@ -1362,7 +1365,9 @@
       const r = rooms[i];
       const I = W.__casoraPanelInternals || {};
       if (id !== "delete" || !on(this) || !r || !this._mHideRoom || (I.isHomeRoom && I.isHomeRoom(r, rooms))
-        || (this._roomDeleteBlock && this._roomDeleteBlock(i))) return orig.apply(this, arguments);
+        || (this._roomDeleteBlock && this._roomDeleteBlock(i))
+        // Already hidden: offering to hide it makes no sense, the plain question asks (Prüfrunde u02-11).
+        || (r.variables && r.variables.casora_hidden)) return orig.apply(this, arguments);
       const res = await this._ask({
         title: fill(tr("Delete “{room}”?"), { room: this._roomLabel(r) }),
         message: tr("Deleted for good when you save. Only not needed for a while? Hide it – it comes back exactly as it is."),

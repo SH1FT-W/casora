@@ -487,7 +487,8 @@ window.CASORA_TILE_TYPES = [
     onlyIf: (hass) => !!(hass && hass.states && Object.keys(hass.states).some((id) => id.startsWith("sensor.")
       && ((hass.states[id].attributes || {}).device_class === "carbon_monoxide"))),
     community: { desc: "Carbon monoxide in ppm on the tile, the symbol in the color of its level: green, from 30 ppm yellow, from 50 orange, from 100 red. The popup shows the value in a ring with the four levels, the history of 24 hours and 7 days, what to do when it rises and when it was last raised, plus battery, self-test and alarm of the detector. For every CO sensor, e.g. Matter smoke and CO alarms.",
-      darkShots: true },
+      // The dark tile shot was taken mid-animation (Prüfrunde u02-13): only the popup has a dark image for now.
+      darkShots: "popup" },
     fields: [ICON, TITLE_NAME] },
   // Smart meter (community card, card request 208): a smart meter's daily counters (Hildebrand Glow, Octopus Energy …):
   // electricity and gas consumption (energy) and cost (monetary), standing charge and the day's total, found on the tile's
@@ -749,7 +750,8 @@ window.CASORA_TILE_TYPES = [
 //   needs  – integration (domain) the card needs; if it is missing, a hint says so
 //   needsText / needsMissing – readable hint for it (otherwise "Needs <integration>")
 //   preview – preview image, otherwise /casora_assets/community/<id>.webp; popup image optional <id>-popup.webp
-//   darkShots – own preview images for the dark profile: <id>-dark.webp / <id>-popup-dark.webp (falls back to light)
+//   darkShots – own preview images for the dark profile: <id>-dark.webp / <id>-popup-dark.webp (falls back to light);
+//            "popup" – only the popup has a dark image, the tile shows the light one
 //   retired – card is discontinued: no longer in the community list (except for those who added it –
 //            there only "Remove") and never again in "Add a tile"; existing tiles keep
 //            working, the editor shows a hint. A later release can then delete the tile type and template.

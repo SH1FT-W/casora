@@ -1142,6 +1142,9 @@ const markAutoHome = (room) => {
   room.name = HOME_ROOM_NAME;
   return room;
 };
+// ⌘Z goes to a text field only when it was typed into since it got the focus (u02-05).
+const fieldOwnsUndo = (t, typed) => !!t
+  && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || !!t.isContentEditable) && typed.has(t);
 // Anzeigename eines Raums (Liste, Editor, Vorschau, Versionen).
 const roomLabel = (room, rooms, hass) => {
   if (!room) return "";
@@ -7645,7 +7648,7 @@ class CasoraPanel extends HTMLElement {
         :host(.is-light) :is(.line.warn, .card > .cdesc.drift) { color:var(--casora-studio-warn, #b25000); }
         :host(.is-light) .condadd { color:var(--casora-studio-link, #0071e3); }
         :host(.is-light:not(.phone)) .seg { background:var(--casora-studio-chip, rgba(118,118,128,0.12)); }
-        :host(.is-light:not(.phone)) .segthumb { background:#ffffff; box-shadow:0 1px 3px rgba(0,0,0,0.12), 0 0 0 .5px rgba(0,0,0,0.04); }
+        :host(.is-light:not(.phone)) .segthumb, :host(.phone.is-light) :is(.flist, section.cn-card) .segthumb { background:#ffffff; box-shadow:0 1px 3px rgba(0,0,0,0.12), 0 0 0 .5px rgba(0,0,0,0.04); }
         :host(.is-light:not(.phone)) .shot { background:var(--casora-studio-chip, rgba(118,118,128,0.12)); }
         :host(.is-light:not(.phone)) .shot:not(.empty) .shotover { background:rgba(0,0,0,0.30); }
         :host(.is-light) .status.warn { color:var(--casora-studio-warn, #c93400); }
@@ -7739,6 +7742,13 @@ class CasoraPanel extends HTMLElement {
           color-scheme:light;
         }
         :host(.phone.is-light) .bg { opacity:1; }
+        /* On the white plates (flow lists, settings sections) a white field or segment track had no surface
+           (Prüfrunde d04-02): there they get the grey of the desktop light profile, the selected segment stays white. */
+        :host(.phone.is-light) :is(.flist, section.cn-card) {
+          --field:var(--casora-studio-phone-field-on-plate, rgba(118,118,128,0.12));
+          --field-hi:var(--casora-studio-phone-field-hi-on-plate, rgba(118,118,128,0.18));
+        }
+        :host(.phone.is-light) :is(.flist, section.cn-card) .seg { background:var(--field); }
         :host(.phone.is-light) .bgwrap::after {
           content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
           background:linear-gradient(to bottom, rgba(242,242,247,0.14) 0%,
@@ -13002,6 +13012,22 @@ class CasoraPanel extends HTMLElement {
         }
         :host(:not(.narrow)) .inspector .row:not(:has(> .sw)):not(:has(> .chipwrap)):has(> .combo) > .drop:not(.blank) { margin-right:30px; }
         :host(.phone) .row:not(:has(> .chipwrap)):has(> .combo) > .drop:not(.blank) { margin-right:30px; }
+        /* Tablet (narrow, not phone): the settings pages stack label and field like the desktop, so the ✕ goes into
+           the field there too instead of a column of its own that made the field end early (Prüfrunde d04-13). */
+        :host(.narrow:not(.phone)) .cn-block .row:not(:has(> .sw)):not(:has(> .chipwrap)):is(:has(> .combo), :has(> input)):has(> .drop:not(.blank)) {
+          grid-template-columns:minmax(0,1fr);
+        }
+        :host(.narrow:not(.phone)) .cn-block .row:not(:has(> .sw)):not(:has(> .chipwrap)):is(:has(> .combo), :has(> input)):has(> .drop:not(.blank)) > label {
+          grid-column:1; grid-row:1;
+        }
+        :host(.narrow:not(.phone)) .cn-block .row:not(:has(> .sw)):not(:has(> .chipwrap)):is(:has(> .combo), :has(> input)):has(> .drop:not(.blank)) > :is(.combo, input) {
+          grid-column:1; grid-row:2; min-width:0;
+        }
+        :host(.narrow:not(.phone)) .cn-block .row:not(:has(> .sw)):not(:has(> .chipwrap)):is(:has(> .combo), :has(> input)) > .drop:not(.blank) {
+          display:grid; grid-column:1; grid-row:2; justify-self:end; align-self:center;
+          position:relative; z-index:2; margin-right:4px;
+        }
+        :host(.narrow:not(.phone)) .cn-block .row:not(:has(> .sw)):not(:has(> .chipwrap)):has(> .combo) > .drop:not(.blank) { margin-right:30px; }
         :host .row:has(> .drop:not(.blank)) > .combo > input { padding-right:66px; }
         :host(.phone) .row:has(> .drop:not(.blank)) > .combo > input { padding-right:76px; }
         :host .row:has(> .drop:not(.blank)) > input { padding-right:42px; }
@@ -13510,11 +13536,16 @@ class CasoraPanel extends HTMLElement {
       ev.preventDefault();
       this._save();
     });
+    // Fields typed into since they got the focus keep ⌘Z for themselves; an untouched field (the device field that
+    // opens by itself after adding a tile) has nothing to undo, so the Studio undoes (Prüfrunde u02-05).
+    const typed = new WeakSet();
+    const target = (ev) => (ev.composedPath ? ev.composedPath()[0] : ev.target);
+    this._gOn(document, "focusin", (ev) => { const t = target(ev); if (t) typed.delete(t); });
+    this._gOn(document, "input", (ev) => { const t = target(ev); if (t) typed.add(t); });
     this._gOn(document, "keydown", (ev) => {
       if (!(ev.metaKey || ev.ctrlKey) || ev.shiftKey || ev.altKey || String(ev.key).toLowerCase() !== "z") return;
       if (!this.isConnected || !(this._undoStack || []).length) return;
-      const t = ev.composedPath ? ev.composedPath()[0] : ev.target;
-      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+      if (fieldOwnsUndo(target(ev), typed)) return;
       ev.preventDefault();
       this._undo();
     });
@@ -18136,16 +18167,23 @@ class CasoraPanel extends HTMLElement {
     requestAnimationFrame(() => this._playTabs(before));
   }
 
+  // Another room already has this name or its path (adding, renaming; Prüfrunde u02-03). `self` is left out.
+  _roomNameTaken(v, self) {
+    const rooms = (this._state && this._state.compact && this._state.compact.rooms) || [];
+    const n = String(v || "").trim();
+    if (!n) return false;
+    return rooms.some((r) => r !== self && (r.path === slug(n)
+      || String(r.name || "").trim().toLowerCase() === n.toLowerCase()
+      || (isDefaultHomeName(n) && isHomeRoom(r, rooms) && isDefaultHomeName(r.name))));
+  }
+
   async _addRoom() {
     const rooms = this._state.compact.rooms;
     const picked = await this._ask({
       title: "New room", value: "", placeholder: "Kitchen", confirmLabel: "Add", icons: true,
       message: "A room is its own page on desktop and tablet, and a section further down the page on the phone.",
       emptyHint: "Enter a name for the room.",
-      validate: (v) => (rooms.some((r) => r.path === slug(v)
-        || String(r.name || "").trim().toLowerCase() === v.toLowerCase()
-        || (isDefaultHomeName(v) && isHomeRoom(r, rooms) && isDefaultHomeName(r.name)))
-        ? "A room with this name already exists." : ""),
+      validate: (v) => (this._roomNameTaken(v) ? "A room with this name already exists." : ""),
     });
     if (!picked) return;
     const name = picked.value;
@@ -18214,7 +18252,9 @@ class CasoraPanel extends HTMLElement {
     const rooms = this._state.compact.rooms;
       const r = rooms[i];
       if (id === "rename") {
-        const name = await this._ask({ title: "Rename room", value: this._roomLabel(r), confirmLabel: "Rename" });
+        const name = await this._ask({ title: "Rename room", value: this._roomLabel(r), confirmLabel: "Rename",
+          emptyHint: "Enter a name for the room.",
+          validate: (v) => (this._roomNameTaken(v, r) ? "A room with this name already exists." : "") });
         if (!name) return;
         keepRoomGlyph(r, name);
         if (this._isHomeRoom(i)) setHomeName(r, name, this._hass); else r.name = storedRoomName(name, false);
@@ -19072,6 +19112,7 @@ class CasoraPanel extends HTMLElement {
         }
         const gt = document.createElement("h3");
         gt.textContent = H.label;
+        if (H.literal) gt.setAttribute("data-no-i18n", "");
         gh.appendChild(gt);
         if (H.blurb) {
           const gp = document.createElement("p");
@@ -19840,6 +19881,12 @@ class CasoraPanel extends HTMLElement {
             return;
           }
           if (f.key === "__name") {
+            // Same rule as adding a room (u02-03): no second room of the same name.
+            if (this._roomNameTaken(v, room)) {
+              input.value = roomLabel(room, this._state.compact.rooms, this._hass);
+              this._status("A room with this name already exists.", "err");
+              return;
+            }
             if (v) keepRoomGlyph(room, v);
             const was = room.name;
             // Übersicht: „Zuhause“/„Home“/leer ist der Standardname – gespeichert als „Home“.
@@ -20060,7 +20107,9 @@ class CasoraPanel extends HTMLElement {
         back.onclick = () => this._popRow();
         const grp = GROUPS.find((x) => x.id === this._sel.group);
         const h3 = document.createElement("h3");
-        h3.textContent = (grp && this._headFor(grp, room).label) || this._sel.label || home;
+        const H = grp && this._headFor(grp, room);
+        h3.textContent = (H && H.label) || this._sel.label || home;
+        if (H && H.label && H.literal) h3.setAttribute("data-no-i18n", "");
         bar.appendChild(back);
         bar.appendChild(h3);
         const ownHead = hit.querySelector(".chead, .thead");
@@ -22033,12 +22082,15 @@ class CasoraPanel extends HTMLElement {
       const type = tile && tileTypeAny(tile);
       // A tile whose template the panel does not know still has a name.
       // Name aus der Kachel (nach Umbenennen aktuell), sonst der beim Auswählen gemerkte.
-      if (!type) return { ...grp, label: (tile.name && String(tile.name).trim()) || sel.label || grp.label };
+      if (!type) return { ...grp, label: (tile.name && String(tile.name).trim()) || sel.label || grp.label, literal: true };
+      const cn = type.id === "custom" && (customTileName(tile, this._hass && this._hass.states) || {}).name;
+      const own = cn || (tile.name && tile.name.trim());
       return {
         icon: TILE_ICON[type.id] || grp.icon,
         color: TILE_COLOR[type.id] || TILE_TINT,
-        label: (type.id === "custom" && (customTileName(tile, this._hass && this._hass.states) || {}).name)
-          || (tile.name && tile.name.trim()) || type.label,
+        label: own || type.label,
+        // A name someone gave (or read from the card) is not a Studio word: „Auto“ stays „Auto“ (Prüfrunde u02-01).
+        literal: !!own,
         blurb: type.blurb,
       };
     }
@@ -22259,6 +22311,9 @@ class CasoraPanel extends HTMLElement {
   _popRow() {
     if (!this._sel) return;
     this._sel = null;
+    // Desktop Studio: back shows the room, so the group goes back too – like removing the selected tile (r160) –
+    // or the veil stays over the preview with nothing selected (Prüfrunde u02-12). The phone stays in its list.
+    if (this.classList.contains("bmode") && !this.classList.contains("phone")) this._group = GROUPS[0].id;
     this._navDir = -1;
     this._toListScroll = true;
     this._renderForm();
@@ -25726,8 +25781,12 @@ class CasoraPanel extends HTMLElement {
     const h3 = room && this._sel && this._sel.group === "tiles" && this.shadowRoot.querySelector(".detailbar h3");
     if (h3) {
       const grp = GROUPS.find((x) => x.id === "tiles");
-      const lab = grp && this._headFor(grp, room).label;
-      if (lab && h3.textContent !== lab) h3.textContent = lab;
+      const H = grp && this._headFor(grp, room);
+      const lab = H && H.label;
+      if (lab && h3.textContent !== lab) {
+        h3.toggleAttribute("data-no-i18n", !!H.literal);
+        h3.textContent = lab;
+      }
     }
     const mount = this.$("mapmount");
     if (!mount || !mount.firstChild) return;
@@ -27047,7 +27106,8 @@ class CasoraPanel extends HTMLElement {
       // die Kachel „Beleuchtung“ in englischer Oberfläche „Lighting“ (07.10.2026, r68).
       const nm = tile.name && typeof window.casoraTr === "function" ? window.casoraTr(String(tile.name)) : tile.name;
       el.querySelector(".mname").textContent = nm || own || (type && type.label) || "Tile";
-      if (own) el.querySelector(".mname").setAttribute("data-no-i18n", "");
+      // Own name: already through the dashboard translation (or literal), never the Studio's word list (u02-01).
+      if (own || nm) el.querySelector(".mname").setAttribute("data-no-i18n", "");
       // Vergleich 06.10. (#f9): Ohne eigenen Namen heißt die Kachel wie das Gerät („P1S“) – darunter klein
       // die Kachelart („3D-Drucker“), damit man sie erkennt. Nur in der Vorschau, das Dashboard bleibt gleich.
       // Heißt die Kachel schon wie ihre Art („Waschmaschine“), keine Doppelung.
@@ -29092,6 +29152,8 @@ class CasoraPanel extends HTMLElement {
     nameEl.textContent = shown + " ";
     // Gelesene Namen (Entität, Kartentitel) sind keine Casora-Texte: nicht übersetzen.
     if (isCustom && shown !== CUSTOM_DEFAULT_NAME) nameEl.setAttribute("data-no-i18n", "");
+    // Nor is a name someone typed (u02-01: a tile named „Auto“ is not the option „Automatic“).
+    else if (!isCustom && !contDesc && !carousel && tile.name && tile.name.trim()) nameEl.setAttribute("data-no-i18n", "");
     title.appendChild(nameEl);
     const sub = document.createElement("span");
     sub.className = "kind";
@@ -29461,9 +29523,27 @@ class CasoraPanel extends HTMLElement {
 
     const nameIn = document.createElement("input");
     nameIn.value = tile.name || "";
-    if (type.label && !type.raw) nameIn.placeholder = newTile(type).name;
+    // Placeholder = the name the tile shows without a name of its own, as in the preview: the template's name
+    // (the device, „P1S“ / „Waschmaschine Zustand“, #f9), else the type's name. It promised the type's name while
+    // the dashboard showed the entity's (Prüfrunde u02-08). Already in the user's language or a device name, so
+    // the Studio word list stays off it (it turned „Auto“ into „Automatisch“).
+    const fallbackName = () => {
+      if (!type.label || type.raw) return "";
+      const bare = { ...tile, name: undefined };
+      const entId = this._tileEnt(bare);
+      const ent = entId && this._hass && this._hass.states[entId];
+      const own = window.casoraTileName
+        && window.casoraTileName(bare, ent, this._hass, this._state && this._state.templates);
+      return own || newTile(type).name;
+    };
+    nameIn.placeholder = fallbackName();
+    nameIn.setAttribute("data-no-i18n", "");
     nameIn.onchange = () => {
-      tile.name = nameIn.value.trim();
+      // Empty = no name key (not ""): the tile goes back to the name the placeholder shows.
+      const v = nameIn.value.trim();
+      if (v) tile.name = v;
+      else delete tile.name;
+      nameIn.placeholder = fallbackName();
       nameEl.textContent = (tile.name || (type.label && !type.raw ? type.label : "") || "(unnamed)") + " ";
       this._syncPreview();
     };
