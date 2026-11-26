@@ -1127,6 +1127,10 @@ const shotLang = (url, hass) => (url && haLang(hass).indexOf("de") === 0 ? url.r
 const isHomeRoom = (room, rooms) => !!room && (room.path === "home"
   || (Array.isArray(rooms) && rooms[0] === room && !rooms.some((r) => r && r.path === "home")));
 const AUTO_HOME = "home";
+// Welcome screen: the line on Hemma dashboards found, by their number (Prüfrunde u01-10; translated by pattern).
+const hemmaFoundText = (n) => (n > 1
+  ? "Casora found " + n + " dashboards of Hemma, its predecessor. Rooms, tiles and phone layout move over."
+  : "Casora found a dashboard of Hemma, its predecessor. Rooms, tiles and phone layout move over.");
 // Selbst eingetippter Name (variables.name_literal, seit 04.10.2026 nur noch zusätzlich): steht, wie er ist.
 const isLiteralName = (room) => !!(room && room.variables && room.variables.name_literal);
 // Von Casora angelegt (Markierung casora_auto_name) und nicht als eigener Name gemerkt.
@@ -14779,8 +14783,7 @@ class CasoraPanel extends HTMLElement {
       try { moves = typeof this._casoraMoveCandidates === "function" ? await this._casoraMoveCandidates() : []; } catch (e) { moves = []; }
       if (!moves.length || this._flowTok !== tok || !feats.isConnected) return;
       // E13 (test 2): only shown when one was found – and said what Hemma is, for whoever never heard of it.
-      const h = feat(["import", studioIcon("flow-hemma"), "Bring Your Existing Dashboard",
-        "Casora found a dashboard of Hemma, its predecessor. Rooms, tiles and phone layout move over."]);
+      const h = feat(["import", studioIcon("flow-hemma"), "Bring Your Existing Dashboard", hemmaFoundText(moves.length)]);
       h.style.setProperty("--i", 0);
       feats.replaceChild(h, screens);
     })();

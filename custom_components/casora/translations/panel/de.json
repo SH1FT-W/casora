@@ -3929,6 +3929,10 @@
     [
       "^(\\d+) available$",
       "{1} verfügbar"
+    ],
+    [
+      "^Casora found (\\d+) dashboards of Hemma, its predecessor\\. Rooms, tiles and phone layout move over\\.$",
+      "Casora hat {1} Dashboards von Hemma gefunden, dem Vorgänger. Räume, Kacheln und Handy-Layout ziehen mit um."
     ]
   ],
   "The dashboard of this suggestion is gone. Discard it and ask your assistant again.": "Das Dashboard dieses Vorschlags gibt es nicht mehr. Verwirf ihn und frag deinen Assistenten noch einmal.",
