@@ -54,12 +54,15 @@ const node = (cls, kids = []) => {
   n.querySelector = (q) => {
     if (q === ':scope > label') return n.children.find((c) => c.tag === 'label') || null;
     if (q === '.lsub') { const walk = (x) => x.children.find((c) => c.classList.contains('lsub') || walk(c)); return walk(n) || null; }
+    if (q === INTERACTIVE) { const walk = (x) => x.children.find((c) => c.tag === 'button' || walk(c)); return walk(n) || null; }
     throw new Error('query ' + q);
   };
   n.querySelectorAll = (q) => { assert.equal(q, ':scope > .subcard'); return n.children.filter((c) => c.classList.contains('subcard')); };
   kids.forEach((k) => n.appendChild(k));
   return n;
 };
+// What the helper must treat as a control inside a hint (kept in step with casora-panel-settings.js).
+const INTERACTIVE = 'button,a[href],input,select,textarea,[tabindex]';
 const label = () => Object.assign(node(''), { tag: 'label' });
 const doc = { createElement: () => ({ style: {}, classList: { add() {}, toggle() {}, contains() { return false; } }, setAttribute() {}, appendChild() {} }), getElementById: () => null };
 new Function('window', 'document', 'customElements', 'localStorage', src)(win, doc,
@@ -69,13 +72,19 @@ assert.equal(typeof P._csRowHints, 'function', 'row hint helper');
 const l1 = label(), l2 = label(), l3 = label(), own = node('lsub');
 l3.appendChild(own);
 const r1 = node('row', [l1]), h1 = node('hint'), r2 = node('row', [l2]), r3 = node('row', [l3]), h3 = node('hint');
-const plate = node('subcard', [r1, h1, r2, r3, h3]);
+// An "action" field's hint holds its button (Tile size on the phone, energy "Automatic", excluded devices). Inside a
+// <label> with no `for` the button becomes the label's control: a tap on the title fired it (g3 review).
+const l4 = label(), r4 = node('row', [l4]), h4 = node('hint energy-excluded', [Object.assign(node('linkbtn'), { tag: 'button' })]);
+const plate = node('subcard', [r1, h1, r2, r3, h3, r4, h4]);
 const foot = node('hint');
 const card = node('cn-card', [plate, foot]);
 P._csRowHints(card);
 assert.equal(h1.parent, l1, 'the hint under a field sits under its title');
 assert.equal(h1.className, 'lsub cn-rowhint', 'drawn as the row sentence');
 assert.equal(h3.parent, plate, 'a row that has a sentence keeps the hint under it');
+assert.equal(h4.parent, plate, 'a hint with a button stays out of the label');
+assert.equal(h4.className, 'hint energy-excluded', 'and keeps its class (the .hint .linkbtn look)');
+assert.ok(src.includes('"' + INTERACTIVE + '"'), 'helper checks the same controls');
 assert.equal(foot.parent, card, 'a hint after the plate (the block footer) stays');
 assert.ok(/rowHints\(card\);/.test(src), 'trimCard runs it for every dashboard section');
 console.log('settings_one_form: ok');

@@ -1293,7 +1293,9 @@
     const DASH_SWITCH = { Scenes: "Show scenes on this dashboard" };
     // One row form (d04-03): a field's hint right under its row becomes the row's sentence under the title, as on
     // every other settings row (title, sentence, then the field). The element moves as it is (code that later
-    // updates its text keeps working); a row that already has a sentence keeps the hint under it.
+    // updates its text keeps working); a row that already has a sentence keeps the hint under it. A hint that holds a
+    // control (an "action" field's button, the energy "excluded" re-add buttons) stays where it is: inside a <label>
+    // with no `for` the button would become the label's control and a tap on the title would fire it.
     const rowHints = (card) => {
       [card, ...card.querySelectorAll(":scope > .subcard")].forEach((plate) => {
         [...plate.children].forEach((h) => {
@@ -1301,6 +1303,7 @@
           const row = h.previousElementSibling;
           const lab = row && row.classList.contains("row") ? row.querySelector(":scope > label") : null;
           if (!lab || lab.querySelector(".lsub")) return;
+          if (h.querySelector("button,a[href],input,select,textarea,[tabindex]")) return;
           h.className = "lsub cn-rowhint";
           lab.appendChild(h);
         });

@@ -75,7 +75,7 @@ mit ihren Unterseiten gibt es nicht mehr.
 - **Eine Zeilenform** (Entscheidung 26.11.2026, d04-03): jede Einstellungszeile hat Titel 13 (`--t-foot`), den Satz
   direkt darunter (12, `--t-caption`, bricht um), dann das Feld darunter bzw. Schalter oder Wert rechts – egal ob
   Zeile aus `_flowRow`, `casora-prow` oder Feld eines Dashboard-Abschnitts (dessen Hinweis rückt unter den Titel,
-  `rowHints` in `trimCard`). Ein Satz zum ganzen Block steht unter der Platte. Zeilen mit Symbol sind Auswahl-Listen
+  `rowHints` in `trimCard`; ein Hinweis mit Knopf bleibt unter dem Feld, sonst löst ein Tipp auf den Titel den Knopf aus). Ein Satz zum ganzen Block steht unter der Platte. Zeilen mit Symbol sind Auswahl-Listen
   (Kameras, Kalender) und behalten ihre Größe. Test `dev/unit/settings_one_form.mjs`.
 - **Gespeichert** wird über eine Leiste für alles; Verlassen mit Ungespeichertem fragt.
 - **Alte Wege** (Seiten-IDs wie `home`, `alerts`, Themen `t-*`, Fokus wie `security`) führen über `ROUTE` /
