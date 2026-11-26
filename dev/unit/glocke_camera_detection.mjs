@@ -10,9 +10,11 @@ const id = 'binary_sensor.test_person';
 const event = 'event.test_motion';
 const idle = 'binary_sensor.test_idle';
 const restart = 'binary_sensor.test_restart';
+const late = 'binary_sensor.test_late';
 const absent = 'binary_sensor.test_absent';
 const now = Date.now() / 1000;
 const entries = [
+  { entity_id: late, state: 'on', name: 'Late history', when: now - 95 },
   { entity_id: absent, state: 'on', name: 'Absent history', when: now - 115 },
   { entity_id: idle, state: 'on', name: 'Idle sensor', when: now - 110 },
   { entity_id: restart, state: 'on', name: 'Restart sensor', when: now - 105 },
@@ -30,6 +32,7 @@ const hass = {
     [id]: { entity_id: id, state: 'on', attributes: { friendly_name: 'Person' } },
     [event]: { entity_id: event, state: entries[7].state, attributes: { friendly_name: 'Motion' } },
     [absent]: { entity_id: absent, state: 'on', attributes: { friendly_name: 'Absent history' } },
+    [late]: { entity_id: late, state: 'on', attributes: { friendly_name: 'Late history' } },
     [idle]: { entity_id: idle, state: 'on', attributes: { friendly_name: 'Idle sensor' } },
     [restart]: { entity_id: restart, state: 'on', attributes: { friendly_name: 'Restart sensor' } },
   },
@@ -37,15 +40,21 @@ const hass = {
   callWS: async message => {
     calls.push(message);
     if (message.type === 'logbook/get_events') return entries;
-    if (message.type === 'history/history_during_period') return {
-      [idle]: [{ s: 'off', lu: now - 110000 }],
-      [restart]: [{ s: 'unavailable', lu: now - 110000 }],
-    };
+    // HA gives the state at the window start as the first row, stamped with the window start (not its own change time).
+    if (message.type === 'history/history_during_period') {
+      const start = Date.parse(message.start_time) / 1000;
+      return {
+        [idle]: [{ s: 'off', lu: start }],
+        [restart]: [{ s: 'unavailable', lu: start }],
+        // No state before the window: the first row is a real change inside it, so it is no start state.
+        [late]: [{ s: 'off', lu: start + 10 }],
+      };
+    }
     return [];
   },
 };
 globalThis.window = globalThis;
-window.CASORA_SETTINGS = { cameras: [{ entity_id: 'camera.test', detection_triggers: [id, event, idle, restart, absent] }] };
+window.CASORA_SETTINGS = { cameras: [{ entity_id: 'camera.test', detection_triggers: [id, event, idle, restart, absent, late] }] };
 globalThis.localStorage = { getItem: () => null, setItem() {}, removeItem() {} };
 globalThis.document = {
   readyState: 'complete', hidden: false,
@@ -62,6 +71,7 @@ assert.ok(calls.some(c => c.type === 'history/history_during_period' && c.includ
 assert.equal(rows.find(row => row.entity === idle)?.label, 'Idle sensor erkannt', 'idle-off predecessor before logbook window is recognized');
 assert.equal(rows.find(row => row.entity === restart), undefined, 'unavailable before logbook window is not a detection');
 assert.equal(rows.find(row => row.entity === absent), undefined, 'missing predecessor does not invent a detection');
+assert.equal(rows.find(row => row.entity === late), undefined, 'a first history row inside the window is not a start state');
 assert.ok(calls.some(c => c.type === 'logbook/get_events' && c.entity_ids.includes(id)), 'listed detection is watched');
 const detections = rows.filter(row => row.entity === id);
 assert.equal(detections.length, 1, 'repeated detections of one trigger stack into one row');
