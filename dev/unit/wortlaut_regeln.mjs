@@ -18,7 +18,7 @@ assert.match(ide['options.step.init.data_description.beta_updates'], /stattdesse
 const ph = J('dashboard/phrases/en.json');
 for (const [rx, en] of ph.patterns) {
   const n = groups(rx);
-  for (const m of en.matchAll(/\{(\d+)\}/g)) assert.ok(+m[1] <= n, `Phrase ${rx}: {${m[1]}} ohne Gruppe`);
+  for (const m of en.matchAll(/\{=?(\d+)\}/g)) assert.ok(+m[1] <= n, `Phrase ${rx}: {${m[1]}} ohne Gruppe`);
 }
 
 // 3. Studio: Platzhalter im Original = in der Übersetzung; Muster wie oben.

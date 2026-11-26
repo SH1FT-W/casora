@@ -54,7 +54,7 @@ def call_sites():
 
 TR = os.path.dirname(SRC)
 # Placeholders and markup a translation has to keep: {name}, {1}, %s and HTML tags.
-MARKS = re.compile(r"\{\w+\}|%s|<[^>]+>")
+MARKS = re.compile(r"\{=?\w+\}|%s|<[^>]+>")
 WORD = re.compile(r"[A-Za-zÄÖÜäöüßÁÉÍÓÚáéíóúÑñ]+")
 # German letters that no other Casora language uses (Spanish has ü: desagüe, antigüedad).
 GERMAN_ONLY = re.compile(r"[äöÄÖßẞ]")
@@ -125,7 +125,7 @@ def _pattern_text(patterns, text):
         except re.error:
             continue
         if m:
-            return re.sub(r"\{(\d)\}", lambda g: m.group(int(g.group(1))) or "", rep)
+            return re.sub(r"\{=?(\d)\}", lambda g: m.group(int(g.group(1))) or "", rep)
     return None
 
 

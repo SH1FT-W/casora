@@ -170,7 +170,7 @@ const send = async (service, yes) => {
 // 7) Englisch: alle Teile haben eine Übersetzung.
 const en = JSON.parse(read('translations/dashboard/phrases/en.json'));
 const trEn = (s) => en.exact[s] ?? (() => {
-  for (const [re, out] of en.patterns) { const m = s.match(new RegExp(re)); if (m) return out.replace(/\{(\d)\}/g, (x, n) => m[+n]); }
+  for (const [re, out] of en.patterns) { const m = s.match(new RegExp(re)); if (m) return out.replace(/\{=?(\d)\}/g, (x, n) => m[+n]); }
   return null;
 })();
 assert.equal(trEn('Achtung'), 'Heads up');

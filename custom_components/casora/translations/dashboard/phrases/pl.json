@@ -460,7 +460,7 @@
     "Saugt & wischt Raum": "Odkurza i mopuje pokój",
     "Schalte alle Lichter aus": "Wyłącz wszystkie światła",
     "Scharfschaltung läuft": "Uzbrajanie",
-    "Schlafzimmer Fenster ist offen": "Okno w sypialni jest otwarte",
+    "Fenster ist offen": "Okno jest otwarte",
     "Schließen": "Zamknij",
     "Zurück": "Wstecz",
     "Schließt": "Zamyka się",
@@ -3449,15 +3449,15 @@
     ],
     [
       "^(.+) hat das Haus verlassen$",
-      "{1} – wyjście z domu"
+      "{=1} – wyjście z domu"
     ],
     [
       "^(.+) ist angekommen$",
-      "{1} – powrót do domu"
+      "{=1} – powrót do domu"
     ],
     [
       "^(.+) ist gekippt$",
-      "{1} uchylone"
+      "{=1} uchylone"
     ],
     [
       "^(.+) ist gleich fertig$",
@@ -3469,11 +3469,11 @@
     ],
     [
       "^(.+) hat geklingelt$",
-      "{1} dzwoni do drzwi"
+      "{=1} dzwoni do drzwi"
     ],
     [
       "^(.+) hat fertig gereinigt$",
-      "{1}: sprzątanie zakończone"
+      "{=1}: sprzątanie zakończone"
     ],
     [
       "^(.+) reinigt$",
@@ -3497,11 +3497,11 @@
     ],
     [
       "^(.+) ist bei (.+)$",
-      "{1}: {2}"
+      "{=1}: {=2}"
     ],
     [
       "^(.+) umgeschaltet auf (.+)$",
-      "{1} przełączono na {2}"
+      "{=1} przełączono na {2}"
     ],
     [
       "^(.+) aktiv · (Zuhause|Abwesend|Nacht|Urlaub|Bypass)$",
@@ -3517,7 +3517,7 @@
     ],
     [
       "^(.+) steht zu nass$",
-      "{1} ma za dużo wody"
+      "{=1} ma za dużo wody"
     ],
     [
       "^(.+) braucht Dünger$",
@@ -3545,7 +3545,7 @@
     ],
     [
       "^(.+) steht in zu trockener Luft$",
-      "{1}: powietrze za suche"
+      "{=1}: powietrze za suche"
     ],
     [
       "^(.+) steht in zu feuchter Luft$",
@@ -3573,7 +3573,7 @@
     ],
     [
       "^(.+) entriegelt$",
-      "{1} odblokowane"
+      "{=1} odblokowane"
     ],
     [
       "^Gestern, (.+)$",
@@ -4165,7 +4165,7 @@
     ],
     [
       "^(.+) ist offen$",
-      "{1} otwarte"
+      "{=1} otwarte"
     ],
     [
       "^(.+) nachfüllen$",
@@ -4513,11 +4513,11 @@
     ],
     [
       "^(.+) Akku fast leer$",
-      "{1}: bateria prawie pusta"
+      "{=1}: bateria prawie pusta"
     ],
     [
       "^(.+) Akku schwach$",
-      "{1}: słaba bateria"
+      "{=1}: słaba bateria"
     ],
     [
       "^(\\d+) Wiedergaben$",
@@ -5421,7 +5421,7 @@
     ],
     [
       "^(.+) braucht Aufmerksamkeit$",
-      "{1} wymaga uwagi"
+      "{=1} wymaga uwagi"
     ],
     [
       "^KI: 1 Breaking Change$",

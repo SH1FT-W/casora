@@ -460,7 +460,7 @@
     "Saugt & wischt Raum": "Vacuuming & mopping room",
     "Schalte alle Lichter aus": "Turn off all lights",
     "Scharfschaltung läuft": "Arming",
-    "Schlafzimmer Fenster ist offen": "Bedroom window is open",
+    "Fenster ist offen": "Window is open",
     "Schließen": "Close",
     "Zurück": "Back",
     "Schließt": "Closing",
@@ -3431,15 +3431,15 @@
     ],
     [
       "^(.+) hat das Haus verlassen$",
-      "{1} left home"
+      "{=1} left home"
     ],
     [
       "^(.+) ist angekommen$",
-      "{1} arrived home"
+      "{=1} arrived home"
     ],
     [
       "^(.+) ist gekippt$",
-      "{1} is tilted"
+      "{=1} is tilted"
     ],
     [
       "^(.+) ist gleich fertig$",
@@ -3451,11 +3451,11 @@
     ],
     [
       "^(.+) hat geklingelt$",
-      "{1} rang the doorbell"
+      "{=1} rang the doorbell"
     ],
     [
       "^(.+) hat fertig gereinigt$",
-      "{1} finished cleaning"
+      "{=1} finished cleaning"
     ],
     [
       "^(.+) reinigt$",
@@ -3479,11 +3479,11 @@
     ],
     [
       "^(.+) ist bei (.+)$",
-      "{1} is at {2}"
+      "{=1} is at {=2}"
     ],
     [
       "^(.+) umgeschaltet auf (.+)$",
-      "{1} switched to {2}"
+      "{=1} switched to {2}"
     ],
     [
       "^(.+) aktiv · (Zuhause|Abwesend|Nacht|Urlaub|Bypass)$",
@@ -3499,7 +3499,7 @@
     ],
     [
       "^(.+) steht zu nass$",
-      "{1} is too wet"
+      "{=1} is too wet"
     ],
     [
       "^(.+) braucht Dünger$",
@@ -3527,7 +3527,7 @@
     ],
     [
       "^(.+) steht in zu trockener Luft$",
-      "{1}: air too dry"
+      "{=1}: air too dry"
     ],
     [
       "^(.+) steht in zu feuchter Luft$",
@@ -3555,7 +3555,7 @@
     ],
     [
       "^(.+) entriegelt$",
-      "{1} unlocked"
+      "{=1} unlocked"
     ],
     [
       "^Gestern, (.+)$",
@@ -4147,7 +4147,7 @@
     ],
     [
       "^(.+) ist offen$",
-      "{1} is open"
+      "{=1} is open"
     ],
     [
       "^(.+) nachfüllen$",
@@ -4495,11 +4495,11 @@
     ],
     [
       "^(.+) Akku fast leer$",
-      "{1} battery almost empty"
+      "{=1} battery almost empty"
     ],
     [
       "^(.+) Akku schwach$",
-      "{1} battery low"
+      "{=1} battery low"
     ],
     [
       "^(\\d+) Wiedergaben$",
@@ -5403,7 +5403,7 @@
     ],
     [
       "^(.+) braucht Aufmerksamkeit$",
-      "{1} needs attention"
+      "{=1} needs attention"
     ],
     [
       "^KI: 1 Breaking Change$",
