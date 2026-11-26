@@ -16,6 +16,11 @@
     } catch (e) { return "0"; }
   })();
   const SEEN_KEY = "casora.seenVersion";
+  // YY.M.N with an optional beta bK: numbers compared in order, a beta before its release (26.11.30b7 < 26.11.30).
+  const verParts = (v) => { const m = /^(\d+)\.(\d+)\.(\d+)(?:b(\d+))?/.exec(String(v || "")); return m ? [+m[1], +m[2], +m[3], m[4] === undefined ? Infinity : +m[4]] : null; };
+  const verCmp = (a, b) => { const x = verParts(a), y = verParts(b); if (!x || !y) return 0; for (let i = 0; i < 4; i++) { if (x[i] !== y[i]) return x[i] < y[i] ? -1 : 1; } return 0; };
+  // The version this browser saw before (for "Everything new since …" after skipping releases), read once on load.
+  const SEEN_BEFORE = (() => { try { return localStorage.getItem(SEEN_KEY); } catch (e) { return null; } })();
   // Keys only the Studio writes once someone has been in it: its intro (casora-panel-b-plus.js) or welcome (casora-panel.js).
   const STUDIO_USED = /^casora\.(studio\.intro|welcomed)$/;
   const CHANGELOG_URL = "https://github.com/SH1FT-W/casora/blob/main/CHANGELOG.md";
@@ -26,26 +31,32 @@
       whatsNewTitle: "Neu in Casora {version}",
       continue: "Weiter",
       all: "Alle Änderungen",
+      allSince: "Alle Neuerungen seit {version}",
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "Bildschirmschoner neu gezeichnet", n0: "Größere Schrift, eigene Farben, hell am Tag und tief in der Nacht.",
-      n1t: "Rauch- und Wassermelder", n1: "Zählen im Sicherheits-Badge und haben eigene Zeilen im Popup.",
-      n2t: "Müll rausgestellt", n2: "Ein Tipp aufs Symbol bestätigt es, die Kachel ruht bis zur nächsten Abholung.",
-      n3t: "Energie je Tag, Woche, Monat", n3: "Haus, Netz und Solar in kWh, dazu die neue Karte Smart Meter.",
+      // HEADLINE FEATURES: doorbell moment, living house photo (weather), Assist opens Casora popups, tablet wakes on motion
+      nh: "Das nächste Level",
+      n0t: "Großer Prüflauf", n0: "20 KI-Tester haben jede Funktion durchgeklickt, rund 150 Funde sind behoben.",
+      n1t: "Zurück wie gewohnt", n1: "Die Zurück-Taste am Handy schließt erst das Popup und führt aus dem Raum nach Zuhause.",
+      n2t: "Schneller mit vielen Räumen", n2: "Räume entstehen erst, wenn du sie brauchst, mit deutlich weniger Speicher.",
+      n3t: "Karte Smart Heating Control", n3: "Ziel, Stufen und Wochenplan für jeden Raum.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
       whatsNewTitle: "New in Casora {version}",
       continue: "Continue",
       all: "All changes",
+      allSince: "Everything new since {version}",
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "Screensavers redrawn", n0: "Larger type, colours of their own, light by day and deep by night.",
-      n1t: "Smoke and water detectors", n1: "They count in the security badge and get their own rows in the popup.",
-      n2t: "Waste put out", n2: "A tap on the icon confirms it, the tile rests until the next pickup.",
-      n3t: "Energy per day, week, month", n3: "House, grid and solar in kWh, plus the new Smart Meter card.",
+      // HEADLINE FEATURES: doorbell moment, living house photo (weather), Assist opens Casora popups, tablet wakes on motion
+      nh: "The next level",
+      n0t: "A big test round", n0: "20 AI testers clicked through every function, about 150 findings are fixed.",
+      n1t: "Back as you expect", n1: "The phone's back button closes the popup first and leads from a room to Home.",
+      n2t: "Faster with many rooms", n2: "Rooms are built when you need them, with far less memory.",
+      n3t: "Smart Heating Control card", n3: "Target, levels and weekly schedule for every room.",
     },
     // Spanish: same keys as en (dev/unit/welcome_es.mjs); a missing key falls back to English.
     es: {
@@ -53,109 +64,130 @@
       whatsNewTitle: "Novedades de Casora {version}",
       continue: "Continuar",
       all: "Todos los cambios",
+      allSince: "Todas las novedades desde {version}",
       w1t: "Habitación por habitación", w1: "Diseña tu panel con los dispositivos que ya tienes en Home Assistant.",
       w2t: "Asistente de dispositivos", w2: "Casora propone las tarjetas adecuadas para cada habitación y las añade por ti.",
       w3t: "Escritorio, tableta y móvil", w3: "Un panel que se adapta a cada pantalla, con su propio diseño para el móvil.",
-      n0t: "Salvapantallas redibujados", n0: "Letra más grande, colores propios, claros de día y profundos de noche.",
-      n1t: "Detectores de humo y agua", n1: "Cuentan en la insignia de seguridad y tienen filas propias en el popup.",
-      n2t: "Basura sacada", n2: "Un toque en el icono lo confirma, la tarjeta descansa hasta la próxima recogida.",
-      n3t: "Energía por día, semana y mes", n3: "Casa, red y solar en kWh, y la nueva tarjeta Smart Meter.",
+      // HEADLINE FEATURES: doorbell moment, living house photo (weather), Assist opens Casora popups, tablet wakes on motion
+      nh: "El siguiente nivel",
+      n0t: "Una gran ronda de pruebas", n0: "20 probadores con IA recorrieron cada función; unos 150 hallazgos están corregidos.",
+      n1t: "Atrás como esperas", n1: "El botón atrás del móvil cierra primero el popup y lleva de una habitación a Casa.",
+      n2t: "Más rápido con muchas habitaciones", n2: "Las habitaciones se crean cuando las necesitas, con mucha menos memoria.",
+      n3t: "Tarjeta Smart Heating Control", n3: "Objetivo, niveles y horario semanal para cada habitación.",
     },
     fr: {
       welcomeTitle: "Bienvenue dans Casora",
       whatsNewTitle: "Nouveautés de Casora {version}",
       continue: "Continuer",
       all: "Tous les changements",
+      allSince: "Toutes les nouveautés depuis {version}",
       w1t: "Pièce par pièce",
       w1: "Conçois ton tableau de bord avec les appareils que tu as déjà dans Home Assistant.",
       w2t: "Assistant appareils",
       w2: "Casora propose les tuiles adaptées à chaque pièce et les ajoute pour toi.",
       w3t: "Ordinateur, tablette et téléphone",
       w3: "Un tableau de bord qui s'adapte à chaque écran, avec sa propre mise en page téléphone.",
-      n0t: "Économiseurs d’écran redessinés", n0: "Texte plus grand, couleurs propres, clairs le jour et profonds la nuit.",
-      n1t: "Détecteurs de fumée et d’eau", n1: "Ils comptent dans le badge de sécurité et ont leurs propres lignes dans le popup.",
-      n2t: "Poubelles sorties", n2: "Un appui sur l’icône le confirme, la tuile se repose jusqu’à la prochaine collecte.",
-      n3t: "Énergie par jour, semaine, mois", n3: "Maison, réseau et solaire en kWh, et la nouvelle carte Smart Meter.",
+      // HEADLINE FEATURES: doorbell moment, living house photo (weather), Assist opens Casora popups, tablet wakes on motion
+      nh: "Le niveau supérieur",
+      n0t: "Une grande campagne de tests", n0: "20 testeurs IA ont parcouru chaque fonction, environ 150 constats sont corrigés.",
+      n1t: "Retour comme prévu", n1: "Le bouton retour du téléphone ferme d'abord le popup et ramène d'une pièce à Maison.",
+      n2t: "Plus rapide avec beaucoup de pièces", n2: "Les pièces se construisent quand tu en as besoin, avec bien moins de mémoire.",
+      n3t: "Carte Smart Heating Control", n3: "Consigne, niveaux et programme de la semaine pour chaque pièce.",
     },
     it: {
       welcomeTitle: "Ti diamo il benvenuto in Casora",
       whatsNewTitle: "Novità di Casora {version}",
       continue: "Continua",
       all: "Tutte le modifiche",
+      allSince: "Tutte le novità dalla {version}",
       w1t: "Stanza per stanza",
       w1: "Progetta la tua dashboard con i dispositivi che hai già in Home Assistant.",
       w2t: "Assistente dispositivi",
       w2: "Casora propone le schede adatte per ogni stanza e le aggiunge per te.",
       w3t: "Desktop, tablet e telefono",
       w3: "Una dashboard che si adatta a ogni schermo, con un layout dedicato per il telefono.",
-      n0t: "Salvaschermo ridisegnati", n0: "Testo più grande, colori propri, chiari di giorno e profondi di notte.",
-      n1t: "Rilevatori di fumo e acqua", n1: "Contano nel badge di sicurezza e hanno righe proprie nel popup.",
-      n2t: "Rifiuti portati fuori", n2: "Un tocco sull’icona lo conferma, la tessera riposa fino al prossimo ritiro.",
-      n3t: "Energia per giorno, settimana, mese", n3: "Casa, rete e solare in kWh, più la nuova scheda Smart Meter.",
+      // HEADLINE FEATURES: doorbell moment, living house photo (weather), Assist opens Casora popups, tablet wakes on motion
+      nh: "Il livello successivo",
+      n0t: "Un grande giro di test", n0: "20 tester IA hanno provato ogni funzione, circa 150 problemi sono risolti.",
+      n1t: "Indietro come ti aspetti", n1: "Il tasto indietro del telefono chiude prima il popup e riporta da una stanza a Casa.",
+      n2t: "Più veloce con molte stanze", n2: "Le stanze si costruiscono quando servono, con molta meno memoria.",
+      n3t: "Scheda Smart Heating Control", n3: "Obiettivo, livelli e programma settimanale per ogni stanza.",
     },
     nb: {
       welcomeTitle: "Velkommen til Casora",
       whatsNewTitle: "Nytt i Casora {version}",
       continue: "Fortsett",
       all: "Alle endringer",
+      allSince: "Alt nytt siden {version}",
       w1t: "Rom for rom",
       w1: "Lag dashbordet ditt med enhetene du allerede har i Home Assistant.",
       w2t: "Enhetsveiviser",
       w2: "Casora foreslår passende fliser for hvert rom og legger dem inn.",
       w3t: "Skrivebord, nettbrett og mobil",
       w3: "Ett dashbord som tilpasser seg hver skjerm, med egen mobilvisning.",
-      n0t: "Skjermsparere tegnet på nytt", n0: "Større skrift, egne farger, lyse om dagen og dype om natten.",
-      n1t: "Røyk- og vannvarslere", n1: "De teller i sikkerhetsmerket og har egne rader i popupen.",
-      n2t: "Avfallet er satt ut", n2: "Et trykk på ikonet bekrefter det, flisen hviler til neste henting.",
-      n3t: "Energi per dag, uke, måned", n3: "Hus, nett og sol i kWh, og det nye kortet Smart Meter.",
+      // HEADLINE FEATURES: doorbell moment, living house photo (weather), Assist opens Casora popups, tablet wakes on motion
+      nh: "Neste nivå",
+      n0t: "En stor testrunde", n0: "20 KI-testere klikket seg gjennom alle funksjoner, rundt 150 funn er rettet.",
+      n1t: "Tilbake som forventet", n1: "Tilbake-knappen på mobilen lukker først popupen og fører fra et rom til Hjem.",
+      n2t: "Raskere med mange rom", n2: "Rom bygges når du trenger dem, med langt mindre minne.",
+      n3t: "Kort for Smart Heating Control", n3: "Mål, nivåer og ukeplan for hvert rom.",
     },
     nl: {
       welcomeTitle: "Welkom bij Casora",
       whatsNewTitle: "Nieuw in Casora {version}",
       continue: "Verder",
       all: "Alle wijzigingen",
+      allSince: "Alles nieuw sinds {version}",
       w1t: "Kamer voor kamer",
       w1: "Ontwerp je dashboard met de apparaten die je al in Home Assistant hebt.",
       w2t: "Apparaatassistent",
       w2: "Casora stelt voor elke kamer passende tegels voor en bouwt ze in.",
       w3t: "Desktop, tablet en telefoon",
       w3: "Eén dashboard dat zich aan elk scherm aanpast, met een eigen telefoonweergave.",
-      n0t: "Screensavers opnieuw getekend", n0: "Grotere letters, eigen kleuren, licht overdag en diep in de nacht.",
-      n1t: "Rook- en watermelders", n1: "Ze tellen mee in de beveiligingsbadge en hebben eigen rijen in de popup.",
-      n2t: "Afval buitengezet", n2: "Een tik op het pictogram bevestigt het, de tegel rust tot de volgende ophaling.",
-      n3t: "Energie per dag, week, maand", n3: "Huis, net en zon in kWh, plus de nieuwe kaart Smart Meter.",
+      // HEADLINE FEATURES: doorbell moment, living house photo (weather), Assist opens Casora popups, tablet wakes on motion
+      nh: "Het volgende niveau",
+      n0t: "Een grote testronde", n0: "20 AI-testers klikten door elke functie, ongeveer 150 bevindingen zijn opgelost.",
+      n1t: "Terug zoals verwacht", n1: "De terugknop van de telefoon sluit eerst de popup en leidt van een kamer naar Thuis.",
+      n2t: "Sneller met veel kamers", n2: "Kamers worden opgebouwd wanneer je ze nodig hebt, met veel minder geheugen.",
+      n3t: "Kaart Smart Heating Control", n3: "Doel, niveaus en weekschema voor elke kamer.",
     },
     pl: {
       welcomeTitle: "Witaj w Casora",
       whatsNewTitle: "Nowości w Casora {version}",
       continue: "Dalej",
       all: "Wszystkie zmiany",
+      allSince: "Wszystkie nowości od {version}",
       w1t: "Pokój po pokoju",
       w1: "Zaprojektuj swój pulpit z urządzeń, które już masz w Home Assistant.",
       w2t: "Asystent urządzeń",
       w2: "Casora proponuje pasujące kafelki dla każdego pokoju i dodaje je za ciebie.",
       w3t: "Komputer, tablet i telefon",
       w3: "Jeden pulpit, który dopasowuje się do każdego ekranu, z własnym układem na telefon.",
-      n0t: "Wygaszacze narysowane od nowa", n0: "Większe litery, własne kolory, jasne w dzień i głębokie w nocy.",
-      n1t: "Czujniki dymu i wody", n1: "Liczą się w odznace bezpieczeństwa i mają własne wiersze w oknie.",
-      n2t: "Odpady wystawione", n2: "Dotknięcie ikony to potwierdza, kafelek odpoczywa do następnego odbioru.",
-      n3t: "Energia na dzień, tydzień, miesiąc", n3: "Dom, sieć i słońce w kWh oraz nowa karta Smart Meter.",
+      // HEADLINE FEATURES: doorbell moment, living house photo (weather), Assist opens Casora popups, tablet wakes on motion
+      nh: "Kolejny poziom",
+      n0t: "Duża runda testów", n0: "20 testerów AI przeklikało każdą funkcję, około 150 zgłoszeń jest poprawionych.",
+      n1t: "Wstecz tak, jak trzeba", n1: "Przycisk wstecz w telefonie najpierw zamyka okno i prowadzi z pokoju do widoku Dom.",
+      n2t: "Szybciej przy wielu pokojach", n2: "Pokoje powstają, gdy ich potrzebujesz, przy dużo mniejszym zużyciu pamięci.",
+      n3t: "Karta Smart Heating Control", n3: "Cel, poziomy i plan tygodnia dla każdego pokoju.",
     },
     pt: {
       welcomeTitle: "Bem-vindo ao Casora",
       whatsNewTitle: "Novidades do Casora {version}",
       continue: "Continuar",
       all: "Todas as alterações",
+      allSince: "Todas as novidades desde a {version}",
       w1t: "Divisão a divisão",
       w1: "Desenha o teu painel com os dispositivos que já tens no Home Assistant.",
       w2t: "Assistente de dispositivos",
       w2: "O Casora propõe os cartões certos para cada divisão e adiciona-os por ti.",
       w3t: "Computador, tablet e telemóvel",
       w3: "Um painel que se adapta a cada ecrã, com layout próprio para o telemóvel.",
-      n0t: "Proteções de ecrã redesenhadas", n0: "Letra maior, cores próprias, claras de dia e profundas à noite.",
-      n1t: "Detetores de fumo e água", n1: "Contam no emblema de segurança e têm linhas próprias no popup.",
-      n2t: "Lixo colocado na rua", n2: "Um toque no ícone confirma, o mosaico descansa até à próxima recolha.",
-      n3t: "Energia por dia, semana e mês", n3: "Casa, rede e solar em kWh, e o novo cartão Smart Meter.",
+      // HEADLINE FEATURES: doorbell moment, living house photo (weather), Assist opens Casora popups, tablet wakes on motion
+      nh: "O próximo nível",
+      n0t: "Uma grande ronda de testes", n0: "20 testadores com IA percorreram cada função; cerca de 150 problemas estão corrigidos.",
+      n1t: "Voltar como esperas", n1: "O botão voltar do telemóvel fecha primeiro o popup e leva de uma divisão a Casa.",
+      n2t: "Mais rápido com muitas divisões", n2: "As divisões são criadas quando precisas delas, com muito menos memória.",
+      n3t: "Cartão Smart Heating Control", n3: "Objetivo, níveis e horário semanal para cada divisão.",
     },
   };
   // Texts for a language: its own, English for anything it does not have (yet).
@@ -171,13 +203,16 @@
   /** After an update: the news of this version - replace on every release. */
   // An optional fourth value is a picture under the text (a file in assets/news, served under /casora_assets/news).
   const WHATS_NEW = [
-    ["mdi:monitor-shimmer", "n0t", "n0", "screensavers-3.jpg"],
-    ["mdi:smoke-detector-variant", "n1t", "n1"],
-    ["mdi:trash-can-outline", "n2t", "n2"],
-    ["mdi:chart-bar", "n3t", "n3"],
+    // HEADLINE FEATURES: doorbell moment, living house photo (weather), Assist opens Casora popups, tablet wakes on motion
+    // (go first, one entry each with TEXT keys in all nine languages; keep the sheet at 4 to 6 entries and at least
+    // one picture, dev/unit/welcome_news_pictures.mjs).
+    ["mdi:check-decagram-outline", "n0t", "n0"],
+    ["mdi:arrow-left-circle-outline", "n1t", "n1"],
+    ["mdi:speedometer", "n2t", "n2"],
+    ["mdi:radiator", "n3t", "n3"],
   ];
   // A big release may set its own headline (a TEXT key); the version then stands small under it. null: "New in Casora x".
-  const WHATS_NEW_HEAD = null;
+  const WHATS_NEW_HEAD = "nh";
   const NEWS_IMG = "/casora_assets/news/";
 
   // Decide on load - before the Studio writes its own casora.* keys.
@@ -185,6 +220,8 @@
     try {
       const seen = localStorage.getItem(SEEN_KEY);
       if (seen === VERSION) return null;
+      // Prüfrunde w01-04: back on an older version after a newer one (downgrade) shows nothing.
+      if (seen !== null && verCmp(seen, VERSION) > 0) return null;
       if (seen !== null) return "whatsNew";
       // Only the Studio's own marks (its intro or welcome seen in this browser) mean "used before": a new device
       // where only the dashboard ran has casora.* keys from its scripts, and its user gets the short welcome.
@@ -234,6 +271,12 @@
     @keyframes cw-up{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}
     @media (prefers-reduced-motion: reduce){.cw-scrim,.cw-sheet{animation:none}}`;
 
+  // Prüfrunde w01-04: after skipping releases the popup lists only this one's points; the link then names the gap.
+  const sinceText = (L) => {
+    const p = verParts(SEEN_BEFORE), v = verParts(VERSION);
+    const skipped = p && v && verCmp(SEEN_BEFORE, VERSION) < 0 && !(p[0] === v[0] && p[1] === v[1] && p[2] >= v[2] - 1);
+    return skipped && L.allSince ? L.allSince.replace("{version}", String(SEEN_BEFORE).replace(/b\d+$/, "")) : L.all;
+  };
   const newsTitle = (L) => (WHATS_NEW_HEAD && L[WHATS_NEW_HEAD]) || L.whatsNewTitle.replace("{version}", VERSION);
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
 
@@ -251,7 +294,7 @@
       <h2 id="cw-t">${esc(mode === "welcome" ? L.welcomeTitle : newsTitle(L))}</h2>${mode !== "welcome" && WHATS_NEW_HEAD ? `<div class="cw-ver">Casora ${esc(VERSION)}</div>` : ""}
       <ul>${list.map(([icon, t, x, img]) => `<li><ha-icon icon="${icon}"></ha-icon><span><b>${esc(L[t])}</b><br>${esc(L[x])}${img ? `<img class="cw-pic" src="${NEWS_IMG}${esc(img)}?v=${esc(VERSION)}" alt="" loading="lazy">` : ""}</span></li>`).join("")}</ul>
       <button class="cw-go">${esc(L.continue)}</button>
-      ${mode === "welcome" ? "" : `<a class="cw-all" href="${CHANGELOG_URL.replace(/\.md$/, String(lang || "").toLowerCase().split(/[-_]/)[0] === "de" ? ".de.md" : ".md")}" target="_blank" rel="noreferrer">${esc(L.all)}</a>`}
+      ${mode === "welcome" ? "" : `<a class="cw-all" href="${CHANGELOG_URL.replace(/\.md$/, String(lang || "").toLowerCase().split(/[-_]/)[0] === "de" ? ".de.md" : ".md")}" target="_blank" rel="noreferrer">${esc(sinceText(L))}</a>`}
       </div></div>`;
     const close = () => { markSeen(); host.remove(); document.removeEventListener("keydown", onKey, true); };
     const onKey = (ev) => { if (ev.key === "Escape") { ev.stopPropagation(); close(); } };
