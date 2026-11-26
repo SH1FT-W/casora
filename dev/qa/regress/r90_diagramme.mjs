@@ -344,7 +344,8 @@ await popupIn(P, { type: 'custom:button-card', template: 'casora_weather', entit
 const w = await stable(P, look, null, { max: 12000, quiet: 1500 });
 await check('Wetter (Casora-Look): Diagramm mit Etikett in der Sand-Karte, kein fremdes Diagramm aus dem vorigen Popup',
   w && w.plate && w.label && !/Leistung/.test(w.label.t) && w.entity !== ids.power && headStyle(w.label), w);
-{ const L = (await plateLabels(P, { satz: true })).find((l) => /48 (Stunden|Std\.)/.test(l.t));
+// Weather Verlauf is 24 h since e9610724f (§7.2, Prüfrunde d03-09); before 48 h.
+{ const L = (await plateLabels(P, { satz: true })).find((l) => /24 (Stunden|Std\.)/.test(l.t));
   await check('Wetter (Casora-Look): Etikett 20/18 vom Rand der Sand-Karte (D1)', L && L.dx === 20 && L.dy === 18, L); }
 
 // Dünger: Säulen mit Etikett in der eigenen Karte (casora-chart title + plate).
