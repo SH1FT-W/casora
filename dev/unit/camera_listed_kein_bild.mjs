@@ -22,7 +22,7 @@ const now = Date.now();
 Date.now = () => now;
 const camera = 'camera.test_hof';
 const ding = 'event.test_hof_ding';
-const hass = { entities: { [camera]: { device_id: 'hof' }, [ding]: { device_id: 'hof' } } };
+const hass = { entities: { [camera]: { device_id: 'hof' } } }; // the trigger is listed only, not a ring entity of the camera device
 const states = {
   [ding]: { state: 'unknown', attributes: { friendly_name: 'Test Ding' } },
 };
