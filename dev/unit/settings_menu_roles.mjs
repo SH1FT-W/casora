@@ -2,6 +2,7 @@
 // (Prüfung 2 fam-07). The "Home Assistant" entry (E14, opened HA's sidebar) is gone for everyone since
 // 02.11.2026: in the Companion app a swipe from the edge opens that sidebar anyway.
 //   node dev/unit/settings_menu_roles.mjs
+// @deckt: dashboards/casora/button_card_templates.json#casora_settings_button
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -33,5 +34,9 @@ assert.ok(!admin.includes('Home Assistant'), 'admin: no "Home Assistant" entry')
 const kid = run({ is_admin: false, id: 'k' });
 assert.ok(!kid.includes('Dashboard bearbeiten'), 'non-admin: no Studio entry (it did nothing)');
 assert.ok(!kid.includes('Home Assistant'), 'non-admin: no "Home Assistant" entry');
-assert.deepEqual(kid, ['Aktualisieren'], 'non-admin: only "Aktualisieren" is left');
+// The entry reloads the page: "Neu laden" (Reload), not "Aktualisieren", which the dashboard translates as the
+// software "Update" (Prüfrunde u06-07).
+assert.deepEqual(kid, ['Neu laden'], 'non-admin: only "Neu laden" is left');
+const EN = JSON.parse(fs.readFileSync(new URL('../../custom_components/casora/translations/dashboard/phrases/en.json', import.meta.url), 'utf8'));
+assert.ok(JSON.stringify(EN).includes('"Neu laden":"Reload"'), 'en: "Neu laden" is "Reload"');
 console.log('settings_menu_roles: ok');

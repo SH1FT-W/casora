@@ -38,6 +38,6 @@ const texts = await page.evaluate(() => {
   return m ? [...m.querySelectorAll('span')].map((s) => s.textContent.trim()).filter(Boolean) : null;
 });
 await need('⋯-Menü offen', texts && texts.length, texts);
-await check('keine deutschen Einträge (' + texts.join(', ') + ')', !texts.some((t) => /Aktualisieren|bearbeiten/.test(t)), texts);
+await check('keine deutschen Einträge (' + texts.join(', ') + ')', !texts.some((t) => /Aktualisieren|Neu laden|bearbeiten/.test(t)), texts);
 await check('„Edit dashboard“ im Menü', texts.includes('Edit dashboard'), texts);
 await finish();
