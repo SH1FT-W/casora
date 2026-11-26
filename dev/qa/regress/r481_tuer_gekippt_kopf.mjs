@@ -83,10 +83,16 @@ await check(`einzeln: newest history row says „Gekippt“ (row „${one.tl[0] 
 await closeAll();
 
 // ── group badges: doors/windows and security ──
-const badges = await page.evaluate(() => window.__pierce('button-card').map((b, i) => {
+// Since w02-03 (26.11.2026, intended) the room card builds its security sub-badge row (doors/windows) only once that
+// row is expanded, so open it first; the security badge itself only toggles the row on the desktop, so it goes last.
+await page.evaluate(() => document.querySelector('home-assistant').hass.callService('input_select', 'select_option',
+  { entity_id: 'input_select.casora_expanded_row', option: 'security' }).catch(() => {}));
+await page.waitForTimeout(2500);
+const badges = (await page.evaluate(() => window.__pierce('button-card').map((b, i) => {
   const t = [].concat((b._config || {}).template || []), r = b.getBoundingClientRect();
   return { i, t: t.join('+'), w: r.width };
-}).filter((x) => x.w > 20 && /casora_badge_(contact_group|security_group)\b/.test(x.t)));
+}).filter((x) => x.w > 20 && /casora_badge_(contact_group|security_group)\b/.test(x.t))))
+  .sort((a, b) => /security_group/.test(a.t) - /security_group/.test(b.t));
 await need('a doors/windows or security badge on the dashboard', badges.length, badges);
 let seen = 0;
 for (const b of badges) {
