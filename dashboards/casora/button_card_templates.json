@@ -3389,7 +3389,8 @@
       "icon": "camera",
       "mobile_filter_category": "security",
       "casora_default_name": "Kameras",
-      "show_offline": false
+      "show_offline": false,
+      "offline_members": "[[[\n  /* Offline look when every camera is unreachable (casora_entity, state casora_offline). */\n  const c = window._casoraCams ? window._casoraCams(variables, entity, hass) : variables.cameras;\n  return Array.isArray(c) ? c.filter(Boolean) : [];\n]]]\n"
     }
   },
   "casora_car": {
@@ -4097,8 +4098,8 @@
       {
         "id": "casora_offline",
         "operator": "template",
-        "value": "[[[\n  /* Offline (V2, 14.11.2026): an unavailable device looked exactly like „Aus“. Second state after „Gerät fehlt“,\n     before the tile templates' own: warning colour, dashed rim, „Offline · seit …“, no switch (casoraTileOffline,\n     casora-core.js). Tiles whose entity is not one device opt out with variables.show_offline: false. */\n  if (variables.show_offline === false || !window.casoraTileOffline) return false;\n  return !!window.casoraTileOffline(entity, states, variables);\n]]]\n",
-        "state_display": "[[[\n  const info = window.casoraTileOffline ? window.casoraTileOffline(entity, states, variables) : null;\n  return window.casoraOfflineHtml ? window.casoraOfflineHtml(info) : 'Offline';\n]]]\n",
+        "value": "[[[\n  /* Offline (V2, 14.11.2026): an unavailable device looked exactly like „Aus“. Second state after „Gerät fehlt“,\n     before the tile templates' own: warning colour, dashed rim, „Offline · seit …“, no switch (casoraTileOffline,\n     casora-core.js). Tiles whose entity is not one device opt out with variables.show_offline: false. */\n  /* A tile over several devices (variables.offline_members, e.g. the phone's „Kameras“) is offline when all of them are\n     (test round 26.11.2026 d02-02: it looked like „Aus“ beside the single camera's offline tile). */\n  const _om = window.casoraTileOfflineMembers ? window.casoraTileOfflineMembers(variables.offline_members, states) : null;\n  if (_om) return _om.all;\n  if (variables.show_offline === false || !window.casoraTileOffline) return false;\n  return !!window.casoraTileOffline(entity, states, variables);\n]]]\n",
+        "state_display": "[[[\n  const _om = window.casoraTileOfflineMembers ? window.casoraTileOfflineMembers(variables.offline_members, states) : null;\n  if (_om && _om.n > 1) return window.casoraStateFit ? window.casoraStateFit('Alle offline') : 'Alle offline';\n  const info = _om ? _om.info : window.casoraTileOffline ? window.casoraTileOffline(entity, states, variables) : null;\n  return window.casoraOfflineHtml ? window.casoraOfflineHtml(info) : 'Offline';\n]]]\n",
         "styles": {
           "card": [
             {
