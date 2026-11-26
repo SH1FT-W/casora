@@ -10294,7 +10294,7 @@ class CasoraPanel extends HTMLElement {
         .miniphone .mp-head.mp-group.first { margin-top:14px; }
         /* #245: why a room keeps one heading although "Group rooms by category" is on (Studio only, not on the phone). */
         .miniphone .mp-rgnote {
-          margin:10px 2px 0; padding:6px 9px; border-radius:9px; font-size:11.5px; line-height:1.35;
+          margin:10px 2px 0; padding:6px 9px; border-radius:9px; font-size:11px; line-height:1.35;
           color:rgba(255,255,255,0.82); background:rgba(255,255,255,0.10); border:1px dashed rgba(255,255,255,0.28);
         }
         .miniphone .mp-head {
