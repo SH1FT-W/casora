@@ -2,7 +2,7 @@
 // @deckt: custom_components/casora/scripts/casora-core.js#casoraCoverControls,casoraCoverClosedView dashboards/casora/button_card_templates.json#casora_cover
 // Issue #145 point 1: covers on the list read as percent closed in the popup, its rows and on the tile; what is sent to
 // Home Assistant is still its own position, and the blinds count stays as it was.
-import { open, dashboard, casoraDashboard, check, need, finish } from './lib.mjs';
+import { open, dashboard, casoraDashboard, check, need, finish, atFinish } from './lib.mjs';
 
 const dash = await casoraDashboard();
 await need('Casora dashboard', dash);
@@ -40,6 +40,15 @@ await check('controls read closed, 60 % closed is sent as 40', stage.flip && sta
 await check('the popup template sends the turned value', opened !== null && await E(`const h = document.querySelector('home-assistant').hass; const T = (await h.callWS({ type: 'lovelace/config', url_path: arg })).button_card_templates; const c = T ? T.casora_cover.tap_action.casora_popup.content : ''; return !T || (/flip: _cc\\.flip/.test(c) && /attr: _cc\\.attr/.test(c));`, dash.url));
 
 // The real tile's popup: a group, shown as closed, keeps its line under the dial readable.
+// Since u05-05 (26.11.2026, intended) the dial counts only a mixed group („1 von 6 geöffnet“); with all open the head's
+// words say it and the long line is gone. So close the other covers to keep the long line under test, restored after.
+const others = await E(`const h = document.querySelector('home-assistant').hass;
+  return Object.keys(h.states).filter((i) => i.startsWith('cover.') && i !== arg && !Array.isArray(h.states[i].attributes.entity_id))
+    .map((i) => ({ id: i, state: h.states[i].state, pos: h.states[i].attributes.current_position, setPos: !!(h.states[i].attributes.supported_features & 4) }));`, cover);
+atFinish(async () => { await E(`const h = document.querySelector('home-assistant').hass;
+  for (const o of arg) { if (o.setPos && o.pos != null) await h.callService('cover', 'set_cover_position', { position: o.pos }, { entity_id: o.id }).catch(() => {});
+    else if (o.state === 'open') await h.callService('cover', 'open_cover', {}, { entity_id: o.id }).catch(() => {}); }`, others).catch(() => {}); });
+if (others.length) { await E(`await document.querySelector('home-assistant').hass.callService('cover', 'close_cover', {}, { entity_id: arg });`, others.map((o) => o.id)); await m.page.waitForTimeout(3500); }
 await E(`const ids = Object.keys(document.querySelector('home-assistant').hass.states).filter((i) => i.startsWith('cover.')); window.CASORA_SETTINGS.security.percent_closed = ids;`);
 const word = await E(`const f = (r) => { for (const e of r.querySelectorAll('button-card')) { const c = e._config || {}; if ([].concat(c.template || []).includes('casora_cover')) return e; } for (const e of r.querySelectorAll('*')) if (e.shadowRoot) { const x = f(e.shadowRoot); if (x) return x; } return null; };
   const b = f(document); if (!b) return null; (b.shadowRoot.querySelector('ha-card') || b).click(); await new Promise((r) => setTimeout(r, 2500));
