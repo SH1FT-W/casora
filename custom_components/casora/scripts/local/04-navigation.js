@@ -505,6 +505,12 @@
       return icon.charAt(0) === '/' ? '<i class="hmn-svg" style="--hmn-svg:url(\'' + esc(String(icon).replace(/['"()\\\s]/g, '')) + '\')' + ms + '"></i>' : '<ha-icon icon="' + esc(icon) + '"></ha-icon>';
     }
     _roomIcon(r) { return r.icon || ROOM_ICON[r.key.replace(/^room_/, '')] || 'mdi:door'; }
+    /* Rooms button: the open room's symbol, but never the house a second time next to Home (Prüfrunde u06-05).
+       A room whose symbol is the house (the Studio's fallback for an unknown name) shows the floor plan instead. */
+    _roomBtnIcon(r) {
+      var ic = r ? this._roomIcon(r) : '';
+      return !ic || /^mdi:home(-variant)?(-outline)?$|\/home\.svg(\?|$)/.test(ic) ? SFI + 'rooms.svg?v=3' : ic;
+    }
     _tap(key) {
       if (key === 'rooms' || key === 'scenes') {
         var same = this._menu && this._menuKind === key;
@@ -917,7 +923,7 @@
       this._seg.toggleAttribute('data-none', onAt < 0);
       /* Räume-Knopf zeigt Icon + Namen des offenen Raums (wie im Dropdown), sonst Grundriss (rooms.svg) + "Räume". */
       var ar = room && this._rooms.filter(function (r) { return r.key === cur; })[0];
-      var ri = ar ? this._roomIcon(ar) : '/casora_assets/icons/rooms.svg?v=3';
+      var ri = this._roomBtnIcon(ar);
       if (this._bRooms._icon !== ri) {
         this._bRooms._icon = ri;
         this._bRooms.firstElementChild.innerHTML = this._iconHtml(ri);

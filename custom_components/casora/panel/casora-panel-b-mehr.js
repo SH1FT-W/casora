@@ -532,7 +532,12 @@
     :host(.bmode.bdirty.phone:not(.flow)) .toprow > .bedited.mlink {
       display:inline-flex; position:absolute; top:calc(100% - 4px); margin:0 !important; z-index:3;
       font-size:12px; font-weight:600; line-height:1.2; color:var(--accent, #94603B); background:var(--bg, transparent); }
-    :host(.bmode.bdirty.phone:not(.flow)) .toprow > .bedited.mlink { top:calc(100% - 10px); padding:4px 10px; border-radius:999px;
+    /* Phone (Prüfrunde d05-08): the pill sat over the 44px search circle and almost on the Desktop/Tablet/Phone
+       switch. Its line is kept free below the header row, always, so nothing moves on the first change. */
+    :host(.bmode.phone:not(.flow)) .toprow { margin-bottom:26px; }
+    /* The page below the fixed header starts that much lower too (casora-panel.js pads it by a fixed 56px). */
+    :host(.bmode.phone:not(.split):not(.flow)) .body { padding-top:calc(max(8px, env(safe-area-inset-top, 0px)) + 56px + 26px + var(--casora-mobile-chrome-drop, 4px)); }
+    :host(.bmode.bdirty.phone:not(.flow)) .toprow > .bedited.mlink { top:calc(100% + 2px); padding:4px 10px; border-radius:999px;
       color:#f5f5f7; background:rgba(28,28,30,.72); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
       box-shadow:0 1px 4px rgba(0,0,0,.18); }
     :host(.is-light.bmode.bdirty.phone:not(.flow)) .toprow > .bedited.mlink { color:#1d1d1f; background:rgba(255,255,255,.86); }
@@ -1077,7 +1082,7 @@
       A("rewind", "Rewind", "zeitreise rewind versionen version früher frueher frühere stände stand wiederherstellen verlauf backup sicherung history zurück",
         () => { this._bOpen = true; this._cvFromMenu(); }, typeof this._cvFromMenu === "function" && !!this._dashUrl, way("Clock next to Undo"));
       A("look", "Change the look", "look ändern design wechseln theme farben farbe aussehen stil weich schrift",
-        () => { if (this._casoraShowDesign) this._casoraShowDesign(); }, typeof this._casoraShowDesign === "function", way("Settings", "Design"));
+        () => { if (this._casoraShowDesign) this._casoraShowDesign(); }, typeof this._casoraShowDesign === "function", way("Settings", "Look & feel", "Design"));
       A("photo", "Change the photo", "foto ändern hintergrund hintergrundbild bild raumbild bild ändern",
         () => { this._bLeavePages && this._bLeavePages(); sel({ group: "rooms", key: "Appearance", label: "Appearance" }); }, !!here,
         here ? this._roomLabel(here) + " › " + tr("Appearance") : "");
@@ -1094,10 +1099,10 @@
         typeof this._csOpenPage === "function", way("Settings", "Bell & messages"));
       A("scene", "Save the current state as a scene", "szene speichern stimmung licht merken aktueller zustand",
         () => this._bSceneFromState(), typeof this._bSceneFromState === "function" && !!(this._hass && this._hass.user && this._hass.user.is_admin),
-        way("Settings", "Home & devices", "Scenes on this dashboard"));
+        way("Settings", "Home & devices", "Scenes"));
       A("adjustlights", "Adjust the lights now", "licht lichter lampe lampen einstellen helligkeit dimmen jetzt stimmung szene",
         () => this._bSceneFromState(), typeof this._bSceneFromState === "function" && !!(this._hass && this._hass.user && this._hass.user.is_admin),
-        way("Settings", "Home & devices", "Scenes on this dashboard"));
+        way("Settings", "Home & devices", "Scenes"));
       A("addroom", "Add Room…", "raum hinzufügen neu zimmer", () => this._addRoom(), true, way("Rooms"));
       A("arrange", "Arrange Rooms", "räume ordnen sortieren reihenfolge ausgeblendet einblenden", () => this._bRoomsOpen(), rooms.length > 1, way("Rooms"));
       A("hideroom", "Hide room", "raum ausblenden verstecken verbergen vorübergehend weg", () => this._mHideRoom(this._room, true),
@@ -1208,7 +1213,7 @@
         }));
       }
       // Scenes
-      (this._sceneCatalog ? this._sceneCatalog() : []).forEach((s) => out.push({ kind: "scene", id: "sc:" + s.id, label: s.label, words: s.id + " szene", path: way("Settings", "Home & devices", "Scenes on this dashboard"),
+      (this._sceneCatalog ? this._sceneCatalog() : []).forEach((s) => out.push({ kind: "scene", id: "sc:" + s.id, label: s.label, words: s.id + " szene", path: way("Settings", "Home & devices", "Scenes"),
         run: () => { this._bLeavePages && this._bLeavePages(); sel({ group: "rooms", key: "Scenes", label: "Scenes" }); } }));
       return out;
     };

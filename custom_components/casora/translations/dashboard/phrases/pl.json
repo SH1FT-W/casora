@@ -3067,7 +3067,7 @@
     ],
     [
       "^Gilt für alle (\\d+)$",
-      "Dotyczy wszystkich ({1})"
+      "Wszystkie ({1})"
     ],
     [
       "^Bauteil (\\d+) %$",

@@ -152,6 +152,10 @@
        the rule "list header off on tablet" – the page stood there without a title. */
     :host(.bmode.split.narrow:not(.flow):not(.phone)) .insphead:has(> .cs-head, > .cu-head, > .cv-head) { display:flex !important; }
     :host(.bmode.split.narrow:not(.flow):not(.phone)) .inspector:has(> .insphead > .cs-head, > .insphead > .cu-head, > .insphead > .cv-head) { padding-top:0 !important; }
+    /* The room list's header too (Prüfrunde d05-05): B's toolbar names the dashboard, not the room, so on a tablet
+       the inspector lost its title ("Home", "Photo, badges, tiles and popups …") and kept 72px of empty space. */
+    :host(.bmode.split.narrow:not(.flow):not(.phone)) .insphead:has(> .navrow > .detailbar.listbar) { display:flex !important; }
+    :host(.bmode.split.narrow:not(.flow):not(.phone)) .inspector:has(> .insphead > .navrow > .detailbar.listbar) { padding-top:0 !important; }
 
     /* Workspace: elements show that they are clickable. */
     :host(.bmode) .card.map [data-mk], :host(.bmode) .card.map [data-pv],

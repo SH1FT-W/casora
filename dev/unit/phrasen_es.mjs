@@ -129,7 +129,7 @@ let played = 0;
   const EXPECT = [
     ['Lampen im Raum', 'Lámparas de la habitación'],
     ['Beleuchtung', 'Iluminación'],
-    ['62 %', '62 %'],
+    ['62 %', '62\u202f%'],  // the space before % does not break (Prüfrunde d05-06)
     ['Home', 'Casa'],
     // Singular before the plural pattern (exact entries win).
     ['1 entriegelt', '1 desbloqueada'],

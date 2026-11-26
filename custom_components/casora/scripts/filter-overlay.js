@@ -1793,6 +1793,9 @@
           }, this._contentEl, i);
         }
         const roomCards = room.cards.map((c) => JSON.parse(JSON.stringify(c)));
+        // A room without tiles (Prüfrunde u06-04): the same hint as an empty category instead of a blank page that
+        // looks like a loading error (the desktop row says „Noch keine Geräte“ too). Its scenes still come first.
+        if (roomMode && !roomCards.length) { this._appendEmptyHint(); continue; }
 
         // Casora (30.09.2026): Die Raumseite zeigt die Kacheln in der Studio-Reihenfolge
         // (room.tiles, per syncPairTiles aufs Handy übernommen). Nach Kategorien gruppiert
