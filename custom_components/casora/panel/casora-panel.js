@@ -29440,8 +29440,14 @@ class CasoraPanel extends HTMLElement {
     const nameIn = document.createElement("input");
     nameIn.value = tile.name || "";
     if (type.label && !type.raw) nameIn.placeholder = newTile(type).name;
-    nameIn.onchange = () => {
-      tile.name = nameIn.value.trim();
+    nameIn.onchange = (ev) => {
+      // An emptied field means the name the placeholder shows, not name: "" – with that the dashboard fell back to
+      // the entity's name („Waschmaschine Zustand“) under a placeholder promising „Waschmaschine“ (Prüfrunde u02-08).
+      // While typing (timer, no event) the field stays empty; leaving it fills in the placeholder.
+      const v = nameIn.value.trim();
+      tile.name = v || nameIn.placeholder || "";
+      if (!v && tile.name && ev) nameIn.value = tile.name;
+      if (!tile.name) delete tile.name;
       nameEl.textContent = (tile.name || (type.label && !type.raw ? type.label : "") || "(unnamed)") + " ";
       this._syncPreview();
     };
