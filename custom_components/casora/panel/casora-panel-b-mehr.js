@@ -1066,7 +1066,7 @@
       A("rewind", "Rewind", "zeitreise rewind versionen version früher frueher frühere stände stand wiederherstellen verlauf backup sicherung history zurück",
         () => { this._bOpen = true; this._cvFromMenu(); }, typeof this._cvFromMenu === "function" && !!this._dashUrl, way("Clock next to Undo"));
       A("look", "Change the look", "look ändern design wechseln theme farben farbe aussehen stil weich schrift",
-        () => { if (this._casoraShowDesign) this._casoraShowDesign(); }, typeof this._casoraShowDesign === "function", way("Settings", "Design"));
+        () => { if (this._casoraShowDesign) this._casoraShowDesign(); }, typeof this._casoraShowDesign === "function", way("Settings", "Look & feel", "Design"));
       A("photo", "Change the photo", "foto ändern hintergrund hintergrundbild bild raumbild bild ändern",
         () => { this._bLeavePages && this._bLeavePages(); sel({ group: "rooms", key: "Appearance", label: "Appearance" }); }, !!here,
         here ? this._roomLabel(here) + " › " + tr("Appearance") : "");
@@ -1083,10 +1083,10 @@
         typeof this._csOpenPage === "function", way("Settings", "Bell & messages"));
       A("scene", "Save the current state as a scene", "szene speichern stimmung licht merken aktueller zustand",
         () => this._bSceneFromState(), typeof this._bSceneFromState === "function" && !!(this._hass && this._hass.user && this._hass.user.is_admin),
-        way("Settings", "Home & devices", "Scenes on this dashboard"));
+        way("Settings", "Home & devices", "Scenes"));
       A("adjustlights", "Adjust the lights now", "licht lichter lampe lampen einstellen helligkeit dimmen jetzt stimmung szene",
         () => this._bSceneFromState(), typeof this._bSceneFromState === "function" && !!(this._hass && this._hass.user && this._hass.user.is_admin),
-        way("Settings", "Home & devices", "Scenes on this dashboard"));
+        way("Settings", "Home & devices", "Scenes"));
       A("addroom", "Add Room…", "raum hinzufügen neu zimmer", () => this._addRoom(), true, way("Rooms"));
       A("arrange", "Arrange Rooms", "räume ordnen sortieren reihenfolge ausgeblendet einblenden", () => this._bRoomsOpen(), rooms.length > 1, way("Rooms"));
       A("hideroom", "Hide room", "raum ausblenden verstecken verbergen vorübergehend weg", () => this._mHideRoom(this._room, true),
@@ -1197,7 +1197,7 @@
         }));
       }
       // Scenes
-      (this._sceneCatalog ? this._sceneCatalog() : []).forEach((s) => out.push({ kind: "scene", id: "sc:" + s.id, label: s.label, words: s.id + " szene", path: way("Settings", "Home & devices", "Scenes on this dashboard"),
+      (this._sceneCatalog ? this._sceneCatalog() : []).forEach((s) => out.push({ kind: "scene", id: "sc:" + s.id, label: s.label, words: s.id + " szene", path: way("Settings", "Home & devices", "Scenes"),
         run: () => { this._bLeavePages && this._bLeavePages(); sel({ group: "rooms", key: "Scenes", label: "Scenes" }); } }));
       return out;
     };
