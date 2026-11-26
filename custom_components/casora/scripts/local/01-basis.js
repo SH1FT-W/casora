@@ -538,9 +538,13 @@ window._casoraLightScope = function (entity, states, hass, vars) {
   /* The house tile is Home's light badge (_casoraHomeLightVarsOf): it takes the badge's variables and goes the badge's
      way below. Not once the badge's way resolved the rooms (house_rooms, the popup it opened), and not for a tile whose
      own list was picked by hand (lights without light_rooms_auto). */
-  if (variables.house === true && !isArr(variables.house_rooms)
+  /* d05-02 (owner, 26.11.2026): a tile on the house's HA group (Home's light badge's light_group_entity) is the house
+     tile too, also without house: true (a group picked as one light: „Beleuchtung 4 an“ under the badge's „1 an“). */
+  var houseEid = typeof eid === 'string' && eid.indexOf('light.') === 0;
+  if ((variables.house === true || (houseEid && !variables.popup_group && !variables.group_entity)) && !isArr(variables.house_rooms)
       && !(isArr(variables.lights) && variables.lights.length > 0 && variables.light_rooms_auto !== true)) {
     var hv = window._casoraHomeLightVars ? window._casoraHomeLightVars() : null;
+    if (hv && variables.house !== true && hv.light_group_entity !== eid) hv = null;
     if (hv) {
       /* Lazily: button-card's variables are a proxy that evaluates each one on read, and the tile's active_override
          calls back in here (a loop the card shows as an error). The popup goes on with these variables, so the
@@ -2492,6 +2496,12 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     } catch (e) { return null; }
   }
   var cache = { host: null, panel: null, at: 0 }, t0 = Date.now();
+  /* The narrow pill's left margin inside the content (content starts at left): 20 px from the edge, or 12 px after
+     the clock's right edge when a clock stands in that row (d05-09). */
+  window._casoraPillLeft = function (left) {
+    var cr = Number(window._casoraClockRight) || 0;
+    return Math.max(20, cr > 0 ? Math.round(cr - left + 12) : 0);
+  };
   setInterval(function () {
     if (document.hidden) return;
     /* Casora (06.10.2026): Die Suche durch den ganzen Baum samt Shadow-DOM lief alle 3 s
@@ -2529,7 +2539,9 @@ window._casoraColGap = window._casoraColGap || function (keys) {
        links fast bis zum Rand, und die Pille in diesem Bereich zentrieren. */
     var narrow = w - 2 * RESERVE < 420;
     if (narrow) {
-      var RIGHT = 232, LEFT = 20;
+      /* d05-09 (owner, 26.11.2026): the clock is not hidden under the pill any more – the pill starts beside it
+         (window._casoraClockRight, measured by the clock guard below; 0 without a clock). */
+      var RIGHT = 232, LEFT = window._casoraPillLeft(left);
       left += LEFT;
       w = Math.max(240, w - LEFT - RIGHT);
       max = w;
@@ -2579,14 +2591,18 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     if (age > 30000 || (els.bar && !els.bar.isConnected)
         || (age > 4000 && (!els.bar || !els.times.length || els.times.some(function (t) { return !t.isConnected; })))) find();
     var b = els.bar && els.bar.getBoundingClientRect();
+    // d05-09: the right edge of the clock in the pill's row, for the narrow pill to start beside it (_casoraPillLeft).
+    var cr = 0;
     els.times.forEach(function (t) {
       if (!t.isConnected) return;
       var r = t.getBoundingClientRect();
+      if (r.width > 0 && (!b || (r.bottom > b.top && r.top < b.bottom))) cr = Math.max(cr, r.right);
       var hit = b && b.width > 0 && r.width > 0 && r.right + 12 > b.left && r.left < b.right + 12
         && r.bottom > b.top && r.top < b.bottom;
       var want = hit ? 'hidden' : '';
       if (t.style.visibility !== want) t.style.visibility = want;
     });
+    window._casoraClockRight = cr;
   }, 700);
 })();
 

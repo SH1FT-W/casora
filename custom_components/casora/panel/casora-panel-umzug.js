@@ -603,6 +603,13 @@
     return out;
   }
 
+  /* u01-11 (owner, 26.11.2026): the move counts its own steps, "Move 1 of 3" – overview, customized tiles (only when
+     there are any), done page; the assistant's "Step n of 6" belongs to the way of a new dashboard. */
+  const moveStep = (a, n) => {
+    const tot = ((a && a.groups) || []).length ? 3 : 2;
+    return { step: [n === "done" ? tot : n, tot], stepText: "Move {1} of {2}" };
+  };
+
   window.casoraUmzug = { candidates, analyze, loadOriginals, spreadWeather, sourceName, proposeTitle, carryPlan, CARRY_INITIAL, movedAny: (h, d) => movedAny(h, d), halfLeft: (h, p, l) => halfLeft(h, p, l),
     lib: { classify, foreignVars, chainOf, ownPlan, renameRefs, retarget, isOwnModule } };
 
@@ -686,6 +693,7 @@
             : "Casora found your dashboard “" + pick.title + "”. Everything moves across in one step – "
               + "your Hemma dashboard stays exactly as it is.",
         back: o.back,
+        ...moveStep(a, 1),
       });
       // Schon übersetzt (mit Dashboard-Namen) – nicht noch einmal durch den Übersetzer.
       const ledeEl = pick.done && list.length === 1 && s.box.querySelector(".flede");
@@ -1028,6 +1036,7 @@
         title: "Some Tiles You've Customized",
         lede: "Keep your version, take Casora's new one – or let AI carry your changes into Casora's version.",
         back: () => this._casoraUmzug(o),
+        ...moveStep(a, 2),
       });
       s.box.classList.add("casora-uwide", "casora-cwide");
       chooseCss(this.shadowRoot);
@@ -1514,7 +1523,7 @@
           pendingSet(null);
           carryHelpers();
           // move: der Fertig-Bildschirm hält den ersten Stand als „Umgezogen“ in den Versionen fest.
-          const r = origDone.call(this, Object.assign({}, opts, { move: true }));
+          const r = origDone.call(this, Object.assign({}, opts, { move: true }, moveStep(a, "done")));
           // KI-Zusammenfassung und Ausblenden-Schalter über die Vorschau – sonst erst nach Scrollen zu sehen.
           const body = this._fx && this._fx.scroll && this._fx.scroll.querySelector(".fbody");
           const before = body ? body.children.length : 0;

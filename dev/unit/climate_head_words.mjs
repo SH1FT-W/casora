@@ -3,6 +3,8 @@
 // Owner: every view shows the same words, no numbers – temperature word, humidity word in lower case after „ · “,
 // the air quality phrase as it is; a missing reading leaves its word out. Invented entities.
 //   node dev/unit/climate_head_words.mjs
+// d03-03 (owner, 26.11.2026): decision #103 stays, but the humidity's „Gut“ reads „Feuchte gut“ (a bare „gut“ said not what).
+// @deckt: dashboards/casora/button_card_templates.json#casora_climate_popup
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
@@ -34,7 +36,7 @@ assert.deepEqual(line, ['Angenehm', 'etwas feucht'], 'the temperature word leads
 st = { ...st, 'sensor.qa_h': S(50, 'humidity', '%'), 'sensor.qa_aq': { state: 'excellent', attributes: {} }, 'sensor.qa_co2': S(450, 'carbon_dioxide', 'ppm') };
 v = { ...v, entity_quality: 'sensor.qa_aq', sensors: ['sensor.qa_co2'] };
 for (const id of ['sensor.qa_t', 'sensor.qa_h', 'sensor.qa_aq'])
-  assert.equal(run(st, v, id), 'Angenehm · gut · Luftqualität ist hervorragend', id);
+  assert.equal(run(st, v, id), 'Angenehm · Feuchte gut · Luftqualität ist hervorragend', id);
 
 // Missing humidity: only the temperature word; missing temperature: the humidity word leads (capitalised).
 assert.equal(run({ 'sensor.qa_t': S(17.5, 'temperature', '°C') }, { entity_temp: 'sensor.qa_t' }, 'sensor.qa_t'), 'Kühl');
@@ -47,7 +49,7 @@ assert.equal(run({ 'sensor.qa_t': S(80, 'temperature', '°F'), 'sensor.qa_h': S(
 const dir = ROOT + 'custom_components/casora/translations/dashboard/phrases/';
 for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.json') && x !== 'de.json')) {
   const ex = JSON.parse(fs.readFileSync(dir + f, 'utf8')).exact;
-  for (const w of ['gut', 'etwas trocken', 'etwas feucht', 'sehr trocken', 'sehr feucht'])
+  for (const w of ['Feuchte gut', 'etwas trocken', 'etwas feucht', 'sehr trocken', 'sehr feucht'])
     assert.ok(ex[w], `${f}: „${w}“`);
 }
 console.log('climate_head_words: ok');

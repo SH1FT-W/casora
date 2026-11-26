@@ -185,11 +185,12 @@ const house = ({ attrs = {}, sensors = [], dev = 'd1' } = {}) => {
   const opt = D.weatherOptions(h, W);
   assert.deepEqual(opt.curves, ['temperature', 'feels', 'dew_point', 'humidity', 'wind', 'gust', 'cloud', 'solar'], 'what the source offers');
   assert.deepEqual(opt.rows, ['feels', 'dew_point', 'gust', 'cloud', 'solar']);
-  // Temperature, felt and dew point: one chart, three curves, the dew point from its sensor (statistics).
+  // Temperature, felt and dew point: one chart, three curves, the dew point from its sensor (statistics). The
+  // temperature is the outdoor sensor with a reading, as the wheel and header show it (u08-04, owner 26.11.2026).
   let c = D.weatherChart(h, W, 'sensor.outdoor', { curves: ['temperature', 'feels', 'dew_point'] });
   assert.equal(c.groups.length, 1);
   assert.deepEqual(c.series.map((s) => [s.entity, s.name, s.color]), [
-    ['sensor.station_temperatur', 'Temperatur', '#FF9F0A'], ['sensor.station_gefuehlt', 'Gefühlt', 'c1'], ['sensor.station_taupunkt', 'Taupunkt', 'c3']]);
+    ['sensor.outdoor', 'Temperatur', '#FF9F0A'], ['sensor.station_gefuehlt', 'Gefühlt', 'c1'], ['sensor.station_taupunkt', 'Taupunkt', 'c3']]);
   assert.equal(c.groups[0].unit, '°C');
   assert.equal(c.groups[0].title, 'Außentemperatur');
   // Different units: temperature alone (the outdoor sensor, as before), humidity, wind with gusts.

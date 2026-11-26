@@ -248,6 +248,10 @@ export async function fakeStates(pg, patch, { sticky = false } = {}) {
   await pg.evaluate(({ p, sticky }) => {
     const ha = document.querySelector('home-assistant');
     const hass = ha.hass;
+    // A fake comes from no person (context without user_id) and changed when it was patched: the per-device helper
+    // input_select.casora_expanded_row (u05-09, casora-core _casoraRow) shows such a change, like one by an automation.
+    const t0 = new Date().toISOString();
+    for (const v of Object.values(p)) if (v && !v.last_changed) v.__t = t0;
     if (sticky && typeof ha._updateHass === 'function') {
       // Sticky patches add up: a later one must not drop an earlier (r376: fake locks vanished as „Gerät fehlt“
       // when a real state_changed came after the second patch).
@@ -258,8 +262,9 @@ export async function fakeStates(pg, patch, { sticky = false } = {}) {
         for (const [id, v] of Object.entries(all)) {
           if (v === null) { delete out[id]; continue; }
           const old = out[id] || { entity_id: id, attributes: {}, context: { id: 'qa' } };
-          out[id] = { ...old, state: v.state, attributes: { ...old.attributes, ...(v.attributes || {}) },
-            ...(v.last_changed ? { last_changed: v.last_changed, last_updated: v.last_changed } : {}) };
+          out[id] = { ...old, state: v.state, attributes: { ...old.attributes, ...(v.attributes || {}) }, context: { id: 'qa' },
+            ...(v.last_changed ? { last_changed: v.last_changed, last_updated: v.last_changed }
+              : id === 'input_select.casora_expanded_row' ? { last_changed: v.__t, last_updated: v.__t } : {}) };
         }
         return out;
       };
@@ -271,8 +276,8 @@ export async function fakeStates(pg, patch, { sticky = false } = {}) {
     for (const [id, v] of Object.entries(p)) {
       if (v === null) { delete states[id]; continue; } // Entität „fehlt“
       const old = states[id] || { entity_id: id, attributes: {}, context: { id: 'qa' } };
-      states[id] = { ...old, state: v.state, attributes: { ...old.attributes, ...(v.attributes || {}) },
-        last_changed: v.last_changed || new Date().toISOString(), last_updated: v.last_changed || new Date().toISOString() };
+      states[id] = { ...old, state: v.state, attributes: { ...old.attributes, ...(v.attributes || {}) }, context: { id: 'qa' },
+        last_changed: v.last_changed || v.__t, last_updated: v.last_changed || v.__t };
     }
     // HA-eigener Weg (hass-base-mixin): verteilt den neuen hass wie ein state_changed.
     if (typeof ha._updateHass === 'function') { ha._updateHass({ states }); return; }

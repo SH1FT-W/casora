@@ -6,6 +6,7 @@
 // badge (window._casoraHomeLightVars): the same lamps, the same count, the same rooms in the popup – in the Studio's
 // preview too.
 //   node dev/unit/house_light_tile_follows_badge.mjs
+// @deckt: custom_components/casora/scripts/local/01-basis.js#_casoraLightScope,casoraLightTally
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -142,5 +143,17 @@ console.log('ok house tile = Home badge (group with rooms beside it)');
   assert.notDeepEqual(sv.lights, [tile.entity], 'the tile\'s own list is replaced by the rooms\' lamps');
   sv.popup_title = 'X';
   assert.equal(sv.popup_title, 'X', 'the popup can still set a variable');
+}
+// d05-02 (review 26.11.2026, owner: tile and badge count alike, both by the rooms): a tile on the house group WITHOUT
+// house: true (the group picked as one light on Home) said „4 an“ (the whole group) under the badge's „1 an“ (the rooms).
+{
+  window._casoraLovelaceCfg = () => cfg;
+  delete window._casoraHomeLightC;
+  const plain = { group_rooms: true, lights: [], popup_group: null };
+  assert.deepEqual(window.casoraLightTally(S['light.demo_alle'], S, h, plain), badge, 'plain tile on the house group counts the rooms');
+  assert.deepEqual(roomsOf(S['light.demo_alle'], plain), roomsOf(null, badgeVars), 'and its popup lists the rooms');
+  // A room's tile keeps its room; a tile with its own popup group keeps that.
+  assert.equal(window.casoraLightTally(S['light.demo_ku'], S, h, plain).tot, 2, 'room tile unchanged');
+  assert.equal(window.casoraLightTally(S['light.demo_alle'], S, h, { ...plain, popup_group: 'light.demo_hub' }).tot, 2, 'own popup group wins');
 }
 console.log('house_light_tile_follows_badge: ok');

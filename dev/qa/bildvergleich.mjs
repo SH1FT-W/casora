@@ -397,7 +397,10 @@ async function fakeExpanded(page, v) {
   return page.evaluate((v) => {
     const ha = document.querySelector('home-assistant'); const id = 'input_select.casora_expanded_row';
     const s = ha && ha.hass && ha.hass.states[id]; if (!s) return false;
-    const states = { ...ha.hass.states, [id]: { ...s, state: v } };
+    // A fake from no person that changed now: the per-device row (u05-09, casora-core _casoraRow) follows it like an
+    // automation's change; the old version shows the state as it is.
+    const t = new Date().toISOString();
+    const states = { ...ha.hass.states, [id]: { ...s, state: v, context: { id: 'qa' }, last_changed: t, last_updated: t } };
     if (typeof ha._updateHass === 'function') ha._updateHass({ states }); else return false;
     return true;
   }, v).then(async (ok) => { await page.waitForTimeout(1300); await settle(page); return ok; });
