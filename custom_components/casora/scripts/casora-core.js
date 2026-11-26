@@ -1534,6 +1534,16 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
     }
     return null;
   };
+  // A tile over several devices (variables.offline_members): { all, n, info } – all: every one is offline (then the
+  // tile takes the offline look), info: the latest of their offline times. null without a list (the tile's own entity).
+  window.casoraTileOfflineMembers = function (ids, states) {
+    if (!Array.isArray(ids)) return null;
+    var S = states || {}, list = ids.filter(function (id, i) { return typeof id === 'string' && id && ids.indexOf(id) === i; });
+    var infos = list.map(function (id) { return S[id] ? window.casoraTileOffline(S[id], S, {}) : null; });
+    var all = list.length > 0 && infos.every(Boolean);
+    var t = all ? infos.map(function (x) { return x.since; }).filter(function (x) { return x != null && isFinite(x); }) : [];
+    return { all: all, n: list.length, info: all ? { since: t.length ? Math.max.apply(null, t) : null } : null };
+  };
   // „seit 5 Min.“, „seit 3 Std.“, „seit 1 Tag“, „seit 2 Tagen“; under a minute „gerade eben“ (casoraAgoMin).
   window.casoraSinceWord = function (ms) {
     var d = Date.now() - Number(ms);

@@ -1818,6 +1818,10 @@
       }
       // The late scenes go in front of the first element built here (the room head and chips may come later).
       if (this._lateScenes) this._lateScenes.before = this._contentEl.children[this._lateScenes.at] || null;
+      // A room page without tiles and scenes was an empty page under its title, as if still loading (test round
+      // 26.11.2026 d02-07); the desktop's row says „Noch keine Geräte“. Its row is there (rooms holds it), so the room
+      // has loaded; scenes that come late take the hint out again (_insertLateScenes).
+      if (roomMode && !scenesShown && !rooms.some((r) => r.cards.length)) this._appendEmptyHint();
       if (this._hass) {
         for (const el of this._cardEls) { try { el.hass = this._hass; } catch (_) {} }
       }
@@ -1892,6 +1896,7 @@
       this._lateScenes = null;
       const frag = document.createDocumentFragment();
       if (!this._appendRoomScenes(L.roomMode, L.roomEntities, frag, null)) return;
+      if (this._emptyHintEl) { this._emptyHintEl.remove(); this._emptyHintEl = null; }
       if (L.flat) this._appendRevealCard(_devicesHeadCfg(), frag, null);
       const ref = L.before && L.before.parentNode === this._contentEl ? L.before : null;
       this._contentEl.insertBefore(frag, ref);

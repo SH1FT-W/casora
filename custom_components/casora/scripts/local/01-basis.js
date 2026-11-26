@@ -800,31 +800,40 @@ window.casoraRoomTempOf = function (climateId, states, rooms) {
   return vals.length ? Math.round(vals.reduce(function (a, b) { return a + b; }, 0) / vals.length * 10) / 10 : null;
 };
 /* The sensors behind casoraRoomTempOf: the readable temp_sensor_N of the first room whose header lists the climate
-   entity ([] without one). */
+   entity, the overview ({ home: true }) only when no other room does ([] without one). */
 window.casoraRoomTempIds = function (climateId, states, rooms) {
   var S = states || {};
   if (typeof climateId !== 'string' || !climateId) return [];
   try {
+    /* The Studio's preview hands in the rooms being edited (casora-panel-types.js, casoraTileState). */
+    if (!rooms && typeof window._casoraRoomTempSource === 'function') rooms = window._casoraRoomTempSource();
     if (!rooms) {
       var cfg = window._casoraLovelaceCfg && window._casoraLovelaceCfg();
       var C = window._casoraRoomTempC;
       if (C && C.cfg === cfg && cfg) rooms = C.rooms;
       else {
         rooms = [];
-        if (cfg && Array.isArray(cfg.views)) cfg.views.forEach(function (v) {
-          (function find(x, d) {
-            if (!x || typeof x !== 'object' || d > 6) return;
-            if (Array.isArray(x)) { x.forEach(function (y) { find(y, d + 1); }); return; }
-            if ([].concat(x.template || []).indexOf('casora_room') > -1 && x.variables) { rooms.push({ vars: x.variables }); return; }
-            find(x.cards, d + 1);
-          })(v && v.cards, 0);
-        });
+        if (cfg && Array.isArray(cfg.views)) {
+          // The overview (path home, else the first view) lists every thermostat of the house (review 2026-11-26 u05-01).
+          var hv = cfg.views.filter(function (v) { return v && v.path === 'home'; })[0] || cfg.views[0];
+          cfg.views.forEach(function (v) {
+            (function find(x, d) {
+              if (!x || typeof x !== 'object' || d > 6) return;
+              if (Array.isArray(x)) { x.forEach(function (y) { find(y, d + 1); }); return; }
+              if ([].concat(x.template || []).indexOf('casora_room') > -1 && x.variables) { rooms.push({ vars: x.variables, home: v === hv }); return; }
+              find(x.cards, d + 1);
+            })(v && v.cards, 0);
+          });
+        }
         if (cfg && rooms.length) window._casoraRoomTempC = { cfg: cfg, rooms: rooms };
         if (!rooms.length && window.casoraPhoneRoom && window.casoraPhoneRoom.rooms) rooms = window.casoraPhoneRoom.rooms() || [];
       }
     }
-    for (var i = 0; i < rooms.length; i++) {
-      var V = (rooms[i] && rooms[i].vars) || {};
+    /* The rooms in their own order, the overview last: it reads its house sensor, a room listing the thermostat too
+       knows where it stands (review 2026-11-26 u05-01: the bath thermostat showed the house mean). */
+    var order = rooms.filter(function (r) { return !(r && r.home); }).concat(rooms.filter(function (r) { return r && r.home; }));
+    for (var i = 0; i < order.length; i++) {
+      var V = (order[i] && order[i].vars) || {};
       var mine = false;
       for (var k in V) if (/^climate_entity_\d+$/.test(k) && V[k] === climateId) { mine = true; break; }
       if (!mine) continue;
@@ -849,6 +858,48 @@ window.casoraThermoHistoryOf = function (climateId, sensor, states) {
   if (sensor) return S[sensor] ? { entity: sensor, attribute: null } : own;
   var rs = window.casoraRoomTempIds ? window.casoraRoomTempIds(climateId, S) : [];
   return rs.length === 1 ? { entity: rs[0], attribute: null } : own;
+};
+/* The target a thermostat that is off switches on at (blueprint v2, stage 2): the last target it had while on (remembered
+   per page in window._casoraThermoLast, also from the tile), else its own target above the minimum, else 20 °C – not
+   the device's frost guard of 5 °C. Reading it while the thermostat is on remembers that target. */
+window.casoraThermoOnTarget = function (entity) {
+  var a = (entity && entity.attributes) || {}, id = entity && entity.entity_id;
+  var num = function (v) { var n = parseFloat(v); return isNaN(n) ? null : n; };
+  var target = num(a.temperature), tMin = num(a.min_temp);
+  if (tMin == null) tMin = 5;
+  var last = window._casoraThermoLast || (window._casoraThermoLast = {});
+  if (id && entity.state !== 'off' && entity.state !== 'unavailable' && entity.state !== 'unknown' && target != null) last[id] = target;
+  return id && last[id] != null ? last[id] : (target != null && target > tMin ? target : 20);
+};
+/* What the thermostat tile's switch (and its icon tap) sends, { service, data } (test round 26.11.2026 u05-02: the switch
+   set „Heizen“ at the frost guard's 5 °C, the popup's dial promised „Einschalten auf 20,0 °C“). On: any mode but off
+   switches off. Off: the helper's mode where the device knows it, else heat, else its first mode; heating a single
+   thermostat with a target goes on at casoraThermoOnTarget like the dial's first +. */
+window.casoraThermoToggle = function (entity, states) {
+  var st = entity && entity.state, id = entity && entity.entity_id, a = (entity && entity.attributes) || {};
+  var onT = window.casoraThermoOnTarget(entity);   // also remembers the target while on (the tile renders this)
+  if (st && ['off', 'unavailable', 'unknown'].indexOf(st) < 0) return { service: 'climate.set_hvac_mode', data: { entity_id: id, hvac_mode: 'off' } };
+  var modes = (a.hvac_modes || []).filter(function (m) { return m !== 'off'; });
+  var hs = (states || {})['input_select.casora_thermostat_mode'];
+  var want = (hs && hs.state) || 'heat';
+  var mode = !modes.length || modes.indexOf(want) > -1 ? want : modes.indexOf('heat') > -1 ? 'heat' : modes[0];
+  var mem = a.member_entities || a.entity_id;
+  var grp = Array.isArray(mem) && mem.length > 1;
+  var hasTarget = a.temperature != null || (Number(a.supported_features) & 1) === 1;
+  if (st === 'off' && mode === 'heat' && modes.indexOf('heat') > -1 && !grp && hasTarget) {
+    return { service: 'climate.set_temperature', data: { entity_id: id, temperature: onT, hvac_mode: 'heat' } };
+  }
+  return { service: 'climate.set_hvac_mode', data: { entity_id: id, hvac_mode: mode } };
+};
+/* A fan's or air purifier's three levels, as the popup and the hold menu set them (33/66/100 %: HA's bounds for three
+   speeds, percentage_to_ordered_list_item / ceil(percentage_to_ranged_value); 67 % is speed 3 there), and the level a
+   percentage stands at, 67 % counting as 2 for devices that report their level 2 so (test round 26.11.2026
+   u05-03/u05-08: the popup marked 67 % as level 3). null without a percentage. */
+window.CASORA_FAN_LEVELS = [33, 66, 100];
+window.casoraFanLevel = function (pct) {
+  var n = parseFloat(pct);
+  if (pct == null || isNaN(n)) return null;
+  return n <= 33 ? 1 : n <= 67 ? 2 : 3;
 };
 window.casoraPopupTitle = function (card, variables, def, defaults) {
   var V = variables || {};

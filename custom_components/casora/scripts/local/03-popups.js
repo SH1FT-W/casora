@@ -4863,6 +4863,16 @@
     var cl = function (k) { return Math.max(lo, Math.min(hi, k)); };
     return [{ k: cl(2700), l: 'Warm', d: 'warm' }, { k: cl(4000), l: 'Neutral', d: 'neutral' }, { k: cl(6000), l: 'Kalt', d: 'cold' }];
   };
+  // The preset a white tone stands at: the nearest one (-1 without a tone). Shared with the hold menu (22-halten.js), so
+  // both mark the same button (test round 26.11.2026 u05-07: 5524 K was „Kalt“ here, nothing there).
+  var ctNearest = function (pr, k) {
+    var best = -1;
+    if (k == null || !isFinite(Number(k))) return best;
+    (pr || []).forEach(function (p, n) { if (best < 0 || Math.abs(p.k - k) < Math.abs(pr[best].k - k)) best = n; });
+    return best;
+  };
+  S.ctPresets = ctPresets;
+  S.ctNearest = ctNearest;
 
   /* Popup v3 „Bühne“ (popup-richtlinien-v3.md §17, Licht): the frame carries data-casora-pv="v3" (template variant,
      localStorage casora_popup_variant) – then stage S1 + scenes as quick choice on the left, the lamps on the right.
@@ -4893,8 +4903,7 @@
       var rc = c3 && Math.max(c3[0], c3[1], c3[2]) >= 16 ? 'rgb(' + c3.join(',') + ')' : null;
       if ((!m || m === 'color_temp') && a.color_temp_kelvin) {
         k = Number(a.color_temp_kelvin); rgb = S.kColor(k);
-        var best = -1;
-        (pr || []).forEach(function (p, n) { if (best < 0 || Math.abs(p.k - k) < Math.abs(pr[best].k - k)) best = n; });
+        var best = ctNearest(pr, k);
         kind = best > -1 ? 'ct' + best : 'white';
       } else if (COL_MODES.indexOf(m) > -1) {
         rgb = rc;
@@ -5171,8 +5180,7 @@
         return false;
       });
       var pr = ctPresets(ct, states);
-      var best = -1;
-      if (cur != null) pr.forEach(function (p, i) { if (best < 0 || Math.abs(p.k - cur) < Math.abs(pr[best].k - cur)) best = i; });
+      var best = ctNearest(pr, cur);
       left += '<div class="lps-lbl' + (left ? ' lps-gap' : '') + '">' + esc(tr('Lichtfarbe')) + '</div><div class="lps-seg">'
         + pr.map(function (p, i) {
           return '<div class="lps-sg' + (i === best ? ' on' : '') + '" role="button" tabindex="0" data-lps-tap="'

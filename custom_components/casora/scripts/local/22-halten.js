@@ -116,20 +116,25 @@
         }
         // Lichtfarbe nur bei eingeschaltetem Licht (aus: kurz halten, Nutzerrunde).
         if (s === 'on' && modes.indexOf('color_temp') !== -1) {
-          var kmin = num(a.min_color_temp_kelvin) || 2200, kmax = num(a.max_color_temp_kelvin) || 6500;
-          var warm = Math.max(kmin, 2700), cold = Math.min(kmax, 6000), mid = Math.round((warm + cold) / 2 / 100) * 100;
+          // The light popup's presets and its rule for the marked one (nearest preset, u05-07).
+          var LS = window._casoraLightSoft || {};
+          var kmin = num(a.min_color_temp_kelvin) || 2000, kmax = num(a.max_color_temp_kelvin) || 6500;
+          var cl = function (x) { return Math.max(kmin, Math.min(kmax, x)); };
+          var one = {}; one[id] = st;
+          var pr = LS.ctPresets ? LS.ctPresets([id], one) : [{ k: cl(2700), l: 'Warm' }, { k: cl(4000), l: 'Neutral' }, { k: cl(6000), l: 'Kalt' }];
           var k = a.color_mode === 'color_temp' ? num(a.color_temp_kelvin) : null;
-          var near = function (x) { return k != null && Math.abs(k - x) <= 150; };
-          m.quick.push({ kind: 'pills', label: 'Lichtfarbe', items: [
-            svc('Warm', null, 'light.turn_on', { color_temp_kelvin: warm }, { on: near(warm) }),
-            svc('Neutral', null, 'light.turn_on', { color_temp_kelvin: mid }, { on: near(mid) }),
-            svc('Kalt', null, 'light.turn_on', { color_temp_kelvin: cold }, { on: near(cold) }),
-          ] });
+          var best = LS.ctNearest ? LS.ctNearest(pr, k) : -1;
+          if (!LS.ctNearest && k != null) pr.forEach(function (p, i) { if (best < 0 || Math.abs(p.k - k) < Math.abs(pr[best].k - k)) best = i; });
+          m.quick.push({ kind: 'pills', label: 'Lichtfarbe', items: pr.map(function (p, i) {
+            return svc(p.l, null, 'light.turn_on', { color_temp_kelvin: p.k }, { on: i === best });
+          }) });
         }
       } else if (dom === 'fan') {
         var pc = s === 'on' ? num(a.percentage) : null, fi = [];
-        if (feats & 1) fi = [33, 66, 100].map(function (p) {
-          return svc(p + ' %', null, 'fan.set_percentage', { percentage: p }, { on: pc != null && !a.preset_mode && Math.abs(pc - p) <= 4 });
+        // The popup's levels „1 2 3“ (33/66/100 %), marked by the same rule (u05-03/u05-08).
+        var lv = window.casoraFanLevel ? window.casoraFanLevel(pc) : pc == null ? null : pc <= 33 ? 1 : pc <= 67 ? 2 : 3;
+        if (feats & 1) fi = (window.CASORA_FAN_LEVELS || [33, 66, 100]).map(function (p, i) {
+          return svc(String(i + 1), null, 'fan.set_percentage', { percentage: p }, { on: pc != null && !a.preset_mode && lv === i + 1 });
         });
         var auto = (a.preset_modes || []).filter(function (x) { return /^auto$/i.test(x); })[0];
         if (auto) fi.push(svc('Auto', null, 'fan.set_preset_mode', { preset_mode: auto }, { on: s === 'on' && a.preset_mode === auto }));
