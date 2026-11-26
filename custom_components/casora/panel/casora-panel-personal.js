@@ -359,6 +359,9 @@
         }
         const chips = document.createElement("div");
         chips.className = "casora-chips";
+        // A „your turn“ sensor decides alone (finder): the months are greyed out meanwhile (Prüfrunde u08-05).
+        const bySensor = !!S.waste.duty_entity;
+        if (bySensor) chips.style.opacity = "0.45";
         const fmt = new Intl.DateTimeFormat((hass.locale && hass.locale.language) || hass.language || "en", { month: "short" });
         for (let m = 1; m <= 12; m++) {
           const b = document.createElement("button");
@@ -366,6 +369,7 @@
           b.className = "casora-chip" + (S.waste.duty_months.includes(m) ? " on" : "");
           b.textContent = fmt.format(new Date(2026, m - 1, 1));
           b.setAttribute("data-no-i18n", "");
+          b.disabled = bySensor;
           b.onclick = () => {
             const i = S.waste.duty_months.indexOf(m);
             if (i >= 0) S.waste.duty_months.splice(i, 1); else S.waste.duty_months.push(m);
@@ -377,9 +381,9 @@
         // "Your turn" (service months), sensor and reminder are not for everyone: under "Advanced",
         // closed by default (even when something is set there).
         more(g, "waste", false, () => {
-          row(g, "Your turn in", [chips], "Months you put the bins out");
+          row(g, "Your turn in", [chips], bySensor ? "The sensor decides" : "Months you put the bins out");
           row(g, "Your turn sensor", [ent(S.waste.duty_entity, ["sensor", "binary_sensor", "input_boolean"],
-            (v) => { S.waste.duty_entity = v; })], "Instead of fixed months");
+            (v) => { S.waste.duty_entity = v; render(); })], "Instead of fixed months");
           // No "Reminder automation" row: the popup's "Push the evening before" switch is gone (popup v3 is clean).
         }, ["Advanced", "Advanced"]);
       }

@@ -3206,7 +3206,8 @@
     "Smart Heating Control integration not installed yet": "Integrazione Smart Heating Control non ancora installata",
     "Room temperature, target and whether the room heats on the tile. The popup sets the target as a manual change, goes back to automatic or picks a level, and shows the decision, the manual change and the house mode; a row opens the schedule: the week at a glance with each slot's level, switching the profile and editing a profile's time slots. For the rooms of the Smart Heating Control integration.": "Temperatura della stanza, obiettivo e riscaldamento in corso sul riquadro. Il popup imposta l'obiettivo come modifica manuale, torna in automatico o sceglie un livello, e mostra la decisione, la modifica manuale e la modalità della casa; una riga apre la programmazione: la settimana a colpo d'occhio con il livello di ogni fascia, cambio di profilo e modifica delle fasce di un profilo. Per le stanze dell'integrazione Smart Heating Control.",
     "At most {n} km": "Al massimo {n} km",
-    "At least {n} km": "Almeno {n} km"
+    "At least {n} km": "Almeno {n} km",
+    "The sensor decides": "Decide il sensore"
   },
   "patterns": [
     [

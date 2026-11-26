@@ -16,7 +16,8 @@
     "No device matches the filter.": "No device matches the filter.",
     "Lights": "Lighting",
     "At most {n} km": "At most {n} km",
-    "At least {n} km": "At least {n} km"
+    "At least {n} km": "At least {n} km",
+    "The sensor decides": "The sensor decides"
   },
   "patterns": [
     [
