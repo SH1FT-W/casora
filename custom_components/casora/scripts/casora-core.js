@@ -9544,12 +9544,13 @@ window.casoraMenuGlass = {
     // Focus into the sheet once it is open (not onto a control: a mouse/touch opening shows no focus ring), unless
     // something inside already took it (a search field).
     _focusIn() {
-      var self = this, gen = this._openGen;
+      // Own round, not _openGen: a tile tap calls open() a second time while already open, which must not stop these.
+      var self = this, round = this._focusRound = (this._focusRound || 0) + 1;
       // Again after the sheet is laid out (it is held invisible until then, and a hidden element takes no focus); only
       // while nobody moved the focus elsewhere meanwhile.
       [0, 120, 450, 1000].forEach(function (ms) {
         setTimeout(function () {
-          if (self._openGen !== gen || !self.hasAttribute('open') || self.hasAttribute('closing')) return;
+          if (self._focusRound !== round || !self.hasAttribute('open') || self.hasAttribute('closing')) return;
           var a = deepFocus();
           if (a && self._owns(a)) return;
           if (a && a !== document.body && a !== document.documentElement && !(self._focusBack || []).includes(a)) return;
