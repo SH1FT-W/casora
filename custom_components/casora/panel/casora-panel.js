@@ -16211,6 +16211,8 @@ class CasoraPanel extends HTMLElement {
       this._startPrev = null;
       sw.onclick = () => { const on = sw.getAttribute("aria-checked") !== "true"; set(on); this._startPage(opts.url_path, on); };
       r.row.appendChild(sw);
+      // Above the preview: below it, the fixed buttons cut the row in half at 1000 px height (Prüfrunde u01-12).
+      s.body.insertBefore(home.parentNode, stage);
     }
     if (opts.phoneNote) {
       const note = document.createElement("p");
