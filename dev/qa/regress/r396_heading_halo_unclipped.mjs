@@ -172,6 +172,9 @@ for (const [theme, dark] of runs) {
     const plan = grouping === 'off' ? [[all[0], null], [all[1], 'noscenes']] : [[all[all.length > 2 ? 2 : 0], 'many']];
     for (const [label, how] of plan) {
       if (how) await need(`${tag}: ${label} vorbereitet (${how})`, (await prepare(page, label, how)) === 'ok');
+      // The test house's settings file hides every room's "Ambiente" scene (CASORA_SETTINGS.scenes.exclude), and since
+      // 300886993 (u04-01) room pages honour that list too: this page only shows the room's scenes with it cleared.
+      if (!how) await page.evaluate(() => { const s = window.CASORA_SETTINGS; if (s && s.scenes) s.scenes = { ...s.scenes, exclude: [] }; });
       // Once: the room page is built before the scene list (window._casoraSC, defined by the first scene card)
       // exists, as on a busy phone (gate 01.11.2026: the room stayed without scenes). The scenes come afterwards.
       if (!how && !lateTried) {
