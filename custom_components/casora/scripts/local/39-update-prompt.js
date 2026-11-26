@@ -90,6 +90,7 @@
     + '.cup-t{display:block}'
     + '.cup-x{display:block;margin-top:2px;font-size:14px;line-height:1.4;font-weight:400;'
     + 'color:var(--casora-popup-tiles-text-secondary, var(--secondary-text-color))}'
+    + '.cup-lang{margin:0 0 6px;font-size:12px;font-weight:600;color:var(--casora-popup-tiles-text-secondary, var(--secondary-text-color))}'
     + '.cup-intro{margin:0 0 14px;font-size:15px;line-height:1.45;color:var(--casora-popup-tiles-text-primary, var(--primary-text-color))}'
     + '.cup-sub{margin:0 0 14px;font-size:14px;line-height:1.45;color:var(--casora-popup-tiles-text-secondary, var(--secondary-text-color))}'
     + '.cup-hint{margin:0 0 16px;font-size:13px;line-height:1.4;color:var(--casora-popup-tiles-text-secondary, var(--secondary-text-color))}'
@@ -142,7 +143,12 @@
     }
     // What is new first (tagline, items, link to all changes), then how it installs, small, above the buttons.
     var moreHtml = info.release_url ? '<button type="button" class="cup-more" data-casora-updp="notes"><span>' + esc(T('Alle Änderungen')) + '</span></button>' : '';
-    return '<div class="cup" data-no-i18n><style>' + CSS + '</style>'
+    // English notes (betas and GitHub's notes have no other language) in another language's UI: said once on top,
+    // so they do not look like a gap in the translation (u09-07).
+    var uiLang = String(window.casoraLocale ? window.casoraLocale() : 'de').slice(0, 2).toLowerCase();
+    var foreignHtml = info.notes_lang === 'en' && uiLang !== 'en' && (info.intro || items.length)
+      ? '<p class="cup-lang">' + esc(T('Neuerungen auf Englisch')) + '</p>' : '';
+    return '<div class="cup" data-no-i18n><style>' + CSS + '</style>' + foreignHtml
       + (info.intro ? '<p class="cup-intro"' + langHtml + '>' + esc(info.intro) + '</p>' : '')
       + listHtml + moreHtml
       + '<p class="cup-hint">' + hintHtml + '</p>'

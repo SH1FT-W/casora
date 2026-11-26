@@ -82,8 +82,7 @@ assert.equal(await U.run(A.h), 'show', 'admin with a new version: popup');
 assert.equal(opened.length, 1);
 const cfg = opened[0];
 assert.equal(cfg.title, 'Casora 26.11.6 ist da', 'title names the version');
-assert.equal(cfg.variant, 'v3', 'v3 popup');
-assert.equal(cfg.content.casora_cols, 1, 'one column (552)');
+assert.equal(cfg.variant, 'v3', 'v3 popup');assert.equal(cfg.content.casora_cols, 1, 'one column (552)');
 const html = cfg.content.cards[0].custom_fields.b;
 // Owner 05.11.2026: hovering the buttons showed a second frame in the popup – the theme's card hover (shadow and
 // filter on every ha-card) reached the content card. The card switches both off through the theme's own variables.
@@ -139,6 +138,14 @@ window.casoraPopup.current = null;
     items: [{ title: 'Backofen', text: 'Kacheltyp „Backofen“ im Studio' }, { title: 'Waschmaschine <und> Trockner', text: 'Die Popups zeigen Pflege' },
       { title: 'C', text: 'c' }, { title: 'D', text: '' }, { title: 'E', text: 'never shown' }],
     lines: ['Backofen', 'Waschmaschine und Trockner', 'C'] };
+  // u09-07: English notes (betas, GitHub) in another language's UI say so, instead of looking like a translation gap.
+  const loc0 = window.casoraLocale;
+  window.casoraLocale = () => 'de-DE';
+  assert.ok(U.html({ ...rich, notes_lang: 'en' }).includes('<p class="cup-lang">Neuerungen auf Englisch</p>'), 'en notes in a German UI: marked');
+  assert.ok(!U.html(rich).includes('<p class="cup-lang">'), 'notes in the UI language: no mark');
+  window.casoraLocale = () => 'en-US';
+  assert.ok(!U.html({ ...rich, notes_lang: 'en' }).includes('<p class="cup-lang">'), 'English UI: no mark');
+  window.casoraLocale = loc0;
   const R = U.html(rich);
   assert.ok(R.includes('<p class="cup-intro" lang="de">Küche &amp; Wäsche mit echtem Inhalt.</p>'), 'tagline as intro, escaped');
   assert.ok(R.includes('<span class="cup-t">Backofen</span><span class="cup-x">Kacheltyp „Backofen“ im Studio</span>'), 'title + short line');
