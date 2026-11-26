@@ -498,6 +498,10 @@
     /* Magnifier and redo in the toolbar (desktop/tablet) */
     :host(.bmode) #msearch, :host(.bmode) #mredo { display:none; }
     :host(.bmode:not(.phone)) #mredo.has { display:grid; }
+    /* Redo keeps its place next to undo, greyed out like undo when there is nothing to redo: appearing only after the
+       first undo pushed undo aside, and the second click on the same spot redid it (Prüfrunde u02-04). */
+    :host(.bmode:not(.phone):not(.flow)) #mredo { display:grid; }
+    :host(.bmode:not(.phone)) #mredo:disabled { opacity:.62; cursor:default; }
     /* Search as a visible entry: field "Search … ⌘K" (phone: magnifier next to "Done") */
     :host(.bmode) #msearch { display:inline-flex; align-items:center; gap:8px; height:34px; min-width:0; padding:0 12px 0 10px;
       margin-right:8px; border-radius:999px; border:0; font:inherit; font-size:14px; color:var(--ink-2, inherit); cursor:text;
