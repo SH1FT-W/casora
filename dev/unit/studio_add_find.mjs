@@ -199,3 +199,16 @@ const panel = () => {
   assert.equal(c.name, 'Test Room', 'named after the room, not the registry name');
   console.log('ok add: smart heating room name');
 }
+
+// ── u08-07: the Studio preview of a plant tile says what the dashboard says, with the plant's name ──
+{
+  const templates = JSON.parse(read('dashboards/casora/button_card_templates.json'));
+  globalThis.DOMParser = class { parseFromString(t) { return { body: { textContent: t, querySelectorAll: () => [] } }; } };
+  const PL = 'plant.yucca_test';
+  const ent = st(PL, 'problem', { friendly_name: 'Yucca', problems: [{ sensor_type: 'moisture', status: 'high' }], moisture_status: 'High' });
+  const h2 = { ...hass, states: { ...states, [PL]: ent } };
+  const tile = { type: 'custom:button-card', template: 'casora_plant', entity: PL, variables: {} };
+  assert.equal(window.casoraTileState(tile, ent, h2, templates), 'Steht zu nass', 'same words as the dashboard tile');
+  assert.equal(window.casoraTileName(tile, ent, h2, templates), 'Yucca', 'named like the plant, not „Pflanze“');
+  console.log('ok preview: plant');
+}
