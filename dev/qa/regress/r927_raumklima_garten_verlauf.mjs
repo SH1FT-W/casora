@@ -3,8 +3,8 @@
 // #235: the Raumklima popup on an outdoor room's page (a garden) showed the stage only – outdoor temperature and
 // humidity, no Verlauf, no lowest and highest. Expected on a copy of qa-arbeit with a view „Garten“ (deleted at the
 // end; the backend's outdoor readings faked in this browser only, pointing at two real sensors with a history):
-// the stage „Außenluft“, a Verlauf with temperature and humidity and the range switch, and „Höchster Wert“ /
-// „Tiefster Wert“ of the temperature for the chosen range. Screenshots with R927_SHOT=<folder>.
+// the stage „Außenluft“, a Verlauf with temperature and humidity over a fixed 24 Std. (d03-09: no range switch in a
+// section), and „Höchster Wert“ / „Tiefster Wert“ of the temperature. Screenshots with R927_SHOT=<folder>.
 import { open, casoraDashboard, dashboard, stable, check, need, finish, usePage, fakeStates, atFinish } from './lib.mjs';
 import { ws } from '../ws.mjs';
 
@@ -66,30 +66,6 @@ const popup = () => {
 };
 const tile = () => window.__pierce('button-card').filter((b) => [].concat((b._config || {}).template || []).includes('casora_vent'))
   .map((b) => { const r = b.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2, w: r.width }; }).filter((b) => b.w > 0);
-const tapSpan = async (pg, sp, mobile) => {
-  const at = await pg.evaluate((s) => {
-    const p = window.__pierce('casora-popup').find((x) => x.hasAttribute('open'));
-    const all = [];
-    (function walk(root) { root.querySelectorAll('*').forEach((n) => { all.push(n); if (n.shadowRoot) walk(n.shadowRoot); }); })(p.shadowRoot || p);
-    const n = all.find((x) => x.getAttribute && x.getAttribute('data-casora-vspan') === s);
-    if (!n) return null;
-    n.scrollIntoView({ block: 'center' });
-    return true;
-  }, sp);
-  if (!at) return false;
-  await pg.waitForTimeout(500);
-  const xy = await pg.evaluate((s) => {
-    const p = window.__pierce('casora-popup').find((x) => x.hasAttribute('open'));
-    const all = [];
-    (function walk(root) { root.querySelectorAll('*').forEach((n) => { all.push(n); if (n.shadowRoot) walk(n.shadowRoot); }); })(p.shadowRoot || p);
-    const r = all.find((x) => x.getAttribute && x.getAttribute('data-casora-vspan') === s).getBoundingClientRect();
-    return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
-  }, sp);
-  if (mobile) await pg.touchscreen.tap(xy.x, xy.y); else await pg.mouse.click(xy.x, xy.y);
-  await pg.waitForTimeout(1500);
-  return true;
-};
-
 const run = async (pg, mobile, path, nth) => {
   usePage(pg);
   await dashboard(pg, URL + '/' + path, 1);
@@ -116,12 +92,10 @@ await check(`a Verlauf (${p.title})`, p.title === 'Verlauf', p.title);
 await check('Verlauf: the outdoor temperature sensor first, a second line with it', p.series.length >= 2 && p.series[0][0] === ids.t[0]
   && (p.series[0][1] === 'Temperatur' ? p.series[1][0] === ids.rh[0] && p.series[1][1] === 'Luftfeuchtigkeit' : true), p.series);
 await check('Verlauf: a line is drawn', p.lines >= 1, p.lines);
-await check('Verlauf: the range switch 24 Std. / 7 Tage / 30 Tage, 24 h on', p.segs.map((x) => x.sp).join(',') === '24h,7d,30d' && p.segs[0].on, p.segs);
+// d03-09 (owner 26.11.2026): a Verlauf section shows a fixed 24 Std. (richtlinien §7.2), no range switch.
+await check(`Verlauf: fixed 24 Std., no range switch (${p.span})`, p.span === '24h' && !p.segs.length, p.segs);
 await check('highest and lowest temperature of the range', p.rows.some((r) => /^Höchster Wert .*\d/.test(r)) && p.rows.some((r) => /^Tiefster Wert .*\d/.test(r)), p.rows);
 if (SHOT) await page.screenshot({ path: SHOT + '/' + (process.env.R927_TAG || 'after') + '-desktop.png' });
-await tapSpan(page, '7d');
-p = await stable(page, popup, undefined, { max: 12000, quiet: 1500, until: (v) => v && v.span === '7d' && v.lines >= 1 && v.rows.some((r) => /^Höchster Wert/.test(r)) });
-await check(`7 Tage: chart and statistics follow (${p && p.span})`, p && p.span === '7d' && p.segs[1].on && p.rows.some((r) => /^Höchster Wert/.test(r)), p);
 await page.keyboard.press('Escape');
 
 // The tile with a sensor picked by hand: it joins the outdoor temperature in one chart with a legend, with its own highest/lowest.
@@ -146,9 +120,7 @@ if (tp.length) {
   await ph.page.touchscreen.tap(tp[0].x, tp[0].y);
   let pp = await stable(ph.page, popup, undefined, { max: 12000, quiet: 1500, until: (v) => v && v.lines >= 1 });
   await check('phone: the Verlauf of the garden', pp && pp.title === 'Verlauf' && pp.lines >= 1, pp);
-  await tapSpan(ph.page, '30d', true);
-  pp = await stable(ph.page, popup, undefined, { max: 12000, quiet: 1500, until: (v) => v && v.span === '30d' });
-  await check(`phone: a finger tap picks 30 Tage (${pp && pp.span})`, pp && pp.span === '30d', pp);
+  await check(`phone: fixed 24 Std., no range switch (${pp && pp.span})`, pp && pp.span === '24h' && !pp.segs.length, pp);
   if (SHOT) await ph.page.screenshot({ path: SHOT + '/after-phone.png' });
 } else {
   await check('phone: room climate tile on the garden page', false, tp);

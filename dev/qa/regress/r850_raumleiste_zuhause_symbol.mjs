@@ -100,7 +100,8 @@ const block = () => page.evaluate(() => {
   const mini = sr.querySelector('.mini-tab.home');
   return { next: b.nextElementSibling && b.nextElementSibling.dataset.pkey, title: b.querySelector('.cn-bhead b').firstChild.textContent.trim(),
     badge: (b.querySelector('.cn-only') || {}).textContent, opts: opts.map((o) => o.textContent.trim()), on: opts.filter((o) => o.classList.contains('on')).map((o) => o.dataset.v),
-    label: (b.querySelector('.row[data-key="nav_names"] > label') || {}).textContent, hint: [...b.querySelectorAll('.hint')].map((h) => h.textContent).join(' '),
+    // d04-03: the field's hint stands under its title, inside the label (.cn-rowhint); the label's own text comes first.
+    label: ((b.querySelector('.row[data-key="nav_names"] > label') || {}).firstChild || {}).textContent, hint: [...b.querySelectorAll('.hint, .cn-rowhint')].map((h) => h.textContent).join(' '),
     mini: mini ? { icon: mini.classList.contains('homeicon'), text: mini.textContent, aria: mini.getAttribute('aria-label') } : null };
 });
 await page.evaluate(() => window.__panel()._csShow('n-look', 'nb-navbar'));

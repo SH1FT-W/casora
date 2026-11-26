@@ -4398,31 +4398,13 @@
         if (c.plug) f2.plug3 = tpl('plug', false);
         rightP = ['cam', 'camoff', 'camai', 'plug3', 'job3', 'temp3', 'ams3', 'dev3'];
         // Issue 130 (owner 05.11.2026): the plug's power is the one Verlauf under the dial (richtlinien §7.1, H.layout
-        // takes the field „chart“), with the range switch 24 Std. · 7 Tage · 30 Tage like the plant and reading pages.
-        // The shared chart slot (_hpChartCfg / _hpPlantShow): each segment carries its chart key (data-hp-metric).
-        if (c.power && fields.chart && typeof window._hpChartCfg === 'function' && UI.segments) {
-          // Owner (06.11.2026): over 7/30 days the raw W line is spiky and unreadable. With an energy meter on the
-          // plug those ranges show the consumption per day as bars instead (long-term statistics, change per day –
-          // §7.2 „Balken für Summen je Zeitraum“), the keys and title of the energy rows („Verbrauch pro Tag“).
-          // Without an energy meter the smoothed power line stays.
-          var pwBars = c.energy && typeof window._hpBarCfg === 'function';
-          var rng = [[c.power, '24h', '24 Std.'],
-            [pwBars ? 'hwd7:' + c.energy : 'pw7:' + c.power, '7d', '7 Tage'],
-            [pwBars ? 'hwd30:' + c.energy : 'pw30:' + c.power, '30d', '30 Tage']];
-          rng.forEach(function (r) {
-            if (r[0] === c.power) { window._hpChartCfg(r[0], 'Leistung', r[1], c.color, 120); return; }
-            // The plate keeps one height across the ranges (§7.1 Abschnitt „Verlauf“: 120).
-            if (pwBars) { window._hpBarCfg(r[0], c.energy, 'Verbrauch pro Tag', r[1], 1).height = 120; return; }
-            var cfg = window._hpChartCfg(r[0], 'Leistung', r[1], c.color, 120);
-            cfg.series[0].entity = c.power;
-            if (window._hpSmooth) window._hpSmooth(r[0]);
-          });
-          // HH.chart: the plate with its head and slot; the segments go inside the plate, under the chart.
-          // L.wrap: the taps of chart keys (_hpPlantTap), as in the plug and temperature lists.
-          var pwHtml = L.wrap(HH.chart(window._hpChartTitle(c.power), plate).replace(/<\/div>$/, '')
-            + '<div style="margin-top:16px;">' + UI.segments(rng.map(function (r, i) {
-              return { label: r[2], active: i === 0, attrs: { 'data-hp-metric': r[0] } };
-            }), null) + '</div></div>');
+        // takes the field „chart“). d03-09 (owner 26.11.2026): a Verlauf section shows a fixed 24 Std. (§7.2); the
+        // switch 24 Std. · 7 Tage · 30 Tage belongs to an S6 stage and the reading page („Details ›“) only.
+        if (c.power && fields.chart && typeof window._hpChartCfg === 'function') {
+          window._hpChartCfg(c.power, 'Leistung', '24h', c.color, 120);
+          // HH.chart: the plate with its head and slot. L.wrap: the taps of chart keys (_hpPlantTap), as in the plug
+          // and temperature lists.
+          var pwHtml = L.wrap(HH.chart(window._hpChartTitle(c.power), plate));
           // The column is drawn anew when the popup balances its columns (Regel A) – a new, empty slot: the template
           // mounts the chart again into it (_hpStageChart, as the S6 stages do).
           f2.chart = '[[[ if (window._hpStageChart) window._hpStageChart(this, ' + JSON.stringify(c.power) + '); return '
