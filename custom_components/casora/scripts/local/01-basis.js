@@ -720,7 +720,11 @@ window._casoraLightTallyIds = function (entity, states, hass, vars) {
 window.casoraLightTally = function (entity, states, hass, vars) {
   var S = states || {};
   var ids = window._casoraLightTallyIds(entity, S, hass, vars);
-  return { kind: 'lamps', tot: ids.length, on: ids.filter(function (x) { return S[x].state === 'on'; }).length };
+  /* dead: lamps HA cannot reach (unavailable/unknown) – not "off" (Prüfrunde u10-06). */
+  var t = { kind: 'lamps', tot: ids.length, on: ids.filter(function (x) { return S[x].state === 'on'; }).length };
+  var dead = ids.filter(function (x) { return S[x].state === 'unavailable' || S[x].state === 'unknown'; }).length;
+  if (dead) t.dead = dead;
+  return t;
 };
 /* Issue 119, „Tap on badges: Switch“ (Studio › Controls › Tiles, badge_tap): what a tap on the light badge switches – the
    lamps it counts (_casoraLightTallyIds, as casoraLightTally). Its HA group alone (no picked lamps, not the rooms):
@@ -782,8 +786,16 @@ window.casoraLightBadgeTapFrom = function (states, hass, src, auto) {
 };
 /* The words for a tally (German, the dashboard translates): „Aus“/„An“ for one lamp, „Alle aus“/„Alle an“, else
    „2 an“ – a count in small letters (owner, 01.11.2026; wortliste §2). */
+/* Lamps offline (t.dead, Prüfrunde u10-06): all of them „Offline“; else the reachable ones' words plus „· 1 offline“
+   („Aus · 1 offline“, „2 aus · 1 offline“, „1 an · 1 offline“) – never „Alle aus“ while one lamp's state is unknown. */
 window.casoraLightTallyText = function (t) {
   if (!t || !t.tot) return 'Aus';
+  if (t.dead > 0) {
+    var live = t.tot - t.dead;
+    if (live <= 0) return 'Offline';
+    var base = t.on ? (live === 1 ? 'An' : t.on + ' an') : (live === 1 ? 'Aus' : live + ' aus');
+    return base + ' · ' + t.dead + ' offline';
+  }
   if (t.tot === 1) return t.on ? 'An' : 'Aus';
   if (!t.on) return 'Alle aus';
   if (t.on === t.tot) return 'Alle an';
