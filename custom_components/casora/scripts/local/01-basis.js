@@ -891,6 +891,15 @@ window.casoraThermoToggle = function (entity, states) {
   }
   return { service: 'climate.set_hvac_mode', data: { entity_id: id, hvac_mode: mode } };
 };
+/* A fan's or air purifier's three levels, as the popup and the hold menu set them (33/67/100 %), and the level a
+   percentage stands at (test round 26.11.2026 u05-03/u05-08: level 2 sets 67 %, the popup marked 67 % as level 3 and
+   the hold menu offered 66 %). null without a percentage. */
+window.CASORA_FAN_LEVELS = [33, 67, 100];
+window.casoraFanLevel = function (pct) {
+  var n = parseFloat(pct);
+  if (pct == null || isNaN(n)) return null;
+  return n <= 33 ? 1 : n <= 67 ? 2 : 3;
+};
 window.casoraPopupTitle = function (card, variables, def, defaults) {
   var V = variables || {};
   var own = String(V.room_name || '').trim();
