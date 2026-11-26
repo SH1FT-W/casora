@@ -108,11 +108,39 @@
     if (bad(s)) return s === 'unknown' ? 'Unbekannt' : 'Nicht verfügbar';
     if (/^binary_sensor\./.test(id)) { var w = Z.binWords(st); return s === 'on' ? w[0] : w[1]; }
     if (Z.isNumeric(st)) return Z.fmt(h, id, s);
+    if (/^(input_)?select\./.test(id)) return Z.optionWord(h, id, s);
     var l = null;
     try { l = h.formatEntityState && h.formatEntityState(Object.assign({}, st, { state: s })); } catch (e) { /* raw */ }
     // Enum sensors without a translation come back raw („connected“): the common words in German.
     if (!l || l === s) return RAW_WORD[String(s).toLowerCase()] || l || String(s);
     return l;
+  };
+  // The word of a select's option (Prüfrunde u08-02: the page said „auto“ under a row that said „Automatik“): a module's
+  // own word first (window._casoraOptionWords: fn(h, id, option) → word or null, e.g. Smart Heating's house mode), then
+  // HA's translation, then Casora's word for a raw code (window._casoraReadableRaw: „default“ → „Standard“).
+  Z.optionWord = function (h, id, o) {
+    var hooks = window._casoraOptionWords || [];
+    for (var i = 0; i < hooks.length; i++) {
+      var w0 = null;
+      try { w0 = hooks[i](h, id, o); } catch (e) { w0 = null; }
+      if (w0) return w0;
+    }
+    var st = h.states[id], l = null;
+    try { l = h.formatEntityState && st && h.formatEntityState(Object.assign({}, st, { state: o })); } catch (e) { /* raw */ }
+    if (l && l !== o) return l;
+    if (window._casoraReadableRaw) return window._casoraReadableRaw(o, st);
+    return RAW_WORD[String(o).toLowerCase()] || String(o);
+  };
+  // A select's options as moons of its page's stage: the chosen one marked, a tap picks another (select_option).
+  Z.optionMoons = function (h, id) {
+    var st = h.states[id], dom = id.split('.')[0];
+    var opts = st && !bad(st.state) && Array.isArray((st.attributes || {}).options) ? st.attributes.options : [];
+    if (!/^(input_)?select$/.test(dom) || opts.length < 2) return null;
+    return opts.map(function (o) {
+      var on = String(o) === String(st.state);
+      return { icon: on ? 'mdi:check-circle-outline' : 'mdi:circle-outline', text: Z.optionWord(h, id, o), active: on,
+        svc: { domain: dom, service: 'select_option', data: { option: o }, target: { entity_id: id } } };
+    });
   };
   // The word for the entity's state right now: a tilted door/window is „Gekippt“ (casoraContactTilted, the same answer
   // as the head, the contacts list and the tile), whatever its contact says. Past states keep Z.stateWord – the
@@ -706,6 +734,7 @@
         var moWord = mo && mo.known ? window.casoraMotionWord(mo, moIdle) : null;
         return UI.stage('status', { tone: pulseTone || (bad(st.state) ? 'warn' : alarm ? 'bad' : duo && !Z.isActive(st.state) ? 'off' : 'good'),
           icon: Z.iconOf(st), text: moWord || Z.nowWord(hass, id), state: st.state === 'unavailable' ? 'na' : null,
+          moons: Z.optionMoons(hass, id) || undefined,
           facts: moWord ? [] : [(Z._kind || {})[id] ? { label: (Z._kind || {})[id], value: '' } : null].concat(isFinite(since) ? [{ label: T('Seit'), value: when(since, now) }] : []).filter(Boolean),
           extra: out.replace(UI.line(Z.nowWord(hass, id), rest, { tone: bad(st.state) ? 'warn' : null }), '').replace('<div style="margin-top:14px;">', '<div>') });
       }

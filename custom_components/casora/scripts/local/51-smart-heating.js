@@ -46,6 +46,11 @@
   // The integration's default profiles (Prüfrunde u08-06: shown as „workday“, „home_office“ before).
   var PROFILE = { workday: 'Werktag', weekend: 'Wochenende', home_office: 'Homeoffice' };
   S.WD = WD; S.LEVEL = LEVEL; S.RULE = RULE; S.MODE = MODE; S.PRESETS = PRESETS;
+  // The house mode's page (the row „Modus ›“ opens the select's page, 18-ziele.js) says the row's words (Prüfrunde u08-02).
+  (window._casoraOptionWords = window._casoraOptionWords || []).push(function (h, id, o) {
+    var e = h && h.entities && h.entities[id];
+    return e && e.platform === DOMAIN && e.translation_key === 'mode' && MODE[o] ? MODE[o] : null;
+  });
   var STEP_MIN = 15;
 
   var num = function (v) { var n = parseFloat(v); return isFinite(n) ? n : null; };
