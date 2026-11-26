@@ -56,6 +56,22 @@ active = t.content;
 assert.equal(tab(t.p, true), true, 'Shift+Tab prevented');
 assert.equal(active, t.btn2, 'Shift+Tab → last focusable');
 
+// Same order as a long popup's: from the content, Tab goes to the content's first control (not back up to the head),
+// Shift+Tab to the head's last one. btn1/hd2 stand in the head, row1/row2 in the content (row2 inside a card's root).
+{
+  t = make(false);
+  const hd2 = el({ tabIndex: 0 }), row1 = el({ tabIndex: 0, parentNode: t.content });
+  const card = { host: row1 }, row2 = el({ tabIndex: 0, parentNode: card });
+  const kids = [t.btn1, hd2, t.content, row1, row2];
+  t.p.shadowRoot = { querySelectorAll: () => kids };
+  active = t.content;
+  assert.equal(tab(t.p, false), true, 'Tab prevented');
+  assert.equal(active, row1, 'Tab from the content → its first control, not the head');
+  active = t.content;
+  assert.equal(tab(t.p, true), true, 'Shift+Tab prevented');
+  assert.equal(active, hd2, 'Shift+Tab from the content → the head\'s last control');
+}
+
 // A 1px rounding difference is no scroll: no tab stop.
 t = make(false); t.content.scrollHeight = 101; t.p._syncScrollStop();
 assert.equal(t.content.getAttribute('tabindex'), '-1', 'rounding adds no tab stop');

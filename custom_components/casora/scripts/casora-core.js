@@ -9691,7 +9691,13 @@ window.casoraMenuGlass = {
       // Focus on the content (set on open) that is no tab stop: Tab enters the list below, not the page behind.
       if (i < 0 && a && a !== this.content && this._owns(a)) return; // inside, but not a stop of ours (e.g. inside a card's own widget)
       var next = null;
-      if (e.shiftKey) { if (i <= 0) next = f[f.length - 1]; }
+      if (i < 0 && a === this.content) {
+        // Same order as when the content is a tab stop (a long popup): Tab to its first control, Shift+Tab to the
+        // head's last one; wrap only when there is none on that side.
+        var c = this.content, inC = function (n) { for (; n; n = n.parentNode || n.host) if (n === c) return true; return false; };
+        var below = f.filter(inC), above = f.filter(function (n) { return !inC(n); });
+        next = e.shiftKey ? above[above.length - 1] || f[f.length - 1] : below[0] || f[0];
+      } else if (e.shiftKey) { if (i <= 0) next = f[f.length - 1]; }
       else if (i < 0 || i === f.length - 1) next = f[0];
       if (!next) return;
       e.preventDefault();
