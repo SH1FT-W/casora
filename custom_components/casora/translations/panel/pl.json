@@ -3933,6 +3933,14 @@
     [
       "^Casora found (\\d+) dashboards of Hemma, its predecessor\\. Rooms, tiles and phone layout move over\\.$",
       "Casora znalazła pulpity Hemma ({1}), swojego poprzednika. Pokoje, kafelki i układ na telefon zostaną przeniesione."
+    ],
+    [
+      "^Motion sensor (\\d+)$",
+      "Czujnik ruchu {1}"
+    ],
+    [
+      "^Person (\\d+)$",
+      "Osoba {1}"
     ]
   ],
   "The dashboard of this suggestion is gone. Discard it and ask your assistant again.": "Pulpit tej propozycji już nie istnieje. Odrzuć ją i zapytaj asystenta ponownie.",

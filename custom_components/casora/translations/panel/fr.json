@@ -3933,6 +3933,14 @@
     [
       "^Casora found (\\d+) dashboards of Hemma, its predecessor\\. Rooms, tiles and phone layout move over\\.$",
       "Casora a trouvé {1} tableaux de bord Hemma, son prédécesseur. Pièces, tuiles et mise en page mobile sont reprises."
+    ],
+    [
+      "^Motion sensor (\\d+)$",
+      "Détecteur de mouvement {1}"
+    ],
+    [
+      "^Person (\\d+)$",
+      "Personne {1}"
     ]
   ],
   "The dashboard of this suggestion is gone. Discard it and ask your assistant again.": "Le tableau de bord de cette proposition n'existe plus. Ignore-la et redemande à ton assistant.",
