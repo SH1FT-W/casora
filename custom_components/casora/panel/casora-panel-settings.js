@@ -301,6 +301,10 @@
     + ".cn-block .frow:not(.hasicon):not(.casora-pmore) .rtext b{font-size:var(--t-foot)}"
     + ".cn-block .frow:not(.hasicon):not(.casora-pmore) .rtext span{font-size:var(--t-caption)}"
     + ".cn-block .row label .lsub{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.4}"
+    // A label with a symbol in front (bell switches) is a flex line: its sentence goes under the title, next to the symbol.
+    + ".cn-block .row>label.haslead:has(>.cn-rowhint){display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:12px;row-gap:0;align-items:center;min-width:0}"
+    + ".cn-block .row>label.haslead>.rowicon{grid-column:1;grid-row:1/span 2}"
+    + ".cn-block .row>label.haslead>.cn-rowhint{grid-column:2;margin-top:2px}"
     + ".cn-grid .cs-hubtile{min-height:96px}"
     // Start and topic pages have no "Applies to" line under the title: the fixed head height left an empty band of
     // ~40 px above "‹ Settings" (the pages with that line sat 16 px higher).

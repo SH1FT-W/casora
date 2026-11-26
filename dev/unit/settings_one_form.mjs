@@ -40,6 +40,9 @@ assert.ok(!/casora-pmore \.rtext b\{color:var\(--casora-studio-link/.test(pers),
 assert.equal(decl(src, '.cn-block .frow:not(.hasicon):not(.casora-pmore) .rtext b')['font-size'], 'var(--t-foot)', 'flow row title 13 px like a field label');
 assert.equal(decl(src, '.cn-block .frow:not(.hasicon):not(.casora-pmore) .rtext span')['font-size'], 'var(--t-caption)', 'flow row sentence 12 px');
 assert.equal(decl(src, '.cn-block .row label .lsub')['white-space'], 'normal', 'a row sentence wraps');
+// A label with a symbol in front is a flex line: the moved sentence went beside the title, out of the block (393, bell).
+assert.equal(decl(src, '.cn-block .row>label.haslead:has(>.cn-rowhint)').display, 'grid', 'symbol label: sentence under the title');
+assert.equal(decl(src, '.cn-block .row>label.haslead>.cn-rowhint')['grid-column'], '2', 'symbol label: sentence in the text column');
 
 // A section field's hint moves under its row's title (tiny DOM).
 const win = {}, P = {};
