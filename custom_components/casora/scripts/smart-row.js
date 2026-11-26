@@ -1231,6 +1231,19 @@ class CasoraSmartRow extends HTMLElement {
 
   get hass() { return this._hass; }
 
+  // Resolves once the row has made its cards and wrappers (_init done; at once if it is). The phone hub reads a
+  // room row right after casoraBuildDeferred made it, before its own build ran (w02-02).
+  whenBuilt() {
+    if (this._cardsCreated) return Promise.resolve();
+    return new Promise((r) => { (this._builtWaiters = this._builtWaiters || []).push(r); });
+  }
+
+  _markBuilt() {
+    const w = this._builtWaiters;
+    this._builtWaiters = null;
+    if (w) w.forEach((r) => r());
+  }
+
   // Builds postponed cards (slimDeferIndices) in config order; budgetMs null = all now, else stop after that long;
   // only = a set of indices to build (the rest stays postponed). Returns how many were built.
   _buildDeferred(budgetMs, only) {
@@ -1470,6 +1483,7 @@ class CasoraSmartRow extends HTMLElement {
       this._initialized  = true;
       this._initializing = false;
       this._updateWrapperVisibility();
+      this._markBuilt();
       this._scheduleDeferred();
       return;
     }
@@ -1549,6 +1563,7 @@ class CasoraSmartRow extends HTMLElement {
 
     this._cardsCreated = true;
     this._initializing = false;
+    this._markBuilt();
     this._scheduleDeferred();
 
     container.addEventListener('pointerdown', () => {
