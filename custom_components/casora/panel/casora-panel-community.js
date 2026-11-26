@@ -190,6 +190,7 @@
     const base = "/casora_assets/community/" + t.id;
     const light = { tile: t.community.preview || (base + ".webp"), popup: t.community.previewPopup || (base + "-popup.webp") };
     if (!dark || !t.community.darkShots || t.community.preview) return { ...light, light };
+    if (t.community.darkShots === "popup") return { tile: light.tile, popup: base + "-popup-dark.webp", light };
     return { tile: base + "-dark.webp", popup: base + "-popup-dark.webp", light };
   };
   W.casoraCommunity = { issueUrl, describe, wishBody, status, cards, usage, dropTiles, load, save, REPO, LABEL_WISH, shots, isDark };
