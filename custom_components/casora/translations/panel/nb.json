@@ -3220,7 +3220,12 @@
     "Badges filled in from the area": "Merker fylt ut fra området",
     "Hidden – nobody sees this tile on the dashboard.": "Skjult – ingen ser denne flisen i dashbordet.",
     "Leave out status LEDs": "Utelat status-LED-er",
-    "Fill Favorites on Home automatically": "Fyll favoritter på Hjem automatisk"
+    "Fill Favorites on Home automatically": "Fyll favoritter på Hjem automatisk",
+    "No room picked – only Home will be created.": "Ingen rom valgt – bare Hjem blir opprettet.",
+    "1 device is in a room you did not pick.": "1 enhet er i et rom du ikke valgte.",
+    "{1} devices are in rooms you did not pick.": "{1} enheter er i rom du ikke valgte.",
+    "Studio tour": "Omvisning i Studio",
+    "Welcome screen": "Velkomstside"
   },
   "patterns": [
     [
@@ -3942,6 +3947,18 @@
     [
       "^(\\d+) available$",
       "{1} tilgjengelig"
+    ],
+    [
+      "^Casora found (\\d+) dashboards of Hemma, its predecessor\\. Rooms, tiles and phone layout move over\\.$",
+      "Casora fant {1} dashbord fra Hemma, forgjengeren. Rom, fliser og mobiloppsett flyttes over."
+    ],
+    [
+      "^Motion sensor (\\d+)$",
+      "Bevegelsessensor {1}"
+    ],
+    [
+      "^Person (\\d+)$",
+      "Person {1}"
     ]
   ],
   "The dashboard of this suggestion is gone. Discard it and ask your assistant again.": "Dashbordet for dette forslaget finnes ikke lenger. Forkast det og spør assistenten din på nytt.",

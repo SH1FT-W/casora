@@ -3220,7 +3220,12 @@
     "Badges filled in from the area": "Badge completati dall'area",
     "Hidden – nobody sees this tile on the dashboard.": "Nascosta – nessuno vede questa scheda nella dashboard.",
     "Leave out status LEDs": "Tralascia i LED di stato",
-    "Fill Favorites on Home automatically": "Riempi automaticamente i preferiti in Casa"
+    "Fill Favorites on Home automatically": "Riempi automaticamente i preferiti in Casa",
+    "No room picked – only Home will be created.": "Nessuna stanza scelta – verrà creata solo Casa.",
+    "1 device is in a room you did not pick.": "1 dispositivo è in una stanza che non hai scelto.",
+    "{1} devices are in rooms you did not pick.": "{1} dispositivi sono in stanze che non hai scelto.",
+    "Studio tour": "Tour dello Studio",
+    "Welcome screen": "Schermata di benvenuto"
   },
   "patterns": [
     [
@@ -3942,6 +3947,18 @@
     [
       "^(\\d+) available$",
       "{1} disponibili"
+    ],
+    [
+      "^Casora found (\\d+) dashboards of Hemma, its predecessor\\. Rooms, tiles and phone layout move over\\.$",
+      "Casora ha trovato {1} dashboard di Hemma, il suo predecessore. Stanze, riquadri e layout per telefono vengono trasferiti."
+    ],
+    [
+      "^Motion sensor (\\d+)$",
+      "Sensore di movimento {1}"
+    ],
+    [
+      "^Person (\\d+)$",
+      "Persona {1}"
     ]
   ],
   "The dashboard of this suggestion is gone. Discard it and ask your assistant again.": "La dashboard di questa proposta non esiste più. Scartala e chiedi di nuovo al tuo assistente.",

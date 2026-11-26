@@ -3220,7 +3220,12 @@
     "Badges filled in from the area": "Emblemas completados a partir da área",
     "Hidden – nobody sees this tile on the dashboard.": "Oculto – ninguém vê este cartão no painel.",
     "Leave out status LEDs": "Omitir LED de estado",
-    "Fill Favorites on Home automatically": "Preencher automaticamente os favoritos em Casa"
+    "Fill Favorites on Home automatically": "Preencher automaticamente os favoritos em Casa",
+    "No room picked – only Home will be created.": "Nenhuma divisão escolhida – só será criada Casa.",
+    "1 device is in a room you did not pick.": "1 dispositivo está numa divisão que não escolheste.",
+    "{1} devices are in rooms you did not pick.": "{1} dispositivos estão em divisões que não escolheste.",
+    "Studio tour": "Visita ao Studio",
+    "Welcome screen": "Ecrã de boas-vindas"
   },
   "patterns": [
     [
@@ -3942,6 +3947,18 @@
     [
       "^(\\d+) available$",
       "{1} disponíveis"
+    ],
+    [
+      "^Casora found (\\d+) dashboards of Hemma, its predecessor\\. Rooms, tiles and phone layout move over\\.$",
+      "O Casora encontrou {1} painéis do Hemma, o seu antecessor. Divisões, blocos e o layout do telemóvel passam para cá."
+    ],
+    [
+      "^Motion sensor (\\d+)$",
+      "Sensor de movimento {1}"
+    ],
+    [
+      "^Person (\\d+)$",
+      "Pessoa {1}"
     ]
   ],
   "The dashboard of this suggestion is gone. Discard it and ask your assistant again.": "O painel desta sugestão já não existe. Descarta-a e pergunta de novo ao teu assistente.",

@@ -194,6 +194,19 @@
   }
   const GROUP_NAME = { light: "Lights", cover: "Blinds", lock: "Locks" };
 
+  // The preview's foot (Prüfrunde u01-02, u01-14): devices without an HA area apart from devices in areas the user
+  // did not pick (both land in loose); rooms = picked rooms without Home.
+  function planFoot(p) {
+    const loose = p.loose || [];
+    return { noArea: loose.filter((it) => !it.area).length, notPicked: loose.filter((it) => !!it.area).length, rooms: Math.max(0, (p.rooms || []).length - 1) };
+  }
+  // „Mit 43 Kacheln anlegen (≈ 5 pro Raum)“ – der Schnitt über die Räume ohne Home, nur wenn es Räume gibt.
+  function createLabel(n, rooms) {
+    const per = rooms > 0 ? Math.round(n / rooms) : 0;
+    return tr(n === 1 ? "Create with 1 tile" : "Create with {1} tiles").replace("{1}", n)
+      + (n > 1 && per >= 1 ? " " + tr("(≈ {1} per room)").replace("{1}", per) : "");
+  }
+
   // Der Plan: {rooms: [{name, items: [{key, on, label, sub, tile}]}], loose: [...]}.
   // key = stabile Kennung für die Vorschau (Gerät oder Gruppe).
   function plan(hass, roomNames, r) {
@@ -945,7 +958,7 @@
     if (n > 1) return n + " × " + kind;
     return fold(kind) === fold(label) ? "" : kind;
   }
-  window.casoraBasis = { plan, kindLine, tilesOf, rules, DEFAULTS, shortName, fillBadges, energyProbe, housePower, housePowerOk, housePowerWhy, homeEnergyWhy, oldHouseTotal, wrongHousePower, roomPowerIds, homeSumIds, prefsHouse, prefsHomeVars, energyPrefsReady, openings, isCombo, addLight, houseLights, homeLightsWhy, homeClimateWhy, topUnits,
+  window.casoraBasis = { plan, planFoot, createLabel, kindLine, tilesOf, rules, DEFAULTS, shortName, fillBadges, energyProbe, housePower, housePowerOk, housePowerWhy, homeEnergyWhy, oldHouseTotal, wrongHousePower, roomPowerIds, homeSumIds, prefsHouse, prefsHomeVars, energyPrefsReady, openings, isCombo, addLight, houseLights, homeLightsWhy, homeClimateWhy, topUnits,
     dosingPumps, dosingFill, dosingSuggest, DOSE_MAPS };
 
   // KI kostet: Casora schätzt vor dem ersten Einsatz grob, was es über den API-Schlüssel
@@ -1046,6 +1059,8 @@
         + ".themecard[aria-disabled=true]{opacity:.45;cursor:not-allowed}"
         + ".bs-lock{margin:12px 4px 0;font-size:var(--t-foot);color:var(--ink-3,rgba(255,255,255,.5));text-align:center}"
         + ".flowin.casora-bwide{max-width:1180px}"
+        // Fill your rooms in the Studio's sheet (u01-08): the three choices side by side, as on the full page.
+        + "@container (min-width:640px){.flowin.fwide:has(.bs-fill){max-width:none}.flowin .themegrid.bs-fill{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}}"
         + ".bs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;text-align:left}"
         + ".bs-room{padding:14px;border-radius:var(--r-l);background:var(--casora-popup-row-fill,rgba(255,255,255,.08))}"
         + ".bs-room>b{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:var(--t-callout);font-weight:600;color:var(--ink);margin:0 2px 8px}"
@@ -1072,16 +1087,18 @@
     // Schritt „Räume füllen“: automatisch (vorausgewählt), mit KI oder leer.
     P._fillStep = async function (o) {
       let pick = o.pick || "auto";
+      // Same frame as the step before (Prüfrunde u01-08): from the Studio a sheet with X and Escape, in the first run
+      // the full page. A forced full page here kept "Choose your rooms" full too after "Back".
       const s = this._flowScreen({
-        full: true, icon: "rooms",
+        icon: "rooms",
         title: "Fill Your Rooms", step: ((I() || {}).setupStep || ((n) => [n, 3]))(2, o.setup),
         lede: "Casora can put your devices into the rooms right away – you check everything before it's created.",
         back: o.back,
       });
       css(this.shadowRoot);
-      s.box.classList.add("fwide");
+      s.box.classList.add("fwide", "casora-uwide");   // the sheet as wide as for the preview after it: three choices side by side (u01-08)
       s.box.style.setProperty("--fcols", 3);
-      const grid = el("div", "themegrid", s.body);
+      const grid = el("div", "themegrid bs-fill", s.body);
       let best = null;
       const cards = [];
       const paint = () => cards.forEach((c) => c.setAttribute("aria-checked", c.dataset.k === pick ? "true" : "false"));
@@ -1162,14 +1179,10 @@
       s.body.insertBefore(grid, note);
       const count = () => p.rooms.reduce((n, room) => n + room.items.filter((x) => x.on).length, 0);
       let go = null;
-      // „Mit 43 Kacheln anlegen (≈ 5 pro Raum)“ – der Schnitt über die Räume ohne Home.
-      const rooms = Math.max(1, p.rooms.length - 1);
+      const foot = planFoot(p);
       const sync = () => {
-        const n = count();
         if (!go) return;
-        const per = Math.round(n / rooms);
-        go.textContent = tr(n === 1 ? "Create with 1 tile" : "Create with {1} tiles").replace("{1}", n)
-          + (n > 1 && per >= 1 ? " " + tr("(≈ {1} per room)").replace("{1}", per) : "");
+        go.textContent = createLabel(count(), foot.rooms);
         go.setAttribute("data-no-i18n", "");
       };
       p.rooms.forEach((room, ri) => {
@@ -1193,7 +1206,9 @@
         });
         upd();
       });
-      if (p.loose.length) el("div", "bs-foot", s.body, tr(p.loose.length === 1 ? "1 device has no room in Home Assistant – add it later with the device assistant." : "{1} devices have no room in Home Assistant – add them later with the device assistant.").replace("{1}", p.loose.length));
+      if (!foot.rooms) el("div", "bs-foot", s.body, tr("No room picked – only Home will be created."));
+      if (foot.noArea) el("div", "bs-foot", s.body, tr(foot.noArea === 1 ? "1 device has no room in Home Assistant – add it later with the device assistant." : "{1} devices have no room in Home Assistant – add them later with the device assistant.").replace("{1}", foot.noArea));
+      if (foot.notPicked) el("div", "bs-foot", s.body, tr(foot.notPicked === 1 ? "1 device is in a room you did not pick." : "{1} devices are in rooms you did not pick.").replace("{1}", foot.notPicked));
       go = this._flowButton(s.acts, "Create", () => o.go(tilesOf(p, this._hass)));
       sync();
     };

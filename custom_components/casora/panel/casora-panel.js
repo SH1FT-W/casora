@@ -1129,6 +1129,20 @@ const shotLang = (url, hass) => (url && haLang(hass).indexOf("de") === 0 ? url.r
 const isHomeRoom = (room, rooms) => !!room && (room.path === "home"
   || (Array.isArray(rooms) && rooms[0] === room && !rooms.some((r) => r && r.path === "home")));
 const AUTO_HOME = "home";
+// Studio "View as" (_uxAs, a user id): a room that person does not see – limited to others (casora_users) or hidden
+// on the dashboard (casora_hidden). Without "View as" nothing is hidden (Prüfrunde u10-04).
+const hiddenFromAs = (room, as) => {
+  if (!as || !room) return false;
+  const V = room.variables || {};
+  const ru = Array.isArray(V.casora_users) ? V.casora_users : [];
+  return V.casora_hidden === true || (ru.length > 0 && ru.indexOf(as) < 0);
+};
+// Choose your rooms: the room tile with this name (case ignored), if there is one.
+const sameNameRoom = (tiles, name) => tiles.find((t) => String(t.dataset.name || "").toLowerCase() === String(name).toLowerCase()) || null;
+// Welcome screen: the line on Hemma dashboards found, by their number (Prüfrunde u01-10; translated by pattern).
+const hemmaFoundText = (n) => (n > 1
+  ? "Casora found " + n + " dashboards of Hemma, its predecessor. Rooms, tiles and phone layout move over."
+  : "Casora found a dashboard of Hemma, its predecessor. Rooms, tiles and phone layout move over.");
 // Selbst eingetippter Name (variables.name_literal, seit 04.10.2026 nur noch zusätzlich): steht, wie er ist.
 const isLiteralName = (room) => !!(room && room.variables && room.variables.name_literal);
 // Von Casora angelegt (Markierung casora_auto_name) und nicht als eigener Name gemerkt.
@@ -10089,7 +10103,7 @@ class CasoraPanel extends HTMLElement {
         }
         .miniphone .mp-wcond {
           display:block; color:rgba(255,255,255,0.92);
-          font-size:14px; font-weight:520; text-transform:capitalize;
+          font-size:14px; font-weight:520;
         }
 
         .miniphone .mp-badges {
@@ -14845,8 +14859,7 @@ class CasoraPanel extends HTMLElement {
       try { moves = typeof this._casoraMoveCandidates === "function" ? await this._casoraMoveCandidates() : []; } catch (e) { moves = []; }
       if (!moves.length || this._flowTok !== tok || !feats.isConnected) return;
       // E13 (test 2): only shown when one was found – and said what Hemma is, for whoever never heard of it.
-      const h = feat(["import", studioIcon("flow-hemma"), "Bring Your Existing Dashboard",
-        "Casora found a dashboard of Hemma, its predecessor. Rooms, tiles and phone layout move over."]);
+      const h = feat(["import", studioIcon("flow-hemma"), "Bring Your Existing Dashboard", hemmaFoundText(moves.length)]);
       h.style.setProperty("--i", 0);
       feats.replaceChild(h, screens);
     })();
@@ -15310,8 +15323,22 @@ class CasoraPanel extends HTMLElement {
     adder.onclick = async () => {
       const picked = await this._ask({ title: "New room", value: "", placeholder: "Kitchen", confirmLabel: "Add" });
       const name = picked && String(typeof picked === "object" ? picked.value : picked).trim();
-      if (name && !tiles().some((t) => t.dataset.name.toLowerCase() === name.toLowerCase())) addRoom(name, true);
+      if (!name) return;
+      // A name that is already there: tick and show that room and say so (Prüfrunde u01-13), never silently nothing.
+      const had = sameNameRoom(tiles(), name);
+      if (had) {
+        had.setAttribute("aria-checked", "true");
+        count();
+        if (had.scrollIntoView) had.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        if (had.focus) had.focus();
+        this._flowError("A room with this name already exists.");
+        dupNote = true;
+        return;
+      }
+      if (dupNote) { this._flowError(""); dupNote = false; }
+      addRoom(name, true);
     };
+    let dupNote = false;
     if (!areas.length) {
       const note = document.createElement("p"); note.className = "ffoot";
       note.textContent = "You don't have any areas in Home Assistant yet, so here are a few to start with.";
@@ -15584,7 +15611,9 @@ class CasoraPanel extends HTMLElement {
       extras[FINGERPRINT_KEY] = fingerprintOf(bundle.templates);
       const cfg = expandAny(st, { extras, templates: bundle.templates });
       if (rooms) applyScenePick(cfg, rooms);
-      if (withTiles) { applyMotion(cfg, rooms); markPhoneManaged(cfg, undefined, undefined, rooms); }
+      if (withTiles) applyMotion(cfg, rooms);
+      // The overview's name (home_auto → "Zuhause") also on an empty phone layout ("Start empty", Prüfrunde u01-03).
+      if ((rooms || []).length) markPhoneManaged(cfg, undefined, undefined, rooms);
       applyKiosk(cfg, rooms || []);
       dropRetiredVars(cfg);
 
@@ -16256,6 +16285,8 @@ class CasoraPanel extends HTMLElement {
       this._startPrev = null;
       sw.onclick = () => { const on = sw.getAttribute("aria-checked") !== "true"; set(on); this._startPage(opts.url_path, on); };
       r.row.appendChild(sw);
+      // Above the preview: below it, the fixed buttons cut the row in half at 1000 px height (Prüfrunde u01-12).
+      s.body.insertBefore(home.parentNode, stage);
     }
     if (opts.phoneNote) {
       const note = document.createElement("p");
@@ -21713,13 +21744,14 @@ class CasoraPanel extends HTMLElement {
     const news = typeof window.casoraWelcomeShow === "function";
     this._menuAt(anchor, [
       // E20 (test 2): short answers in the Studio first; the guide on GitHub stays below.
-      ...(typeof this._helpTopics === "function" ? [{ id: "howto", label: "How do I …?" }] : []),
-      { id: "welcome", label: "Introduction to Casora" },
-      ...(news ? [{ id: "whatsNew", label: "What's new" }] : []),
-      { id: "docs", label: "Guide on GitHub", group: "web", quiet: true },
-      { id: "issue", label: "Report a problem", group: "web", quiet: true },
+      // Icons like the ⋯ menu; "Welcome screen" apart from the ⋯ menu's "Studio tour" (Prüfrunde u01-15).
+      ...(typeof this._helpTopics === "function" ? [{ id: "howto", label: "How do I …?", icon: "help" }] : []),
+      { id: "welcome", label: "Welcome screen", icon: "home" },
+      ...(news ? [{ id: "whatsNew", label: "What's new", icon: "update" }] : []),
+      { id: "docs", label: "Guide on GitHub", icon: "open", group: "web", quiet: true },
+      { id: "issue", label: "Report a problem", icon: "share", group: "web", quiet: true },
       // Counts and versions for an issue, no names (casora-panel-diagnostics.js).
-      ...(typeof this._diagShow === "function" ? [{ id: "diag", label: "Copy diagnostics…", group: "web", quiet: true }] : []),
+      ...(typeof this._diagShow === "function" ? [{ id: "diag", label: "Copy diagnostics…", icon: "copy", group: "web", quiet: true }] : []),
     ], (id) => {
       // Die Einführung ist der Willkommen-Bildschirm vom Erststart (über dem Studio als Blatt).
       if (id === "welcome") return this._welcomeScreen();
@@ -24822,7 +24854,7 @@ class CasoraPanel extends HTMLElement {
     const B0 = window.casoraBasis;
     const allRooms = (this._state && this._state.compact && this._state.compact.rooms) || [];
     const hl = V.light_rooms_auto === true && !grp && !listed.length && B0 && B0.houseLights && isHomeRoom(room, allRooms)
-      ? B0.houseLights(this._hass, allRooms.filter((r) => r !== room)) : null;
+      ? B0.houseLights(this._hass, allRooms.filter((r) => r !== room && !hiddenFromAs(r, this._uxAs))) : null;
     const lights = hl ? hl.ids : listed.length ? listed
       : (Array.isArray(members) && members.length ? members.filter(Boolean) : (grp ? [grp] : []));
     if (on("show_lights") && (grp || listed.length || (hl && hl.ids.length))) {
@@ -27407,6 +27439,7 @@ class CasoraPanel extends HTMLElement {
       // Ausgeblendete Räume: durchgestrichenes Auge (Nutzertest 4: in der Leiste nicht erkennbar).
       const hid = !!(r.variables || {}).casora_hidden;
       t.className = "mini-tab" + (r === room ? " on" : "") + (hid ? " hid" : "") + (homeFixed && ri === 0 ? " home" : "");
+      t.dataset.ri = ri;   // "View as" hides the rooms that person does not see (casora-panel-b-ux.js _uxMarkPreview)
       t.textContent = this._roomShown(r);
       t.setAttribute("data-no-i18n", "");
       const go = r === room ? "" : "Go to " + this._roomShown(r);
@@ -30604,7 +30637,7 @@ function previewHasError(doc) {
 
 // Casora: Bausteine des Panels für Casora-Erweiterungen (Import-Assistent, Geräte-Assistent).
 window.__casoraPanelInternals = {
-  setupStep,
+  setupStep, hiddenFromAs,
   blankRoom, roomPhoto, slug, translit, expandConfig, expandAny, extractAny, retargetRoutes, mobileFromRooms,
   applyScenePick, confirmEntities, confirmNames, entityUsers, wrapCustomCard, hostCard, FINGERPRINT_KEY, fingerprintOf, refreshTemplates, templatePrint, TILE_TYPES, USER_TILE_TYPES,
   fieldDefault, findType, tileTypeAny, newTile, previewHasError, isPetTracker, petName, isStatSensor, isPlantEntity, listCategory, TILE_MAIN_FIND, tileMissingEntity, tileEntityGone, iconUrl, studioIcon, roomGlyph, roomIconSrc, titleCase, clone, FLOW_TINT, isMobileConfig, applyKiosk, studioClockText, studioClockDate, studioClockLine,

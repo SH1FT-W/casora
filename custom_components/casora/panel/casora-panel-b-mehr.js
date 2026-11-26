@@ -1126,7 +1126,7 @@
         if (seg) seg.click();
       }, !isPhone(this));
       A("match", "Match Desktop and Phone", "angleichen unterschiede handy desktop", () => this._reviewDifferences(), typeof this._reviewDifferences === "function" && !!this._pair);
-      A("tour", "Quick tour", "einführung hilfe tour erklärung", () => this._bIntro && this._bIntro(true));
+      A("tour", "Studio tour", "einführung rundgang hilfe tour erklärung", () => this._bIntro && this._bIntro(true));
       A("updates", "Updates", "update aktualisieren version neu", () => this._cuFromMenu(), typeof this._cuFromMenu === "function");
       // Help topics: found by their task words ("Abfall", "Foto"), open a short answer (E20).
       HELP_TOPICS.forEach((h) => A("help-" + h.id, h.title, h.words + " hilfe help wie how", () => this._helpTopic(h.id), true, way("Help", "How do I …?")));
@@ -1645,6 +1645,27 @@
       const eu = I().entityUsers ? I().entityUsers(rooms) : {};
       const allowed = (list, u) => !list.length || list.indexOf(u.id) >= 0;
       const places = [], who = new Set();
+      // A room's light badge: its lamp slots and HA group, groups opened to their lamps (nested too).
+      const S = (this._hass && this._hass.states) || {};
+      const lamps = (ids) => {
+        const out = new Set(), open = ids.slice();
+        while (open.length) {
+          const id = open.pop();
+          if (out.has(id)) continue;
+          out.add(id);
+          const m = ((S[id] || {}).attributes || {}).entity_id;
+          if (Array.isArray(m)) m.forEach((x) => { if (typeof x === "string") open.push(x); });
+        }
+        return out;
+      };
+      // The tile's light and, for a group, its lamps: a badge listing those lamps shows the same light.
+      const wantL = lamps([...want].filter((x) => /^(light|group)\./.test(x)));
+      const lightHit = (V) => {
+        if (!wantL.size) return false;
+        const have = lamps([V.light_group_entity].concat([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => V["light_entity_" + i]))
+          .filter((x) => typeof x === "string" && x));
+        return [...have].some((x) => wantL.has(x));
+      };
       rooms.forEach((r, ri) => {
         (r.tiles || []).forEach((t) => {
           if (skip && skip.tile === t) return;
@@ -1658,6 +1679,23 @@
         });
         const V = r.variables || {};
         if (skip && skip.badge === ri) return;
+        // Light badges too (Prüfrunde u10-02): the room's badge lists the lamp or its group; Home's badge with
+        // light_rooms_auto shows every room's lights. Badge sharing (casora_badge_users.lights) narrows it there.
+        const lit = V.show_lights !== false && (lightHit(V) || (V.light_rooms_auto === true
+          && rooms.some((o) => o !== r && (o.variables || {}).show_lights !== false && lightHit(o.variables || {}))));
+        if (lit) {
+          const lu = ((V.casora_badge_users || {}).lights) || [];
+          const hit = gone.filter((u) => allowed(lu, u));
+          if (hit.length) {
+            hit.forEach((u) => who.add(u.name)); places.push(this._roomLabel(r) + " (" + tr("Lights") + ")");
+            fixes.push(() => {
+              r.variables = r.variables || {};
+              const m = { ...(r.variables.casora_badge_users || {}) };
+              m.lights = narrow(Array.isArray(m.lights) ? m.lights : []);
+              r.variables.casora_badge_users = m;
+            });
+          }
+        }
         if (V.show_security === false) return;
         const sec = SEC_KEYS(V).filter((e) => want.has(e));
         if (!sec.length) return;

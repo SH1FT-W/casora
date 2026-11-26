@@ -3034,7 +3034,9 @@
     "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "Het schema is intussen gewijzigd, bewerk het opnieuw",
     "Neuerungen auf Englisch": "Nieuw, in het Engels",
     "Werktag": "Werkdag",
-    "Homeoffice": "Thuiswerken"
+    "Homeoffice": "Thuiswerken",
+    "Noch keine Geräte": "Nog geen apparaten",
+    "Für alle ausblenden": "Voor iedereen verbergen"
   },
   "patterns": [
     [

@@ -15,7 +15,8 @@ const head = { appendChild: (el) => { styleEl = el; } };
 let styleEl = null;
 const doc = { getElementById: () => styleEl, createElement: () => ({ textContent: '' }), head };
 const run = (code, variables, dark) => {
-  const window = { matchMedia: () => ({ matches: dark }), requestIdleCallback: (fn) => fn() };
+  // Modules loaded (casora-local-loaded): the preload chain starts 2 s later (Prüfrunde w02-04).
+  const window = { matchMedia: () => ({ matches: dark }), requestIdleCallback: (fn) => fn(), _casoraLocalLoaded: [], addEventListener() {} };
   const hass = { themes: { darkMode: dark } };
   return new Function('window', 'document', 'Image', 'hass', 'variables', 'states', 'entity', code)(window, doc, FakeImage, hass, variables, {}, null);
 };
@@ -25,7 +26,7 @@ for (const dark of [false, true]) {
   // 1) Preload list (casora_shared).
   requested.length = 0;
   run(body(T.casora_shared.extra_styles), { preload_rooms: ['schlafzimmer', 'garden-demo'] }, dark);
-  await new Promise((r) => setTimeout(r, 0));
+  await new Promise((r) => setTimeout(r, 2100));
   assert.ok(!requested.some((u) => own.test(u)), 'preload guessed an own photo: ' + requested.join(', '));
   assert.ok(requested.some((u) => /garden-demo/.test(u)), 'the demo photo is still preloaded');
   // 2) Room hero (casora_room --hero-img).

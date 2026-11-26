@@ -155,6 +155,11 @@ async def ws_get(hass: HomeAssistant, connection: websocket_api.ActiveConnection
 @websocket_api.async_response
 async def ws_set(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
     clean = {k: v for k, v in msg["settings"].items() if k in SECTIONS and v not in (None, "", [], {})}
+    # Sections this version does not know (written by a newer Casora) stay as stored: going back to an older
+    # version and saving one setting must not drop them for good (Prüfrunde w01-02).
+    stored = await async_load_settings(hass)
+    if isinstance(stored, dict):
+        clean.update({k: v for k, v in stored.items() if k not in SECTIONS})
     await _store(hass).async_save(clean)
     connection.send_result(msg["id"], {"settings": clean, "stored": True})
 

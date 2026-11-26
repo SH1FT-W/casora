@@ -15493,6 +15493,9 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   // the integration (casora/notify_hidden, notify_hidden.py) and pushed to every bell. Off (default): per HA user as before.
   var SHARED_UID = 'casora:shared';
   function sharedHidden() { return window.CASORA_NOTIFY_SHARED_HIDDEN === true; }
+  // A non-admin's action on an HA notification: with the shared list hiding it is for everyone, and says so
+  // (Prüfrunde w05-01: "Für mich ausblenden" cleared the admin's bell too).
+  function pnHideLabel() { return _hid.uid === SHARED_UID ? 'Für alle ausblenden' : 'Für mich ausblenden'; }
   var _hidLoaded = false, _hidUnsub = null;
   // The user's own list (HA user data) into the shared one: the later „until“ of each message wins.
   function mergeOwn(hass) {
@@ -15662,7 +15665,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       + pnHtml(n.message)
       // Blueprint v2 (rule 9): „Löschen“ is an action row at the end, not a loose button.
       + '<div style="height:8px"></div>' + window._casoraUI.group([admin ? { icon: 'mdi:delete-outline', iconTone: 'bad', label: 'Löschen', labelTone: 'bad', tappable: true, noChev: true }
-        : { icon: 'mdi:eye-off-outline', label: 'Für mich ausblenden', tappable: true, noChev: true }], null)
+        : { icon: 'mdi:eye-off-outline', label: pnHideLabel(), tappable: true, noChev: true }], null)
           .replace('<div class="hui-row', '<div data-casora-pn-del="' + esc0(k) + '" class="hui-row') + '</div>';
     window.casoraPopup.open({
       title: (own && own.label) || pnText(n.title) || 'Benachrichtigung', dismissable: true,

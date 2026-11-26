@@ -51,6 +51,9 @@ console.log('ok welcome: new users');
   const i = panel.indexOf('_welcomeScreen() {');
   const body = panel.slice(i, panel.indexOf('async _afterWelcome()', i));
   assert.ok(!body.includes('"Bring Your Hemma"'), 'no bare "Bring Your Hemma"');
-  assert.ok(/if \(!moves\.length[^\n]*return;\n[\s\S]*Hemma, its predecessor/.test(body), 'explained, only after a find');
+  // The line follows the number found (Prüfrunde u01-10): hemmaFoundText(n), both wordings say what Hemma is.
+  assert.ok(/if \(!moves\.length[^\n]*return;\n[\s\S]*hemmaFoundText\(moves\.length\)/.test(body), 'explained, only after a find');
+  const ht = panel.slice(panel.indexOf('const hemmaFoundText = '), panel.indexOf('const hemmaFoundText = ') + 400);
+  assert.equal((ht.match(/Hemma, its predecessor/g) || []).length, 2, 'singular and plural say what Hemma is');
   console.log('ok welcome: Hemma line');
 }

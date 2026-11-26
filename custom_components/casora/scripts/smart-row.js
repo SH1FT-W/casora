@@ -1091,6 +1091,31 @@ class CasoraSmartRow extends HTMLElement {
     }, 500);
   }
 
+  // The empty-room line. Only an admin may open the Studio (fam-07): others get the plain line "Noch keine Geräte",
+  // no plus, no link (Prüfrunde u10-01: a child tapped it and HA sent them to another dashboard without a word).
+  _buildEmptyHint() {
+    const tr = window.casoraTr || ((x) => x);
+    const u = this._hass && this._hass.user;
+    const admin = u ? u.is_admin !== false : (!window.casoraIsAdmin || window.casoraIsAdmin());
+    const hint = document.createElement('div');
+    hint.className = 'empty-hint';
+    if (!admin) {
+      hint.classList.add('plain');
+      hint.innerHTML = '<span></span>';
+      hint.lastChild.textContent = tr('Noch keine Geräte');
+      return hint;
+    }
+    hint.setAttribute('role', 'link');
+    hint.innerHTML = '<ha-icon icon="mdi:plus"></ha-icon><span></span>';
+    hint.lastChild.textContent = tr('Noch keine Geräte – im Studio hinzufügen');
+    hint.addEventListener('click', () => {
+      const seg = (window.location.pathname || '').split('/').filter(Boolean);
+      window.location.assign('/casora-studio' + (seg[1] ? '/' + seg[1] : '')
+        + (seg[0] ? '?dash=' + encodeURIComponent(seg[0]) : ''));
+    });
+    return hint;
+  }
+
   // True when the empty-room hint exists and the design shows it (--casora-empty-row-display).
   _emptyHintShown() {
     const h = this._emptyHint;
@@ -1299,16 +1324,7 @@ class CasoraSmartRow extends HTMLElement {
     // Raum ohne Kacheln (Fix-Runde 1, A-16): dezente Leerzeile mit Weg ins Studio. Sichtbar nur,
     // wenn das Design --casora-empty-row-display setzt (Weich); sonst bleibt die Fläche leer wie bisher.
     if (!(this._config.cards || []).length && !this._scrollMode) {
-      const hint = document.createElement('div');
-      hint.className = 'empty-hint';
-      hint.setAttribute('role', 'link');
-      hint.innerHTML = '<ha-icon icon="mdi:plus"></ha-icon><span></span>';
-      hint.lastChild.textContent = (window.casoraTr || ((x) => x))('Noch keine Geräte – im Studio hinzufügen');
-      hint.addEventListener('click', () => {
-        const seg = (window.location.pathname || '').split('/').filter(Boolean);
-        window.location.assign('/casora-studio' + (seg[1] ? '/' + seg[1] : '')
-          + (seg[0] ? '?dash=' + encodeURIComponent(seg[0]) : ''));
-      });
+      const hint = this._buildEmptyHint();
       container.appendChild(hint);
       this._emptyHint = hint;
     }
@@ -2081,6 +2097,7 @@ class CasoraSmartRow extends HTMLElement {
         -webkit-tap-highlight-color: transparent;
       }
       .empty-hint ha-icon { --mdc-icon-size: 20px; color: var(--casora-tone-general, currentColor); }
+      .empty-hint.plain { cursor: default; padding-left: 24px; }
 
       .card-wrapper {
         flex: 0 0 var(--casora-entity-col-width-current, var(--casora-entity-col-width-desktop, 300px));

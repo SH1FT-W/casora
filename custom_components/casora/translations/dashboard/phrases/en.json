@@ -3016,7 +3016,9 @@
     "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "The schedule has changed in the meantime, please edit it again",
     "Neuerungen auf Englisch": "What's new, in English",
     "Werktag": "Workday",
-    "Homeoffice": "Home office"
+    "Homeoffice": "Home office",
+    "Noch keine Geräte": "No devices yet",
+    "Für alle ausblenden": "Hide for everyone"
   },
   "patterns": [
     [

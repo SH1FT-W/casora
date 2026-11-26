@@ -361,8 +361,9 @@
     + '.step{display:flex;align-items:center;gap:8px;}'
     + '.step .pill{flex:0 0 48px;}'
     + '.step b{flex:1;text-align:center;font-size:var(--casora-fs-heading, 17px);font-weight:700;font-variant-numeric:tabular-nums;}'
-    + '.tm{display:flex;align-items:center;gap:8px;}'
-    + '.tm .pill{flex:0 0 auto;padding:0 12px;}'
+    /* The time left comes first (Prüfrunde u10-08: „Aus in 1…“): it never shrinks, the button wraps below when short of room. */
+    + '.tm{display:flex;flex-wrap:wrap;align-items:center;gap:8px;}'
+    + '.tm .pill{flex:0 0 auto;padding:0 12px;margin-left:auto;}'
     + '.tm > ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;margin-left:8px;color:var(--casora-text-2, currentColor);}'
     /* Fertig-Zeile im Raster der Zeilen (Kreis 36 | Text), Restzeit als Unterzeile – Info, keine Aktion. */
     + '.info{display:grid;grid-template-columns:var(--casora-ic-row, 36px) minmax(0,1fr);align-items:center;column-gap:var(--casora-menu-ic-gap, 12px);'
@@ -372,7 +373,7 @@
     + '.info small{display:block;font-size:var(--casora-fs-sub, 13px);font-weight:500;line-height:16px;color:var(--casora-text-2, inherit);}'
     + '.row.quiet{color:var(--casora-text-2, inherit);font-weight:500;}'
     + '.row.quiet .ic{color:var(--casora-text-2, inherit);}'
-    + '.tm span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:4px;flex:1;font-size:var(--casora-fs-row, 15px);font-weight:600;padding-left:8px;}';
+    + '.tm span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:4px;flex:1 0 auto;max-width:100%;font-size:var(--casora-fs-row, 15px);font-weight:600;padding-left:8px;}';
 
   // lastName: Titel der Rückfrage, auch wenn das Menü schon zu ist (Hauptaktion schließt erst, dann fragt sie).
   var host = null, cur = null, poll = 0, lastName = '';

@@ -313,6 +313,12 @@
     .adv.open .advsum .uxsum { display:none; }
     /* „Sichtbarkeit & Rückfrage“ bleibt einzeilig; die Zusammenfassung daneben kürzt sich. */
     .adv.uxvis .advsum > span:not(.uxsum) { white-space:nowrap; flex:none; }
+    /* Its title is long (in German about all the room there is): the summary goes on a line of its own below, readable
+       in full ("Nur Anna · überall"), instead of "All…" beside it (Prüfrunde u10-09). */
+    .adv.uxvis .advsum { flex-wrap:wrap; row-gap:2px; padding-top:8px; padding-bottom:8px; }
+    .adv.uxvis .advsum .uxsum { flex:1 0 100%; max-width:none; margin-left:0; padding-left:21px; text-align:left;
+      white-space:normal; overflow:visible; font-size:13px; }
+    .adv.uxvis.open .advsum { padding-top:0; padding-bottom:0; }
     .tile > .tbody > .adv.uxvis .advbody > .subcard { margin:0 0 10px; padding:0; background:none; box-shadow:none; }
     .tile > .tbody > .adv.uxvis .advbody > .row:first-child { padding-top:2px; }
     /* Sichtbar & sicher: Satz oben in der Gruppe, Auge an eingeschränkten Kacheln */
@@ -1299,6 +1305,14 @@
         const host = sub.parentElement || map;
         const open = host.querySelector('.mini-badges .pbadge.open') || map.querySelector('.mini-badges .pbadge.open');
         sub.classList.toggle("uxashide", !!as && !!open && open.classList.contains("uxashide"));
+      });
+      // The room bar shows only the rooms this person sees, as on their dashboard (Prüfrunde u10-04); the room at hand
+      // stays (with the sentence below), the Studio's room list is untouched.
+      const allR = rooms$(this);
+      const hideAs = (W.__casoraPanelInternals || {}).hiddenFromAs || (() => false);
+      map.querySelectorAll(".mini-tab[data-ri]").forEach((el) => {
+        const r = allR[+el.dataset.ri];
+        el.classList.toggle("uxashide", !!as && r !== room && hideAs(r, as));
       });
       // Raum für diesen Menschen nicht sichtbar: ein Satz über der Vorschau.
       const canvas = this.shadowRoot.querySelector(".canvas");

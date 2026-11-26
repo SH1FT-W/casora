@@ -3034,7 +3034,9 @@
     "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "El horario ha cambiado mientras tanto, edítalo de nuevo",
     "Neuerungen auf Englisch": "Novedades en inglés",
     "Werktag": "Día laborable",
-    "Homeoffice": "Teletrabajo"
+    "Homeoffice": "Teletrabajo",
+    "Noch keine Geräte": "Aún no hay dispositivos",
+    "Für alle ausblenden": "Ocultar para todos"
   },
   "patterns": [
     [

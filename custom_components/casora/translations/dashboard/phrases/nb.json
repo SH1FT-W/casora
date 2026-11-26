@@ -3027,7 +3027,9 @@
     "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "Tidsplanen er endret i mellomtiden, rediger den på nytt",
     "Neuerungen auf Englisch": "Nyheter på engelsk",
     "Werktag": "Arbeidsdag",
-    "Homeoffice": "Hjemmekontor"
+    "Homeoffice": "Hjemmekontor",
+    "Noch keine Geräte": "Ingen enheter ennå",
+    "Für alle ausblenden": "Skjul for alle"
   },
   "patterns": [
     [

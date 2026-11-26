@@ -402,6 +402,10 @@ window._casoraHouseLightsOf = function (rooms, states) {
   (rooms || []).forEach(function (r) {
     var V = r && r.vars;
     if (!V || V.show_lights === false) return;
+    // A room this person does not see ("Who sees this?", casora_users) is not in their house's lights either, as it
+    // is not in their room bar (Prüfrunde u10-03). The Studio has no viewer: casoraSeesRoute is the dashboard's.
+    if (Array.isArray(V.casora_users) && V.casora_users.length && window.casoraSeesRoute
+      && !window.casoraSeesRoute({ users: V.casora_users })) return;
     var slots = [];
     for (var i = 1; i <= 10; i++) if (typeof V['light_entity_' + i] === 'string' && V['light_entity_' + i]) slots.push(V['light_entity_' + i]);
     var grp = typeof V.light_group_entity === 'string' && V.light_group_entity ? V.light_group_entity : null;
@@ -720,7 +724,11 @@ window._casoraLightTallyIds = function (entity, states, hass, vars) {
 window.casoraLightTally = function (entity, states, hass, vars) {
   var S = states || {};
   var ids = window._casoraLightTallyIds(entity, S, hass, vars);
-  return { kind: 'lamps', tot: ids.length, on: ids.filter(function (x) { return S[x].state === 'on'; }).length };
+  /* dead: lamps HA cannot reach (unavailable/unknown) – not "off" (Prüfrunde u10-06). */
+  var t = { kind: 'lamps', tot: ids.length, on: ids.filter(function (x) { return S[x].state === 'on'; }).length };
+  var dead = ids.filter(function (x) { return S[x].state === 'unavailable' || S[x].state === 'unknown'; }).length;
+  if (dead) t.dead = dead;
+  return t;
 };
 /* Issue 119, „Tap on badges: Switch“ (Studio › Controls › Tiles, badge_tap): what a tap on the light badge switches – the
    lamps it counts (_casoraLightTallyIds, as casoraLightTally). Its HA group alone (no picked lamps, not the rooms):
@@ -782,8 +790,16 @@ window.casoraLightBadgeTapFrom = function (states, hass, src, auto) {
 };
 /* The words for a tally (German, the dashboard translates): „Aus“/„An“ for one lamp, „Alle aus“/„Alle an“, else
    „2 an“ – a count in small letters (owner, 01.11.2026; wortliste §2). */
+/* Lamps offline (t.dead, Prüfrunde u10-06): all of them „Offline“; else the reachable ones' words plus „· 1 offline“
+   („Aus · 1 offline“, „2 aus · 1 offline“, „1 an · 1 offline“) – never „Alle aus“ while one lamp's state is unknown. */
 window.casoraLightTallyText = function (t) {
   if (!t || !t.tot) return 'Aus';
+  if (t.dead > 0) {
+    var live = t.tot - t.dead;
+    if (live <= 0) return 'Offline';
+    var base = t.on ? (live === 1 ? 'An' : t.on + ' an') : (live === 1 ? 'Aus' : live + ' aus');
+    return base + ' · ' + t.dead + ' offline';
+  }
   if (t.tot === 1) return t.on ? 'An' : 'Aus';
   if (!t.on) return 'Alle aus';
   if (t.on === t.tot) return 'Alle an';

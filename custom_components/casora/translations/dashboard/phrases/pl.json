@@ -3034,7 +3034,9 @@
     "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "Harmonogram zmienił się w międzyczasie, edytuj go ponownie",
     "Neuerungen auf Englisch": "Nowości po angielsku",
     "Werktag": "Dzień roboczy",
-    "Homeoffice": "Praca zdalna"
+    "Homeoffice": "Praca zdalna",
+    "Noch keine Geräte": "Jeszcze brak urządzeń",
+    "Für alle ausblenden": "Ukryj dla wszystkich"
   },
   "patterns": [
     [

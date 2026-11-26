@@ -3034,7 +3034,9 @@
     "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "Le planning a changé entre-temps, modifie-le à nouveau",
     "Neuerungen auf Englisch": "Nouveautés en anglais",
     "Werktag": "Jour ouvré",
-    "Homeoffice": "Télétravail"
+    "Homeoffice": "Télétravail",
+    "Noch keine Geräte": "Pas encore d'appareils",
+    "Für alle ausblenden": "Masquer pour tout le monde"
   },
   "patterns": [
     [
