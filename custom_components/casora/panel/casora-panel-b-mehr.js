@@ -212,7 +212,9 @@
   function settingText(k, v, ctx) {
     const secs = (ctx && ctx.sections) || ((W.__casoraPanelInternals || {}).SECTIONS) || [];
     for (const sec of secs) {
-      const f = (sec.fields || []).find((x) => x && x.key === k);
+      // A section's own switch (Notifications: „Show the bell on this dashboard“, show_notifications).
+      const f = sec.toggle === k && sec.toggleRow ? { key: k, label: sec.toggleRow, type: "bool", boolDefault: true }
+        : (sec.fields || []).find((x) => x && x.key === k);
       if (!f || !f.label) continue;
       const head = tr(sec.title || sec.label) + ": " + tr(f.label);
       if (f.type === "bool") {
@@ -229,6 +231,13 @@
       return null;
     }
     return null;
+  }
+  // Whether k is a setting of the whole dashboard (a section with scope „dashboard“, its fields or its own switch):
+  // such a key is named on its own line even where it sits in one room only (Prüfrunde u04-05: switching the bell
+  // off, show_notifications on Home, read „Badges changed: Home“).
+  function dashSetting(k, ctx) {
+    const secs = (ctx && ctx.sections) || ((W.__casoraPanelInternals || {}).SECTIONS) || [];
+    return secs.some((sec) => sec && sec.scope === "dashboard" && (sec.toggle === k || (sec.fields || []).some((x) => x && x.key === k)));
   }
   function changeItems(before, after, ctx) {
     const out = [];
@@ -335,6 +344,8 @@
       new Set(Object.keys(V0).concat(Object.keys(V1))).forEach((v) => {
         if (OWN_VAR.test(v) || wide.has(v) || J(V0[v]) === J(V1[v])) return;
         if (renamed && ofRename(v)) return;
+        const named = dashSetting(v, ctx) && settingText(v, V1[v], ctx);
+        if (named) { add(named, copyVars((x) => x === v)); return; }
         if (BADGE_VAR.test(v) && !RENAME_VAR.test(v)) badgeKeys.push(v); else otherKeys.push(v);
       });
       if (badgeKeys.length) {

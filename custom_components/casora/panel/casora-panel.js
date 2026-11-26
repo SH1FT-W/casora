@@ -2749,9 +2749,10 @@ const SECTIONS = [
       { key: "show_date", label: "Show date", type: "bool", boolDefault: false, always: true,
         hint: "Weekday and date in small type under the time." },
       // Always visible: without an entry the clock takes sensor.time, and that should show.
-      { ...E("time_entity", "Time sensor", ["sensor"]), always: true, placeholder: "Automatic" },
+      { ...E("time_entity", "Time sensor", ["sensor"]), accept: "clock", always: true, placeholder: "Automatic",
+        hint: "Only needed if the clock should follow another sensor that shows a time. Empty: automatic." },
       { key: "use_12h", label: "12-hour clock", type: "bool", boolDefault: clock12, always: true },
-      { ...T("time_suffix", "Suffix"),
+      { ...T("time_suffix", "Text after the time"), hint: "Shown right after the time, for example “h”.",
         auto: true, advanced: true, noAdd: true },
     ],
   },
@@ -2803,7 +2804,7 @@ const SECTIONS = [
         always: true, ord: 12 },
       // #70: notifications from scripts and automations (persistent_notification.create), live from HA.
       { key: "notify_ha", sub: "system", glyph: "bell", tone: "var(--casora-color-teal, #00C3D0)", label: "Home Assistant notifications", type: "bool", boolDefault: true,
-        always: true, ord: 12.1, hint: "What scripts and automations create with persistent_notification.create, and Home Assistant's own notices. Swiping one away in the bell dismisses it in Home Assistant too." },
+        always: true, ord: 12.1, hint: "Messages your automations and scripts create in Home Assistant, and Home Assistant's own notices. Swiping one away in the bell dismisses it in Home Assistant too." },
 
       // Hemma round #11d: one list of removed messages for everyone (notify_hidden.py). Off = per user as before.
       { key: "notification_hidden_shared", sub: "system", glyph: "bell", tone: "var(--casora-color-sand, #9A8672)", label: "Removed for all users", type: "bool", boolDefault: false,
@@ -5760,14 +5761,22 @@ const isWasteEntity = (h, id, dom) => {
   if (dom === "sensor" && (st.attributes || {}).daysTo !== undefined) return true;
   return WASTE_WORD.test(id + " " + ((st.attributes || {}).friendly_name || ""));
 };
+// A sensor the top bar's clock can show (Prüfrunde u03-06: the time sensor offered every sensor, a temperature too):
+// the Time & Date sensors, or a state that holds a time „HH:MM“ (alone or beside a date, as the clock reads it).
+function isClockSensor(h, id) {
+  if (/^sensor\.time(_|$)/.test(id)) return true;
+  const st = h && h.states && h.states[id];
+  return !!st && /(^|,\s*)\d{1,2}:\d{2}(\s*(,|$))/.test(String(st.state || "").trim());
+}
 const ACCEPT_RULES = {
   weather_warning: isWarningLevelSensor,
   group: isGroupEntity,
   waste: (h, id) => isWasteEntity(h, id, "sensor"),
   waste_calendar: (h, id) => isWasteEntity(h, id, "calendar"),
+  clock: isClockSensor,
 };
 // accept rules that keep ONLY their hits (the rest add to the domain list), and rules that only sort their hits first.
-const ACCEPT_ONLY = new Set(["group", "waste"]);
+const ACCEPT_ONLY = new Set(["group", "waste", "clock"]);
 const ACCEPT_FIRST = new Set(["waste_calendar"]);
 
 // The main entity a new tile suggests: by the integration's translation_key (language-independent, however
@@ -17585,10 +17594,15 @@ class CasoraPanel extends HTMLElement {
       if (inner && typeof inner === "object" && inner.type) tiles.push(inner);
     }));
     const todo = tiles.filter((t) => !(t.variables && t.variables.size === "auto"));
-    if (!todo.length) return;
+    // Nothing left to change: say so instead of a click that does nothing (Prüfrunde u04-07).
+    if (!todo.length) {
+      if (typeof this._bToast === "function") this._bToast(trLabel("All tiles are already on Automatic."));
+      return;
+    }
     const res = await this._ask({
       title: "Set all tiles to Automatic?",
-      message: "{n} tiles get the size Automatic on the phone. Save afterwards to apply it.".replace("{n}", todo.length),
+      // Translated before the number goes in: the table knows the text with „{n}“ (Prüfrunde u04-03).
+      message: trLabel("{n} tiles get the size Automatic on the phone. Save afterwards to apply it.").replace("{n}", todo.length),
       confirmLabel: "Set to Automatic",
     });
     if (!res) return;
@@ -23158,6 +23172,8 @@ class CasoraPanel extends HTMLElement {
     const h = this._hass;
     const R = (h && h.entities) || {}, D = (h && h.devices) || {};
     const list = this._entityList(domains, classes, accept);
+    // A list that keeps only its own kind (ACCEPT_ONLY) still offers the value already chosen, fitting or not.
+    if (cur && ACCEPT_ONLY.has(accept) && h && h.states && h.states[cur] && !list.includes(cur)) list.unshift(cur);
     const area = room ? this._roomArea(room) : null;
     const areaOf = (e) => { const r = R[e]; return r && (r.area_id || (D[r.device_id] || {}).area_id); };
     // Gruppen haben oft keinen Bereich: der Raumname in Kennung oder Name zählt wie er.

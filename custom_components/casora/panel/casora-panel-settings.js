@@ -214,16 +214,7 @@
     casora_ebike: ["house", "devices", "Other devices"], casora_weather_warning: ["wx", "weather", "Weather"],
     casora_washer: LIVE_TAB, casora_dryer: LIVE_TAB, casora_dishwasher: LIVE_TAB, casora_3d_printer: LIVE_TAB, vacuum: LIVE_TAB,
   };
-  // A typed search radius (fuel 1–25 km, charging 1–50 km), Prüfrunde u08-08: the value kept and, when the typed one was
-  // outside the range, the note that says so – the field then shows the kept value instead of „50 km“ that was never saved.
-  // null for nothing usable (the draft keeps its value).
-  const radiusOf = (text, max) => {
-    const v = Number(String(text == null ? "" : text).trim().replace(",", "."));
-    if (!isFinite(v) || v <= 0) return null;
-    const r = Math.round(v * 10) / 10, kept = Math.max(1, Math.min(max, r));
-    return { v: kept, note: r > max ? "At most {n} km" : r < 1 ? "At least {n} km" : null };
-  };
-  window.casoraSettingsMap = { tiles: NEU, dashSections: DASH_SECS, route, tileShared: TILE_SHARED, radiusOf };
+  window.casoraSettingsMap = { tiles: NEU, dashSections: DASH_SECS, route, tileShared: TILE_SHARED };
   const pageOf = (id) => neuPage(route(id)[0]) || NEU_START;
 
   const CSS = ".cs-wrap{padding:4px 0 28px}"
@@ -360,6 +351,8 @@
     + ".cs-num{display:flex;align-items:center;gap:8px}"
     + ".cs-num input{width:110px;padding:7px 12px;border-radius:var(--r-m);border:none;background:var(--field, var(--casora-studio-field, rgba(118,118,128,.18)));color:inherit;font:inherit;text-align:right}"
     + ".cs-num span{font-size:var(--t-callout);color:var(--ink-2)}"
+    + ".cs-num input.cs-bad{box-shadow:inset 0 0 0 2px var(--casora-popup-ui-bad, #FF453A)}"
+    + ".rtext span.cs-ferr{display:block;color:var(--casora-popup-ui-bad, #FF453A);font-size:var(--t-foot);margin-top:2px;white-space:normal}"
     + ".casora-pctl>button.ghost{padding:7px 13px;font-size:var(--t-foot)}"
     + ".frow .sw{margin-left:auto;flex:none}"
     + ".cs-empty{font-size:var(--t-foot);color:var(--ink-2)}"
@@ -569,9 +562,19 @@
       if (cs.busy) return false;
       if (!this._csDirty()) return true;
       const price = cs.O && cs.O.price_kwh;
-      if (price !== undefined && (typeof price !== "number" || isNaN(price) || price < 0 || price > 2)) {
+      if (priceBad(price)) {
         cs.err = t("The electricity price must be between 0 and 2 €/kWh.");
         this._csRepaint();
+        this._csFocusBad();
+        return false;
+      }
+      // The radius of fuel prices (1–25 km) and of charging stations (1 to the server's maximum).
+      const chMax = (cs.ch && cs.ch.radius_max) || 50;
+      const radiusErr = tankenDirty(cs) && radiusBad(cs.F.radius, 25) ? 25 : chargingDirty(cs) && radiusBad(cs.C.radius, chMax) ? chMax : 0;
+      if (radiusErr) {
+        cs.err = t("The radius must be between 1 and {n} km.").replace("{n}", radiusErr);
+        this._csRepaint();
+        this._csFocusBad();
         return false;
       }
       // Security › „Counts as closed up to“ (issue 138, casora-panel-personal.js): whole percent 0–20.
@@ -865,29 +868,21 @@
     };
     const decimalSep = (self) => (1.5).toLocaleString(String((self._hass && self._hass.locale && self._hass.locale.language)
       || (self._hass && self._hass.language) || "en")).charAt(1);
-    // A radius field (fuel, charging): every keystroke goes into the draft kept in range; leaving the field shows the kept
-    // value and says in the row's line in red why it changed (u08-08: „50 km“ stayed while 25 was saved).
-    const radiusField = (self, rin, row, max, set) => {
-      const sub = row.querySelector(".rtext > span");
-      const said = sub ? sub.textContent : "";
-      const M = window.casoraSettingsMap;
-      rin.oninput = () => {
-        const r = M.radiusOf(rin.value, max);
-        if (r) set(r.v);
-        if (sub) { sub.textContent = said; sub.style.color = ""; }
-        self._csBar();
-      };
-      rin.onchange = () => {
-        const r = M.radiusOf(rin.value, max);
-        if (!r || !r.note) return;
-        rin.value = String(r.v).replace(".", decimalSep(self));
-        if (sub) {
-          sub.setAttribute("data-no-i18n", "");
-          sub.textContent = t(r.note).replace("{n}", String(r.v).replace(".", decimalSep(self)));
-          sub.style.color = "var(--casora-studio-danger, #ff453a)";
-        }
-      };
+    // A number field that holds a value it cannot take says so at the field: red rim and a line under the row's title
+    // (Prüfrunde u04-04/u04-06: the price's error stood at the top of the page, out of sight; the radius was cut short
+    // to 25 without a word).
+    const numBad = (row, inp, bad, msg) => {
+      inp.setAttribute("aria-invalid", bad ? "true" : "false");
+      inp.classList.toggle("cs-bad", !!bad);
+      const txt = row.querySelector(".rtext");
+      let m = txt && txt.querySelector(".cs-ferr");
+      if (bad && txt && !m) { m = el("span", "cs-ferr"); m.setAttribute("role", "alert"); txt.appendChild(m); }
+      if (m) { m.textContent = bad ? msg : ""; m.hidden = !bad; }
     };
+    const priceBad = (v) => v !== undefined && (typeof v !== "number" || isNaN(v) || v < 0 || v > 2);
+    const radiusBad = (v, max) => !(typeof v === "number" && isFinite(v) && v >= 1 && v <= max);
+    // The value typed in a radius field: a number with one decimal, NaN for anything else (kept, so saving refuses it).
+    const radiusOf = (text) => { const v = Number(String(text).trim().replace(",", ".")); return text.trim() && isFinite(v) ? Math.round(v * 10) / 10 : NaN; };
     const notifyLabel = (id) => {
       const s = String(id).replace(/^notify\./, "").replace(/^mobile_app_/, "").replace(/_/g, " ").trim();
       return s ? s.charAt(0).toUpperCase() + s.slice(1) : id;
@@ -982,12 +977,15 @@
           sub.setAttribute("data-no-i18n", "");
           sub.hidden = O.price_kwh != null;
         }
+        const priceMsg = t("Only 0 to 2 €/kWh.");
         inp.oninput = () => {
           const v = inp.value.trim().replace(",", ".");
           if (!v) delete O.price_kwh; else O.price_kwh = /^\d*\.?\d+$/.test(v) ? Number(v) : NaN;
           if (sub) sub.hidden = !!v;
+          numBad(pr.row, inp, priceBad(O.price_kwh), priceMsg);
           this._csBar();
         };
+        if (priceBad(O.price_kwh)) { if (isNaN(O.price_kwh)) inp.value = ""; numBad(pr.row, inp, true, priceMsg); }
         wrap.append(inp, el("span", "", "€/kWh"));
         pr.row.appendChild(wrap);
       } else if (page === "update_push") {
@@ -1097,9 +1095,15 @@
       const rin = el("input", "cs-ch-radius");
       rin.type = "text";
       rin.inputMode = "decimal";
-      rin.value = String(C.radius).replace(".", decimalSep(this));
+      rin.value = isFinite(C.radius) ? String(C.radius).replace(".", decimalSep(this)) : "";
       rin.setAttribute("aria-label", t("Radius"));
-      radiusField(this, rin, rr.row, ch.radius_max || 50, (v) => { C.radius = v; });
+      const chMax = ch.radius_max || 50, chMsg = t("Only 1 to {n} km.").replace("{n}", chMax);
+      rin.oninput = () => {
+        C.radius = radiusOf(rin.value);
+        numBad(rr.row, rin, radiusBad(C.radius, chMax), chMsg);
+        this._csBar();
+      };
+      if (radiusBad(C.radius, chMax)) numBad(rr.row, rin, true, chMsg);
       wrap.append(rin, el("span", "", "km"));
       rr.row.appendChild(wrap);
       host.appendChild(el("p", "cs-lede", t("Data: Open Charge Map and its data providers, CC BY 4.0. No live availability and hardly any prices.")));
@@ -1198,9 +1202,15 @@
         const rin = el("input", "cs-tk-radius");
         rin.type = "text";
         rin.inputMode = "decimal";
-        rin.value = String(F.radius).replace(".", decimalSep(this));
+        rin.value = isFinite(F.radius) ? String(F.radius).replace(".", decimalSep(this)) : "";
         rin.setAttribute("aria-label", t("Radius"));
-        radiusField(this, rin, rr.row, 25, (v) => { F.radius = v; });
+        const tkMsg = t("Only 1 to {n} km.").replace("{n}", 25);
+        rin.oninput = () => {
+          F.radius = radiusOf(rin.value);
+          numBad(rr.row, rin, radiusBad(F.radius, 25), tkMsg);
+          this._csBar();
+        };
+        if (radiusBad(F.radius, 25)) numBad(rr.row, rin, true, tkMsg);
         wrap.append(rin, el("span", "", "km"));
         rr.row.appendChild(wrap);
         const st = tk.status || {};
@@ -1951,11 +1961,12 @@
       }
     };
     // A change to the dashboard while a page of the new structure is open belongs to the bar.
+    P._csOwnsChanges = function () { return !!this._csOpen && /^n-/.test(String(this._csPage || "")); };
     const markDirty = P._markDirty;
     P._markDirty = function () {
       const before = this._lastPrint;
       const r = markDirty.apply(this, arguments);
-      if (this._csOpen && !this._csLoadingDash && /^n-/.test(String(this._csPage || "")) && this._lastPrint !== before && before !== undefined) this._csDashTouched = true;
+      if (this._csOwnsChanges() && !this._csLoadingDash && this._lastPrint !== before && before !== undefined) this._csDashTouched = true;
       // A field may change without an event the bar listens to (a menu picks on mousedown, a slider writes a beat
       // after the last move): the bar follows every change of the dashboard.
       if (this._csOpen && this._lastPrint !== before && typeof this._csBar === "function") this._csBar();
@@ -1994,6 +2005,12 @@
       }
     };
 
+    // After a refused save: the field with the wrong value in view and in focus (the message at the top may be out of sight).
+    P._csFocusBad = function () {
+      const f = this.shadowRoot && this.shadowRoot.querySelector('input[aria-invalid="true"]');
+      if (!f) return;
+      try { f.scrollIntoView({ block: "center" }); f.focus({ preventScroll: true }); } catch (e) { /* not drawn */ }
+    };
     // block: the key of a block on a tile page (e.g. "live"): only that block is drawn again. A live refresh every 5 s
     // redrew the whole tile before, including the Studio's own drawing of this dashboard's phone section, for nothing.
     P._csRepaint = function (block) {

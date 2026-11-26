@@ -280,7 +280,7 @@
 
     /* ── Handy: untere Leiste lesbar, auch dunkel ──────────────────── */
     :host(.bmode.phone) .bbar button:not(.bplus) { color:var(--ink, #1c1c1e); }
-    :host(.bmode.phone:not(.is-light)) .bbar { background:var(--pane-solid, rgba(29,31,37,.97)); }
+    :host(.bmode.phone) .bbar { background:var(--pane-solid, rgba(29,31,37,.97)); }
     :host(.bmode.phone:not(.is-light)) .bbar button:not(.bplus) { color:rgba(255,255,255,.92); }
     :host(.bmode.phone) .bscrim { animation:bFade .22s ease; }
     @keyframes bFade { from { opacity:0; } }
@@ -614,6 +614,9 @@
       const group = this._bGroup;
       const undo = { label: tr("Undo"), run: () => this._bUndoTo(group.snap) };
       clearTimeout(this._bSoftT);
+      // On a settings page the save bar there („Unsaved changes · Save settings“) already holds the change: no second
+      // „Save now“ beside it (Prüfrunde u03-05, u04-08: toast and bar stood on top of each other at the bottom).
+      if (soft && typeof this._csOwnsChanges === "function" && this._csOwnsChanges()) return;
       if (soft) {
         this._bSoftT = setTimeout(() => {
           const first = !this._bToldDone;
