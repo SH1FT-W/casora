@@ -137,7 +137,12 @@ for (const [tag, opts, url] of VIEWS) {
   await need(tag + ': Diagramm gezeichnet', r.chart, r);
   const c = r.chart;
   await check(tag + ': zwei Kurven (Temperatur + Gefühlt)', c.series.length === 2 && c.series[1].entity === FEELS && c.series[1].name === 'Gefühlt', c.series);
-  await check(tag + ': gemessene Kurve aus derselben Quelle (Station)', c.series[0].entity === 'sensor.testwetter_temperature', c.series);
+  // u08-04 (owner, 26.11.2026): every „now“ of the weather from one source, the outdoor sensor when the house has one,
+  // else the weather service; the chart's temperature curve follows it also beside the felt curve (before: the
+  // station's own temperature sensor). So the measured curve is the same source the wheel and the header show.
+  const nowSrc = await page.evaluate((id) => { const h = document.querySelector('home-assistant').hass;
+    const n = window.casoraDevice.weatherNow(h, id, {}); return n && n.entity + (n.attribute ? '#' + n.attribute : ''); }, WX);
+  await check(tag + ': gemessene Kurve aus derselben Quelle wie das Rad (' + nowSrc + ')', !!nowSrc && c.series[0].entity + (c.series[0].attribute ? '#' + c.series[0].attribute : '') === nowSrc, { nowSrc, series: c.series });
   await check(tag + ': zwei verschiedene Farben', c.colors.length === 2 && c.colors[0] !== c.colors[1], c.colors);
   await check(tag + ': beide gleichzeitig, kein Umschalter', c.switch === false && c.tabs === 0 && c.lines.length === 2, c);
   await check(tag + ': Legende Temperatur/Gefühlt', c.legend.join('|') === 'Temperatur|Gefühlt', c.legend);
