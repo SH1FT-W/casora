@@ -328,6 +328,20 @@
     return true;
   };
 
+  // Code missing (Prüfrunde u07-02): the shake alone went unseen (no focus ring, gone in 260 ms). The field says so and
+  // stays outlined until someone types.
+  AL.askCode = function (inp) {
+    var tr = window.casoraTr || function (x) { return x; };
+    inp.placeholder = tr('Erst Code eingeben');
+    inp.style.boxShadow = 'inset 0 0 0 2px ' + BAD;
+    inp.focus();
+    if (inp.animate) inp.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'translateX(0)' }], { duration: 260 });
+    if (!inp._casoraAskCode) {
+      inp._casoraAskCode = true;
+      inp.addEventListener('input', function () { inp.style.boxShadow = ''; inp.placeholder = tr('Code eingeben'); inp._casoraAskCode = false; }, { once: true });
+    }
+  };
+
   // The question itself failing says so (issue 109: casoraAsk threw, the tap left no trace).
   AL.fail = function (e) {
     var tr = window.casoraTr || function (x) { return x; };
@@ -372,10 +386,7 @@
       var root = el.getRootNode && el.getRootNode();
       var inp = root && root.querySelector ? root.querySelector('.cal-code input') : null;
       var code = inp ? String(inp.value || '').trim() : '';
-      if (need && !code) {
-        if (inp) { inp.focus(); inp.animate && inp.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'translateX(0)' }], { duration: 260 }); }
-        return;
-      }
+      if (need && !code) { if (inp) AL.askCode(inp); return; }
       var data = { entity_id: spec.e }; if (code) data.code = code;
       hass.callService('alarm_control_panel', spec.s, data).catch(function () {
         // HA's callService shows its own error toast; the field only says why when a code was given.
