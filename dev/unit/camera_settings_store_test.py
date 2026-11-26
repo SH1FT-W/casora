@@ -147,6 +147,36 @@ class CameraSettingsStoreTest(unittest.IsolatedAsyncioTestCase):
         }
         self.assertEqual(store.saved, expected)
 
+    async def test_duplicate_camera_adds_its_triggers_to_the_first(self):
+        store = FakeStore()
+        connection = Connection()
+        hass = SimpleNamespace(data={})
+        settings_store = settings._store
+        settings._store = lambda _hass: store
+        try:
+            message = {
+                "id": 4,
+                "type": "casora/settings/set",
+                "settings": {
+                    "cameras": [
+                        {"entity_id": "camera.garden", "name": "Garden"},
+                        {"entity_id": "camera.garden", "name": "Duplicate", "detection_triggers": ["event.b", "binary_sensor.a"]},
+                        {"entity_id": "camera.garden", "detection_triggers": ["binary_sensor.a", "event.c"]},
+                    ],
+                },
+            }
+            await inspect.unwrap(settings.ws_set)(hass, connection, message)
+        finally:
+            settings._store = settings_store
+
+        expected = {
+            "cameras": [
+                {"entity_id": "camera.garden", "name": "Garden",
+                 "detection_triggers": ["event.b", "binary_sensor.a", "event.c"]},
+            ],
+        }
+        self.assertEqual(store.saved, expected)
+
 
 if __name__ == "__main__":
     unittest.main()
