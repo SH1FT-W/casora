@@ -16137,7 +16137,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     }
 
     if (listedDetection(id)) {
-      if (window.casoraDetectionAt(id, s, prev, Math.round(Number(entry.when) * 1000)) === null) return null;
+      if (window.casoraDetectionAt(id, s, prev, Math.round(Number(entry.when) * 1000), hassOf()) === null) return null;
       return { label: name + ' erkannt', icon: 'camera', tone: 'accent', passive: true };
     }
 
