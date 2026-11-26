@@ -92,6 +92,9 @@ if (overlay) {
   const { page } = await open({ width: 390, height: 844, mobile: true, safari: true });
   usePage(page);
   await dashboard(page, dash.phone.url + '/' + (phone.views[0].path || '0'), 3);
+  // The test house's settings file hides every room's "Ambiente" scene (CASORA_SETTINGS.scenes.exclude), and since
+  // 300886993 (Prüfrunde u04-01) room pages honour that list too: the room pages only show their scenes with it cleared.
+  await page.evaluate(() => { const s = window.CASORA_SETTINGS; if (s && s.scenes) s.scenes = { ...s.scenes, exclude: [] }; });
   await page.evaluate((k) => window.dispatchEvent(new CustomEvent('ll-custom', { detail: { casora_filter: k } })), overlay.filter_category || key(NEU));
   let res = null;
   for (let i = 0; i < 16; i++) {

@@ -31,6 +31,9 @@ for (const [tag, dark] of [['dark', true], ['light', false]]) {
       sc = v; if (v && v.isActive && !v.__qa) { v.isActive = () => true; v.__qa = 1; } } });
   });
   await dashboard(o.page, dash.phone.url + '/' + (phone.views[0].path || '0'), 3);
+  // The test house's settings file hides every room's "Ambiente" scene (CASORA_SETTINGS.scenes.exclude), and since
+  // 300886993 (Prüfrunde u04-01) room pages honour that list too: the room pages only show their scenes with it cleared.
+  await o.page.evaluate(() => { const s = window.CASORA_SETTINGS; if (s && s.scenes) s.scenes = { ...s.scenes, exclude: [] }; });
   let res = null;
   for (const room of rooms) {
     await o.page.evaluate((k) => window.dispatchEvent(new CustomEvent('ll-custom', { detail: { casora_filter: k } })), room.filter_category || key(room.room));
