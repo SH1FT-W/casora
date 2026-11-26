@@ -195,13 +195,14 @@ for (const [tag, o, url, mobile, act] of VIEWS) {
   const w = await stable(page, POPUP, null, { until: (v) => v && v.days === 7 && v.editable >= 1, max: 8000 });
   await check(tag + ': the week page: "Tagesprofile", "Woche" with 7 days, today\'s slots', w && lab(w, 'Tagesprofile') && lab(w, 'Woche') && w.days === 7
     && lab(w, 'Heute') && w.editable >= 1, w && { labels: w.labels, days: w.days, editable: w.editable });
-  await check(tag + ': profiles with their days', w && w.rows.some((r) => /^workday.*Werktage.*Aktiv/.test(r)) && w.rows.some((r) => /^home_office.*Mi.*Aktivieren/.test(r)), w && w.rows);
+  // Profiles read in words since aeb89ca42 (Prüfrunde u08-06): workday → Werktag, home_office → Homeoffice; services keep the key.
+  await check(tag + ': profiles with their days', w && w.rows.some((r) => /^Werktag.*Werktage.*Aktiv/.test(r)) && w.rows.some((r) => /^Homeoffice.*Mi.*Aktivieren/.test(r)), w && w.rows);
   if (BILDER) { await page.waitForTimeout(700); await page.screenshot({ path: file('woche') }); }
 
   if (act) {
     // Switch the profile on (the room's profile select).
     await page.waitForTimeout(700);
-    await tapSel('.hui-srow', '^home_office');
+    await tapSel('.hui-srow', '^Homeoffice');
     let a = await waitAttrs((x) => x.profile_days && x.profile_days.home_office && x.profile_days.home_office.enabled);
     await check(tag + ': „Aktivieren“ → select.select_option turns home_office on', a && a.profile_days.home_office.enabled, a && a.profile_days);
     // Edit Monday's 06:00 slot one level warmer (home → comfort) and save.
@@ -210,7 +211,7 @@ for (const [tag, o, url, mobile, act] of VIEWS) {
     await page.waitForTimeout(700);
     await tapMi('shc-edit:' + DEC + '|workday|1');
     const e = await stable(page, POPUP, null, { until: (v) => v && v.labels.some((l) => /^Zeitfenster bearbeiten/.test(l.t)), max: 5000 });
-    await check(tag + ': the editor opens', e && e.labels.some((l) => /^Zeitfenster bearbeiten · workday/.test(l.t)), e && e.labels);
+    await check(tag + ': the editor opens', e && e.labels.some((l) => /^Zeitfenster bearbeiten · Werktag/.test(l.t)), e && e.labels);
     await tapMi('shc-step:' + DEC + '|level|+');
     await page.waitForTimeout(600);
     if (BILDER) { await page.waitForTimeout(500); await page.screenshot({ path: file('bearbeiten') }); }
