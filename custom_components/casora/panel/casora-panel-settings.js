@@ -214,7 +214,16 @@
     casora_ebike: ["house", "devices", "Other devices"], casora_weather_warning: ["wx", "weather", "Weather"],
     casora_washer: LIVE_TAB, casora_dryer: LIVE_TAB, casora_dishwasher: LIVE_TAB, casora_3d_printer: LIVE_TAB, vacuum: LIVE_TAB,
   };
-  window.casoraSettingsMap = { tiles: NEU, dashSections: DASH_SECS, route, tileShared: TILE_SHARED };
+  // A typed search radius (fuel 1–25 km, charging 1–50 km), Prüfrunde u08-08: the value kept and, when the typed one was
+  // outside the range, the note that says so – the field then shows the kept value instead of „50 km“ that was never saved.
+  // null for nothing usable (the draft keeps its value).
+  const radiusOf = (text, max) => {
+    const v = Number(String(text == null ? "" : text).trim().replace(",", "."));
+    if (!isFinite(v) || v <= 0) return null;
+    const r = Math.round(v * 10) / 10, kept = Math.max(1, Math.min(max, r));
+    return { v: kept, note: r > max ? "At most {n} km" : r < 1 ? "At least {n} km" : null };
+  };
+  window.casoraSettingsMap = { tiles: NEU, dashSections: DASH_SECS, route, tileShared: TILE_SHARED, radiusOf };
   const pageOf = (id) => neuPage(route(id)[0]) || NEU_START;
 
   const CSS = ".cs-wrap{padding:4px 0 28px}"
@@ -856,6 +865,29 @@
     };
     const decimalSep = (self) => (1.5).toLocaleString(String((self._hass && self._hass.locale && self._hass.locale.language)
       || (self._hass && self._hass.language) || "en")).charAt(1);
+    // A radius field (fuel, charging): every keystroke goes into the draft kept in range; leaving the field shows the kept
+    // value and says in the row's line in red why it changed (u08-08: „50 km“ stayed while 25 was saved).
+    const radiusField = (self, rin, row, max, set) => {
+      const sub = row.querySelector(".rtext > span");
+      const said = sub ? sub.textContent : "";
+      const M = window.casoraSettingsMap;
+      rin.oninput = () => {
+        const r = M.radiusOf(rin.value, max);
+        if (r) set(r.v);
+        if (sub) { sub.textContent = said; sub.style.color = ""; }
+        self._csBar();
+      };
+      rin.onchange = () => {
+        const r = M.radiusOf(rin.value, max);
+        if (!r || !r.note) return;
+        rin.value = String(r.v).replace(".", decimalSep(self));
+        if (sub) {
+          sub.setAttribute("data-no-i18n", "");
+          sub.textContent = t(r.note).replace("{n}", String(r.v).replace(".", decimalSep(self)));
+          sub.style.color = "var(--casora-studio-danger, #ff453a)";
+        }
+      };
+    };
     const notifyLabel = (id) => {
       const s = String(id).replace(/^notify\./, "").replace(/^mobile_app_/, "").replace(/_/g, " ").trim();
       return s ? s.charAt(0).toUpperCase() + s.slice(1) : id;
@@ -1067,11 +1099,7 @@
       rin.inputMode = "decimal";
       rin.value = String(C.radius).replace(".", decimalSep(this));
       rin.setAttribute("aria-label", t("Radius"));
-      rin.oninput = () => {
-        const v = Number(rin.value.trim().replace(",", "."));
-        if (isFinite(v) && v > 0) C.radius = Math.max(1, Math.min(ch.radius_max || 50, Math.round(v * 10) / 10));
-        this._csBar();
-      };
+      radiusField(this, rin, rr.row, ch.radius_max || 50, (v) => { C.radius = v; });
       wrap.append(rin, el("span", "", "km"));
       rr.row.appendChild(wrap);
       host.appendChild(el("p", "cs-lede", t("Data: Open Charge Map and its data providers, CC BY 4.0. No live availability and hardly any prices.")));
@@ -1172,11 +1200,7 @@
         rin.inputMode = "decimal";
         rin.value = String(F.radius).replace(".", decimalSep(this));
         rin.setAttribute("aria-label", t("Radius"));
-        rin.oninput = () => {
-          const v = Number(rin.value.trim().replace(",", "."));
-          if (isFinite(v) && v > 0) F.radius = Math.max(1, Math.min(25, Math.round(v * 10) / 10));
-          this._csBar();
-        };
+        radiusField(this, rin, rr.row, 25, (v) => { F.radius = v; });
         wrap.append(rin, el("span", "", "km"));
         rr.row.appendChild(wrap);
         const st = tk.status || {};

@@ -14,7 +14,9 @@
     "Household": "Household",
     "Name or entity": "Name or entity",
     "No device matches the filter.": "No device matches the filter.",
-    "Lights": "Lighting"
+    "Lights": "Lighting",
+    "At most {n} km": "At most {n} km",
+    "At least {n} km": "At least {n} km"
   },
   "patterns": [
     [
