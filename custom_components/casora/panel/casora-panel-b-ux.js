@@ -1362,7 +1362,9 @@
       const r = rooms[i];
       const I = W.__casoraPanelInternals || {};
       if (id !== "delete" || !on(this) || !r || !this._mHideRoom || (I.isHomeRoom && I.isHomeRoom(r, rooms))
-        || (this._roomDeleteBlock && this._roomDeleteBlock(i))) return orig.apply(this, arguments);
+        || (this._roomDeleteBlock && this._roomDeleteBlock(i))
+        // Already hidden: offering to hide it makes no sense, the plain question asks (Prüfrunde u02-11).
+        || (r.variables && r.variables.casora_hidden)) return orig.apply(this, arguments);
       const res = await this._ask({
         title: fill(tr("Delete “{room}”?"), { room: this._roomLabel(r) }),
         message: tr("Deleted for good when you save. Only not needed for a while? Hide it – it comes back exactly as it is."),
