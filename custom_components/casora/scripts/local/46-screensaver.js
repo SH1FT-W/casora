@@ -21,6 +21,7 @@
 //   window._casoraSaver.kindAt(kind, now, pool) → the kind on show
 //   window._casoraSaver.canStart() / start()   → start by hand (the dashboard's ⋯ menu), only where one may start
 //   window.casoraScreensaver.wake(reason)      → ends the screensaver from outside (presence, doorbell); true if one was on show
+//   window._casoraSaver.wake()                 → end it from outside (doorbell ring, 52-klingel-moment.js)
 // Studio settings beside the three above: casora_screensaver_mix (kinds that alternate, none = all),
 // casora_screensaver_cameras (none = automatic: the real cameras) / _calendars (none = all), casora_screensaver_tint (the playing cover's colour as a wash),
 // casora_screensaver_wander (false = the content stands still, for displays that do not burn in),
@@ -1589,6 +1590,8 @@
   };
   // night: the calm night clock instead of the screensaver (a wake at night, S.wakeNow).
   var show = function (cfg, night) {
+    // A screensaver still fading out after a wake makes room for the new one at once.
+    if (layer && layer._casoraFading) hide();
     if (layer) return;
     if (!document.getElementById('cs-sv-over-css')) {
       var st = document.createElement('style');
@@ -1641,21 +1644,31 @@
       context: function () { var c = config() || cfg; return { config: c, vars: S.vars(c) }; } });
   };
   S.show = show;
-  S.shown = function () { return !!layer; };
+  // A screensaver that is fading out after a wake no longer counts as shown.
+  S.shown = function () { return !!layer && !layer._casoraFading; };
+  // Woken from outside (presence, 46 here; a doorbell ring, 52-klingel-moment.js): the screensaver fades as after a
+  // touch and the idle time starts again. reason: a short word for the log. True when one was showing.
+  S.wake = function (reason) {
+    bump();
+    var was = !!layer;
+    S._lastWake = { reason: String(reason || ''), at: Date.now(), was: was };
+    if (!layer) return false;
+    var l = layer, still = false;
+    try { still = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) { still = false; }
+    if (still) { hide(); return true; }
+    l._casoraFading = true;
+    l.style.pointerEvents = 'none';
+    l.style.transition = 'opacity .24s ease';
+    l.style.opacity = '0';
+    setTimeout(function () { if (layer === l) hide(); }, 260);
+    return true;
+  };
   // Started by hand from the dashboard's ⋯ menu: on a tablet, also without a start time (owner, 13.11.2026).
   S.canStart = function () {
     if (OFF || layer) return false;
     return !!(config() && (FORCE || isTablet()));
   };
   S.start = function () { var cfg = config(); if (cfg && S.canStart()) { show(cfg); byHand = !!layer; } };
-  // From outside (wake on presence here, the doorbell elsewhere): ends the screensaver, as a touch would.
-  // reason: a short word for the log. Returns true when a screensaver was on show.
-  S.wake = function (reason) {
-    var was = !!layer;
-    if (layer) hide(); else bump();
-    S._lastWake = { reason: String(reason || ''), at: Date.now(), was: was };
-    return was;
-  };
   window.casoraScreensaver = window.casoraScreensaver || {};
   window.casoraScreensaver.wake = S.wake;
   var homeOf = function (cfg) {

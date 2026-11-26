@@ -453,6 +453,8 @@
     "Done": "Listo",
     "Door sensor": "Sensor de puerta",
     "Doorbell": "Timbre",
+    "Bring the doorbell to the front": "Traer el timbre al frente",
+    "When it rings, this dashboard wakes from the screensaver and shows the doorbell's camera large. Without a touch it closes again after a minute and a half.": "Cuando suena, este panel sale del salvapantallas y muestra la cámara del timbre en grande. Si nadie lo toca, se cierra solo al cabo de un minuto y medio.",
     "Doors": "Puertas",
     "Drag to reorder": "Arrastra para reordenar",
     "Each light in the group becomes a sub-badge.": "Cada luz del grupo se convierte en una subinsignia.",

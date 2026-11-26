@@ -453,6 +453,8 @@
     "Done": "Terminé",
     "Door sensor": "Capteur de porte",
     "Doorbell": "Sonnette",
+    "Bring the doorbell to the front": "Mettre la sonnette au premier plan",
+    "When it rings, this dashboard wakes from the screensaver and shows the doorbell's camera large. Without a touch it closes again after a minute and a half.": "Quand ça sonne, ce tableau de bord quitte l'économiseur d'écran et affiche la caméra de la sonnette en grand. Sans contact, elle se referme au bout d'une minute et demie.",
     "Doors": "Portes",
     "Drag to reorder": "Glisse pour réordonner",
     "Each light in the group becomes a sub-badge.": "Chaque lumière du groupe devient un sous-badge.",

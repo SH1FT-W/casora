@@ -453,6 +453,8 @@
     "Done": "Fertig",
     "Door sensor": "Türsensor",
     "Doorbell": "Türklingel",
+    "Bring the doorbell to the front": "Türklingel nach vorn holen",
+    "When it rings, this dashboard wakes from the screensaver and shows the doorbell's camera large. Without a touch it closes again after a minute and a half.": "Klingelt es, wacht dieses Dashboard aus dem Bildschirmschoner auf und zeigt die Kamera der Türklingel groß. Ohne Berührung schließt sie sich nach anderthalb Minuten wieder.",
     "Doors": "Türen",
     "Drag to reorder": "Zum Sortieren ziehen",
     "Each light in the group becomes a sub-badge.": "Jedes Licht der Gruppe wird ein Unter-Badge.",

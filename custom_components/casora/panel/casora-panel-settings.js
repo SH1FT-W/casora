@@ -109,7 +109,7 @@
       blocks: [
         { k: "bell", sec: "Notifications", title: "Bell on this dashboard",
           plain: "Switch the bell on or off and choose which messages it shows here.",
-          kw: "glocke meldungen benachrichtigungen sicherheit wasser rauch co2 schloss alarm klingel türen personen sauger geräte pflanzen akku pulse updates neustart" },
+          kw: "glocke meldungen benachrichtigungen sicherheit wasser rauch co2 schloss alarm klingel türen personen sauger geräte pflanzen akku pulse updates neustart türklingel nach vorn klingeln kamera bildschirmschoner doorbell front ring" },
         { k: "vent", opt: "vent", title: "Ventilation push",
           plain: "Push to your phone when it is time to open or close the windows.",
           kw: "lüften lueften push fenster öffnen schließen co2 handy personen" },

@@ -453,6 +453,8 @@
     "Done": "Klaar",
     "Door sensor": "Deursensor",
     "Doorbell": "Deurbel",
+    "Bring the doorbell to the front": "Deurbel naar voren halen",
+    "When it rings, this dashboard wakes from the screensaver and shows the doorbell's camera large. Without a touch it closes again after a minute and a half.": "Als er wordt aangebeld, komt dit dashboard uit de schermbeveiliging en toont de camera van de deurbel groot. Zonder aanraking sluit hij na anderhalve minuut weer.",
     "Doors": "Deuren",
     "Drag to reorder": "Sleep om te sorteren",
     "Each light in the group becomes a sub-badge.": "Elke lamp in de groep wordt een subbadge.",

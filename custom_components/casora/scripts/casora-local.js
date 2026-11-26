@@ -263,6 +263,7 @@ const MODULES = [
   '50-waste-out',
   '51-smart-heating',
   '52-assist-show',
+  '52-klingel-moment',
 ];
 
 const START_MODULES = MODULES.slice(0, 5);
