@@ -938,10 +938,17 @@
           Object.fromEntries(Object.entries({ 2: "From 2 devices", 3: "From 3 devices", 4: "From 4 devices", 0: "Never" })
             .map(([k, v]) => [k, window.casoraI18n ? window.casoraI18n.t(v) : v])),
           (v) => { B.group_min = Number(v) || 99; })], "Lights, blinds and locks of a room");
-        row(g, "Status LEDs", [tog(B.skip_leds !== false, "Leave out", (v) => { B.skip_leds = v; })],
-          "Router, access point and camera lights");
-        row(g, "Favorites on Home", [tog(B.favorites !== false, "Fill automatically", (v) => { B.favorites = v; })],
-          "Locks, lights and blinds of all rooms");
+        // Switch on the right like every settings row, the meaning in the title (Prüfrunde d04-04).
+        const swRow = (title, sub, on, set) => {
+          const r = self._flowRow(g, { title, sub });
+          if (typeof self._boolSwitch === "function") {
+            r.row.appendChild(self._boolSwitch(on, true, (v) => set(v !== false),
+              window.casoraI18n ? window.casoraI18n.t(title) : title));
+          }
+          return r.row;
+        };
+        swRow("Leave out status LEDs", "Router, access point and camera lights", B.skip_leds !== false, (v) => { B.skip_leds = v; });
+        swRow("Fill Favorites on Home automatically", "Locks, lights and blinds of all rooms", B.favorites !== false, (v) => { B.favorites = v; });
         if (B.order || B.group_min != null || B.skip_leds === false || B.favorites === false) {
           addRow(g, "Reset standard room", () => { S.basis = {}; });
         }
