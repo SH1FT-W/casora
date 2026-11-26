@@ -1300,6 +1300,14 @@
         const open = host.querySelector('.mini-badges .pbadge.open') || map.querySelector('.mini-badges .pbadge.open');
         sub.classList.toggle("uxashide", !!as && !!open && open.classList.contains("uxashide"));
       });
+      // The room bar shows only the rooms this person sees, as on their dashboard (Prüfrunde u10-04); the room at hand
+      // stays (with the sentence below), the Studio's room list is untouched.
+      const allR = rooms$(this);
+      const hideAs = (W.__casoraPanelInternals || {}).hiddenFromAs || (() => false);
+      map.querySelectorAll(".mini-tab[data-ri]").forEach((el) => {
+        const r = allR[+el.dataset.ri];
+        el.classList.toggle("uxashide", !!as && r !== room && hideAs(r, as));
+      });
       // Raum für diesen Menschen nicht sichtbar: ein Satz über der Vorschau.
       const canvas = this.shadowRoot.querySelector(".canvas");
       let note = canvas && canvas.querySelector(".uxasnote");

@@ -1127,6 +1127,14 @@ const shotLang = (url, hass) => (url && haLang(hass).indexOf("de") === 0 ? url.r
 const isHomeRoom = (room, rooms) => !!room && (room.path === "home"
   || (Array.isArray(rooms) && rooms[0] === room && !rooms.some((r) => r && r.path === "home")));
 const AUTO_HOME = "home";
+// Studio "View as" (_uxAs, a user id): a room that person does not see – limited to others (casora_users) or hidden
+// on the dashboard (casora_hidden). Without "View as" nothing is hidden (Prüfrunde u10-04).
+const hiddenFromAs = (room, as) => {
+  if (!as || !room) return false;
+  const V = room.variables || {};
+  const ru = Array.isArray(V.casora_users) ? V.casora_users : [];
+  return V.casora_hidden === true || (ru.length > 0 && ru.indexOf(as) < 0);
+};
 // Choose your rooms: the room tile with this name (case ignored), if there is one.
 const sameNameRoom = (tiles, name) => tiles.find((t) => String(t.dataset.name || "").toLowerCase() === String(name).toLowerCase()) || null;
 // Welcome screen: the line on Hemma dashboards found, by their number (Prüfrunde u01-10; translated by pattern).
@@ -24753,7 +24761,7 @@ class CasoraPanel extends HTMLElement {
     const B0 = window.casoraBasis;
     const allRooms = (this._state && this._state.compact && this._state.compact.rooms) || [];
     const hl = V.light_rooms_auto === true && !grp && !listed.length && B0 && B0.houseLights && isHomeRoom(room, allRooms)
-      ? B0.houseLights(this._hass, allRooms.filter((r) => r !== room)) : null;
+      ? B0.houseLights(this._hass, allRooms.filter((r) => r !== room && !hiddenFromAs(r, this._uxAs))) : null;
     const lights = hl ? hl.ids : listed.length ? listed
       : (Array.isArray(members) && members.length ? members.filter(Boolean) : (grp ? [grp] : []));
     if (on("show_lights") && (grp || listed.length || (hl && hl.ids.length))) {
@@ -27317,6 +27325,7 @@ class CasoraPanel extends HTMLElement {
       // Ausgeblendete Räume: durchgestrichenes Auge (Nutzertest 4: in der Leiste nicht erkennbar).
       const hid = !!(r.variables || {}).casora_hidden;
       t.className = "mini-tab" + (r === room ? " on" : "") + (hid ? " hid" : "") + (homeFixed && ri === 0 ? " home" : "");
+      t.dataset.ri = ri;   // "View as" hides the rooms that person does not see (casora-panel-b-ux.js _uxMarkPreview)
       t.textContent = this._roomShown(r);
       t.setAttribute("data-no-i18n", "");
       const go = r === room ? "" : "Go to " + this._roomShown(r);
@@ -30494,7 +30503,7 @@ function previewHasError(doc) {
 
 // Casora: Bausteine des Panels für Casora-Erweiterungen (Import-Assistent, Geräte-Assistent).
 window.__casoraPanelInternals = {
-  setupStep,
+  setupStep, hiddenFromAs,
   blankRoom, roomPhoto, slug, translit, expandConfig, expandAny, extractAny, retargetRoutes, mobileFromRooms,
   applyScenePick, confirmEntities, confirmNames, entityUsers, wrapCustomCard, hostCard, FINGERPRINT_KEY, fingerprintOf, refreshTemplates, templatePrint, TILE_TYPES, USER_TILE_TYPES,
   fieldDefault, findType, tileTypeAny, newTile, previewHasError, isPetTracker, petName, isStatSensor, isPlantEntity, listCategory, TILE_MAIN_FIND, tileMissingEntity, tileEntityGone, iconUrl, studioIcon, roomGlyph, roomIconSrc, titleCase, clone, FLOW_TINT, isMobileConfig, applyKiosk, studioClockText, studioClockDate, studioClockLine,
