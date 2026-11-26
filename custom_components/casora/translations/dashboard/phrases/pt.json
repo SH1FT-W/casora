@@ -3030,7 +3030,9 @@
     "Bis zum nächsten Wechsel": "Até à próxima mudança",
     "Wartet": "Em espera",
     "Ein Profil braucht mindestens ein Zeitfenster": "Um perfil precisa de pelo menos um intervalo",
-    "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "O horário mudou entretanto, edita-o novamente"
+    "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "O horário mudou entretanto, edita-o novamente",
+    "Werktag": "Dia útil",
+    "Homeoffice": "Teletrabalho"
   },
   "patterns": [
     [

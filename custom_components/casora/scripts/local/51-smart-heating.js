@@ -43,6 +43,8 @@
   // The house mode (select mode, const.py MODES).
   var MODE = { auto: 'Automatik', away: 'Abwesend', vacation: 'Urlaub', off: 'Aus', summer: 'Sommer' };
   var DAYS = { all: 'Alle Tage', workday: 'Werktage', weekend: 'Wochenende' };
+  // The integration's default profiles (Prüfrunde u08-06: shown as „workday“, „home_office“ before).
+  var PROFILE = { workday: 'Werktag', weekend: 'Wochenende', home_office: 'Homeoffice' };
   S.WD = WD; S.LEVEL = LEVEL; S.RULE = RULE; S.MODE = MODE; S.PRESETS = PRESETS;
   var STEP_MIN = 15;
 
@@ -103,6 +105,15 @@
     return LEVEL[p] || String(p || '');
   };
   S.levelTemp = function (m, p) { return m && m.levels ? num(m.levels[p]) : null; };
+  // A profile's name for display only (services keep the key): Casora's word for the default profiles, a snake_case key
+  // made readable („late_shift“ → „Late shift“), a name the user wrote as it is.
+  S.profileName = function (n) {
+    var k = String(n == null ? '' : n);
+    if (Object.prototype.hasOwnProperty.call(PROFILE, k)) return T(PROFILE[k]);
+    if (!/^[a-z0-9]+(_[a-z0-9]+)*$/.test(k)) return k;
+    var w = k.replace(/_/g, ' ');
+    return w.charAt(0).toUpperCase() + w.slice(1);
+  };
   S.daysWord = function (days) {
     // Each short day translated on its own: the page translates whole texts, „Mo, Mi“ is none.
     if (Array.isArray(days)) return WD.filter(function (d) { return days.indexOf(d) >= 0; }).map(function (d) { return T(SHORT[WD.indexOf(d)]); }).join(', ');
@@ -356,7 +367,7 @@
       var go = function () { save(hass, id, m, e.profile, e.i, null); };
       if (!window.casoraAsk) { go(); return true; }
       var pop = window.casoraPopup && window.casoraPopup.element;
-      window.casoraAsk({ title: T('Zeitfenster löschen?'), text: e.profile + ' · ' + e.slot.time + ' · ' + T(S.levelName(m, e.slot.preset)), yes: T('Löschen'),
+      window.casoraAsk({ title: T('Zeitfenster löschen?'), text: S.profileName(e.profile) + ' · ' + e.slot.time + ' · ' + T(S.levelName(m, e.slot.preset)), yes: T('Löschen'),
         withPopup: !!(pop && pop.hasAttribute && pop.hasAttribute('open')) }).then(function (ok) { if (ok) go(); });
       return true;
     }
@@ -502,7 +513,7 @@
     var sel = m.ents.schedule_profile;
     var rows = m.profiles.map(function (n) {
       var d = m.days[n] || {}, on = !!d.enabled, today = m.profile === n;
-      var r = { icon: on ? 'mdi:calendar-check-outline' : 'mdi:calendar-blank-outline', iconTone: on ? 'accent' : OFF_PLATE, label: n,
+      var r = { icon: on ? 'mdi:calendar-check-outline' : 'mdi:calendar-blank-outline', iconTone: on ? 'accent' : OFF_PLATE, label: S.profileName(n),
         sub: [S.daysWord(d.days), today ? 'Heute' : ''].filter(Boolean).join(' · ') || null };
       if (on) { r.value = 'Aktiv'; r.active = today; }
       else if (sel && m.editable) { r.action = 'Aktivieren'; r.svc = S.svc.profile(sel, n); }
@@ -514,8 +525,11 @@
 
   var planHtml = function (UI, id, m, date) {
     var u = uiOf(id), today = S.weekday(date), sel = u.day != null ? u.day : today;
-    var out = profilesHtml(UI, m);
-    out += (out ? GAP : '') + weekHtml(UI, id, m, sel, today, date);
+    // The page's status line (§3, lifted into the head): today's profile and the next change (Prüfrunde u08-06: the
+    // head said „Gerade eben“, the Decision sensor's last change).
+    var out = UI.line(m.profile ? S.profileName(m.profile) : 'Frostschutz', S.next(m, date) ? [S.next(m, date)] : []);
+    var ph = profilesHtml(UI, m);
+    out += ph + (ph ? GAP : '') + weekHtml(UI, id, m, sel, today, date);
     var e = u.edit;
     if (e && m.editable && m.schedule[e.profile]) {
       var Tk = UI.tokens, b = e.slot, order = S.levelOrder(m), k = order.indexOf(b.preset);
@@ -528,7 +542,7 @@
         + buttonHtml('Abbrechen', 'shc-cancel:' + id) + (e.i >= 0 && !only ? buttonHtml('Löschen', 'shc-del:' + id) : '')
         + buttonHtml(u.busy ? 'Speichert …' : 'Speichern', 'shc-save:' + id, true) + '</div>';
       var dw = S.daysWord((m.days[e.profile] || {}).days);
-      out += GAP + UI.label(T(e.i >= 0 ? 'Zeitfenster bearbeiten' : 'Neues Zeitfenster') + ' · ' + e.profile) + html
+      out += GAP + UI.label(T(e.i >= 0 ? 'Zeitfenster bearbeiten' : 'Neues Zeitfenster') + ' · ' + S.profileName(e.profile)) + html
         + (UI.note ? UI.note(T('Gilt für jeden Tag mit diesem Profil') + (dw ? ' · ' + T(dw) : '')) : '');
       return out;
     }
@@ -545,7 +559,7 @@
       return r;
     });
     if (prof && m.editable) slots.push({ icon: 'mdi:plus', iconTone: OFF_PLATE, label: 'Zeitfenster hinzufügen', entity: 'shc-add:' + id + '|' + prof });
-    var head = dayTitle(sel, today) + (prof ? ' · ' + prof : '');
+    var head = dayTitle(sel, today) + (prof ? ' · ' + S.profileName(prof) : '');
     out += GAP + UI.group(slots, head);
     if (!prof) out += UI.note ? UI.note(T('Kein aktives Profil an diesem Tag: der Raum hält den Frostschutz.')) : '';
     else if (!m.editable && !m.error) out += UI.note ? UI.note(T('Der Zeitplan kommt aus einem Zeitplan-Helfer und wird dort bearbeitet.')) : '';
@@ -598,7 +612,7 @@
     if (part === 'rows') {
       if (!st || !m.ok) return '';
       var rows = [];
-      var sub = [m.profile, S.next(m, date)].filter(Boolean).join(' · ');
+      var sub = [m.profile ? S.profileName(m.profile) : '', S.next(m, date)].filter(Boolean).join(' · ');
       rows.push({ icon: 'mdi:calendar-clock', iconTone: 'accent', label: 'Zeitplan', sub: sub || null,
         value: m.profile ? null : 'Frostschutz', page: 'shc-plan|' + id });
       if (m.override) {
