@@ -34,7 +34,7 @@ assert.doesNotMatch(TPL, /' bis ' \+ fmtDateTime/, 'no German „bis“ glued in
 const spans = TPL.match(/fmtDateTime\(w\.effective\)\) \+ '[^']*' \+ esc\(fmtDateTime\(w\.expires\)/g) || [];
 assert.equal(spans.length, 2, 'both lists build the span the same way');
 const glue = /fmtDateTime\(w\.effective\)\) \+ '([^']*)' \+/.exec(spans[0])[1];
-assert.doesNotMatch(TPL, /esc\(subtitle\)/, 'the span is HTML, not escaped a second time');
+assert.doesNotMatch(TPL, /esc\(subtitle(Html)?\)/, 'the span is HTML, not escaped a second time');
 const html = '<div>Thu · 11/26, 06:03 AM' + glue + 'Thu · 11/26, 02:03 PM</div>';
 assert.equal(plain(trFor('en')(html)), 'Thu · 11/26, 06:03 AM to Thu · 11/26, 02:03 PM', 'en span');
 assert.doesNotMatch(plain(trFor('fr')(html.replace(/AM|PM/g, ''))), /\bbis\b/, 'fr span');
