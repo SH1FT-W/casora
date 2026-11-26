@@ -2056,10 +2056,17 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     return out;
   }
 
-  function hhmm(iso) {
+  // 12 or 24 hours like the dashboard clock (profile, else the HA user's language): „until 2:03 PM“ in English.
+  function hhmm(iso, hass) {
     var t = Date.parse(iso || '');
     if (!isFinite(t)) return '';
     var d = new Date(t);
+    var f = hass && hass.locale && hass.locale.time_format;
+    var use12 = f === '12' ? true : f === '24' ? false : (function () {
+      var lang = (hass && hass.locale && hass.locale.language) || (hass && hass.language) || (window.casoraLocale ? window.casoraLocale() : undefined);
+      try { return !!new Intl.DateTimeFormat(lang, { hour: 'numeric' }).resolvedOptions().hour12; } catch (e) { return false; }
+    })();
+    if (typeof window.casoraClockText === 'function') return window.casoraClockText(hass, use12, d);
     return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
   }
 
@@ -2267,7 +2274,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
           if (!isWarning(id, st)) return;
           // One row per warning: a binary_sensor carries one, a DWD level sensor warning_count of them.
           WR.of(st, id).forEach(function (w, i) {
-            var until = hhmm(w.end);
+            var until = hhmm(w.end, hass);
             var kind = WR.kind(w);
             out.push({
               id: 'casora:warning:' + id + (i ? ':' + i : ''),

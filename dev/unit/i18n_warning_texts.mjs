@@ -39,4 +39,21 @@ const html = '<div>Thu · 11/26, 06:03 AM' + glue + 'Thu · 11/26, 02:03 PM</div
 assert.equal(plain(trFor('en')(html)), 'Thu · 11/26, 06:03 AM to Thu · 11/26, 02:03 PM', 'en span');
 assert.doesNotMatch(plain(trFor('fr')(html.replace(/AM|PM/g, ''))), /\bbis\b/, 'fr span');
 
+// u09-04: the bell's „until …“ follows the clock's 12/24 hours (profile, else the language), not always 24 hours.
+const a = BASIS.indexOf('  function hhmm(');
+assert.ok(a > 0, 'hhmm found');
+const hhmmSrc = BASIS.slice(a, BASIS.indexOf('\n  }\n', a) + 4);
+assert.match(BASIS, /var until = hhmm\(w\.end, hass\);/, 'the bell passes hass');
+const clockWin = { casoraLocale: () => 'en-US' };
+clockWin.casoraClockText = (h, use12, d) => (use12 ? ((d.getHours() % 12) || 12) + ':' + String(d.getMinutes()).padStart(2, '0') + ' ' + (d.getHours() >= 12 ? 'PM' : 'AM')
+  : String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'));
+const hhmm = new Function('window', hhmmSrc + '\nreturn hhmm;')(clockWin);
+const end = new Date(2026, 10, 26, 14, 3).toISOString();
+assert.equal(hhmm(end, { locale: { language: 'en', time_format: 'language' } }), '2:03 PM', 'en by language: 12 hours');
+assert.equal(hhmm(end, { locale: { language: 'en', time_format: '24' } }), '14:03', 'profile says 24');
+assert.equal(hhmm(end, { locale: { language: 'de', time_format: '12' } }), '2:03 PM', 'profile says 12');
+assert.equal(hhmm(end, { locale: { language: 'de', time_format: 'language' } }), '14:03', 'de by language: 24 hours');
+assert.equal(hhmm('', {}), '', 'no end, no time');
+assert.equal(trFor('en')('Unwetter · bis 2:03 PM'), 'Severe weather · until 2:03 PM', 'the sub line in English');
+
 console.log('ok warning texts');
