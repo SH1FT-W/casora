@@ -122,9 +122,10 @@ assert.equal(m.acts[0].key, 'live'); assert.equal(keys(m), 'popup');
 m = H.model(st('humidifier.h', 'on', { humidity: 50, min_humidity: 30, max_humidity: 80 }), {});
 assert.equal(m.quick[0].label, 'Zielfeuchte'); assert.equal(m.quick[0].items[1].on, true);
 m = H.model(st('fan.f', 'on', { supported_features: 9, percentage: 33, preset_modes: ['Auto', 'Sleep'], preset_mode: 'Auto' }), {});
-// The popup's levels 1/2/3 at 33/67/100 % (test round 26.11.2026 u05-08: the menu said 33 %/66 %/100 %).
+// The popup's levels 1/2/3 at 33/66/100 %, HA's bounds for three speeds (test round 26.11.2026 u05-08: the menu said
+// 33 %/66 %/100 %; 67 % is speed 3 in HA).
 assert.deepEqual(m.quick[0].items.map((x) => x.t), ['1', '2', '3', 'Auto']);
-assert.deepEqual(m.quick[0].items.slice(0, 3).map((x) => x.data.percentage), [33, 67, 100]);
+assert.deepEqual(m.quick[0].items.slice(0, 3).map((x) => x.data.percentage), [33, 66, 100]);
 assert.equal(m.quick[0].items[3].on, true); assert.equal(m.quick[0].items[0].on, false);
 
 // Nur Halten, das bisher ein Popup/HAs Dialog war, wird zum Menü.

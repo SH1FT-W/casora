@@ -891,10 +891,11 @@ window.casoraThermoToggle = function (entity, states) {
   }
   return { service: 'climate.set_hvac_mode', data: { entity_id: id, hvac_mode: mode } };
 };
-/* A fan's or air purifier's three levels, as the popup and the hold menu set them (33/67/100 %), and the level a
-   percentage stands at (test round 26.11.2026 u05-03/u05-08: level 2 sets 67 %, the popup marked 67 % as level 3 and
-   the hold menu offered 66 %). null without a percentage. */
-window.CASORA_FAN_LEVELS = [33, 67, 100];
+/* A fan's or air purifier's three levels, as the popup and the hold menu set them (33/66/100 %: HA's bounds for three
+   speeds, percentage_to_ordered_list_item / ceil(percentage_to_ranged_value); 67 % is speed 3 there), and the level a
+   percentage stands at, 67 % counting as 2 for devices that report their level 2 so (test round 26.11.2026
+   u05-03/u05-08: the popup marked 67 % as level 3). null without a percentage. */
+window.CASORA_FAN_LEVELS = [33, 66, 100];
 window.casoraFanLevel = function (pct) {
   var n = parseFloat(pct);
   if (pct == null || isNaN(n)) return null;

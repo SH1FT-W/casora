@@ -116,9 +116,9 @@
         }
       } else if (dom === 'fan') {
         var pc = s === 'on' ? num(a.percentage) : null, fi = [];
-        // The popup's levels „1 2 3“ (33/67/100 %), marked by the same rule (u05-03/u05-08).
+        // The popup's levels „1 2 3“ (33/66/100 %), marked by the same rule (u05-03/u05-08).
         var lv = window.casoraFanLevel ? window.casoraFanLevel(pc) : pc == null ? null : pc <= 33 ? 1 : pc <= 67 ? 2 : 3;
-        if (feats & 1) fi = (window.CASORA_FAN_LEVELS || [33, 67, 100]).map(function (p, i) {
+        if (feats & 1) fi = (window.CASORA_FAN_LEVELS || [33, 66, 100]).map(function (p, i) {
           return svc(String(i + 1), null, 'fan.set_percentage', { percentage: p }, { on: pc != null && !a.preset_mode && lv === i + 1 });
         });
         var auto = (a.preset_modes || []).filter(function (x) { return /^auto$/i.test(x); })[0];

@@ -33,7 +33,8 @@ for (const k of ['casora_air_purifier', 'casora_fan']) {
   const c = T[k].tap_action.casora_popup.content;
   const line = c.slice(c.indexOf('const level'), c.indexOf(';', c.indexOf('const level')) + 1);
   assert.equal(new Function('pct', line + ' return level;')(67), 2, k + ': 67 % is level 2');
-  assert.match(c, /\[\[1, 33\], \[2, 67\], \[3, 100\]\]/, k + ': the popup sets 33/67/100');
+  assert.match(c, /\[\[1, 33\], \[2, 66\], \[3, 100\]\]/, k + ': the popup sets 33/66/100');
+  assert.doesNotMatch(c, /percentage: 67\b/, k + ': no level sends 67 %');
 }
 
 // u05-08: the hold menu's levels as in the popup, the one the device stands at marked.
@@ -41,8 +42,27 @@ for (const k of ['casora_air_purifier', 'casora_fan']) {
   const m = H.model(st('fan.example_purifier', 'on', { supported_features: 1, percentage: 67 }), {});
   const q = m.quick.find((x) => x.label === 'Stufe');
   assert.deepEqual(q.items.map((x) => x.t), ['1', '2', '3']);
-  assert.deepEqual(q.items.map((x) => x.data.percentage), [33, 67, 100]);
+  assert.deepEqual(q.items.map((x) => x.data.percentage), [33, 66, 100]);
   assert.deepEqual(q.items.map((x) => !!x.on), [false, true, false]);
+  // A device reporting its level 2 as HA does (66 %) is marked at 2 as well.
+  const m66 = H.model(st('fan.example_purifier', 'on', { supported_features: 1, percentage: 66 }), {});
+  assert.deepEqual(m66.quick.find((x) => x.label === 'Stufe').items.map((x) => !!x.on), [false, true, false]);
+}
+// Review 26.11.2026: what the levels send must land on the same level of a three-speed device in HA. HA maps a
+// percentage to a speed with percentage_to_ordered_list_item (upper bounds 33/66/100) or, for numbered speeds,
+// ceil(percentage_to_ranged_value) – 67 % was level 3 there (e.g. VeSync Core 200S), so „2“ set the highest level.
+{
+  const ordered = (p, n) => { for (let i = 1; i <= n; i++) if (p <= Math.floor((i * 100) / n)) return i; return n; };
+  const ranged = (p, n) => Math.ceil((n * p) / 100);
+  window.CASORA_FAN_LEVELS.forEach((p, i) => {
+    assert.equal(ordered(p, 3), i + 1, p + ' % is speed ' + (i + 1) + ' of 3 (ordered list)');
+    assert.equal(ranged(p, 3), i + 1, p + ' % is speed ' + (i + 1) + ' of 3 (ranged value)');
+  });
+  for (const k of ['casora_air_purifier', 'casora_fan']) {
+    const c = T[k].tap_action.casora_popup.content;
+    const sent = [...c.matchAll(/percentage: (\d+) \}/g)].map((x) => Number(x[1]));
+    for (const p of sent) assert.ok(p !== 67, k + ': ' + p + ' %');
+  }
 }
 // u05-08: the purifier popup's title is the tile's name, else the device's name.
 {
