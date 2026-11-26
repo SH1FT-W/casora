@@ -29465,15 +29465,27 @@ class CasoraPanel extends HTMLElement {
 
     const nameIn = document.createElement("input");
     nameIn.value = tile.name || "";
-    if (type.label && !type.raw) nameIn.placeholder = newTile(type).name;
-    nameIn.onchange = (ev) => {
-      // An emptied field means the name the placeholder shows, not name: "" – with that the dashboard fell back to
-      // the entity's name („Waschmaschine Zustand“) under a placeholder promising „Waschmaschine“ (Prüfrunde u02-08).
-      // While typing (timer, no event) the field stays empty; leaving it fills in the placeholder.
+    // Placeholder = the name the tile shows without a name of its own, as in the preview: the template's name
+    // (the device, „P1S“ / „Waschmaschine Zustand“, #f9), else the type's name. It promised the type's name while
+    // the dashboard showed the entity's (Prüfrunde u02-08). Already in the user's language or a device name, so
+    // the Studio word list stays off it (it turned „Auto“ into „Automatisch“).
+    const fallbackName = () => {
+      if (!type.label || type.raw) return "";
+      const bare = { ...tile, name: undefined };
+      const entId = this._tileEnt(bare);
+      const ent = entId && this._hass && this._hass.states[entId];
+      const own = window.casoraTileName
+        && window.casoraTileName(bare, ent, this._hass, this._state && this._state.templates);
+      return own || newTile(type).name;
+    };
+    nameIn.placeholder = fallbackName();
+    nameIn.setAttribute("data-no-i18n", "");
+    nameIn.onchange = () => {
+      // Empty = no name key (not ""): the tile goes back to the name the placeholder shows.
       const v = nameIn.value.trim();
-      tile.name = v || nameIn.placeholder || "";
-      if (!v && tile.name && ev) nameIn.value = tile.name;
-      if (!tile.name) delete tile.name;
+      if (v) tile.name = v;
+      else delete tile.name;
+      nameIn.placeholder = fallbackName();
       nameEl.textContent = (tile.name || (type.label && !type.raw ? type.label : "") || "(unnamed)") + " ";
       this._syncPreview();
     };
