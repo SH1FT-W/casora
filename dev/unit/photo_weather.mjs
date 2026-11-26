@@ -214,6 +214,25 @@ const st = (state, attributes = {}) => ({ entity_id: 'weather.home', state, attr
   p.shadowRoot.root = false;
   run(2);
   assert.ok(!W._mounts.some((M) => M.card === p), 'disconnected card dropped');
+
+  // HA only parks a view it leaves and hangs it back in on return: the same layer must draw again, also for new weather.
+  const r = mkCard();
+  W.attach(r, vars, hassOf(st('rainy')), 'room');
+  const rcv = layer(r).children.find((x) => x.tag === 'canvas');
+  run(2);
+  r.shadowRoot.root = false;
+  run(2);
+  assert.ok(!W._mounts.some((M) => M.card === r), 'parked view leaves the loop');
+  r.shadowRoot.root = true;
+  W.attach(r, vars, hassOf(st('rainy')), 'room');
+  assert.equal(r.ha.children.filter((x) => x.className === 'casora-pwx').length, 1, 'back again: still one layer');
+  assert.ok(W._mounts.some((M) => M.card === r), 'back again: in the loop');
+  const r0 = rcv.draws; run(2);
+  assert.ok(rcv.draws > r0, 'back again: draws');
+  r.shadowRoot.root = false; run(1); r.shadowRoot.root = true;
+  W.attach(r, vars, hassOf(st('snowy')), 'room');
+  const r1 = rcv.draws; run(3);
+  assert.ok(rcv.draws > r1 + 1, 'back with new weather: draws the new weather');
 }
 
 // Wired up: loader, both hero templates, the Studio field and its block, the phone mirror.

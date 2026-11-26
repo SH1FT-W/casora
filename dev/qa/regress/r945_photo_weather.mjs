@@ -6,6 +6,7 @@
 //   - desktop 1440 (light) and tablet 1024 (dark): rain gives the hero card of the open view a layer between the photo
 //     and its content (first child of ha-card, z-index -9, no pointer events, aria-hidden) whose canvas draws streaks;
 //     the room title stays on top (elementFromPoint finds it, not the layer); at most FPS + a little frames a second
+//   - away to another view and back (HA hangs the parked view back in): the layer draws again, also new weather
 //   - fog: a still veil, no frames; clear weather: no layer at all
 //   - while the screensaver shows, the layer is hidden and draws nothing
 //   - prefers-reduced-motion: no layer
@@ -78,6 +79,27 @@ for (const v of [{ name: 'desktop', width: 1440, height: 900, dark: false }, { n
   await check(v.name + ': room title stays above the layer', await titleOnTop(pg) !== false);
   const n = await fps(pg);
   await check(v.name + ': frame rate capped (' + n + ' frames in 1 s)', n >= 5 && n <= 24, n);
+
+  // Away to another view and back: HA hangs the parked view back in, its layer must draw again, also new weather.
+  const views = (dash.config.views || []).map((x, i) => '/' + dash.url + '/' + (x.path || i));
+  const here = await pg.evaluate(() => location.pathname);
+  const other = views.find((u) => u !== here);
+  if (other) {
+    const go = (u) => pg.evaluate((u) => { history.pushState(null, '', u);
+      window.dispatchEvent(new CustomEvent('location-changed', { detail: { replace: false } })); }, u);
+    await go(other); await pg.waitForTimeout(1200);
+    await go(here); await pg.waitForTimeout(1200);
+    const nBack = await fps(pg);
+    await check(v.name + ': back on the view → rain draws again (' + nBack + ' frames in 1 s)', nBack >= 5, nBack);
+    await go(other); await pg.waitForTimeout(800);
+    await fakeStates(pg, { [wx]: { state: 'snowy', attributes: {} } }, { sticky: true });
+    await go(here); await pg.waitForTimeout(1200);
+    const nSnow = await fps(pg);
+    L = await layer(pg, 'casora_room');
+    await check(v.name + ': back with new weather → snow draws', L.layer && L.shown && nSnow >= 5 && L.ink > 0, { L, nSnow });
+    await fakeStates(pg, { [wx]: RAIN }, { sticky: true });
+    await pg.waitForTimeout(600);
+  } else console.log('  info   ' + v.name + ': only one view – away-and-back skipped');
 
   // Screensaver showing: hidden, no frames.
   await pg.evaluate(() => { window.__qaShown = window._casoraSaver && window._casoraSaver.shown; if (window._casoraSaver) window._casoraSaver.shown = () => true; });

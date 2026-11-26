@@ -224,11 +224,18 @@
     if (rq && rq.addEventListener) rq.addEventListener('change', kick);
   } catch (e) { /* older browsers: read on every render */ }
 
+  // Puts a layer (back) into the frame loop; true if it was not in it.
+  var track = function (M) {
+    if (mounts.indexOf(M) > -1 || M.card._casoraPwx !== M) return false;
+    mounts.push(M);
+    return true;
+  };
   var mount = function (card, where) {
     var root = card && card.shadowRoot, ha = root && root.querySelector('ha-card');
     if (!ha) return null;
     var M = card._casoraPwx;
-    if (M && M.wrap.isConnected && M.wrap.parentNode === ha) return M;
+    // HA parks a view it leaves and hangs it back in on return: the loop dropped the layer meanwhile, take it back.
+    if (M && M.wrap.isConnected && M.wrap.parentNode === ha) { track(M); return M; }
     // button-card drew a new ha-card: the old layer goes with its observer.
     if (M) unmount(card);
     if (!root.getElementById('casora-pwx-css')) {
@@ -249,11 +256,16 @@
     ha.insertBefore(wrap, ha.firstChild);
     M = { card: card, wrap: wrap, fog: fog, cv: cv, ctx: cv.getContext ? cv.getContext('2d') : null, cw: 0, ch: 0, w: 1, h: 1, mood: null, key: '', drops: [], flakes: [], streaks: [] };
     if (typeof ResizeObserver === 'function') {
-      M.ro = new ResizeObserver(function () { if (size(M)) { seed(M); kick(); } });
+      M.ro = new ResizeObserver(function () {
+        if (!M.wrap.isConnected) return;
+        var back = track(M);
+        if (size(M)) { seed(M); back = true; }
+        if (back) kick();
+      });
       M.ro.observe(wrap);
     }
     card._casoraPwx = M;
-    mounts.push(M);
+    track(M);
     return M;
   };
   var unmount = function (card) {
