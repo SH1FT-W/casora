@@ -15535,9 +15535,16 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   }
   // A restart issue came or went (HA's Marketplace): rebuild like for a new notification.
   function restartsChanged() { if (_busy) _busy.then(function () { collect(); }); else collect(); }
+  // HA shows simple HTML in notifications as well as Markdown: bold and italic become their Markdown marks, a line
+  // break a new line, every other tag (img, script …) goes, its text stays. A lone „<“ or „>“ is no tag.
+  function pnTags(t) {
+    return String(t == null ? '' : t)
+      .replace(/<(b|strong)>([\s\S]*?)<\/\1>/gi, '**$2**').replace(/<(i|em)>([\s\S]*?)<\/\1>/gi, '*$2*')
+      .replace(/<br\s*\/?>/gi, '\n').replace(/<\/?[a-z][^<>]*>/gi, '');
+  }
   // Markdown of the message as one plain line: links keep their text, no marks, at most 160 characters.
   function pnText(t) {
-    var s = String(t == null ? '' : t).replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[*_`#>]+/g, '')
+    var s = pnTags(t).replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[*_`#>]+/g, '')
       .replace(/\s+/g, ' ').trim();
     return s.length > 160 ? s.slice(0, 159).replace(/\s+\S*$/, '') + ' …' : s;
   }
@@ -15555,7 +15562,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         .replace(/`([^`]+)`/g, '<code>$1</code>');
     };
     var out = '', list = null, flushHtml = function () { var itemsHtml = list.join(''); list = null; return '<ul>' + itemsHtml + '</ul>'; };
-    String(t == null ? '' : t).split(/\r?\n/).forEach(function (line) {
+    pnTags(t).split(/\r?\n/).forEach(function (line) {
       var m = line.match(/^\s*(?:[-*+]|\d+\.)\s+(.*)$/);
       if (m) { if (!list) { list = []; } list.push('<li>' + inlineHtml(m[1]) + '</li>'); return; }
       if (list) out += flushHtml();
@@ -15616,6 +15623,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       + 'background:var(--casora-popup-row-fill,rgba(127,127,127,.14));color:var(--casora-popup-ui-bad,#FF453A)}'
       + '.cpn button:focus-visible{outline:2px solid currentColor;outline-offset:2px}</style>'
       + (stamp ? '<p class="when">' + esc0(stamp) + '</p>' : '')
+      // The popup's head is one line and cuts a long title: the whole title as the first line (u09-09).
+      + (!(own && own.label) && pnText(n.title).length > 30 ? '<p><b>' + esc0(pnText(n.title)) + '</b></p>' : '')
       + (own && own.lead ? '<p>' + esc0(T(own.lead)) + '</p>' : '')
       + pnHtml(n.message)
       // Blueprint v2 (rule 9): „Löschen“ is an action row at the end, not a loose button.
