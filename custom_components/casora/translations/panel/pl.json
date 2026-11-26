@@ -1871,7 +1871,6 @@
     "Condition": "Warunek",
     "not": "nie",
     "Don't Ask Again": "Nie pytaj ponownie",
-    "Casora won't look for Hemma dashboards anymore – switch it back on under Personal.": "Casora nie będzie już szukać pulpitów Hemma – włącz to ponownie w „Osobiste”.",
     "Hemma dashboards": "Pulpity Hemma",
     "Look for them automatically": "Szukaj ich automatycznie",
     "Offers to move a Hemma dashboard when the Studio opens": "Proponuje przeniesienie pulpitu Hemma przy otwarciu Studio",
@@ -2432,7 +2431,6 @@
     "Hold": "Przytrzymanie",
     "Same as dashboard": "Jak pulpit",
     "Same as dashboard ({mode})": "Jak pulpit ({mode})",
-    "What holding this tile does. Same as dashboard follows Controls › Tiles.": "Co robi przytrzymanie tego kafelka. „Jak pulpit” stosuje się do Obsługa › Kafelki.",
     "Hold on this tile": "Przytrzymanie tego kafelka",
     "Frigate camera": "Kamera Frigate",
     "Live camera with what Frigate detected last. The popup shows the live view and the latest alerts and detections; its main switch turns detection on and off. “Seen” is stored by Frigate for the user the integration signs in with – so everyone in Home Assistant shares the same state.": "Kamera na żywo z tym, co Frigate wykrył ostatnio. Okno pokazuje podgląd na żywo oraz ostatnie alarmy i wykrycia; główny przełącznik włącza i wyłącza wykrywanie. „Widziane” Frigate zapisuje dla użytkownika, którym loguje się integracja – więc wszyscy w Home Assistant dzielą ten sam stan.",
@@ -3205,7 +3203,9 @@
     "For every room of Smart Heating Control": "Dla każdego pokoju ze Smart Heating Control",
     "Smart Heating Control integration not installed yet": "Integracja Smart Heating Control nie jest jeszcze zainstalowana",
     "Room temperature, target and whether the room heats on the tile. The popup sets the target as a manual change, goes back to automatic or picks a level, and shows the decision, the manual change and the house mode; a row opens the schedule: the week at a glance with each slot's level, switching the profile and editing a profile's time slots. For the rooms of the Smart Heating Control integration.": "Temperatura w pokoju, cel i czy pokój grzeje na kafelku. Okno ustawia cel jako ręczną zmianę, wraca do trybu automatycznego lub wybiera poziom i pokazuje decyzję, ręczną zmianę oraz tryb domu; wiersz otwiera harmonogram: tydzień w skrócie z poziomem każdego przedziału, zmiana profilu i edycja przedziałów profilu. Dla pokoi integracji Smart Heating Control.",
-    "Open topic": "Otwórz"
+    "Open topic": "Otwórz",
+    "What holding this tile does. Same as dashboard follows Settings › Tapping & tablet › Hold and sort tiles.": "Co robi przytrzymanie tego kafelka. „Jak pulpit” działa według Ustawienia › Dotyk i tablet › Przytrzymanie i sortowanie kafelków.",
+    "Casora won't look for Hemma dashboards anymore – switch it back on under Settings › Updates & setup › Advanced › Hemma dashboards.": "Casora nie będzie już szukać pulpitów Hemma – włącz to ponownie w Ustawienia › Aktualizacje i konfiguracja › Zaawansowane › Pulpity Hemma."
   },
   "patterns": [
     [

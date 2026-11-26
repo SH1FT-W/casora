@@ -198,7 +198,7 @@ Casora can use an AI **you have already set up in Home Assistant** (Settings →
 - **Custom cards in popups:** AI adapts a card you paste in to Casora's look.
 - **Device assistant:** describe a device in a sentence and AI helps fill in the rest.
 
-**On the dashboard** (set up in the Studio under **Settings › Extras › AI**, or in Home Assistant under Settings → Devices & services → Casora → **Configure**)
+**On the dashboard** (set up in the Studio under **Settings › AI**, or in Home Assistant under Settings → Devices & services → Casora → **Configure**)
 
 | Feature | What it does |
 |---|---|
@@ -214,7 +214,7 @@ Casora can use an AI **you have already set up in Home Assistant** (Settings →
 
 The aquarium doctor and the bike check start from the aquarium and e-bike popups. Their button only appears when an AI task is set up, or when your own assistant answers (see [Use your own assistant for Casora's AI features](#use-your-own-assistant-for-casoras-ai-features)).
 
-**Schedules.** In the Studio under **Settings › Extras › AI › Automatic runs**, each feature gets its own schedule: **Off** (the AI only runs when you tap a button in a popup), **Automatic** or a day and time you pick. Automatic means the energy coach on Sundays at 18:00, the heating coach on Mondays at 07:00 (heating season only), the ventilation coach on Saturdays at 10:00 and the recipe on Mondays at 06:00. The update check runs daily or only when you ask. On a new install every schedule starts **Off**; an upgrade keeps what you had. AI answers in your Home Assistant language. **Hints for the AI** are added to every review, for example *"The bedroom window is tilted on purpose."*
+**Schedules.** In the Studio under **Settings › AI › Automatic runs**, each feature gets its own schedule: **Off** (the AI only runs when you tap a button in a popup), **Automatic** or a day and time you pick. Automatic means the energy coach on Sundays at 18:00, the heating coach on Mondays at 07:00 (heating season only), the ventilation coach on Saturdays at 10:00 and the recipe on Mondays at 06:00. The update check runs daily or only when you ask. On a new install every schedule starts **Off**; an upgrade keeps what you had. AI answers in your Home Assistant language. **Hints for the AI** are added to every review, for example *"The bedroom window is tilted on purpose."*
 
 > [!IMPORTANT]
 > **AI costs money.** AI calls run on your own provider account and API key, and your provider bills you for them. Before each AI step in the Studio, Casora shows an estimate based on list prices, and you can continue or cancel. The estimate is only a guide; your provider's bill is what counts. Casora picks a suitable model itself (a Sonnet-class model rather than an Opus-class one). If your current AI isn't strong enough, Casora can set up a separate *Casora AI* task with a stronger model, and your existing AI stays as it is. Nothing runs on a schedule unless you give that feature a schedule.
@@ -295,7 +295,7 @@ Renaming tiles that are already on a dashboard is not part of this: the names in
 
 The dashboard's AI features (coaches, camera description, plant and aquarium doctor, bike check, update check, recipe of the week) can be answered by your own assistant over MCP instead of an AI task. MCP only works one way: your assistant calls Home Assistant, Home Assistant cannot call your assistant. So Casora leaves the work as a job, and your assistant picks it up when you ask it to. You need the same kind of MCP server as above (one that can call actions, signed in as an administrator, for example [ha-mcp](https://github.com/homeassistant-ai/ha-mcp)).
 
-1. **Choose your assistant.** In the Studio under **Settings › Extras › AI › Which AI**, set **Who answers** to **Your own assistant (MCP)**. In Home Assistant's own options dialog (Devices & services → Casora → **Configure**) it is the entry **Your own assistant (MCP)** in the AI menus. The AI features then show up even without an AI task.
+1. **Choose your assistant.** In the Studio under **Settings › AI › Which AI**, set **Who answers** to **Your own assistant (MCP)**. In Home Assistant's own options dialog (Devices & services → Casora → **Configure**) it is the entry **Your own assistant (MCP)** in the AI menus. The AI features then show up even without an AI task.
 2. **Use a feature as usual.** Tap, for example, the plant doctor's button in a plant's popup. Casora gathers the plant's readings, writes the instructions and leaves a job. The popup says *Waiting for your assistant…*, and Casora fires the event `casora_ai_job` (`job_id`, `task_name`, `pending`), which an automation can use to remind you.
 3. **Ask your assistant:** *"Do Casora's open AI jobs."* It reads them with `casora.ai_jobs`:
 

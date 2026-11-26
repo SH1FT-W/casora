@@ -1872,7 +1872,6 @@
     "Condition": "Betingelse",
     "not": "ikke",
     "Don't Ask Again": "Ikke spør igjen",
-    "Casora won't look for Hemma dashboards anymore – switch it back on under Personal.": "Casora leter ikke lenger etter Hemma-dashbord – slå det på igjen under Personlig.",
     "Hemma dashboards": "Hemma-dashbord",
     "Look for them automatically": "Let etter dem automatisk",
     "Offers to move a Hemma dashboard when the Studio opens": "Tilbyr å flytte et Hemma-dashbord når Studio åpnes",
@@ -2433,7 +2432,6 @@
     "Hold": "Hold",
     "Same as dashboard": "Som dashbordet",
     "Same as dashboard ({mode})": "Som dashbordet ({mode})",
-    "What holding this tile does. Same as dashboard follows Controls › Tiles.": "Hva som skjer når du holder på denne flisen. Som dashbordet følger Betjening › Fliser.",
     "Hold on this tile": "Hold på denne flisen",
     "Frigate camera": "Frigate-kamera",
     "Live camera with what Frigate detected last. The popup shows the live view and the latest alerts and detections; its main switch turns detection on and off. “Seen” is stored by Frigate for the user the integration signs in with – so everyone in Home Assistant shares the same state.": "Direktekamera med det Frigate oppdaget sist. Popupen viser direktebildet og de siste varslene og deteksjonene; hovedbryteren slår deteksjon på og av. «Sett» lagres av Frigate for brukeren integrasjonen logger inn med – så alle i Home Assistant deler samme status.",
@@ -3205,7 +3203,9 @@
     "For every room of Smart Heating Control": "For hvert rom i Smart Heating Control",
     "Smart Heating Control integration not installed yet": "Smart Heating Control-integrasjonen er ikke installert ennå",
     "Room temperature, target and whether the room heats on the tile. The popup sets the target as a manual change, goes back to automatic or picks a level, and shows the decision, the manual change and the house mode; a row opens the schedule: the week at a glance with each slot's level, switching the profile and editing a profile's time slots. For the rooms of the Smart Heating Control integration.": "Romtemperatur, mål og om rommet varmes på flisen. Popupen setter målet som manuell endring, går tilbake til automatikk eller velger et nivå, og viser beslutningen, den manuelt satte endringen og husets modus; en rad åpner tidsplanen: uken på et øyeblikk med nivået for hvert tidsrom, bytte profil og redigere tidsrommene i en profil. For rommene i Smart Heating Control-integrasjonen.",
-    "Open topic": "Åpne"
+    "Open topic": "Åpne",
+    "What holding this tile does. Same as dashboard follows Settings › Tapping & tablet › Hold and sort tiles.": "Hva det gjør å holde inne denne flisen. «Som dashbordet» følger Innstillinger › Trykk og nettbrett › Hold og sorter fliser.",
+    "Casora won't look for Hemma dashboards anymore – switch it back on under Settings › Updates & setup › Advanced › Hemma dashboards.": "Casora ser ikke lenger etter Hemma-dashbord – slå det på igjen under Innstillinger › Oppdateringer og oppsett › Avansert › Hemma-dashbord."
   },
   "patterns": [
     [

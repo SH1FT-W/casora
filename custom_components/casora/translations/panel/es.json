@@ -1872,7 +1872,6 @@
     "Condition": "Condición",
     "not": "no",
     "Don't Ask Again": "No volver a preguntar",
-    "Casora won't look for Hemma dashboards anymore – switch it back on under Personal.": "Casora ya no buscará paneles de Hemma: vuelve a activarlo en Personal.",
     "Hemma dashboards": "Paneles de Hemma",
     "Look for them automatically": "Buscarlos automáticamente",
     "Offers to move a Hemma dashboard when the Studio opens": "Ofrece trasladar un panel de Hemma al abrir Studio",
@@ -2433,7 +2432,6 @@
     "Hold": "Mantener pulsado",
     "Same as dashboard": "Igual que el panel",
     "Same as dashboard ({mode})": "Igual que el panel ({mode})",
-    "What holding this tile does. Same as dashboard follows Controls › Tiles.": "Lo que hace mantener pulsada esta tarjeta. Igual que el panel sigue Controles › Tarjetas.",
     "Hold on this tile": "Mantener pulsada esta tarjeta",
     "Frigate camera": "Cámara Frigate",
     "Live camera with what Frigate detected last. The popup shows the live view and the latest alerts and detections; its main switch turns detection on and off. “Seen” is stored by Frigate for the user the integration signs in with – so everyone in Home Assistant shares the same state.": "Cámara en vivo con lo último que detectó Frigate. La ventana muestra la vista en vivo y las últimas alertas y detecciones; su interruptor principal activa y desactiva la detección. Frigate guarda “Visto” para el usuario con el que inicia sesión la integración, así que todos en Home Assistant comparten el mismo estado.",
@@ -3205,7 +3203,9 @@
     "For every room of Smart Heating Control": "Para cada habitación de Smart Heating Control",
     "Smart Heating Control integration not installed yet": "Integración Smart Heating Control aún no instalada",
     "Room temperature, target and whether the room heats on the tile. The popup sets the target as a manual change, goes back to automatic or picks a level, and shows the decision, the manual change and the house mode; a row opens the schedule: the week at a glance with each slot's level, switching the profile and editing a profile's time slots. For the rooms of the Smart Heating Control integration.": "Temperatura de la habitación, objetivo y si la habitación calienta en la tarjeta. La ventana fija el objetivo como cambio manual, vuelve a automático o elige un nivel, y muestra la decisión, el cambio manual y el modo de la casa; una fila abre el horario: la semana de un vistazo con el nivel de cada franja, cambio de perfil y edición de las franjas de un perfil. Para las habitaciones de la integración Smart Heating Control.",
-    "Open topic": "Abrir"
+    "Open topic": "Abrir",
+    "What holding this tile does. Same as dashboard follows Settings › Tapping & tablet › Hold and sort tiles.": "Lo que hace mantener pulsado este mosaico. «Igual que el panel» sigue Ajustes › Tocar y tableta › Mantener pulsado y ordenar mosaicos.",
+    "Casora won't look for Hemma dashboards anymore – switch it back on under Settings › Updates & setup › Advanced › Hemma dashboards.": "Casora ya no buscará paneles de Hemma: vuelve a activarlo en Ajustes › Actualizaciones y configuración › Avanzado › Paneles de Hemma."
   },
   "patterns": [
     [

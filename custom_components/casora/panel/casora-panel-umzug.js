@@ -813,7 +813,7 @@
         this._flowButton(s.acts, "Don't Ask Again", async () => {
           await offerOffForGood(this._hass);
           this._flowBack();
-          this._status("Casora won't look for Hemma dashboards anymore – switch it back on under Personal.", "ok");
+          this._status("Casora won't look for Hemma dashboards anymore – switch it back on under Settings › Updates & setup › Advanced › Hemma dashboards.", "ok");
         }, true);
       }
       if (!o.hideNotNow) this._flowButton(s.acts, o.notNowLabel || "Not Now", () => {

@@ -1871,7 +1871,6 @@
     "Condition": "Voorwaarde",
     "not": "niet",
     "Don't Ask Again": "Niet meer vragen",
-    "Casora won't look for Hemma dashboards anymore – switch it back on under Personal.": "Casora zoekt niet meer naar Hemma-dashboards – zet het weer aan onder Persoonlijk.",
     "Hemma dashboards": "Hemma-dashboards",
     "Look for them automatically": "Er automatisch naar zoeken",
     "Offers to move a Hemma dashboard when the Studio opens": "Biedt bij het openen van de Studio aan een Hemma-dashboard te verhuizen",
@@ -2432,7 +2431,6 @@
     "Hold": "Vasthouden",
     "Same as dashboard": "Zoals dashboard",
     "Same as dashboard ({mode})": "Zoals dashboard ({mode})",
-    "What holding this tile does. Same as dashboard follows Controls › Tiles.": "Wat vasthouden op deze tegel doet. Zoals dashboard volgt Bediening › Tegels.",
     "Hold on this tile": "Vasthouden op deze tegel",
     "Frigate camera": "Frigate-camera",
     "Live camera with what Frigate detected last. The popup shows the live view and the latest alerts and detections; its main switch turns detection on and off. “Seen” is stored by Frigate for the user the integration signs in with – so everyone in Home Assistant shares the same state.": "Livecamera met wat Frigate het laatst heeft gedetecteerd. Het venster toont het livebeeld en de laatste alarmen en detecties; de hoofdschakelaar zet de detectie aan en uit. “Gezien” slaat Frigate op voor de gebruiker waarmee de integratie inlogt – dus iedereen in Home Assistant deelt dezelfde status.",
@@ -3205,7 +3203,9 @@
     "For every room of Smart Heating Control": "Voor elke kamer van Smart Heating Control",
     "Smart Heating Control integration not installed yet": "Smart Heating Control-integratie nog niet geïnstalleerd",
     "Room temperature, target and whether the room heats on the tile. The popup sets the target as a manual change, goes back to automatic or picks a level, and shows the decision, the manual change and the house mode; a row opens the schedule: the week at a glance with each slot's level, switching the profile and editing a profile's time slots. For the rooms of the Smart Heating Control integration.": "Kamertemperatuur, doel en of de kamer verwarmt op de tegel. De popup stelt het doel in als handmatige wijziging, gaat terug naar automatisch of kiest een niveau, en toont de beslissing, de handmatige wijziging en de modus van het huis; een regel opent het schema: de week in één oogopslag met het niveau per tijdvak, profiel wisselen en de tijdvakken van een profiel bewerken. Voor de kamers van de Smart Heating Control-integratie.",
-    "Open topic": "Openen"
+    "Open topic": "Openen",
+    "What holding this tile does. Same as dashboard follows Settings › Tapping & tablet › Hold and sort tiles.": "Wat vasthouden op deze tegel doet. „Zoals dashboard” volgt Instellingen › Tikken & tablet › Tegels vasthouden en sorteren.",
+    "Casora won't look for Hemma dashboards anymore – switch it back on under Settings › Updates & setup › Advanced › Hemma dashboards.": "Casora zoekt niet meer naar Hemma-dashboards – weer inschakelen onder Instellingen › Updates & inrichting › Geavanceerd › Hemma-dashboards."
   },
   "patterns": [
     [

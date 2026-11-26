@@ -1834,7 +1834,7 @@
             };
             group.append(r, h, try_);
           }
-          // Hold (22-halten.js): empty = as set for the dashboard (Controls › Tiles, window._casoraHoldMode).
+          // Hold (22-halten.js): empty = as set for the dashboard (Settings › Tapping & tablet › Hold and sort tiles, window._casoraHoldMode).
           // "Same as dashboard" names the dashboard value (first room with hold_mode, like the Studio field; else quick menu).
           if (holdsTile(inner) && typeof this._combo === "function") {
             const r = document.createElement("div");
@@ -1853,7 +1853,7 @@
             const h = document.createElement("div");
             h.className = "hint";
             h.setAttribute("data-no-i18n", "");
-            h.textContent = tr("What holding this tile does. Same as dashboard follows Controls › Tiles.");
+            h.textContent = tr("What holding this tile does. Same as dashboard follows Settings › Tapping & tablet › Hold and sort tiles.");
             group.append(r, h);
           }
           this._mWhoRow(group, () => tileUsers(shell), (ids) => setTileUsers(shell, ids), "Tile",
