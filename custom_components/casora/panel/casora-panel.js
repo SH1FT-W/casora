@@ -24517,10 +24517,12 @@ class CasoraPanel extends HTMLElement {
   }
 
   // z3: the scenes of a phone room page as the dashboard lists them (filter-overlay.js _appendRoomScenes →
-  // _casoraSC.list with room and room_entities, no scene list of its own): every visible scene of the room's area –
-  // the area named like the room, else the area most of the room's tiles are in – and none when no area is found.
+  // _casoraSC.list with area, room and room_entities, no scene list of its own). The room's set of entities, in
+  // casora_scene_core's order: the area saved with the room (variables.area, kept on renaming and handed to the
+  // phone page as card.area), else the area named like the room (id or name), else roomEntityIdsFrom – the tile
+  // entities themselves plus, on a clear majority only (#142), their area. No set: no scenes, not all of them.
   // _sceneListForRoom starts from the open wide room's own scene list (Home's), so the room page came out empty.
-  _phoneRoomSceneList(name, tiles) {
+  _phoneRoomSceneList(name, tiles, area) {
     const H = this._hass || {};
     const states = H.states || {};
     const ents = H.entities || {};
@@ -24530,30 +24532,44 @@ class CasoraPanel extends HTMLElement {
       const e = ents[eid] || {};
       return e.area_id || (e.device_id ? (devices[e.device_id] || {}).area_id : null) || null;
     };
-    const want = String(name || "").trim().toLowerCase();
-    let areaIds = new Set(Object.keys(areas)
-      .filter((id) => want && String((areas[id] || {}).name || "").trim().toLowerCase() === want));
-    if (!areaIds.size) {
-      const count = {};
-      const walk = (x, d) => {
-        if (!x || d > 6 || typeof x !== "object") return;
-        if (Array.isArray(x)) { x.forEach((y) => walk(y, d + 1)); return; }
-        Object.keys(x).forEach((k) => {
-          const y = x[k];
-          if (typeof y === "string") {
-            if ((k === "entity" || k === "entity_id" || /^entity_|_entity(_\d+)?$/.test(k)) && states[y]) {
-              const a = areaOf(y);
-              if (a) count[a] = (count[a] || 0) + 1;
-            }
-          } else walk(y, d + 1);
-        });
-      };
-      walk(tiles || [], 0);
-      const best = Object.keys(count).sort((a, b) => count[b] - count[a])[0];
-      if (best) areaIds = new Set([best]);
-    }
-    if (!areaIds.size) return [];
-    const inRoom = new Set(Object.keys(ents).filter((eid) => areaIds.has(areaOf(eid))));
+    // roomEntityIds: every entity of the area whose id or name is the given text.
+    const byArea = (text) => {
+      const want = String(text || "").trim().toLowerCase();
+      if (!want) return null;
+      const ids = new Set(Object.keys(areas)
+        .filter((id) => id.toLowerCase() === want || String((areas[id] || {}).name || "").trim().toLowerCase() === want));
+      if (!ids.size) return null;
+      const out = new Set(Object.keys(ents).filter((eid) => { const a = areaOf(eid); return !!a && ids.has(a); }));
+      return out.size ? out : null;
+    };
+    // room_entities as filter-overlay.js collects them: each card's entity, then every entity-looking value below.
+    const roomEntities = [];
+    const ENT = /^[a-z_]+\.[a-z0-9_]+$/;
+    const add = (x) => { if (typeof x === "string" && ENT.test(x) && !roomEntities.includes(x)) roomEntities.push(x); };
+    const walk = (x, d) => {
+      if (d > 6 || !x || typeof x !== "object") return;
+      if (Array.isArray(x)) { x.forEach((y) => walk(y, d + 1)); return; }
+      Object.keys(x).forEach((k) => {
+        const y = x[k];
+        if (typeof y === "string") { if (k === "entity" || k === "entity_id" || /^entity_|_entity(_\d+)?$/.test(k)) add(y); }
+        else walk(y, d + 1);
+      });
+    };
+    (tiles || []).forEach((c) => add(c && c.entity));
+    walk(tiles || [], 0);
+    // roomEntityIdsFrom.
+    const fromTiles = (ids) => {
+      if (!ids.length) return null;
+      const cnt = {};
+      ids.map(areaOf).filter(Boolean).forEach((a) => { cnt[a] = (cnt[a] || 0) + 1; });
+      const top = Math.max(0, ...Object.values(cnt));
+      const areaIds = new Set(top * 2 > ids.length ? Object.keys(cnt).filter((a) => cnt[a] === top) : []);
+      const out = new Set(ids);
+      if (areaIds.size) Object.keys(ents).forEach((eid) => { const a = areaOf(eid); if (a && areaIds.has(a)) out.add(eid); });
+      return out;
+    };
+    const inRoom = byArea(area) || byArea(name) || fromTiles(roomEntities);
+    if (!inRoom) return [];
     const leaves = (eid, seen) => {
       if (!eid || seen.has(eid)) return [];
       seen.add(eid);
@@ -25511,6 +25527,31 @@ class CasoraPanel extends HTMLElement {
     }
   }
 
+  // The dashboard helpers the preview draws with (casora-core.js: casoraTileOffline, casoraCoverSummary(Text);
+  // casora-i18n.js: casoraTr; casora-local.js: casoraLightTallyText). A freshly opened Studio has none of them:
+  // casora-studio.js does not import them and casora-preload.js only fetches casora-core.js ahead. Without them the
+  // offline rim, "Alle geöffnet" and the dashboard's badge words stayed out until a popup (or the Weich player) had
+  // loaded the dashboard scripts. Loads them once, like _npSoftLoad, and draws again when they are there.
+  _dashHelpersLoad() {
+    const sig = () => ["casoraTileOffline", "casoraCoverSummaryText", "casoraTr", "casoraLightTallyText"]
+      .map((k) => (typeof window[k] === "function" ? 1 : 0)).join("");
+    if (sig() === "1111" || this._dashHelpersTried) return;
+    this._dashHelpersTried = true;
+    let drawn = sig();
+    const ready = () => {
+      // Draw again for each step that brought a helper (casora-core first, casora-local's modules later).
+      const now = sig();
+      if (now === drawn) return;
+      drawn = now;
+      if (now === "1111") window.removeEventListener("casora-local-loaded", ready);
+      if (this._state) this._rebuildPreview();
+    };
+    window.addEventListener("casora-local-loaded", ready);
+    if (typeof this._casoraCardsReady === "function") {
+      return Promise.resolve(this._casoraCardsReady()).then(ready, ready);
+    }
+  }
+
   // Paints a non-empty _npSoftList at the preview's scale with the dashboard's own code
   // (09-weich-wiedergabe.js): on desktop/tablet the wave's menu (opt.panel: cover stage, then cover
   // strips, in a 332 px window as 10-weich-welle.js opens it), on the phone the cover strips.
@@ -26462,7 +26503,9 @@ class CasoraPanel extends HTMLElement {
       // z3: the phone's room page lists the room's scenes whatever the scenes setting of the start page says
       // (filter-overlay.js _appendRoomScenes, only config.scenes === false hides them) – with scenes "off" the
       // preview dropped the section and its "Szenen"/"Geräte" headings.
-      const scenes = this._phoneRoomSceneList(roomPop, sec ? sec.tiles : []);
+      // The saved area of the wide room goes along as on the phone (card.area, see the phone sync's room pages).
+      const scenes = this._phoneRoomSceneList(roomPop, sec ? sec.tiles : [],
+        wideRoom ? (wideRoom.variables || {}).area : null);
       if (scenes.length) {
         const sgroup = document.createElement("div");
         sgroup.className = "mp-scenegroup";
@@ -26830,6 +26873,7 @@ class CasoraPanel extends HTMLElement {
   }
 
   _paintBadge(b, small) {
+    if (b.dash) this._dashHelpersLoad();
     const el = document.createElement(small ? "span" : "button");
     if (!small) el.type = "button";
     el.className = "pbadge" + (small ? " sub" : "") + (b.dim ? " dim" : "") + (b.clip ? " clip" : "");
@@ -26973,6 +27017,7 @@ class CasoraPanel extends HTMLElement {
   }
 
   _paintTile(tile, ti, room) {
+      this._dashHelpersLoad();
       // Casora: bedingte Karten wie im Dashboard (panel/casora-panel-types.js).
       const cu = (window.casoraPreviewUnwrap && window.casoraPreviewUnwrap(tile, this._hass)) || {};
       if (cu.cards) {

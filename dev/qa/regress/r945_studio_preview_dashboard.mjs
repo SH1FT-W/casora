@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/panel/casora-panel.js#_paintTile,_paintBadge,_miniModel,_phoneRoomSceneList,solidToggle,offInk,LOCK_OPEN_TINT, custom_components/casora/panel/casora-panel-types.js#casoraTileIconUrl,casoraTileIsOffline
+// @deckt: custom_components/casora/panel/casora-panel.js#_paintTile,_paintBadge,_miniModel,_phoneRoomSceneList,_dashHelpersLoad,solidToggle,offInk,LOCK_OPEN_TINT, custom_components/casora/panel/casora-panel-types.js#casoraTileIconUrl,casoraTileIsOffline
 // Review 26.11.2026 (z3: u04-02, d02-04, d02-05): the Studio preview looked unlike the dashboard. Desktop: the open
 // lock teal with a dark switch, the scenes badge a pale stack. Phone, room page: every TV, Apple TV, PlayStation and
 // the cameras tile with the speaker/doorbell symbol, the dark lamp with a yellow symbol, the offline camera without
@@ -8,11 +8,11 @@
 // in the theme's colours (not teal, not the dark cut-out switch), scenes badge with the palette, device symbols per
 // device, off symbols in the off colour, the dashed rim on an offline camera, and the room's scenes with headings.
 // Nothing is saved.
-import { open, usePage, studio, studioDashboard, check, need, finish } from './lib.mjs';
+import { open, usePage, studio, studioDashboard, fakeStates, check, need, finish } from './lib.mjs';
 
 const dash = process.env.CASORA_QA_DASH || await studioDashboard();
 await need('Casora dashboard for the Studio', dash);
-const { page } = await open({ dark: false, width: 1440, height: 1000 });
+let { page } = await open({ dark: false, width: 1440, height: 1000 });
 usePage(page);
 await studio(page, dash);
 await page.waitForTimeout(2500);
@@ -73,4 +73,55 @@ const cam = find(/^Kamera$|^Camera$/);
 await check('phone room: the offline camera has the dashed rim', !cam || cam.offline, cam);
 await check('phone room: the scenes section with "Szenen" and "Geräte" headings',
   ph.scenes > 0 && ph.heads.some((h) => /Szenen|Scenes/.test(h)) && ph.heads.some((h) => /Geräte|Devices/.test(h)), ph);
+// Fix round 3: the offline rim and "Alle geöffnet" need casora-core.js, which a freshly opened Studio does not
+// import. In Weich the player preview loads the dashboard scripts anyway (_npSoftLoad); in a theme without the soft
+// layout nothing did until a popup was opened. So a second browser in HA's default theme opens the Studio straight
+// away (no dashboard script in the page). Two tiles only in this page's memory: a lamp that is unavailable and a
+// blinds group with both members open.
+const { page: page2 } = await open({ dark: false, width: 1440, height: 1000, theme: 'default' });
+page = page2;
+usePage(page);
+await studio(page, dash);
+const fresh = await page.evaluate(() => ({
+  soft: getComputedStyle(document.documentElement).getPropertyValue('--casora-popup-layout').trim(),
+  scripts: [...document.querySelectorAll('script[src]')].map((x) => x.src).filter((u) => !/casora_panel\//.test(u)) }));
+await need('Studio in a theme without the soft layout', fresh.soft !== 'soft', fresh);
+await page.evaluate(() => { const b = window.__panel().shadowRoot.querySelector('#sizeseg [data-size="desktop"]'); if (b) b.click(); });
+await page.waitForTimeout(1000);
+await fakeStates(page, {
+  'light.qa_r945_offline': { state: 'unavailable', attributes: { friendly_name: 'QA offline lamp' } },
+  'cover.qa_r945_a': { state: 'open', attributes: { current_position: 100 } },
+  'cover.qa_r945_b': { state: 'open', attributes: { current_position: 100 } },
+  'cover.qa_r945_group': { state: 'open', attributes: { entity_id: ['cover.qa_r945_a', 'cover.qa_r945_b'], current_position: 100 } },
+}, { sticky: true });
+await page.evaluate(() => {
+  const p = window.__panel();
+  const room = p._state.compact.rooms[p._room];
+  room.tiles = (room.tiles || []).concat([
+    { type: 'custom:button-card', template: 'casora_light', entity: 'light.qa_r945_offline', name: 'QA offline lamp' },
+    { type: 'custom:button-card', template: 'casora_cover', entity: 'cover.qa_r945_group', name: 'QA blinds' },
+  ]);
+  p._rebuildPreview();
+});
+await page.waitForFunction(() => typeof window.casoraTileOffline === 'function' && typeof window.casoraCoverSummaryText === 'function',
+  null, { timeout: 20000 }).catch(() => {});
+await page.waitForTimeout(2500);
+const qa = await page.evaluate(() => {
+  const r = window.__panel().shadowRoot;
+  const t = (re) => [...r.querySelectorAll('#mapmount .mtile')].find((el) => re.test((el.querySelector('.mname') || {}).textContent || ''));
+  const lamp = t(/QA offline lamp/), blinds = t(/QA blinds/);
+  return { core: typeof window.casoraTileOffline === 'function', lamp: !!lamp, offline: !!(lamp && lamp.classList.contains('offline')),
+    blinds: blinds ? (blinds.querySelector('.mstate') || {}).textContent : null };
+});
+await check('fresh Studio: the dashboard helpers are loaded without opening a popup', qa.core, qa);
+await need('the test lamp is in the preview', qa.lamp, qa);
+await check('desktop: an unavailable lamp has the dashed offline rim', qa.offline, qa);
+await check('desktop: a blinds group with every member open says "Alle geöffnet"', /Alle geöffnet|All open/i.test(qa.blinds || ''), qa);
+await page.evaluate(() => {
+  const p = window.__panel();
+  const room = p._state.compact.rooms[p._room];
+  room.tiles = room.tiles.filter((x) => !/qa_r945/.test(x.entity || ''));
+  p._rebuildPreview();
+});
+
 await finish();

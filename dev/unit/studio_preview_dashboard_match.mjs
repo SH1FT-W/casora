@@ -1,5 +1,5 @@
 // @deckt: custom_components/casora/panel/casora-panel-types.js#casoraTileIconUrl,casoraTileState,casoraTileIsOffline,casoraTileArtUrl
-// @deckt: custom_components/casora/panel/casora-panel.js#_miniModel,_phoneRoomSceneList,_paintBadge,_paintTile
+// @deckt: custom_components/casora/panel/casora-panel.js#_miniModel,_phoneRoomSceneList,_paintBadge,_paintTile,_dashHelpersLoad
 // Studio preview = dashboard (review 26.11.2026, z3: u04-02, u09-05, d02-04, d02-05, u01-05). The preview drew
 // TV, Apple TV, PlayStation and the cameras tile with the speaker/doorbell fallback, a blinds group "Geöffnet"
 // instead of "Alle geöffnet", no offline rim, a grey ball instead of the club crest, the scenes badge as a pale
@@ -55,13 +55,55 @@ const states = {
   'scene.kitchen': st('scene.kitchen', '2026-11-26T08:00:00Z', { friendly_name: 'Cook', entity_id: ['light.counter'] }),
   'light.sofa': st('light.sofa', 'off'), 'light.counter': st('light.counter', 'off'),
   'light.a': st('light.a', 'on'), 'light.b': st('light.b', 'off'),
+  'light.desk': st('light.desk', 'off'),
+  'scene.read': st('scene.read', '2026-11-26T08:00:00Z', { friendly_name: 'Read', entity_id: ['light.desk'] }),
+  'scene.mood': st('scene.mood', '2026-11-26T08:00:00Z', { friendly_name: 'Mood', entity_id: ['light.b'] }),
 };
 const hass = { states, language: 'de', locale: { language: 'de' }, formatEntityState: (s) => s.state,
-  areas: { living: { area_id: 'living', name: 'Living room' }, kitchen: { area_id: 'kitchen', name: 'Kitchen' } },
+  areas: { living: { area_id: 'living', name: 'Living room' }, kitchen: { area_id: 'kitchen', name: 'Kitchen' },
+    den: { area_id: 'den', name: 'Study' } },
   devices: {},
-  entities: { 'scene.cosy': {}, 'scene.movie': { area_id: 'living' }, 'scene.kitchen': {},
+  entities: { 'scene.cosy': {}, 'scene.movie': { area_id: 'living' }, 'scene.kitchen': {}, 'scene.read': {}, 'scene.mood': {},
+    'light.desk': { area_id: 'den' },
     'light.sofa': { area_id: 'living' }, 'light.counter': { area_id: 'kitchen' }, 'media_player.tv': { area_id: 'living' } } };
 const bc = (template, entity, variables) => ({ type: 'custom:button-card', template, entity, ...(variables ? { variables } : {}) });
+
+// A freshly opened Studio has none of the dashboard helpers (casora-studio.js does not import casora-core.js,
+// casora-i18n.js or casora-local.js): painting a tile or a badge loads them once (_casoraCardsReady, as popups do)
+// and draws again when they are there – the offline rim, "Alle geöffnet" and the badge words stayed out before.
+const core = read('custom_components/casora/scripts/casora-core.js');
+const realHelpers = () => {
+  const a = core.indexOf('// casora-offline:start'), b = core.indexOf('// casora-offline:end');
+  const i = core.indexOf('  window.casoraCoverSummary = function'), j = core.indexOf('  window.casoraCoverIconUrl = function');
+  assert.ok(a > 0 && b > a && i > 0 && j > i, 'casora-core blocks');
+  window.casoraStateFit = (t) => t;
+  new Function(core.slice(a, b))();
+  new Function('window', core.slice(i, j))(window);
+};
+{
+  const evs = {};
+  const add0 = globalThis.addEventListener, rem0 = globalThis.removeEventListener;
+  globalThis.addEventListener = (n, f) => { (evs[n] = evs[n] || new Set()).add(f); };
+  globalThis.removeEventListener = (n, f) => { if (evs[n]) evs[n].delete(f); };
+  let loads = 0, draws = 0;
+  const panel = Object.assign(Object.create(P), { _state: {}, _rebuildPreview() { draws++; },
+    _casoraCardsReady: async () => { loads++; realHelpers(); window.casoraTr = (t) => t; return true; } });
+  assert.equal(typeof window.casoraTileOffline, 'undefined', 'test starts like a fresh Studio');
+  try { P._paintBadge.call(panel, { id: 'lights', dash: '1 an', text: '1 on', icon: 'light', color: '' }); } catch (e) { /* stub DOM */ }
+  assert.equal(loads, 1, 'a badge with dashboard words loads the dashboard scripts');
+  await new Promise((r) => setImmediate(r));
+  assert.equal(draws, 1, 'drawn again once casora-core and the translation are there');
+  try { P._paintTile.call(panel, { entity: 'light.a' }, 0, {}); } catch (e) { /* stub DOM */ }
+  assert.equal(loads, 1, 'loaded once per Studio');
+    window.casoraLightTallyText = (t) => (t.on === 1 ? '1 an' : '?');
+  (evs['casora-local-loaded'] || new Set()).forEach((f) => f());
+  assert.equal(draws, 2, 'casora-local.js done: drawn again with the light tally');
+  assert.equal((evs['casora-local-loaded'] || new Set()).size, 0, 'and stops listening');
+  const fresh = { _state: {}, _rebuildPreview() { draws++; }, _casoraCardsReady: async () => { loads++; return true; } };
+  P._dashHelpersLoad.call(fresh);
+  assert.equal(loads, 1, 'nothing to load once every helper is there');
+  globalThis.addEventListener = add0; globalThis.removeEventListener = rem0;
+}
 
 // Icons from the template chain (casora_media: device kind; casora_cameras: camera) instead of speaker/doorbell.
 const icon = (t) => window.casoraTileIconUrl(t, states[t.entity], hass, templates);
@@ -72,14 +114,11 @@ assert.equal(icon(bc('casora_media', 'media_player.box')), '/casora_assets/icons
 assert.equal(icon(bc(['casora_cameras', 'casora_popup_camera'], 'camera.door', { cameras: ['camera.door'] })),
   '/casora_assets/icons/camera.svg', 'cameras tile: camera icon');
 
-// Blinds group: the dashboard's summary words (casoraCoverSummaryText) once casora-core is there.
-window.casoraCoverSummary = (S, ids) => ({ ids });
-window.casoraCoverSummaryText = () => ({ full: 'Alle geöffnet', short: 'Offen' });
+// Blinds group: the dashboard's summary words (casora-core.js casoraCoverSummaryText, the real one).
 assert.equal(window.casoraTileState(bc('casora_cover', 'cover.blinds'), states['cover.blinds'], hass, templates),
   'Alle geöffnet', 'blinds group says "Alle geöffnet" like the dashboard');
 
-// Offline rim (casora_entity state casora_offline); the cameras tile opts out (show_offline: false).
-window.casoraTileOffline = (e) => (e && e.state === 'unavailable' ? { since: null } : null);
+// Offline rim (casora_entity state casora_offline, casora-core.js casoraTileOffline); the cameras tile opts out.
 assert.equal(window.casoraTileIsOffline(bc('casora_camera', 'camera.door'), states['camera.door'], hass, templates), true,
   'an unavailable camera is marked offline');
 assert.equal(window.casoraTileIsOffline(bc(['casora_cameras', 'casora_popup_camera'], 'camera.door', { cameras: ['camera.door'] }),
@@ -102,6 +141,20 @@ assert.deepEqual(P._phoneRoomSceneList.call(fake, 'Living room', []).map((x) => 
 assert.deepEqual(P._phoneRoomSceneList.call(fake, 'Lounge', [bc('casora_media', 'media_player.tv')]).map((x) => x.id),
   ['scene.cosy', 'scene.movie'], 'renamed room: the area of its tiles');
 assert.deepEqual(P._phoneRoomSceneList.call(fake, 'Attic', []), [], 'no area: no scenes (not all of them)');
+// The area saved with the room (variables.area, kept on renaming; the phone page gets it as card.area) comes first.
+assert.deepEqual(P._phoneRoomSceneList.call(fake, 'Lounge', [], 'living').map((x) => x.id), ['scene.cosy', 'scene.movie'],
+  'renamed room with its saved area: the scenes of that area, also without tiles');
+assert.deepEqual(P._phoneRoomSceneList.call(fake, 'Kitchen', [bc('casora_media', 'media_player.tv')], 'living').map((x) => x.id),
+  ['scene.cosy', 'scene.movie'], 'the saved area wins over a matching name');
+// Area ids count like names (roomEntityIds: id or name).
+assert.deepEqual(P._phoneRoomSceneList.call(fake, 'den', []).map((x) => x.id), ['scene.read'], 'room named like an area id');
+// #142 catch-all room: no clear majority, so no area; the tile devices themselves decide (roomEntityIdsFrom).
+assert.deepEqual(P._phoneRoomSceneList.call(fake, 'Everything',
+  [bc('casora_media', 'media_player.tv'), bc('casora_light', 'light.counter')]).map((x) => x.id), ['scene.kitchen'],
+  'catch-all room: only the scenes that switch its tiles, not all of the most frequent area');
+// Tiles without any area: the scenes that switch them, as on the phone.
+assert.deepEqual(P._phoneRoomSceneList.call(fake, 'Shed', [bc('casora_light', 'light.b')]).map((x) => x.id), ['scene.mood'],
+  'room without areas: the scenes of its devices');
 
 // Badges: scenes badge with the palette in the scene badge colour, never dimmed; light and scene texts in the
 // dashboard's German words for the dashboard translation.
@@ -111,7 +164,6 @@ const sc = model({ show_scenes: true, scene_entities: ['scene.cosy'] }).find((b)
 assert.ok(sc && /^data:image\/svg\+xml/.test(sc.icon) && decodeURIComponent(sc.icon).includes('M17.5,12A1.5'), 'scenes badge: mdi:palette');
 assert.ok(/--casora-scene-badge-color/.test(sc.color) && !sc.dim, 'scenes badge: scene badge colour, full strength');
 assert.equal(sc.dash, 'Keine aktiv', 'scenes badge: dashboard wording');
-window.casoraLightTallyText = (t) => (t.on === 1 ? '1 an' : '?');
 const li = model({ light_entity_1: 'light.a', light_entity_2: 'light.b' }).find((b) => b.id === 'lights');
 assert.equal(li && li.dash, '1 an', 'lights badge: the dashboard tally words');
 console.log('ok preview: icons, blinds words, offline rim, crest, room scenes and badges as on the dashboard');
