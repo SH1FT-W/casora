@@ -7634,12 +7634,16 @@ window.casoraMenuGlass = {
       text-align: left;
       color: var(--casora-soft-sub, var(--secondary-text-color));
       font-variant-numeric: tabular-nums;
-      overflow-wrap: anywhere;
-      /* Statuszeile darf umbrechen (Teile an „·“, _casoraSepScan) – nie abgeschnitten. */
+      /* d03-07 (§3, „Ein Kopf, eine Höhe“): one line. What does not fit goes from the end, each extra whole with its
+         dot (headFit); only the state alone, still too long, ends in „…“. Was: the line wrapped and the head grew. */
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     /* Der gespiegelte Zustand trägt die Inline-Größe 17 der Inhaltszeile – im Kopf 15, fett. */
     :host([soft]) .header-status span, :host([soft]) .header-status div { font-size: inherit !important; letter-spacing: normal !important;
-      white-space: normal !important; display: inline !important; }
+      white-space: nowrap !important; display: inline !important; }
+    :host([soft]) .header-status .hui-drop { display: none !important; }
     :host([soft]) .header-status > div { display: inline !important; }
     :host([soft]) .header-status .hui-sep.hui-cut { display: none !important; }
     :host([soft]) .header-status i.hui-sep { font-style: normal; opacity: .6; }
@@ -8536,6 +8540,35 @@ window.casoraMenuGlass = {
     }
   }
 
+  // d03-07 (§3): the head's status line stays on one line. The parts of the line in order – each extra with the dot in
+  // front of it (a slot carries its dot itself, a wrapper with dots inside is opened) – and while the line is wider
+  // than its box the last extra goes, whole. The first part (the state) always stays; alone too long, CSS ends it in „…“.
+  function headUnits(el) {
+    var units = [], cur = null;
+    (function walk(box) {
+      [].forEach.call(box.children, function (c) {
+        if (c.tagName === 'STYLE' || c.tagName === 'BR') return;
+        var cl = c.classList;
+        if (cl && cl.contains('hui-sep')) { cur = [c]; units.push(cur); return; }
+        if (cl && cl.contains('hui-lslot')) { if (String(c.textContent || '').trim()) { cur = [c]; units.push(cur); } return; }
+        if (c.querySelector && c.querySelector('.hui-sep, .hui-lslot')) { walk(c); return; }
+        if (!cur) { cur = [c]; units.push(cur); } else cur.push(c);
+      });
+    })(el);
+    return units;
+  }
+  function headFit(el) {
+    if (!el || !el.querySelectorAll) return;
+    var old = el.querySelectorAll('.hui-drop');
+    for (var i = 0; i < old.length; i++) old[i].classList.remove('hui-drop');
+    if (el.hidden || !el.clientWidth) return;
+    var units = headUnits(el);
+    for (var k = units.length - 1; k > 0 && el.scrollWidth > el.clientWidth + 1; k--) {
+      units[k].forEach(function (n) { n.classList.add('hui-drop'); });
+    }
+  }
+  window._casoraHeadFit = headFit;
+
   class CasoraPopup extends HTMLElement {
     constructor() {
       super();
@@ -8621,6 +8654,14 @@ window.casoraMenuGlass = {
       this._headerContent = root.querySelector('.header-content');
       this._headerRing = root.querySelector('.header-ring');
       this._headerStatus = root.querySelector('.header-status');
+      var hsFit = () => {
+        if (this._hfT) return;
+        this._hfT = requestAnimationFrame(() => { this._hfT = 0; headFit(this._headerStatus); });
+      };
+      if (typeof MutationObserver === 'function') {
+        new MutationObserver(hsFit).observe(this._headerStatus, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden'] });
+      }
+      if (typeof ResizeObserver === 'function') new ResizeObserver(hsFit).observe(this._headerStatus);
       this._headerSwitch = root.querySelector('.header-switch');
       this._headerSwitch.addEventListener('click', (e) => {
         e.preventDefault();
@@ -9304,7 +9345,7 @@ window.casoraMenuGlass = {
       // and „SW ·“ hung at the end of the first line on the phone (final review 01.11.2026).
       if (window._casoraSepScan) {
         var sr = this.shadowRoot, hs0 = this._headerStatus;
-        [0, 350, 900].forEach(function (ms) { setTimeout(function () { hs0._casoraSepSig = null; window._casoraSepScan(sr); }, ms); });
+        [0, 350, 900].forEach(function (ms) { setTimeout(function () { hs0._casoraSepSig = null; window._casoraSepScan(sr); headFit(hs0); }, ms); });
       }
     }
     _syncHeadLine() {
