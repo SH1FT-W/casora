@@ -439,7 +439,7 @@ Ein Aufräum-Umbau entfernt so etwas nie still; jede dieser Funktionen hat einen
 | #89 | Fahrzeug | Kilometerstand im Abschnitt „Zustand“ (auch BMW CarData) | `03-popups.js`, Teil `state_s3` |
 | #56 | Wetter | „gefühlt“ in der Mitte des Rads, immer wenn die Quelle einen Wert hat (Attribut `apparent_temperature` oder Sensor, ohne Studio-Schalter); die gefühlte Kurve im Verlauf nach der Studio-Wahl; Zusätzliche Werte aus dem Studio (`weather_extras`: Taupunkt, Windböen, Bewölkung, Niederschlag, Sonneneinstrahlung …) als Zeilen in „Details“ nach Regen, Wind und UV (was Rad und diese drei zeigen, nicht doppelt) | Vorlage `casora_weather` (Popup), `00-finder.js` `weatherSources` |
 
-Nicht zurück: #35 (Jalousie-Stufen bleiben drei Monde: Auf · Beschatten · Zu).
+Nicht zurück: #35 (Jalousie-Stufen bleiben die Monde Auf · Beschatten · Zu). Dazu kommt „Stopp“ wie im Schnellmenü (u05-06, 26.11.2026), sobald eine der Jalousien anhalten kann (Funktion 8): Auf · Beschatten · Stopp · Zu, ohne Beschatten Auf · Stopp · Zu; Stopp ist nie gewählt. Test `cover_popup_stop.mjs`.
 
 ## 9. Zustände des ganzen Popups
 
