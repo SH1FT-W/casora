@@ -42,7 +42,9 @@ const st = (pairs) => Object.fromEntries(pairs.map(([id, s, attrs]) => [id, { en
   const o = C.sec('stage', null, S, {});
   assert.equal(o.text, 'Reichweite 312 km');
   assert.ok(o.facts.some((f) => f.label === 'Akku' && f.value === '64 %'));
-  assert.deepEqual(C.sec('line', null, S, {}), ['Verriegelt', 'Akku 64 %']);
+  // The fill level joins the head line only with a vehicle picture (without one it is the wheel's fact, d03-02).
+  assert.deepEqual(C.sec('line', null, S, { img: 'own.jpg' }), ['Verriegelt', 'Akku 64 %']);
+  assert.deepEqual(C.sec('line', null, S, { img: 'none' }), ['Verriegelt']);
 }
 // Nothing at all: still „Keine Daten“.
 {
