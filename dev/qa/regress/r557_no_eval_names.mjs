@@ -78,6 +78,27 @@ const tap = (pg, i) => pg.evaluate((n) => {
 
 // ── Desktop ───────────────────────────────────────────────────────────────────
 const { page } = await open({ width: 1440, height: 900, dark: true });
+// The desktop room cards draw now playing only with show_now_playing on, and since w02-03 (26.11.2026, intended) a hidden
+// now playing is not built at all; the test house has it off. So switch it on in this browser's dashboard config
+// (like r45), else Home would have no now-playing card to check.
+await page.addInitScript(() => {
+  const fix = (o) => {
+    if (!o || typeof o !== 'object') return;
+    if (Array.isArray(o)) { o.forEach(fix); return; }
+    if (o.variables && [].concat(o.template || []).includes('casora_room')) o.variables.show_now_playing = true;
+    for (const k in o) fix(o[k]);
+  };
+  const add = WebSocket.prototype.addEventListener;
+  WebSocket.prototype.addEventListener = function (t, fn, opt) {
+    if (t !== 'message') return add.call(this, t, fn, opt);
+    return add.call(this, t, function (ev) {
+      if (typeof ev.data === 'string' && ev.data.includes('"views"') && ev.data.includes('"casora_room"')) {
+        try { const d = JSON.parse(ev.data); fix(d); ev = new MessageEvent('message', { data: JSON.stringify(d) }); } catch (e) { /* unchanged */ }
+      }
+      return fn.call(this, ev);
+    }, opt);
+  };
+});
 usePage(page);
 watchErrors(page);
 await dashboard(page, dash.url + '/' + view.path, 2);
