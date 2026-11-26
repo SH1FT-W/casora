@@ -10,7 +10,7 @@
 //     Schon begrüßt: gleich „Räume wählen“ bzw. mit Hemma gleich der Assistent.
 //  3. Mit Casora-Dashboard (wiederkehrend): gleich das Studio. ⋯-Menü mit „Einrichtungsassistent …“,
 //     ohne „Startseite …“ (auch nicht im Dashboard-Wechsler); der Assistent schließt zurück ins
-//     Studio. Hilfe → „Einführung in Casora“ zeigt die Begrüßung, „Los geht’s“ schließt sie.
+//     Studio. Hilfe → „Willkommensseite“ zeigt die Begrüßung, „Los geht’s“ schließt sie.
 // Schreibt nichts in HA – bis auf eins: fehlt ein Casora-Dashboard (Zustand „frisch“), legt der
 // Test vorab über den echten Anlege-Weg des Panels „qa-start“ (+ -mobile) an und löscht es am Ende
 // wieder. Aufruf (Test-HA, Port 8124):
@@ -260,11 +260,11 @@ if (await reached(LOOK, 'Einrichtungsassistent … → Look')) {
 }
 const sw = await H(() => window.__panel()._dashSwitchItems(true).map((x) => x.id));
 check(!sw.includes('startpage') && sw.includes('newdash'), 'Dashboard-Wechsler: kein „Startseite …“, „Dashboard erstellen …“ bleibt', sw.join(','));
-// Hilfe → Einführung in Casora.
+// Hilfe → Willkommensseite.
 const help = await menu(() => window.__panel()._helpMenu(window.__panel().$('more')));
-check(/Einführung in Casora/.test(help), 'Hilfe: „Einführung in Casora“', help.slice(0, 120));
-check(await pick(/Einführung in Casora/), 'Hilfe: „Einführung in Casora“ antippbar');
-if (await reached(WELCOME, 'Einführung in Casora → Begrüßung')) {
+check(/Willkommensseite/.test(help), 'Hilfe: „Willkommensseite“', help.slice(0, 120));
+check(await pick(/Willkommensseite/), 'Hilfe: „Willkommensseite“ antippbar');
+if (await reached(WELCOME, 'Willkommensseite → Begrüßung')) {
   f = await flow();
   check(f.mode === 'sheet' && !f.welcomeSheet, 'Einführung als Blatt über dem Studio', f.mode);
   await page.waitForTimeout(1200);

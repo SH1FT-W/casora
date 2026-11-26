@@ -21645,13 +21645,14 @@ class CasoraPanel extends HTMLElement {
     const news = typeof window.casoraWelcomeShow === "function";
     this._menuAt(anchor, [
       // E20 (test 2): short answers in the Studio first; the guide on GitHub stays below.
-      ...(typeof this._helpTopics === "function" ? [{ id: "howto", label: "How do I …?" }] : []),
-      { id: "welcome", label: "Introduction to Casora" },
-      ...(news ? [{ id: "whatsNew", label: "What's new" }] : []),
-      { id: "docs", label: "Guide on GitHub", group: "web", quiet: true },
-      { id: "issue", label: "Report a problem", group: "web", quiet: true },
+      // Icons like the ⋯ menu; "Welcome screen" apart from the ⋯ menu's "Studio tour" (Prüfrunde u01-15).
+      ...(typeof this._helpTopics === "function" ? [{ id: "howto", label: "How do I …?", icon: "help" }] : []),
+      { id: "welcome", label: "Welcome screen", icon: "home" },
+      ...(news ? [{ id: "whatsNew", label: "What's new", icon: "update" }] : []),
+      { id: "docs", label: "Guide on GitHub", icon: "open", group: "web", quiet: true },
+      { id: "issue", label: "Report a problem", icon: "share", group: "web", quiet: true },
       // Counts and versions for an issue, no names (casora-panel-diagnostics.js).
-      ...(typeof this._diagShow === "function" ? [{ id: "diag", label: "Copy diagnostics…", group: "web", quiet: true }] : []),
+      ...(typeof this._diagShow === "function" ? [{ id: "diag", label: "Copy diagnostics…", icon: "copy", group: "web", quiet: true }] : []),
     ], (id) => {
       // Die Einführung ist der Willkommen-Bildschirm vom Erststart (über dem Studio als Blatt).
       if (id === "welcome") return this._welcomeScreen();

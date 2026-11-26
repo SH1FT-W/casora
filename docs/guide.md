@@ -67,7 +67,7 @@ Everything after the first setup happens in the Studio: rooms and room photos, t
 - **The toolbar** has **Rooms** (switch, add and arrange rooms), **Content** (everything in the open room, including what the preview doesn't show right now), **+** (add a tile), **Settings** and **Community**. On a phone the bar at the bottom has **Rooms**, **Content**, **+**, **Look & feel** and **Settings**. **Search…** (⌘K or Ctrl+K) finds rooms, tiles, devices, settings and actions.
 - **Nothing is written until you save.** **Save** keeps the Studio open, **Done** saves and opens the dashboard. An unsaved draft survives a reload, and leaving asks before anything is discarded. The clock next to Undo opens [Rewind](#rewind-going-back-to-an-earlier-version).
 - **The dashboard's name** at the top opens the dashboard menu: switch to another dashboard or create one, and for this dashboard **Rename…**, **Icon…**, **Open on phone…**, **Phone layout** and **Delete…**.
-- **The ⋯ menu** contains **Move from Hemma…**, **Device assistant…**, **Import from YAML…**, **Setup assistant…**, **Quick tour**, **Keyboard shortcuts** and **Help…**. On a phone it also holds **Community cards…**.
+- **The ⋯ menu** contains **Move from Hemma…**, **Device assistant…**, **Import from YAML…**, **Setup assistant…**, **Studio tour**, **Keyboard shortcuts** and **Help…**. On a phone it also holds **Community cards…**.
 
 **Settings** opens a start page with a search and eight tiles. Each tile shows its settings right away, each with a short sentence on what it does; rarely needed ones sit under **Advanced** at the end of the tile. Entries marked *Only this dashboard* change only the dashboard you are editing; everything else applies to all your Casora dashboards.
 

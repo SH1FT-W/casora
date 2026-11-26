@@ -3207,7 +3207,9 @@
     "Room temperature, target and whether the room heats on the tile. The popup sets the target as a manual change, goes back to automatic or picks a level, and shows the decision, the manual change and the house mode; a row opens the schedule: the week at a glance with each slot's level, switching the profile and editing a profile's time slots. For the rooms of the Smart Heating Control integration.": "Température de la pièce, consigne et chauffe en cours sur la tuile. Le popup règle la consigne comme changement manuel, revient en automatique ou choisit un niveau, et affiche la décision, le changement manuel et le mode de la maison ; une ligne ouvre le programme : la semaine en un coup d'œil avec le niveau de chaque plage, changement de profil et modification des plages d'un profil. Pour les pièces de l'intégration Smart Heating Control.",
     "No room picked – only Home will be created.": "Aucune pièce choisie – seule Maison sera créée.",
     "1 device is in a room you did not pick.": "1 appareil se trouve dans une pièce que tu n'as pas choisie.",
-    "{1} devices are in rooms you did not pick.": "{1} appareils se trouvent dans des pièces que tu n'as pas choisies."
+    "{1} devices are in rooms you did not pick.": "{1} appareils se trouvent dans des pièces que tu n'as pas choisies.",
+    "Studio tour": "Visite du Studio",
+    "Welcome screen": "Écran d'accueil"
   },
   "patterns": [
     [

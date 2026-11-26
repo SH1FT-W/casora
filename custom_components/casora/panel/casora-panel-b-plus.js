@@ -780,7 +780,7 @@
         const h = items.findIndex((x) => x && x.id === "hints");
         if (h >= 0 && !items.some((x) => x && x.id === "bintro")) {
           items = items.slice();
-          items.splice(h + 1, 0, { id: "bintro", label: "Quick tour", glyph: "tile", plainGlyph: true, group: items[h].group });
+          items.splice(h + 1, 0, { id: "bintro", label: "Studio tour", glyph: "tile", plainGlyph: true, group: items[h].group });
           const pick = onPick;
           onPick = (id) => (id === "bintro" ? setTimeout(() => this._bIntro(true), 60) : pick(id));
         }
@@ -1048,7 +1048,7 @@
       box.innerHTML = '<div class="bspot"></div><div class="bcoach"><div class="bstep" data-no-i18n></div><h3></h3><p></p>'
         + '<div class="bacts"><div class="bdots"><i></i><i></i><i></i></div><div>'
         + '<button type="button" class="bskip"></button><button type="button" class="bnext"></button></div></div></div>';
-      box.setAttribute("aria-label", tr("Quick tour"));
+      box.setAttribute("aria-label", tr("Studio tour"));
       root.appendChild(box);
       const spot = box.querySelector(".bspot"), coach = box.querySelector(".bcoach");
       let i = 0;

@@ -1102,7 +1102,7 @@
         if (seg) seg.click();
       }, !isPhone(this));
       A("match", "Match Desktop and Phone", "angleichen unterschiede handy desktop", () => this._reviewDifferences(), typeof this._reviewDifferences === "function" && !!this._pair);
-      A("tour", "Quick tour", "einführung hilfe tour erklärung", () => this._bIntro && this._bIntro(true));
+      A("tour", "Studio tour", "einführung rundgang hilfe tour erklärung", () => this._bIntro && this._bIntro(true));
       A("updates", "Updates", "update aktualisieren version neu", () => this._cuFromMenu(), typeof this._cuFromMenu === "function");
       // Help topics: found by their task words ("Abfall", "Foto"), open a short answer (E20).
       HELP_TOPICS.forEach((h) => A("help-" + h.id, h.title, h.words + " hilfe help wie how", () => this._helpTopic(h.id), true, way("Help", "How do I …?")));
