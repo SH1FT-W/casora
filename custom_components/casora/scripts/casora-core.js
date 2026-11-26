@@ -15735,6 +15735,27 @@ window.casoraMenuGlass = {
     return s ? s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ') : ALL.unknown;
   };
 })();
+// The detection rule of the camera tile and the bell: is this state of a detection trigger a detection, and since when (ms)?
+// A binary_sensor counts when it goes from off to on at `changed` (ISO text or ms); an event counts at its own time stamp
+// (its state). A time a little ahead of the browser clock counts as now; with hass given, a time in HA's start window is the
+// restart. null = no detection.
+(function () {
+  if (window.casoraDetectionAt) return;
+  window.casoraDetectionAt = function (id, state, previous, changed, hass) {
+    var at = null;
+    if (String(id).indexOf('binary_sensor.') === 0 && state === 'on' && previous === 'off') at = typeof changed === 'number' ? changed : Date.parse(changed);
+    if (String(id).indexOf('event.') === 0) at = Date.parse(state);
+    if (at === null || !isFinite(at)) return null;
+    // A browser clock a little behind HA puts the change in the future: it still counts, as now. An hour ahead is not skew.
+    var now = Date.now();
+    if (at > now) at = at - now <= 2 * 60000 ? now : null;
+    if (at === null) return null;
+    // A binary_sensor change in HA's start window is the restart, not a detection (casoraSinceMs says null for such a time).
+    // An event is dated by its own time stamp: a restored one is old, so a real event just after the start still counts.
+    if (hass && String(id).indexOf('event.') !== 0 && typeof window.casoraSinceMs === 'function' && window.casoraSinceMs({ entity_id: id, last_changed: new Date(at).toISOString() }, hass) === null) return null;
+    return at;
+  };
+})();
 /* Sicherheits-Symbole an einer Stelle (03.10.2026): Kontakt-/Schloss-/Alarm-Unter-Badges
    (casora_badge_contact_group) und das Mitteilungszentrum nehmen dasselbe Symbol für denselben
    Zustand. Alarm-Modi wie im Alarm-Popup (casora_badge_security: Zuhause/Abwesend/Nacht/Urlaub/
@@ -16544,6 +16565,13 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   var APPLIANCE_DONE = /^(off|idle|finished|complete|completed|standby|end|ready)$/i;
   var APPLIANCE_BUSY = /^(on|run|running|active|washing|rinsing|spinning|drying|printing|busy)$/i;
 
+  function listedDetection(id) {
+    var cameras = (window.CASORA_SETTINGS || {}).cameras;
+    return Array.isArray(cameras) && cameras.some(function (camera) {
+      return camera && Array.isArray(camera.detection_triggers) && camera.detection_triggers.indexOf(id) !== -1;
+    });
+  }
+
   function isDoorbell(id, st) {
     // The rule lives in 00-finder.js (one rule for the bell and the Studio list). The old check below is only
     // for the moment before 00-finder.js or hass has loaded.
@@ -16587,6 +16615,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       if (on('locks') && id.indexOf('lock.') === 0) return void out.push(id);
       if (on('alarm') && id.indexOf('alarm_control_panel.') === 0) return void out.push(id);
       if (on('vacuum') && id.indexOf('vacuum.') === 0) return void out.push(id);
+      if ((id.indexOf('binary_sensor.') === 0 || id.indexOf('event.') === 0) && listedDetection(id)) return void out.push(id);
       if (on('doorbell') && isDoorbell(id, st)) return void out.push(id);
       if (on('people') && id.indexOf('person.') === 0) return void out.push(id);
       if (on('appliances') && appl.indexOf(id) !== -1) return void out.push(id);
@@ -16677,6 +16706,11 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       // Fertig entscheidet vacuumRuns() über den ganzen Ablauf (Zwischenstopps), nicht das Andocken.
       if (s === 'error') return { label: name + ' braucht Aufmerksamkeit', icon: 'vacuum', tone: 'bad' };
       return null;
+    }
+
+    if (listedDetection(id)) {
+      if (window.casoraDetectionAt(id, s, prev, Math.round(Number(entry.when) * 1000), hassOf()) === null) return null;
+      return { label: name + ' erkannt', icon: 'camera', tone: 'accent', passive: true };
     }
 
     if (isDoorbell(id, st)) {
@@ -17230,8 +17264,10 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     (events || []).forEach(function (e) {
       if (!e) return;
       var k = e.entity ? 'e:' + e.entity : 'l:' + e.label;
+      // Detections stack per trigger only: the same text from another trigger is another row.
+      if (e.passive) k = 'p:' + (e.entity || e.id);
       var h = byKey[k];
-      if (!h) {
+      if (!h && !e.passive) {
         h = heads.filter(function (x) {
           return x.label === e.label && x.members.some(function (m) { return Math.abs(m.when - e.when) < DEDUPE_MS; });
         })[0];
@@ -17403,8 +17439,23 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       ? hass.callWS({ type: 'logbook/get_events', start_time: from, entity_ids: ids })
       : Promise.resolve([]);
 
-    _busy = fetch.catch(function () { return []; }).then(function (entries) {
+    var binaryDetections = ids.filter(function (id) {
+      return id.indexOf('binary_sensor.') === 0 && listedDetection(id);
+    });
+    var history = (binaryDetections.length && hass.callWS)
+      ? hass.callWS({ type: 'history/history_during_period', start_time: from,
+          entity_ids: binaryDetections, include_start_time_state: true,
+          significant_changes_only: false, minimal_response: true, no_attributes: true })
+      : Promise.resolve({});
+
+    _busy = Promise.all([fetch.catch(function () { return []; }), history.catch(function () { return {}; })]).then(function (result) {
+      var entries = result[0];
       var prev = {};
+      binaryDetections.forEach(function (id) {
+        var first = result[1] && result[1][id] && result[1][id][0];
+        // Only a state at or before the window proves the missing predecessor.
+        if (first && typeof first.s === 'string' && Number(first.lu) * 1000 <= Date.parse(from)) prev[id] = first.s;
+      });
       var real = {};
       var events = [];
       var asked = {};
@@ -17426,7 +17477,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         // Kurzer Ausfall (unavailable/unknown) mitten im Ablauf: der letzte echte Zustand zählt.
         // Gleich wie vorher = Neustart, keine Neuigkeit; anders = echter Wechsel im Ausfall
         // (Sauger „returning → unavailable → docked“ ist fertig).
-        if (was !== undefined && DEAD.test(was) && real[id] !== undefined && !DEAD.test(cur)) {
+        if (!listedDetection(id) && was !== undefined && DEAD.test(was) && real[id] !== undefined && !DEAD.test(cur)) {
           was = real[id];
         }
         if (!DEAD.test(cur)) real[id] = cur;
@@ -17455,6 +17506,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
           opens: d.opens || null,
           once: d.once || null,
           done: !!d.done,
+          passive: !!d.passive,
         });
       });
 
@@ -17718,10 +17770,10 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         // mit führendem „·“ in eine eigene Zeile.
         sub: r.ongoing ? r.sub : (r.sub ? (toned ? [r.sub, ago(r.when)].filter(Boolean).join(' · ') : [r.sub, ago(r.when)]) : ago(r.when)),
         value: r.value || null,
-        entity: r.entity || null,
+        entity: r.passive ? null : (r.entity || null),
         image: r.image,
         imageFit: r.imageFit,
-        tappable: !!(r.entity || r.opens || many),
+        tappable: many || (!r.passive && !!(r.entity || r.opens)),
         // A stack: how many, and a chevron that points down (closed) or up (open). Tapping opens it.
         endHtml: many ? '<span class="casora-nst-n">' + Number(r.count) + '</span>' : null,
         noChev: many,
@@ -17783,6 +17835,10 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
             if (e && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); e.click(); }
           });
         }
+        continue;
+      }
+      if (list[i].passive) {
+        els[i].removeAttribute('data-casora-mi');
         continue;
       }
       if (!list[i].opens) continue;
@@ -18686,6 +18742,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     get count() { return unread(); },
     get doorbellFront() { return _doorbellFront; },
     get rows() { return _rows.slice(); },
+    sections: sections,
     // Tests and the list as drawn: open or close a stack, the rows with open stacks unfolded.
     stack: function (key, open) { _openStacks[key] = open !== false; },
     get shown() { var g = ordered(); return unfold(g.fresh).concat(unfold(g.old)); },

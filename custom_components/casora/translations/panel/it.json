@@ -1,6 +1,10 @@
 {
   "_comment": "Traduzione del pannello Casora. Chiave = testo originale inglese del pannello. Nuova lingua: crea il file <codice>.json, poi esegui tools/build-panel-i18n.py.",
   "exact": {
+    "Add sensor or event": "Aggiungi sensore o evento",
+    "Camera detections": "Rilevamenti della telecamera",
+    "Detection from": "Rilevamento da",
+    "Sensors or events that count as a detection at this camera. The name comes from Home Assistant.": "Sensori o eventi che contano come un rilevamento per questa telecamera. Il nome proviene da Home Assistant.",
     "Copy diagnostics…": "Copia diagnostica…",
     "Diagnostics": "Diagnostica",
     "Paste it into your GitHub issue. It contains only counts, versions and integrations – no names of devices, rooms or people, no addresses.": "Incollala nel tuo issue su GitHub. Contiene solo numeri, versioni e integrazioni: nessun nome di dispositivi, stanze o persone, nessun indirizzo.",

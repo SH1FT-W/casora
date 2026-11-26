@@ -109,7 +109,7 @@ texts.forEach((s) => assert.ok(src.includes(JSON.stringify(s).slice(1, -1)) || s
 // jump from a tile or the old battery list lands in the right section.
 const house = NEU.find((tl) => tl.id === 'house');
 assert.ok(house.fold && house.blocks.every((b) => !b.adv), 'Home & devices: sections, no Advanced');
-assert.deepEqual(house.blocks.map((b) => b.k), ['security', 'contacts', 'battery', 'scenes', 'media', 'waste', 'calendars', 'devices', 'climate'], 'Home & devices: order');
+assert.deepEqual(house.blocks.map((b) => b.k), ['security', 'contacts', 'battery', 'scenes', 'media', 'waste', 'cameras', 'calendars', 'devices', 'climate'], 'Home & devices: order');
 assert.deepEqual(route('home', 'battery'), ['n-house', 'nb-battery'], 'batteries → Home & devices');
 assert.deepEqual(route('home', 'notify_exclude'), ['n-bell', 'nb-notify'], '"Do not notify" stays with the bell');
 // Side panel tabs: every kind with shared settings points at a block that exists; kinds without any have no entry.

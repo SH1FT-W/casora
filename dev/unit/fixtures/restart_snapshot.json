@@ -1,0 +1,494 @@
+{
+ "note": "Entity names replaced. States and change times: get_states of the Test HA right after bin/haus restart (HA 2026.11.0), read at taken_at.",
+ "taken_at": "2026-11-26T11:20:23Z",
+ "states": [
+  {
+   "entity_id": "binary_sensor.test_item_0",
+   "state": "on",
+   "last_changed": "2026-11-26T11:19:51.298867+00:00",
+   "attributes": {
+    "friendly_name": "Test item 0"
+   }
+  },
+  {
+   "entity_id": "binary_sensor.test_motion",
+   "state": "on",
+   "last_changed": "2026-11-26T11:19:51.299162+00:00",
+   "attributes": {
+    "friendly_name": "Test motion"
+   }
+  },
+  {
+   "entity_id": "binary_sensor.test_item_2",
+   "state": "off",
+   "last_changed": "2026-11-26T11:19:51.299169+00:00",
+   "attributes": {
+    "friendly_name": "Test item 2"
+   }
+  },
+  {
+   "entity_id": "binary_sensor.test_item_3",
+   "state": "off",
+   "last_changed": "2026-11-26T11:19:51.299179+00:00",
+   "attributes": {
+    "friendly_name": "Test item 3"
+   }
+  },
+  {
+   "entity_id": "binary_sensor.test_item_4",
+   "state": "on",
+   "last_changed": "2026-11-26T11:19:51.299186+00:00",
+   "attributes": {
+    "friendly_name": "Test item 4"
+   }
+  },
+  {
+   "entity_id": "binary_sensor.test_item_5",
+   "state": "off",
+   "last_changed": "2026-11-26T11:19:51.299391+00:00",
+   "attributes": {
+    "friendly_name": "Test item 5"
+   }
+  },
+  {
+   "entity_id": "binary_sensor.test_item_6",
+   "state": "off",
+   "last_changed": "2026-11-26T11:19:51.299399+00:00",
+   "attributes": {
+    "friendly_name": "Test item 6"
+   }
+  },
+  {
+   "entity_id": "binary_sensor.test_item_7",
+   "state": "on",
+   "last_changed": "2026-11-26T11:19:51.299408+00:00",
+   "attributes": {
+    "friendly_name": "Test item 7"
+   }
+  },
+  {
+   "entity_id": "binary_sensor.test_item_8",
+   "state": "on",
+   "last_changed": "2026-11-26T11:19:51.299441+00:00",
+   "attributes": {
+    "friendly_name": "Test item 8"
+   }
+  },
+  {
+   "entity_id": "binary_sensor.test_item_9",
+   "state": "off",
+   "last_changed": "2026-11-26T11:19:51.299456+00:00",
+   "attributes": {
+    "friendly_name": "Test item 9"
+   }
+  },
+  {
+   "entity_id": "binary_sensor.test_item_10",
+   "state": "off",
+   "last_changed": "2026-11-26T11:19:51.299464+00:00",
+   "attributes": {
+    "friendly_name": "Test item 10"
+   }
+  },
+  {
+   "entity_id": "binary_sensor.test_item_11",
+   "state": "off",
+   "last_changed": "2026-11-26T11:19:51.299798+00:00",
+   "attributes": {
+    "friendly_name": "Test item 11"
+   }
+  },
+  {
+   "entity_id": "binary_sensor.test_item_12",
+   "state": "off",
+   "last_changed": "2026-11-26T11:19:51.300236+00:00",
+   "attributes": {
+    "friendly_name": "Test item 12"
+   }
+  },
+  {
+   "entity_id": "binary_sensor.test_item_13",
+   "state": "on",
+   "last_changed": "2026-11-26T11:19:51.300306+00:00",
+   "attributes": {
+    "friendly_name": "Test item 13"
+   }
+  },
+  {
+   "entity_id": "binary_sensor.test_item_14",
+   "state": "off",
+   "last_changed": "2026-11-26T11:19:51.300323+00:00",
+   "attributes": {
+    "friendly_name": "Test item 14"
+   }
+  },
+  {
+   "entity_id": "binary_sensor.test_item_15",
+   "state": "off",
+   "last_changed": "2026-11-26T11:19:51.300348+00:00",
+   "attributes": {
+    "friendly_name": "Test item 15"
+   }
+  },
+  {
+   "entity_id": "binary_sensor.test_item_16",
+   "state": "on",
+   "last_changed": "2026-11-26T11:19:51.300357+00:00",
+   "attributes": {
+    "friendly_name": "Test item 16"
+   }
+  },
+  {
+   "entity_id": "binary_sensor.test_item_17",
+   "state": "off",
+   "last_changed": "2026-11-26T11:19:51.300364+00:00",
+   "attributes": {
+    "friendly_name": "Test item 17"
+   }
+  },
+  {
+   "entity_id": "binary_sensor.test_item_18",
+   "state": "off",
+   "last_changed": "2026-11-26T11:19:51.300371+00:00",
+   "attributes": {
+    "friendly_name": "Test item 18"
+   }
+  },
+  {
+   "entity_id": "binary_sensor.test_item_19",
+   "state": "off",
+   "last_changed": "2026-11-26T11:19:51.300380+00:00",
+   "attributes": {
+    "friendly_name": "Test item 19"
+   }
+  },
+  {
+   "entity_id": "binary_sensor.test_item_20",
+   "state": "on",
+   "last_changed": "2026-11-26T11:19:51.300386+00:00",
+   "attributes": {
+    "friendly_name": "Test item 20"
+   }
+  },
+  {
+   "entity_id": "binary_sensor.test_item_21",
+   "state": "on",
+   "last_changed": "2026-11-26T11:19:51.300393+00:00",
+   "attributes": {
+    "friendly_name": "Test item 21"
+   }
+  },
+  {
+   "entity_id": "binary_sensor.test_item_22",
+   "state": "on",
+   "last_changed": "2026-11-26T11:19:51.300400+00:00",
+   "attributes": {
+    "friendly_name": "Test item 22"
+   }
+  },
+  {
+   "entity_id": "binary_sensor.test_item_23",
+   "state": "on",
+   "last_changed": "2026-11-26T11:19:51.300587+00:00",
+   "attributes": {
+    "friendly_name": "Test item 23"
+   }
+  },
+  {
+   "entity_id": "binary_sensor.test_item_24",
+   "state": "on",
+   "last_changed": "2026-11-26T11:19:51.301003+00:00",
+   "attributes": {
+    "friendly_name": "Test item 24"
+   }
+  },
+  {
+   "entity_id": "binary_sensor.test_item_25",
+   "state": "on",
+   "last_changed": "2026-11-26T11:19:51.301026+00:00",
+   "attributes": {
+    "friendly_name": "Test item 25"
+   }
+  },
+  {
+   "entity_id": "binary_sensor.test_item_26",
+   "state": "off",
+   "last_changed": "2026-11-26T11:19:51.301060+00:00",
+   "attributes": {
+    "friendly_name": "Test item 26"
+   }
+  },
+  {
+   "entity_id": "binary_sensor.test_item_27",
+   "state": "off",
+   "last_changed": "2026-11-26T11:19:51.301092+00:00",
+   "attributes": {
+    "friendly_name": "Test item 27"
+   }
+  },
+  {
+   "entity_id": "binary_sensor.test_item_28",
+   "state": "off",
+   "last_changed": "2026-11-26T11:19:51.301122+00:00",
+   "attributes": {
+    "friendly_name": "Test item 28"
+   }
+  },
+  {
+   "entity_id": "binary_sensor.test_item_29",
+   "state": "off",
+   "last_changed": "2026-11-26T11:19:51.301152+00:00",
+   "attributes": {
+    "friendly_name": "Test item 29"
+   }
+  },
+  {
+   "entity_id": "conversation.test_item_30",
+   "state": "unknown",
+   "last_changed": "2026-11-26T11:19:49.771098+00:00",
+   "attributes": {
+    "friendly_name": "Test item 30"
+   }
+  },
+  {
+   "entity_id": "event.test_item_31",
+   "state": "2026-11-09T04:44:33.387+00:00",
+   "last_changed": "2026-11-26T11:19:49.774223+00:00",
+   "attributes": {
+    "friendly_name": "Test item 31"
+   }
+  },
+  {
+   "entity_id": "sensor.test_item_32",
+   "state": "idle",
+   "last_changed": "2026-11-26T11:19:51.489154+00:00",
+   "attributes": {
+    "friendly_name": "Test item 32"
+   }
+  },
+  {
+   "entity_id": "sensor.test_item_33",
+   "state": "unknown",
+   "last_changed": "2026-11-26T11:19:49.774913+00:00",
+   "attributes": {
+    "friendly_name": "Test item 33"
+   }
+  },
+  {
+   "entity_id": "sensor.test_item_34",
+   "state": "unknown",
+   "last_changed": "2026-11-26T11:19:49.775026+00:00",
+   "attributes": {
+    "friendly_name": "Test item 34"
+   }
+  },
+  {
+   "entity_id": "sensor.test_item_35",
+   "state": "unknown",
+   "last_changed": "2026-11-26T11:19:49.775131+00:00",
+   "attributes": {
+    "friendly_name": "Test item 35"
+   }
+  },
+  {
+   "entity_id": "sensor.test_item_36",
+   "state": "unknown",
+   "last_changed": "2026-11-26T11:19:49.775258+00:00",
+   "attributes": {
+    "friendly_name": "Test item 36"
+   }
+  },
+  {
+   "entity_id": "zone.test_item_37",
+   "state": "0",
+   "last_changed": "2026-11-26T11:19:49.994941+00:00",
+   "attributes": {
+    "friendly_name": "Test item 37"
+   }
+  },
+  {
+   "entity_id": "input_select.test_item_38",
+   "state": "all",
+   "last_changed": "2026-11-26T11:19:50.012431+00:00",
+   "attributes": {
+    "friendly_name": "Test item 38"
+   }
+  },
+  {
+   "entity_id": "input_select.test_item_39",
+   "state": "media",
+   "last_changed": "2026-11-26T11:19:51.566438+00:00",
+   "attributes": {
+    "friendly_name": "Test item 39"
+   }
+  },
+  {
+   "entity_id": "input_select.test_item_40",
+   "state": "heat",
+   "last_changed": "2026-11-26T11:19:50.012640+00:00",
+   "attributes": {
+    "friendly_name": "Test item 40"
+   }
+  },
+  {
+   "entity_id": "input_boolean.test_item_41",
+   "state": "on",
+   "last_changed": "2026-11-26T11:19:50.012809+00:00",
+   "attributes": {
+    "friendly_name": "Test item 41"
+   }
+  },
+  {
+   "entity_id": "input_boolean.test_item_42",
+   "state": "off",
+   "last_changed": "2026-11-26T11:19:50.012878+00:00",
+   "attributes": {
+    "friendly_name": "Test item 42"
+   }
+  },
+  {
+   "entity_id": "input_boolean.test_item_43",
+   "state": "off",
+   "last_changed": "2026-11-26T11:19:50.012943+00:00",
+   "attributes": {
+    "friendly_name": "Test item 43"
+   }
+  },
+  {
+   "entity_id": "input_boolean.test_item_44",
+   "state": "off",
+   "last_changed": "2026-11-26T11:19:50.013000+00:00",
+   "attributes": {
+    "friendly_name": "Test item 44"
+   }
+  },
+  {
+   "entity_id": "input_boolean.test_item_45",
+   "state": "off",
+   "last_changed": "2026-11-26T11:19:50.013051+00:00",
+   "attributes": {
+    "friendly_name": "Test item 45"
+   }
+  },
+  {
+   "entity_id": "input_boolean.test_item_46",
+   "state": "off",
+   "last_changed": "2026-11-26T11:19:50.013100+00:00",
+   "attributes": {
+    "friendly_name": "Test item 46"
+   }
+  },
+  {
+   "entity_id": "input_boolean.test_item_47",
+   "state": "on",
+   "last_changed": "2026-11-26T11:19:50.013156+00:00",
+   "attributes": {
+    "friendly_name": "Test item 47"
+   }
+  },
+  {
+   "entity_id": "input_boolean.test_item_48",
+   "state": "off",
+   "last_changed": "2026-11-26T11:19:50.013211+00:00",
+   "attributes": {
+    "friendly_name": "Test item 48"
+   }
+  },
+  {
+   "entity_id": "input_boolean.test_item_49",
+   "state": "off",
+   "last_changed": "2026-11-26T11:19:50.013265+00:00",
+   "attributes": {
+    "friendly_name": "Test item 49"
+   }
+  },
+  {
+   "entity_id": "input_boolean.test_item_50",
+   "state": "off",
+   "last_changed": "2026-11-26T11:19:50.013326+00:00",
+   "attributes": {
+    "friendly_name": "Test item 50"
+   }
+  },
+  {
+   "entity_id": "input_boolean.test_item_51",
+   "state": "off",
+   "last_changed": "2026-11-26T11:19:50.013392+00:00",
+   "attributes": {
+    "friendly_name": "Test item 51"
+   }
+  },
+  {
+   "entity_id": "input_number.test_item_52",
+   "state": "15.0",
+   "last_changed": "2026-11-26T11:19:50.013669+00:00",
+   "attributes": {
+    "friendly_name": "Test item 52"
+   }
+  },
+  {
+   "entity_id": "person.test_item_53",
+   "state": "unknown",
+   "last_changed": "2026-11-26T11:19:50.013910+00:00",
+   "attributes": {
+    "friendly_name": "Test item 53"
+   }
+  },
+  {
+   "entity_id": "input_datetime.test_item_54",
+   "state": "2026-11-21 00:00:00",
+   "last_changed": "2026-11-26T11:19:50.252601+00:00",
+   "attributes": {
+    "friendly_name": "Test item 54"
+   }
+  },
+  {
+   "entity_id": "input_text.test_item_55",
+   "state": "",
+   "last_changed": "2026-11-26T11:19:50.252800+00:00",
+   "attributes": {
+    "friendly_name": "Test item 55"
+   }
+  },
+  {
+   "entity_id": "input_text.test_item_56",
+   "state": "",
+   "last_changed": "2026-11-26T11:19:50.252872+00:00",
+   "attributes": {
+    "friendly_name": "Test item 56"
+   }
+  },
+  {
+   "entity_id": "input_text.test_item_57",
+   "state": "",
+   "last_changed": "2026-11-26T11:19:50.252929+00:00",
+   "attributes": {
+    "friendly_name": "Test item 57"
+   }
+  },
+  {
+   "entity_id": "sun.test_item_58",
+   "state": "above_horizon",
+   "last_changed": "2026-11-26T11:19:50.978644+00:00",
+   "attributes": {
+    "friendly_name": "Test item 58"
+   }
+  },
+  {
+   "entity_id": "sensor.test_item_59",
+   "state": "2026-11-27T06:41:42+00:00",
+   "last_changed": "2026-11-26T11:19:50.979300+00:00",
+   "attributes": {
+    "friendly_name": "Test item 59"
+   }
+  },
+  {
+   "entity_id": "sensor.test_item_60",
+   "state": "12:20",
+   "last_changed": "2026-11-26T11:20:00.000870+00:00",
+   "attributes": {
+    "friendly_name": "Test item 60"
+   }
+  }
+ ]
+}

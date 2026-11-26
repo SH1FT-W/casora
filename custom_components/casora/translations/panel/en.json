@@ -1,6 +1,10 @@
 {
   "_comment": "Casora-Panel-Übersetzung. Schlüssel = englischer Originaltext im Panel. Neue Sprache: Datei <code>.json anlegen, dann tools/build-panel-i18n.py.",
   "exact": {
+    "Add sensor or event": "Add sensor or event",
+    "Camera detections": "Camera detections",
+    "Detection from": "Detection from",
+    "Sensors or events that count as a detection at this camera. The name comes from Home Assistant.": "Sensors or events that count as a detection at this camera. The name comes from Home Assistant.",
     "Casora": "Casora",
     "Welcome to Casora": "Welcome to Casora",
     "Leave Casora?": "Leave Casora?",

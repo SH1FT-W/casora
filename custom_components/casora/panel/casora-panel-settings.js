@@ -26,7 +26,7 @@
     live: ["n-phone", "nb-live"], fuel: ["n-wx", "nb-fuel"], home: ["n-house"],
   };
   // A focus inside an earlier page (a group of casora-panel-personal.js) → its block.
-  const FOCUS_BLOCK = { waste: "waste", contacts: "contacts", security: "security", scenes: "scenes", media: "media",
+  const FOCUS_BLOCK = { cameras: "cameras", waste: "waste", contacts: "contacts", security: "security", scenes: "scenes", media: "media",
     devices: "devices", calendars: "calendars", notify: "notify", notify_exclude: "notify", battery: "battery", basis: "basis", umzug: "umzug", climate: "climate" };
   const route = (pageId, focus) => {
     const id = String(pageId || "n-start");
@@ -146,6 +146,9 @@
         { k: "waste", personal: ["waste"], title: "Waste collection",
           plain: "Which bins are collected when, so tiles and the bell remind you.",
           kw: "abfall müll muell tonne abholung restmüll papier gelber sack bio" },
+        { k: "cameras", personal: ["cameras"], title: "Cameras",
+          plain: "Sensors or events that count as a detection at this camera. The name comes from Home Assistant.",
+          kw: "kamera camera cameras erkennung detection" },
         { k: "calendars", personal: ["calendars"], title: "Calendars",
           plain: "Which calendars the calendar tiles show, with name and color.",
           kw: "kalender termine farbe calendar" },
@@ -249,6 +252,8 @@
     + ".cn-fold>.cn-bhead::after{content:'›';position:absolute;right:13px;top:50%;transform:translateY(-50%);font-size:20px;color:var(--ink-3)}"
     + ".cn-fold.open>.cn-bhead::after{transform:translateY(-50%) rotate(90deg)}"
     + ".cn-fold>.cn-bhead:focus-visible{outline:2px solid var(--accent);outline-offset:2px}"
+    // The camera fold is a plain button, not a block heading: full width, no border, its own text.
+    + ".camera-fold>.cn-bhead{width:100%;border:0;color:var(--ink);font:inherit;text-align:left}"
     // Tabs of a tile's side panel.
     + ".tiletabs{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:2px;padding:3px;margin:0 0 12px;border-radius:var(--r-m);background:var(--casora-studio-chip,rgba(118,118,128,.18))}"
     + ".tiletabs button{all:unset;box-sizing:border-box;cursor:pointer;min-height:36px;padding:0 4px;display:flex;align-items:center;justify-content:center;text-align:center;border-radius:calc(var(--r-m) - 3px);font-size:var(--t-foot);font-weight:500;line-height:20px;color:var(--ink)}"

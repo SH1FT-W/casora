@@ -1,6 +1,10 @@
 {
   "_comment": "Casora-paneloversettelse. Nøkkel = engelsk originaltekst i panelet. Nytt språk: opprett filen <kode>.json, kjør deretter tools/build-panel-i18n.py.",
   "exact": {
+    "Add sensor or event": "Legg til sensor eller hendelse",
+    "Camera detections": "Kameradeteksjoner",
+    "Detection from": "Deteksjon fra",
+    "Sensors or events that count as a detection at this camera. The name comes from Home Assistant.": "Sensorer eller hendelser som regnes som deteksjon ved dette kameraet. Navnet kommer fra Home Assistant.",
     "Copy diagnostics…": "Kopier diagnostikk…",
     "Diagnostics": "Diagnostikk",
     "Paste it into your GitHub issue. It contains only counts, versions and integrations – no names of devices, rooms or people, no addresses.": "Lim den inn i GitHub-saken din. Den inneholder bare antall, versjoner og integrasjoner – ingen navn på enheter, rom eller personer, ingen adresser.",

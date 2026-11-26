@@ -2,6 +2,7 @@
 // A Ring-style camera alert must expire even when sensor.time is absent,
 // and also when sensor.time exists but has no usable value (unavailable, unknown, empty).
 import assert from 'node:assert/strict';
+import './_detection_rule.mjs';
 import fs from 'node:fs';
 import { testhaus } from './lib/testhaus.mjs';
 

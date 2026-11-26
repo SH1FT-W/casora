@@ -104,6 +104,7 @@
     s.media = s.media || {};
     s.media.players = s.media.players || {};
     s.media.hidden = Array.isArray(s.media.hidden) ? s.media.hidden : [];
+    s.cameras = Array.isArray(s.cameras) ? s.cameras : [];
     s.ebike = s.ebike || {};
     s.basis = s.basis || {};
     // #202: room types and changed recommended values (climate.rooms: name → type, climate.types: type → fields).
@@ -195,6 +196,7 @@
       const self = this;
       const hass = this._hass;
       const want = (k) => keys.includes(k);
+      const tr = (x) => (window.casoraI18n ? window.casoraI18n.t(x) : x);
       const group = (key, opts) => {
         const list = self._flowGroup(host, opts);
         list.parentElement.dataset.pkey = key;
@@ -383,6 +385,74 @@
             (v) => { S.waste.duty_entity = v; render(); })], "Instead of fixed months");
           // No "Reminder automation" row: the popup's "Push the evening before" switch is gone (popup v3 is clean).
         }, ["Advanced", "Advanced"]);
+      }
+
+      if (want("cameras")) {
+        g = group("cameras", { header: "Cameras" });
+        const cameras = S.cameras;
+        const registry = hass.entities || {}, devices = hass.devices || {};
+        const nameOf = (id) => self._prettyEntity(id) || id;
+        const ids = self._entityList(["camera"], null).filter((id) => {
+          const meta = registry[id] || {};
+          return id.startsWith("camera.") && !meta.hidden && !meta.hidden_by && !meta.disabled_by && !meta.entity_category;
+        });
+        const changed = () => { if (self._csBar) self._csBar(); render(); };
+        if (!cameras.length && !ids.length) self._flowRow(g, { title: "No Cameras", sub: "Nothing found in Home Assistant." });
+        cameras.forEach((camera, index) => {
+          const fold = document.createElement("div");
+          fold.className = "cn-fold camera-fold";
+          const toggle = document.createElement("button");
+          toggle.type = "button";
+          toggle.className = "cn-bhead";
+          toggle.textContent = camera.name || nameOf(camera.entity_id);
+          toggle.setAttribute("data-no-i18n", "");
+          const key = camera.entity_id;
+          const open = self._csCameraOpen === key;
+          toggle.setAttribute("aria-expanded", String(open));
+          toggle.onclick = () => { self._csCameraOpen = open ? null : key; render(); };
+          fold.appendChild(toggle);
+          if (open) {
+            const list = self._flowGroup(fold, { header: "Camera detections" });
+            const values = () => Array.isArray(camera.detection_triggers) ? camera.detection_triggers : [];
+            const choices = () => self._entityList(["binary_sensor", "event"], null)
+              .filter((id) => !values().includes(id))
+              .sort((a, b) => nameOf(a).localeCompare(nameOf(b)));
+            const picker = self._combo("", choices(), "Add sensor or event", (id) => {
+              if (!choices().includes(id)) return;
+              if (!Array.isArray(camera.detection_triggers)) camera.detection_triggers = [];
+              camera.detection_triggers.push(id);
+              changed();
+            }, { entity: true, source: choices });
+            row(list, "Detection from", [picker.wrap],
+              "Sensors or events that count as a detection at this camera. The name comes from Home Assistant.");
+            values().forEach((id, triggerIndex) => {
+              row(list, nameOf(id), [del(() => {
+                camera.detection_triggers.splice(triggerIndex, 1);
+                if (!camera.detection_triggers.length) delete camera.detection_triggers;
+                if (self._csBar) self._csBar();
+              })]).setAttribute("data-no-i18n", "");
+            });
+            const removeCamera = del(() => { cameras.splice(index, 1); self._csCameraOpen = null; if (self._csBar) self._csBar(); });
+            const removeLabel = tr("Remove") + ": " + (camera.name || nameOf(camera.entity_id));
+            removeCamera.title = removeLabel;
+            removeCamera.setAttribute("aria-label", removeLabel);
+            row(list, "Remove", [removeCamera]);
+          }
+          if (open) fold.classList.add("open");
+          g.appendChild(fold);
+        });
+        const choices = ids.filter((id) => !cameras.some((camera) => camera.entity_id === id));
+        if (choices.length) {
+          row(g, "Add a camera", [self._combo("", choices, "Add a camera", (id) => {
+            if (!choices.includes(id)) return;
+            const device = registry[id] && registry[id].device_id;
+            const info = device && devices[device];
+            cameras.push({ entity_id: id, device_id: device || null,
+              name: (info && (info.name_by_user || info.name)) || nameOf(id) });
+            self._csCameraOpen = id;
+            changed();
+          }, { entity: true }).wrap]);
+        }
       }
 
       if (want("calendars")) {
