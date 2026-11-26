@@ -69,7 +69,7 @@
   window.__casoraStudioLive = { COLORS, KIND_LABEL, GRADE_LABEL, PHASE_LABEL, DEFAULTS, deviceSub, cleanDevices, draftOf, settingsOf, logLine,
     saveDevices, sentText };
 
-  const CSS = ".cs-live-row .fswitch{margin-left:auto;flex:none}"
+  const CSS = ".cs-live-row>.sw{margin-left:auto;flex:none}"
     // Phone: wrap sublines (kind · source · grade) and explanations instead of „Home Connect (HAC…“.
     + ".cs-wrap .frow.cs-live-row .rtext span,.cs-wrap .frow.cs-live-opt .rtext span,.cs-wrap .frow.cs-live-opt .rtext b{white-space:normal;overflow:visible;text-overflow:clip}"
     // Per-device settings: select/switch on the right in the same row (like „Umkreis“ on the Tanken page).
@@ -162,8 +162,9 @@
       });
       return box;
     };
+    // The settings' own switch (.sw, like every other settings row), not the larger iOS one (Prüfrunde d04-06).
     const fswitch = (on, onChange) => {
-      const sw = el("button", "fswitch");
+      const sw = el("button", "sw");
       sw.type = "button";
       sw.setAttribute("role", "switch");
       sw.setAttribute("aria-checked", on ? "true" : "false");
