@@ -3024,7 +3024,8 @@
     "Wartet": "Venter",
     "Ein Profil braucht mindestens ein Zeitfenster": "En profil trenger minst ett tidsvindu",
     "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "Tidsplanen er endret i mellomtiden, rediger den på nytt",
-    "Noch keine Geräte": "Ingen enheter ennå"
+    "Noch keine Geräte": "Ingen enheter ennå",
+    "Für alle ausblenden": "Skjul for alle"
   },
   "patterns": [
     [

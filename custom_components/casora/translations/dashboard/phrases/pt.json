@@ -3031,7 +3031,8 @@
     "Wartet": "Em espera",
     "Ein Profil braucht mindestens ein Zeitfenster": "Um perfil precisa de pelo menos um intervalo",
     "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "O horário mudou entretanto, edita-o novamente",
-    "Noch keine Geräte": "Ainda sem dispositivos"
+    "Noch keine Geräte": "Ainda sem dispositivos",
+    "Für alle ausblenden": "Ocultar para todos"
   },
   "patterns": [
     [

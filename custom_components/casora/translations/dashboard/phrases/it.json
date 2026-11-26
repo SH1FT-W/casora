@@ -3031,7 +3031,8 @@
     "Wartet": "In attesa",
     "Ein Profil braucht mindestens ein Zeitfenster": "Un profilo ha bisogno di almeno una fascia",
     "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "Il programma è cambiato nel frattempo, modificalo di nuovo",
-    "Noch keine Geräte": "Ancora nessun dispositivo"
+    "Noch keine Geräte": "Ancora nessun dispositivo",
+    "Für alle ausblenden": "Nascondi per tutti"
   },
   "patterns": [
     [

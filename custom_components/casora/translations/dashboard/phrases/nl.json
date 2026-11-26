@@ -3031,7 +3031,8 @@
     "Wartet": "Wacht",
     "Ein Profil braucht mindestens ein Zeitfenster": "Een profiel heeft minstens één tijdvak nodig",
     "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "Het schema is intussen gewijzigd, bewerk het opnieuw",
-    "Noch keine Geräte": "Nog geen apparaten"
+    "Noch keine Geräte": "Nog geen apparaten",
+    "Für alle ausblenden": "Voor iedereen verbergen"
   },
   "patterns": [
     [

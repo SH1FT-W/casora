@@ -3031,7 +3031,8 @@
     "Wartet": "Czeka",
     "Ein Profil braucht mindestens ein Zeitfenster": "Profil potrzebuje co najmniej jednego przedziału",
     "Der Zeitplan wurde inzwischen geändert, bitte noch einmal bearbeiten": "Harmonogram zmienił się w międzyczasie, edytuj go ponownie",
-    "Noch keine Geräte": "Jeszcze brak urządzeń"
+    "Noch keine Geräte": "Jeszcze brak urządzeń",
+    "Für alle ausblenden": "Ukryj dla wszystkich"
   },
   "patterns": [
     [
