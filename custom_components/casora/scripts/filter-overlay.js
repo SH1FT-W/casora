@@ -1705,6 +1705,8 @@
       if ((this._config.sections || []).length) { this._autoSectionsDone = true; return; }
       const container = this._container;
       if (!container || !this._helpers || !this._contentEl) return;
+      // The phone's Home builds its room sections after the load (smart-row.js, w02-02): this page reads them.
+      if (typeof window.casoraBuildDeferred === 'function') window.casoraBuildDeferred();
       const roomMode = this._config.room || null;
       const rooms = [];
       let pending = null; // last seen room header

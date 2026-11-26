@@ -171,6 +171,8 @@
   var blindsOut = [];
   var roomsOf = function (cat) {
     if (cat === 'climate') blindsOut = [];
+    // The room sections are built after the load (smart-row.js, w02-02); the hub reads their tiles.
+    if (typeof window.casoraBuildDeferred === 'function') window.casoraBuildDeferred();
     var ov = deep(haRoot(), function (n) { return n.localName === 'casora-filter-overlay' && n._config && n._config.filter_category === cat; }, 1)[0];
     var found = ov && typeof ov._findContainerAndSelf === 'function' ? ov._findContainerAndSelf() : null;
     var container = found && found.container;
