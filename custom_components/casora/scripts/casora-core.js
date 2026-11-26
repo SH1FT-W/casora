@@ -6936,6 +6936,125 @@ window.casoraMenuGlass = {
   });
 })();
 
+// Back button / back gesture (u06-01, 26.11.2026): Casora's own layers – an open popup, a sub page in it, an open room
+// of the phone dashboard – each hold one history entry on the same address. The phone's back (Android button, iOS edge
+// swipe in the app or Safari, the browser's back) closes the top layer first: sub page → the page before (as its ‹),
+// popup → closed, room → Home; only then does back leave the dashboard. The address never changes, deep links stay.
+// - push(tag, onBack): one entry { casoraBack: { sid, id, d } } on the same URL (the state's other keys are kept, HA's
+//   dialog keys and the photo zoom's flag dropped). onBack runs when a back lands below the layer; returning false keeps
+//   the layer open (it gets a new entry: a popup that may not be dismissed).
+// - release(layer): the layer closed by itself (X, ‹, Home, idle …): it and the layers above it go from the list at
+//   once; one tick later, if the address still stands on the top one's entry (the code did not navigate meanwhile),
+//   history.go(-n) takes those entries back – no dead entry waits for a later back (no double back). Navigated away:
+//   the entries stay behind as dead ones.
+// - popstate: the entry landed on decides. A live layer's entry: every layer above it goes. A dead entry of this page
+//   load: every layer at or above its depth. Any other entry: all layers go – except HA's own dialog entries (its more
+//   info over a popup), which are HA's business. HA keeps the entry below its dialog ({...state, opensDialog: true}),
+//   so a layer's mark survives a more-info over it (docs/ha-annahmen.md).
+// - While a go() of ours is on its way, pushes and releases wait for it (never a push before that back arrived).
+// Only in the top window: the Studio's preview frame keeps no history. model() is pure (dev/unit/zurueck_ebenen.mjs).
+(function () {
+  if (window.casoraBack) return;
+  var DROP = ['dialog', 'dialogParams', 'open', 'oldState', 'casoraZoom'];
+
+  function model(env) {
+    var H = env.history, sid = env.sid;
+    var layers = [], seq = 0, busy = false, waiting = [], busyT = null;
+    var mark = function () {
+      var s = H.state, m = s && typeof s === 'object' ? s.casoraBack : null;
+      return m && m.sid === sid ? m : null;
+    };
+    var run = function (fn) { if (busy) waiting.push(fn); else fn(); };
+    var settle = function () {
+      if (!busy) return;
+      busy = false;
+      if (busyT != null) { env.clear(busyT); busyT = null; }
+      var q = waiting;
+      waiting = [];
+      q.forEach(run);
+    };
+    var go = function (n) {
+      busy = true;
+      busyT = env.later(settle, 800);   // a back that never arrives must not hold everything
+      try { H.go(-n); } catch (e) { settle(); }
+    };
+    var enter = function (L) {
+      if (L.gone || L.live) return;
+      var top = layers[layers.length - 1];
+      L.id = ++seq;
+      L.d = (top ? top.d : 0) + 1;
+      var st = {}, cur = H.state;
+      if (cur && typeof cur === 'object') {
+        Object.keys(cur).forEach(function (k) { if (DROP.indexOf(k) < 0) st[k] = cur[k]; });
+      }
+      st.casoraBack = { sid: sid, id: L.id, d: L.d };
+      try { H.pushState(st, ''); } catch (e) { return; }
+      L.live = true;
+      layers.push(L);
+    };
+    var push = function (tag, onBack) {
+      var L = { tag: String(tag || ''), onBack: onBack, id: 0, d: 0, live: false, gone: false };
+      run(function () { enter(L); });
+      return L;
+    };
+    var release = function (L) {
+      if (!L || L.gone) return;
+      L.gone = true;
+      var i = layers.indexOf(L);
+      if (i < 0) return;                          // never entered (still waiting): nothing to take back
+      var off = layers.splice(i);
+      off.forEach(function (x) { x.gone = true; x.live = false; });
+      var topId = off[off.length - 1].id, n = off.length;
+      env.later(function () {
+        run(function () {
+          var m = mark();
+          if (m && m.id === topId) go(n);
+        });
+      }, 0);
+    };
+    var onPop = function () {
+      var m = mark(), s = H.state, keep;
+      if (m) {
+        keep = -1;
+        for (var i = 0; i < layers.length; i++) if (layers[i].id === m.id) keep = i + 1;
+        if (keep < 0) { keep = 0; while (keep < layers.length && layers[keep].d < m.d) keep++; }
+      } else if (s && typeof s === 'object' && 'dialog' in s) {
+        keep = layers.length;
+      } else keep = 0;
+      var off = layers.splice(keep);
+      off.forEach(function (x) { x.gone = true; x.live = false; });
+      off.reverse().forEach(function (L) {
+        var ok;
+        try { ok = typeof L.onBack === 'function' ? L.onBack() : undefined; } catch (e) { ok = undefined; }
+        if (ok === false) { L.gone = false; run(function () { enter(L); }); }
+      });
+      settle();
+    };
+    return {
+      push: push, release: release, onPop: onPop,
+      layers: function () { return layers.map(function (x) { return x.tag; }); },
+      busy: function () { return busy; },
+    };
+  }
+
+  var topWin = true;
+  try { topWin = window.top === window; } catch (e) { topWin = false; }
+  if (!topWin || !window.history || typeof window.history.pushState !== 'function' || !window.addEventListener) {
+    window.casoraBack = { model: model, push: function (tag) { return { tag: tag, gone: false }; }, release: function () {},
+      layers: function () { return []; } };
+    return;
+  }
+  var api = model({
+    history: window.history,
+    sid: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+    later: function (fn, ms) { return setTimeout(fn, ms); },
+    clear: function (t) { clearTimeout(t); },
+  });
+  api.model = model;
+  window.casoraBack = api;
+  window.addEventListener('popstate', function () { api.onPop(); });
+})();
+
 (function () {
   if (window.casoraPopup) return;
 
@@ -9087,6 +9206,7 @@ window.casoraMenuGlass = {
         this._prevOverflow = document.documentElement.style.overflow;
         document.documentElement.style.overflow = 'hidden';
       }
+      this._backSync(!wasOpen);
 
       if (hasHeader && cfg.header_actions && typeof cfg.header_actions === 'object') {
         await this._buildCard(cfg.header_actions, this._headerActions);
@@ -9877,6 +9997,40 @@ window.casoraMenuGlass = {
       try { next.focus(); } catch (x) { /* gone */ }
     }
 
+    // Back gesture (u06-01, window.casoraBack): an open popup holds one history entry, a sub page (‹ shown) one more.
+    // Back on a sub page does what its ‹ does, back on a page without ‹ closes the popup (not when it may not be
+    // dismissed: it stays, with a new entry). Sub page → sub page keeps the one entry; ‹ to a page without ‹ takes it
+    // back. fresh: the popup was closed before this open().
+    _backSync(fresh) {
+      var B = window.casoraBack;
+      if (!B || !this.hasAttribute('open')) return;
+      var self = this;
+      if (fresh || !this._histPopup || this._histPopup.gone) {
+        if (this._histPage) B.release(this._histPage);
+        if (this._histPopup) B.release(this._histPopup);
+        this._histPage = null;
+        this._histPopup = B.push('popup', function () {
+          if (!self._dismissable) return false;
+          self._histPopup = self._histPage = null;
+          self.close();
+        });
+      }
+      var want = !!this._backFn, have = !!(this._histPage && !this._histPage.gone);
+      if (want && !have) {
+        var page = this._histPage = B.push('page', function () {
+          if (self._histPage === page) self._histPage = null;
+          // A back past the popup as well (long press on back): the popup closes, no page opens.
+          if (!self._histPopup || self._histPopup.gone || !self.hasAttribute('open')) return;
+          var fn = self._backFn;
+          self._navBackAt = Date.now();
+          if (typeof fn === 'function') fn();
+        });
+      } else if (!want && have) {
+        B.release(this._histPage);
+        this._histPage = null;
+      }
+    }
+
     dismiss() {
       if (Date.now() < (window._casoraSuppressDismiss || 0)) return;
       if (this._dismissable) this.close();
@@ -9949,6 +10103,9 @@ window.casoraMenuGlass = {
       window.removeEventListener('location-changed', this._onNav, true);
       window.removeEventListener('popstate', this._onNav, true);
       document.documentElement.style.overflow = this._prevOverflow || '';
+      // Back gesture (u06-01): the popup's history entries (and its sub page's) go with it.
+      if (this._histPopup && window.casoraBack) window.casoraBack.release(this._histPopup);
+      this._histPopup = this._histPage = null;
       // Focus back to where it was before the popup opened (its tile), if it is still in the popup or nowhere.
       var back = this._focusBack, now = deepFocus();
       this._focusBack = null;
@@ -18901,6 +19058,38 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   };
   // Karten, die vor diesem Skript Zustände bekamen, melden sich jetzt am Filter an (P-01).
   try { window.dispatchEvent(new Event('casora-filter-ready')); } catch (e) {}
+})();
+
+// Back gesture on the phone dashboard (u06-01, window.casoraBack): an open room (or a category / the scenes page) holds
+// one history entry, a back goes Home – as the room's ‹ does. Room → room (menu, swipe) keeps that one entry; Home by
+// any other way (‹, Home button, swipe, idle return) takes it back. A reload starts on Home (filter-overlay), so a page
+// load starts without one.
+(function () {
+  var F = window._casoraFilter;
+  if (!F || F._backBound || !window.casoraBack) return;
+  F._backBound = true;
+  var layer = null, last = F.get();
+  var home = function () {
+    var o = window._hmnOwner;
+    if (o && o.isConnected && typeof o._set === 'function') {
+      if (typeof o._closeMenu === 'function') o._closeMenu();
+      o._set('all');
+      return;
+    }
+    var v = F.set('all');
+    var ha = document.querySelector('home-assistant');
+    F.share(ha && ha.hass, v);
+  };
+  F.onChange(function (v) {
+    if (v === last) return;
+    last = v;
+    if (v !== 'all' && !layer) {
+      layer = window.casoraBack.push('room', function () { layer = null; home(); });
+    } else if (v === 'all' && layer) {
+      window.casoraBack.release(layer);
+      layer = null;
+    }
+  });
 })();
 
 // Raum-Badges am Handy wie im Raum-Kopf am Desktop/Tablet (05.10.2026). Die Raumseite am Handy
