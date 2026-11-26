@@ -44,6 +44,18 @@ assert.equal(V.show_offline, false, 'the tile\'s own entity still does not decid
   assert.equal(run(st.value, S['camera.example_living'], S, some), false, 'one reachable: the tile says „1 offline“ itself');
   assert.equal(run(st.value, null, S, { show_offline: false, offline_members: [] }), false, 'no cameras: not offline');
 }
+// Test round 26.11.2026 (u06-08, decision „Offline überall gleich: orange Warnung, auch für die Kameras-Gruppe“): with
+// some cameras offline the tile's own „1 offline“ is in the offline look's warning colour, not grey.
+{
+  globalThis.casoraStateFit = (t) => t;
+  const sd = (cameras) => run(T.casora_cameras.state_display, S[cameras[0]], S, { cameras });
+  const one = sd(['camera.example_living', 'camera.example_door']);
+  assert.match(one, /^<span style="color:var\(--casora-entity-offline-color, var\(--casora-popup-ui-warn/, 'warning colour');
+  assert.match(one, />1 offline<\/span>$/);
+  assert.equal(st.styles.state[0].color.split(' !important')[0], 'var(--casora-entity-offline-color, var(--casora-popup-ui-warn, var(--casora-color-orange-deep, #B96A33)))', 'same colour as the offline look');
+  assert.ok(!/<span/.test(sd(['camera.example_door'])), 'all reachable: no warning');
+  delete globalThis.casoraStateFit;
+}
 // Other tiles keep their rule.
 assert.equal(run(st.value, S['camera.example_living'], S, { show_offline: false }), false);
 assert.equal(run(st.value, S['camera.example_living'], S, {}), true);
