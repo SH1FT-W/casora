@@ -994,6 +994,7 @@
         b.addEventListener('click', function (ev) { ev.stopPropagation(); self._switch(Number(b.getAttribute('data-i'))); });
       });
       this._bindSwipe(r.querySelector('.st'));
+      this._bindTouchTap(r);
       // Popups schließen am Handy beim Wischen über touchstart – Knöpfe handeln auf click, Wischen bleibt beim Popup.
       r.querySelector('.snd').addEventListener('click', function (ev) { ev.stopPropagation(); self._toggleSound(); });
       var tb = r.querySelector('.tlk');
@@ -1319,6 +1320,29 @@
       if (window.casoraHaptic) window.casoraHaptic('light');
       this._view = i;
       this._sync();
+    };
+    // #23: in the popup this card sits in a stage card (button-card) whose action handler cancels touchend, so a
+    // finger never produced the click the buttons listen to (a mouse did: full screen, camera switch, Listen, Talk
+    // worked on a Mac, not on a tablet). A tap on a button fires its click here, on touchend; the browser's own
+    // click after it is cancelled so nothing fires twice. A finger that moved is a scroll, not a tap.
+    P._bindTouchTap = function (r) {
+      var tp = null;
+      r.addEventListener('touchstart', function (ev) {
+        var t = ev.touches && ev.touches[0];
+        var b = t && ev.touches.length === 1 && ev.target && ev.target.closest && ev.target.closest('button');
+        tp = b ? { b: b, x: t.clientX, y: t.clientY, moved: false } : null;
+      }, { passive: true });
+      r.addEventListener('touchmove', function (ev) {
+        var t = ev.touches && ev.touches[0];
+        if (tp && t && (Math.abs(t.clientX - tp.x) > 10 || Math.abs(t.clientY - tp.y) > 10)) tp.moved = true;
+      }, { passive: true });
+      r.addEventListener('touchcancel', function () { tp = null; }, { passive: true });
+      r.addEventListener('touchend', function (ev) {
+        var d = tp; tp = null;
+        if (!d || d.moved || d.b.disabled || d.b.hidden || !d.b.isConnected) return;
+        if (ev.cancelable) ev.preventDefault();
+        d.b.click();
+      });
     };
     // Wischen nach unten schließt das große Bild (Handy). Berührungen im großen Bild gehen nicht ans Popup
     // darunter – dessen Wischen nach unten schlösse sonst das ganze Popup.
