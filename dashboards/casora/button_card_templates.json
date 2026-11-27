@@ -3708,21 +3708,6 @@
       "card": [
         {
           "padding": "0px"
-        },
-        {
-          "background": "none"
-        },
-        {
-          "box-shadow": "none"
-        },
-        {
-          "backdrop-filter": "none"
-        },
-        {
-          "-webkit-backdrop-filter": "none"
-        },
-        {
-          "border": "none"
         }
       ]
     },
