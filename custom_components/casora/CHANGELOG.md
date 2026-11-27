@@ -4,6 +4,11 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.11.33 – 27.11.2026
+
+### Fixed
+- **French (#248):** Casora addresses you with "tu" throughout, and five texts still said "vous": the hint to tap the rooms, the code field of the alarm, the Studio message when Casora's templates cannot be read, the chart limit and the search hint. They now use "tu" too. Thanks to @ejetzass.
+
 ## 26.11.32 – 27.11.2026
 
 Three fixes: custom cards get the tile background, the doorbell buttons work on tablets, and the tablet clock stays.

@@ -4,6 +4,11 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.11.33 – 27.11.2026
+
+### Behoben
+- **Französisch (#248):** Casora duzt auf Französisch durchgehend („tu“), fünf Texte siezten noch („vous“): der Hinweis zum Antippen der Räume, das Codefeld der Alarmanlage, die Studio-Meldung bei nicht lesbaren Vorlagen, die Grenze im Diagramm und der Hinweis zur Suche. Jetzt duzen auch sie. Danke an @ejetzass.
+
 ## 26.11.32 – 27.11.2026
 
 Drei Korrekturen: eigene Karten bekommen den Kachel-Hintergrund, die Türklingel-Knöpfe gehen am Tablet, und die Tablet-Uhr bleibt stehen.
