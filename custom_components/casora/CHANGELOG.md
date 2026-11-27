@@ -6,8 +6,12 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
 ## 26.11.32 – 27.11.2026
 
+Three fixes: custom cards get the tile background, the doorbell buttons work on tablets, and the tablet clock stays.
+
 ### Fixed
 - **Custom cards (#247):** a card added through "Custom card (YAML)" in the Studio had no background and sat directly on the room photo, while the Casora tiles next to it had their surface. The tile that hosts the card now draws the same surface, corner radius and shadow as every other Casora tile; the card inside stays transparent, so there is no second background. Thanks to @domemshur.
+- **Doorbell popup on tablets (#23):** on a touch screen the buttons on and under the live picture (full screen, the camera switch, Listen and Talk) did nothing when tapped, while they worked with a mouse. They now answer a finger like every other button in the popup. Thanks to @vitidron for the patient reports.
+- **Clock on portrait tablets:** at some times of day the clock beside the room bar disappeared on a tablet held upright, depending on the digits of the time. It now stays.
 
 ## 26.11.31 – 26.11.2026
 

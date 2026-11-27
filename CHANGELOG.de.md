@@ -6,8 +6,12 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
 ## 26.11.32 – 27.11.2026
 
+Drei Korrekturen: eigene Karten bekommen den Kachel-Hintergrund, die Türklingel-Knöpfe gehen am Tablet, und die Tablet-Uhr bleibt stehen.
+
 ### Behoben
 - **Eigene Karten (#247):** Eine Karte, die im Studio über „Eigene Karte (YAML)“ eingefügt wurde, hatte keinen Hintergrund und lag direkt auf dem Raumfoto, während die Casora-Kacheln daneben ihre Fläche hatten. Die Kachel, die die Karte trägt, zeichnet jetzt dieselbe Fläche, Rundung und denselben Schatten wie jede andere Casora-Kachel; die Karte darin bleibt durchsichtig, es gibt also keinen zweiten Hintergrund. Danke an @domemshur.
+- **Türklingel-Popup am Tablet (#23):** Auf einem Touchscreen taten die Knöpfe auf und unter dem Livebild (Vollbild, Kamera-Umschalter, Mithören und Sprechen) beim Antippen nichts, mit der Maus gingen sie. Jetzt reagieren sie auf den Finger wie jeder andere Knopf im Popup. Danke an @vitidron für die geduldigen Meldungen.
+- **Uhr am Tablet im Hochformat:** Zu manchen Uhrzeiten verschwand die Uhr neben der Raumleiste am hochkant gehaltenen Tablet, abhängig von den Ziffern der Uhrzeit. Jetzt bleibt sie stehen.
 
 ## 26.11.31 – 26.11.2026
 
