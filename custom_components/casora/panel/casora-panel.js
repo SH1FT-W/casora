@@ -7347,6 +7347,8 @@ class CasoraPanel extends HTMLElement {
       let json = "";
       try { json = JSON.stringify(this._state || {}); } catch (e) { /* none */ }
       this._liveRefs = new Set(json.match(/\bsensor\.[a-z0-9_]+/g) || []);
+      // The clock's default sensor is named nowhere, yet the preview time reads it (studioTimeText).
+      this._liveRefs.add("sensor.time");
     }
     let skipped = false;
     for (const id in hass.states) {

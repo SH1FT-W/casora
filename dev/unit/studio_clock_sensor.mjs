@@ -3,7 +3,7 @@
 // device clock in the profile's zone; a chosen sensor that is gone shows nothing. Both rules run on the same
 // inputs here: the real template from button_card_templates.json, and the real preview through _roomMap.
 //   node dev/unit/studio_clock_sensor.mjs
-// @deckt: custom_components/casora/panel/casora-panel.js#_roomMap,studioTimeText,studioClockLine dashboards/casora/button_card_templates.json#casora_time custom_components/casora/scripts/casora-core.js#casoraClockText,casoraClockHtml
+// @deckt: custom_components/casora/panel/casora-panel.js#_roomMap,studioTimeText,studioClockLine,_liveRelevant dashboards/casora/button_card_templates.json#casora_time custom_components/casora/scripts/casora-core.js#casoraClockText,casoraClockHtml
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import { loadPanel } from './lib/testhaus.mjs';
@@ -157,5 +157,26 @@ instant = new RealDate('2026-01-15T05:05:00Z');
 const hass12 = { states: { 'sensor.time': { state: '08:13' } }, locale: { language: 'nl', time_zone: 'local', time_format: '12' }, config: { time_zone: 'Europe/Amsterdam' } };
 assert.equal(dashboardText(hass12, hass12.states, {}), '08:13', 'use_12h not stored: the Dashboard shows 24-hour');
 assert.equal(previewText(hass12, {}), '8:13 AM', 'use_12h not stored, profile 12-hour: the preview follows the profile');
+
+// The hass path: sensor.time coming back must redraw the preview at once. _liveRelevant skips sensors the room
+// does not name, and the default sensor.time is named nowhere, so the time stayed on the device clock until the
+// next change after 30 s. A change to sensor.time counts like one the dashboard names.
+{
+  const live = Object.assign(Object.create(P), { _state: { compact: { rooms: [{ path: 'home', name: 'Home', tiles: [], variables: {} }] } } });
+  const house = { 'light.a': { state: 'on' } };
+  live._liveRelevant({ states: house });
+  live._liveAt = Date.now();   // a redraw has just happened
+  assert.equal(live._liveRelevant({ states: { ...house, 'sensor.time': { state: '08:13' } } }), true,
+    'sensor.time comes back: the preview redraws now, not after 30 s');
+  live._liveAt = Date.now();
+  assert.equal(live._liveRelevant({ states: { ...house, 'sensor.time': { state: '08:14' } } }), true,
+    'sensor.time ticks: the preview follows');
+  live._liveAt = Date.now();
+  const tick = { state: '08:14' };
+  live._liveRelevant({ states: { ...house, 'sensor.time': tick } });
+  live._liveAt = Date.now();
+  assert.equal(live._liveRelevant({ states: { ...house, 'sensor.time': tick, 'sensor.power': { state: '5' } } }), false,
+    'an unrelated sensor still waits');
+}
 
 console.log('studio_clock_sensor: ok');
