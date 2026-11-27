@@ -4,6 +4,11 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.11.32 – 27.11.2026
+
+### Fixed
+- **Custom cards (#247):** a card added through "Custom card (YAML)" in the Studio had no background and sat directly on the room photo, while the Casora tiles next to it had their surface. The tile that hosts the card now draws the same surface, corner radius and shadow as every other Casora tile; the card inside stays transparent, so there is no second background. Thanks to @domemshur.
+
 ## 26.11.31 – 26.11.2026
 
 Hotfix for 26.11.30.
