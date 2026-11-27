@@ -178,5 +178,13 @@ assert.equal(previewText(hass12, {}), '8:13 AM', 'use_12h not stored, profile 12
   assert.equal(live._liveRelevant({ states: { ...house, 'sensor.time': tick, 'sensor.power': { state: '5' } } }), false,
     'an unrelated sensor still waits');
 }
+{
+  const chosen = Object.assign(Object.create(P), { _state: { compact: { rooms: [{ path: 'home', name: 'Home', tiles: [], variables: { time_entity: 'sensor.wall_clock' } }] } } });
+  const house = { 'light.a': { state: 'on' } };
+  chosen._liveRelevant({ states: house });
+  chosen._liveAt = Date.now();
+  assert.equal(chosen._liveRelevant({ states: { ...house, 'sensor.wall_clock': { state: '08:13' } } }), true,
+    'a time sensor chosen in Studio redraws the preview too');
+}
 
 console.log('studio_clock_sensor: ok');
