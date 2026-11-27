@@ -2503,7 +2503,9 @@ window._casoraColGap = window._casoraColGap || function (keys) {
      the clock's right edge when a clock stands in that row (d05-09). */
   window._casoraPillLeft = function (left) {
     var cr = Number(window._casoraClockRight) || 0;
-    return Math.max(20, cr > 0 ? Math.round(cr - left + 12) : 0);
+    // Up, never to the nearest pixel: the clock guard hides the clock when the pill is less than 12 px away, and a
+    // clock edge at x.1–x.4 rounded down to 11.x px (the clock vanished depending on the time's digits, r623).
+    return Math.max(20, cr > 0 ? Math.ceil(cr - left + 12) : 0);
   };
   setInterval(function () {
     if (document.hidden) return;
