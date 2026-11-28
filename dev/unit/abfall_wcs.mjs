@@ -40,6 +40,7 @@ globalThis.fetch = () => Promise.reject(new Error('offline'));
 window.casoraStateFit = (t) => t;
 
 new Function(read('custom_components/casora/scripts/local/00-finder.js'))();
+new Function(read('custom_components/casora/scripts/local/06-abfall-fetch.js'))();
 const D = window.casoraDevice;
 const T = JSON.parse(read('dashboards/casora/button_card_templates.json'));
 const body = (s) => s.trim().replace(/^\[\[\[/, '').replace(/\]\]\]$/, '');
@@ -217,7 +218,6 @@ window.CASORA_SETTINGS = {};
 
   // A failed fetch is not repeated on every render: again after 5 s, 15 s, then every minute.
   // Opening the popup tries at once (a short outage must not leave it loading).
-  delete window._casoraTrashFetch;
   window._casoraTrashCal = null; window._casoraTrashBusy = false; window._casoraTrashFail = null;
   window.CASORA_SETTINGS = { waste: { calendar: LIVE } };
   let calls = 0, up = false;
