@@ -130,7 +130,7 @@ def samples(pattern):
     return out
 
 
-def _matrix(patterns):
+def matrix(patterns):
     """touch[a] = patterns b with a sample that a matches (a hides b on that text if listed first);
     cover[a] = patterns b whose samples a matches all (a is at least as broad as b)."""
     rx = [re.compile(p) for p in patterns]
@@ -149,6 +149,15 @@ def _matrix(patterns):
         touch.append(t)
         cover.append(c)
     return touch, cover, smp
+
+
+def reordered(mx, idx):
+    """The matrix of [patterns[i] for i in idx], from the matrix of patterns (no new regex searches)."""
+    touch, cover, smp = mx
+    pos = {old: new for new, old in enumerate(idx)}
+    return ([{pos[b] for b in touch[i]} for i in idx],
+            [{pos[b] for b in cover[i]} for i in idx],
+            [smp[i] for i in idx])
 
 
 def _literals(seq):
@@ -186,13 +195,14 @@ def _first(a, b, touch, cover, lit):
     return None
 
 
-def order(patterns):
+def order(patterns, mx=None):
     """Stable order of the pattern indices so no pattern hides a more specific one.
 
     Raises ValueError for two patterns that match the same texts (the later one could never apply).
+    mx: matrix(patterns), when the caller already has it.
     """
     n = len(patterns)
-    touch, cover, _ = _matrix(patterns)
+    touch, cover, _ = mx if mx is not None else matrix(patterns)
     lit = [literals(p) for p in patterns]
     after = [set() for _ in range(n)]  # after[x] = patterns that must come after x
     indeg = [0] * n
@@ -221,10 +231,11 @@ def order(patterns):
     return out
 
 
-def shadowed(patterns):
+def shadowed(patterns, mx=None):
     """(earlier, later, sample) for every pattern hidden, at least on one sample, by a less specific
-    earlier one, and for later duplicates of an earlier pattern."""
-    touch, cover, smp = _matrix(patterns)
+    earlier one, and for later duplicates of an earlier pattern.
+    mx: matrix(patterns), when the caller already has it."""
+    touch, cover, smp = mx if mx is not None else matrix(patterns)
     lit = [literals(p) for p in patterns]
     out = []
     for a in range(len(patterns)):
