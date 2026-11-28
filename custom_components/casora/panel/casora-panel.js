@@ -6475,7 +6475,8 @@ const cameraAlert = (hass, states, cams, windowMinutes) => {
     if (!devs[reg[id].device_id]) return;
     const t = Date.parse(states[id] && states[id].state);
     if (!isFinite(t) || now - t > span) return;
-    if (/ding|doorbell|button/.test(id)) ding = true;
+    const dc = states[id]?.attributes?.device_class;
+    if (/ding|doorbell|button/.test(id) || dc === "doorbell") ding = true;
     else if (/motion/.test(id)) motion = true;
   });
   return ding ? "Doorbell" : motion ? "Motion Detected" : "";
