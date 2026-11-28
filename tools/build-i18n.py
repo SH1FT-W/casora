@@ -518,14 +518,15 @@ def main() -> int:
             pats = data.get("patterns") or []
             # The runtime takes the first matching pattern: a specific one goes before a general one
             # that also matches its texts ("^Ø von (\\d+) Lampen$" before "^Ø (.+)$").
-            # The pattern matrix is the slow part: build it once, reuse it for the ordered list.
-            mx = i18n_patterns.matrix([p[0] for p in pats])
+            names = [p[0] for p in pats]
             try:
-                idx = i18n_patterns.order([p[0] for p in pats], mx)
+                # The pattern matrix is the slow part: build it once, reuse it for the ordered list.
+                mx = i18n_patterns.matrix(names)
+                idx = i18n_patterns.order(names, mx)
             except ValueError as e:
                 raise SystemExit("%s: %s" % (name, e))
             pats = [pats[i] for i in idx]
-            left = i18n_patterns.shadowed([p[0] for p in pats], i18n_patterns.reordered(mx, idx))
+            left = i18n_patterns.shadowed([names[i] for i in idx], i18n_patterns.reordered(mx, idx))
             if left:
                 raise SystemExit("%s: pattern %r hides %r (%r)" % ((name,) + left[0]))
             phrases[name[: -len(".json")]] = {

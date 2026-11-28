@@ -53,4 +53,23 @@ fresh = i18n_patterns.matrix([pats[i] for i in idx])
 if carried != fresh:
     print("FAIL reordered() differs from a matrix built on the ordered patterns")
     sys.exit(1)
+# A pattern without a sample still stops the build with the language file's name.
+import json  # noqa: E402
+import tempfile  # noqa: E402
+
+with tempfile.TemporaryDirectory() as tmp:
+    with open(os.path.join(tmp, "xx.json"), "w", encoding="utf-8") as fh:
+        json.dump({"patterns": [[r"^(\d+) Tag$x", "x"]]}, fh)
+    build.PHRASES = tmp
+    try:
+        with redirect_stdout(io.StringIO()):
+            build.main()
+        fail = "builder accepts a pattern without a sample"
+    except SystemExit as e:
+        fail = None if str(e).startswith("xx.json: ") else "message lacks the file name: %s" % e
+    except ValueError as e:
+        fail = "raw ValueError escapes: %s" % e
+if fail:
+    print("FAIL " + fail)
+    sys.exit(1)
 print("ok: matrix built once per language (%d calls)" % len(calls))

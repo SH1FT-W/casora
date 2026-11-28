@@ -202,7 +202,7 @@ def order(patterns, mx=None):
     mx: matrix(patterns), when the caller already has it.
     """
     n = len(patterns)
-    touch, cover, _ = mx or matrix(patterns)
+    touch, cover, _ = mx if mx is not None else matrix(patterns)
     lit = [literals(p) for p in patterns]
     after = [set() for _ in range(n)]  # after[x] = patterns that must come after x
     indeg = [0] * n
@@ -235,7 +235,7 @@ def shadowed(patterns, mx=None):
     """(earlier, later, sample) for every pattern hidden, at least on one sample, by a less specific
     earlier one, and for later duplicates of an earlier pattern.
     mx: matrix(patterns), when the caller already has it."""
-    touch, cover, smp = mx or matrix(patterns)
+    touch, cover, smp = mx if mx is not None else matrix(patterns)
     lit = [literals(p) for p in patterns]
     out = []
     for a in range(len(patterns)):
