@@ -1,6 +1,8 @@
 {
   "_comment": "Casora-paneloversettelse. Nøkkel = engelsk originaltekst i panelet. Nytt språk: opprett filen <kode>.json, kjør deretter tools/build-panel-i18n.py.",
   "exact": {
+    "Hide when the title contains": "Skjul når tittelen inneholder",
+    "Separate entries with commas; an entry may have several words. The calendar popup still shows them.": "Skill oppføringene med komma; en oppføring kan ha flere ord. Kalender-popupen viser dem fortsatt.",
     "Add sensor or event": "Legg til sensor eller hendelse",
     "Camera detections": "Kameradeteksjoner",
     "Detection from": "Deteksjon fra",

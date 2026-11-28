@@ -8,6 +8,8 @@
 //     is not repeated on every render (5 s, 15 s, then every minute; opening the popup tries at once)
 //   - Studio: a bin picked without a name keeps its name, a corrected pick takes the new name, an
 //     emptied name gets it back; the waste tile mirrors the global "Calendar in the waste popup" switch
+//   Also pins the finder contract (00-finder.js#waste) for the Studio's trash_calendar.
+// @deckt: custom_components/casora/scripts/local/00-finder.js#waste
 //   node dev/unit/abfall_wcs.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -82,6 +84,39 @@ function wcs({ place = null, rename = {}, bins = BINS, ha211 = false } = {}) {
 const labels = (W) => W.bins.map((b) => b.label).sort();
 const binOf = (W, label) => W.bins.find((b) => b.label === label);
 window.CASORA_SETTINGS = {};
+
+// ── Finder contract, pinned here (not a regression test): the calendar is only known through trash_calendar ─
+{
+  // A calendar without a waste platform or name: only the configured id can name it.
+  const CAL = 'calendar.side_calendar';
+  const hc = { states: { [CAL]: { entity_id: CAL, state: 'off', attributes: { friendly_name: 'Side Calendar' } } },
+    entities: { [CAL]: { entity_id: CAL, platform: 'remote_calendar', name: 'Side Calendar' } }, devices: {} };
+  assert.equal(D.waste(hc, {}).calendar, null, 'no waste calendar detected by name or platform');
+  assert.equal(D.waste(hc, { trash_calendar: CAL }).calendar, CAL, 'the configured trash_calendar is taken');
+  assert.equal(D.waste(hc, {}).calendar, null, 'trash_calendar does not leak into the next call');
+  console.log('abfall_wcs: finder contract ok');
+}
+
+// An explicitly cleared draft calendar uses automatic waste discovery, not the saved calendar.
+{
+  const saved = 'calendar.side_calendar', detected = 'calendar.collection';
+  const h = {
+    states: {
+      [saved]: { entity_id: saved, state: 'off', attributes: { friendly_name: 'Side Calendar' } },
+      [detected]: { entity_id: detected, state: 'off', attributes: { friendly_name: 'Collection calendar' } },
+    },
+    entities: {
+      [saved]: { entity_id: saved, platform: 'remote_calendar', name: 'Side Calendar' },
+      [detected]: { entity_id: detected, platform: 'waste_collection_schedule', name: 'Collection calendar' },
+    },
+    devices: {},
+  };
+  window.CASORA_SETTINGS = { waste: { calendar: saved } };
+  assert.equal(D.waste(h, { trash_calendar: null }).calendar, detected,
+    'cleared calendar override bypasses saved value but preserves automatic waste discovery');
+  window.CASORA_SETTINGS = {};
+  console.log('abfall_wcs: cleared calendar override uses automatic discovery');
+}
 
 // ── A: names without the place ────────────────────────────────────────────────
 {

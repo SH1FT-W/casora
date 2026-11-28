@@ -1,6 +1,8 @@
 {
   "_comment": "Casora-Panel-Übersetzung. Schlüssel = englischer Originaltext im Panel. Neue Sprache: Datei <code>.json anlegen, dann tools/build-panel-i18n.py.",
   "exact": {
+    "Hide when the title contains": "Ausblenden, wenn der Titel enthält",
+    "Separate entries with commas; an entry may have several words. The calendar popup still shows them.": "Einträge mit Komma trennen; ein Eintrag darf mehrere Wörter haben. Das Kalender-Popup zeigt sie weiter.",
     "Add sensor or event": "Sensor oder Ereignis hinzufügen",
     "Camera detections": "Kameraerkennung",
     "Detection from": "Erkennung von",

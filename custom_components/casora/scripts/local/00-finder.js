@@ -564,7 +564,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     var weich = !!(window._casoraSoft && window._casoraSoft());
     // A configured calendar that is gone (renamed, removed) falls back to the detected one; it only
     // stays when nothing else is found, so the tile can still say the source is unreachable.
-    var calGiven = V.trash_calendar || cfg.calendar || null;
+    var calGiven = Object.prototype.hasOwnProperty.call(V, 'trash_calendar') ? V.trash_calendar : cfg.calendar || null;
     var calendar = (calGiven && S[calGiven] ? calGiven : null) || Object.keys(S).filter(function (eid) {
       return eid.indexOf('calendar.') === 0 && isWasteCalendar(hass, eid, null);
     }).sort()[0] || calGiven;
@@ -1603,7 +1603,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
   // tile: false = shown only in the calendar popup (callers that list appointments leave it out).
   var CAL_PALETTE = ['#0A84FF', '#FF453A', '#30D158', '#BF5AF2', '#FF9F0A', '#64D2FF', '#FFD60A', '#FF375F'];
   var calNormMemo = typeof WeakMap === 'function' ? new WeakMap() : null;
-  var calAutoMemo = { S: null, E: null, cfg: null, out: [] };
+  var calAutoMemo = { S: null, E: null, cfg: null, draftWaste: null, out: [] };
   // Waste Collection Schedule's calendars (or the waste calendar Casora uses) are pickups, not appointments.
   function isWasteCalendar(hass, id, wasteCal) {
     var e = ((hass && hass.entities) || {})[id], st = ((hass && hass.states) || {})[id];
@@ -1621,18 +1621,23 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
   window.casoraCalendars = function (hass, vars) {
     var v = vars && vars.calendars;
     if (Array.isArray(v) && v.length) return calNorm(v);
-    var own = null;
-    try { own = window.casoraSettings ? window.casoraSettings().calendars : null; } catch (e) { own = null; }
-    if (Array.isArray(own) && own.length) {
-      var mine = calNorm(own);
-      if (mine.length) return mine;
+    if (!(vars && vars._casora_calendar_draft === true)) {
+      var own = null;
+      try { own = window.casoraSettings ? window.casoraSettings().calendars : null; } catch (e) { own = null; }
+      if (Array.isArray(own) && own.length) {
+        var mine = calNorm(own);
+        if (mine.length) return mine;
+      }
     }
     var S = hass && hass.states;
     if (!S) return calAutoMemo.out;
     var E = hass.entities || {}, cfg = window.CASORA_SETTINGS || null;
-    if (calAutoMemo.S === S && calAutoMemo.E === E && calAutoMemo.cfg === cfg) return calAutoMemo.out;
+    var draftWaste = vars && vars._casora_calendar_draft ? String(vars._casora_waste_calendar || '') : null;
+    if (calAutoMemo.S === S && calAutoMemo.E === E && calAutoMemo.cfg === cfg && calAutoMemo.draftWaste === draftWaste) return calAutoMemo.out;
     var wasteCal = null;
-    try { wasteCal = window.casoraDevice && window.casoraDevice.waste ? window.casoraDevice.waste(hass, {}).calendar : null; } catch (e) { wasteCal = null; }
+    var wasteVars = vars && vars._casora_calendar_draft
+      ? { trash_calendar: vars._casora_waste_calendar || null } : {};
+    try { wasteCal = window.casoraDevice && window.casoraDevice.waste ? window.casoraDevice.waste(hass, wasteVars).calendar : null; } catch (e) { wasteCal = null; }
     var out = Object.keys(S).filter(function (id) {
       if (id.indexOf('calendar.') !== 0) return false;
       var e = E[id];
@@ -1641,7 +1646,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     }).sort().map(function (id, n) {
       return { entity: id, name: (S[id].attributes || {}).friendly_name || id, color: CAL_PALETTE[n % CAL_PALETTE.length] };
     });
-    calAutoMemo = { S: S, E: E, cfg: cfg, out: out };
+    calAutoMemo = { S: S, E: E, cfg: cfg, draftWaste: draftWaste, out: out };
     return out;
   };
   // casora-calendars:end
@@ -1677,6 +1682,7 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
       if (bins.length && isWasteCalendar(hass, id, W && W.calendar)) return;
       var a = S[id].attributes || {};
       if (!a.message || !a.start_time) return;
+      if (window.casoraCalendarAllows && !window.casoraCalendarAllows(a.message, null, a)) return;
       var d = new Date(String(a.start_time).replace(' ', 'T'));
       if (isNaN(d) || (bins.length && sameBin(a.message, d))) return;
       if (!best || d < best.d) best = { d: d, title: a.message, allDay: !!a.all_day, on: S[id].state === 'on' };

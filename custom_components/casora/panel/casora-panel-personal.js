@@ -457,6 +457,7 @@
 
       if (want("calendars")) {
         // Calendar
+        const redrawCalendar = () => { if (self._rebuildPreview) self._rebuildPreview(); };
         g = group("calendars", { header: "Calendars",
           footer: "Without calendars here, the calendar tile, the greeting and the screensaver show all of them except holidays, working days and waste." });
         S.calendars.forEach((c, i) => {
@@ -467,17 +468,19 @@
           cb.type = "checkbox";
           cb.setAttribute("role", "switch");
           cb.checked = c.tile !== false;
-          cb.onchange = () => { if (cb.checked) delete c.tile; else c.tile = false; };
+          cb.onchange = () => { if (cb.checked) delete c.tile; else c.tile = false; redrawCalendar(); };
           tog.appendChild(cb);
           tog.appendChild(document.createTextNode("On tile"));
           // No row label: the group header (and on its own page the title) already says "Calendars".
           row(g, "", [
-            ent(c.entity, ["calendar"], (v) => { c.entity = v; }),
+            ent(c.entity, ["calendar"], (v) => { c.entity = v; redrawCalendar(); }),
             txt(c.name, "Name", (v) => { c.name = v; }, true), col, tog,
-            del(() => { S.calendars.splice(i, 1); }),
+            del(() => { S.calendars.splice(i, 1); redrawCalendar(); }),
           ], i ? undefined : "Calendar, name, color and whether it shows on the tile.").classList.add("casora-calrow");
         });
-        addRow(g, "Add calendar", () => { S.calendars.push({ entity: "", name: "", color: CAL_DEFAULT }); });
+        addRow(g, "Add calendar", () => { S.calendars.push({ entity: "", name: "", color: CAL_DEFAULT }); redrawCalendar(); });
+        row(g, "Hide when the title contains", [txt(S.calendar_filter, "", (v) => { S.calendar_filter = v; redrawCalendar(); })],
+          "Separate entries with commas; an entry may have several words. The calendar popup still shows them.");
       }
 
       if (want("contacts")) {

@@ -70,20 +70,14 @@
   };
   var calOf = function (cals, id) { for (var i = 0; i < cals.length; i++) if (cals[i].entity === id) return cals[i]; return { entity: id, name: id, color: '#8E8E93' }; };
 
-  /* Nächster Termin aus den Kalender-Zuständen (message/start_time/all_day). */
+  // The calendar popup keeps every event; the Agenda tile skips filtered titles (rule in 06a-kalender-filter.js).
+  K.allowsTitle = function (title, attrs) {
+    return window.casoraCalendarAllows ? window.casoraCalendarAllows(title, null, attrs) : true;
+  };
+  /* Nächster Termin aus den Kalender-Zuständen (message/start_time/all_day). Regel: casoraCalendarNext (06a). */
   K.next = function (states, variables) {
-    var best = null, now = new Date();
-    K.cals(variables).forEach(function (c) {
-      if (c.tile === false) return;
-      var s = states[c.entity], a = s && s.attributes;
-      if (!a || !a.message || !a.start_time) return;
-      var st = new Date(String(a.start_time).replace(' ', 'T')), en = new Date(String(a.end_time || a.start_time).replace(' ', 'T'));
-      if (isNaN(st)) return;
-      var ev = { name: a.message, start: st, end: en, allDay: !!a.all_day, on: s.state === 'on', cal: c };
-      if (!ev.on && en < now) return;
-      if (!best || (ev.on && !best.on) || (ev.on === best.on && st < best.start)) best = ev;
-    });
-    return best;
+    if (typeof window.casoraCalendarNext !== 'function') return null;
+    return window.casoraCalendarNext(states, K.cals(variables), new Date(), K.allowsTitle);
   };
   K.tile = function (states, variables) {
     var n = K.next(states, variables);
