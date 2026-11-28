@@ -11,6 +11,8 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - **Klingel-Ereignisse (#250):** Ein Klingel-Ereignis wird auch an seiner Art erkannt (Geräteklasse „doorbell“), nicht nur an Wörtern wie „ding“ oder „doorbell“ im Namen. Danke an @ejetzass.
 - **Uhr in der Studio-Vorschau (#252):** Die Vorschau zeigt die Zeit des Zeitsensors so wie die Uhr im Dashboard. Danke an @ejetzass.
 - **Assist nach einem Neustart (#255):** Die Sätze, die Casora-Popups öffnen, werden nach dem Start von Home Assistant wie vorgesehen aufgefrischt. Danke an @ejetzass.
+- **Hinweise am Wandtablet (#256):** Die Hinweise zum Zurückkehren zu „Zuhause“ und zum Schließen von Popups bei Inaktivität sagen, wie beide zusammenspielen: Das Zurückkehren wartet, solange ein Popup offen ist, und schließt sich das Popup, geht es danach zurück zu „Zuhause“. Danke an @ejetzass.
+- **Niederländisch (#257):** Das Studio nennt ein Popup überall „venster“, dazu ein paar weniger wörtliche Formulierungen. Danke an @ejetzass.
 
 ## 26.11.33 – 27.11.2026
 

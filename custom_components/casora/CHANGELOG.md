@@ -11,6 +11,8 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - **Doorbell events (#250):** a doorbell event is recognized by its type (device class "doorbell") as well, not only by words like "ding" or "doorbell" in its name. Thanks to @ejetzass.
 - **Studio clock preview (#252):** the preview shows the time of the time sensor the same way the dashboard clock does. Thanks to @ejetzass.
 - **Assist after a restart (#255):** the sentences that open Casora popups are refreshed once Home Assistant has started, as intended. Thanks to @ejetzass.
+- **Wall tablet hints (#256):** the hints of "Return to Home when idle" and "Close popups when idle" say how the two work together: going Home waits while a popup is open, and closing the popup then goes Home too. Thanks to @ejetzass.
+- **Dutch (#257):** the Studio calls a popup "venster" everywhere, and a few wordings read less literally. Thanks to @ejetzass.
 
 ## 26.11.33 – 27.11.2026
 
