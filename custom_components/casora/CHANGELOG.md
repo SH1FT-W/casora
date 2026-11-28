@@ -4,6 +4,14 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.11.34 – 28.11.2026
+
+### Fixed
+- **Fuel prices map without WebGL2 (#253):** in a browser without WebGL2 (hardware acceleration off, no graphics chip) the map stayed empty and fell back to the simple dot map after a few seconds. Since Home Assistant 2026.10 the map uses a different drawing engine there, which Casora now finds. Thanks to @ejetzass.
+- **Doorbell events (#250):** a doorbell event is recognized by its type (device class "doorbell") as well, not only by words like "ding" or "doorbell" in its name. Thanks to @ejetzass.
+- **Studio clock preview (#252):** the preview shows the time of the time sensor the same way the dashboard clock does. Thanks to @ejetzass.
+- **Assist after a restart (#255):** the sentences that open Casora popups are refreshed once Home Assistant has started, as intended. Thanks to @ejetzass.
+
 ## 26.11.33 – 27.11.2026
 
 ### Fixed

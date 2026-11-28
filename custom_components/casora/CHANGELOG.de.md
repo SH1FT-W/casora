@@ -4,6 +4,14 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.11.34 – 28.11.2026
+
+### Behoben
+- **Tankpreis-Karte ohne WebGL2 (#253):** In einem Browser ohne WebGL2 (Hardwarebeschleunigung aus, kein Grafikchip) blieb die Karte leer und wich nach ein paar Sekunden auf die einfache Punktkarte aus. Seit Home Assistant 2026.10 zeichnet die Karte dort anders, Casora findet sie jetzt. Danke an @ejetzass.
+- **Klingel-Ereignisse (#250):** Ein Klingel-Ereignis wird auch an seiner Art erkannt (Geräteklasse „doorbell“), nicht nur an Wörtern wie „ding“ oder „doorbell“ im Namen. Danke an @ejetzass.
+- **Uhr in der Studio-Vorschau (#252):** Die Vorschau zeigt die Zeit des Zeitsensors so wie die Uhr im Dashboard. Danke an @ejetzass.
+- **Assist nach einem Neustart (#255):** Die Sätze, die Casora-Popups öffnen, werden nach dem Start von Home Assistant wie vorgesehen aufgefrischt. Danke an @ejetzass.
+
 ## 26.11.33 – 27.11.2026
 
 ### Behoben
