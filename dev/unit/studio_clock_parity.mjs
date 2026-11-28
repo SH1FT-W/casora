@@ -1,5 +1,9 @@
 // #214: the Studio preview clock must read exactly like the dashboard clock. The dashboard rule stays in
 // casora-core.js; the panel carries a small local copy (studioClockText/studioClockDate/studioClockLine).
+// The panel's three clock names, one line each:
+//   studioClockText: the time text only (24-hour or 12-hour), in the profile's zone.
+//   studioClockLine: studioClockText plus the suffix, uppercased.
+//   studioTimeText: the tile's time line, which also reads a time sensor; tested in studio_clock_sensor.mjs.
 // This runs both rules on the same inputs and fails when they drift apart.
 //   node dev/unit/studio_clock_parity.mjs
 // @deckt: custom_components/casora/scripts/casora-core.js#casoraClockText,casoraClockDate,casora-clock custom_components/casora/panel/casora-panel.js#studioClockText,studioClockDate,studioClockLine
