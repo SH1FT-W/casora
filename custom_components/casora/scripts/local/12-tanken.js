@@ -504,10 +504,14 @@
     + '.leaflet-control-attribution a{color:inherit!important}';
   // HA 2026.10: ha-map zeichnet direkt mit MapLibre (kein Leaflet mehr, m._engine._map). Gleiche Schnittstelle
   // wie Leaflet für syncMap; MapLibre zählt Zoom in 512er-Kacheln (eine Stufe weniger als Leaflet).
-  var mlOf = function (m) { return m && !m.leafletMap && m._engine && m._engine._map && m._engine._map.project ? m._engine._map : null; };
+  // #253: without WebGL2 HA 2026.10+ falls back to Leaflet inside the same engine (m._engine.leafletMap); before 2026.10
+  // Leaflet sat on m.leafletMap. Both places, or the map stayed empty and gave up for the dot map.
+  var leafOf = function (m) { return (m && (m.leafletMap || (m._engine && m._engine.leafletMap))) || null; };
+  var mlOf = function (m) { return m && !leafOf(m) && m._engine && m._engine._map && m._engine._map.project ? m._engine._map : null; };
   var lmOf = function (m) {
     if (!m) return null;
-    if (m.leafletMap) return m.leafletMap;
+    var lf = leafOf(m);
+    if (lf) return lf;
     var ml = mlOf(m);
     if (!ml) return null;
     return {
@@ -545,7 +549,7 @@
       var t0 = Date.now();
       var wait = setInterval(function () {
         if (V !== v || !m.isConnected) { clearInterval(wait); return; }
-        var lm = m.leafletMap, mlx = mlOf(m);
+        var lm = leafOf(m), mlx = mlOf(m);
         if (mlx && !hm.hooked) {
           hm.hooked = true;
           ['dragPan', 'scrollZoom', 'boxZoom', 'doubleClickZoom', 'touchZoomRotate', 'keyboard', 'dragRotate', 'touchPitch'].forEach(function (x) { if (mlx[x] && mlx[x].disable) mlx[x].disable(); });
