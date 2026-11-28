@@ -241,6 +241,21 @@ class AssistShow(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(data, {"answer": "1 of 2 lights are on in Wohnzimmer.", "shown": True})
         self.assertEqual(self.take()["area"], "Wohnzimmer")
 
+    async def test_start_refresh_runs_in_the_loop(self) -> None:
+        # HA runs a plain function given to async_at_started in a worker thread; the refresh needs the event loop.
+        from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+
+        rt = self.hass.data[A.DOMAIN]["assist_rt"]
+        calls = []
+
+        async def refresh() -> None:
+            calls.append(1)
+
+        rt.async_refresh = refresh
+        self.hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await self.hass.async_block_till_done(wait_background_tasks=True)
+        self.assertEqual(calls, [1])
+
     async def test_unload_removes_sentences(self) -> None:
         A.async_unload_assist_show(self.hass)
         await self.say("Wo ist es gerade am wärmsten?")

@@ -736,8 +736,14 @@ async def _async_setup(hass) -> None:
 
     rt.removes.append(hass.bus.async_listen("lovelace_updated", changed))
     rt.removes.append(hass.bus.async_listen(EVENT_COMPONENT_LOADED, changed))
+
+    @callback
+    def started(_hass) -> None:
+        # A @callback runs in the event loop; a plain function would run in a worker thread.
+        changed()
+
     if not hass.is_running:
-        rt.removes.append(async_at_started(hass, lambda _hass: changed()))
+        rt.removes.append(async_at_started(hass, started))
     await rt.async_refresh()
 
 
