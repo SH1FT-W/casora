@@ -28,9 +28,11 @@ window.casoraTr = (t) => phrases[t] || t;
 assert.equal(window.casoraTileName(tile, null, hass, templates), 'Deurbel');
 // A typed name is not the default name: nothing of its own, the form handles it.
 assert.equal(window.casoraTileName({ ...tile, name: 'Klingel' }, null, hass, templates), null);
-// Unknown words stay as they are.
-assert.equal(window.casoraTileName({ type: 'custom:button-card', template: 'casora_recipe' }, null, hass, templates),
-  window.casoraTr('Rezept'));
+// A default name that is not in the phrase list stays as it is.
+assert.equal(window.casoraTileName({ ...tile, variables: { casora_default_name: 'Zzzwort' } }, null, hass, templates), 'Zzzwort');
+// A tile with an entity keeps the entity's own name untranslated.
+const cam = { entity_id: 'camera.haustuer', state: 'idle', attributes: { friendly_name: 'Klingel' } };
+assert.equal(window.casoraTileName(tile, cam, { states: { [cam.entity_id]: cam } }, templates), 'Klingel');
 // Without the translation (German UI or not loaded yet) the German name stays.
 delete window.casoraTr;
 assert.equal(window.casoraTileName(tile, null, hass, templates), 'Klingel');

@@ -1112,9 +1112,9 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
       const tpl = resolve(templates, tile.template);
       const v = run(tpl.name, ctxFor(tile, ent, hass, tpl));
       if (typeof v !== "string" || !v.trim() || v.includes("<")) return null;
-      // Without an entity the name is the template's fixed German default (casora_default_name): the dashboard
-      // shows it translated, so the preview and the name field's placeholder do too. An entity's own name is
-      // a device name and stays as it is.
+      // Without an entity the name comes from the template (usually its fixed German casora_default_name, also
+      // when read through a variable). Translate it as the dashboard does, so the preview and the name field's
+      // placeholder match. An entity's own name is a device name and stays as it is.
       return !ent && typeof window.casoraTr === "function" ? window.casoraTr(v.trim()) : v.trim();
     } catch (e) {
       return null;
