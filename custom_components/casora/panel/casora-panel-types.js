@@ -1105,13 +1105,17 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
 
   // Name as on the dashboard (name of the template chain, e.g. casora_entity: the entity's display name,
   // warning tile "Warnings"). Empty (no entity, depending on the design) → the preview keeps the name of the
-  // tile type. null = nothing of its own.
+  // tile type. A default name without an entity is translated like on the dashboard. null = nothing of its own.
   window.casoraTileName = (tile, ent, hass, templates) => {
     if (!tile || tile.name || !isOursAny(tile)) return null;
     try {
       const tpl = resolve(templates, tile.template);
       const v = run(tpl.name, ctxFor(tile, ent, hass, tpl));
-      return typeof v === "string" && v.trim() && !v.includes("<") ? v.trim() : null;
+      if (typeof v !== "string" || !v.trim() || v.includes("<")) return null;
+      // Without an entity the name is the template's fixed German default (casora_default_name): the dashboard
+      // shows it translated, so the preview and the name field's placeholder do too. An entity's own name is
+      // a device name and stays as it is.
+      return !ent && typeof window.casoraTr === "function" ? window.casoraTr(v.trim()) : v.trim();
     } catch (e) {
       return null;
     }
