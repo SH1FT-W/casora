@@ -1664,10 +1664,17 @@
         const rooms = (this._state && this._state.compact && this._state.compact.rooms) || [];
         const seen = new Set(), list = [];
         rooms.forEach((r) => { const ref = r.variables && r.variables.image; if (ref && !seen.has(String(ref))) { seen.add(String(ref)); list.push({ ref: String(ref), title: typeof this._roomShown === "function" ? this._roomShown(r) : r.name || "" }); } });
-        if (show !== "fotos" || !list.length) return;
+        pick.hidden = show !== "fotos" && !(show === "mix" && SV.selected(SV.vars(draft())).includes("fotos"));
+        if (pick.hidden) return;
+        if (show === "mix") lists.appendChild(pick);
+        else wrap.insertBefore(pick, lists);
+        pick.appendChild(el("div", "fhead", t("Photos")));
+        if (!list.length) {
+          pick.appendChild(el("p", "cs-lede", t("No room photos available. Add a photo to a room.")));
+          return;
+        }
         const cur = (rooms.map((r) => (r.variables || {}).casora_screensaver_photos).find((v) => Array.isArray(v) && v.length) || []).map(String);
         const on = (ref) => !cur.length || cur.includes(ref);
-        pick.appendChild(el("div", "fhead", t("Photos")));
         pick.appendChild(el("p", "cs-lede", t(cur.length ? "Only the photos picked here." : "All room photos. Tap a photo to show only the ones you pick.")));
         const grid = el("div", "cs-saver-grid");
         grid.style.cssText = "display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px;margin:8px 0 0;";
@@ -1685,6 +1692,7 @@
             + "background:linear-gradient(transparent, rgba(0,0,0,0.55));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;";
           b.appendChild(cap);
           b.onclick = () => {
+            const focused = (b.getRootNode() || document).activeElement === b;
             // From „all“ the first tap picks that one photo; the last one switched off means all again.
             let next = cur.length ? (cur.includes(p.ref) ? cur.filter((x) => x !== p.ref) : cur.concat([p.ref])) : [p.ref];
             next = list.map((x) => x.ref).filter((x) => next.includes(x));
@@ -1693,6 +1701,10 @@
             if (typeof this._mirrorToPair === "function") this._mirrorToPair("casora_screensaver_photos", next.length ? next.slice() : undefined, all);
             if (typeof this._markDirty === "function") this._markDirty();
             live.update(); photos();
+            if (focused) {
+              const nextButton = Array.from(pick.querySelectorAll(".cs-saver-photo")).find((x) => x.dataset.ref === p.ref);
+              if (nextButton) nextButton.focus({ preventScroll: true });
+            }
           };
           grid.appendChild(b);
         });
@@ -1704,6 +1716,7 @@
       const lists = el("div", "cs-saver-lists");
       lists.style.cssText = "margin:14px 0 0;";
       wrap.appendChild(lists);
+      const calendarKinds = new Set(["kalender", "linie", "woche"]);
       const root = wrap.getRootNode && wrap.getRootNode();
       if (root && root.appendChild && !root.querySelector("#cs-saver-list-css")) {
         const st = document.createElement("style");
@@ -1720,7 +1733,12 @@
           + ".cs-saver-row[aria-pressed=\"true\"] .cs-saver-ic{color:var(--cs-tone);background:color-mix(in srgb, var(--cs-tone) 18%, transparent);}"
           + ".cs-saver-tx{flex:1;min-width:0;display:flex;flex-direction:column;}"
           + ".cs-saver-tx b{font-size:var(--t-callout, 15px);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}"
-          + ".cs-saver-tx span{font-size:var(--t-foot, 13px);color:var(--ink-3, rgba(127,127,127,.8));}";
+          + ".cs-saver-tx span{font-size:var(--t-foot, 13px);color:var(--ink-3, rgba(127,127,127,.8));}"
+          + ".cs-saver-camera-kind{display:flex;flex-wrap:wrap;align-items:center;gap:8px;}"
+          + ".cs-saver-camera-kind>.cs-saver-row{flex:1 1 140px;width:auto;}"
+          + ".cs-saver-camera-kind>.cs-saver-camera-picker{flex:1 0 100%;min-width:0;}"
+          + ".cs-saver-camera-kind .cs-saver-list{background:none;padding:0;}"
+          + ".cs-saver-camera-choose{min-height:44px;white-space:normal;}";
         root.appendChild(st);
       }
       const rooms0 = () => (this._state && this._state.compact && this._state.compact.rooms) || [];
@@ -1732,13 +1750,33 @@
       };
       // items: { id, label, icon, tone, sub, raw, auto }. With auto on the items (cameras) none picked means
       // „Automatic“: the items with auto true, the others grey; a row „Automatic“ on top goes back to it.
-      const pickList = (key, items, title, ledeAll, ledeSome, none, autoRow) => {
-        lists.appendChild(el("div", "fhead", t(title)));
-        if (!items.length) { lists.appendChild(el("p", "cs-lede", t(none))); return; }
+      let camerasOpen = false;
+      const cameraPicker = (host, inRotation = false) => {
+        const picker = el("div", "cs-saver-camera-picker");
+        picker.hidden = !camerasOpen;
+        const choose = btn(t("Choose cameras"), () => {
+          camerasOpen = !camerasOpen;
+          picker.hidden = !camerasOpen;
+          choose.setAttribute("aria-expanded", camerasOpen ? "true" : "false");
+        }, true);
+        choose.classList.add("cs-saver-camera-choose");
+        choose.setAttribute("aria-expanded", camerasOpen ? "true" : "false");
+        host.append(choose, picker);
+        const why = { map: "Map or robot vacuum, not taken automatically", printer: "3D printer, not taken automatically" };
+        pickList("casora_screensaver_cameras", SV.cameraChoices(this._hass).map((c) => ({ id: c.id, label: c.name, raw: true, icon: "mdi:cctv", tone: "#5B8FC9",
+          auto: c.auto, sub: why[c.why] || "" })), inRotation ? "" : "Cameras",
+          "Automatic: every camera with a real picture; robot vacuum maps and 3D printer cameras stay out. Tap a camera to choose them yourself. On the tablet a tap on a camera shows its live picture.",
+          "Only the cameras picked here. “Automatic” takes every camera with a real picture again.",
+          "No camera found. The preview shows an example.",
+          { id: "auto", label: "Automatic", sub: "Every camera with a real picture", icon: "mdi:auto-fix", tone: "#5B8FC9" }, picker);
+      };
+      const pickList = (key, items, title, ledeAll, ledeSome, none, autoRow, host = lists) => {
+        if (title) host.appendChild(el("div", "fhead", t(title)));
+        if (!items.length) { host.appendChild(el("p", "cs-lede", t(none))); return; }
         const ids = items.map((x) => x.id);
         const auto = items.some((x) => x.auto !== undefined) ? items.filter((x) => x.auto).map((x) => x.id) : null;
         const cur = ((rooms0().map((r) => (r.variables || {})[key]).find((v) => Array.isArray(v) && v.length)) || []).map(String).filter((x) => ids.includes(x));
-        lists.appendChild(el("p", "cs-lede", t(cur.length ? ledeSome : ledeAll)));
+        host.appendChild(el("p", "cs-lede", t(cur.length ? ledeSome : ledeAll)));
         const list = el("div", "cs-saver-list");
         list.dataset.key = key;
         const row = (it, on, tap) => {
@@ -1758,14 +1796,26 @@
           if (it.sub) tx.appendChild(el("span", "", t(it.sub)));
           r.append(ic, tx);
           r.onclick = () => { tap(); live.update(); extra(); };
-          list.appendChild(r);
+          if (key === "casora_screensaver_mix" && it.id === "kameras" && on && typeof SV.cameraChoices === "function") {
+            const group = el("div", "cs-saver-camera-kind");
+            group.appendChild(r);
+            cameraPicker(group, true);
+            list.appendChild(group);
+          } else {
+            list.appendChild(r);
+          }
         };
         if (autoRow) row(autoRow, !cur.length, () => { if (cur.length) setVar(key, []); });
         items.forEach((it) => {
           const on = cur.length ? cur.includes(it.id) : (!auto || auto.includes(it.id));
           row(it, on, () => setVar(key, SV.pickNext(cur, ids, auto, it.id)));
         });
-        lists.appendChild(list);
+        host.appendChild(list);
+      };
+      const calendarPickerVisible = () => {
+        if (calendarKinds.has(show)) return true;
+        if (show !== "mix" || typeof SV.vars !== "function" || typeof SV.selected !== "function") return false;
+        return SV.selected(SV.vars(draft())).some((kind) => calendarKinds.has(kind));
       };
       const drawLists = () => {
         lists.textContent = "";
@@ -1775,16 +1825,9 @@
             "All of them take turns, five minutes each. Tap one to leave it out. One with nothing to show right now is skipped.",
             "Only the ones picked here take turns, five minutes each. One with nothing to show right now is skipped.", "");
         } else if (show === "kameras" && typeof SV.cameraChoices === "function") {
-          // Every camera; „Automatic“ (the default) takes the ones with a real picture, robot vacuum maps and
-          // printer cameras stay grey with the reason (the Cameras tile's rule, SV.cameraChoices).
-          const why = { map: "Map or robot vacuum, not taken automatically", printer: "3D printer, not taken automatically" };
-          pickList("casora_screensaver_cameras", SV.cameraChoices(hass).map((c) => ({ id: c.id, label: c.name, raw: true, icon: "mdi:cctv", tone: "#5B8FC9",
-            auto: c.auto, sub: why[c.why] || "" })), "Cameras",
-            "Automatic: every camera with a real picture; robot vacuum maps and 3D printer cameras stay out. Tap a camera to choose them yourself. On the tablet a tap on a camera shows its live picture.",
-            "Only the cameras picked here. “Automatic” takes every camera with a real picture again.",
-            "No camera found. The preview shows an example.",
-            { id: "auto", label: "Automatic", sub: "Every camera with a real picture", icon: "mdi:auto-fix", tone: "#5B8FC9" });
-        } else if (["kalender", "linie", "woche"].includes(show) && typeof SV.calendars === "function") {
+          cameraPicker(lists);
+        }
+        if (calendarPickerVisible() && typeof SV.calendars === "function") {
           const S0 = (hass && hass.states) || {};
           pickList("casora_screensaver_calendars", SV.calendars(hass).map((id) => ({ id, label: String(((S0[id] || {}).attributes || {}).friendly_name || id), raw: true,
             icon: "mdi:calendar-blank-outline", tone: "#DE8A4E" })), "Calendars",
@@ -1792,7 +1835,7 @@
             "No calendar found. The preview shows an example.");
         }
       };
-      const extra = () => { photos(); drawLists(); };
+      const extra = () => { drawLists(); photos(); };
       extra();
       // The kind of the draft changes: the preview follows it (looked at while the preview is on the page).
       // A setting the picture depends on changes in the draft (the calendar's range, the cover colour): drawn again.

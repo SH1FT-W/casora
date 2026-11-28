@@ -28,7 +28,7 @@ const wait = (ms) => page.waitForTimeout(ms);
 await P(`for (const r of p._state.compact.rooms) { r.variables.casora_screensaver = '5'; delete r.variables.casora_screensaver_kind; delete r.variables.casora_screensaver_mix; }`);
 await P(`p._csShow('n-saver')`);
 await wait(2000);
-const list = () => P(`const r = p.shadowRoot; return { rows: [...r.querySelectorAll('.cs-saver-list[data-key="casora_screensaver_mix"] .cs-saver-row')].map((x) => [x.dataset.id, x.getAttribute('aria-pressed')]),
+const list = () => P(`const r = p.shadowRoot; return { rows: [...r.querySelectorAll('.cs-saver-list[data-key="casora_screensaver_mix"] .cs-saver-row')].filter((x) => x.closest('.cs-saver-list').dataset.key === 'casora_screensaver_mix').map((x) => [x.dataset.id, x.getAttribute('aria-pressed')]),
   ticks: r.querySelectorAll('.cs-saver-list .rcheck').length,
   vars: [...new Set(p._state.compact.rooms.map((x) => JSON.stringify(x.variables.casora_screensaver_mix ?? null)))] };`);
 let l = await list();
@@ -77,8 +77,9 @@ for (const v of noTime.views || []) { const h = (v.cards || [])[0]; if (h && h.v
 await c.cmd({ type: 'lovelace/config/save', url_path: dash, config: noTime });
 await dashboard(page, dash + '?casora_saver=1');
 const items = await menu();
-await check('ohne Startzeit: „Bildschirmschoner starten“ im ⋯-Menü', items.some((t) => /Bildschirmschoner starten|Start screensaver/.test(t)), items.join(' | '));
-await page.evaluate(() => { const b = [...document.querySelectorAll('.casora-settings-menu button')].find((x) => /Bildschirmschoner|Screensaver/.test(x.textContent)); b && b.click(); });
+const startLabel = await page.evaluate(() => window.casoraTr ? window.casoraTr('Bildschirmschoner starten') : 'Bildschirmschoner starten');
+await check('ohne Startzeit: „Bildschirmschoner starten“ im ⋯-Menü', items.includes(startLabel), items.join(' | '));
+await page.evaluate((label) => { const b = [...document.querySelectorAll('.casora-settings-menu button')].find((x) => x.textContent.trim() === label); b && b.click(); }, startLabel);
 await wait(2000);
 const on = await page.evaluate(() => ({ shown: window._casoraSaver.shown(), kind: (document.querySelector('.cs-sv-layer .cs-sv') || {}).dataset?.kind || '' }));
 await check('Eintrag startet den Bildschirmschoner (Kalender)', on.shown && on.kind === 'kalender', JSON.stringify(on));
