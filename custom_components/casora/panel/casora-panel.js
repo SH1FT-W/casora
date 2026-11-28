@@ -2657,12 +2657,12 @@ const SECTIONS = [
         boolDefault: true, auto: true, scope: "dashboard" },
       { key: "casora_idle_home", sub: "chrome", label: "Return to Home when idle",
         type: "select", auto: true, scope: "dashboard", ...IDLE_CHOICES,
-        hint: "Tablets only. Brings one back to Home after a while without use." },
+        hint: "Only on tablets. Goes back to Home after a while without use. Waits while a popup is open." },
       // Idle close: shuts an open popup after these minutes without a touch, counted from the later of the
       // last touch and the moment the popup opened (scripts/casora-core.js, idleDecision). Same choices as above.
       { key: "casora_idle_close", sub: "chrome", label: "Close popups when idle",
         type: "select", auto: true, scope: "dashboard", ...IDLE_CHOICES,
-        hint: "Tablets only. Closes an open popup after a while without use." },
+        hint: "Only on tablets. Closes an open popup after a while without use. With “Return to Home when idle” on too, it then goes back to Home." },
       // Issue 114: swipe left/right on Home or an open room for the next/previous page (scripts/local/40-swipe-rooms.js),
       // on every touch device (owner, 03.11.2026: one setting). Under Screen, not Phone (issue 186: read as phone only).
       // The tablet reads swipe_rooms from the room views (casora-core.js, window._casoraSwipeRooms), the phone's bottom
