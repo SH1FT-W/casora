@@ -27375,7 +27375,8 @@ class CasoraPanel extends HTMLElement {
       // die Kachel „Beleuchtung“ in englischer Oberfläche „Lighting“ (07.10.2026, r68).
       const nm = tile.name && typeof window.casoraTr === "function" ? window.casoraTr(String(tile.name)) : tile.name;
       el.querySelector(".mname").textContent = nm || own || (type && type.label) || "Tile";
-      // Own name: already through the dashboard translation (or literal), never the Studio's word list (u02-01).
+      // Typed name: through the dashboard translation above. Default name (casoraTileName): translated there too.
+      // Neither goes through the Studio's word list (u02-01).
       if (own || nm) el.querySelector(".mname").setAttribute("data-no-i18n", "");
       // Vergleich 06.10. (#f9): Ohne eigenen Namen heißt die Kachel wie das Gerät („P1S“) – darunter klein
       // die Kachelart („3D-Drucker“), damit man sie erkennt. Nur in der Vorschau, das Dashboard bleibt gleich.
