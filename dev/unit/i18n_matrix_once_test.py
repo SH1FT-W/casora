@@ -12,6 +12,7 @@ import importlib.util
 import io
 import os
 import sys
+import tempfile
 from contextlib import redirect_stdout
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -36,6 +37,10 @@ def counting(patterns):
 
 
 i18n_patterns.matrix = counting
+# Build into a temporary folder: the test must not rewrite the shipped casora-i18n.js and scripts/i18n/*.json.
+_out = tempfile.TemporaryDirectory()
+build.OUT = os.path.join(_out.name, "casora-i18n.js")
+build.OUT_LANG = os.path.join(_out.name, "i18n")
 try:
     with redirect_stdout(io.StringIO()):
         build.main()
@@ -55,7 +60,6 @@ if carried != fresh:
     sys.exit(1)
 # A pattern without a sample still stops the build with the language file's name.
 import json  # noqa: E402
-import tempfile  # noqa: E402
 
 with tempfile.TemporaryDirectory() as tmp:
     with open(os.path.join(tmp, "xx.json"), "w", encoding="utf-8") as fh:
